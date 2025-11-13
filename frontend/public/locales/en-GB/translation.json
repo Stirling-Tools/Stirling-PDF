@@ -4471,7 +4471,8 @@
     "title": "PDF Editor",
     "badges": {
       "unsaved": "Unsaved changes",
-      "modified": "Edited"
+      "modified": "Edited",
+      "earlyAccess": "Early Access - Pre-Alpha"
     },
     "controls": {
       "title": "Document Controls"
@@ -4525,6 +4526,12 @@
       "auto": "Auto",
       "paragraph": "Paragraph",
       "singleLine": "Single Line"
+    },
+    "modeChange": {
+      "title": "Confirm Mode Change",
+      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
+      "cancel": "Cancel",
+      "confirm": "Reset and Change Mode"
     },
     "disclaimer": {
       "heading": "Preview limitations",

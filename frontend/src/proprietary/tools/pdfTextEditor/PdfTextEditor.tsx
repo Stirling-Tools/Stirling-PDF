@@ -976,6 +976,36 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         } catch (textError) {
           console.warn('[PdfTextEditor] Failed to strip text from preview', textError);
         }
+
+        // Also mask out images to prevent ghost/shadow images when they're moved
+        try {
+          const pageImages = imagesByPage[pageIndex] ?? [];
+          if (pageImages.length > 0) {
+            context.save();
+            context.globalCompositeOperation = 'destination-out';
+            context.fillStyle = '#000000';
+            for (const image of pageImages) {
+              if (!image) continue;
+              // Get image bounds in PDF coordinates
+              const left = image.left ?? image.x ?? 0;
+              const bottom = image.bottom ?? image.y ?? 0;
+              const width = image.width ?? Math.max((image.right ?? left) - left, 0);
+              const height = image.height ?? Math.max((image.top ?? bottom) - bottom, 0);
+              const right = left + width;
+              const top = bottom + height;
+
+              // Convert to canvas coordinates (PDF origin is bottom-left, canvas is top-left)
+              const canvasX = left * scale;
+              const canvasY = canvas.height - top * scale;
+              const canvasWidth = width * scale;
+              const canvasHeight = height * scale;
+              context.fillRect(canvasX, canvasY, canvasWidth, canvasHeight);
+            }
+            context.restore();
+          }
+        } catch (imageError) {
+          console.warn('[PdfTextEditor] Failed to strip images from preview', imageError);
+        }
         const dataUrl = canvas.toDataURL('image/png');
         page.cleanup();
         if (previewRequestIdRef.current !== currentToken) {
@@ -993,7 +1023,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         previewRenderingRef.current.delete(pageIndex);
       }
     },
-    [hasVectorPreview],
+    [hasVectorPreview, imagesByPage],
   );
 
   // Re-group text when grouping mode changes without forcing a full reload

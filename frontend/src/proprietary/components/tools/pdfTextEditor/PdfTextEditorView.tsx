@@ -318,6 +318,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const draggingImageRef = useRef<string | null>(null);
+  const rndRefs = useRef<Map<string, any>>(new Map());
+  const pendingDragUpdateRef = useRef<number | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
   const [autoScaleText, setAutoScaleText] = useState(true);
   const [textScales, setTextScales] = useState<Map<string, number>>(new Map());
@@ -930,6 +933,41 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     }
   }, [editingGroupId]);
 
+  // Sync image positions when not dragging (handles stutters/re-renders)
+  useLayoutEffect(() => {
+    const isDragging = draggingImageRef.current !== null;
+    if (isDragging) {
+      return; // Don't sync during drag
+    }
+
+    pageImages.forEach((image) => {
+      if (!image?.id) return;
+
+      const imageId = image.id;
+      const rndRef = rndRefs.current.get(imageId);
+      if (!rndRef || !rndRef.updatePosition) return;
+
+      const bounds = getImageBounds(image);
+      const width = Math.max(bounds.right - bounds.left, 1);
+      const height = Math.max(bounds.top - bounds.bottom, 1);
+      const cssLeft = bounds.left * scale;
+      const cssTop = (pageHeight - bounds.top) * scale;
+
+      // Get current position from Rnd component
+      const currentState = rndRef.state || {};
+      const currentX = currentState.x ?? 0;
+      const currentY = currentState.y ?? 0;
+
+      // Calculate drift
+      const drift = Math.abs(currentX - cssLeft) + Math.abs(currentY - cssTop);
+
+      // Only sync if drift is significant (more than 3px)
+      if (drift > 3) {
+        rndRef.updatePosition({ x: cssLeft, y: cssTop });
+      }
+    });
+  }, [pageImages, scale, pageHeight]);
+
   const handlePageChange = (pageNumber: number) => {
     setActiveGroupId(null);
     setEditingGroupId(null);
@@ -1413,25 +1451,43 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
 
                     return (
                       <Rnd
+                        ref={(ref) => {
+                          if (ref) {
+                            rndRefs.current.set(imageId, ref);
+                          } else {
+                            rndRefs.current.delete(imageId);
+                          }
+                        }}
                         key={`image-${imageId}`}
                         bounds="parent"
                         size={{ width: cssWidth, height: cssHeight }}
                         position={{ x: cssLeft, y: cssTop }}
-                        onDragStart={() => {
+                        onDragStart={(_event, data) => {
                           setActiveGroupId(null);
                           setEditingGroupId(null);
                           setActiveImageId(imageId);
+                          draggingImageRef.current = imageId;
                         }}
                         onDrag={(_event, data) => {
-                          emitImageTransform(
-                            imageId,
-                            data.x,
-                            data.y,
-                            cssWidth,
-                            cssHeight,
-                          );
+                          // Cancel any pending update
+                          if (pendingDragUpdateRef.current) {
+                            cancelAnimationFrame(pendingDragUpdateRef.current);
+                          }
+
+                          // Schedule update on next frame to batch rapid drag events
+                          pendingDragUpdateRef.current = requestAnimationFrame(() => {
+                            const rndRef = rndRefs.current.get(imageId);
+                            if (rndRef && rndRef.updatePosition) {
+                              rndRef.updatePosition({ x: data.x, y: data.y });
+                            }
+                          });
                         }}
                         onDragStop={(_event, data) => {
+                          if (pendingDragUpdateRef.current) {
+                            cancelAnimationFrame(pendingDragUpdateRef.current);
+                            pendingDragUpdateRef.current = null;
+                          }
+                          draggingImageRef.current = null;
                           emitImageTransform(
                             imageId,
                             data.x,
@@ -1444,19 +1500,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           setActiveImageId(imageId);
                           setActiveGroupId(null);
                           setEditingGroupId(null);
-                        }}
-                        onResize={(_event, _direction, ref, _delta, position) => {
-                          const nextWidth = parseFloat(ref.style.width);
-                          const nextHeight = parseFloat(ref.style.height);
-                          emitImageTransform(
-                            imageId,
-                            position.x,
-                            position.y,
-                            nextWidth,
-                            nextHeight,
-                          );
+                          draggingImageRef.current = imageId;
                         }}
                         onResizeStop={(_event, _direction, ref, _delta, position) => {
+                          draggingImageRef.current = null;
                           const nextWidth = parseFloat(ref.style.width);
                           const nextHeight = parseFloat(ref.style.height);
                           emitImageTransform(
