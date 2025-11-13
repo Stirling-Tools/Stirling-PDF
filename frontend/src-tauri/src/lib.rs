@@ -3,7 +3,16 @@ use tauri::{RunEvent, WindowEvent, Emitter, Manager};
 mod utils;
 mod commands;
 
-use commands::{start_backend, check_backend_health, get_opened_files, clear_opened_files, cleanup_backend, add_opened_file};
+use commands::{
+    start_backend,
+    check_backend_health,
+    get_opened_files,
+    clear_opened_files,
+    cleanup_backend,
+    add_opened_file,
+    is_default_pdf_handler,
+    set_as_default_pdf_handler,
+};
 use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -39,7 +48,15 @@ pub fn run() {
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, get_opened_files, clear_opened_files, get_tauri_logs])
+    .invoke_handler(tauri::generate_handler![
+      start_backend,
+      check_backend_health,
+      get_opened_files,
+      clear_opened_files,
+      get_tauri_logs,
+      is_default_pdf_handler,
+      set_as_default_pdf_handler,
+    ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
     .run(|app_handle, event| {

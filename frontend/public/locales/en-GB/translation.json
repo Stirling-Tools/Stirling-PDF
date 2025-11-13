@@ -41,6 +41,25 @@
     "cancel": "Cancel",
     "confirm": "Extract"
   },
+  "defaultApp": {
+    "title": "Set as Default PDF App",
+    "message": "Would you like to set Stirling PDF as your default PDF editor?",
+    "description": "You can change this later in your system settings.",
+    "notNow": "Not Now",
+    "setDefault": "Set Default",
+    "success": {
+      "title": "Default App Set",
+      "message": "Stirling PDF is now your default PDF editor"
+    },
+    "settingsOpened": {
+      "title": "Settings Opened",
+      "message": "Please select Stirling PDF in your system settings"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Failed to set default PDF handler"
+    }
+  },
   "language": {
     "direction": "ltr"
   },
