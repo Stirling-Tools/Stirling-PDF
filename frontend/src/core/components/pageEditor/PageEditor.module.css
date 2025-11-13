@@ -11,6 +11,26 @@
   transform: scale(1.02) translateZ(0);
 }
 
+.pageSurface {
+  transition: background-color 0.4s ease;
+}
+
+.pageJustMoved {
+  animation: pageMovedHighlight 1.2s ease-out;
+}
+
+@keyframes pageMovedHighlight {
+  0% {
+    background-color: rgba(59, 130, 246, 0.32);
+  }
+  60% {
+    background-color: rgba(59, 130, 246, 0.12);
+  }
+  100% {
+    background-color: rgba(59, 130, 246, 0);
+  }
+}
+
 .pageContainer:hover .pageNumber {
   opacity: 1 !important;
 }
@@ -28,28 +48,6 @@
 /* Page movement animations */
 .pageMoveAnimation {
   transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.pageMoving {
-  z-index: 10;
-  transform: scale(1.05);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-/* Multi-page drag indicator */
-.multiDragIndicator {
-  position: fixed;
-  background: rgba(59, 130, 246, 0.9);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transform: translate(-50%, -50%);
-  backdrop-filter: blur(4px);
 }
 
 /* Animations */

@@ -89,9 +89,18 @@ export function isStirlingFile(file: File): file is StirlingFile {
 
 // Create a StirlingFile from a regular File object
 export function createStirlingFile(file: File, id?: FileId): StirlingFile {
-  // Check if file is already a StirlingFile to avoid property redefinition
+  // If the file already has Stirling metadata and we aren't trying to override it,
+  // return as–is. When a new id is requested we clone the File so we can embed
+  // the fresh identifier without mutating the original object.
   if (isStirlingFile(file)) {
-    return file; // Already has fileId and quickKey properties
+    if (!id || file.fileId === id) {
+      return file;
+    }
+
+    file = new File([file], file.name, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
   }
 
   const fileId = id || createFileId();
