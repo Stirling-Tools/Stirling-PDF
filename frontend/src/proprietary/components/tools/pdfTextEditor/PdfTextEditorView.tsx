@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   Divider,
-  FileButton,
   Group,
   Modal,
   Pagination,
@@ -27,7 +26,6 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
 import { Rnd } from 'react-rnd';
 
@@ -348,7 +346,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     forceSingleTextElement,
     groupingMode: externalGroupingMode,
     requestPagePreview,
-    onLoadJson,
     onSelectPage,
     onGroupEdit,
     onGroupDelete,
@@ -1116,19 +1113,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             </Group>
 
             <Stack gap="xs">
-              <FileButton onChange={onLoadJson} accept="application/pdf,application/json,.pdf,.json">
-                {(props) => (
-                  <Button
-                    variant="light"
-                    leftSection={<UploadIcon fontSize="small" />}
-                    loading={isConverting}
-                    fullWidth
-                    {...props}
-                  >
-                    {t('pdfTextEditor.actions.load', 'Load File')}
-                  </Button>
-                )}
-              </FileButton>
               <Button
                 variant="subtle"
                 leftSection={<AutorenewIcon fontSize="small" />}

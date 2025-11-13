@@ -351,8 +351,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         let shouldUseLazyMode = false;
         let pendingJobId: string | null = null;
 
-        setErrorMessage(null);
-
         if (isPdf) {
           latestPdfRequestIdRef.current = requestId;
           setIsConverting(true);
@@ -539,7 +537,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
         setFileName(file.name);
         setErrorMessage(null);
-        autoLoadKeyRef.current = fileKey;
       } catch (error: any) {
         console.error('Failed to load file', error);
         console.error('Error details:', {
@@ -1052,7 +1049,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     forceSingleTextElement,
     groupingMode,
     requestPagePreview,
-    onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
     onGroupDelete: handleGroupDelete,
@@ -1076,7 +1072,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     handleGroupTextChange,
     handleGroupDelete,
     handleImageReset,
-    handleLoadFile,
     handleResetEdits,
     handleSelectPage,
     hasChanges,
