@@ -1,3 +1,19 @@
+:root {
+  /* Compare highlight colors (same in light/dark) */
+  --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45); /* #ff6b6b @ 0.45 */
+  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);  /* #51cf66 @ 0.35 */
+
+  /* Badge colors for dropdowns */
+  --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
+  --spdf-compare-removed-badge-fg: #b91c1c;
+  --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
+  --spdf-compare-added-badge-fg: #1b5e20;
+
+  /* Inline highlights in summary */
+  --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
+  --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+}
+
 /* CSS variables for Tailwind + Mantine integration */
 
 :root {
@@ -174,6 +190,7 @@
   --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
   --right-rail-icon: #4B5563;         /* icon color */
   --right-rail-icon-disabled: #CECECE;/* disabled icon */
+  --right-rail-pan-active-bg: #EAEAEA;
 
   /* Colors for tooltips */
   --tooltip-title-bg: #DBEFFF;
@@ -293,6 +310,22 @@
   --pdf-light-report-container-bg: 249 250 251;
   --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
+
+  /* Code token colors (light mode) */
+  --code-kw-color: #1d4ed8;   /* blue-700 */
+  --code-str-color: #16a34a;  /* green-600 */
+  --code-num-color: #4338ca;  /* indigo-700 */
+  --code-com-color: #6b7280;  /* gray-500 */
+  /* Compare tool specific colors - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
+  --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
+  --compare-upload-icon-bg: rgba(148, 163, 184, 0.2);
+  --compare-upload-icon-color: rgba(17, 24, 39, 0.75);
+  --compare-upload-divider: rgba(148, 163, 184, 0.5);
+
+  /* Compare page label chip (light mode): slightly lighter than surrounding rows */
+  --compare-page-label-bg: var(--bg-muted);
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -424,6 +457,7 @@
   --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
   --right-rail-icon: #BCBEBF;         /* icon color */
   --right-rail-icon-disabled: #43464B;/* disabled icon */
+  --right-rail-pan-active-bg: #EAEAEA;
 
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4B525A;
@@ -436,6 +470,10 @@
   --text-instruction: #ffffff;
   --text-brand: var(--color-gray-800);
   --text-brand-accent: #EF4444;
+
+  /* Compare badge text colors (dark mode): lighter for readability */
+  --spdf-compare-removed-badge-fg: var(--color-red-500);
+  --spdf-compare-added-badge-fg: var(--color-green-500);
 
   /* container */
   --landing-paper-bg: #171A1F;
@@ -518,6 +556,22 @@
   --api-keys-input-border: #3A4047;
   --api-keys-button-bg: #3A4047;
   --api-keys-button-color: #D0D6DC;
+  
+  /* Code token colors (dark mode - Cursor-like) */
+  --code-kw-color: #C792EA;   /* purple */
+  --code-str-color: #C3E88D;  /* green */
+  --code-num-color: #F78C6C;  /* orange */
+  --code-com-color: #697098;  /* muted gray-blue */
+  /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
+  --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
+  --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
+  --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
+  --compare-upload-divider: rgba(75, 85, 99, 0.5);
+
+  /* Compare page label chip (dark mode): slightly darker than surrounding rows */
+  --compare-page-label-bg: #1F2329;
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 /* Dropzone drop state styling */

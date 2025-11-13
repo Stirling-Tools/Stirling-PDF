@@ -98,6 +98,8 @@
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
+  "back": "Back",
+  "nothingToUndo": "Nothing to undo",
   "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
@@ -2443,15 +2445,99 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "highlightColor": {
-      "1": "Highlight Color 1:",
-      "2": "Highlight Color 2:"
+    "clearSelected": "Clear selected",
+    "clear": {
+      "confirmTitle": "Clear selected PDFs?",
+      "confirmBody": "This will close the current comparison and take you back to Active Files.",
+      "confirm": "Clear and return"
     },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
+    "review": {
+      "title": "Comparison Result",
+      "actionsHint": "Review the comparison, switch document roles, or export the summary.",
+      "switchOrder": "Switch order",
+      "exportSummary": "Export summary"
     },
-    "submit": "Compare",
+    "base": {
+      "label": "Original document",
+      "placeholder": "Select the original PDF"
+    },
+    "comparison": {
+      "label": "Edited document",
+      "placeholder": "Select the edited PDF"
+    },
+    "addFilesHint": "Add PDFs in the Files step to enable selection.",
+    "noFiles": "No PDFs available yet",
+    "pages": "Pages",
+    "selection": {
+      "originalEditedTitle": "Select Original and Edited PDFs"
+    },
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
+    "swap": {
+      "confirmTitle": "Re-run comparison?",
+      "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+      "confirm": "Swap and Re-run"
+    },
+    "cta": "Compare",
+    "loading": "Comparing...",
+    
+    "summary": {
+      "baseHeading": "Original document",
+      "comparisonHeading": "Edited document",
+      "pageLabel": "Page"
+    },
+    "rendering": {
+      "pageNotReadyTitle": "Page not rendered yet",
+      "pageNotReadyBody": "Some pages are still rendering. Navigation will snap once they are ready.",
+      "rendering": "rendering",
+      "inProgress": "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+      "pagesRendered": "pages rendered",
+      "complete": "Page rendering complete"
+    },
+    "dropdown": {
+      "deletionsLabel": "Deletions",
+      "additionsLabel": "Additions",
+      "deletions": "Deletions ({{count}})",
+      "additions": "Additions ({{count}})",
+      "searchPlaceholder": "Search changes...",
+      "noResults": "No changes found"
+    },
+    "actions": {
+      "stackVertically": "Stack vertically",
+      "placeSideBySide": "Place side by side",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view",
+      "unlinkScrollPan": "Unlink scroll and pan",
+      "linkScrollPan": "Link scroll and pan",
+      "unlinkScroll": "Unlink scroll",
+      "linkScroll": "Link scroll"
+    },
+    "toasts": {
+      "unlinkedTitle": "Independent scroll & pan enabled",
+      "unlinkedBody": "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
+    },
+    "error": {
+      "selectRequired": "Select a original and edited document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analysing differences...",
+      "complete": "Comparison ready"
+    },
+    "longJob": {
+      "title": "Large comparison in progress",
+      "body": "These PDFs together exceed 2,000 pages. Processing can take several minutes."
+    },
+    "slowOperation": {
+      "title": "Still working…",
+      "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
+      "cancel": "Cancel comparison"
+    },
+    
+    "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
     },
@@ -2464,6 +2550,16 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "These documents appear highly dissimilar. Comparison was stopped to save time."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "These PDFs look highly different",
+      "body": "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
+      "stopButton": "Stop comparison"
     }
   },
   "certSign": {
@@ -2956,7 +3052,14 @@
     "title": "Show Javascript",
     "header": "Show Javascript",
     "downloadJS": "Download Javascript",
-    "submit": "Show"
+    "submit": "Show",
+    "results": "Result",
+    "processing": "Extracting JavaScript...",
+    "done": "JavaScript extracted",
+    "singleFileWarning": "This tool only supports one file at a time. Please select a single file.",
+    "view": {
+      "title": "Extracted JavaScript"
+    }
   },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
@@ -3115,7 +3218,7 @@
     "title": "Overlay PDFs",
     "desc": "Overlay one PDF on top of another",
     "baseFile": {
-      "label": "Select Base PDF File"
+      "label": "Select Original PDF File"
     },
     "overlayFiles": {
       "label": "Select Overlay PDF Files",
@@ -4815,6 +4918,12 @@
     }
   },
   "common": {
+    "previous": "Previous",
+    "next": "Next",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapsed": "collapsed",
+    "lines": "lines",
     "copy": "Copy",
     "copied": "Copied!",
     "refresh": "Refresh",

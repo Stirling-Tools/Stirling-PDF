@@ -1,5 +1,5 @@
 import { FileId } from '@app/types/file';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+import { PDFDocument, PDFPage, PageBreakSettings } from '@app/types/pageEditor';
 
 // V1-style DOM-first command system (replaces the old React state commands)
 export abstract class DOMCommand {
@@ -67,7 +67,7 @@ export class DeletePagesCommand extends DOMCommand {
     private pagesToDelete: number[],
     private getCurrentDocument: () => PDFDocument | null,
     private setDocument: (doc: PDFDocument) => void,
-    private setSelectedPages: (pages: number[]) => void,
+    private setSelectedPageIds: (pageIds: string[]) => void,
     private getSplitPositions: () => Set<number>,
     private setSplitPositions: (positions: Set<number>) => void,
     private getSelectedPages: () => number[],
@@ -99,6 +99,13 @@ export class DeletePagesCommand extends DOMCommand {
       this.hasExecuted = true;
     }
 
+    const selectedPageNumbersBefore = this.getSelectedPages();
+    const selectedIdSet = new Set(
+      selectedPageNumbersBefore
+        .map((pageNum) => currentDoc.pages.find((p) => p.pageNumber === pageNum)?.id)
+        .filter((id): id is string => Boolean(id))
+    );
+
     // Filter out deleted pages by ID (stable across undo/redo)
     const remainingPages = currentDoc.pages.filter(page =>
       !this.pageIdsToDelete.includes(page.id)
@@ -106,7 +113,7 @@ export class DeletePagesCommand extends DOMCommand {
 
     if (remainingPages.length === 0) {
       // If all pages would be deleted, clear selection/splits and close PDF
-      this.setSelectedPages([]);
+      this.setSelectedPageIds([]);
       this.setSplitPositions(new Set());
       this.onAllPagesDeleted?.();
       return;
@@ -135,7 +142,12 @@ export class DeletePagesCommand extends DOMCommand {
 
     // Apply changes
     this.setDocument(updatedDocument);
-    this.setSelectedPages([]);
+
+    const remainingSelectedPageIds = remainingPages
+      .filter((page) => selectedIdSet.has(page.id))
+      .map((page) => page.id);
+    this.setSelectedPageIds(remainingSelectedPageIds);
+
     this.setSplitPositions(newPositions);
   }
 
@@ -145,7 +157,12 @@ export class DeletePagesCommand extends DOMCommand {
     // Simply restore the complete original document state
     this.setDocument(this.originalDocument);
     this.setSplitPositions(this.originalSplitPositions);
-    this.setSelectedPages(this.originalSelectedPages);
+    const restoredIds = this.originalSelectedPages
+      .map((pageNum) =>
+        this.originalDocument!.pages.find((page) => page.pageNumber === pageNum)?.id || ""
+      )
+      .filter((id) => id !== "");
+    this.setSelectedPageIds(restoredIds);
   }
 
   get description(): string {
@@ -161,7 +178,8 @@ export class ReorderPagesCommand extends DOMCommand {
     private targetIndex: number,
     private selectedPages: number[] | undefined,
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private onReorderComplete?: (newPages: PDFPage[]) => void
   ) {
     super();
   }
@@ -196,7 +214,13 @@ export class ReorderPagesCommand extends DOMCommand {
     } else {
       // Single page reorder
       const [movedPage] = newPages.splice(sourceIndex, 1);
-      newPages.splice(this.targetIndex, 0, movedPage);
+
+      // Adjust target index if moving forward (after removal, indices shift)
+      const adjustedTargetIndex = sourceIndex < this.targetIndex
+        ? this.targetIndex - 1
+        : this.targetIndex;
+
+      newPages.splice(adjustedTargetIndex, 0, movedPage);
 
       newPages.forEach((page, index) => {
         page.pageNumber = index + 1;
@@ -210,6 +234,11 @@ export class ReorderPagesCommand extends DOMCommand {
     };
 
     this.setDocument(reorderedDocument);
+
+    // Notify that reordering is complete
+    if (this.onReorderComplete) {
+      this.onReorderComplete(newPages);
+    }
   }
 
   undo(): void {
@@ -408,6 +437,8 @@ export class SplitAllCommand extends DOMCommand {
   }
 }
 
+// PageBreakSettings, PageSize, and PageOrientation are now imported from pageEditor.ts
+
 export class PageBreakCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
@@ -415,7 +446,8 @@ export class PageBreakCommand extends DOMCommand {
   constructor(
     private selectedPageNumbers: number[],
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private settings?: PageBreakSettings
   ) {
     super();
   }
@@ -450,7 +482,8 @@ export class PageBreakCommand extends DOMCommand {
           rotation: 0,
           selected: false,
           splitAfter: false,
-          isBlankPage: true // Custom flag for blank pages
+          isBlankPage: true, // Custom flag for blank pages
+          pageBreakSettings: this.settings // Store settings for export
         };
         newPages.push(blankPage);
         this.insertedPages.push(blankPage);
@@ -881,6 +914,10 @@ export class UndoManager {
 
   canRedo(): boolean {
     return this.redoStack.length > 0;
+  }
+
+  hasHistory(): boolean {
+    return this.undoStack.length > 0;
   }
 
   clear(): void {
