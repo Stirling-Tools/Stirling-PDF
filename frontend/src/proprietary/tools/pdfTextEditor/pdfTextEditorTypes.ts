@@ -199,7 +199,6 @@ export interface PdfTextEditorViewData {
   forceSingleTextElement: boolean;
   groupingMode: 'auto' | 'paragraph' | 'singleLine';
   requestPagePreview: (pageIndex: number, scale: number) => void;
-  onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
   onGroupDelete: (pageIndex: number, groupId: string) => void;
