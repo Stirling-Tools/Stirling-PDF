@@ -74,12 +74,18 @@ export default function Login() {
     }
   }, [enabledProviders]);
 
-  // Handle query params (email prefill and success messages)
+  // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
     try {
       const emailFromQuery = searchParams.get('email');
       if (emailFromQuery) {
         setEmail(emailFromQuery);
+      }
+
+      // Check if session expired (401 redirect)
+      const expired = searchParams.get('expired');
+      if (expired === 'true') {
+        setError(t('login.sessionExpired', 'Your session has expired. Please sign in again.'));
       }
 
       const messageType = searchParams.get('messageType')

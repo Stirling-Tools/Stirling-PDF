@@ -93,18 +93,32 @@ export async function handleHttpError(error: any): Promise<boolean> {
     return false; // Don't show global toast, but continue rejection
   }
 
-  // Suppress "Authentication required" 401 errors on auth pages
+  // Handle 401 authentication errors
   const status: number | undefined = error?.response?.status;
   if (status === 401) {
     const pathname = window.location.pathname;
+    const errorMessage = error?.response?.data?.error || error?.response?.data?.message || '';
+    const isAuthenticationError = errorMessage.toLowerCase().includes('authentication');
+
+    // Check if we're already on an auth page
     const isAuthPage = pathname.includes('/login') ||
                       pathname.includes('/signup') ||
                       pathname.includes('/auth/') ||
                       pathname.includes('/invite/');
-    if (isAuthPage) {
-      console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
-      return true; // Suppress toast
+
+    // If not on auth page, redirect to login with expired session message
+    if (!isAuthPage) {
+      console.debug('[httpErrorHandler] 401 detected, redirecting to login');
+      // Store the current location so we can redirect back after login
+      const currentLocation = window.location.pathname + window.location.search;
+      // Redirect to login with state
+      window.location.href = `/login?expired=true&from=${encodeURIComponent(currentLocation)}`;
+      return true; // Suppress toast since we're redirecting
     }
+
+    // On auth pages, suppress the toast (user is already trying to authenticate)
+    console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
+    return true;
   }
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);

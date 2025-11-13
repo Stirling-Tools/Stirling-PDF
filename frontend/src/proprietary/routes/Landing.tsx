@@ -95,13 +95,7 @@ export default function Landing() {
     );
   }
 
-  // If we're at home route ("/"), show login directly (marketing/landing page)
-  // Otherwise navigate to login (fixes URL mismatch for tool routes)
-  const isHome = location.pathname === '/' || location.pathname === '';
-  if (isHome) {
-    return <Login />;
-  }
-
-  // For non-home routes without auth, navigate to login (preserves from location)
+  // No session - redirect to login page
+  // This ensures the URL always shows /login when not authenticated
   return <Navigate to="/login" replace state={{ from: location }} />;
 }

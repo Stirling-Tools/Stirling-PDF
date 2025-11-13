@@ -3177,6 +3177,7 @@
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
     "signinTitle": "Please sign in",
     "ssoSignIn": "Login via Single Sign-on",
     "oAuth2AutoCreateDisabled": "OAUTH2 Auto-Create User Disabled",
