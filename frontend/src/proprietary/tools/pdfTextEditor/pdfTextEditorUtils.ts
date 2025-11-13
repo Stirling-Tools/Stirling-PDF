@@ -647,6 +647,8 @@ export const groupPageTextElements = (
     return [];
   }
 
+  const pageWidth = valueOr(page.width, DEFAULT_PAGE_WIDTH);
+
   const elements = page.textElements
     .map(cloneTextElement)
     .filter((element) => element.text !== null && element.text !== undefined);
@@ -749,6 +751,11 @@ export const groupPageTextElements = (
   let totalWords = 0;
   let longTextGroups = 0;
   let totalGroups = 0;
+  const wordCounts: number[] = [];
+  let fullWidthLines = 0;
+
+  // Define "full width" as extending to at least 70% of page width
+  const fullWidthThreshold = pageWidth * 0.7;
 
   lineGroups.forEach((group) => {
     const text = (group.text || '').trim();
@@ -760,13 +767,20 @@ export const groupPageTextElements = (
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
     totalWords += wordCount;
+    wordCounts.push(wordCount);
 
     if (lineCount > 1) {
       multiLineGroups++;
     }
 
-    if (wordCount >= 5 || text.length >= 30) {
+    if (wordCount >= 10 || text.length >= 50) {
       longTextGroups++;
+    }
+
+    // Check if this line extends close to the right margin (paragraph-like)
+    const rightEdge = group.bounds.right;
+    if (rightEdge >= fullWidthThreshold) {
+      fullWidthLines++;
     }
   });
 
@@ -776,18 +790,69 @@ export const groupPageTextElements = (
 
   const avgWordsPerGroup = totalWords / totalGroups;
   const longTextRatio = longTextGroups / totalGroups;
+  const fullWidthRatio = fullWidthLines / totalGroups;
 
-  const isParagraphPage =
-    (multiLineGroups >= 2 && avgWordsPerGroup > 8) ||
-    avgWordsPerGroup > 12 ||
-    longTextRatio > 0.4;
+  // Calculate variance in line lengths (paragraphs have varying lengths, lists are uniform)
+  const variance = wordCounts.reduce((sum, count) => {
+    const diff = count - avgWordsPerGroup;
+    return sum + diff * diff;
+  }, 0) / totalGroups;
+  const stdDev = Math.sqrt(variance);
+  const coefficientOfVariation = avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
+
+  // Check each criterion
+  const criterion1 = multiLineGroups >= 2 && avgWordsPerGroup > 8;
+  const criterion2 = avgWordsPerGroup > 5;
+  const criterion3 = longTextRatio > 0.4;
+  const criterion4 = coefficientOfVariation > 0.5 || fullWidthRatio > 0.6; // High variance OR many full-width lines = paragraph text
+
+  const isParagraphPage = criterion1 && criterion2 && criterion3 && criterion4;
+
+  // Log detection stats
+  console.log(`📄 Page ${pageIndex} Grouping Analysis (mode: ${groupingMode}):`);
+  console.log(`   Stats:`);
+  console.log(`     • Page width: ${pageWidth.toFixed(1)}pt (full-width threshold: ${fullWidthThreshold.toFixed(1)}pt)`);
+  console.log(`     • Multi-line groups: ${multiLineGroups}`);
+  console.log(`     • Total groups: ${totalGroups}`);
+  console.log(`     • Total words: ${totalWords}`);
+  console.log(`     • Long text groups (≥10 words or ≥50 chars): ${longTextGroups}`);
+  console.log(`     • Full-width lines (≥70% page width): ${fullWidthLines}`);
+  console.log(`     • Avg words per group: ${avgWordsPerGroup.toFixed(2)}`);
+  console.log(`     • Long text ratio: ${(longTextRatio * 100).toFixed(1)}%`);
+  console.log(`     • Full-width ratio: ${(fullWidthRatio * 100).toFixed(1)}%`);
+  console.log(`     • Std deviation: ${stdDev.toFixed(2)}`);
+  console.log(`     • Coefficient of variation: ${coefficientOfVariation.toFixed(2)}`);
+  console.log(`   Criteria:`);
+  console.log(`     1. Multi-line + Avg Words: ${criterion1 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`        (${multiLineGroups} >= 2 AND ${avgWordsPerGroup.toFixed(2)} > 8)`);
+  console.log(`     2. Avg Words Only: ${criterion2 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`        (${avgWordsPerGroup.toFixed(2)} > 5)`);
+  console.log(`     3. Long Text Ratio: ${criterion3 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`        (${(longTextRatio * 100).toFixed(1)}% > 40%)`);
+  console.log(`     4. Line Width Pattern: ${criterion4 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`        (CV ${coefficientOfVariation.toFixed(2)} > 0.5 OR ${(fullWidthRatio * 100).toFixed(1)}% > 60%)`);
+  console.log(`        ${coefficientOfVariation > 0.5 ? '✓ High variance (varying line lengths)' : '✗ Low variance'} ${fullWidthRatio > 0.6 ? '✓ Many full-width lines (paragraph-like)' : '✗ Few full-width lines (list-like)'}`);
+  console.log(`   Decision: ${isParagraphPage ? '📝 PARAGRAPH MODE' : '📋 LINE MODE'}`);
+  if (isParagraphPage) {
+    console.log(`   Reason: All criteria passed (AND logic)`);
+  } else {
+    const failedReasons = [];
+    if (!criterion1) failedReasons.push('insufficient multi-line groups or word density');
+    if (!criterion2) failedReasons.push('low average words per group');
+    if (!criterion3) failedReasons.push('low ratio of long text groups');
+    if (!criterion4) failedReasons.push('low variance and few full-width lines (list-like structure)');
+    console.log(`   Reason: ${failedReasons.join(', ')}`);
+  }
+  console.log('');
 
   // Only apply paragraph grouping if it looks like a paragraph-heavy page
   if (isParagraphPage) {
+    console.log(`🔀 Applying paragraph grouping to page ${pageIndex}`);
     return groupLinesIntoParagraphs(lineGroups, metrics);
   }
 
   // For sparse pages, keep lines separate
+  console.log(`📋 Keeping lines separate for page ${pageIndex}`);
   return lineGroups;
 };
 
@@ -1192,14 +1257,35 @@ export const areImageListsDifferent = (
 export const getDirtyPages = (
   groupsByPage: TextGroup[][],
   imagesByPage: PdfJsonImageElement[][],
+  originalGroupsByPage: TextGroup[][],
   originalImagesByPage: PdfJsonImageElement[][],
 ): boolean[] => {
   return groupsByPage.map((groups, index) => {
+    // Check if any text was modified
     const textDirty = groups.some((group) => group.text !== group.originalText);
+
+    // Check if any groups were deleted by comparing with original groups
+    const originalGroups = originalGroupsByPage[index] ?? [];
+    const groupCountChanged = groups.length !== originalGroups.length;
+
     const imageDirty = areImageListsDifferent(
       imagesByPage[index] ?? [],
       originalImagesByPage[index] ?? [],
     );
-    return textDirty || imageDirty;
+
+    const isDirty = textDirty || groupCountChanged || imageDirty;
+
+    if (groupCountChanged || textDirty) {
+      console.log(`📄 Page ${index} dirty check:`, {
+        textDirty,
+        groupCountChanged,
+        originalGroupsLength: originalGroups.length,
+        currentGroupsLength: groups.length,
+        imageDirty,
+        isDirty,
+      });
+    }
+
+    return isDirty;
   });
 };

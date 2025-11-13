@@ -89,6 +89,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [loadingImagePages, setLoadingImagePages] = useState<Set<number>>(new Set());
 
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
+  const originalGroupsRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
   const autoLoadKeyRef = useRef<string | null>(null);
   const loadRequestIdRef = useRef(0);
@@ -131,7 +132,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   const dirtyPages = useMemo(
-    () => getDirtyPages(groupsByPage, imagesByPage, originalImagesRef.current),
+    () => getDirtyPages(groupsByPage, imagesByPage, originalGroupsRef.current, originalImagesRef.current),
     [groupsByPage, imagesByPage],
   );
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
@@ -157,6 +158,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     const images = extractDocumentImages(cloned);
     const originalImages = images.map((page) => page.map(cloneImageElement));
     originalImagesRef.current = originalImages;
+    originalGroupsRef.current = groups.map((page) => page.map((group) => ({ ...group })));
     imagesByPageRef.current = images.map((page) => page.map(cloneImageElement));
     const initialLoaded = new Set<number>();
     originalImages.forEach((pageImages, index) => {
@@ -595,13 +597,16 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   const handleGroupDelete = useCallback((pageIndex: number, groupId: string) => {
-    setGroupsByPage((previous) =>
-      previous.map((groups, idx) =>
-        idx !== pageIndex
-          ? groups
-          : groups.map((group) => (group.id === groupId ? { ...group, text: '' } : group))
-      )
-    );
+    console.log(`🗑️ Deleting group ${groupId} from page ${pageIndex}`);
+    setGroupsByPage((previous) => {
+      const updated = previous.map((groups, idx) => {
+        if (idx !== pageIndex) return groups;
+        const filtered = groups.filter((group) => group.id !== groupId);
+        console.log(`   Before: ${groups.length} groups, After: ${filtered.length} groups`);
+        return filtered;
+      });
+      return updated;
+    });
   }, []);
 
   const handleImageTransform = useCallback(

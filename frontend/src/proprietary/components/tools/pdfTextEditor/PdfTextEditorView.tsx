@@ -247,20 +247,16 @@ const buildFontLookupKeys = (
  * Analyzes text groups on a page to determine if it's paragraph-heavy or sparse.
  * Returns true if the page appears to be document-like with substantial text content.
  */
-const analyzePageContentType = (groups: TextGroup[]): boolean => {
+const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean => {
   if (groups.length === 0) return false;
 
   let multiLineGroups = 0;
   let totalWords = 0;
   let longTextGroups = 0;
   let totalGroups = 0;
-  const groupDetails: Array<{
-    id: string;
-    lines: number;
-    words: number;
-    chars: number;
-    text: string;
-  }> = [];
+  let fullWidthLines = 0;
+  const wordCounts: number[] = [];
+  const fullWidthThreshold = pageWidth * 0.7;
 
   groups.forEach((group) => {
     const text = (group.text || '').trim();
@@ -272,39 +268,46 @@ const analyzePageContentType = (groups: TextGroup[]): boolean => {
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
     totalWords += wordCount;
+    wordCounts.push(wordCount);
 
     // Count multi-line paragraphs
     if (lineCount > 1) {
       multiLineGroups++;
     }
 
-    // Count text groups with substantial content (more than a few words)
-    if (wordCount >= 5 || text.length >= 30) {
+    // Count text groups with substantial content (≥10 words or ≥50 chars)
+    if (wordCount >= 10 || text.length >= 50) {
       longTextGroups++;
     }
 
-    groupDetails.push({
-      id: group.id,
-      lines: lineCount,
-      words: wordCount,
-      chars: text.length,
-      text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-    });
+    // Check if this line extends close to the right margin
+    const rightEdge = group.bounds.right;
+    if (rightEdge >= fullWidthThreshold) {
+      fullWidthLines++;
+    }
   });
 
   if (totalGroups === 0) return false;
 
-  // Heuristics for paragraph mode:
-  // 1. Has multiple substantial multi-line groups (2+) AND decent average words
-  // 2. Average words per group > 12 (strong indicator of document text)
-  // 3. More than 40% of groups have substantial text (typical of documents)
   const avgWordsPerGroup = totalWords / totalGroups;
   const longTextRatio = longTextGroups / totalGroups;
+  const fullWidthRatio = fullWidthLines / totalGroups;
 
-  const isParagraphPage =
-    (multiLineGroups >= 2 && avgWordsPerGroup > 8) ||
-    avgWordsPerGroup > 12 ||
-    longTextRatio > 0.4;
+  // Calculate variance in line lengths
+  const variance = wordCounts.reduce((sum, count) => {
+    const diff = count - avgWordsPerGroup;
+    return sum + diff * diff;
+  }, 0) / totalGroups;
+  const stdDev = Math.sqrt(variance);
+  const coefficientOfVariation = avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
+
+  // All 4 criteria must pass for paragraph mode
+  const criterion1 = multiLineGroups >= 2 && avgWordsPerGroup > 8;
+  const criterion2 = avgWordsPerGroup > 5;
+  const criterion3 = longTextRatio > 0.4;
+  const criterion4 = coefficientOfVariation > 0.5 || fullWidthRatio > 0.6;
+
+  const isParagraphPage = criterion1 && criterion2 && criterion3 && criterion4;
 
   return isParagraphPage;
 };
@@ -543,9 +546,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
   const pagePreview = pagePreviews.get(selectedPage);
+  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
 
   // Detect if current page contains paragraph-heavy content
-  const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups), [pageGroups]);
+  const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups, pageWidth), [pageGroups, pageWidth]);
   const isParagraphLayout =
     externalGroupingMode === 'paragraph' || (externalGroupingMode === 'auto' && isParagraphPage);
 
@@ -788,7 +792,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       ),
     [pageImages],
   );
-  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
   const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
   const scaledWidth = pageWidth * scale;
   const scaledHeight = pageHeight * scale;
@@ -1036,14 +1039,37 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             position: 'absolute',
             top: -8,
             right: -8,
-            zIndex: 10,
+            zIndex: 9999,
             cursor: 'pointer',
+            pointerEvents: 'auto',
+          }}
+          onMouseDown={(event) => {
+            console.log(`❌ MOUSEDOWN on X button for group ${groupId}`);
+            event.stopPropagation();
+            event.preventDefault();
+
+            // Find the current group to check if it's already empty
+            const currentGroups = groupsByPage[pageIndex] ?? [];
+            const currentGroup = currentGroups.find(g => g.id === groupId);
+            const currentText = (currentGroup?.text ?? '').trim();
+
+            if (currentText.length === 0) {
+              // Already empty - remove the textbox entirely
+              console.log(`   Text already empty, removing textbox`);
+              onGroupDelete(pageIndex, groupId);
+              setActiveGroupId(null);
+              setEditingGroupId(null);
+            } else {
+              // Has text - clear it but keep the textbox
+              console.log(`   Clearing text (textbox remains)`);
+              onGroupEdit(pageIndex, groupId, '');
+            }
+            console.log(`   Operation completed`);
           }}
           onClick={(event) => {
+            console.log(`❌ X button ONCLICK fired for group ${groupId} on page ${pageIndex}`);
             event.stopPropagation();
-            onGroupDelete(pageIndex, groupId);
-            setActiveGroupId(null);
-            setEditingGroupId(null);
+            event.preventDefault();
           }}
         >
           <CloseIcon style={{ fontSize: 12 }} />
