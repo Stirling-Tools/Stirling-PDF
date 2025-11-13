@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
+import { Button } from '@mantine/core';
 
 // OAuth provider configuration
 const oauthProviders = [
@@ -26,14 +27,15 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       <div className="oauth-container-icons">
         {enabledProviders.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
-            <button
+            <Button
               onClick={() => onProviderClick(p.id as any)}
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
+              variant="default"
             >
               <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-small"/>
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -45,14 +47,15 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       <div className="oauth-container-grid">
         {enabledProviders.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
-            <button
+            <Button
               onClick={() => onProviderClick(p.id as any)}
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
+              variant="default"
             >
               <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-medium"/>
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -62,16 +65,17 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   return (
     <div className="oauth-container-vertical">
       {enabledProviders.map((p) => (
-        <button
+        <Button
           key={p.id}
           onClick={() => onProviderClick(p.id as any)}
           disabled={isSubmitting}
           className="oauth-button-vertical"
           title={p.label}
+          variant="default"
+          leftSection={<img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />}
         >
-          <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
           {p.label}
-        </button>
+        </Button>
       ))}
     </div>
   );

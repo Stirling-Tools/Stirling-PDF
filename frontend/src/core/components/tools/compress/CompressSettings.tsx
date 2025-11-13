@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
@@ -12,7 +11,6 @@ interface CompressSettingsProps {
 
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const [isSliding, setIsSliding] = useState(false);
 
   return (
     <Stack gap="md">
@@ -35,50 +33,19 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         <Stack gap="sm">
           <Divider />
           <Text size="sm" fw={500}>Compression Level</Text>
-          <div style={{ position: 'relative' }}>
-            <input
-              type="range"
-              min="1"
-              max="9"
-              step="1"
-              value={parameters.compressionLevel}
-              onChange={(e) => onParameterChange('compressionLevel', parseInt(e.target.value))}
-              onMouseDown={() => setIsSliding(true)}
-              onMouseUp={() => setIsSliding(false)}
-              onTouchStart={() => setIsSliding(true)}
-              onTouchEnd={() => setIsSliding(false)}
-              disabled={disabled}
-              style={{
-                width: '100%',
-                height: '6px',
-                borderRadius: '3px',
-                background: `linear-gradient(to right, #228be6 0%, #228be6 ${(parameters.compressionLevel - 1) / 8 * 100}%, #e9ecef ${(parameters.compressionLevel - 1) / 8 * 100}%, #e9ecef 100%)`,
-                outline: 'none',
-                WebkitAppearance: 'none'
-              }}
-            />
-            {isSliding && (
-              <div style={{
-                position: 'absolute',
-                top: '-25px',
-                left: `${(parameters.compressionLevel - 1) / 8 * 100}%`,
-                transform: 'translateX(-50%)',
-                background: '#f8f9fa',
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                fontSize: '12px',
-                color: '#228be6',
-                whiteSpace: 'nowrap'
-              }}>
-                {parameters.compressionLevel}
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6c757d' }}>
-            <span>Min 1</span>
-            <span>Max 9</span>
-          </div>
+          <Slider
+            min={1}
+            max={9}
+            step={1}
+            value={parameters.compressionLevel}
+            onChange={(value) => onParameterChange('compressionLevel', value)}
+            disabled={disabled}
+            marks={[
+              { value: 1, label: 'Min 1' },
+              { value: 9, label: 'Max 9' },
+            ]}
+            label={(value) => `${value}`}
+          />
           <Text size="xs" c="dimmed" style={{ marginTop: '8px' }}>
             {parameters.compressionLevel <= 3 && "1-3 PDF compression"}
             {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && "4-6 lite image compression"}
