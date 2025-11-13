@@ -551,9 +551,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups), [pageGroups]);
   const isParagraphLayout =
     externalGroupingMode === 'paragraph' || (externalGroupingMode === 'auto' && isParagraphPage);
-  const paragraphWhiteSpace = isParagraphLayout ? 'pre-wrap' : 'pre';
-  const paragraphWordBreak = isParagraphLayout ? 'break-word' : 'normal';
-  const paragraphOverflowWrap = isParagraphLayout ? 'break-word' : 'normal';
 
   const syncEditorValue = useCallback(
     (
@@ -847,8 +844,16 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           return;
         }
 
-        // Skip multi-line paragraphs - auto-scaling doesn't work well with wrapped text
+        // Only apply auto-scaling to unchanged text
+        const hasChanges = group.text !== group.originalText;
+        if (hasChanges) {
+          newScales.set(group.id, 1);
+          return;
+        }
+
         const lineCount = (group.text || '').split('\n').length;
+
+        // Skip multi-line paragraphs - auto-scaling doesn't work well with wrapped text
         if (lineCount > 1) {
           newScales.set(group.id, 1);
           return;
@@ -901,6 +906,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     scale,
     fontFamilies.size,
     selectedPage,
+    isParagraphLayout,
   ]);
 
   useLayoutEffect(() => {
@@ -1636,13 +1642,29 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                       const textColor = group.color || '#111827';
                       const fontWeight = group.fontWeight || getFontWeight(effectiveFontId, group.pageIndex);
 
+                      // Determine text wrapping behavior based on whether text has been changed
+                      const hasChanges = changed;
+                      const shouldWrap = hasChanges && isParagraphLayout;
+                      const whiteSpace = shouldWrap ? 'pre-wrap' : 'pre';
+                      const wordBreak = shouldWrap ? 'break-word' : 'normal';
+                      const overflowWrap = shouldWrap ? 'break-word' : 'normal';
+
+                      // For paragraph mode, allow height to grow to accommodate lines without wrapping
+                      // For single-line mode, maintain fixed height based on PDF bounds
+                      const useFlexibleHeight = isEditing || shouldWrap || (isParagraphLayout && lineCount > 1);
+
+                      // The renderGroupContainer wrapper adds 4px horizontal padding (2px left + 2px right)
+                      // We need to add this to the container width to compensate, so the inner content
+                      // has the full PDF-defined width available for text
+                      const WRAPPER_HORIZONTAL_PADDING = 4;
+
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
                         left: `${containerLeft}px`,
                         top: `${containerTop}px`,
-                        width: `${containerWidth}px`,
-                        height: isEditing ? 'auto' : `${containerHeight}px`,
-                        minHeight: `${containerHeight}px`,
+                        width: `${containerWidth + WRAPPER_HORIZONTAL_PADDING}px`,
+                        height: useFlexibleHeight ? 'auto' : `${containerHeight}px`,
+                        minHeight: useFlexibleHeight ? 'auto' : `${containerHeight}px`,
                         display: 'flex',
                         alignItems: 'flex-start',
                         justifyContent: 'flex-start',
@@ -1718,9 +1740,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                   outline: 'none',
                                   border: 'none',
                                   display: 'block',
-                                  whiteSpace: paragraphWhiteSpace,
-                                  wordBreak: paragraphWordBreak,
-                                  overflowWrap: paragraphOverflowWrap,
+                                  whiteSpace: isParagraphLayout ? 'pre-wrap' : 'pre',
+                                  wordBreak: isParagraphLayout ? 'break-word' : 'normal',
+                                  overflowWrap: isParagraphLayout ? 'break-word' : 'normal',
                                   cursor: 'text',
                                   overflow: 'visible',
                                 }}
@@ -1748,9 +1770,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 width: '100%',
                                 minHeight: '100%',
                                 padding: 0,
-                                whiteSpace: paragraphWhiteSpace,
-                                wordBreak: paragraphWordBreak,
-                                overflowWrap: paragraphOverflowWrap,
+                                whiteSpace,
+                                wordBreak,
+                                overflowWrap,
                                 fontSize: `${fontSizePx}px`,
                                 fontFamily,
                                 fontWeight,
@@ -1758,17 +1780,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 color: textColor,
                                 display: 'block',
                                 cursor: 'text',
-                                overflow: 'hidden',
+                                overflow: shouldWrap ? 'visible' : 'hidden',
                               }}
                             >
                               <span
                                 data-text-content
                                 style={{
                                   pointerEvents: 'none',
-                                  display: 'inline-block',
+                                  display: shouldWrap ? 'inline' : 'inline-block',
                                   transform: shouldScale ? `scaleX(${textScale})` : 'none',
                                   transformOrigin: 'left center',
-                                  whiteSpace: paragraphWhiteSpace,
+                                  whiteSpace,
                                 }}
                               >
                                 {group.text || '\u00A0'}
