@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionCreateRequest;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
@@ -26,8 +28,12 @@ public class ChatbotService {
     private final ChatbotCacheService cacheService;
     private final ChatbotFeatureProperties featureProperties;
     private final AuditService auditService;
+    private final UserService userService;
 
     public ChatbotSession createSession(ChatbotSessionCreateRequest request) {
+        if (!StringUtils.hasText(request.getUserId())) {
+            request.setUserId(userService.getCurrentUsername());
+        }
         ChatbotSession session = ingestionService.ingest(request);
         log.debug("Chatbot session {} initialised", session.getSessionId());
         audit(

@@ -33,7 +33,20 @@ export default function AuthCallback() {
 
         // Store JWT in localStorage
         localStorage.setItem('stirling_jwt', token);
-        console.log('[AuthCallback] JWT stored in localStorage');
+        console.log('[AuthCallback] JWT stored in localStorage after OAuth');
+        console.log('[AuthCallback] JWT token length:', token.length);
+
+        // Verify it was actually saved
+        const savedToken = localStorage.getItem('stirling_jwt');
+        if (!savedToken) {
+          console.error('[AuthCallback] CRITICAL: JWT was not saved to localStorage!');
+          // Try again
+          localStorage.setItem('stirling_jwt', token);
+        } else if (savedToken !== token) {
+          console.error('[AuthCallback] CRITICAL: Saved token differs from received token!');
+        } else {
+          console.log('[AuthCallback] ✓ Verified JWT is correctly saved in localStorage');
+        }
 
         // Dispatch custom event for other components to react to JWT availability
         window.dispatchEvent(new CustomEvent('jwt-available'));

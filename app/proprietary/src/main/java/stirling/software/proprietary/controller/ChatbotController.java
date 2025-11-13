@@ -21,6 +21,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionCreateRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionResponse;
+import stirling.software.proprietary.model.chatbot.ChatbotUsageSummary;
 import stirling.software.proprietary.service.chatbot.ChatbotCacheService;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
@@ -28,12 +29,10 @@ import stirling.software.proprietary.service.chatbot.ChatbotService;
 import stirling.software.proprietary.service.chatbot.ChatbotSessionRegistry;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
-@RestController
-@RequestMapping("/api/v1/internal/chatbot")
-@RequiredArgsConstructor
 @Slf4j
-// @ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
-// @ConditionalOnBean(ChatbotService.class)
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/internal/chatbot")
 public class ChatbotController {
 
     private final ChatbotService chatbotService;
@@ -54,10 +53,12 @@ public class ChatbotController {
                         .ocrRequested(session.isOcrRequested())
                         .imageContentDetected(session.isImageContentDetected())
                         .textCharacters(session.getTextCharacters())
+                        .estimatedTokens(session.getEstimatedTokens())
                         .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
                         .createdAt(session.getCreatedAt())
                         .warnings(sessionWarnings(settings, session))
                         .metadata(session.getMetadata())
+                        .usageSummary(session.getUsageSummary())
                         .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -83,10 +84,12 @@ public class ChatbotController {
                         .ocrRequested(session.isOcrRequested())
                         .imageContentDetected(session.isImageContentDetected())
                         .textCharacters(session.getTextCharacters())
+                        .estimatedTokens(session.getEstimatedTokens())
                         .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
                         .createdAt(session.getCreatedAt())
                         .warnings(sessionWarnings(settings, session))
                         .metadata(session.getMetadata())
+                        .usageSummary(session.getUsageSummary())
                         .build();
         return ResponseEntity.ok(response);
     }
@@ -106,7 +109,16 @@ public class ChatbotController {
 
         warnings.add("Only extracted text is sent for analysis.");
         if (session != null && session.isOcrRequested()) {
-            warnings.add("OCR was requested – extra processing charges may apply.");
+            warnings.add("OCR requested – uses credits .");
+        }
+
+        if (session != null && session.getUsageSummary() != null) {
+            ChatbotUsageSummary usage = session.getUsageSummary();
+            if (usage.isLimitExceeded()) {
+                warnings.add("Monthly chatbot allocation exceeded – requests may be throttled.");
+            } else if (usage.isNearingLimit()) {
+                warnings.add("You are approaching the monthly chatbot allocation.");
+            }
         }
 
         return warnings;

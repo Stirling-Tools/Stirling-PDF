@@ -97,11 +97,13 @@ premium:
       cache:
         ttlMinutes: 720 # Cache entry lifetime (12h)
         maxEntries: 200 # Maximum number of cached documents per node
-        maxDocumentCharacters: 200000 # Reject uploads exceeding this character count
+        maxDocumentCharacters: 600000 # Reject uploads exceeding this character count
       models:
         primary: gpt-5-nano # Default lightweight model
         fallback: gpt-5-mini # Escalation model for complex prompts
         embedding: text-embedding-3-small # Embedding model for vector store usage
+        temperature: 0.2 # Sampling temperature for LLM responses
+        topP: 0.95 # Top-p (nucleus) sampling for LLM responses
       rag:
         chunkSizeTokens: 512 # Token window used when chunking text
         chunkOverlapTokens: 128 # Overlap between successive chunks
@@ -112,6 +114,9 @@ premium:
         enabled: true # Emit audit records for chatbot activity
       maxPromptCharacters: 4000 # Server-side guardrail for incoming prompts
       minConfidenceNano: 0.65 # Minimum nano confidence to avoid escalation
+      usage:
+        perUserMonthlyTokens: 200000 # Monthly RAG + chat token budget per user
+        warnAtRatio: 0.7 # Warn users when usage exceeds 70%
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging

@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionCreateRequest;
-import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 import stirling.software.proprietary.service.chatbot.exception.NoTextDetectedException;
@@ -30,7 +28,8 @@ public class ChatbotIngestionService {
     private final ChatbotCacheService cacheService;
     private final ChatbotSessionRegistry sessionRegistry;
     private final ChatbotFeatureProperties featureProperties;
-    private final EmbeddingModel embeddingModel;
+    private final VectorStore vectorStore;
+    private final ChatbotUsageService usageService;
 
     public ChatbotSession ingest(ChatbotSessionCreateRequest request) {
         ChatbotSettings settings = featureProperties.current();
@@ -40,10 +39,16 @@ public class ChatbotIngestionService {
         if (!request.isWarningsAccepted() && settings.alphaWarning()) {
             throw new ChatbotException("Alpha warning must be accepted before use");
         }
-        boolean hasText = StringUtils.hasText(request.getText());
-        if (!hasText) {
+        if (!StringUtils.hasText(request.getText())) {
             throw new NoTextDetectedException(
                     "No text detected in document payload. Images are currently unsupported – enable OCR to continue.");
+        }
+
+        long characterLimit = cacheService.getMaxDocumentCharacters();
+        long textCharacters = request.getText().length();
+        if (textCharacters > characterLimit) {
+            throw new ChatbotException(
+                    "Document text exceeds maximum allowed characters: " + characterLimit);
         }
 
         String sessionId =
@@ -51,7 +56,6 @@ public class ChatbotIngestionService {
                         ? request.getSessionId()
                         : ChatbotSession.randomSessionId();
         boolean imagesDetected = request.isImagesDetected();
-        long textCharacters = request.getText().length();
         boolean ocrApplied = request.isOcrRequested();
         Map<String, String> metadata = new HashMap<>();
         if (request.getMetadata() != null) {
@@ -63,23 +67,28 @@ public class ChatbotIngestionService {
                 "content.extractionSource", ocrApplied ? "ocr-text-layer" : "embedded-text-layer");
         Map<String, String> immutableMetadata = Map.copyOf(metadata);
 
+        List<Document> documents =
+                buildDocuments(
+                        sessionId, request.getDocumentId(), request.getText(), metadata, settings);
+        try {
+            vectorStore.add(documents);
+        } catch (RuntimeException ex) {
+            throw new ChatbotException(
+                    "Failed to index document content in vector store: "
+                            + sanitizeRemoteMessage(ex.getMessage()),
+                    ex);
+        }
+
         String cacheKey =
                 cacheService.register(
                         sessionId,
                         request.getDocumentId(),
-                        request.getText(),
                         immutableMetadata,
                         ocrApplied,
                         imagesDetected,
                         textCharacters);
 
-        List<String> chunkTexts =
-                chunkText(
-                        request.getText(),
-                        settings.rag().chunkSizeTokens(),
-                        settings.rag().chunkOverlapTokens());
-        List<ChatbotTextChunk> chunks = embedChunks(sessionId, cacheKey, chunkTexts, metadata);
-        cacheService.attachChunks(cacheKey, chunks);
+        long estimatedTokens = Math.max(1L, Math.round(textCharacters / 4.0));
 
         ChatbotSession session =
                 ChatbotSession.builder()
@@ -90,93 +99,65 @@ public class ChatbotIngestionService {
                         .ocrRequested(ocrApplied)
                         .imageContentDetected(imagesDetected)
                         .textCharacters(textCharacters)
+                        .estimatedTokens(estimatedTokens)
                         .warningsAccepted(request.isWarningsAccepted())
                         .alphaWarningRequired(settings.alphaWarning())
                         .cacheKey(cacheKey)
                         .createdAt(Instant.now())
                         .build();
+        session.setUsageSummary(
+                usageService.registerIngestion(session.getUserId(), estimatedTokens));
         sessionRegistry.register(session);
         log.info(
-                "Registered chatbot session {} for document {} with {} chunks",
+                "Registered chatbot session {} for document {} with {} RAG chunks",
                 sessionId,
                 request.getDocumentId(),
-                chunks.size());
+                documents.size());
         return session;
     }
 
-    private List<String> chunkText(String text, int chunkSizeTokens, int overlapTokens) {
-        String[] tokens = text.split("\\s+");
-        List<String> chunks = new ArrayList<>();
-        if (tokens.length == 0) {
-            return chunks;
+    private List<Document> buildDocuments(
+            String sessionId,
+            String documentId,
+            String text,
+            Map<String, String> metadata,
+            ChatbotSettings settings) {
+        List<Document> documents = new ArrayList<>();
+        if (!StringUtils.hasText(text)) {
+            return documents;
         }
-        int effectiveChunk = Math.max(chunkSizeTokens, 1);
-        int effectiveOverlap = Math.max(Math.min(overlapTokens, effectiveChunk - 1), 0);
+
+        int chunkChars = Math.max(512, settings.rag().chunkSizeTokens() * 4);
+        int overlapChars = Math.max(64, settings.rag().chunkOverlapTokens() * 4);
+
         int index = 0;
-        while (index < tokens.length) {
-            int end = Math.min(tokens.length, index + effectiveChunk);
-            String chunk = String.join(" ", java.util.Arrays.copyOfRange(tokens, index, end));
-            if (StringUtils.hasText(chunk)) {
-                chunks.add(chunk);
+        int order = 0;
+        while (index < text.length()) {
+            int end = Math.min(text.length(), index + chunkChars);
+            String chunk = text.substring(index, end).trim();
+            if (!chunk.isEmpty()) {
+                Document document = new Document(chunk);
+                document.getMetadata().putAll(metadata);
+                document.getMetadata().put("sessionId", sessionId);
+                document.getMetadata().put("documentId", documentId);
+                document.getMetadata().put("chunkOrder", Integer.toString(order));
+                documents.add(document);
+                order++;
             }
-            if (end == tokens.length) {
+            if (end == text.length()) {
                 break;
             }
-            index = end - effectiveOverlap;
-            if (index <= 0) {
-                index = end;
+            int nextIndex = end - overlapChars;
+            if (nextIndex <= index) {
+                nextIndex = end;
             }
+            index = nextIndex;
         }
-        return chunks;
-    }
 
-    private List<ChatbotTextChunk> embedChunks(
-            String sessionId,
-            String cacheKey,
-            List<String> chunkTexts,
-            Map<String, String> metadata) {
-        if (chunkTexts.isEmpty()) {
-            throw new ChatbotException("Unable to split document text into retrievable chunks");
+        if (documents.isEmpty()) {
+            throw new ChatbotException("Unable to split document text into searchable chunks");
         }
-        EmbeddingResponse response;
-        try {
-            response = embeddingModel.embedForResponse(chunkTexts);
-        } catch (org.eclipse.jetty.client.HttpResponseException ex) {
-            throw new ChatbotException(
-                    "Embedding provider rejected the request: "
-                            + sanitizeRemoteMessage(ex.getMessage()),
-                    ex);
-        } catch (RuntimeException ex) {
-            throw new ChatbotException(
-                    "Failed to compute embeddings for chatbot ingestion: "
-                            + sanitizeRemoteMessage(ex.getMessage()),
-                    ex);
-        }
-        if (response.getResults().size() != chunkTexts.size()) {
-            throw new ChatbotException("Mismatch between chunks and embedding results");
-        }
-        List<ChatbotTextChunk> chunks = new ArrayList<>();
-        for (int i = 0; i < chunkTexts.size(); i++) {
-            String chunkId = sessionId + ":" + i + ":" + UUID.randomUUID();
-            float[] embeddingArray = response.getResults().get(i).getOutput();
-            List<Double> embedding = new ArrayList<>(embeddingArray.length);
-            for (float value : embeddingArray) {
-                embedding.add((double) value);
-            }
-            chunks.add(
-                    ChatbotTextChunk.builder()
-                            .id(chunkId)
-                            .order(i)
-                            .text(chunkTexts.get(i))
-                            .embedding(embedding)
-                            .build());
-        }
-        log.debug(
-                "Computed embeddings for session {} cacheKey {} ({} vectors)",
-                sessionId,
-                cacheKey,
-                chunks.size());
-        return chunks;
+        return documents;
     }
 
     private String sanitizeRemoteMessage(String message) {

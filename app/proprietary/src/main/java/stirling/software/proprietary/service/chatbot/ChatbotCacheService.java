@@ -2,7 +2,6 @@ package stirling.software.proprietary.service.chatbot;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,15 +20,14 @@ import stirling.software.common.model.ApplicationProperties.Premium;
 import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures;
 import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.Chatbot;
 import stirling.software.proprietary.model.chatbot.ChatbotDocumentCacheEntry;
-import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
-import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Service
 // @ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 @Slf4j
 public class ChatbotCacheService {
 
-    private final Cache<String, ChatbotDocumentCacheEntry> documentCache;
+    private final Cache<String, ChatbotDocumentCacheEntry>
+            documentCache; // todo: can redis be used instead?
     private final long maxDocumentCharacters;
     private final Map<String, String> sessionToCacheKey = new ConcurrentHashMap<>();
 
@@ -61,18 +59,12 @@ public class ChatbotCacheService {
     public String register(
             String sessionId,
             String documentId,
-            String rawText,
             Map<String, String> metadata,
             boolean ocrApplied,
             boolean imageContentDetected,
             long textCharacters) {
         Objects.requireNonNull(sessionId, "sessionId must not be null");
         Objects.requireNonNull(documentId, "documentId must not be null");
-        Objects.requireNonNull(rawText, "rawText must not be null");
-        if (rawText.length() > maxDocumentCharacters) {
-            throw new ChatbotException(
-                    "Document text exceeds maximum allowed characters: " + maxDocumentCharacters);
-        }
         String cacheKey =
                 sessionToCacheKey.computeIfAbsent(sessionId, k -> UUID.randomUUID().toString());
         ChatbotDocumentCacheEntry entry =
@@ -81,7 +73,6 @@ public class ChatbotCacheService {
                         .sessionId(sessionId)
                         .documentId(documentId)
                         .metadata(metadata)
-                        .text(rawText)
                         .ocrApplied(ocrApplied)
                         .imageContentDetected(imageContentDetected)
                         .textCharacters(textCharacters)
@@ -89,17 +80,6 @@ public class ChatbotCacheService {
                         .build();
         documentCache.put(cacheKey, entry);
         return cacheKey;
-    }
-
-    public void attachChunks(String cacheKey, List<ChatbotTextChunk> chunks) {
-        documentCache
-                .asMap()
-                .computeIfPresent(
-                        cacheKey,
-                        (key, existing) -> {
-                            existing.setChunks(chunks);
-                            return existing;
-                        });
     }
 
     public Optional<ChatbotDocumentCacheEntry> resolveByCacheKey(String cacheKey) {

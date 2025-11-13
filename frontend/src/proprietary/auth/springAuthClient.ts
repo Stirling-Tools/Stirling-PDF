@@ -123,7 +123,7 @@ class SpringAuthClient {
       const token = localStorage.getItem('stirling_jwt');
 
       if (!token) {
-        // console.debug('[SpringAuth] getSession: No JWT in localStorage');
+        // console.warn('[SpringAuth] getSession: No JWT found in localStorage!');
         return { data: { session: null }, error: null };
       }
 
@@ -190,7 +190,18 @@ class SpringAuthClient {
 
       // Store JWT in localStorage
       localStorage.setItem('stirling_jwt', token);
-      // console.log('[SpringAuth] JWT stored in localStorage');
+
+      // Verify it was actually saved
+      const savedToken = localStorage.getItem('stirling_jwt');
+      if (!savedToken) {
+        console.error('[SpringAuth] CRITICAL: JWT was not saved to localStorage!');
+        // Try again
+        localStorage.setItem('stirling_jwt', token);
+      } else if (savedToken !== token) {
+        console.error('[SpringAuth] CRITICAL: Saved token differs from received token!');
+      } else {
+        console.log('[SpringAuth] ✓ Verified JWT is correctly saved in localStorage');
+      }
 
       // Dispatch custom event for other components to react to JWT availability
       window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -319,19 +330,37 @@ class SpringAuthClient {
       });
 
       const data = response.data;
-      const token = data.session.access_token;
+
+      // Handle different response structures - the API might return the token directly or nested
+      const token = data?.session?.access_token || data?.access_token || data?.token;
+
+      if (!token) {
+        console.error('[SpringAuth] refreshSession: No access token in response:', data);
+        throw new Error('No access token received from refresh endpoint');
+      }
 
       // Update local storage with new token
       localStorage.setItem('stirling_jwt', token);
+      console.log('[SpringAuth] refreshSession: New JWT stored in localStorage');
+
+      // Verify it was saved
+      const savedToken = localStorage.getItem('stirling_jwt');
+      if (savedToken !== token) {
+        console.error('[SpringAuth] CRITICAL: JWT was not properly saved during refresh!');
+      } else {
+        console.log('[SpringAuth] refreshSession: ✓ JWT refreshed and verified in localStorage');
+      }
 
       // Dispatch custom event for other components to react to JWT availability
       window.dispatchEvent(new CustomEvent('jwt-available'));
 
+      // Build session object, handling different response structures
+      const expires_in = data?.session?.expires_in || data?.expires_in || 3600; // Default to 1 hour
       const session: Session = {
-        user: data.user,
+        user: data?.user || data?.session?.user || null,
         access_token: token,
-        expires_in: data.session.expires_in,
-        expires_at: Date.now() + data.session.expires_in * 1000,
+        expires_in: expires_in,
+        expires_at: Date.now() + expires_in * 1000,
       };
 
       // Notify listeners

@@ -1,5 +1,16 @@
 import apiClient from '@app/services/apiClient';
 
+export interface ChatbotUsageSummary {
+  allocatedTokens: number;
+  consumedTokens: number;
+  remainingTokens: number;
+  usageRatio: number;
+  nearingLimit: boolean;
+  limitExceeded: boolean;
+  lastIncrementTokens: number;
+  window?: string;
+}
+
 export interface ChatbotSessionPayload {
   sessionId?: string;
   documentId: string;
@@ -17,8 +28,11 @@ export interface ChatbotSessionInfo {
   ocrRequested: boolean;
   maxCachedCharacters: number;
   createdAt: string;
+  textCharacters: number;
+  estimatedTokens: number;
   warnings?: string[];
   metadata?: Record<string, string>;
+  usageSummary?: ChatbotUsageSummary;
 }
 
 export interface ChatbotQueryPayload {
@@ -37,6 +51,10 @@ export interface ChatbotMessageResponse {
   cacheHit?: boolean;
   warnings?: string[];
   metadata?: Record<string, unknown>;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  usageSummary?: ChatbotUsageSummary;
 }
 
 export async function createChatbotSession(payload: ChatbotSessionPayload) {
@@ -48,4 +66,3 @@ export async function sendChatbotPrompt(payload: ChatbotQueryPayload) {
   const { data } = await apiClient.post<ChatbotMessageResponse>('/api/v1/internal/chatbot/query', payload);
   return data;
 }
-

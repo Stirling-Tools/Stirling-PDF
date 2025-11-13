@@ -26,6 +26,10 @@ public class ChatbotResponse {
     private Instant respondedAt;
     private List<String> warnings;
     private Map<String, Object> metadata;
+    private long promptTokens;
+    private long completionTokens;
+    private long totalTokens;
+    private ChatbotUsageSummary usageSummary;
 
     public List<String> getWarnings() {
         return warnings == null ? Collections.emptyList() : warnings;

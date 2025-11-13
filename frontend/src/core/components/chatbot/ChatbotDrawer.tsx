@@ -30,6 +30,7 @@ import { runOcrForChat } from '@app/services/chatbotOcrService';
 import {
   ChatbotMessageResponse,
   ChatbotSessionInfo,
+  ChatbotUsageSummary,
   createChatbotSession,
   sendChatbotPrompt,
 } from '@app/services/chatbotService';
@@ -81,6 +82,7 @@ const ChatbotDrawer = () => {
   const [pendingOcrRetry, setPendingOcrRetry] = useState(false);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const [panelAnchor, setPanelAnchor] = useState<{ right: number; top: number } | null>(null);
+  const usageAlertState = useRef<'none' | 'warned' | 'limit'>('none');
 
   const selectedFile = useMemo<StirlingFile | undefined>(
     () => files.find((file) => file.fileId === selectedFileId),
@@ -119,6 +121,39 @@ const ChatbotDrawer = () => {
       });
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    usageAlertState.current = 'none';
+  }, [sessionInfo?.sessionId]);
+
+  const maybeShowUsageWarning = (usage?: ChatbotUsageSummary | null) => {
+    if (!usage) {
+      return;
+    }
+    if (usage.limitExceeded && usageAlertState.current !== 'limit') {
+      usageAlertState.current = 'limit';
+      show({
+        alertType: 'warning',
+        title: t('chatbot.usage.limitReachedTitle', 'Chatbot limit reached'),
+        body: t(
+          'chatbot.usage.limitReachedBody',
+          'You have exceeded the current monthly allocation for the chatbot. Further responses may be throttled.'
+        ),
+      });
+      return;
+    }
+    if (usage.nearingLimit && usageAlertState.current === 'none') {
+      usageAlertState.current = 'warned';
+      show({
+        alertType: 'warning',
+        title: t('chatbot.usage.nearingLimitTitle', 'Approaching usage limit'),
+        body: t(
+          'chatbot.usage.nearingLimitBody',
+          'You are nearing your monthly chatbot allocation. Consider limiting very large requests.'
+        ),
+      });
+    }
+  };
 
   useEffect(() => {
     if (sessionInfo && sessionInfo.documentId !== selectedFileId) {
@@ -245,6 +280,7 @@ const ChatbotDrawer = () => {
       );
 
       setSessionInfo(response);
+      maybeShowUsageWarning(response.usageSummary);
       setContextStats({
         pageCount: extractionResult.pageCount,
         characterCount: extractionResult.characterCount,
@@ -295,6 +331,7 @@ const ChatbotDrawer = () => {
         prompt: trimmedPrompt,
         allowEscalation: true,
       });
+      maybeShowUsageWarning(reply.usageSummary);
       setWarnings(reply.warnings ?? []);
       const assistant = convertAssistantMessage(reply);
       setMessages((prev) => [...prev, assistant]);

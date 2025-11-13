@@ -95,6 +95,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.debug('[Auth] Initializing auth...');
 
+        // Skip auth check if we're on auth pages
+        // Need to check for paths with or without base path
+        const pathname = window.location.pathname;
+        const isAuthPage = pathname.endsWith('/login') ||
+                          pathname.endsWith('/signup') ||
+                          pathname.endsWith('/auth/callback') ||
+                          pathname.includes('/auth/') ||
+                          pathname.includes('/invite/');
+
+        if (isAuthPage) {
+          console.log('[Auth] On auth page, completely skipping session check');
+          console.log('[Auth] Current path:', pathname);
+          setLoading(false);
+          return;
+        }
+
+        // GUARD: Check if JWT exists before making session call
+        const hasJWT = localStorage.getItem('stirling_jwt');
+        if (!hasJWT) {
+          console.debug('[Auth] No JWT token found, skipping session check');
+          setLoading(false);
+          return;
+        }
+
         // Skip config check entirely - let the app handle login state
         // The config will be fetched by useAppConfig when needed
         const { data, error } = await springAuth.getSession();
@@ -127,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     // Listen for jwt-available event (triggered by desktop auth or other sources)
-    const handleJwtAvailable = () => {
+    const handleJwtAvailable = async () => {
       console.debug('[Auth] JWT available event received, refreshing session');
       void initializeAuth();
     };

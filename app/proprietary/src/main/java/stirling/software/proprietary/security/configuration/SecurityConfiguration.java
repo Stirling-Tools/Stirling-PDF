@@ -11,7 +11,6 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -85,8 +84,7 @@ public class SecurityConfiguration {
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
-    private final stirling.software.proprietary.service.UserLicenseSettingsService
-            licenseSettingsService;
+    private final UserLicenseSettingsService licenseSettingsService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -107,8 +105,7 @@ public class SecurityConfiguration {
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
                     OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
-            stirling.software.proprietary.service.UserLicenseSettingsService
-                    licenseSettingsService) {
+            UserLicenseSettingsService licenseSettingsService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -222,9 +219,19 @@ public class SecurityConfiguration {
                                 csrf.ignoringRequestMatchers(
                                                 request -> {
                                                     String uri = request.getRequestURI();
+                                                    String contextPath = request.getContextPath();
+                                                    String trimmedUri =
+                                                            uri.startsWith(contextPath)
+                                                                    ? uri.substring(
+                                                                            contextPath.length())
+                                                                    : uri;
 
-                                                    // Ignore CSRF for auth endpoints
-                                                    if (uri.startsWith("/api/v1/auth/")) {
+                                                    // Ignore CSRF for auth endpoints + oauth/saml
+                                                    if (trimmedUri.startsWith("/api/v1/auth/")
+                                                            || trimmedUri.startsWith("/oauth2")
+                                                            || trimmedUri.startsWith("/saml2")
+                                                            || trimmedUri.startsWith(
+                                                                    "/login/oauth2/code/")) {
                                                         return true;
                                                     }
 
@@ -361,7 +368,8 @@ public class SecurityConfiguration {
                                                     securityProperties.getOauth2(),
                                                     userService,
                                                     jwtService,
-                                                    licenseSettingsService))
+                                                    licenseSettingsService,
+                                                    applicationProperties))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(

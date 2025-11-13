@@ -26,7 +26,9 @@ public class ChatbotFeatureProperties {
                         resolveProvider(chatbot.getModels().getProvider()),
                         chatbot.getModels().getPrimary(),
                         chatbot.getModels().getFallback(),
-                        chatbot.getModels().getEmbedding());
+                        chatbot.getModels().getEmbedding(),
+                        chatbot.getModels().getTemperature(),
+                        chatbot.getModels().getTopP());
         return new ChatbotSettings(
                 chatbot.isEnabled(),
                 chatbot.isAlphaWarning(),
@@ -42,7 +44,10 @@ public class ChatbotFeatureProperties {
                         chatbot.getCache().getMaxEntries(),
                         chatbot.getCache().getMaxDocumentCharacters()),
                 new ChatbotSettings.OcrSettings(chatbot.getOcr().isEnabledByDefault()),
-                new ChatbotSettings.AuditSettings(chatbot.getAudit().isEnabled()));
+                new ChatbotSettings.AuditSettings(chatbot.getAudit().isEnabled()),
+                new ChatbotSettings.UsageSettings(
+                        chatbot.getUsage().getPerUserMonthlyTokens(),
+                        chatbot.getUsage().getWarnAtRatio()));
     }
 
     public boolean isEnabled() {
@@ -77,10 +82,16 @@ public class ChatbotFeatureProperties {
             RagSettings rag,
             CacheSettings cache,
             OcrSettings ocr,
-            AuditSettings audit) {
+            AuditSettings audit,
+            UsageSettings usage) {
 
         public record ModelSettings(
-                ModelProvider provider, String primary, String fallback, String embedding) {}
+                ModelProvider provider,
+                String primary,
+                String fallback,
+                String embedding,
+                double temperature,
+                double topP) {}
 
         public record RagSettings(int chunkSizeTokens, int chunkOverlapTokens, int topK) {}
 
@@ -89,6 +100,8 @@ public class ChatbotFeatureProperties {
         public record OcrSettings(boolean enabledByDefault) {}
 
         public record AuditSettings(boolean enabled) {}
+
+        public record UsageSettings(long perUserMonthlyTokens, double warnAtRatio) {}
 
         public enum ModelProvider {
             OPENAI,

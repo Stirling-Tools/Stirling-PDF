@@ -50,8 +50,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
-    private final stirling.software.proprietary.service.UserLicenseSettingsService
-            licenseSettingsService;
+    private final UserLicenseSettingsService licenseSettingsService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)

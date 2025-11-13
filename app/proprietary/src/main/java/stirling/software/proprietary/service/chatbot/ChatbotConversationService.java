@@ -16,6 +16,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -32,12 +33,12 @@ import stirling.software.proprietary.model.chatbot.ChatbotDocumentCacheEntry;
 import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
-import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
+import stirling.software.proprietary.model.chatbot.ChatbotUsageSummary;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class ChatbotConversationService {
 
@@ -46,6 +47,7 @@ public class ChatbotConversationService {
     private final ChatbotCacheService cacheService;
     private final ChatbotFeatureProperties featureProperties;
     private final ChatbotRetrievalService retrievalService;
+    private final ChatbotUsageService usageService;
     private final ObjectMapper objectMapper;
     private final AtomicBoolean modelSwitchVerified = new AtomicBoolean(false);
 
@@ -74,7 +76,7 @@ public class ChatbotConversationService {
 
         List<String> warnings = buildWarnings(settings, session);
 
-        List<ChatbotTextChunk> context =
+        List<Document> context =
                 retrievalService.retrieveTopK(
                         request.getSessionId(), request.getPrompt(), settings);
 
@@ -97,16 +99,22 @@ public class ChatbotConversationService {
         boolean escalated = false;
         if (shouldEscalate) {
             escalated = true;
-            List<ChatbotTextChunk> expandedContext = ensureMinimumContext(context, cacheEntry);
             finalReply =
                     invokeModel(
                             settings,
                             settings.models().fallback(),
                             request.getPrompt(),
                             session,
-                            expandedContext,
+                            context,
                             cacheEntry.getMetadata());
         }
+
+        ChatbotUsageSummary usageSummary =
+                usageService.registerGeneration(
+                        session.getUserId(),
+                        finalReply.promptTokens(),
+                        finalReply.completionTokens());
+        session.setUsageSummary(usageSummary);
 
         return ChatbotResponse.builder()
                 .sessionId(request.getSessionId())
@@ -120,6 +128,10 @@ public class ChatbotConversationService {
                 .respondedAt(Instant.now())
                 .warnings(warnings)
                 .metadata(buildMetadata(settings, session, finalReply, context.size(), escalated))
+                .promptTokens(finalReply.promptTokens())
+                .completionTokens(finalReply.completionTokens())
+                .totalTokens(finalReply.totalTokens())
+                .usageSummary(usageSummary)
                 .build();
     }
 
@@ -151,6 +163,9 @@ public class ChatbotConversationService {
         metadata.put("modelProvider", settings.models().provider().name());
         metadata.put("imageContentDetected", session.isImageContentDetected());
         metadata.put("charactersCached", session.getTextCharacters());
+        metadata.put("promptTokens", reply.promptTokens());
+        metadata.put("completionTokens", reply.completionTokens());
+        metadata.put("totalTokens", reply.totalTokens());
         return metadata;
     }
 
@@ -179,29 +194,12 @@ public class ChatbotConversationService {
         }
     }
 
-    private List<ChatbotTextChunk> ensureMinimumContext(
-            List<ChatbotTextChunk> context, ChatbotDocumentCacheEntry entry) {
-        if (context.size() >= 3 || entry.getChunks().size() <= context.size()) {
-            return context;
-        }
-        List<ChatbotTextChunk> augmented = new ArrayList<>(context);
-        for (ChatbotTextChunk chunk : entry.getChunks()) {
-            if (augmented.size() >= 3) {
-                break;
-            }
-            if (!augmented.contains(chunk)) {
-                augmented.add(chunk);
-            }
-        }
-        return augmented;
-    }
-
     private ModelReply invokeModel(
             ChatbotSettings settings,
             String model,
             String prompt,
             ChatbotSession session,
-            List<ChatbotTextChunk> context,
+            List<Document> context,
             Map<String, String> metadata) {
         Prompt requestPrompt = buildPrompt(settings, model, prompt, session, context, metadata);
         ChatResponse response;
@@ -217,13 +215,27 @@ public class ChatbotConversationService {
                             + sanitizeRemoteMessage(ex.getMessage()),
                     ex);
         }
+        long promptTokens = 0L;
+        long completionTokens = 0L;
+        long totalTokens = 0L;
+        if (response != null && response.getMetadata() != null) {
+            org.springframework.ai.chat.metadata.Usage usage = response.getMetadata().getUsage();
+            if (usage != null) {
+                promptTokens = toLong(usage.getPromptTokens());
+                completionTokens = toLong(usage.getCompletionTokens());
+                totalTokens =
+                        usage.getTotalTokens() != null
+                                ? usage.getTotalTokens()
+                                : promptTokens + completionTokens;
+            }
+        }
         String content =
                 Optional.ofNullable(response)
                         .map(ChatResponse::getResults)
                         .filter(results -> !results.isEmpty())
                         .map(results -> results.get(0).getOutput().getText())
                         .orElse("");
-        return parseModelResponse(content);
+        return parseModelResponse(content, promptTokens, completionTokens, totalTokens);
     }
 
     private Prompt buildPrompt(
@@ -231,13 +243,13 @@ public class ChatbotConversationService {
             String model,
             String question,
             ChatbotSession session,
-            List<ChatbotTextChunk> context,
+            List<Document> context,
             Map<String, String> metadata) {
         StringBuilder contextBuilder = new StringBuilder();
-        for (ChatbotTextChunk chunk : context) {
+        for (Document chunk : context) {
             contextBuilder
                     .append("[Chunk ")
-                    .append(chunk.getOrder())
+                    .append(chunk.getMetadata().getOrDefault("chunkOrder", "?"))
                     .append("]\n")
                     .append(chunk.getText())
                     .append("\n\n");
@@ -270,18 +282,24 @@ public class ChatbotConversationService {
                         + "Question: "
                         + question;
 
-        OpenAiChatOptions options = buildChatOptions(model);
+        OpenAiChatOptions options = buildChatOptions(settings, model);
 
         return new Prompt(
                 List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)), options);
     }
 
-    private OpenAiChatOptions buildChatOptions(String model) {
-        // Note: Some models only support default temperature value of 1.0
-        return OpenAiChatOptions.builder().model(model).temperature(1.0).build();
+    private OpenAiChatOptions buildChatOptions(ChatbotSettings settings, String model) {
+        OpenAiChatOptions.Builder builder = OpenAiChatOptions.builder().model(model);
+        String normalizedModel = model == null ? "" : model.toLowerCase();
+        boolean reasoningModel = normalizedModel.startsWith("gpt-5-");
+        if (!reasoningModel) {
+            builder.temperature(settings.models().temperature()).topP(settings.models().topP());
+        }
+        return builder.build();
     }
 
-    private ModelReply parseModelResponse(String raw) {
+    private ModelReply parseModelResponse(
+            String raw, long promptTokens, long completionTokens, long totalTokens) {
         if (!StringUtils.hasText(raw)) {
             throw new ChatbotException("Model returned empty response");
         }
@@ -301,20 +319,44 @@ public class ChatbotConversationService {
                     Optional.ofNullable(node.get("rationale"))
                             .map(JsonNode::asText)
                             .orElse("Model did not provide rationale");
-            return new ModelReply(answer, confidence, requiresEscalation, rationale);
+            return new ModelReply(
+                    answer,
+                    confidence,
+                    requiresEscalation,
+                    rationale,
+                    promptTokens,
+                    completionTokens,
+                    totalTokens);
         } catch (IOException ex) {
             log.warn("Failed to parse model JSON response, returning raw text", ex);
-            return new ModelReply(raw, 0.0D, true, "Unable to parse JSON response");
+            return new ModelReply(
+                    raw,
+                    0.0D,
+                    true,
+                    "Unable to parse JSON response",
+                    promptTokens,
+                    completionTokens,
+                    totalTokens);
         }
     }
 
     private record ModelReply(
-            String answer, double confidence, boolean requiresEscalation, String rationale) {}
+            String answer,
+            double confidence,
+            boolean requiresEscalation,
+            String rationale,
+            long promptTokens,
+            long completionTokens,
+            long totalTokens) {}
 
     private String sanitizeRemoteMessage(String message) {
         if (!StringUtils.hasText(message)) {
             return "unexpected provider error";
         }
         return message.replaceAll("(?i)api[-_ ]?key\\s*=[^\\s]+", "api-key=***");
+    }
+
+    private long toLong(Integer value) {
+        return value == null ? 0L : value.longValue();
     }
 }

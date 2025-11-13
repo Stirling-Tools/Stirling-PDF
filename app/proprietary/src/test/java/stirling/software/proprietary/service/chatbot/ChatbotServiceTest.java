@@ -22,6 +22,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionCreateRequest;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 
@@ -34,6 +35,7 @@ class ChatbotServiceTest {
     @Mock private ChatbotCacheService cacheService;
     @Mock private ChatbotFeatureProperties featureProperties;
     @Mock private AuditService auditService;
+    @Mock private UserService userService;
 
     @InjectMocks private ChatbotService chatbotService;
 
@@ -52,11 +54,14 @@ class ChatbotServiceTest {
                                 ChatbotSettings.ModelProvider.OPENAI,
                                 "gpt-5-nano",
                                 "gpt-5-mini",
-                                "embed"),
+                                "embed",
+                                0.2D,
+                                0.95D),
                         new ChatbotSettings.RagSettings(512, 128, 4),
                         new ChatbotSettings.CacheSettings(60, 10, 1000),
                         new ChatbotSettings.OcrSettings(false),
-                        new ChatbotSettings.AuditSettings(true));
+                        new ChatbotSettings.AuditSettings(true),
+                        new ChatbotSettings.UsageSettings(100000L, 0.7D));
 
         auditDisabledSettings =
                 new ChatbotSettings(
@@ -68,11 +73,14 @@ class ChatbotServiceTest {
                                 ChatbotSettings.ModelProvider.OPENAI,
                                 "gpt-5-nano",
                                 "gpt-5-mini",
-                                "embed"),
+                                "embed",
+                                0.2D,
+                                0.95D),
                         new ChatbotSettings.RagSettings(512, 128, 4),
                         new ChatbotSettings.CacheSettings(60, 10, 1000),
                         new ChatbotSettings.OcrSettings(false),
-                        new ChatbotSettings.AuditSettings(false));
+                        new ChatbotSettings.AuditSettings(false),
+                        new ChatbotSettings.UsageSettings(100000L, 0.7D));
     }
 
     @Test
@@ -86,6 +94,7 @@ class ChatbotServiceTest {
                         .build();
         when(ingestionService.ingest(any())).thenReturn(session);
         when(featureProperties.current()).thenReturn(auditEnabledSettings);
+        when(userService.getCurrentUsername()).thenReturn("tester");
 
         chatbotService.createSession(
                 ChatbotSessionCreateRequest.builder().text("abc").warningsAccepted(true).build());
@@ -97,6 +106,7 @@ class ChatbotServiceTest {
                         payloadCaptor.capture());
         Map<String, Object> payload = payloadCaptor.getValue();
         verify(cacheService, times(0)).invalidateSession(any());
+        verify(userService).getCurrentUsername();
         org.junit.jupiter.api.Assertions.assertEquals("session-1", payload.get("sessionId"));
     }
 

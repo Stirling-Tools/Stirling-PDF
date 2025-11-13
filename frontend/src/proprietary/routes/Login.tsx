@@ -272,8 +272,12 @@ export default function Login() {
         setError(error.message);
       } else if (user && session) {
         console.log('[Login] Email sign in successful');
-        // Auth state will update automatically and Landing will redirect to home
-        // No need to navigate manually here
+        // Dispatch event to trigger auth state update
+        window.dispatchEvent(new CustomEvent('jwt-available'));
+        // Navigate to home page
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100); // Small delay to ensure auth state updates
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);

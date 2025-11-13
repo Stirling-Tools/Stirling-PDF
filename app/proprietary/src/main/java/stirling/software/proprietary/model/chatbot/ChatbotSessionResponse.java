@@ -23,9 +23,11 @@ public class ChatbotSessionResponse {
     private boolean imageContentDetected;
     private long maxCachedCharacters;
     private long textCharacters;
+    private long estimatedTokens;
     private Instant createdAt;
     private List<String> warnings;
     private Map<String, String> metadata;
+    private ChatbotUsageSummary usageSummary;
 
     public List<String> getWarnings() {
         return warnings == null ? Collections.emptyList() : warnings;

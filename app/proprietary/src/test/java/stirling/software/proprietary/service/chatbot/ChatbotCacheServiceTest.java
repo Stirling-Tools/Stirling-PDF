@@ -1,7 +1,6 @@
 package stirling.software.proprietary.service.chatbot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.chatbot.ChatbotDocumentCacheEntry;
-import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 class ChatbotCacheServiceTest {
 
@@ -35,30 +33,12 @@ class ChatbotCacheServiceTest {
     }
 
     @Test
-    void registerRejectsOversizedText() {
-        ChatbotCacheService cacheService = new ChatbotCacheService(properties);
-        String longText = "a".repeat(51);
-        assertThrows(
-                ChatbotException.class,
-                () ->
-                        cacheService.register(
-                                "session",
-                                "doc",
-                                longText,
-                                Map.of(),
-                                false,
-                                false,
-                                longText.length()));
-    }
-
-    @Test
     void registerAndResolveSession() {
         ChatbotCacheService cacheService = new ChatbotCacheService(properties);
         String cacheKey =
                 cacheService.register(
                         "session1",
                         "doc1",
-                        "hello world",
                         Map.of("title", "Sample"),
                         false,
                         false,

@@ -21,9 +21,11 @@ public class ChatbotSession {
     private boolean alphaWarningRequired;
     private boolean imageContentDetected;
     private long textCharacters;
+    private long estimatedTokens;
     private String cacheKey;
     private String vectorStoreId;
     private Instant createdAt;
+    private ChatbotUsageSummary usageSummary;
 
     public static String randomSessionId() {
         return UUID.randomUUID().toString();
