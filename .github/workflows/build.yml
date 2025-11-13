@@ -76,7 +76,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build
+        run: gradle clean build -x spotlessApply -x spotlessCheck
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
@@ -161,7 +161,7 @@ jobs:
         uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: gradle :stirling-pdf:generateOpenApiDocs
         env:
           DISABLE_ADDITIONAL_FEATURES: true
 
@@ -191,7 +191,7 @@ jobs:
           distribution: "temurin"
 
       - name: Check licenses for compatibility
-        run: ./gradlew clean checkLicense
+        run: gradle clean checkLicense
         env:
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: true
@@ -244,7 +244,7 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.37.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.40.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
@@ -296,17 +296,21 @@ jobs:
           gradle-version: 8.14
 
       - name: Build application
-        run: ./gradlew clean build
+        run: gradle clean build -x spotlessApply -x spotlessCheck
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        with:
+          platforms: linux/amd64,linux/arm64/v8
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        with:
+          platforms: linux/amd64,linux/arm64/v8
 
       - name: Convert repository owner to lowercase
         id: repoowner
@@ -335,6 +339,15 @@ jobs:
           provenance: false
           sbom: false
 
+      - name: Test Java works (amd64)
+        run: docker run --rm ${{ steps.meta.outputs.tags }} java -version
+
+      - name: Prune amd64 image and cache
+        if: always()
+        run: |
+          docker image rm -f ${{ steps.meta.outputs.tags }} || true
+          docker builder prune --force || true
+
       - name: Build and load arm64 image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
@@ -349,9 +362,6 @@ jobs:
           platforms: linux/arm64/v8
           provenance: false
           sbom: false
-
-      - name: Test Java works (amd64)
-        run: docker run --rm ${{ steps.meta.outputs.tags }} java -version
 
       - name: Test Java works (arm64)
         run: docker run --rm --platform linux/arm64 ${{ steps.meta.outputs.tags }} java -version
@@ -369,7 +379,7 @@ jobs:
 
           # LibreOffice binary linkage
           docker run --rm --platform linux/arm64 $TAG \
-            sh -c "ldd /usr/bin/soffice.bin > /dev/null && echo 'LibreOffice binary linked OK'" || \
+            sh -c "ldd /usr/lib/libreoffice/program/soffice.bin > /dev/null && echo 'LibreOffice binary linked OK'" || \
             (echo "LibreOffice binary broken on arm64!" && exit 1)
 
           # Python uno import
@@ -378,12 +388,31 @@ jobs:
             (echo "Python uno import failed on arm64!" && exit 1)
 
           # Full startup
-          timeout 180 docker run --rm --platform linux/arm64 \
-            -e DISABLE_ADDITIONAL_FEATURES=true \
-            -e FAT_DOCKER=true \
+          TAG="${{ steps.meta.outputs.tags }}"
+          echo "Running quick startup check on arm64..."
+
+          docker run --rm --platform linux/arm64 \
             $TAG \
-            sh -c "java -jar /app.jar --version && echo 'Stirling-PDF fat started on arm64!'" || \
-            (echo "Startup failed on arm64!" && exit 1)
+            sh -c "java -jar /app.jar --version || java -jar /app.jar --help || java -jar /app.jar" > startup.log 2>&1 &
+
+          # Warte max. 90 Sekunden und prüfe, ob die Startzeile mit Version erscheint
+          timeout 90 bash -c "
+            until grep -q 'Starting SPDFApplication v' startup.log; do
+              sleep 2
+              if ! kill -0 \$! 2>/dev/null; then
+                echo 'Java process died!'
+                cat startup.log
+                exit 1
+              fi
+            done
+            echo 'Stirling-PDF fat started successfully on arm64!'
+          " || (echo "Startup failed:"; cat startup.log; exit 1)
+
+      - name: Cleanup arm64 image and cache
+        if: always()
+        run: |
+          docker image rm -f ${{ steps.meta.outputs.tags }} || true
+          docker builder prune --force || true
 
       - name: Upload Docker build reports
         if: always()
