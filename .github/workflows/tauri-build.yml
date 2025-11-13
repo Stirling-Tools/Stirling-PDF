@@ -183,6 +183,37 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Import Windows Code Signing Certificate
+        if: matrix.platform == 'windows-latest'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        shell: powershell
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            Write-Host "Importing Windows Code Signing Certificate..."
+
+            # Decode base64 certificate and save to file
+            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+            [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+            # Import certificate to CurrentUser\My store
+            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+
+            # Extract and set thumbprint as environment variable
+            $thumbprint = $cert.Thumbprint
+            Write-Host "Certificate imported with thumbprint: $thumbprint"
+            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+
+            # Clean up certificate file
+            Remove-Item $certPath
+
+            Write-Host "Windows certificate import completed."
+          } else {
+            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
+          }
+
       # Disabled Mac builds - Import Apple Developer Certificate
       # - name: Import Apple Developer Certificate
       #   if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
@@ -224,7 +255,7 @@ jobs:
       #     echo "Available tools:"
       #     ls -la /usr/bin/hd* || echo "No hd* tools found"
 
-      - name: Build Tauri app 
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -236,8 +267,10 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           SIGN: 1
-          CI: true 
+          CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
@@ -248,7 +281,7 @@ jobs:
         run: |
           mkdir -p ./dist
           cd ./frontend/src-tauri/target
-          
+
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
@@ -261,6 +294,66 @@ jobs:
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
+
+      - name: Verify Windows Code Signature
+        if: matrix.platform == 'windows-latest'
+        shell: powershell
+        run: |
+          Write-Host "🔍 Verifying Windows code signatures..."
+
+          $exePath = "./dist/Stirling-PDF-${{ matrix.name }}.exe"
+          $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
+
+          $allSigned = $true
+
+          # Check EXE signature
+          if (Test-Path $exePath) {
+            $exeSig = Get-AuthenticodeSignature -FilePath $exePath
+            Write-Host "EXE Signature Status: $($exeSig.Status)"
+            Write-Host "EXE Signer: $($exeSig.SignerCertificate.Subject)"
+            Write-Host "EXE Timestamp: $($exeSig.TimeStamperCertificate.NotAfter)"
+
+            if ($exeSig.Status -ne "Valid") {
+              Write-Host "⚠️ EXE is not properly signed (Status: $($exeSig.Status))"
+              if ($env:WINDOWS_CERTIFICATE) {
+                Write-Host "❌ Windows certificate was provided but signing failed"
+                $allSigned = $false
+              } else {
+                Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
+              }
+            } else {
+              Write-Host "✅ EXE is properly signed"
+            }
+          }
+
+          # Check MSI signature
+          if (Test-Path $msiPath) {
+            $msiSig = Get-AuthenticodeSignature -FilePath $msiPath
+            Write-Host "MSI Signature Status: $($msiSig.Status)"
+            Write-Host "MSI Signer: $($msiSig.SignerCertificate.Subject)"
+            Write-Host "MSI Timestamp: $($msiSig.TimeStamperCertificate.NotAfter)"
+
+            if ($msiSig.Status -ne "Valid") {
+              Write-Host "⚠️ MSI is not properly signed (Status: $($msiSig.Status))"
+              if ($env:WINDOWS_CERTIFICATE) {
+                Write-Host "❌ Windows certificate was provided but signing failed"
+                $allSigned = $false
+              } else {
+                Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
+              }
+            } else {
+              Write-Host "✅ MSI is properly signed"
+            }
+          }
+
+          if ($env:WINDOWS_CERTIFICATE -and -not $allSigned) {
+            Write-Host "❌ Code signing verification failed"
+            exit 1
+          } else {
+            Write-Host "✅ Code signature verification completed"
+          }
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
