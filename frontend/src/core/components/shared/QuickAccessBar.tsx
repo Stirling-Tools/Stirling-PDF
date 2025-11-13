@@ -16,6 +16,7 @@ import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolBu
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
+import InviteMembersModal from '@app/components/shared/InviteMembersModal';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -34,6 +35,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { config } = useAppConfig();
   const { startTour } = useOnboarding();
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
@@ -88,7 +90,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: () => handleClick(),
             'aria-label': config.name
           })}
-          size={isActive ? (config.size || 'lg') : 'lg'}
+          size={isActive ? 'lg' : 'md'}
           variant="subtle"
           style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
           className={isActive ? 'activeIconScale' : ''}
@@ -108,9 +110,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const mainButtons: ButtonConfig[] = [
     {
       id: 'read',
-      name: t("quickAccess.read", "Read"),
-      icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
-      size: 'lg',
+      name: t("quickAccess.reader", "Reader"),
+      icon: <LocalIcon icon="menu-book-rounded" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       isRound: false,
       type: 'navigation',
       onClick: () => {
@@ -118,23 +120,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         handleReaderToggle();
       }
     },
-    // {
-    //  id: 'sign',
-    //  name: t("quickAccess.sign", "Sign"),
-    //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
-    //  size: 'lg',
-    //  isRound: false,
-    //  type: 'navigation',
-    //  onClick: () => {
-    //    setActiveButton('sign');
-    //    handleToolSelect('sign');
-    //  }
-    // },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon: <LocalIcon icon="automation-outline" width="1.6rem" height="1.6rem" />,
-      size: 'lg',
+      icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       isRound: false,
       type: 'navigation',
       onClick: () => {
@@ -147,47 +137,59 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
-  ];
-
-  const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.6rem" height="1.6rem" />,
+      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
-      size: 'lg',
+      size: 'md',
       type: 'modal',
       onClick: handleFilesButtonClick
     },
-    //TODO: Activity
-    //{
-    //  id: 'activity',
-    //  name: t("quickAccess.activity", "Activity"),
-    //  icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
-    //  isRound: true,
-    //  size: 'lg',
-    //  type: 'navigation',
-    //  onClick: () => setActiveButton('activity')
-    //},
   ];
+
+  const isAdmin = config?.isAdmin === true;
+
+  const middleButtons: ButtonConfig[] = [];
+  //TODO: Activity
+  //{
+  //  id: 'activity',
+  //  name: t("quickAccess.activity", "Activity"),
+  //  icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
+  //  isRound: true,
+  //  size: 'lg',
+  //  type: 'navigation',
+  //  onClick: () => setActiveButton('activity')
+  //},
 
   const bottomButtons: ButtonConfig[] = [
     {
       id: 'help',
       name: t("quickAccess.help", "Help"),
-      icon: <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />,
+      icon: <LocalIcon icon="help-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
-      size: 'lg',
+      size: 'md',
       type: 'action',
       onClick: () => {
         // This will be overridden by the wrapper logic
       },
     },
+    ...(isAdmin ? [{
+      id: 'invite',
+      name: t("quickAccess.invite", "Invite"),
+      icon: <LocalIcon icon="person-add" width="1.25rem" height="1.25rem" />,
+      isRound: true,
+      size: 'md' as const,
+      type: 'action' as const,
+      onClick: () => {
+        setInviteModalOpen(true);
+      }
+    }] : []),
     {
       id: 'config',
-      name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
-      icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'lg',
+      name: t("quickAccess.settings", "Settings"),
+      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       type: 'modal',
       onClick: () => {
         navigate('/settings/overview');
@@ -200,7 +202,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
-      className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
+      className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
       style={{
         borderRight: '1px solid var(--border-default)'
       }}
@@ -239,20 +241,30 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             ))}
           </Stack>
 
-          {/* Divider after main buttons */}
-          <Divider
-            size="xs"
-            className="content-divider"
-          />
+          {/* Divider after main buttons (creates gap) */}
+          {middleButtons.length === 0 && (
+            <Divider
+              size="xs"
+              className="content-divider"
+            />
+          )}
 
           {/* Middle section */}
-          <Stack gap="lg" align="center">
-            {middleButtons.map((config, index) => (
-              <React.Fragment key={config.id}>
-                {renderNavButton(config, index)}
-              </React.Fragment>
-            ))}
-          </Stack>
+          {middleButtons.length > 0 && (
+            <>
+              <Divider
+                size="xs"
+                className="content-divider"
+              />
+              <Stack gap="lg" align="center">
+                {middleButtons.map((config, index) => (
+                  <React.Fragment key={config.id}>
+                    {renderNavButton(config, index)}
+                  </React.Fragment>
+                ))}
+              </Stack>
+            </>
+          )}
 
           {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
@@ -330,6 +342,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
+      />
+
+      <InviteMembersModal
+        opened={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
       />
     </div>
   );

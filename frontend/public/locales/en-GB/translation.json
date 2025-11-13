@@ -3655,7 +3655,8 @@
     "account": "Account",
     "config": "Config",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools",
+    "allTools": "Tools",
+    "reader": "Reader",
     "helpMenu": {
       "toolsTour": "Tools Tour",
       "toolsTourDesc": "Learn what the tools can do",
@@ -4778,7 +4779,7 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
-    "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
+    "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
     "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",

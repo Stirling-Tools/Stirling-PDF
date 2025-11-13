@@ -16,6 +16,7 @@ import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
+import { InviteModalProvider } from "@app/contexts/InviteModalContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -68,11 +69,13 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                               <PageEditorProvider>
                                 <SignatureProvider>
                                   <RightRailProvider>
-                                    <TourOrchestrationProvider>
-                                      <AdminTourOrchestrationProvider>
-                                        {children}
-                                      </AdminTourOrchestrationProvider>
-                                    </TourOrchestrationProvider>
+                                    <InviteModalProvider>
+                                      <TourOrchestrationProvider>
+                                        <AdminTourOrchestrationProvider>
+                                          {children}
+                                        </AdminTourOrchestrationProvider>
+                                      </TourOrchestrationProvider>
+                                    </InviteModalProvider>
                                   </RightRailProvider>
                                 </SignatureProvider>
                               </PageEditorProvider>
