@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Anchor, Group, Stack, Text, Paper } from "@mantine/core";
+import { Anchor, Group, Stack, Text, Paper, Skeleton } from "@mantine/core";
 import ApiKeySection from "./apiKeys/ApiKeySection";
 import RefreshModal from "./apiKeys/RefreshModal";
 import useApiKey from "./apiKeys/hooks/useApiKey";
-import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
@@ -95,9 +94,9 @@ export default function ApiKeys() {
       {apiKeyLoading ? (
         <div style={{ padding: 18, borderRadius: 12, background: "var(--api-keys-card-bg)", border: "1px solid var(--api-keys-card-border)", boxShadow: "0 2px 8px var(--api-keys-card-shadow)" }}>
           <Group align="center" gap={12} wrap="nowrap">
-            <SkeletonLoader type="block" width="100%" height={36} />
-            <SkeletonLoader type="block" width={76} height={32} />
-            <SkeletonLoader type="block" width={92} height={32} />
+            <Skeleton height={36} style={{ flex: 1 }} />
+            <Skeleton height={32} width={76} />
+            <Skeleton height={32} width={92} />
           </Group>
         </div>
       ) : (
