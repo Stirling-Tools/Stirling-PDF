@@ -1,4 +1,5 @@
 import { PDFDocument, rgb } from 'pdf-lib';
+import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile, createChildStub } from '@app/contexts/file/fileActions';
 import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
@@ -228,7 +229,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         size: 12,
                         color: rgb(0, 0, 0)
                       });
-                    } else if (annotation.type === 14 || annotation.type === 15) {
+                    } else if (annotation.type === PdfAnnotationSubtype.INK || annotation.type === PdfAnnotationSubtype.LINE) {
                       // Handle ink annotations (drawn signatures)
                       page.drawRectangle({
                         x: pdfX,

@@ -346,7 +346,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (pageAnnotationsTask) {
         pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
           const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+          if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
             // Store image data before deletion
             storeImageData(annotationId, annotation.imageSrc);
           }
