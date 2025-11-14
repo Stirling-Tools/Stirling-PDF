@@ -257,6 +257,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "html-to-pdf");
         addEndpointToGroup("Convert", "url-to-pdf");
         addEndpointToGroup("Convert", "markdown-to-pdf");
+        addEndpointToGroup("Convert", "ebook-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
@@ -446,6 +447,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
         addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
+        // Calibre dependent endpoints
+        addEndpointToGroup("Calibre", "ebook-to-pdf");
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
@@ -475,7 +479,7 @@ public class EndpointConfiguration {
             disableGroup("enterprise");
         }
 
-        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
@@ -498,6 +502,7 @@ public class EndpointConfiguration {
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
+                || "Calibre".equals(group)
                 || "rar".equals(group)
                 || "FFmpeg".equals(group);
     }
