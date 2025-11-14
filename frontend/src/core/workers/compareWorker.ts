@@ -1,10 +1,6 @@
 /// <reference lib="webworker" />
 
-import type {
-  CompareDiffToken,
-  CompareWorkerRequest,
-  CompareWorkerResponse,
-} from '@app/types/compare';
+import type {CompareDiffToken, CompareWorkerRequest, CompareWorkerResponse,} from '@app/types/compare';
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -108,8 +104,7 @@ const chunkedDiff = (
 
   const baseChunkSize = Math.max(1, chunkSize);
   let dynamicChunkSize = baseChunkSize;
-  const baseMaxWindow = Math.max(baseChunkSize * 6, baseChunkSize + 512);
-  let dynamicMaxWindow = baseMaxWindow;
+  let dynamicMaxWindow = Math.max(baseChunkSize * 6, baseChunkSize + 512);
   let dynamicMinCommit = Math.max(1, Math.floor(dynamicChunkSize * 0.1));
   let dynamicStep = Math.max(64, Math.floor(dynamicChunkSize * 0.5));
   let stallIterations = 0;
@@ -422,7 +417,7 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
       },
       { maxProcessedTokens: runtimeMaxProcessedTokens, minUnchangedRatio: runtimeMinUnchangedRatio }
     );
-  } catch (err) { 
+  } catch (err) {
     const error = err as Error & { __earlyStop?: boolean };
     if (error && (error.__earlyStop || error.message === 'EARLY_STOP_TOO_DISSIMILAR')) {
       const response: CompareWorkerResponse = {

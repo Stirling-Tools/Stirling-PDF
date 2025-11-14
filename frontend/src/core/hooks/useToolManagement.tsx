@@ -35,7 +35,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
     // Check if at least one endpoint is enabled
     // If endpoint is not in status map, assume enabled (optimistic fallback)
-    return endpoints.some((endpoint: string) => endpointStatus[endpoint] !== false);
+    return endpoints.some((endpoint: string) => endpointStatus[endpoint]);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {

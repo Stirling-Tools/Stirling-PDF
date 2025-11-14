@@ -1,15 +1,15 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { fileStorage } from '@app/services/fileStorage';
-import { zipFileService } from '@app/services/zipFileService';
-import { StirlingFileStub } from '@app/types/fileContext';
-import { downloadFiles } from '@app/utils/downloadUtils';
-import { FileId } from '@app/types/file';
-import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { fileStorage } from "@app/services/fileStorage";
+import { zipFileService } from "@app/services/zipFileService";
+import { StirlingFileStub } from "@app/types/fileContext";
+import { downloadFiles } from "@app/utils/downloadUtils";
+import { FileId } from "@app/types/file";
+import { groupFilesByOriginal } from "@app/utils/fileHistoryUtils";
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
   // State
-  activeSource: 'recent' | 'local' | 'drive';
+  activeSource: "recent" | "local" | "drive";
   selectedFileIds: FileId[];
   searchTerm: string;
   selectedFiles: StirlingFileStub[];
@@ -22,7 +22,7 @@ interface FileManagerContextValue {
   isLoading: boolean;
 
   // Handlers
-  onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
+  onSourceChange: (source: "recent" | "local" | "drive") => void;
   onLocalFileClick: () => void;
   onFileSelect: (file: StirlingFileStub, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
@@ -78,9 +78,9 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   refreshRecentFiles,
   isLoading,
 }) => {
-  const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
+  const [activeSource, setActiveSource] = useState<"recent" | "local" | "drive">("recent");
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(new Set());
   const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StirlingFileStub[]>>(new Map()); // Cache for loaded history
@@ -88,7 +88,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
-
 
   // Computed values (with null safety)
   const selectedFilesSet = new Set(selectedFileIds);
@@ -98,10 +97,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (!recentFiles || recentFiles.length === 0) return new Map();
 
     // Convert StirlingFileStub to FileRecord-like objects for grouping utility
-    const recordsForGrouping = recentFiles.map(file => ({
+    const recordsForGrouping = recentFiles.map((file) => ({
       ...file,
       originalFileId: file.originalFileId,
-      versionNumber: file.versionNumber || 1
+      versionNumber: file.versionNumber || 1,
     }));
 
     return groupFilesByOriginal(recordsForGrouping);
@@ -115,19 +114,17 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     return recentFiles;
   }, [recentFiles]);
 
-  const selectedFiles = selectedFileIds.length === 0 ? [] :
-    displayFiles.filter(file => selectedFilesSet.has(file.id));
+  const selectedFiles = selectedFileIds.length === 0 ? [] : displayFiles.filter((file) => selectedFilesSet.has(file.id));
 
-  const filteredFiles = !searchTerm ? displayFiles :
-    displayFiles.filter(file =>
-      file.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filteredFiles = !searchTerm
+    ? displayFiles
+    : displayFiles.filter((file) => file.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleSourceChange = useCallback((source: 'recent' | 'local' | 'drive') => {
+  const handleSourceChange = useCallback((source: "recent" | "local" | "drive") => {
     setActiveSource(source);
-    if (source !== 'recent') {
+    if (source !== "recent") {
       setSelectedFileIds([]);
-      setSearchTerm('');
+      setSearchTerm("");
       setLastClickedIndex(null);
     }
   }, []);
@@ -136,53 +133,53 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((file: StirlingFileStub, currentIndex: number, shiftKey?: boolean) => {
-    const fileId = file.id;
-    if (!fileId) return;
+  const handleFileSelect = useCallback(
+    (file: StirlingFileStub, currentIndex: number, shiftKey?: boolean) => {
+      const fileId = file.id;
+      if (!fileId) return;
 
-    if (shiftKey && lastClickedIndex !== null) {
-      // Range selection with shift-click
-      const startIndex = Math.min(lastClickedIndex, currentIndex);
-      const endIndex = Math.max(lastClickedIndex, currentIndex);
+      if (shiftKey && lastClickedIndex !== null) {
+        // Range selection with shift-click
+        const startIndex = Math.min(lastClickedIndex, currentIndex);
+        const endIndex = Math.max(lastClickedIndex, currentIndex);
 
-      setSelectedFileIds(prev => {
-        const selectedSet = new Set(prev);
+        setSelectedFileIds((prev) => {
+          const selectedSet = new Set(prev);
 
-        // Add all files in the range to selection
-        for (let i = startIndex; i <= endIndex; i++) {
-          const rangeFileId = filteredFiles[i]?.id;
-          if (rangeFileId) {
-            selectedSet.add(rangeFileId);
+          // Add all files in the range to selection
+          for (let i = startIndex; i <= endIndex; i++) {
+            const rangeFileId = filteredFiles[i]?.id;
+            if (rangeFileId) {
+              selectedSet.add(rangeFileId);
+            }
           }
-        }
 
-        return Array.from(selectedSet);
-      });
-    } else {
-      // Normal click behavior - optimized with Set for O(1) lookup
-      setSelectedFileIds(prev => {
-        const selectedSet = new Set(prev);
+          return Array.from(selectedSet);
+        });
+      } else {
+        // Normal click behavior - optimized with Set for O(1) lookup
+        setSelectedFileIds((prev) => {
+          const selectedSet = new Set(prev);
 
-        if (selectedSet.has(fileId)) {
-          selectedSet.delete(fileId);
-        } else {
-          selectedSet.add(fileId);
-        }
+          if (selectedSet.has(fileId)) {
+            selectedSet.delete(fileId);
+          } else {
+            selectedSet.add(fileId);
+          }
 
-        return Array.from(selectedSet);
-      });
+          return Array.from(selectedSet);
+        });
 
-      // Update last clicked index for future range selections
-      setLastClickedIndex(currentIndex);
-    }
-  }, [filteredFiles, lastClickedIndex]);
+        // Update last clicked index for future range selections
+        setLastClickedIndex(currentIndex);
+      }
+    },
+    [filteredFiles, lastClickedIndex],
+  );
 
   // Helper function to safely determine which files can be deleted
-  const getSafeFilesToDelete = useCallback((
-    fileIds: FileId[],
-    allStoredStubs: StirlingFileStub[]
-  ): FileId[] => {
-    const fileMap = new Map(allStoredStubs.map(f => [f.id, f]));
+  const getSafeFilesToDelete = useCallback((fileIds: FileId[], allStoredStubs: StirlingFileStub[]): FileId[] => {
+    const fileMap = new Map(allStoredStubs.map((f) => [f.id, f]));
     const filesToDelete = new Set<FileId>();
     const filesToPreserve = new Set<FileId>();
 
@@ -199,12 +196,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         const originalFileId = currentFile.originalFileId || currentFile.id;
 
         // Find all files in this history chain
-        const chainFiles = allStoredStubs.filter((file: StirlingFileStub) =>
-          (file.originalFileId || file.id) === originalFileId
+        const chainFiles = allStoredStubs.filter(
+          (file: StirlingFileStub) => (file.originalFileId || file.id) === originalFileId,
         );
 
         // Add all files in this lineage as candidates for deletion
-        chainFiles.forEach(file => filesToDelete.add(file.id));
+        chainFiles.forEach((file) => filesToDelete.add(file.id));
       }
     }
 
@@ -215,20 +212,20 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // If this file is a leaf node (not being deleted) and its lineage overlaps with files we want to delete
       if (file.isLeaf !== false && !fileIds.includes(file.id)) {
         // Find all files in this preserved lineage
-        const preservedChainFiles = allStoredStubs.filter((chainFile: StirlingFileStub) =>
-          (chainFile.originalFileId || chainFile.id) === fileOriginalId
+        const preservedChainFiles = allStoredStubs.filter(
+          (chainFile: StirlingFileStub) => (chainFile.originalFileId || chainFile.id) === fileOriginalId,
         );
 
         // Mark all files in this preserved lineage as must-preserve
-        preservedChainFiles.forEach(chainFile => filesToPreserve.add(chainFile.id));
+        preservedChainFiles.forEach((chainFile) => filesToPreserve.add(chainFile.id));
       }
     }
 
     // Final list: files to delete minus files that must be preserved
-    let safeToDelete = Array.from(filesToDelete).filter(fileId => !filesToPreserve.has(fileId));
+    let safeToDelete = Array.from(filesToDelete).filter((fileId) => !filesToPreserve.has(fileId));
 
     // Check for orphaned non-leaf files after main deletion
-    const remainingFiles = allStoredStubs.filter(file => !safeToDelete.includes(file.id));
+    const remainingFiles = allStoredStubs.filter((file) => !safeToDelete.includes(file.id));
     const orphanedNonLeafFiles: FileId[] = [];
 
     for (const file of remainingFiles) {
@@ -237,7 +234,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         const fileOriginalId = file.originalFileId || file.id;
 
         // Check if this non-leaf file has any living descendants
-        const hasLivingDescendants = remainingFiles.some(otherFile => {
+        const hasLivingDescendants = remainingFiles.some((otherFile) => {
           // Check if otherFile is a descendant of this file
           const otherOriginalId = otherFile.originalFileId || otherFile.id;
           return (
@@ -261,123 +258,138 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   }, []);
 
   // Shared internal delete logic
-  const performFileDelete = useCallback(async (fileToRemove: StirlingFileStub, fileIndex: number) => {
-    const deletedFileId = fileToRemove.id;
+  const performFileDelete = useCallback(
+    async (fileToRemove: StirlingFileStub, fileIndex: number) => {
+      const deletedFileId = fileToRemove.id;
 
-    // Get all stored files to analyze lineages
-    const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+      // Get all stored files to analyze lineages
+      const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
 
-    // Get safe files to delete (respecting shared lineages)
-    const filesToDelete = getSafeFilesToDelete([deletedFileId], allStoredStubs);
+      // Get safe files to delete (respecting shared lineages)
+      const filesToDelete = getSafeFilesToDelete([deletedFileId], allStoredStubs);
 
-    // Clear from selection immediately
-    setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
+      // Clear from selection immediately
+      setSelectedFileIds((prev) => prev.filter((id) => !filesToDelete.includes(id)));
 
-    // Clear from expanded state to prevent ghost entries
-    setExpandedFileIds(prev => {
-      const newExpanded = new Set(prev);
-      filesToDelete.forEach(id => newExpanded.delete(id));
-      return newExpanded;
-    });
+      // Clear from expanded state to prevent ghost entries
+      setExpandedFileIds((prev) => {
+        const newExpanded = new Set(prev);
+        filesToDelete.forEach((id) => newExpanded.delete(id));
+        return newExpanded;
+      });
 
-    // Clear from history cache - remove all files in the chain
-    setLoadedHistoryFiles(prev => {
-      const newCache = new Map(prev);
+      // Clear from history cache - remove all files in the chain
+      setLoadedHistoryFiles((prev) => {
+        const newCache = new Map(prev);
 
-      // Remove cache entries for all deleted files
-      filesToDelete.forEach(id => newCache.delete(id as FileId));
+        // Remove cache entries for all deleted files
+        filesToDelete.forEach((id) => newCache.delete(id as FileId));
 
-      // Also remove deleted files from any other file's history cache
-      for (const [mainFileId, historyFiles] of newCache.entries()) {
-        const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id));
-        if (filteredHistory.length !== historyFiles.length) {
-          newCache.set(mainFileId, filteredHistory);
+        // Also remove deleted files from any other file's history cache
+        for (const [mainFileId, historyFiles] of newCache.entries()) {
+          const filteredHistory = historyFiles.filter((histFile) => !filesToDelete.includes(histFile.id));
+          if (filteredHistory.length !== historyFiles.length) {
+            newCache.set(mainFileId, filteredHistory);
+          }
         }
+
+        return newCache;
+      });
+
+      // Delete safe files from IndexedDB
+      try {
+        for (const fileId of filesToDelete) {
+          await fileStorage.deleteStirlingFile(fileId as FileId);
+        }
+      } catch (error) {
+        console.error("Failed to delete files from chain:", error);
       }
 
-      return newCache;
-    });
+      // Call the parent's deletion logic for the main file only
+      onFileRemove(fileIndex);
 
-    // Delete safe files from IndexedDB
-    try {
-      for (const fileId of filesToDelete) {
-        await fileStorage.deleteStirlingFile(fileId as FileId);
+      // Refresh to ensure consistent state
+      await refreshRecentFiles();
+    },
+    [getSafeFilesToDelete, setSelectedFileIds, setExpandedFileIds, setLoadedHistoryFiles, onFileRemove, refreshRecentFiles],
+  );
+
+  const handleFileRemove = useCallback(
+    async (index: number) => {
+      const fileToRemove = filteredFiles[index];
+      if (fileToRemove) {
+        await performFileDelete(fileToRemove, index);
       }
-    } catch (error) {
-      console.error('Failed to delete files from chain:', error);
-    }
-
-    // Call the parent's deletion logic for the main file only
-    onFileRemove(fileIndex);
-
-    // Refresh to ensure consistent state
-    await refreshRecentFiles();
-  }, [getSafeFilesToDelete, setSelectedFileIds, setExpandedFileIds, setLoadedHistoryFiles, onFileRemove, refreshRecentFiles]);
-
-  const handleFileRemove = useCallback(async (index: number) => {
-    const fileToRemove = filteredFiles[index];
-    if (fileToRemove) {
-      await performFileDelete(fileToRemove, index);
-    }
-  }, [filteredFiles, performFileDelete]);
+    },
+    [filteredFiles, performFileDelete],
+  );
 
   // Handle deletion by fileId (more robust than index-based)
-  const handleFileRemoveById = useCallback(async (fileId: FileId) => {
-    // Find the file and its index in filteredFiles
-    const fileIndex = filteredFiles.findIndex(file => file.id === fileId);
-    const fileToRemove = filteredFiles[fileIndex];
+  const handleFileRemoveById = useCallback(
+    async (fileId: FileId) => {
+      // Find the file and its index in filteredFiles
+      const fileIndex = filteredFiles.findIndex((file) => file.id === fileId);
+      const fileToRemove = filteredFiles[fileIndex];
 
-    if (fileToRemove && fileIndex !== -1) {
-      await performFileDelete(fileToRemove, fileIndex);
-    }
-  }, [filteredFiles, performFileDelete]);
+      if (fileToRemove && fileIndex !== -1) {
+        await performFileDelete(fileToRemove, fileIndex);
+      }
+    },
+    [filteredFiles, performFileDelete],
+  );
 
   // Handle deletion of specific history files (not index-based)
-  const handleHistoryFileRemove = useCallback(async (fileToRemove: StirlingFileStub) => {
-    const deletedFileId = fileToRemove.id;
+  const handleHistoryFileRemove = useCallback(
+    async (fileToRemove: StirlingFileStub) => {
+      const deletedFileId = fileToRemove.id;
 
-    // Clear from expanded state to prevent ghost entries
-    setExpandedFileIds(prev => {
-      const newExpanded = new Set(prev);
-      newExpanded.delete(deletedFileId);
-      return newExpanded;
-    });
+      // Clear from expanded state to prevent ghost entries
+      setExpandedFileIds((prev) => {
+        const newExpanded = new Set(prev);
+        newExpanded.delete(deletedFileId);
+        return newExpanded;
+      });
 
-    // Clear from history cache - remove all files in the chain
-    setLoadedHistoryFiles(prev => {
-      const newCache = new Map(prev);
+      // Clear from history cache - remove all files in the chain
+      setLoadedHistoryFiles((prev) => {
+        const newCache = new Map(prev);
 
-      // Remove cache entries for all deleted files
-      newCache.delete(deletedFileId);
+        // Remove cache entries for all deleted files
+        newCache.delete(deletedFileId);
 
-      // Also remove deleted files from any other file's history cache
-      for (const [mainFileId, historyFiles] of newCache.entries()) {
-        const filteredHistory = historyFiles.filter(histFile => deletedFileId != histFile.id);
-        if (filteredHistory.length !== historyFiles.length) {
-          newCache.set(mainFileId, filteredHistory);
+        // Also remove deleted files from any other file's history cache
+        for (const [mainFileId, historyFiles] of newCache.entries()) {
+          const filteredHistory = historyFiles.filter((histFile) => deletedFileId != histFile.id);
+          if (filteredHistory.length !== historyFiles.length) {
+            newCache.set(mainFileId, filteredHistory);
+          }
         }
+
+        return newCache;
+      });
+
+      // Delete safe files from IndexedDB
+      try {
+        await fileStorage.deleteStirlingFile(deletedFileId);
+      } catch (error) {
+        console.error("Failed to delete files from chain:", error);
       }
 
-      return newCache;
-    });
+      // Refresh to ensure consistent state
+      await refreshRecentFiles();
+    },
+    [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete],
+  );
 
-    // Delete safe files from IndexedDB
-    try {
-        await fileStorage.deleteStirlingFile(deletedFileId);
-    } catch (error) {
-      console.error('Failed to delete files from chain:', error);
-    }
-
-    // Refresh to ensure consistent state
-    await refreshRecentFiles();
-  }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
-
-  const handleFileDoubleClick = useCallback((file: StirlingFileStub) => {
-    if (isFileSupported(file.name)) {
-      onRecentFilesSelected([file]);
-      onClose();
-    }
-  }, [isFileSupported, onRecentFilesSelected, onClose]);
+  const handleFileDoubleClick = useCallback(
+    (file: StirlingFileStub) => {
+      if (isFileSupported(file.name)) {
+        onRecentFilesSelected([file]);
+        onClose();
+      }
+    },
+    [isFileSupported, onRecentFilesSelected, onClose],
+  );
 
   const handleOpenFiles = useCallback(() => {
     if (selectedFiles.length > 0) {
@@ -390,20 +402,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     setSearchTerm(value);
   }, []);
 
-  const handleFileInputChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      try {
-        // For local file uploads, pass File objects directly to FileContext
-        onNewFilesSelect(files);
-        await refreshRecentFiles();
-        onClose();
-      } catch (error) {
-        console.error('Failed to process selected files:', error);
+  const handleFileInputChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length > 0) {
+        try {
+          // For local file uploads, pass File objects directly to FileContext
+          onNewFilesSelect(files);
+          await refreshRecentFiles();
+          onClose();
+        } catch (error) {
+          console.error("Failed to process selected files:", error);
+        }
       }
-    }
-    event.target.value = '';
-  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
+      event.target.value = "";
+    },
+    [onNewFilesSelect, refreshRecentFiles, onClose],
+  );
 
   const handleSelectAll = useCallback(() => {
     const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
@@ -413,7 +428,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setLastClickedIndex(null);
     } else {
       // Select all filtered files
-      setSelectedFileIds(filteredFiles.map(file => file.id).filter(Boolean));
+      setSelectedFileIds(filteredFiles.map((file) => file.id).filter(Boolean));
       setLastClickedIndex(null);
     }
   }, [filteredFiles, selectedFileIds]);
@@ -427,26 +442,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         await handleFileRemoveById(fileId);
       }
     } catch (error) {
-      console.error('Failed to delete selected files:', error);
+      console.error("Failed to delete selected files:", error);
     }
   }, [selectedFileIds, handleFileRemoveById]);
-
 
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;
 
     try {
       // Get selected files
-      const selectedFilesToDownload = filteredFiles.filter(file =>
-        selectedFileIds.includes(file.id)
-      );
+      const selectedFilesToDownload = filteredFiles.filter((file) => selectedFileIds.includes(file.id));
 
       // Use generic download utility
       await downloadFiles(selectedFilesToDownload, {
-        zipFilename: `selected-files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.zip`
+        zipFilename: `selected-files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`,
       });
     } catch (error) {
-      console.error('Failed to download selected files:', error);
+      console.error("Failed to download selected files:", error);
     }
   }, [selectedFileIds, filteredFiles]);
 
@@ -454,141 +466,153 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     try {
       await downloadFiles([file]);
     } catch (error) {
-      console.error('Failed to download file:', error);
+      console.error("Failed to download file:", error);
     }
   }, []);
 
-  const handleToggleExpansion = useCallback(async (fileId: FileId) => {
-    const isCurrentlyExpanded = expandedFileIds.has(fileId);
+  const handleToggleExpansion = useCallback(
+    async (fileId: FileId) => {
+      const isCurrentlyExpanded = expandedFileIds.has(fileId);
 
-    // Update expansion state
-    setExpandedFileIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(fileId)) {
-        newSet.delete(fileId);
-      } else {
-        newSet.add(fileId);
-      }
-      return newSet;
-    });
+      // Update expansion state
+      setExpandedFileIds((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(fileId)) {
+          newSet.delete(fileId);
+        } else {
+          newSet.add(fileId);
+        }
+        return newSet;
+      });
 
-    // Load complete history chain if expanding
-    if (!isCurrentlyExpanded) {
-      const currentFileMetadata = recentFiles.find(f => f.id === fileId);
-      if (currentFileMetadata && (currentFileMetadata.versionNumber || 1) > 1) {
-        try {
-          // Get all stored file metadata for chain traversal
-          const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
-          const fileMap = new Map(allStoredStubs.map(f => [f.id, f]));
+      // Load complete history chain if expanding
+      if (!isCurrentlyExpanded) {
+        const currentFileMetadata = recentFiles.find((f) => f.id === fileId);
+        if (currentFileMetadata && (currentFileMetadata.versionNumber || 1) > 1) {
+          try {
+            // Get all stored file metadata for chain traversal
+            const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+            const fileMap = new Map(allStoredStubs.map((f) => [f.id, f]));
 
-          // Get the current file's IndexedDB data
-          const currentStoredStub = fileMap.get(fileId as FileId);
-          if (!currentStoredStub) {
-            console.warn(`No stored file found for ${fileId}`);
-            return;
-          }
-
-          // Build complete history chain using IndexedDB metadata
-          const historyFiles: StirlingFileStub[] = [];
-
-          // Find the original file
-
-          // Collect only files in this specific branch (ancestors of current file)
-          const chainFiles: StirlingFileStub[] = [];
-          const allFiles = Array.from(fileMap.values());
-
-          // Build a map for fast parent lookups
-          const fileIdMap = new Map<FileId, StirlingFileStub>();
-          allFiles.forEach(f => fileIdMap.set(f.id, f));
-
-          // Trace back from current file through parent chain
-          let currentFile = fileIdMap.get(fileId);
-          while (currentFile?.parentFileId) {
-            const parentFile = fileIdMap.get(currentFile.parentFileId);
-            if (parentFile) {
-              chainFiles.push(parentFile);
-              currentFile = parentFile;
-            } else {
-              break; // Parent not found, stop tracing
+            // Get the current file's IndexedDB data
+            const currentStoredStub = fileMap.get(fileId as FileId);
+            if (!currentStoredStub) {
+              console.warn(`No stored file found for ${fileId}`);
+              return;
             }
+
+            // Build complete history chain using IndexedDB metadata
+            const historyFiles: StirlingFileStub[] = [];
+
+            // Find the original file
+
+            // Collect only files in this specific branch (ancestors of current file)
+            const chainFiles: StirlingFileStub[] = [];
+            const allFiles = Array.from(fileMap.values());
+
+            // Build a map for fast parent lookups
+            const fileIdMap = new Map<FileId, StirlingFileStub>();
+            allFiles.forEach((f) => fileIdMap.set(f.id, f));
+
+            // Trace back from current file through parent chain
+            let currentFile = fileIdMap.get(fileId);
+            while (currentFile?.parentFileId) {
+              const parentFile = fileIdMap.get(currentFile.parentFileId);
+              if (parentFile) {
+                chainFiles.push(parentFile);
+                currentFile = parentFile;
+              } else {
+                break; // Parent not found, stop tracing
+              }
+            }
+
+            // Sort by version number (oldest first for history display)
+            chainFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
+
+            // StirlingFileStubs already have all the data we need - no conversion required!
+            historyFiles.push(...chainFiles);
+
+            // Cache the loaded history files
+            setLoadedHistoryFiles((prev) => new Map(prev.set(fileId as FileId, historyFiles)));
+          } catch (error) {
+            console.warn(`Failed to load history chain for file ${fileId}:`, error);
           }
+        }
+      } else {
+        // Clear loaded history when collapsing
+        setLoadedHistoryFiles((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(fileId as FileId);
+          return newMap;
+        });
+      }
+    },
+    [expandedFileIds, recentFiles],
+  );
 
-          // Sort by version number (oldest first for history display)
-          chainFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
+  const handleAddToRecents = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        // Mark the file as a leaf node so it appears in recent files
+        await fileStorage.markFileAsLeaf(file.id);
 
-          // StirlingFileStubs already have all the data we need - no conversion required!
-          historyFiles.push(...chainFiles);
+        // Refresh the recent files list to show updated state
+        await refreshRecentFiles();
+      } catch (error) {
+        console.error("Failed to add to recents:", error);
+      }
+    },
+    [refreshRecentFiles],
+  );
 
-          // Cache the loaded history files
-          setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
+  const handleGoogleDriveSelect = useCallback(
+    async (files: File[]) => {
+      if (files.length > 0) {
+        try {
+          // Process Google Drive files same as local files
+          onNewFilesSelect(files);
+          await refreshRecentFiles();
+          onClose();
         } catch (error) {
-          console.warn(`Failed to load history chain for file ${fileId}:`, error);
+          console.error("Failed to process Google Drive files:", error);
         }
       }
-    } else {
-      // Clear loaded history when collapsing
-      setLoadedHistoryFiles(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(fileId as FileId);
-        return newMap;
-      });
-    }
-  }, [expandedFileIds, recentFiles]);
+    },
+    [onNewFilesSelect, refreshRecentFiles, onClose],
+  );
 
-  const handleAddToRecents = useCallback(async (file: StirlingFileStub) => {
-    try {
-      // Mark the file as a leaf node so it appears in recent files
-      await fileStorage.markFileAsLeaf(file.id);
-
-      // Refresh the recent files list to show updated state
-      await refreshRecentFiles();
-    } catch (error) {
-      console.error('Failed to add to recents:', error);
-    }
-  }, [refreshRecentFiles]);
-
-  const handleGoogleDriveSelect = useCallback(async (files: File[]) => {
-    if (files.length > 0) {
+  const handleUnzipFile = useCallback(
+    async (file: StirlingFileStub) => {
       try {
-        // Process Google Drive files same as local files
-        onNewFilesSelect(files);
-        await refreshRecentFiles();
-        onClose();
+        // Load the full file from storage
+        const stirlingFile = await fileStorage.getStirlingFile(file.id);
+        if (!stirlingFile) {
+          return;
+        }
+
+        // Extract and store files using shared service method
+        const result = await zipFileService.extractAndStoreFilesWithHistory(stirlingFile, file);
+
+        if (result.success) {
+          // Refresh file manager to show new files
+          await refreshRecentFiles();
+        }
+
+        if (result.errors.length > 0) {
+          console.error("Errors during unzip:", result.errors);
+        }
       } catch (error) {
-        console.error('Failed to process Google Drive files:', error);
+        console.error("Failed to unzip file:", error);
       }
-    }
-  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
-
-  const handleUnzipFile = useCallback(async (file: StirlingFileStub) => {
-    try {
-      // Load the full file from storage
-      const stirlingFile = await fileStorage.getStirlingFile(file.id);
-      if (!stirlingFile) {
-        return;
-      }
-
-      // Extract and store files using shared service method
-      const result = await zipFileService.extractAndStoreFilesWithHistory(stirlingFile, file);
-
-      if (result.success) {
-        // Refresh file manager to show new files
-        await refreshRecentFiles();
-      }
-
-      if (result.errors.length > 0) {
-        console.error('Errors during unzip:', result.errors);
-      }
-    } catch (error) {
-      console.error('Failed to unzip file:', error);
-    }
-  }, [refreshRecentFiles]);
+    },
+    [refreshRecentFiles],
+  );
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
       // Clean up all created blob URLs
-      createdBlobUrls.current.forEach(url => {
+      createdBlobUrls.current.forEach((url) => {
         URL.revokeObjectURL(url);
       });
       createdBlobUrls.current.clear();
@@ -598,90 +622,89 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setActiveSource('recent');
+      setActiveSource("recent");
       setSelectedFileIds([]);
-      setSearchTerm('');
+      setSearchTerm("");
       setLastClickedIndex(null);
     }
   }, [isOpen]);
 
-  const contextValue: FileManagerContextValue = useMemo(() => ({
-    // State
-    activeSource,
-    selectedFileIds,
-    searchTerm,
-    selectedFiles,
-    filteredFiles,
-    fileInputRef,
-    selectedFilesSet,
-    expandedFileIds,
-    fileGroups,
-    loadedHistoryFiles,
-    isLoading,
+  const contextValue: FileManagerContextValue = useMemo(
+    () => ({
+      // State
+      activeSource,
+      selectedFileIds,
+      searchTerm,
+      selectedFiles,
+      filteredFiles,
+      fileInputRef,
+      selectedFilesSet,
+      expandedFileIds,
+      fileGroups,
+      loadedHistoryFiles,
+      isLoading,
 
-    // Handlers
-    onSourceChange: handleSourceChange,
-    onLocalFileClick: handleLocalFileClick,
-    onFileSelect: handleFileSelect,
-    onFileRemove: handleFileRemove,
-    onHistoryFileRemove: handleHistoryFileRemove,
-    onFileDoubleClick: handleFileDoubleClick,
-    onOpenFiles: handleOpenFiles,
-    onSearchChange: handleSearchChange,
-    onFileInputChange: handleFileInputChange,
-    onSelectAll: handleSelectAll,
-    onDeleteSelected: handleDeleteSelected,
-    onDownloadSelected: handleDownloadSelected,
-    onDownloadSingle: handleDownloadSingle,
-    onToggleExpansion: handleToggleExpansion,
-    onAddToRecents: handleAddToRecents,
-    onUnzipFile: handleUnzipFile,
-    onNewFilesSelect,
-    onGoogleDriveSelect: handleGoogleDriveSelect,
+      // Handlers
+      onSourceChange: handleSourceChange,
+      onLocalFileClick: handleLocalFileClick,
+      onFileSelect: handleFileSelect,
+      onFileRemove: handleFileRemove,
+      onHistoryFileRemove: handleHistoryFileRemove,
+      onFileDoubleClick: handleFileDoubleClick,
+      onOpenFiles: handleOpenFiles,
+      onSearchChange: handleSearchChange,
+      onFileInputChange: handleFileInputChange,
+      onSelectAll: handleSelectAll,
+      onDeleteSelected: handleDeleteSelected,
+      onDownloadSelected: handleDownloadSelected,
+      onDownloadSingle: handleDownloadSingle,
+      onToggleExpansion: handleToggleExpansion,
+      onAddToRecents: handleAddToRecents,
+      onUnzipFile: handleUnzipFile,
+      onNewFilesSelect,
+      onGoogleDriveSelect: handleGoogleDriveSelect,
 
-    // External props
-    recentFiles,
-    isFileSupported,
-    modalHeight,
-  }), [
-    activeSource,
-    selectedFileIds,
-    searchTerm,
-    selectedFiles,
-    filteredFiles,
-    fileInputRef,
-    expandedFileIds,
-    fileGroups,
-    loadedHistoryFiles,
-    isLoading,
-    handleSourceChange,
-    handleLocalFileClick,
-    handleFileSelect,
-    handleFileRemove,
-    handleFileRemoveById,
-    performFileDelete,
-    handleFileDoubleClick,
-    handleOpenFiles,
-    handleSearchChange,
-    handleFileInputChange,
-    handleSelectAll,
-    handleDeleteSelected,
-    handleDownloadSelected,
-    handleToggleExpansion,
-    handleAddToRecents,
-    handleUnzipFile,
-    onNewFilesSelect,
-    handleGoogleDriveSelect,
-    recentFiles,
-    isFileSupported,
-    modalHeight,
-  ]);
-
-  return (
-    <FileManagerContext.Provider value={contextValue}>
-      {children}
-    </FileManagerContext.Provider>
+      // External props
+      recentFiles,
+      isFileSupported,
+      modalHeight,
+    }),
+    [
+      activeSource,
+      selectedFileIds,
+      searchTerm,
+      selectedFiles,
+      filteredFiles,
+      fileInputRef,
+      expandedFileIds,
+      fileGroups,
+      loadedHistoryFiles,
+      isLoading,
+      handleSourceChange,
+      handleLocalFileClick,
+      handleFileSelect,
+      handleFileRemove,
+      handleFileRemoveById,
+      performFileDelete,
+      handleFileDoubleClick,
+      handleOpenFiles,
+      handleSearchChange,
+      handleFileInputChange,
+      handleSelectAll,
+      handleDeleteSelected,
+      handleDownloadSelected,
+      handleToggleExpansion,
+      handleAddToRecents,
+      handleUnzipFile,
+      onNewFilesSelect,
+      handleGoogleDriveSelect,
+      recentFiles,
+      isFileSupported,
+      modalHeight,
+    ],
   );
+
+  return <FileManagerContext.Provider value={contextValue}>{children}</FileManagerContext.Provider>;
 };
 
 // Custom hook to use the context
@@ -690,8 +713,8 @@ export const useFileManagerContext = (): FileManagerContextValue => {
 
   if (!context) {
     throw new Error(
-      'useFileManagerContext must be used within a FileManagerProvider. ' +
-      'Make sure you wrap your component with <FileManagerProvider>.'
+      "useFileManagerContext must be used within a FileManagerProvider. " +
+        "Make sure you wrap your component with <FileManagerProvider>.",
     );
   }
 

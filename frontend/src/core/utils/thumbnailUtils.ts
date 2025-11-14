@@ -379,6 +379,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
 
 /**
  * Generate thumbnail and extract page count for a PDF file - always returns a valid thumbnail
+ * @param file
  * @param applyRotation - If true, render thumbnail with PDF rotation applied (for static display).
  *                        If false, render without rotation (for CSS-based rotation in PageEditor)
  */

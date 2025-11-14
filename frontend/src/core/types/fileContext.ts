@@ -4,6 +4,7 @@
 
 import { PageOperation } from '@app/types/pageEditor';
 import { FileId, BaseFileMetadata } from '@app/types/file';
+import React from "react";
 
 // Re-export FileId for convenience
 export type { FileId };

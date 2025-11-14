@@ -4,7 +4,7 @@ import { BaseParametersHook, useBaseParameters } from '@app/hooks/tools/shared/u
 export interface MergeParameters extends BaseParameters {
   removeDigitalSignature: boolean;
   generateTableOfContents: boolean;
-};
+}
 
 export const defaultParameters: MergeParameters = {
   removeDigitalSignature: false,

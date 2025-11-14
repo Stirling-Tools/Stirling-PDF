@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import SanitizeSettings from '@app/components/tools/sanitize/SanitizeSettings';
 import { SanitizeParameters } from '@app/hooks/tools/sanitize/useSanitizeParameters';
+import React from "react";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

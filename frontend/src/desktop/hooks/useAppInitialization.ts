@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
-import { useOpenedFile } from '@app/hooks/useOpenedFile';
-import { fileOpenService } from '@app/services/fileOpenService';
-import { useFileManagement } from '@app/contexts/file/fileHooks';
+import {useEffect, useRef} from 'react';
+import {useBackendInitializer} from '@app/hooks/useBackendInitializer';
+import {useOpenedFile} from '@app/hooks/useOpenedFile';
+import {fileOpenService} from '@app/services/fileOpenService';
+import {useFileManagement} from '@app/contexts/file/fileHooks';
 
 /**
  * App initialization hook
@@ -86,9 +86,7 @@ export function useAppInitialization(): void {
     };
 
     // Set up event listener and get cleanup function
-    const unlisten = fileOpenService.onFileOpened(handleRuntimeFileOpen);
-
     // Clean up listener on unmount
-    return unlisten;
+    return fileOpenService.onFileOpened(handleRuntimeFileOpen);
   }, [addFiles]);
 }

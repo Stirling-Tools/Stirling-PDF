@@ -48,7 +48,7 @@ const PageSelectionInput = ({
             <Text size="sm" c="var(--text-secondary)">{t('bulkSelection.advanced.title', 'Advanced')}</Text>
             <Switch
               size="sm"
-              checked={!!advancedOpened}
+              checked={advancedOpened}
               onChange={(e) => onToggleAdvanced?.(e.currentTarget.checked)}
               title={t('bulkSelection.advanced.title', 'Advanced')}
               className={classes.advancedSwitch}
@@ -56,7 +56,7 @@ const PageSelectionInput = ({
           </Flex>
         )}
       </Flex>
-      
+
       {/* Text input */}
       <TextInput
         value={csvInput}
@@ -72,7 +72,7 @@ const PageSelectionInput = ({
               variant="subtle"
               size="xs"
               onClick={onClear}
-              style={{ 
+              style={{
                 color: 'var(--text-muted)',
                 minWidth: 'auto',
                 width: '24px',

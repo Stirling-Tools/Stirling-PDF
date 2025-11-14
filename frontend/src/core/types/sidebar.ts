@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface SidebarState {
   sidebarsVisible: boolean;
   leftPanelView: 'toolPicker' | 'toolContent';

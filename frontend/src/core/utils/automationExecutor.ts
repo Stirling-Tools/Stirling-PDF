@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { ToolId } from '@app/types/toolId';
-import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
-import { AutomationFileProcessor } from '@app/utils/automationFileProcessor';
-import { ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { processResponse } from '@app/utils/toolResponseProcessor';
+import {ToolRegistry} from '@app/data/toolsTaxonomy';
+import {ToolId} from '@app/types/toolId';
+import {AUTOMATION_CONSTANTS} from '@app/constants/automation';
+import {AutomationFileProcessor} from '@app/utils/automationFileProcessor';
+import {ToolType} from '@app/hooks/tools/shared/useToolOperation';
+import {processResponse} from '@app/utils/toolResponseProcessor';
 
 /**
  * Process multi-file tool response (handles ZIP or single PDF responses)
@@ -20,14 +20,13 @@ const processMultiFileResponse = async (
   if (responseData.type === 'application/pdf' ||
       (responseHeaders && responseHeaders['content-type'] === 'application/pdf')) {
     // Single PDF response - use processResponse to respect preserveBackendFilename
-    const processedFiles = await processResponse(
+    return await processResponse(
       responseData,
       files,
       filePrefix,
       undefined,
       preserveBackendFilename ? responseHeaders : undefined
     );
-    return processedFiles;
   } else {
     // ZIP response
     const result = await AutomationFileProcessor.extractAutomationZipFiles(responseData);
@@ -37,14 +36,12 @@ const processMultiFileResponse = async (
     }
 
     // Apply prefix to files, replacing any existing prefix
-    const processedFiles = filePrefix && !preserveBackendFilename
+    return filePrefix && !preserveBackendFilename
       ? result.files.map(file => {
-          const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
-          return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
-        })
+        const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
+        return new File([file], `${filePrefix}${nameWithoutPrefix}`, {type: file.type});
+      })
       : result.files;
-
-    return processedFiles;
   }
 };
 
@@ -158,8 +155,7 @@ export const executeToolOperationWithPrefix = async (
   try {
     // Check if tool uses custom processor (like Convert tool)
     if (config.customProcessor) {
-      const resultFiles = await config.customProcessor(parameters, files);
-      return resultFiles;
+      return await config.customProcessor(parameters, files);
     }
 
     // Execute based on tool type

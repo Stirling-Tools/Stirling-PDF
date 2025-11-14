@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import RedactAdvancedSettings from '@app/components/tools/redact/RedactAdvancedSettings';
 import { defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import React from "react";
 
 // Mock useTranslation
 const mockT = vi.fn((_key: string, fallback: string) => fallback);

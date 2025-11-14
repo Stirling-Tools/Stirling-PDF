@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { useFileState } from '@app/contexts/FileContext';
-import { usePageEditor } from '@app/contexts/PageEditorContext';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
-import { FileId } from '@app/types/file';
+import {useMemo} from 'react';
+import {useFileState} from '@app/contexts/FileContext';
+import {usePageEditor} from '@app/contexts/PageEditorContext';
+import {PDFDocument, PDFPage} from '@app/types/pageEditor';
+import {FileId} from '@app/types/file';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -102,7 +102,7 @@ export function usePageDocument(): PageDocumentHook {
     });
 
     // Build pages by interleaving original pages with insertions
-    let pages: PDFPage[] = [];
+    let pages: PDFPage[];
 
     // Helper function to create pages from a file (or placeholder if deselected)
     const createPagesFromFile = (fileId: FileId, startPageNumber: number, isSelected: boolean): PDFPage[] => {
@@ -236,15 +236,13 @@ export function usePageDocument(): PageDocumentHook {
       }
     }
 
-    const mergedDoc: PDFDocument = {
+    return {
       id: activeFileIds.join('-'),
       name,
       file: primaryFile!,
       pages,
       totalPages: pages.length,
     };
-
-    return mergedDoc;
   }, [activeFileIds, selectedActiveFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds, currentPagesSignature, currentPages]);
 
   // Large document detection for smart loading

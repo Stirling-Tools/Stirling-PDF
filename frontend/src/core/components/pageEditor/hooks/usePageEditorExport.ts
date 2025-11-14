@@ -1,14 +1,11 @@
-import { Dispatch, SetStateAction, useCallback } from "react";
+import {Dispatch, SetStateAction, useCallback} from "react";
 
-import type {
-  useFileActions,
-  useFileState,
-} from "@app/contexts/FileContext";
-import { documentManipulationService } from "@app/services/documentManipulationService";
-import { pdfExportService } from "@app/services/pdfExportService";
-import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
-import { FileId } from "@app/types/file";
-import { PDFDocument } from "@app/types/pageEditor";
+import type {useFileActions, useFileState,} from "@app/contexts/FileContext";
+import {documentManipulationService} from "@app/services/documentManipulationService";
+import {pdfExportService} from "@app/services/pdfExportService";
+import {exportProcessedDocumentsToFiles} from "@app/services/pdfExportHelpers";
+import {FileId} from "@app/types/file";
+import {PDFDocument} from "@app/types/pageEditor";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -48,10 +45,9 @@ const normalizeProcessedDocuments = (
   processed: PDFDocument | PDFDocument[]
 ): PDFDocument | PDFDocument[] => {
   if (Array.isArray(processed)) {
-    const normalized = processed
+    return processed
       .map(removePlaceholderPages)
       .filter((doc) => doc.pages.length > 0);
-    return normalized;
   }
   return removePlaceholderPages(processed);
 };

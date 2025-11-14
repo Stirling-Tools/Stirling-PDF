@@ -1,31 +1,28 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Loader, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useIsMobile } from '@app/hooks/useIsMobile';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Loader, Stack} from '@mantine/core';
+import {useTranslation} from 'react-i18next';
+import {useIsMobile} from '@app/hooks/useIsMobile';
 import {
-  mapChangesForDropdown,
-  getFileFromSelection,
-  getStubFromSelection,
-  computeShowProgressBanner,
-  computeProgressPct,
   computeCountsText,
   computeMaxSharedPages,
+  computeProgressPct,
+  computeShowProgressBanner,
+  getFileFromSelection,
+  getStubFromSelection,
+  mapChangesForDropdown,
 } from '@app/components/tools/compare/compare';
-import {
-  CompareResultData,
-  CompareWorkbenchData,
-} from '@app/types/compare';
-import { useFileContext } from '@app/contexts/file/fileHooks';
-import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
+import {CompareResultData, CompareWorkbenchData,} from '@app/types/compare';
+import {useFileContext} from '@app/contexts/file/fileHooks';
+import {useRightRailButtons} from '@app/hooks/useRightRailButtons';
 import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
-import { useComparePagePreviews } from '@app/components/tools/compare/hooks/useComparePagePreviews';
-import { useComparePanZoom } from '@app/components/tools/compare/hooks/useComparePanZoom';
-import { useCompareHighlights } from '@app/components/tools/compare/hooks/useCompareHighlights';
-import { useCompareChangeNavigation } from '@app/components/tools/compare/hooks/useCompareChangeNavigation';
+import {useComparePagePreviews} from '@app/components/tools/compare/hooks/useComparePagePreviews';
+import {useComparePanZoom} from '@app/components/tools/compare/hooks/useComparePanZoom';
+import {useCompareHighlights} from '@app/components/tools/compare/hooks/useCompareHighlights';
+import {useCompareChangeNavigation} from '@app/components/tools/compare/hooks/useCompareChangeNavigation';
 import '@app/components/tools/compare/compareView.css';
-import { useCompareRightRailButtons } from '@app/components/tools/compare/hooks/useCompareRightRailButtons';
-import { alert, updateToast, updateToastProgress, dismissToast } from '@app/components/toast';
-import type { ToastLocation } from '@app/components/toast/types';
+import {useCompareRightRailButtons} from '@app/components/tools/compare/hooks/useCompareRightRailButtons';
+import {alert, dismissToast, updateToast, updateToastProgress} from '@app/components/toast';
+import type {ToastLocation} from '@app/components/toast/types';
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
@@ -76,7 +73,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     isPanMode,
     setIsPanMode,
     baseZoom,
-    setBaseZoom,  
+    setBaseZoom,
     comparisonZoom,
     setComparisonZoom,
     setPanToTopLeft,
@@ -216,7 +213,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     if (!allDone) {
       // Create toast if missing
       if (!progressToastIdRef.current) {
-        const id = alert({
+        progressToastIdRef.current = alert({
           alertType: 'neutral',
           title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
           body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
@@ -226,7 +223,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
           expandable: false,
           progressBarPercentage: progressPct,
         });
-        progressToastIdRef.current = id;
       } else {
         updateToast(progressToastIdRef.current, {
           title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
@@ -293,8 +289,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       const pageEl = container.querySelector(`.compare-diff-page[data-page-number="${pageNum}"]`) as HTMLElement | null;
       if (!pageEl) return false;
       const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
-      const desired = Math.max(0, Math.min(maxTop, pageEl.offsetTop - Math.round(container.clientHeight * 0.2)));
-      container.scrollTop = desired;
+      container.scrollTop = Math.max(0, Math.min(maxTop, pageEl.offsetTop - Math.round(container.clientHeight * 0.2)));
       return true;
     };
 

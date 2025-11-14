@@ -71,7 +71,7 @@ try {
         let licenseType = dep.licenseType;
 
         // Handle missing or null licenses
-        if (!licenseType || licenseType === null || licenseType === undefined) {
+        if (!licenseType) {
             licenseType = 'Unknown';
         }
 

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 
 import {
   BulkRotateCommand,
@@ -293,7 +293,7 @@ export const usePageEditorCommands = ({
         if (!targetPage) return;
 
         const insertAfterPageId = targetPage.id;
-        let addedFileIds: FileId[] = [];
+        let addedFileIds: FileId[];
         if (isFromStorage) {
           const stubs = files as StirlingFileStub[];
           const result = await actions.addStirlingFileStubs(stubs, {

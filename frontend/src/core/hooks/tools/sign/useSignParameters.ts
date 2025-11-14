@@ -47,11 +47,9 @@ const validateSignParameters = (parameters: SignParameters): boolean => {
     return false;
   }
   // For text signatures, require signer name
-  if (parameters.signatureType === 'text' && !parameters.signerName) {
-    return false;
-  }
+  return !(parameters.signatureType === 'text' && !parameters.signerName);
 
-  return true;
+
 };
 
 export const useSignParameters = () => {

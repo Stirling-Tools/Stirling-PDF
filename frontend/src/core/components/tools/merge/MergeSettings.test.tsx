@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import MergeSettings from '@app/components/tools/merge/MergeSettings';
 import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import React from "react";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);
@@ -96,5 +97,5 @@ describe('MergeSettings', () => {
     expect(mockT).toHaveBeenCalledWith('merge.removeDigitalSignature.label', 'Remove digital signature in the merged file?');
     expect(mockT).toHaveBeenCalledWith('merge.generateTableOfContents.label', 'Generate table of contents in the merged file?');
   });
-  
+
 });

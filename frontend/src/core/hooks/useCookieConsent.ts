@@ -67,7 +67,7 @@ export const useCookieConsent = ({
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
           // Priority: Mantine attribute > CSS classes > system preference
-          let isDarkMode = false;
+          let isDarkMode: boolean;
 
           if (mantineScheme) {
             isDarkMode = mantineScheme === 'dark';

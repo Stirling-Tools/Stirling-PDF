@@ -10,6 +10,7 @@ import {
   StirlingFile,
   createStirlingFile
 } from '@app/types/fileContext';
+import React from "react";
 
 /**
  * Create stable selectors using stateRef and filesRef

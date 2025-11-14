@@ -19,6 +19,7 @@ import { buildQuickKeySet } from '@app/contexts/file/fileSelectors';
 import { StirlingFile } from '@app/types/fileContext';
 import { fileStorage } from '@app/services/fileStorage';
 import { zipFileService } from '@app/services/zipFileService';
+import React from "react";
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**

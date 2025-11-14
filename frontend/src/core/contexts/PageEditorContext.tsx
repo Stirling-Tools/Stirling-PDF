@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef, useEffect } from 'react';
-import { FileId } from '@app/types/file';
-import { useFileActions, useFileState } from '@app/contexts/FileContext';
-import { PDFPage } from '@app/types/pageEditor';
-import { MAX_PAGE_EDITOR_FILES } from '@app/components/pageEditor/fileColors';
+import React, {createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {FileId} from '@app/types/file';
+import {useFileActions, useFileState} from '@app/contexts/FileContext';
+import {PDFPage} from '@app/types/pageEditor';
+import {MAX_PAGE_EDITOR_FILES} from '@app/components/pageEditor/fileColors';
 
 // PageEditorFile is now defined locally in consuming components
 // Components should derive file list directly from FileContext
@@ -26,11 +26,9 @@ function computeFileOrderFromPages(pages: PDFPage[]): FileId[] {
   });
 
   // Sort files by their first page position
-  const fileOrder = Array.from(fileFirstPagePositions.entries())
+  return Array.from(fileFirstPagePositions.entries())
     .sort((a, b) => a[1] - b[1])
     .map(entry => entry[0]);
-
-  return fileOrder;
 }
 
 /**

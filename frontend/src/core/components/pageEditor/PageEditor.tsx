@@ -1,28 +1,28 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { usePageEditor } from "@app/contexts/PageEditorContext";
-import { PageEditorFunctions } from "@app/types/pageEditor";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {Box, Center, LoadingOverlay, Stack, Text} from "@mantine/core";
+import {useFileActions, useFileState} from "@app/contexts/FileContext";
+import {useNavigationGuard} from "@app/contexts/NavigationContext";
+import {usePageEditor} from "@app/contexts/PageEditorContext";
+import {PageEditorFunctions} from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import '@app/components/pageEditor/PageEditor.module.css';
 import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
 import DragDropGrid from '@app/components/pageEditor/DragDropGrid';
 import SkeletonLoader from '@app/components/shared/SkeletonLoader';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
-import { FileId } from "@app/types/file";
-import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
-import { useInitialPageDocument } from '@app/components/pageEditor/hooks/useInitialPageDocument';
-import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
-import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
-import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
-import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
-import { useWheelZoom } from "@app/hooks/useWheelZoom";
-import { useEditedDocumentState } from "@app/components/pageEditor/hooks/useEditedDocumentState";
-import { useUndoManagerState } from "@app/components/pageEditor/hooks/useUndoManagerState";
-import { usePageSelectionManager } from "@app/components/pageEditor/hooks/usePageSelectionManager";
-import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEditorCommands";
-import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
+import {FileId} from "@app/types/file";
+import {GRID_CONSTANTS} from '@app/components/pageEditor/constants';
+import {useInitialPageDocument} from '@app/components/pageEditor/hooks/useInitialPageDocument';
+import {usePageDocument} from '@app/components/pageEditor/hooks/usePageDocument';
+import {usePageEditorState} from '@app/components/pageEditor/hooks/usePageEditorState';
+import {usePageEditorRightRailButtons} from "@app/components/pageEditor/pageEditorRightRailButtons";
+import {useFileColorMap} from "@app/components/pageEditor/hooks/useFileColorMap";
+import {useWheelZoom} from "@app/hooks/useWheelZoom";
+import {useEditedDocumentState} from "@app/components/pageEditor/hooks/useEditedDocumentState";
+import {useUndoManagerState} from "@app/components/pageEditor/hooks/useUndoManagerState";
+import {usePageSelectionManager} from "@app/components/pageEditor/hooks/usePageSelectionManager";
+import {usePageEditorCommands} from "@app/components/pageEditor/hooks/useEditorCommands";
+import {usePageEditorExport} from "@app/components/pageEditor/hooks/usePageEditorExport";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -233,8 +233,6 @@ const PageEditor = ({
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
-  const activeFileIds = selectedFileIds;
-
   usePageEditorRightRailButtons({
     totalPages,
     selectedPageCount,
@@ -249,7 +247,7 @@ const PageEditor = ({
     onExportSelected,
     onSaveChanges: applyChanges,
     exportLoading,
-    activeFileCount: activeFileIds.length,
+    activeFileCount: selectedFileIds.length,
     closePdf,
   });
 

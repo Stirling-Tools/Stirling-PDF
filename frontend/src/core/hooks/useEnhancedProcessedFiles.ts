@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { ProcessedFile, ProcessingState, ProcessingConfig } from '@app/types/processing';
-import { enhancedPDFProcessingService } from '@app/services/enhancedPDFProcessingService';
-import { FileHasher } from '@app/utils/fileHash';
+import {useEffect, useRef, useState} from 'react';
+import {ProcessedFile, ProcessingConfig, ProcessingState} from '@app/types/processing';
+import {enhancedPDFProcessingService} from '@app/services/enhancedPDFProcessingService';
+import {FileHasher} from '@app/utils/fileHash';
 
 interface UseEnhancedProcessedFilesResult {
   processedFiles: Map<File, ProcessedFile>;
@@ -42,8 +42,7 @@ export function useEnhancedProcessedFiles(
 
   // Subscribe to processing state changes once
   useEffect(() => {
-    const unsubscribe = enhancedPDFProcessingService.onProcessingChange(setProcessingStates);
-    return unsubscribe;
+    return enhancedPDFProcessingService.onProcessingChange(setProcessingStates);
   }, []);
 
   // Process files when activeFiles changes

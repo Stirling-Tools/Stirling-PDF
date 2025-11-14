@@ -2,6 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import WordsToRedactInput from '@app/components/tools/redact/WordsToRedactInput';
+import React from "react";
 
 // Mock useTranslation
 const mockT = vi.fn((_key: string, fallback: string) => fallback);

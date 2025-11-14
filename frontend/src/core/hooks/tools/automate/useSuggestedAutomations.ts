@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import React from 'react';
+import React, {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { SuggestedAutomation } from '@app/types/automation';
-import { SPLIT_METHODS } from '@app/constants/splitConstants';
+import {SuggestedAutomation} from '@app/types/automation';
+import {SPLIT_METHODS} from '@app/constants/splitConstants';
 
 // Create icon components
 const CompressIcon = () => React.createElement(LocalIcon, { icon: 'compress', width: '1.5rem', height: '1.5rem' });
@@ -13,7 +12,7 @@ const StarIcon = () => React.createElement(LocalIcon, { icon: 'star', width: '1.
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
 
-  const suggestedAutomations = useMemo<SuggestedAutomation[]>(() => {
+  return useMemo<SuggestedAutomation[]>(() => {
     const now = new Date().toISOString();
     return [
       {
@@ -189,6 +188,4 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       },
     ];
   }, [t]);
-
-  return suggestedAutomations;
 }

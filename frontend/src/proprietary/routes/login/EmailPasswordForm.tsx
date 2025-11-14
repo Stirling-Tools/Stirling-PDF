@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import '@app/routes/authShared/auth.css';
+import React from "react";
 
 interface EmailPasswordFormProps {
   email: string

@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import RemovePasswordSettings from '@app/components/tools/removePassword/RemovePasswordSettings';
 import { defaultParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
+import React from "react";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

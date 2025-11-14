@@ -2,6 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import ButtonSelector from '@app/components/shared/ButtonSelector';
+import React from "react";
 
 // Wrapper component to provide Mantine context
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -208,7 +209,7 @@ describe('ButtonSelector', () => {
     // Should render buttons
     expect(screen.getByText('Option 1')).toBeInTheDocument();
     expect(screen.getByText('Option 2')).toBeInTheDocument();
-    
+
     // Stack should only contain the Group (buttons), no Text element for label
     const stackElement = container.querySelector('[class*="mantine-Stack-root"]');
     expect(stackElement?.children).toHaveLength(1); // Only the Group, no label Text

@@ -3,7 +3,7 @@
  * Handles Google Drive file picker integration
  */
 
-import { loadScript } from '@app/utils/scriptLoader';
+import {loadScript} from '@app/utils/scriptLoader';
 
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 const SESSION_STORAGE_ID = 'googleDrivePickerAccessToken';
@@ -222,7 +222,7 @@ class GoogleDrivePickerService {
             });
 
             // Convert response body to File object
-            const file = new File(
+            return new File(
               [new Uint8Array(res.body.length).map((_: any, i: number) => res.body.charCodeAt(i))],
               pickedFile.name,
               {
@@ -230,7 +230,6 @@ class GoogleDrivePickerService {
                 lastModified: pickedFile.lastModified,
               }
             );
-            return file;
           })
         );
 

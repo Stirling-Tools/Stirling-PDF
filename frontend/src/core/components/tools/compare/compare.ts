@@ -1,7 +1,6 @@
-import type { TokenBoundingBox, WordHighlightEntry } from '@app/types/compare';
-import type { FileId } from '@app/types/file';
-import type { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
-import type { PagePreview } from '@app/types/compare';
+import type {PagePreview, TokenBoundingBox, WordHighlightEntry} from '@app/types/compare';
+import type {FileId} from '@app/types/file';
+import type {StirlingFile, StirlingFileStub} from '@app/types/fileContext';
 
 /** Convert hex color (#rrggbb) to rgba() string with alpha; falls back to input if invalid. */
 export const toRgba = (hexColor: string, alpha: number): string => {
@@ -15,8 +14,7 @@ export const toRgba = (hexColor: string, alpha: number): string => {
 
 /** Normalize rotation to [0, 360). */
 export const normalizeRotation = (deg: number | undefined | null): number => {
-  const n = ((deg ?? 0) % 360 + 360) % 360;
-  return n;
+  return ((deg ?? 0) % 360 + 360) % 360;
 };
 
 /**

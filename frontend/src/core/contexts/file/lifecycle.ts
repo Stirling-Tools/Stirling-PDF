@@ -4,6 +4,7 @@
 
 import { FileId } from '@app/types/file';
 import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '@app/types/fileContext';
+import React from "react";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 

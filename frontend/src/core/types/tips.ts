@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface TooltipTip {
   title?: string;
   description?: string;
@@ -12,4 +14,4 @@ export interface TooltipContent {
   };
   tips?: TooltipTip[];
   content?: React.ReactNode;
-} 
+}

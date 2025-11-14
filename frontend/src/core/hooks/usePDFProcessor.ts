@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { createQuickKey } from '@app/types/fileContext';
+import {useCallback, useState} from 'react';
+import {PDFDocument, PDFPage} from '@app/types/pageEditor';
+import {pdfWorkerManager} from '@app/services/pdfWorkerManager';
+import {createQuickKey} from '@app/types/fileContext';
 
 export function usePDFProcessor() {
   const [loading, setLoading] = useState(false);
@@ -89,8 +89,7 @@ export function usePDFProcessor() {
       const priorityPages = Math.min(10, totalPages);
       for (let i = 1; i <= priorityPages; i++) {
         try {
-          const thumbnail = await generateThumbnailFromPDF(pdf, i);
-          pages[i - 1].thumbnail = thumbnail;
+          pages[i - 1].thumbnail = await generateThumbnailFromPDF(pdf, i);
         } catch (error) {
           console.warn(`Failed to generate thumbnail for page ${i}:`, error);
         }
@@ -99,15 +98,13 @@ export function usePDFProcessor() {
       // Clean up using worker manager
       pdfWorkerManager.destroyDocument(pdf);
 
-      const document: PDFDocument = {
+      return {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: file.name,
         file,
         pages,
         totalPages
       };
-
-      return document;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF';
       setError(errorMessage);

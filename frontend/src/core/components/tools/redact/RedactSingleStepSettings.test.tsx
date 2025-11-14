@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import RedactSingleStepSettings from '@app/components/tools/redact/RedactSingleStepSettings';
 import { defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import React from "react";
 
 // Mock useTranslation
 vi.mock('react-i18next', () => ({

@@ -1,4 +1,5 @@
 import '@app/components/shared/dividerWithText/DividerWithText.css';
+import React from "react";
 
 interface TextDividerProps {
   text?: string

@@ -2,6 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import MergeFileSorter from '@app/components/tools/merge/MergeFileSorter';
+import React from "react";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);
@@ -117,7 +118,7 @@ describe('MergeFileSorter', () => {
     // Open the dropdown by clicking on the current selected value
     const currentSelection = screen.getByText('mock-merge.sortBy.filename');
     fireEvent.mouseDown(currentSelection);
-    
+
     // Click on the dateModified option
     const dateModifiedOption = screen.getByText('mock-merge.sortBy.dateModified');
     fireEvent.click(dateModifiedOption);

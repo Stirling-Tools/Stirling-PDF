@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react';
-import { ToastApi, ToastInstance, ToastOptions } from '@app/components/toast/types';
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {ToastApi, ToastInstance, ToastOptions} from '@app/components/toast/types';
 
 function normalizeProgress(value: number | undefined): number | undefined {
   if (typeof value !== 'number' || Number.isNaN(value)) return undefined;
@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       progress: normalizeProgress(options.progressBarPercentage),
       justCompleted: false,
       expandable: hasButton ? false : (options.expandable !== false),
-      isExpanded: hasButton ? true : (options.expandable === false ? true : (options.alertType === 'error' ? true : false)),
+      isExpanded: hasButton ? true : (options.expandable === false ? true : (options.alertType === 'error')),
       createdAt: Date.now(),
     } as ToastInstance;
     setToasts(prev => {
@@ -73,8 +73,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return updated;
         }
       }
-      const next = [...prev.filter(t => t.id !== id), merged];
-      return next;
+      return [...prev.filter(t => t.id !== id), merged];
     });
     scheduleAutoDismiss(merged);
     return id;

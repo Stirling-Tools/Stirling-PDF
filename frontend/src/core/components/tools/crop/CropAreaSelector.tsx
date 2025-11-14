@@ -1,14 +1,14 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Box, useMantineTheme, MantineTheme } from '@mantine/core';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Box, MantineTheme, useMantineTheme} from '@mantine/core';
 import {
-  PDFBounds,
-  Rectangle,
-  domToPDFCoordinates,
-  pdfToDOMCoordinates,
   constrainDOMRectToThumbnail,
-  isPointInThumbnail
+  domToPDFCoordinates,
+  isPointInThumbnail,
+  PDFBounds,
+  pdfToDOMCoordinates,
+  Rectangle
 } from '@app/utils/cropCoordinates';
-import { type ResizeHandle } from '@app/constants/cropConstants';
+import {type ResizeHandle} from '@app/constants/cropConstants';
 
 interface CropAreaSelectorProps {
   /** PDF bounds for coordinate conversion */
@@ -188,8 +188,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 // Helper functions
 
 function getResizeHandle(x: number, y: number, domRect: Rectangle): ResizeHandle {
-  const handleSize = 8;
-  const tolerance = handleSize;
+  const tolerance = 8;
 
   // Corner handles (check these first, they have priority)
   if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y, tolerance)) return 'nw';

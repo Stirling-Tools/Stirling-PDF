@@ -1,8 +1,9 @@
-import { PDFDocument, rgb } from 'pdf-lib';
-import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
-import { createProcessedFile, createChildStub } from '@app/contexts/file/fileActions';
-import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
-import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import {PDFDocument, rgb} from 'pdf-lib';
+import {generateThumbnailWithMetadata} from '@app/utils/thumbnailUtils';
+import {createChildStub, createProcessedFile} from '@app/contexts/file/fileActions';
+import {createStirlingFile, FileId, StirlingFile, StirlingFileStub} from '@app/types/fileContext';
+import type {SignatureAPI} from '@app/components/viewer/viewerTypes';
+import React from "react";
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -56,10 +57,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                                        annotation.stampData || annotation.imageSrc ||
                                        annotation.contents || annotation.data;
 
-              const isSessionAnnotation = hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
-
-
-              return isSessionAnnotation;
+              return hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
             });
 
             if (sessionAnnotations.length > 0) {

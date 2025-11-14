@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useToolNavigation } from '@app/hooks/useToolNavigation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -67,7 +67,7 @@ export function useSuggestedTools(): SuggestedTool[] {
           onClick: (e: React.MouseEvent) => { e.preventDefault(); }
         };
       }
-      
+
       const navProps = getToolNavigation(tool.id, toolRegistryEntry);
       return {
         ...tool,

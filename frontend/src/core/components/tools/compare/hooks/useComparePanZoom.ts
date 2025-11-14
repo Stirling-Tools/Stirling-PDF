@@ -1,23 +1,13 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import type {MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent, WheelEvent as ReactWheelEvent,} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState,} from 'react';
 import type {
-  MouseEvent as ReactMouseEvent,
-  TouchEvent as ReactTouchEvent,
-  WheelEvent as ReactWheelEvent,
-} from 'react';
-import type {
-  PagePreview,
   ComparePane as Pane,
-  PanState,
-  ScrollLinkDelta,
-  ScrollLinkAnchors,
+  PagePreview,
   PanDragState,
+  PanState,
   PinchState,
+  ScrollLinkAnchors,
+  ScrollLinkDelta,
   UseComparePanZoomOptions,
   UseComparePanZoomReturn,
 } from '@app/types/compare';
@@ -212,8 +202,7 @@ export const useComparePanZoom = ({
       const frac = srcHeights[i] > 0 ? within / srcHeights[i] : 0;
 
       const j = Math.min(i, dstHeights.length - 1);
-      const dstTop = dstPrefix[j] + frac * (dstHeights[j] || 1);
-      return dstTop;
+      return dstPrefix[j] + frac * (dstHeights[j] || 1);
     },
     [rowHeights]
   );
@@ -478,8 +467,7 @@ export const useComparePanZoom = ({
         const deltaPx = sourceIsBase
           ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
           : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
-        const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
-        target.scrollTop = desiredTop;
+        target.scrollTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
       }
     }
   }, [isScrollLinked, mapScrollTopBetweenPanes]);
@@ -652,8 +640,7 @@ export const useComparePanZoom = ({
       if (desired !== target.scrollTop) {
         isSyncingRef.current = true;
         // Adjust relative to mapped space to keep the anchor consistent
-        const anchored = Math.max(0, Math.min(targetMax, mappedBefore + deltaPx + (mappedDelta || deltaY)));
-        target.scrollTop = anchored;
+        target.scrollTop = Math.max(0, Math.min(targetMax, mappedBefore + deltaPx + (mappedDelta || deltaY)));
         requestAnimationFrame(() => {
           isSyncingRef.current = false;
         });

@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useSearch } from '@embedpdf/plugin-search/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { SEARCH_CONSTANTS } from '@app/components/viewer/constants/search';
+import {useEffect, useMemo, useState} from 'react';
+import {useSearch} from '@embedpdf/plugin-search/react';
+import {useViewer} from '@app/contexts/ViewerContext';
+import {SEARCH_CONSTANTS} from '@app/components/viewer/constants/search';
 
 interface SearchLayerProps {
   pageIndex: number;
@@ -43,7 +43,7 @@ export function CustomSearchLayer({
       return;
     }
 
-    const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
+    return searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
       // Auto-scroll to active search result
       if (state?.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
         const activeResult = state.results[state.activeResultIndex];
@@ -55,9 +55,6 @@ export function CustomSearchLayer({
 
       setSearchResultState(state);
     });
-
-
-    return unsubscribe;
   }, [searchProvides, pageIndex]);
 
   // Filter results for current page while preserving original indices
@@ -66,11 +63,9 @@ export function CustomSearchLayer({
       return [];
     }
 
-    const filtered = searchResultState.results
-      .map((result, originalIndex) => ({ result, originalIndex }))
-      .filter(({ result }) => result.pageIndex === pageIndex);
-
-    return filtered;
+    return searchResultState.results
+      .map((result, originalIndex) => ({result, originalIndex}))
+      .filter(({result}) => result.pageIndex === pageIndex);
   }, [searchResultState, pageIndex]);
 
   if (!pageResults.length) {

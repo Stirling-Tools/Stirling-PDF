@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavKey } from '@app/components/shared/config/types';
+import {NavKey} from '@app/components/shared/config/types';
 import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
 
@@ -32,7 +32,7 @@ export const createConfigNavSections = (
   _runningEE: boolean = false,
   _loginEnabled: boolean = false
 ): ConfigNavSection[] => {
-  const sections: ConfigNavSection[] = [
+  return [
     {
       title: 'Preferences',
       items: [
@@ -40,17 +40,15 @@ export const createConfigNavSections = (
           key: 'general',
           label: 'General',
           icon: 'settings-rounded',
-          component: <GeneralSection />
+          component: <GeneralSection/>
         },
         {
           key: 'hotkeys',
           label: 'Keyboard Shortcuts',
           icon: 'keyboard-rounded',
-          component: <HotkeysSection />
+          component: <HotkeysSection/>
         },
       ],
     },
   ];
-
-  return sections;
 };

@@ -18,7 +18,7 @@ export interface SubcategoryGroup {
     id: ToolId;
     tool: ToolRegistryEntry;
   }[];
-};
+}
 
 export type ToolSectionKey = 'quick' | 'all';
 
@@ -26,7 +26,7 @@ export interface ToolSection {
   key: ToolSectionKey;
   title: string;
   subcategories: SubcategoryGroup[];
-};
+}
 
 export function useToolSections(
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>,

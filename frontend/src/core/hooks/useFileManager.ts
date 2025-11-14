@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react';
-import { useIndexedDB } from '@app/contexts/IndexedDBContext';
-import { fileStorage } from '@app/services/fileStorage';
-import { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
-import { FileId } from '@app/types/fileContext';
+import {useCallback, useState} from 'react';
+import {useIndexedDB} from '@app/contexts/IndexedDBContext';
+import {fileStorage} from '@app/services/fileStorage';
+import {FileId, StirlingFile, StirlingFileStub} from '@app/types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
@@ -34,9 +33,7 @@ export const useFileManager = () => {
       const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
 
       // For now, only regular files - drafts will be handled separately in the future
-      const sortedFiles = stirlingFileStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-
-      return sortedFiles;
+      return stirlingFileStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
     } catch (error) {
       console.error('Failed to load recent files:', error);
       return [];

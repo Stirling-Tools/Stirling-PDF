@@ -1,15 +1,15 @@
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { appendWord as sharedAppendWord } from '@app/utils/textDiff';
-import { PARAGRAPH_SENTINEL } from '@app/types/compare';
-import type { StirlingFile } from '@app/types/fileContext';
-import type { PDFPageProxy, TextContent, TextItem } from 'pdfjs-dist/types/src/display/api';
+import {pdfWorkerManager} from '@app/services/pdfWorkerManager';
+import {appendWord as sharedAppendWord} from '@app/utils/textDiff';
 import type {
   CompareChange,
   CompareDiffToken,
+  CompareParagraph,
   CompareResultData,
   TokenBoundingBox,
-  CompareParagraph,
 } from '@app/types/compare';
+import {PARAGRAPH_SENTINEL} from '@app/types/compare';
+import type {StirlingFile} from '@app/types/fileContext';
+import type {PDFPageProxy, TextContent, TextItem} from 'pdfjs-dist/types/src/display/api';
 
 export interface TokenMetadata {
   page: number;
@@ -261,8 +261,7 @@ export const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
 export const getWorkerErrorCode = (value: unknown): 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' | undefined => {
   if (typeof value === 'object' && value !== null && 'code' in value) {
-    const potentialCode = (value as { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' }).code;
-    return potentialCode;
+    return (value as { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' }).code;
   }
   return undefined;
 };

@@ -3,11 +3,11 @@
  * Integrates with FileContext to provide transparent file persistence
  */
 
-import React, { createContext, useContext, useCallback, useRef } from 'react';
-import { fileStorage } from '@app/services/fileStorage';
-import { FileId } from '@app/types/file';
-import { StirlingFileStub, createStirlingFile, createQuickKey } from '@app/types/fileContext';
-import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
+import React, {createContext, useCallback, useContext, useRef} from 'react';
+import {fileStorage} from '@app/services/fileStorage';
+import {FileId} from '@app/types/file';
+import {createQuickKey, createStirlingFile, StirlingFileStub} from '@app/types/fileContext';
+import {generateThumbnailForFile} from '@app/utils/thumbnailUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -133,18 +133,15 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const loadLeafMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
-    const metadata = await fileStorage.getLeafStirlingFileStubs(); // Only get leaf files
-
+     // Only get leaf files
     // All files are already StirlingFileStub objects, no processing needed
-    return metadata;
+    return await fileStorage.getLeafStirlingFileStubs();
 
   }, []);
 
   const loadAllMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
-    const metadata = await fileStorage.getAllStirlingFileStubs();
-
     // All files are already StirlingFileStub objects, no processing needed
-    return metadata;
+    return await fileStorage.getAllStirlingFileStubs();
   }, []);
 
   const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {

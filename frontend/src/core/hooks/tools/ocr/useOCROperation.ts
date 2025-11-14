@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { OCRParameters, defaultParameters } from '@app/hooks/tools/ocr/useOCRParameters';
-import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
+import {useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
+import {defaultParameters, OCRParameters} from '@app/hooks/tools/ocr/useOCRParameters';
+import {ToolOperationConfig, ToolType, useToolOperation} from '@app/hooks/tools/shared/useToolOperation';
+import {createStandardErrorHandler} from '@app/utils/toolErrorHandler';
+import {useToolResources} from '@app/hooks/tools/shared/useToolResources';
 
 // Helper: get MIME type based on file extension
 function getMimeType(filename: string): string {
@@ -108,8 +108,7 @@ export const useOCROperation = () => {
   // OCR-specific parsing: ZIP (sidecar) vs PDF vs HTML error
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
     // extractZipFiles from useToolResources already returns File[] directly
-    const simpleExtractZipFiles = extractZipFiles;
-    return ocrResponseHandler(blob, originalFiles, simpleExtractZipFiles);
+    return ocrResponseHandler(blob, originalFiles, extractZipFiles);
   }, [extractZipFiles]);
 
   const ocrConfig: ToolOperationConfig<OCRParameters> = {

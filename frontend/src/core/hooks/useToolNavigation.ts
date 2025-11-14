@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { ToolRegistryEntry, getToolUrlPath } from '@app/data/toolsTaxonomy';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
-import { ToolId } from '@app/types/toolId';
+import React, {useCallback} from 'react';
+import {getToolUrlPath, ToolRegistryEntry} from '@app/data/toolsTaxonomy';
+import {useToolWorkflow} from '@app/contexts/ToolWorkflowContext';
+import {handleUnlessSpecialClick} from '@app/utils/clickHandlers';
+import {ToolId} from '@app/types/toolId';
 
 export interface ToolNavigationProps {
   /** Full URL for the tool (for href attribute) */
@@ -22,8 +22,7 @@ export function useToolNavigation(): {
 
   const getToolNavigation = useCallback((toolId: string, tool: ToolRegistryEntry): ToolNavigationProps => {
     // Generate SSR-safe relative path
-    const path = getToolUrlPath(toolId);
-    const href = path; // Relative path, no window.location needed
+    const href = getToolUrlPath(toolId); // Relative path, no window.location needed
 
     // Click handler that maintains SPA behavior
     const onClick = (e: React.MouseEvent) => {

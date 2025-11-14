@@ -1,4 +1,4 @@
-import { RefObject, useEffect } from 'react';
+import {RefObject, useEffect} from 'react';
 
 export type AdjustFontSizeOptions = {
   /** Max font size to start from. Defaults to the element's computed font size. */
@@ -94,8 +94,7 @@ export function useAdjustFontSizeToFit(
 ) {
   useEffect(() => {
     if (!ref.current) return;
-    const cleanup = adjustFontSizeToFit(ref.current, options);
-    return cleanup;
+    return adjustFontSizeToFit(ref.current, options);
   }, [ref, options.maxFontSizePx, options.minFontScale, options.stepScale, options.maxLines, options.singleLine]);
 }
 

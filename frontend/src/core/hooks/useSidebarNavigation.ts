@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useToolNavigation } from '@app/hooks/useToolNavigation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';

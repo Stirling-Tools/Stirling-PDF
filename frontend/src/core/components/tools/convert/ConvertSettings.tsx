@@ -56,7 +56,7 @@ const ConvertSettings = ({
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
 
-    return endpointStatus[endpointKey] === true;
+    return endpointStatus[endpointKey];
   };
 
   // Enhanced FROM options with endpoint availability

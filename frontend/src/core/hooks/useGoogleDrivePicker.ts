@@ -2,11 +2,11 @@
  * React hook for Google Drive file picker
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {
+  getGoogleDriveConfig,
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
-  getGoogleDriveConfig,
 } from '@app/services/googleDrivePickerService';
 
 interface UseGoogleDrivePickerOptions {
@@ -71,12 +71,10 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
 
         // Open picker
         const service = getGoogleDrivePickerService();
-        const files = await service.openPicker({
+        return await service.openPicker({
           multiple: options.multiple ?? true,
           mimeTypes: options.mimeTypes,
         });
-
-        return files;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to open Google Drive picker';
         setError(errorMessage);

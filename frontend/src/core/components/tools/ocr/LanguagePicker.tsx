@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Text, Loader } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { tempOcrLanguages, getAutoOcrLanguage } from '@app/utils/languageMapping';
-import DropdownListWithFooter, { DropdownItem } from '@app/components/shared/DropdownListWithFooter';
+import React, {useEffect, useState} from 'react';
+import {Loader, Text} from '@mantine/core';
+import {useTranslation} from 'react-i18next';
+import {getAutoOcrLanguage, tempOcrLanguages} from '@app/utils/languageMapping';
+import DropdownListWithFooter, {DropdownItem} from '@app/components/shared/DropdownListWithFooter';
 
 export interface LanguageOption {
   value: string;
@@ -48,8 +48,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           const languageOptions = languages.map(lang => {
             // TODO: Use actual language translations when they become available
             // For now, use temporary English translations
-            const translatedName = tempOcrLanguages.lang[lang as keyof typeof tempOcrLanguages.lang] || lang;
-            const displayName = translatedName;
+            const displayName = tempOcrLanguages.lang[lang as keyof typeof tempOcrLanguages.lang] || lang;
 
             return {
               value: lang,
@@ -85,18 +84,18 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     if (shouldAutoFillLanguage) {
       // Use the comprehensive language mapping from languageMapping.ts
       const suggestedOcrLanguages = getAutoOcrLanguage(i18n.language);
-      
+
       if (suggestedOcrLanguages.length > 0) {
         // Find the first suggested language that's available in the backend
-        const matchingLanguage = availableLanguages.find(lang => 
+        const matchingLanguage = availableLanguages.find(lang =>
           suggestedOcrLanguages.includes(lang.value)
         );
-        
+
         if (matchingLanguage) {
           onChange([matchingLanguage.value]);
         }
       }
-      
+
       setHasAutoFilled(true);
     }
   }, [autoFillFromBrowserLanguage, isLoadingLanguages, availableLanguages, hasAutoFilled, value.length, i18n.language, onChange]);
@@ -111,15 +110,14 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   }
 
   const footer = (
-    <>
     <div className="flex flex-col items-center gap-1 text-center">
       <Text size="xs" c="dimmed" className="text-center">
         {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
       </Text>
-      <Text 
-        size="xs" 
-        style={{ 
-          color: '#3b82f6', 
+      <Text
+        size="xs"
+        style={{
+          color: '#3b82f6',
           cursor: 'pointer',
           textDecoration: 'underline',
           textAlign: 'center'
@@ -129,7 +127,6 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
         {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
       </Text>
     </div>
-    </>
   );
 
   return (
@@ -148,4 +145,4 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   );
 };
 
-export default LanguagePicker; 
+export default LanguagePicker;

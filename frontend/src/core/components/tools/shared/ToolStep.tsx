@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { Text, Stack, Flex, Divider } from '@mantine/core';
+import React, {createContext, useContext, useMemo} from 'react';
+import {Divider, Flex, Stack, Text} from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import { TooltipTip } from '@app/types/tips';
-import { createFilesToolStep, FilesToolStepProps } from '@app/components/tools/shared/FilesToolStep';
-import { createReviewToolStep, ReviewToolStepProps } from '@app/components/tools/shared/ReviewToolStep';
+import {Tooltip} from '@app/components/shared/Tooltip';
+import {TooltipTip} from '@app/types/tips';
+import {createFilesToolStep, FilesToolStepProps} from '@app/components/tools/shared/FilesToolStep';
+import {createReviewToolStep, ReviewToolStepProps} from '@app/components/tools/shared/ReviewToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -91,8 +91,6 @@ const ToolStep = ({
     return parent ? parent.visibleStepCount >= 3 : false; // Auto-detect
   }, [showNumber, parent]);
 
-  const stepNumber = _stepNumber;
-
   return (
     <div>
       <div
@@ -116,7 +114,7 @@ const ToolStep = ({
         <Flex align="center" gap="sm">
           {shouldShowNumber && (
             <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
-              {stepNumber}
+              {_stepNumber}
             </Text>
           )}
           {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}

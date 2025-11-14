@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { clamp } from '@app/utils/genericUtils';
 import { getSidebarInfo } from '@app/utils/sidebarUtils';
 import { SidebarRefs, SidebarState } from '@app/types/sidebar';

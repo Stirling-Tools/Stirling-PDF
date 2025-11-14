@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from "react";
 
 // Mock i18next for tests
 vi.mock('react-i18next', () => ({

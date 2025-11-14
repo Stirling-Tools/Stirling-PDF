@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import AdjustPageScaleSettings from '@app/components/tools/adjustPageScale/AdjustPageScaleSettings';
 import { AdjustPageScaleParameters, PageSize } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
+import React from "react";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string, fallback?: string) => fallback || `mock-${key}`);
