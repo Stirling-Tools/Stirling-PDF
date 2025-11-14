@@ -28,10 +28,13 @@ import { userManagementService, User } from '@app/services/userManagementService
 import { teamService, Team } from '@app/services/teamService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 export default function PeopleSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const { loginEnabled } = useLoginRequired();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,30 +100,103 @@ export default function PeopleSection() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [adminData, teamsData] = await Promise.all([
-        userManagementService.getUsers(),
-        teamService.getTeams(),
-      ]);
 
-      // Enrich users with session data
-      const enrichedUsers = adminData.users.map(user => ({
-        ...user,
-        isActive: adminData.userSessions[user.username] || false,
-        lastRequest: adminData.userLastRequest[user.username] || undefined,
-      }));
+      if (loginEnabled) {
+        const [adminData, teamsData] = await Promise.all([
+          userManagementService.getUsers(),
+          teamService.getTeams(),
+        ]);
 
-      setUsers(enrichedUsers);
-      setTeams(teamsData);
+        // Enrich users with session data
+        const enrichedUsers = adminData.users.map(user => ({
+          ...user,
+          isActive: adminData.userSessions[user.username] || false,
+          lastRequest: adminData.userLastRequest[user.username] || undefined,
+        }));
 
-      // Store license information
-      setLicenseInfo({
-        maxAllowedUsers: adminData.maxAllowedUsers,
-        availableSlots: adminData.availableSlots,
-        grandfatheredUserCount: adminData.grandfatheredUserCount,
-        licenseMaxUsers: adminData.licenseMaxUsers,
-        premiumEnabled: adminData.premiumEnabled,
-        totalUsers: adminData.totalUsers,
-      });
+        setUsers(enrichedUsers);
+        setTeams(teamsData);
+
+        // Store license information
+        setLicenseInfo({
+          maxAllowedUsers: adminData.maxAllowedUsers,
+          availableSlots: adminData.availableSlots,
+          grandfatheredUserCount: adminData.grandfatheredUserCount,
+          licenseMaxUsers: adminData.licenseMaxUsers,
+          premiumEnabled: adminData.premiumEnabled,
+          totalUsers: adminData.totalUsers,
+        });
+      } else {
+        // Provide example data when login is disabled
+        const exampleUsers: User[] = [
+          {
+            id: 1,
+            username: 'admin',
+            email: 'admin@example.com',
+            enabled: true,
+            roleName: 'ROLE_ADMIN',
+            rolesAsString: 'ROLE_ADMIN',
+            authenticationType: 'password',
+            isActive: true,
+            lastRequest: Date.now(),
+            team: { id: 1, name: 'Engineering' }
+          },
+          {
+            id: 2,
+            username: 'john.doe',
+            email: 'john.doe@example.com',
+            enabled: true,
+            roleName: 'ROLE_USER',
+            rolesAsString: 'ROLE_USER',
+            authenticationType: 'password',
+            isActive: false,
+            lastRequest: Date.now() - 86400000,
+            team: { id: 1, name: 'Engineering' }
+          },
+          {
+            id: 3,
+            username: 'jane.smith',
+            email: 'jane.smith@example.com',
+            enabled: true,
+            roleName: 'ROLE_USER',
+            rolesAsString: 'ROLE_USER',
+            authenticationType: 'oauth',
+            isActive: true,
+            lastRequest: Date.now(),
+            team: { id: 2, name: 'Marketing' }
+          },
+          {
+            id: 4,
+            username: 'bob.wilson',
+            email: 'bob.wilson@example.com',
+            enabled: false,
+            roleName: 'ROLE_USER',
+            rolesAsString: 'ROLE_USER',
+            authenticationType: 'password',
+            isActive: false,
+            lastRequest: Date.now() - 604800000,
+            team: undefined
+          }
+        ];
+
+        const exampleTeams: Team[] = [
+          { id: 1, name: 'Engineering', userCount: 3 },
+          { id: 2, name: 'Marketing', userCount: 2 }
+        ];
+
+        setUsers(exampleUsers);
+        setTeams(exampleTeams);
+
+        // Example license information
+        setLicenseInfo({
+          maxAllowedUsers: 10,
+          availableSlots: 6,
+          grandfatheredUserCount: 0,
+          licenseMaxUsers: 5,
+          premiumEnabled: true,
+          totalUsers: 4,
+        });
+      }
     } catch (error) {
       console.error('Failed to fetch people data:', error);
       alert({ alertType: 'error', title: 'Failed to load people data' });
@@ -405,6 +481,7 @@ export default function PeopleSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">
           {t('workspace.people.title')}
@@ -457,15 +534,15 @@ export default function PeopleSection() {
           style={{ maxWidth: 300 }}
         />
         <Tooltip
-          label={t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
-          disabled={!licenseInfo || licenseInfo.availableSlots > 0}
+          label={!loginEnabled ? 'Enable login mode first' : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          disabled={loginEnabled && (!licenseInfo || licenseInfo.availableSlots > 0)}
           position="bottom"
           withArrow
         >
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
             onClick={() => setInviteModalOpened(true)}
-            disabled={licenseInfo ? licenseInfo.availableSlots === 0 : false}
+            disabled={!loginEnabled || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
           >
             {t('workspace.people.addMembers')}
           </Button>
@@ -616,20 +693,21 @@ export default function PeopleSection() {
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray">
+                          <ActionIcon variant="subtle" color="gray" disabled={!loginEnabled}>
                             <LocalIcon icon="more-vert" width="1rem" height="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
-                          <Menu.Item onClick={() => openEditModal(user)}>{t('workspace.people.editRole')}</Menu.Item>
+                          <Menu.Item onClick={() => openEditModal(user)} disabled={!loginEnabled}>{t('workspace.people.editRole')}</Menu.Item>
                           <Menu.Item
                             leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
                             onClick={() => handleToggleEnabled(user)}
+                            disabled={!loginEnabled}
                           >
                             {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
                           </Menu.Item>
                           <Menu.Divider />
-                          <Menu.Item color="red" leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />} onClick={() => handleDeleteUser(user)}>
+                          <Menu.Item color="red" leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />} onClick={() => handleDeleteUser(user)} disabled={!loginEnabled}>
                             {t('workspace.people.deleteUser')}
                           </Menu.Item>
                         </Menu.Dropdown>

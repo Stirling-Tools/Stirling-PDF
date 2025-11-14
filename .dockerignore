@@ -1,0 +1,74 @@
+# Node modules and build artifacts
+node_modules
+frontend/node_modules
+frontend/dist
+frontend/build
+frontend/.vite
+frontend/.tauri
+
+# Gradle build artifacts
+.gradle
+build
+bin
+target
+out
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.iml
+*.iws
+*.ipr
+
+# Logs
+*.log
+logs
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Test reports
+test-results
+coverage
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.swp
+*~
+
+# Runtime database and config files (locked by running app)
+app/core/configs/**
+stirling/**
+stirling-pdf-DB*.mv.db
+stirling-pdf-DB*.trace.db
+
+# Documentation
+*.md
+!README.md
+docs
+
+# CI/CD
+.github
+.gitlab-ci.yml
