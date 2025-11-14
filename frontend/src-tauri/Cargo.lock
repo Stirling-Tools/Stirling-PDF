@@ -2058,6 +2058,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "keyring"
+version = "3.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eebcc3aff044e5944a8fbaf69eb277d11986064cba30c468730e8b9909fb551c"
+dependencies = [
+ "log",
+ "zeroize",
+]
+
+[[package]]
 name = "kuchikiki"
 version = "0.8.8-speedreader"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3952,6 +3962,7 @@ version = "0.1.0"
 dependencies = [
  "core-foundation 0.10.1",
  "core-services",
+ "keyring",
  "log",
  "reqwest 0.11.27",
  "serde",
@@ -3962,6 +3973,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
+ "tauri-plugin-store",
  "tokio",
 ]
 
@@ -4364,6 +4376,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-store"
+version = "2.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59a77036340a97eb5bbe1b3209c31e5f27f75e6f92a52fd9dd4b211ef08bf310"
+dependencies = [
+ "dunce",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "tauri-runtime"
 version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4596,7 +4624,19 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "socket2 0.6.1",
+ "tokio-macros",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af407857209536a95c8e56f8231ef2c2e2aff839b22e07a1ffcbc617e9db9fa5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.108",
 ]
 
 [[package]]
@@ -5961,6 +6001,12 @@ dependencies = [
  "syn 2.0.108",
  "synstructure",
 ]
+
+[[package]]
+name = "zeroize"
+version = "1.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
 
 [[package]]
 name = "zerotrie"

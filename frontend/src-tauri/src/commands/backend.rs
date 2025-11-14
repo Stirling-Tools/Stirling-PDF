@@ -3,6 +3,7 @@ use tauri::Manager;
 use std::sync::Mutex;
 use std::path::PathBuf;
 use crate::utils::add_log;
+use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
 // Store backend process handle globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
@@ -308,9 +309,31 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
 
 // Command to start the backend with bundled JRE
 #[tauri::command]
-pub async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
+pub async fn start_backend(
+    app: tauri::AppHandle,
+    connection_state: tauri::State<'_, AppConnectionState>,
+) -> Result<String, String> {
     add_log("🚀 start_backend() called - Attempting to start backend with bundled JRE...".to_string());
-    
+
+    // Check connection mode
+    let mode = {
+        let state = connection_state.0.lock().map_err(|e| {
+            let error_msg = format!("❌ Failed to access connection state: {}", e);
+            add_log(error_msg.clone());
+            error_msg
+        })?;
+        state.mode.clone()
+    };
+
+    match mode {
+        ConnectionMode::Offline => {
+            add_log("🔌 Running in Offline mode - starting local backend".to_string());
+        }
+        ConnectionMode::Server => {
+            add_log("🌐 Running in Server mode - starting local backend (for hybrid execution support)".to_string());
+        }
+    }
+
     // Check if backend is already running or starting
     if let Err(msg) = check_backend_status() {
         return Ok(msg);
