@@ -1,4 +1,5 @@
-import apiClient from '@app/services/apiClient';
+import apiClient from './apiClient';
+import { supabase } from './supabaseClient';
 
 export interface PlanFeature {
   name: string;
@@ -15,6 +16,19 @@ export interface PlanTier {
   features: PlanFeature[];
   highlights: string[];
   isContactOnly?: boolean;
+  seatPrice?: number;        // Per-seat price for enterprise plans
+  requiresSeats?: boolean;   // Flag indicating seat selection is needed
+  lookupKey: string;         // Stripe lookup key for this plan
+}
+
+export interface PlanTierGroup {
+  tier: 'free' | 'server' | 'enterprise';
+  name: string;
+  monthly: PlanTier | null;
+  yearly: PlanTier | null;
+  features: PlanFeature[];
+  highlights: string[];
+  popular?: boolean;
 }
 
 export interface SubscriptionInfo {
@@ -28,14 +42,17 @@ export interface SubscriptionInfo {
 
 export interface PlansResponse {
   plans: PlanTier[];
-  currentSubscription: SubscriptionInfo;
+  currentSubscription: SubscriptionInfo | null;
 }
 
 export interface CheckoutSessionRequest {
-  planId: string;
-  currency: string;
-  successUrl: string;
-  cancelUrl: string;
+  lookup_key: string;       // Stripe lookup key (e.g., 'selfhosted:server:monthly')
+  email: string;            // Customer email (required for self-hosted)
+  installation_id?: string; // Installation ID from backend (MAC-based fingerprint)
+  requires_seats?: boolean; // Whether to add adjustable seat pricing
+  seat_count?: number;      // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
+  successUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface CheckoutSessionResponse {
@@ -47,44 +64,370 @@ export interface BillingPortalResponse {
   url: string;
 }
 
+export interface InstallationIdResponse {
+  installationId: string;
+}
+
+export interface LicenseKeyResponse {
+  status: 'ready' | 'pending';
+  license_key?: string;
+  email?: string;
+  plan?: string;
+}
+
+// Currency symbol mapping
+const getCurrencySymbol = (currency: string): string => {
+  const currencySymbols: { [key: string]: string } = {
+    'gbp': '£',
+    'usd': '$',
+    'eur': '€',
+    'cny': '¥',
+    'inr': '₹',
+    'brl': 'R$',
+    'idr': 'Rp'
+  };
+  return currencySymbols[currency.toLowerCase()] || currency.toUpperCase();
+};
+
+// Self-hosted plan lookup keys
+const SELF_HOSTED_LOOKUP_KEYS = [
+  'selfhosted:server:monthly',
+  'selfhosted:server:yearly',
+  'selfhosted:enterpriseseat:monthly',
+  'selfhosted:enterpriseseat:yearly',
+];
+
 const licenseService = {
   /**
    * Get available plans with pricing for the specified currency
    */
   async getPlans(currency: string = 'gbp'): Promise<PlansResponse> {
-    const response = await apiClient.get<PlansResponse>(`/api/v1/license/plans`, {
-      params: { currency },
-    });
-    return response.data;
+    try {
+      // Fetch all self-hosted prices from Stripe
+      const { data, error } = await supabase.functions.invoke<{
+        prices: Record<string, {
+          unit_amount: number;
+          currency: string;
+          lookup_key: string;
+        }>;
+        missing: string[];
+      }>('stripe-price-lookup', {
+        body: {
+          lookup_keys: SELF_HOSTED_LOOKUP_KEYS,
+          currency
+        },
+      });
+
+      if (error) {
+        throw new Error(`Failed to fetch plans: ${error.message}`);
+      }
+
+      if (!data || !data.prices) {
+        throw new Error('No pricing data returned');
+      }
+
+      // Log missing prices for debugging
+      if (data.missing && data.missing.length > 0) {
+        console.warn('Missing Stripe prices for lookup keys:', data.missing, 'in currency:', currency);
+      }
+
+      // Build price map for easy access
+      const priceMap = new Map<string, { unit_amount: number; currency: string }>();
+      for (const [lookupKey, priceData] of Object.entries(data.prices)) {
+        priceMap.set(lookupKey, {
+          unit_amount: priceData.unit_amount,
+          currency: priceData.currency
+        });
+      }
+
+      const currencySymbol = getCurrencySymbol(currency);
+
+      // Helper to get price info
+      const getPriceInfo = (lookupKey: string, fallback: number = 0) => {
+        const priceData = priceMap.get(lookupKey);
+        return priceData ? priceData.unit_amount / 100 : fallback;
+      };
+
+      // Build plan tiers
+      const plans: PlanTier[] = [
+        {
+          id: 'selfhosted:server:monthly',
+          lookupKey: 'selfhosted:server:monthly',
+          name: 'Server - Monthly',
+          price: getPriceInfo('selfhosted:server:monthly'),
+          currency: currencySymbol,
+          period: '/month',
+          popular: false,
+          features: [
+            { name: 'Self-hosted deployment', included: true },
+            { name: 'All PDF operations', included: true },
+            { name: 'Unlimited users', included: true },
+            { name: 'Community support', included: true },
+            { name: 'Regular updates', included: true },
+            { name: 'Priority support', included: false },
+            { name: 'Custom integrations', included: false },
+          ],
+          highlights: [
+            'Self-hosted on your infrastructure',
+            'All features included',
+            'Cancel anytime'
+          ]
+        },
+        {
+          id: 'selfhosted:server:yearly',
+          lookupKey: 'selfhosted:server:yearly',
+          name: 'Server - Yearly',
+          price: getPriceInfo('selfhosted:server:yearly'),
+          currency: currencySymbol,
+          period: '/year',
+          popular: true,
+          features: [
+            { name: 'Self-hosted deployment', included: true },
+            { name: 'All PDF operations', included: true },
+            { name: 'Unlimited users', included: true },
+            { name: 'Community support', included: true },
+            { name: 'Regular updates', included: true },
+            { name: 'Priority support', included: false },
+            { name: 'Custom integrations', included: false },
+          ],
+          highlights: [
+            'Self-hosted on your infrastructure',
+            'All features included',
+            'Save with annual billing'
+          ]
+        },
+        {
+          id: 'selfhosted:enterprise:monthly',
+          lookupKey: 'selfhosted:server:monthly',
+          name: 'Enterprise - Monthly',
+          price: getPriceInfo('selfhosted:server:monthly'),
+          seatPrice: getPriceInfo('selfhosted:enterpriseseat:monthly'),
+          currency: currencySymbol,
+          period: '/month',
+          popular: false,
+          requiresSeats: true,
+          features: [
+            { name: 'Self-hosted deployment', included: true },
+            { name: 'All PDF operations', included: true },
+            { name: 'Per-seat licensing', included: true },
+            { name: 'Priority support', included: true },
+            { name: 'SLA guarantee', included: true },
+            { name: 'Custom integrations', included: true },
+            { name: 'Dedicated account manager', included: true },
+          ],
+          highlights: [
+            'Enterprise-grade support',
+            'Custom integrations available',
+            'SLA guarantee included'
+          ]
+        },
+        {
+          id: 'selfhosted:enterprise:yearly',
+          lookupKey: 'selfhosted:server:yearly',
+          name: 'Enterprise - Yearly',
+          price: getPriceInfo('selfhosted:server:yearly'),
+          seatPrice: getPriceInfo('selfhosted:enterpriseseat:yearly'),
+          currency: currencySymbol,
+          period: '/year',
+          popular: false,
+          requiresSeats: true,
+          features: [
+            { name: 'Self-hosted deployment', included: true },
+            { name: 'All PDF operations', included: true },
+            { name: 'Per-seat licensing', included: true },
+            { name: 'Priority support', included: true },
+            { name: 'SLA guarantee', included: true },
+            { name: 'Custom integrations', included: true },
+            { name: 'Dedicated account manager', included: true },
+          ],
+          highlights: [
+            'Enterprise-grade support',
+            'Custom integrations available',
+            'Save with annual billing'
+          ]
+        },
+      ];
+
+      // Filter out plans with missing prices (price === 0 means Stripe price not found)
+      const validPlans = plans.filter(plan => plan.price > 0);
+
+      if (validPlans.length < plans.length) {
+        const missingPlans = plans.filter(plan => plan.price === 0).map(p => p.id);
+        console.warn('Filtered out plans with missing prices:', missingPlans);
+      }
+
+      // Add Free plan (static definition)
+      const freePlan: PlanTier = {
+        id: 'free',
+        lookupKey: 'free',
+        name: 'Free',
+        price: 0,
+        currency: currencySymbol,
+        period: '',
+        popular: false,
+        features: [
+          { name: 'Self-hosted deployment', included: true },
+          { name: 'All PDF operations', included: true },
+          { name: 'Up to 5 users', included: true },
+          { name: 'Community support', included: true },
+          { name: 'Regular updates', included: true },
+          { name: 'Priority support', included: false },
+          { name: 'SLA guarantee', included: false },
+          { name: 'Custom integrations', included: false },
+          { name: 'Dedicated account manager', included: false },
+        ],
+        highlights: [
+          'Up to 5 users',
+          'Self-hosted',
+          'All basic features'
+        ]
+      };
+
+      const allPlans = [freePlan, ...validPlans];
+
+      return {
+        plans: allPlans,
+        currentSubscription: null  // Will be implemented later
+      };
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      throw error;
+    }
   },
 
   /**
    * Get current subscription details
+   * TODO: Implement with Supabase edge function when available
    */
-  async getCurrentSubscription(): Promise<SubscriptionInfo> {
-    const response = await apiClient.get<SubscriptionInfo>('/api/v1/license/subscription');
-    return response.data;
+  async getCurrentSubscription(): Promise<SubscriptionInfo | null> {
+    // Placeholder - will be implemented later
+    return null;
+  },
+
+  /**
+   * Group plans by tier for display (Free, Server, Enterprise)
+   */
+  groupPlansByTier(plans: PlanTier[]): PlanTierGroup[] {
+    const groups: PlanTierGroup[] = [];
+
+    // Free tier
+    const freePlan = plans.find(p => p.id === 'free');
+    if (freePlan) {
+      groups.push({
+        tier: 'free',
+        name: 'Free',
+        monthly: freePlan,
+        yearly: null,
+        features: freePlan.features,
+        highlights: freePlan.highlights,
+        popular: false,
+      });
+    }
+
+    // Server tier
+    const serverMonthly = plans.find(p => p.lookupKey === 'selfhosted:server:monthly');
+    const serverYearly = plans.find(p => p.lookupKey === 'selfhosted:server:yearly');
+    if (serverMonthly || serverYearly) {
+      groups.push({
+        tier: 'server',
+        name: 'Server',
+        monthly: serverMonthly || null,
+        yearly: serverYearly || null,
+        features: (serverMonthly || serverYearly)!.features,
+        highlights: (serverMonthly || serverYearly)!.highlights,
+        popular: serverYearly?.popular || serverMonthly?.popular || false,
+      });
+    }
+
+    // Enterprise tier (uses server pricing + seats)
+    const enterpriseMonthly = plans.find(p => p.id === 'selfhosted:enterprise:monthly');
+    const enterpriseYearly = plans.find(p => p.id === 'selfhosted:enterprise:yearly');
+    if (enterpriseMonthly || enterpriseYearly) {
+      groups.push({
+        tier: 'enterprise',
+        name: 'Enterprise',
+        monthly: enterpriseMonthly || null,
+        yearly: enterpriseYearly || null,
+        features: (enterpriseMonthly || enterpriseYearly)!.features,
+        highlights: (enterpriseMonthly || enterpriseYearly)!.highlights,
+        popular: false,
+      });
+    }
+
+    return groups;
   },
 
   /**
    * Create a Stripe checkout session for upgrading
    */
   async createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResponse> {
-    const response = await apiClient.post<CheckoutSessionResponse>(
-      '/api/v1/license/checkout',
-      request
-    );
-    return response.data;
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: {
+        self_hosted: true,
+        lookup_key: request.lookup_key,
+        email: request.email,
+        installation_id: request.installation_id,
+        requires_seats: request.requires_seats,
+        seat_count: request.seat_count || 1,
+        callback_base_url: window.location.origin,
+      },
+    });
+
+    if (error) {
+      throw new Error(`Failed to create checkout session: ${error.message}`);
+    }
+
+    return data as CheckoutSessionResponse;
   },
 
   /**
    * Create a Stripe billing portal session for managing subscription
    */
-  async createBillingPortalSession(returnUrl: string): Promise<BillingPortalResponse> {
-    const response = await apiClient.post<BillingPortalResponse>('/api/v1/license/billing-portal', {
-      returnUrl,
+  async createBillingPortalSession(email: string, returnUrl: string): Promise<BillingPortalResponse> {
+    const { data, error} = await supabase.functions.invoke('manage-billing', {
+      body: {
+        email,
+        returnUrl
+      },
     });
-    return response.data;
+
+    if (error) {
+      throw new Error(`Failed to create billing portal session: ${error.message}`);
+    }
+
+    return data as BillingPortalResponse;
+  },
+
+  /**
+   * Get the installation ID from the backend (MAC-based fingerprint)
+   */
+  async getInstallationId(): Promise<string> {
+    try {
+      const response = await apiClient.get('/api/v1/admin/installation-id');
+
+      const data: InstallationIdResponse = await response.data;
+      return data.installationId;
+    } catch (error) {
+      console.error('Error fetching installation ID:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check if license key is ready for the given installation ID
+   */
+  async checkLicenseKey(installationId: string): Promise<LicenseKeyResponse> {
+    const { data, error } = await supabase.functions.invoke('get-license-key', {
+      body: {
+        installation_id: installationId,
+      },
+    });
+
+    if (error) {
+      throw new Error(`Failed to check license key: ${error.message}`);
+    }
+
+    return data as LicenseKeyResponse;
   },
 };
 

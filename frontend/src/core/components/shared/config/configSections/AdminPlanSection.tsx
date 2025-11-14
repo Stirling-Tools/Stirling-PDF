@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import { PlanTier } from '@app/services/licenseService';
+import { PlanTierGroup } from '@app/services/licenseService';
 import StripeCheckout from '@app/components/shared/StripeCheckout';
 import AvailablePlansSection from './plan/AvailablePlansSection';
 import ActivePlanSection from './plan/ActivePlanSection';
@@ -25,11 +25,12 @@ const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null);
+  const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
   const [currency, setCurrency] = useState<string>('gbp');
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [currentLicenseInfo, setCurrentLicenseInfo] = useState<any>(null);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
+  const [email, setEmail] = useState<string>('');
   const { plans, currentSubscription, loading, error, refetch } = usePlans(currency);
 
   // Premium/License key management
@@ -105,35 +106,43 @@ const AdminPlanSection: React.FC = () => {
   ];
 
   const handleUpgradeClick = useCallback(
-    (plan: PlanTier) => {
-      if (plan.isContactOnly) {
-        // Open contact form or redirect to contact page
-        window.open('https://www.stirling.com/contact', '_blank');
+    (planGroup: PlanTierGroup) => {
+      // Validate email is provided
+      if (!email || !email.trim()) {
+        alert({
+          alertType: 'warning',
+          title: t('admin.plan.emailRequired.title', 'Email Required'),
+          body: t('admin.plan.emailRequired.message', 'Please enter your email address before proceeding'),
+        });
         return;
       }
 
-      if (!currentSubscription || plan.id !== currentSubscription.plan.id) {
-        setSelectedPlan(plan);
-        setCheckoutOpen(true);
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert({
+          alertType: 'warning',
+          title: t('admin.plan.invalidEmail.title', 'Invalid Email'),
+          body: t('admin.plan.invalidEmail.message', 'Please enter a valid email address'),
+        });
+        return;
       }
+
+      setSelectedPlanGroup(planGroup);
+      setCheckoutOpen(true);
     },
-    [currentSubscription]
+    [email, t]
   );
 
   const handlePaymentSuccess = useCallback(
     (sessionId: string) => {
       console.log('Payment successful, session:', sessionId);
 
-      // Refetch plans to update current subscription
-      refetch();
-
-      // Close modal after brief delay to show success message
-      setTimeout(() => {
-        setCheckoutOpen(false);
-        setSelectedPlan(null);
-      }, 2000);
+      // Don't refetch here - will refetch when modal closes to avoid re-renders
+      // Don't close modal - let user view license key and close manually
+      // Modal will show "You can now close this window" when ready
     },
-    [refetch]
+    []
   );
 
   const handlePaymentError = useCallback((error: string) => {
@@ -143,8 +152,11 @@ const AdminPlanSection: React.FC = () => {
 
   const handleCheckoutClose = useCallback(() => {
     setCheckoutOpen(false);
-    setSelectedPlan(null);
-  }, []);
+    setSelectedPlanGroup(null);
+
+    // Refetch plans after modal closes to update subscription display
+    refetch();
+  }, [refetch]);
 
   // Show static version if Stripe is not configured or there's an error
   if (useStaticVersion) {
@@ -165,7 +177,7 @@ const AdminPlanSection: React.FC = () => {
     return <StaticPlanSection currentLicenseInfo={currentLicenseInfo} />;
   }
 
-  if (!plans || !currentSubscription) {
+  if (!plans || plans.length === 0) {
     return (
       <Alert color="yellow" title="No data available">
         Plans data is not available at the moment.
@@ -175,42 +187,57 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Currency Selector */}
-      <div>
-        <Group justify="space-between" align="center" mb="md">
+      {/* Customer Information Section */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
           <Text size="lg" fw={600}>
-            {t('plan.currency', 'Currency')}
+            {t('admin.plan.customerInfo', 'Customer Information')}
           </Text>
-          <Select
-            value={currency}
-            onChange={(value) => setCurrency(value || 'gbp')}
-            data={currencyOptions}
-            searchable
-            clearable={false}
-            w={300}
+          <TextInput
+            label={t('admin.plan.email.label', 'Email Address')}
+            description={t('admin.plan.email.description', 'This email will be used to manage your subscription and billing')}
+            placeholder="admin@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            type="email"
           />
-        </Group>
-      </div>
+          <Group justify="space-between" align="center">
+            <Text size="lg" fw={600}>
+              {t('plan.currency', 'Currency')}
+            </Text>
+            <Select
+              value={currency}
+              onChange={(value) => setCurrency(value || 'gbp')}
+              data={currencyOptions}
+              searchable
+              clearable={false}
+              w={300}
+            />
+          </Group>
+        </Stack>
+      </Paper>
 
-      <ActivePlanSection subscription={currentSubscription} />
-
-      <Divider />
+      {currentSubscription && (
+        <>
+          <ActivePlanSection subscription={currentSubscription} />
+          <Divider />
+        </>
+      )}
 
       <AvailablePlansSection
         plans={plans}
-        currentPlanId={currentSubscription.plan.id}
+        currentPlanId={currentSubscription?.plan.id}
         onUpgradeClick={handleUpgradeClick}
       />
 
       {/* Stripe Checkout Modal */}
-      {selectedPlan && (
+      {selectedPlanGroup && (
         <StripeCheckout
           opened={checkoutOpen}
           onClose={handleCheckoutClose}
-          planId={selectedPlan.id}
-          planName={selectedPlan.name}
-          planPrice={selectedPlan.price}
-          currency={selectedPlan.currency}
+          planGroup={selectedPlanGroup}
+          email={email}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
         />

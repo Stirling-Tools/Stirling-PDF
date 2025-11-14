@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button, Card, Badge, Text, Collapse } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { PlanTier } from '@app/services/licenseService';
+import licenseService, { PlanTier, PlanTierGroup } from '@app/services/licenseService';
 import PlanCard from './PlanCard';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
-  currentPlanId: string;
+  currentPlanId?: string;
   onUpgradeClick: (plan: PlanTier) => void;
 }
 
@@ -17,6 +17,20 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
+
+  // Group plans by tier (Free, Server, Enterprise)
+  const groupedPlans = useMemo(() => {
+    return licenseService.groupPlansByTier(plans);
+  }, [plans]);
+
+  // Determine if the current tier matches
+  const isCurrentTier = (tierGroup: PlanTierGroup): boolean => {
+    if (!currentPlanId) return false;
+    return (
+      tierGroup.monthly?.id === currentPlanId ||
+      tierGroup.yearly?.id === currentPlanId
+    );
+  };
 
   return (
     <div>
@@ -41,11 +55,11 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
           marginBottom: '1rem',
         }}
       >
-        {plans.map((plan) => (
+        {groupedPlans.map((group) => (
           <PlanCard
-            key={plan.id}
-            plan={plan}
-            isCurrentPlan={plan.id === currentPlanId}
+            key={group.tier}
+            planGroup={group}
+            isCurrentTier={isCurrentTier(group)}
             onUpgradeClick={onUpgradeClick}
           />
         ))}
@@ -66,30 +80,32 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
           </Text>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>
+                <tr style={{ borderBottom: '2px solid var(--mantine-color-gray-3)' }}>
+                  <th style={{ textAlign: 'left', padding: '0.75rem' }}>
                     {t('plan.feature.title', 'Feature')}
                   </th>
-                  {plans.map((plan) => (
+                  {groupedPlans.map((group) => (
                     <th
-                      key={plan.id}
-                      style={{ textAlign: 'center', padding: '0.5rem', minWidth: '6rem', position: 'relative' }}
+                      key={group.tier}
+                      style={{
+                        textAlign: 'center',
+                        padding: '0.75rem',
+                        minWidth: '8rem',
+                        position: 'relative'
+                      }}
                     >
-                      {plan.name}
-                      {plan.popular && (
+                      {group.name}
+                      {group.popular && (
                         <Badge
                           color="blue"
                           variant="filled"
+                          size="xs"
                           style={{
                             position: 'absolute',
-                            top: '0rem',
-                            right: '-2rem',
-                            fontSize: '0.5rem',
-                            fontWeight: '500',
-                            height: '1rem',
-                            padding: '0 0.25rem',
+                            top: '0.5rem',
+                            right: '0.5rem',
                           }}
                         >
                           {t('plan.popular', 'Popular')}
@@ -100,20 +116,24 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {plans[0].features.map((_, featureIndex) => (
+                {groupedPlans[0]?.features.map((_, featureIndex) => (
                   <tr
                     key={featureIndex}
                     style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
                   >
-                    <td style={{ padding: '0.5rem' }}>{plans[0].features[featureIndex].name}</td>
-                    {plans.map((plan) => (
-                      <td key={plan.id} style={{ textAlign: 'center', padding: '0.5rem' }}>
-                        {plan.features[featureIndex].included ? (
-                          <Text c="green" fw={600}>
+                    <td style={{ padding: '0.75rem' }}>
+                      {groupedPlans[0].features[featureIndex].name}
+                    </td>
+                    {groupedPlans.map((group) => (
+                      <td key={group.tier} style={{ textAlign: 'center', padding: '0.75rem' }}>
+                        {group.features[featureIndex]?.included ? (
+                          <Text c="green" fw={600} size="lg">
                             ✓
                           </Text>
                         ) : (
-                          <Text c="gray">-</Text>
+                          <Text c="gray" size="sm">
+                            −
+                          </Text>
                         )}
                       </td>
                     ))}
