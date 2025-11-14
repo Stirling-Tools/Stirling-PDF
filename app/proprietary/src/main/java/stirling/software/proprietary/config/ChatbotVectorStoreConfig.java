@@ -28,10 +28,12 @@ public class ChatbotVectorStoreConfig {
     public VectorStore chatbotVectorStore(
             ObjectProvider<JedisPooled> jedisProvider, EmbeddingModel embeddingModel) {
         JedisPooled jedis = jedisProvider.getIfAvailable();
+
         if (jedis != null) {
             try {
                 jedis.ping();
                 log.info("Initialising Redis vector store for chatbot usage");
+
                 return RedisVectorStore.builder(jedis, embeddingModel)
                         .indexName(DEFAULT_INDEX)
                         .prefix(DEFAULT_PREFIX)
@@ -45,6 +47,7 @@ public class ChatbotVectorStoreConfig {
         } else {
             log.info("No Redis connection detected; using SimpleVectorStore for chatbot.");
         }
+
         return SimpleVectorStore.builder(embeddingModel).build();
     }
 

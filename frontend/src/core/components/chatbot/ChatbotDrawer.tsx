@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -13,14 +12,12 @@ import {
   Switch,
   Text,
   Textarea,
-  Tooltip,
 } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
-import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 import { useChatbot } from '@app/contexts/ChatbotContext';
@@ -47,8 +44,6 @@ interface ChatMessage {
   createdAt: Date;
 }
 
-const ALPHA_ACK_KEY = 'stirling.chatbot.alphaAck';
-
 function createMessageId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -68,7 +63,6 @@ const ChatbotDrawer = () => {
   const { show } = useToast();
   const files = selectors.getFiles();
   const [selectedFileId, setSelectedFileId] = useState<string | undefined>();
-  const [alphaAccepted, setAlphaAccepted] = useState(false);
   const [runOcr, setRunOcr] = useState(false);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -93,11 +87,6 @@ const ChatbotDrawer = () => {
     if (!isOpen) {
       return;
     }
-
-    const storedAck = typeof window !== 'undefined'
-      ? window.localStorage.getItem(ALPHA_ACK_KEY) === 'true'
-      : false;
-    setAlphaAccepted(storedAck);
 
     if (preferredFileId) {
       setSelectedFileId(preferredFileId);
@@ -161,6 +150,8 @@ const ChatbotDrawer = () => {
       setContextStats(null);
       setMessages([]);
       setWarnings([]);
+      setPendingOcrRetry(false);
+      setNoTextModalOpen(false);
     }
   }, [sessionInfo, selectedFileId]);
 
@@ -192,17 +183,6 @@ const ChatbotDrawer = () => {
     };
   }, [isMobile, isOpen, sidebarRefs.toolPanelRef]);
 
-  const handleAlphaAccept = (checked: boolean) => {
-    setAlphaAccepted(checked);
-    if (typeof window !== 'undefined') {
-      if (checked) {
-        window.localStorage.setItem(ALPHA_ACK_KEY, 'true');
-      } else {
-        window.localStorage.removeItem(ALPHA_ACK_KEY);
-      }
-    }
-  };
-
   const withStatus = async <T,>(label: string, fn: () => Promise<T>): Promise<T> => {
     setStatusMessage(label);
     try {
@@ -226,14 +206,6 @@ const ChatbotDrawer = () => {
 
   const handleSessionStart = async (forceOcr?: boolean) => {
     if (!ensureFileSelected() || !selectedFile) {
-      return;
-    }
-    if (!alphaAccepted) {
-      show({
-        alertType: 'neutral',
-        title: t('chatbot.toasts.ackTitle', 'Accept alpha notice'),
-        body: t('chatbot.toasts.ackBody', 'Please acknowledge the alpha warning before starting.'),
-      });
       return;
     }
     setIsStartingSession(true);
@@ -271,7 +243,7 @@ const ChatbotDrawer = () => {
         text: extractionResult.text,
         metadata,
         ocrRequested: shouldRunOcr,
-        warningsAccepted: alphaAccepted,
+        warningsAccepted: true,
       };
 
       const response = await withStatus(
@@ -301,6 +273,36 @@ const ChatbotDrawer = () => {
       setStatusMessage('');
     }
   };
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !selectedFile ||
+      sessionInfo ||
+      isStartingSession ||
+      pendingOcrRetry ||
+      noTextModalOpen
+    ) {
+      return;
+    }
+    let cancelled = false;
+    handleSessionStart().catch((error) => {
+      if (!cancelled) {
+        console.error('[Chatbot] Auto-sync failed', error);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, selectedFile, sessionInfo, isStartingSession, pendingOcrRetry, noTextModalOpen, runOcr]);
+
+  useEffect(() => {
+    if (!sessionInfo) {
+      return;
+    }
+    setSessionInfo(null);
+    setContextStats(null);
+  }, [runOcr]);
 
   const handleSendMessage = async () => {
     if (!sessionInfo) {
@@ -495,25 +497,6 @@ const ChatbotDrawer = () => {
         transitionProps={{ transition: 'slide-left', duration: 200 }}
       >
         <Stack gap="sm" h="100%" style={{ minHeight: 0 }}>
-        <Box
-          p="sm"
-          style={{
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 8,
-            backgroundColor: 'var(--bg-subtle)',
-            display: 'flex',
-            gap: '0.5rem',
-            alignItems: 'flex-start',
-          }}
-        >
-          <WarningAmberRoundedIcon fontSize="small" style={{ color: 'var(--text-warning)' }} />
-          <Box>
-            <Text fw={600}>{t('chatbot.alphaTitle', 'Experimental feature')}</Text>
-            <Text size="sm">
-              {t('chatbot.alphaDescription', 'This chatbot is in alpha. It currently ignores images and may produce inaccurate answers. Your PDF text stays local until you confirm you want to chat.')}
-            </Text>
-          </Box>
-        </Box>
 
         <Group align="flex-end" justify="space-between" gap="md" wrap="wrap">
           <Select
@@ -527,30 +510,12 @@ const ChatbotDrawer = () => {
           />
           <Stack gap={4} style={{ minWidth: 160 }}>
             <Switch
-              checked={alphaAccepted}
-              label={t('chatbot.acceptAlphaLabel', 'Alpha notice acknowledged')}
-              onChange={(event) => handleAlphaAccept(event.currentTarget.checked)}
-            />
-            <Switch
               checked={runOcr}
               onChange={(event) => setRunOcr(event.currentTarget.checked)}
               label={t('chatbot.ocrToggle', 'Run OCR before extracting text')}
             />
           </Stack>
         </Group>
-
-        <Button
-          fullWidth
-          variant="filled"
-          leftSection={<RefreshRoundedIcon fontSize="small" />}
-          loading={isStartingSession}
-          onClick={() => handleSessionStart()}
-          disabled={!selectedFile || !alphaAccepted}
-        >
-          {sessionInfo
-            ? t('chatbot.refreshButton', 'Re-sync document')
-            : t('chatbot.startButton', 'Send document to chat')}
-        </Button>
 
         {statusMessage && (
           <Box
@@ -596,6 +561,28 @@ const ChatbotDrawer = () => {
                     </Group>
                   </Box>
                 ))}
+              {isOpen && (
+                <Box
+                  p="sm"
+                  bg="var(--bg-muted)"
+                  style={{ borderRadius: 12, border: '1px solid var(--border-subtle)' }}
+                >
+                  <Group gap="xs" align="flex-start">
+                    <WarningAmberRoundedIcon fontSize="small" style={{ color: 'var(--text-warning)' }} />
+                    <Box>
+                      <Text size="sm" fw={600}>
+                        {t('chatbot.alphaTitle', 'Experimental feature')}
+                      </Text>
+                      <Text size="sm">
+                        {t(
+                          'chatbot.alphaDescription',
+                          'This chatbot is in alpha. It currently ignores images and may produce inaccurate answers.'
+                        )}
+                      </Text>
+                    </Box>
+                  </Group>
+                </Box>
+              )}
               {messages.length === 0 && (
                 <Text size="sm" c="dimmed">
                   {t('chatbot.emptyState', 'Ask a question about your PDF to start the conversation.')}

@@ -47,6 +47,8 @@ public class ChatbotConversationService {
     private final ChatbotCacheService cacheService;
     private final ChatbotFeatureProperties featureProperties;
     private final ChatbotRetrievalService retrievalService;
+    private final ChatbotContextCompressor contextCompressor;
+    private final ChatbotMemoryService memoryService;
     private final ChatbotUsageService usageService;
     private final ObjectMapper objectMapper;
     private final AtomicBoolean modelSwitchVerified = new AtomicBoolean(false);
@@ -79,6 +81,9 @@ public class ChatbotConversationService {
         List<Document> context =
                 retrievalService.retrieveTopK(
                         request.getSessionId(), request.getPrompt(), settings);
+        String contextSummary =
+                contextCompressor.summarize(
+                        context, (int) Math.max(settings.maxPromptCharacters() / 2, 1000));
 
         ModelReply nanoReply =
                 invokeModel(
@@ -87,6 +92,7 @@ public class ChatbotConversationService {
                         request.getPrompt(),
                         session,
                         context,
+                        contextSummary,
                         cacheEntry.getMetadata());
 
         boolean shouldEscalate =
@@ -106,6 +112,7 @@ public class ChatbotConversationService {
                             request.getPrompt(),
                             session,
                             context,
+                            contextSummary,
                             cacheEntry.getMetadata());
         }
 
@@ -115,6 +122,8 @@ public class ChatbotConversationService {
                         finalReply.promptTokens(),
                         finalReply.completionTokens());
         session.setUsageSummary(usageSummary);
+
+        memoryService.recordTurn(session, request.getPrompt(), finalReply.answer());
 
         return ChatbotResponse.builder()
                 .sessionId(request.getSessionId())
@@ -200,8 +209,10 @@ public class ChatbotConversationService {
             String prompt,
             ChatbotSession session,
             List<Document> context,
+            String contextSummary,
             Map<String, String> metadata) {
-        Prompt requestPrompt = buildPrompt(settings, model, prompt, session, context, metadata);
+        Prompt requestPrompt =
+                buildPrompt(settings, model, prompt, session, context, contextSummary, metadata);
         ChatResponse response;
         try {
             response = chatModel.call(requestPrompt);
@@ -244,16 +255,9 @@ public class ChatbotConversationService {
             String question,
             ChatbotSession session,
             List<Document> context,
+            String contextSummary,
             Map<String, String> metadata) {
-        StringBuilder contextBuilder = new StringBuilder();
-        for (Document chunk : context) {
-            contextBuilder
-                    .append("[Chunk ")
-                    .append(chunk.getMetadata().getOrDefault("chunkOrder", "?"))
-                    .append("]\n")
-                    .append(chunk.getText())
-                    .append("\n\n");
-        }
+        String chunkOutline = buildChunkOutline(context);
         String metadataSummary =
                 metadata.entrySet().stream()
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
@@ -277,8 +281,10 @@ public class ChatbotConversationService {
                         + session.isOcrRequested()
                         + "\n"
                         + imageDirective
-                        + "\nContext:\n"
-                        + contextBuilder
+                        + "\nContext summary:\n"
+                        + contextSummary
+                        + "\nContext outline:\n"
+                        + chunkOutline
                         + "Question: "
                         + question;
 
@@ -296,6 +302,27 @@ public class ChatbotConversationService {
             builder.temperature(settings.models().temperature()).topP(settings.models().topP());
         }
         return builder.build();
+    }
+
+    private String buildChunkOutline(List<Document> context) {
+        if (context == null || context.isEmpty()) {
+            return "No chunks retrieved for this question.";
+        }
+        StringBuilder outline = new StringBuilder();
+        for (Document chunk : context) {
+            String order = chunk.getMetadata().getOrDefault("chunkOrder", "?").toString();
+            String snippet = chunk.getText();
+            if (snippet != null) {
+                snippet = snippet.replaceAll("\\s+", " ").trim();
+                if (snippet.length() > 240) {
+                    snippet = snippet.substring(0, 237) + "...";
+                }
+            } else {
+                snippet = "(empty)";
+            }
+            outline.append("- Chunk ").append(order).append(": ").append(snippet).append("\n");
+        }
+        return outline.toString();
     }
 
     private ModelReply parseModelResponse(

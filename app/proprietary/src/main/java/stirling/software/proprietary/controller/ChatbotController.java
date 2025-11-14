@@ -107,7 +107,7 @@ public class ChatbotController {
             warnings.add("Images detected - Images are not currently supported.");
         }
 
-        warnings.add("Only extracted text is sent for analysis.");
+        warnings.add("Images are not yet supported. Only extracted text is sent for analysis.");
         if (session != null && session.isOcrRequested()) {
             warnings.add("OCR requested – uses credits .");
         }
