@@ -85,6 +85,7 @@ const AdminUsageSection: React.FC = () => {
 
       setData({
         totalVisits: totalVisits,
+        totalEndpoints: filteredEndpoints.length,
         endpoints: filteredEndpoints,
       });
       setLoading(false);

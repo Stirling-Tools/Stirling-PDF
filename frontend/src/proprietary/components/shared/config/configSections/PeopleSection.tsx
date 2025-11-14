@@ -138,8 +138,8 @@ export default function PeopleSection() {
             rolesAsString: 'ROLE_ADMIN',
             authenticationType: 'password',
             isActive: true,
-            lastRequest: new Date().toISOString(),
-            team: { id: 1, name: 'Engineering', userCount: 3 }
+            lastRequest: Date.now(),
+            team: { id: 1, name: 'Engineering' }
           },
           {
             id: 2,
@@ -150,8 +150,8 @@ export default function PeopleSection() {
             rolesAsString: 'ROLE_USER',
             authenticationType: 'password',
             isActive: false,
-            lastRequest: new Date(Date.now() - 86400000).toISOString(),
-            team: { id: 1, name: 'Engineering', userCount: 3 }
+            lastRequest: Date.now() - 86400000,
+            team: { id: 1, name: 'Engineering' }
           },
           {
             id: 3,
@@ -162,8 +162,8 @@ export default function PeopleSection() {
             rolesAsString: 'ROLE_USER',
             authenticationType: 'oauth',
             isActive: true,
-            lastRequest: new Date().toISOString(),
-            team: { id: 2, name: 'Marketing', userCount: 2 }
+            lastRequest: Date.now(),
+            team: { id: 2, name: 'Marketing' }
           },
           {
             id: 4,
@@ -174,7 +174,7 @@ export default function PeopleSection() {
             rolesAsString: 'ROLE_USER',
             authenticationType: 'password',
             isActive: false,
-            lastRequest: new Date(Date.now() - 604800000).toISOString(),
+            lastRequest: Date.now() - 604800000,
             team: undefined
           }
         ];

@@ -51,7 +51,7 @@ export default function Login() {
           // The keys are like "/oauth2/authorization/google" - extract the last part
           const providerIds = Object.keys(data.providerList || {})
             .map(key => key.split('/').pop())
-            .filter(id => id);
+            .filter((id): id is string => id !== undefined);
           setEnabledProviders(providerIds);
         }
       } catch (err) {
@@ -124,7 +124,7 @@ export default function Login() {
     return <LoggedInState />;
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure') => {
+  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
     try {
       setIsSigningIn(true);
       setError(null);
