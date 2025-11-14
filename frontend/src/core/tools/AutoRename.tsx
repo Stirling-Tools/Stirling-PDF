@@ -12,7 +12,7 @@ const AutoRename =(props: BaseToolProps) => {
   const autoRenameTips = useAutoRenameTips();
 
   const base = useBaseTool(
-    '"auto-rename-pdf-file',
+    'auto-rename-pdf-file',
     useAutoRenameParameters,
     useAutoRenameOperation,
     props
