@@ -39,9 +39,14 @@ interface SignSettingsProps {
   onUndo?: () => void;
   onRedo?: () => void;
   onSave?: () => void;
+  translationScope?: string;
+  allowedSignatureSources?: SignatureSource[];
+  defaultSignatureSource?: SignatureSource;
 }
 
-type SignatureSource = 'canvas' | 'image' | 'text' | 'saved';
+export type SignatureSource = 'canvas' | 'image' | 'text' | 'saved';
+
+const DEFAULT_SIGNATURE_SOURCES: SignatureSource[] = ['canvas', 'image', 'text', 'saved'];
 
 const SignSettings = ({
   parameters,
@@ -52,13 +57,33 @@ const SignSettings = ({
   onUpdateDrawSettings,
   onUndo,
   onRedo,
-  onSave
+  onSave,
+  translationScope = 'sign',
+  allowedSignatureSources = DEFAULT_SIGNATURE_SOURCES,
+  defaultSignatureSource,
 }: SignSettingsProps) => {
   const { t } = useTranslation();
   const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
   const { activeFileIndex } = useViewer();
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
   const historyApiInstance = historyApiRef.current;
+  const translate = useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      t(`${translationScope}.${key}`, { defaultValue, ...options }),
+    [t, translationScope]
+  );
+  const allowedSignatureTypes = useMemo(
+    () =>
+      allowedSignatureSources.filter(
+        (source): source is SignParameters['signatureType'] => source !== 'saved'
+      ),
+    [allowedSignatureSources]
+  );
+  const effectiveDefaultSource =
+    (defaultSignatureSource && allowedSignatureSources.includes(defaultSignatureSource)
+      ? defaultSignatureSource
+      : allowedSignatureSources[0]) ?? 'text';
+  const canUseSavedLibrary = allowedSignatureSources.includes('saved');
 
   // State for drawing
   const [selectedColor, setSelectedColor] = useState('#000000');
@@ -82,7 +107,13 @@ const SignSettings = ({
     updateSignatureLabel,
     byTypeCounts,
   } = useSavedSignatures();
-  const [signatureSource, setSignatureSource] = useState<SignatureSource>(parameters.signatureType);
+  const [signatureSource, setSignatureSource] = useState<SignatureSource>(() => {
+    const paramSource = parameters.signatureType as SignatureSource;
+    if (allowedSignatureSources.includes(paramSource)) {
+      return paramSource;
+    }
+    return effectiveDefaultSource;
+  });
   const [lastSavedSignatureKeys, setLastSavedSignatureKeys] = useState<Record<SavedSignatureType, string | null>>({
     canvas: null,
     image: null,
@@ -103,13 +134,13 @@ const SignSettings = ({
   const getDefaultSavedLabel = useCallback(
     (type: SavedSignatureType) => {
       const nextIndex = (byTypeCounts[type] ?? 0) + 1;
-      let baseLabel = t('sign.saved.defaultLabel', 'Signature');
+      let baseLabel = translate('saved.defaultLabel', 'Signature');
       if (type === 'canvas') {
-        baseLabel = t('sign.saved.defaultCanvasLabel', 'Drawing signature');
+        baseLabel = translate('saved.defaultCanvasLabel', 'Drawing signature');
       } else if (type === 'image') {
-        baseLabel = t('sign.saved.defaultImageLabel', 'Uploaded signature');
+        baseLabel = translate('saved.defaultImageLabel', 'Uploaded signature');
       } else if (type === 'text') {
-        baseLabel = t('sign.saved.defaultTextLabel', 'Typed signature');
+        baseLabel = translate('saved.defaultTextLabel', 'Typed signature');
       }
       return `${baseLabel} ${nextIndex}`;
     },
@@ -263,7 +294,10 @@ const SignSettings = ({
   );
 
   const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
-    const label = t('sign.saved.saveButton', 'Save signature');
+    if (!canUseSavedLibrary) {
+      return null;
+    }
+    const label = translate('saved.saveButton', 'Save signature');
     const currentKey = signatureKeysByType[type];
     const lastSavedKey = lastSavedSignatureKeys[type];
     const hasChanges = Boolean(currentKey && currentKey !== lastSavedKey);
@@ -271,11 +305,11 @@ const SignSettings = ({
 
     let tooltipMessage: string | undefined;
     if (!isReady) {
-      tooltipMessage = t('sign.saved.saveUnavailable', 'Create a signature first to save it.');
+      tooltipMessage = translate('saved.saveUnavailable', 'Create a signature first to save it.');
     } else if (isSaved) {
-      tooltipMessage = t('sign.saved.noChanges', 'Current signature is already saved.');
+      tooltipMessage = translate('saved.noChanges', 'Current signature is already saved.');
     } else if (isSavedSignatureLimitReached) {
-      tooltipMessage = t('sign.saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
+      tooltipMessage = translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
         max: MAX_SAVED_SIGNATURES,
       });
     }
@@ -289,7 +323,7 @@ const SignSettings = ({
         disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
         leftSection={<LocalIcon icon="material-symbols:save-rounded" width={16} height={16} />}
       >
-        {isSaved ? t('sign.saved.status.saved', 'Saved') : label}
+        {isSaved ? translate('saved.status.saved', 'Saved') : label}
       </Button>
     );
 
@@ -304,14 +338,33 @@ const SignSettings = ({
     return button;
   };
 
+  const renderSaveButtonRow = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
+    const button = renderSaveButton(type, isReady, onClick);
+    if (!button) {
+      return null;
+    }
+    return (
+      <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+        {button}
+      </Box>
+    );
+  };
+
   useEffect(() => {
+    if (signatureSource === 'saved' && !canUseSavedLibrary) {
+      setSignatureSource(effectiveDefaultSource);
+      return;
+    }
     if (signatureSource === 'saved') {
       return;
     }
-    if (signatureSource !== parameters.signatureType) {
-      setSignatureSource(parameters.signatureType);
+    const nextSource = allowedSignatureSources.includes(parameters.signatureType as SignatureSource)
+      ? (parameters.signatureType as SignatureSource)
+      : effectiveDefaultSource;
+    if (signatureSource !== nextSource) {
+      setSignatureSource(nextSource);
     }
-  }, [parameters.signatureType, signatureSource]);
+  }, [parameters.signatureType, signatureSource, allowedSignatureSources, effectiveDefaultSource, canUseSavedLibrary]);
 
   useEffect(() => {
     if (!disabled) {
@@ -654,8 +707,23 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   }, [activeFileIndex, shouldEnablePlacement, signaturesApplied, onActivateSignaturePlacement]);
 
+  const sourceLabels: Record<SignatureSource, string> = {
+    canvas: translate('type.canvas', 'Draw'),
+    image: translate('type.image', 'Upload'),
+    text: translate('type.text', 'Type'),
+    saved: translate('type.saved', 'Saved'),
+  };
+
+  const sourceOptions = allowedSignatureSources.map(source => ({
+    label: sourceLabels[source],
+    value: source,
+  }));
+
   const renderSignatureBuilder = () => {
     if (signatureSource === 'saved') {
+      if (!canUseSavedLibrary) {
+        return null;
+      }
       return (
         <SavedSignaturesSection
           signatures={savedSignatures}
@@ -664,6 +732,7 @@ const SignSettings = ({
           onUseSignature={handleUseSavedSignature}
           onDeleteSignature={handleDeleteSavedSignature}
           onRenameSignature={handleRenameSavedSignature}
+          translationScope={translationScope}
         />
       );
     }
@@ -685,9 +754,7 @@ const SignSettings = ({
             disabled={disabled}
             initialSignatureData={canvasSignatureData}
           />
-          <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
-            {renderSaveButton('canvas', hasCanvasSignature, handleSaveCanvasSignature)}
-          </Box>
+          {renderSaveButtonRow('canvas', hasCanvasSignature, handleSaveCanvasSignature)}
         </Stack>
       );
     }
@@ -699,9 +766,7 @@ const SignSettings = ({
             onImageChange={handleImageChange}
             disabled={disabled}
           />
-          <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
-            {renderSaveButton('image', hasImageSignature, handleSaveImageSignature)}
-          </Box>
+          {renderSaveButtonRow('image', hasImageSignature, handleSaveImageSignature)}
         </Stack>
       );
     }
@@ -719,34 +784,32 @@ const SignSettings = ({
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
         />
-        <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
-          {renderSaveButton('text', hasTextSignature, handleSaveTextSignature)}
-        </Box>
+        {renderSaveButtonRow('text', hasTextSignature, handleSaveTextSignature)}
       </Stack>
     );
   };
 
   const placementInstructions = () => {
     if (signatureSource === 'saved') {
-      return t(
-        'sign.instructions.saved',
+      return translate(
+        'instructions.saved',
         'Select a saved signature above, then click anywhere on the PDF to place it.'
       );
     }
     if (parameters.signatureType === 'canvas') {
-      return t(
-        'sign.instructions.canvas',
+      return translate(
+        'instructions.canvas',
         'After drawing your signature and closing the canvas, click anywhere on the PDF to place it.'
       );
     }
     if (parameters.signatureType === 'image') {
-      return t(
-        'sign.instructions.image',
+      return translate(
+        'instructions.image',
         'After uploading your signature image, click anywhere on the PDF to place it.'
       );
     }
-    return t(
-      'sign.instructions.text',
+    return translate(
+      'instructions.text',
       'After entering your name above, click anywhere on the PDF to place your signature.'
     );
   };
@@ -755,16 +818,16 @@ const SignSettings = ({
     ? {
         color: isPlacementMode ? 'blue' : 'teal',
         title: isPlacementMode
-          ? t('sign.instructions.title', 'How to add your signature')
-          : t('sign.instructions.paused', 'Placement paused'),
+          ? translate('instructions.title', 'How to add your signature')
+          : translate('instructions.paused', 'Placement paused'),
         message: isPlacementMode
           ? placementInstructions()
-          : t('sign.instructions.resumeHint', 'Resume placement to click and add your signature.'),
+          : translate('instructions.resumeHint', 'Resume placement to click and add your signature.'),
       }
     : {
         color: 'yellow',
-        title: t('sign.instructions.title', 'How to add your signature'),
-        message: t('sign.instructions.noSignature', 'Create a signature above to enable placement tools.'),
+        title: translate('instructions.title', 'How to add your signature'),
+        message: translate('instructions.noSignature', 'Create a signature above to enable placement tools.'),
       };
 
   const handlePausePlacement = () => {
@@ -800,11 +863,11 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
         ? (
-            <Tooltip label={t('sign.mode.pause', 'Pause placement')}>
+            <Tooltip label={translate('mode.pause', 'Pause placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={t('sign.mode.pause', 'Pause placement')}
+                aria-label={translate('mode.pause', 'Pause placement')}
                 onClick={handlePausePlacement}
                 disabled={disabled || !onDeactivateSignature}
                 style={{
@@ -817,17 +880,17 @@ const SignSettings = ({
               >
                 <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {t('sign.mode.pause', 'Pause placement')}
+                  {translate('mode.pause', 'Pause placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
           )
         : (
-            <Tooltip label={t('sign.mode.resume', 'Resume placement')}>
+            <Tooltip label={translate('mode.resume', 'Resume placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={t('sign.mode.resume', 'Resume placement')}
+                aria-label={translate('mode.resume', 'Resume placement')}
                 onClick={handleResumePlacement}
                 disabled={disabled || !isCurrentTypeReady || !onActivateSignaturePlacement}
                 style={{
@@ -840,7 +903,7 @@ const SignSettings = ({
               >
                 <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {t('sign.mode.resume', 'Resume placement')}
+                  {translate('mode.resume', 'Resume placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
@@ -851,19 +914,16 @@ const SignSettings = ({
     <Stack>
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
-          {t('sign.step.createDesc', 'Choose how you want to create the signature')}
+          {translate('step.createDesc', 'Choose how you want to create the signature')}
         </Text>
-        <SegmentedControl
-          value={signatureSource}
-          fullWidth
-          onChange={(value) => handleSignatureSourceChange(value as SignatureSource)}
-          data={[
-            { label: t('sign.type.canvas', 'Draw'), value: 'canvas' },
-            { label: t('sign.type.image', 'Upload'), value: 'image' },
-            { label: t('sign.type.text', 'Type'), value: 'text' },
-            { label: t('sign.type.saved', 'Saved'), value: 'saved' },
-          ]}
-        />
+        {sourceOptions.length > 1 && (
+          <SegmentedControl
+            value={signatureSource}
+            fullWidth
+            onChange={(value) => handleSignatureSourceChange(value as SignatureSource)}
+            data={sourceOptions}
+          />
+        )}
         {renderSignatureBuilder()}
       </Stack>
 
@@ -871,10 +931,10 @@ const SignSettings = ({
 
       <Stack gap="sm">
         <Text fw={600} size="md">
-          {t('sign.step.place', 'Place & save')}
+          {translate('step.place', 'Place & save')}
         </Text>
         <Text size="sm" c="dimmed">
-          {t('sign.step.placeDesc', 'Position the signature on your PDF')}
+          {translate('step.placeDesc', 'Position the signature on your PDF')}
         </Text>
 
         <Group gap="xs" wrap="nowrap" align="center">
@@ -905,7 +965,7 @@ const SignSettings = ({
         onClose={() => setIsColorPickerOpen(false)}
         selectedColor={selectedColor}
         onColorChange={setSelectedColor}
-        title={t('sign.canvas.colorPickerTitle', 'Choose stroke colour')}
+        title={translate('canvas.colorPickerTitle', 'Choose stroke colour')}
       />
 
       {onSave && (
@@ -915,7 +975,7 @@ const SignSettings = ({
           variant="filled"
           fullWidth
         >
-          {t('sign.applySignatures', 'Apply Signatures')}
+          {translate('applySignatures', 'Apply Signatures')}
         </Button>
       )}
 

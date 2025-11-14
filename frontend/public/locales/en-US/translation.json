@@ -138,6 +138,11 @@
     "x-large": "X-Large"
   },
   "error": {
+    "404": {
+      "1": "We can't seem to find the page you're looking for.",
+      "2": "Something went wrong",
+      "head": "404 - Page Not Found | Oops, we tripped in the code!"
+    },
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
     "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
     "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
@@ -146,11 +151,6 @@
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
     "contactTip": "If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:",
-    "404": {
-      "head": "404 - Page Not Found | Oops, we tripped in the code!",
-      "1": "We can't seem to find the page you're looking for.",
-      "2": "Something went wrong"
-    },
     "github": "Submit a ticket on GitHub",
     "showStack": "Show Stack Trace",
     "copyStack": "Copy Stack Trace",
@@ -283,10 +283,10 @@
     "updateAvailable": "{0} is the current installed version. A new version ({1}) is available.",
     "appVersion": "App Version:",
     "downloadOption": {
-      "title": "Choose download option (For single file non zip downloads):",
       "1": "Open in same window",
       "2": "Open in new window",
-      "3": "Download file"
+      "3": "Download file",
+      "title": "Choose download option (For single file non zip downloads):"
     },
     "zipThreshold": "Zip files when the number of downloaded files exceeds",
     "signOut": "Sign Out",
@@ -912,6 +912,11 @@
       "tags": "color,replace,invert",
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Add Text",
+      "desc": "Add custom text anywhere in your PDF"
     }
   },
   "landing": {
@@ -1314,7 +1319,6 @@
     "header": "PDF Page Organizer",
     "submit": "Rearrange Pages",
     "mode": {
-      "_value": "Organization mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -1326,6 +1330,7 @@
       "9": "Remove First and Last",
       "10": "Odd-Even Merge",
       "11": "Duplicate all pages",
+      "_value": "Organization mode",
       "desc": {
         "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
         "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
@@ -2307,7 +2312,8 @@
       "draw": "Draw",
       "canvas": "Canvas",
       "image": "Image",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Saved"
     },
     "image": {
       "label": "Upload signature image",
@@ -2323,7 +2329,9 @@
     },
     "mode": {
       "move": "Move Signature",
-      "place": "Place Signature"
+      "place": "Place Signature",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
     },
     "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
@@ -2333,6 +2341,11 @@
     },
     "error": {
       "failed": "An error occurred while signing the PDF."
+    },
+    "step": {
+      "createDesc": "Choose how you want to create the signature",
+      "place": "Place & save",
+      "placeDesc": "Position the signature on your PDF"
     }
   },
   "flatten": {
@@ -2499,8 +2512,12 @@
     "selection": {
       "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "original": { "label": "Original PDF" },
-    "edited": { "label": "Edited PDF" },
+    "original": {
+      "label": "Original PDF"
+    },
+    "edited": {
+      "label": "Edited PDF"
+    },
     "swap": {
       "confirmTitle": "Re-run comparison?",
       "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
@@ -2508,7 +2525,6 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-    
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2564,7 +2580,6 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -3688,8 +3703,8 @@
     },
     "selectText": {
       "1": {
-        "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality",
+        "_value": "Compression Settings"
       },
       "2": "Optimization level:",
       "4": "Auto mode - Auto adjusts quality to get PDF to exact size",
@@ -5604,5 +5619,113 @@
   },
   "replaceColorPdf": {
     "tags": "Replace Color,Page operations,Back end,server side"
+  },
+  "addText": {
+    "title": "Add Text",
+    "header": "Add text to PDFs",
+    "upload": "Upload Image",
+    "draw": {
+      "title": "Draw your signature",
+      "clear": "Clear"
+    },
+    "text": {
+      "name": "Text content",
+      "placeholder": "Enter the text you want to add"
+    },
+    "clear": "Clear",
+    "add": "Add",
+    "saved": {
+      "heading": "Saved text",
+      "description": "Reuse saved text snippets at any time.",
+      "emptyTitle": "No saved signatures yet",
+      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
+      "type": {
+        "canvas": "Drawing",
+        "image": "Upload",
+        "text": "Text"
+      },
+      "limitTitle": "Limit reached",
+      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
+      "carouselPosition": "{{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "delete": "Remove",
+      "label": "Label",
+      "defaultLabel": "Text snippet",
+      "defaultCanvasLabel": "Drawing snippet",
+      "defaultImageLabel": "Uploaded snippet",
+      "defaultTextLabel": "Typed snippet",
+      "saveButton": "Save signature",
+      "saveUnavailable": "Create a signature first to save it.",
+      "noChanges": "Current signature is already saved.",
+      "status": {
+        "saved": "Saved"
+      }
+    },
+    "save": "Save Text",
+    "applySignatures": "Apply Text",
+    "personalSigs": "Personal Signatures",
+    "sharedSigs": "Shared Signatures",
+    "noSavedSigs": "No saved signatures found",
+    "addToAll": "Add to all pages",
+    "delete": "Delete",
+    "first": "First page",
+    "last": "Last page",
+    "next": "Next page",
+    "previous": "Previous page",
+    "maintainRatio": "Toggle maintain aspect ratio",
+    "undo": "Undo",
+    "redo": "Redo",
+    "submit": "Sign Document",
+    "steps": {
+      "configure": "Configure Signature"
+    },
+    "type": {
+      "title": "Text creation method",
+      "draw": "Draw",
+      "canvas": "Canvas",
+      "image": "Upload",
+      "text": "Type",
+      "saved": "Saved"
+    },
+    "image": {
+      "label": "Upload signature image",
+      "placeholder": "Select image file",
+      "hint": "Upload a PNG or JPG image of your signature"
+    },
+    "instructions": {
+      "title": "How to add text",
+      "canvas": "After drawing and closing the canvas, click anywhere on the PDF to place your text.",
+      "image": "After uploading your image above, click anywhere on the PDF to place it.",
+      "saved": "Select saved text above, then click anywhere on the PDF to place it.",
+      "text": "After entering your text above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your text.",
+      "noSignature": "Create text above to enable placement tools."
+    },
+    "mode": {
+      "move": "Move Text",
+      "place": "Place Text",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "updateAndPlace": "Update and Place",
+    "activate": "Activate Signature Placement",
+    "deactivate": "Stop Placing Signatures",
+    "results": {
+      "title": "Add Text Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding text to the PDF."
+    },
+    "step": {
+      "createDesc": "Choose how you want to create the text",
+      "place": "Place & save",
+      "placeDesc": "Position the text on your PDF"
+    },
+    "canvas": {
+      "colorPickerTitle": "Choose stroke colour"
+    },
+    "tags": "text,annotation,label"
   }
 }
