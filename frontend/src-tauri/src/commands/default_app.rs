@@ -51,9 +51,13 @@ pub fn set_as_default_pdf_handler() -> Result<String, String> {
 
 #[cfg(target_os = "windows")]
 fn check_default_windows() -> Result<bool, String> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     // Query the default handler for .pdf extension
     let output = Command::new("cmd")
         .args(["/C", "assoc .pdf"])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("Failed to check default app: {}", e))?;
 
@@ -65,6 +69,7 @@ fn check_default_windows() -> Result<bool, String> {
         // Query what application handles this ProgID
         let output = Command::new("cmd")
             .args(["/C", &format!("ftype {}", prog_id)])
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .map_err(|e| format!("Failed to query file type: {}", e))?;
 
