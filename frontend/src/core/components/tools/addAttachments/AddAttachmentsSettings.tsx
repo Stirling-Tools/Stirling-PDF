@@ -4,7 +4,7 @@
  * Allows selecting files to attach to PDFs.
  */
 
-import { Stack, Text, Group, ActionIcon, Alert, ScrollArea, Button } from "@mantine/core";
+import { Stack, Text, Group, ActionIcon, ScrollArea, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -20,16 +20,7 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
 
   return (
     <Stack gap="md">
-      <Alert color="blue" variant="light">
-        <Text size="sm">
-          {t("AddAttachmentsRequest.info", "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.")}
-        </Text>
-      </Alert>
-
       <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t("AddAttachmentsRequest.selectFiles", "Select Files to Attach")}
-        </Text>
         <input
           type="file"
           multiple

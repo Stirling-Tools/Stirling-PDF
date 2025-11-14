@@ -8,10 +8,12 @@ import { useAddAttachmentsParameters } from "@app/hooks/tools/addAttachments/use
 import { useAddAttachmentsOperation } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import AddAttachmentsSettings from "@app/components/tools/addAttachments/AddAttachmentsSettings";
+import { useAddAttachmentsTips } from "@app/components/tooltips/useAddAttachmentsTips";
 
 const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
+  const addAttachmentsTips = useAddAttachmentsTips();
 
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
@@ -64,6 +66,7 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       isCollapsed: accordion.getCollapsedState(AddAttachmentsStep.ATTACHMENTS),
       onCollapsedClick: () => accordion.handleStepToggle(AddAttachmentsStep.ATTACHMENTS),
       isVisible: true,
+      tooltip: addAttachmentsTips,
       content: (
         <AddAttachmentsSettings
           parameters={params.parameters}

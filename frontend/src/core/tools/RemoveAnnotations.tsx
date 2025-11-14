@@ -5,9 +5,11 @@ import { useRemoveAnnotationsParameters } from "@app/hooks/tools/removeAnnotatio
 import { useRemoveAnnotationsOperation } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useRemoveAnnotationsTips } from "@app/components/tooltips/useRemoveAnnotationsTips";
 
 const RemoveAnnotations = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const removeAnnotationsTips = useRemoveAnnotationsTips();
 
   const base = useBaseTool(
     'removeAnnotations',
@@ -26,6 +28,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
         title: t("removeAnnotations.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: removeAnnotationsTips,
         content: <RemoveAnnotationsSettings />,
       },
     ],
