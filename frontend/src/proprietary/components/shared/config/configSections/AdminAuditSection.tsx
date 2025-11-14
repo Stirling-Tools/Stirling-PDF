@@ -6,9 +6,12 @@ import AuditSystemStatus from '@app/components/shared/config/configSections/audi
 import AuditChartsSection from '@app/components/shared/config/configSections/audit/AuditChartsSection';
 import AuditEventsTable from '@app/components/shared/config/configSections/audit/AuditEventsTable';
 import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
+  const { loginEnabled } = useLoginRequired();
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +30,24 @@ const AdminAuditSection: React.FC = () => {
       }
     };
 
-    fetchSystemStatus();
-  }, []);
+    if (loginEnabled) {
+      fetchSystemStatus();
+    } else {
+      // Provide example audit system status when login is disabled
+      setSystemStatus({
+        enabled: true,
+        level: 'INFO',
+        retentionDays: 90,
+        totalEvents: 1234,
+      });
+      setLoading(false);
+    }
+  }, [loginEnabled]);
 
-  if (loading) {
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem 0' }}>
         <Loader size="lg" />
@@ -56,32 +73,33 @@ const AdminAuditSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <AuditSystemStatus status={systemStatus} />
 
       {systemStatus.enabled ? (
         <Tabs defaultValue="dashboard">
           <Tabs.List>
-            <Tabs.Tab value="dashboard">
+            <Tabs.Tab value="dashboard" disabled={!loginEnabled}>
               {t('audit.tabs.dashboard', 'Dashboard')}
             </Tabs.Tab>
-            <Tabs.Tab value="events">
+            <Tabs.Tab value="events" disabled={!loginEnabled}>
               {t('audit.tabs.events', 'Audit Events')}
             </Tabs.Tab>
-            <Tabs.Tab value="export">
+            <Tabs.Tab value="export" disabled={!loginEnabled}>
               {t('audit.tabs.export', 'Export')}
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="dashboard" pt="md">
-            <AuditChartsSection />
+            <AuditChartsSection loginEnabled={loginEnabled} />
           </Tabs.Panel>
 
           <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable />
+            <AuditEventsTable loginEnabled={loginEnabled} />
           </Tabs.Panel>
 
           <Tabs.Panel value="export" pt="md">
-            <AuditExportSection />
+            <AuditExportSection loginEnabled={loginEnabled} />
           </Tabs.Panel>
         </Tabs>
       ) : (
