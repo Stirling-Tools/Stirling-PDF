@@ -415,9 +415,16 @@ public class PdfJsonConversionService {
                     for (PDPage page : document.getPages()) {
                         PdfJsonPageDimension dim = new PdfJsonPageDimension();
                         dim.setPageNumber(pageIndex + 1);
-                        PDRectangle mediaBox = page.getMediaBox();
-                        dim.setWidth(mediaBox.getWidth());
-                        dim.setHeight(mediaBox.getHeight());
+                        // Use CropBox if present (defines visible page area), otherwise fall back
+                        // to MediaBox
+                        PDRectangle pageBox = page.getCropBox();
+                        if (pageBox == null
+                                || pageBox.getWidth() == 0
+                                || pageBox.getHeight() == 0) {
+                            pageBox = page.getMediaBox();
+                        }
+                        dim.setWidth(pageBox.getWidth());
+                        dim.setHeight(pageBox.getHeight());
                         dim.setRotation(page.getRotation());
                         pageDimensions.add(dim);
                         pageIndex++;
@@ -1851,9 +1858,13 @@ public class PdfJsonConversionService {
         for (PDPage page : document.getPages()) {
             PdfJsonPage pageModel = new PdfJsonPage();
             pageModel.setPageNumber(pageIndex + 1);
-            PDRectangle mediaBox = page.getMediaBox();
-            pageModel.setWidth(mediaBox.getWidth());
-            pageModel.setHeight(mediaBox.getHeight());
+            // Use CropBox if present (defines visible page area), otherwise fall back to MediaBox
+            PDRectangle pageBox = page.getCropBox();
+            if (pageBox == null || pageBox.getWidth() == 0 || pageBox.getHeight() == 0) {
+                pageBox = page.getMediaBox();
+            }
+            pageModel.setWidth(pageBox.getWidth());
+            pageModel.setHeight(pageBox.getHeight());
             pageModel.setRotation(page.getRotation());
             pageModel.setTextElements(textByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
             pageModel.setImageElements(imagesByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));

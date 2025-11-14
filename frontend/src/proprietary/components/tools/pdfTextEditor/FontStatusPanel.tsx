@@ -173,10 +173,6 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     [document, pageIndex]
   );
 
-  if (!document || fontAnalysis.fonts.length === 0) {
-    return null;
-  }
-
   const { canReproducePerfectly, hasWarnings, summary, fonts } = fontAnalysis;
 
   const statusIcon = useMemo(() => {
@@ -188,6 +184,11 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     }
     return <InfoIcon sx={{ fontSize: 16 }} />;
   }, [canReproducePerfectly, hasWarnings]);
+
+  // Early return AFTER all hooks are declared
+  if (!document || fontAnalysis.fonts.length === 0) {
+    return null;
+  }
 
   const statusColor = canReproducePerfectly ? 'green' : hasWarnings ? 'yellow' : 'blue';
 

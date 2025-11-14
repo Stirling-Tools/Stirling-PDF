@@ -379,6 +379,30 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onUngroupGroup,
   } = data;
 
+  // Define derived variables immediately after props destructuring, before any hooks
+  const pages = pdfDocument?.pages ?? [];
+  const currentPage = pages[selectedPage] ?? null;
+  const pageGroups = groupsByPage[selectedPage] ?? [];
+  const pageImages = imagesByPage[selectedPage] ?? [];
+  const pagePreview = pagePreviews.get(selectedPage);
+  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
+
+  // Debug logging for page dimensions
+  console.log(`📐 [PdfTextEditor] Page ${selectedPage + 1} Dimensions:`, {
+    pageWidth,
+    pageHeight,
+    aspectRatio: pageHeight > 0 ? (pageWidth / pageHeight).toFixed(3) : 'N/A',
+    currentPage: currentPage ? {
+      mediaBox: currentPage.mediaBox,
+      cropBox: currentPage.cropBox,
+      rotation: currentPage.rotation,
+    } : null,
+    documentMetadata: pdfDocument?.metadata ? {
+      title: pdfDocument.metadata.title,
+      pageCount: pages.length,
+    } : null,
+  });
+
   const handleModeChangeRequest = useCallback((newMode: GroupingMode) => {
     if (hasChanges && newMode !== externalGroupingMode) {
       // Show confirmation dialog
@@ -409,7 +433,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     widthOverridesRef.current = widthOverrides;
   }, [widthOverrides]);
 
-  const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
+  const resolveFont = useCallback((fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
       return null;
     }
@@ -431,9 +455,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       return directUid;
     }
     return fonts.find((font) => font?.id === fontId) ?? null;
-  };
+  }, [pdfDocument?.fonts]);
 
-  const getFontFamily = (fontId: string | null | undefined, pageIndex: number | null | undefined): string => {
+  const getFontFamily = useCallback((fontId: string | null | undefined, pageIndex: number | null | undefined): string => {
     if (!fontId) {
       return 'sans-serif';
     }
@@ -464,116 +488,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     }
 
     return 'Arial, Helvetica, sans-serif';
-  };
-
-  const getFontMetricsFor = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): { unitsPerEm: number; ascent: number; descent: number } | undefined => {
-    if (!fontId) {
-      return undefined;
-    }
-    const font = resolveFont(fontId, pageIndex);
-    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
-    for (const key of lookupKeys) {
-      const metrics = fontMetrics.get(key);
-      if (metrics) {
-        return metrics;
-      }
-    }
-    return undefined;
-  };
-
-  const getLineHeightPx = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-    fontSizePx: number,
-  ): number => {
-    if (fontSizePx <= 0) {
-      return fontSizePx;
-    }
-    const metrics = getFontMetricsFor(fontId, pageIndex);
-    if (!metrics || metrics.unitsPerEm <= 0) {
-      return fontSizePx * 1.2;
-    }
-    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
-    const ascentUnits = metrics.ascent ?? unitsPerEm;
-    const descentUnits = Math.abs(metrics.descent ?? -(unitsPerEm * 0.2));
-    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
-    if (totalUnits <= 0) {
-      return fontSizePx * 1.2;
-    }
-    const lineHeight = (totalUnits / unitsPerEm) * fontSizePx;
-    return Math.max(lineHeight, fontSizePx * 1.05);
-  };
-
-  const getFontGeometry = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): {
-    unitsPerEm: number;
-    ascentUnits: number;
-    descentUnits: number;
-    totalUnits: number;
-    ascentRatio: number;
-    descentRatio: number;
-  } | undefined => {
-    const metrics = getFontMetricsFor(fontId, pageIndex);
-    if (!metrics) {
-      return undefined;
-    }
-    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
-    const rawAscent = metrics.ascent ?? unitsPerEm;
-    const rawDescent = metrics.descent ?? -(unitsPerEm * 0.2);
-    const ascentUnits = Number.isFinite(rawAscent) ? rawAscent : unitsPerEm;
-    const descentUnits = Number.isFinite(rawDescent) ? Math.abs(rawDescent) : unitsPerEm * 0.2;
-    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
-    if (totalUnits <= 0 || !Number.isFinite(totalUnits)) {
-      return undefined;
-    }
-    return {
-      unitsPerEm,
-      ascentUnits,
-      descentUnits,
-      totalUnits,
-      ascentRatio: ascentUnits / totalUnits,
-      descentRatio: descentUnits / totalUnits,
-    };
-  };
-
-  const getFontWeight = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): number | 'normal' | 'bold' => {
-    if (!fontId) {
-      return 'normal';
-    }
-    const font = resolveFont(fontId, pageIndex);
-    if (!font || !font.fontDescriptorFlags) {
-      return 'normal';
-    }
-
-    // PDF font descriptor flag bit 18 (value 262144 = 0x40000) indicates ForceBold
-    const FORCE_BOLD_FLAG = 262144;
-    if ((font.fontDescriptorFlags & FORCE_BOLD_FLAG) !== 0) {
-      return 'bold';
-    }
-
-    // Also check if font name contains "Bold"
-    const fontName = font.standard14Name || font.baseName || '';
-    if (fontName.toLowerCase().includes('bold')) {
-      return 'bold';
-    }
-
-    return 'normal';
-  };
-
-  const pages = pdfDocument?.pages ?? [];
-  const currentPage = pages[selectedPage] ?? null;
-  const pageGroups = groupsByPage[selectedPage] ?? [];
-  const pageImages = imagesByPage[selectedPage] ?? [];
-  const pagePreview = pagePreviews.get(selectedPage);
-  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
+  }, [resolveFont, fontFamilies]);
 
   useEffect(() => {
     clearSelection();
@@ -929,6 +844,110 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       });
     };
   }, [pdfDocument?.fonts]);
+
+  // Define helper functions that depend on hooks AFTER all hook calls
+  const getFontMetricsFor = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): { unitsPerEm: number; ascent: number; descent: number } | undefined => {
+    if (!fontId) {
+      return undefined;
+    }
+    const font = resolveFont(fontId, pageIndex);
+    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
+    for (const key of lookupKeys) {
+      const metrics = fontMetrics.get(key);
+      if (metrics) {
+        return metrics;
+      }
+    }
+    return undefined;
+  }, [resolveFont, fontMetrics]);
+
+  const getLineHeightPx = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+    fontSizePx: number,
+  ): number => {
+    if (fontSizePx <= 0) {
+      return fontSizePx;
+    }
+    const metrics = getFontMetricsFor(fontId, pageIndex);
+    if (!metrics || metrics.unitsPerEm <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const ascentUnits = metrics.ascent ?? unitsPerEm;
+    const descentUnits = Math.abs(metrics.descent ?? -(unitsPerEm * 0.2));
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const lineHeight = (totalUnits / unitsPerEm) * fontSizePx;
+    return Math.max(lineHeight, fontSizePx * 1.05);
+  }, [getFontMetricsFor]);
+
+  const getFontGeometry = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): {
+    unitsPerEm: number;
+    ascentUnits: number;
+    descentUnits: number;
+    totalUnits: number;
+    ascentRatio: number;
+    descentRatio: number;
+  } | undefined => {
+    const metrics = getFontMetricsFor(fontId, pageIndex);
+    if (!metrics) {
+      return undefined;
+    }
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const rawAscent = metrics.ascent ?? unitsPerEm;
+    const rawDescent = metrics.descent ?? -(unitsPerEm * 0.2);
+    const ascentUnits = Number.isFinite(rawAscent) ? rawAscent : unitsPerEm;
+    const descentUnits = Number.isFinite(rawDescent) ? Math.abs(rawDescent) : unitsPerEm * 0.2;
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits <= 0 || !Number.isFinite(totalUnits)) {
+      return undefined;
+    }
+    return {
+      unitsPerEm,
+      ascentUnits,
+      descentUnits,
+      totalUnits,
+      ascentRatio: ascentUnits / totalUnits,
+      descentRatio: descentUnits / totalUnits,
+    };
+  }, [getFontMetricsFor]);
+
+  const getFontWeight = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): number | 'normal' | 'bold' => {
+    if (!fontId) {
+      return 'normal';
+    }
+    const font = resolveFont(fontId, pageIndex);
+    if (!font || !font.fontDescriptorFlags) {
+      return 'normal';
+    }
+
+    // PDF font descriptor flag bit 18 (value 262144 = 0x40000) indicates ForceBold
+    const FORCE_BOLD_FLAG = 262144;
+    if ((font.fontDescriptorFlags & FORCE_BOLD_FLAG) !== 0) {
+      return 'bold';
+    }
+
+    // Also check if font name contains "Bold"
+    const fontName = font.standard14Name || font.baseName || '';
+    if (fontName.toLowerCase().includes('bold')) {
+      return 'bold';
+    }
+
+    return 'normal';
+  }, [resolveFont]);
+
   const visibleGroups = useMemo(
     () =>
       pageGroups
@@ -949,7 +968,18 @@ const orderedImages = useMemo(
     ),
   [pageImages],
 );
-const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
+const scale = useMemo(() => {
+  const calculatedScale = Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5);
+  console.log(`🔍 [PdfTextEditor] Scale Calculation:`, {
+    MAX_RENDER_WIDTH,
+    pageWidth,
+    pageHeight,
+    calculatedScale: calculatedScale.toFixed(3),
+    scaledWidth: (pageWidth * calculatedScale).toFixed(2),
+    scaledHeight: (pageHeight * calculatedScale).toFixed(2),
+  });
+  return calculatedScale;
+}, [pageWidth, pageHeight]);
 const scaledWidth = pageWidth * scale;
 const scaledHeight = pageHeight * scale;
 const selectionToolbarPosition = useMemo(() => {
@@ -1710,7 +1740,18 @@ const selectionToolbarPosition = useMemo(() => {
                       borderRadius: '0.5rem',
                       overflow: 'hidden',
                     }}
-                    ref={containerRef}
+                    ref={(node) => {
+                      containerRef.current = node;
+                      if (node) {
+                        console.log(`🖼️ [PdfTextEditor] Canvas Rendered:`, {
+                          renderedWidth: node.offsetWidth,
+                          renderedHeight: node.offsetHeight,
+                          styleWidth: scaledWidth,
+                          styleHeight: scaledHeight,
+                          pageNumber: selectedPage + 1,
+                        });
+                      }
+                    }}
                   >
                     {pagePreview && (
                       <img

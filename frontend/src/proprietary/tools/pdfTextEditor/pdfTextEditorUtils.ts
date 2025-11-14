@@ -984,10 +984,28 @@ export const deepCloneDocument = (document: PdfJsonDocument): PdfJsonDocument =>
 };
 
 export const pageDimensions = (page: PdfJsonPage | null | undefined): { width: number; height: number } => {
-  return {
-    width: valueOr(page?.width, DEFAULT_PAGE_WIDTH),
-    height: valueOr(page?.height, DEFAULT_PAGE_HEIGHT),
-  };
+  const width = valueOr(page?.width, DEFAULT_PAGE_WIDTH);
+  const height = valueOr(page?.height, DEFAULT_PAGE_HEIGHT);
+
+  console.log(`📏 [pageDimensions] Calculating page size:`, {
+    hasPage: !!page,
+    rawWidth: page?.width,
+    rawHeight: page?.height,
+    mediaBox: page?.mediaBox,
+    cropBox: page?.cropBox,
+    rotation: page?.rotation,
+    calculatedWidth: width,
+    calculatedHeight: height,
+    DEFAULT_PAGE_WIDTH,
+    DEFAULT_PAGE_HEIGHT,
+    commonFormats: {
+      'US Letter': '612 × 792 pt',
+      'A4': '595 × 842 pt',
+      'Legal': '612 × 1008 pt',
+    },
+  });
+
+  return { width, height };
 };
 
 export const createMergedElement = (group: TextGroup): PdfJsonTextElement => {
