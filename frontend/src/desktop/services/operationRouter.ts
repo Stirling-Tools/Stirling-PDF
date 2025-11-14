@@ -1,4 +1,4 @@
-import { connectionModeService, ConnectionMode } from './connectionModeService';
+import { connectionModeService } from '@app/services/connectionModeService';
 
 export type ExecutionTarget = 'local' | 'remote';
 
@@ -14,10 +14,10 @@ export class OperationRouter {
 
   /**
    * Determines where an operation should execute
-   * @param operation - The operation name (for future operation classification)
+   * @param _operation - The operation name (for future operation classification)
    * @returns 'local' or 'remote'
    */
-  async getExecutionTarget(operation?: string): Promise<ExecutionTarget> {
+  async getExecutionTarget(_operation?: string): Promise<ExecutionTarget> {
     const mode = await connectionModeService.getCurrentMode();
 
     // Current implementation: simple mode-based routing
@@ -37,11 +37,11 @@ export class OperationRouter {
 
   /**
    * Gets the base URL for an operation based on execution target
-   * @param operation - The operation name (for future operation classification)
+   * @param _operation - The operation name (for future operation classification)
    * @returns Base URL for API calls
    */
-  async getBaseUrl(operation?: string): Promise<string> {
-    const target = await this.getExecutionTarget(operation);
+  async getBaseUrl(_operation?: string): Promise<string> {
+    const target = await this.getExecutionTarget(_operation);
 
     if (target === 'local') {
       return 'http://localhost:8080';

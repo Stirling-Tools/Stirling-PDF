@@ -1,18 +1,55 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
+import { connectionModeService } from '@app/services/connectionModeService';
+import { authService } from '@app/services/authService';
 
 /**
  * App initialization hook
  * Desktop version: Handles Tauri-specific initialization
- * - Starts the backend on app startup
+ * - Checks for first launch and shows setup wizard if needed
+ * - Starts the backend on app startup (after setup)
+ * - Initializes auth state for server mode
  * - Handles files opened with the app (adds directly to FileContext)
  */
-export function useAppInitialization(): void {
-  // Initialize backend on app startup
-  useBackendInitializer();
+export function useAppInitialization(): { isFirstLaunch: boolean; setupComplete: boolean } {
+  const [isFirstLaunch, setIsFirstLaunch] = useState(false);
+  const [setupComplete, setSetupComplete] = useState(false);
+  const setupCheckCompleteRef = useRef(false);
+
+  // Check if this is first launch
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const firstLaunch = await connectionModeService.isFirstLaunch();
+        setIsFirstLaunch(firstLaunch);
+
+        if (!firstLaunch) {
+          // Not first launch - initialize normally
+          await authService.initializeAuthState();
+          setSetupComplete(true);
+        }
+
+        setupCheckCompleteRef.current = true;
+      } catch (error) {
+        console.error('Failed to check first launch:', error);
+        // On error, assume not first launch and proceed
+        setIsFirstLaunch(false);
+        setSetupComplete(true);
+        setupCheckCompleteRef.current = true;
+      }
+    };
+
+    if (!setupCheckCompleteRef.current) {
+      checkFirstLaunch();
+    }
+  }, []);
+
+  // Initialize backend on app startup (only if setup is complete)
+  const shouldStartBackend = setupComplete && !isFirstLaunch;
+  useBackendInitializer(shouldStartBackend);
 
   // Get file management actions
   const { addFiles } = useFileManagement();
@@ -58,4 +95,12 @@ export function useAppInitialization(): void {
 
     loadOpenedFiles();
   }, [openedFilePaths, openedFileLoading, addFiles]);
+}
+
+export function useSetupCompletion(): (completed: boolean) => void {
+  const [, setSetupComplete] = useState(false);
+
+  return (completed: boolean) => {
+    setSetupComplete(completed);
+  };
 }
