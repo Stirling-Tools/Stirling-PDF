@@ -16,7 +16,7 @@ import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolBu
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
-import InviteMembersModal from '@app/components/shared/InviteMembersModal';
+
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -35,7 +35,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { config } = useAppConfig();
   const { startTour } = useOnboarding();
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
@@ -148,8 +147,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     },
   ];
 
-  const isAdmin = config?.isAdmin === true;
-
   const middleButtons: ButtonConfig[] = [];
   //TODO: Activity
   //{
@@ -174,17 +171,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         // This will be overridden by the wrapper logic
       },
     },
-    ...(isAdmin ? [{
-      id: 'invite',
-      name: t("quickAccess.invite", "Invite"),
-      icon: <LocalIcon icon="person-add" width="1.25rem" height="1.25rem" />,
-      isRound: true,
-      size: 'md' as const,
-      type: 'action' as const,
-      onClick: () => {
-        setInviteModalOpen(true);
-      }
-    }] : []),
     {
       id: 'config',
       name: t("quickAccess.settings", "Settings"),
@@ -342,11 +328,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      />
-
-      <InviteMembersModal
-        opened={inviteModalOpen}
-        onClose={() => setInviteModalOpen(false)}
       />
     </div>
   );
