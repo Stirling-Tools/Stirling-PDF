@@ -223,7 +223,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 || trimmedUri.startsWith("/saml2")
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
-                || trimmedUri.startsWith("/api/v1/auth/logout");
+                || trimmedUri.startsWith("/api/v1/auth/logout")
+                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/login");
     }
 
     private enum UserLoginType {

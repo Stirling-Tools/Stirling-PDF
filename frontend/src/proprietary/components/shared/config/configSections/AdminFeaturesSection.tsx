@@ -7,6 +7,8 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface FeaturesSettingsData {
   serverCertificate?: {
@@ -19,6 +21,7 @@ interface FeaturesSettingsData {
 
 export default function AdminFeaturesSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -69,10 +72,15 @@ export default function AdminFeaturesSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
     try {
       await saveSettings();
       showRestartModal();
@@ -85,7 +93,9 @@ export default function AdminFeaturesSection() {
     }
   };
 
-  if (loading) {
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -95,6 +105,7 @@ export default function AdminFeaturesSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.features.title', 'Features')}</Text>
         <Text size="sm" c="dimmed">
@@ -124,10 +135,15 @@ export default function AdminFeaturesSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.serverCertificate?.enabled ?? true}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  serverCertificate: { ...settings.serverCertificate, enabled: e.target.checked }
-                })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({
+                    ...settings,
+                    serverCertificate: { ...settings.serverCertificate, enabled: e.target.checked }
+                  });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('serverCertificate.enabled')} />
             </Group>
@@ -148,6 +164,7 @@ export default function AdminFeaturesSection() {
                 serverCertificate: { ...settings.serverCertificate, organizationName: e.target.value }
               })}
               placeholder="Stirling-PDF"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -167,6 +184,7 @@ export default function AdminFeaturesSection() {
               })}
               min={1}
               max={3650}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -180,10 +198,15 @@ export default function AdminFeaturesSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.serverCertificate?.regenerateOnStartup ?? false}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  serverCertificate: { ...settings.serverCertificate, regenerateOnStartup: e.target.checked }
-                })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({
+                    ...settings,
+                    serverCertificate: { ...settings.serverCertificate, regenerateOnStartup: e.target.checked }
+                  });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('serverCertificate.regenerateOnStartup')} />
             </Group>
@@ -193,7 +216,7 @@ export default function AdminFeaturesSection() {
 
       {/* Save Button */}
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>

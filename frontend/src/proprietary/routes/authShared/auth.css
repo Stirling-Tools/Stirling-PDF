@@ -239,7 +239,7 @@
 }
 
 .login-logo-text {
-  height: 1.5rem; /* 24px */
+  height: 2rem; /* 32px - increased from 24px */
 }
 
 .login-title {

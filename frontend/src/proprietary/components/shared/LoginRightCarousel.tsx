@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { BASE_PATH } from '@app/constants/app';
 
 type ImageSlide = { src: string; alt?: string; cornerModelUrl?: string; title?: string; subtitle?: string; followMouseTilt?: boolean; tiltMaxDeg?: number }
 
-export default function LoginRightCarousel({
+function LoginRightCarousel({
   imageSlides = [],
   showBackground = true,
   initialSeconds = 5,
@@ -157,3 +157,5 @@ export default function LoginRightCarousel({
     </div>
   );
 }
+
+export default memo(LoginRightCarousel);

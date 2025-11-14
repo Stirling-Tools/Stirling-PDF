@@ -6,6 +6,8 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import apiClient from '@app/services/apiClient';
 
 interface DatabaseSettingsData {
@@ -21,6 +23,7 @@ interface DatabaseSettingsData {
 
 export default function AdminDatabaseSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -78,10 +81,16 @@ export default function AdminDatabaseSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled, fetchSettings]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       await saveSettings();
       showRestartModal();
@@ -94,7 +103,10 @@ export default function AdminDatabaseSection() {
     }
   };
 
-  if (loading) {
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -104,6 +116,8 @@ export default function AdminDatabaseSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       <div>
         <Group justify="space-between" align="center">
           <div>
@@ -130,14 +144,19 @@ export default function AdminDatabaseSection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.enableCustomDatabase || false}
-                onChange={(e) => setSettings({ ...settings, enableCustomDatabase: e.target.checked })}
+                checked={settings?.enableCustomDatabase || false}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, enableCustomDatabase: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('enableCustomDatabase')} />
             </Group>
           </div>
 
-          {settings.enableCustomDatabase && (
+          {settings?.enableCustomDatabase && (
             <>
               <div>
                 <TextInput
@@ -148,9 +167,10 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.customUrl.description', 'Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.')}
-                  value={settings.customDatabaseUrl || ''}
+                  value={settings?.customDatabaseUrl || ''}
                   onChange={(e) => setSettings({ ...settings, customDatabaseUrl: e.target.value })}
                   placeholder="jdbc:postgresql://localhost:5432/postgres"
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -163,7 +183,7 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.type.description', 'Type of database (not used if custom URL is provided)')}
-                  value={settings.type || 'postgresql'}
+                  value={settings?.type || 'postgresql'}
                   onChange={(value) => setSettings({ ...settings, type: value || 'postgresql' })}
                   data={[
                     { value: 'postgresql', label: 'PostgreSQL' },
@@ -171,6 +191,7 @@ export default function AdminDatabaseSection() {
                     { value: 'mysql', label: 'MySQL' },
                     { value: 'mariadb', label: 'MariaDB' }
                   ]}
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -183,9 +204,10 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.hostName.description', 'Database server hostname (not used if custom URL is provided)')}
-                  value={settings.hostName || ''}
+                  value={settings?.hostName || ''}
                   onChange={(e) => setSettings({ ...settings, hostName: e.target.value })}
                   placeholder="localhost"
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -198,10 +220,11 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.port.description', 'Database server port (not used if custom URL is provided)')}
-                  value={settings.port || 5432}
+                  value={settings?.port || 5432}
                   onChange={(value) => setSettings({ ...settings, port: Number(value) })}
                   min={1}
                   max={65535}
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -214,9 +237,10 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.name.description', 'Name of the database (not used if custom URL is provided)')}
-                  value={settings.name || ''}
+                  value={settings?.name || ''}
                   onChange={(e) => setSettings({ ...settings, name: e.target.value })}
                   placeholder="postgres"
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -229,9 +253,10 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.username.description', 'Database authentication username')}
-                  value={settings.username || ''}
+                  value={settings?.username || ''}
                   onChange={(e) => setSettings({ ...settings, username: e.target.value })}
                   placeholder="postgres"
+                  disabled={!loginEnabled}
                 />
               </div>
 
@@ -244,9 +269,10 @@ export default function AdminDatabaseSection() {
                     </Group>
                   }
                   description={t('admin.settings.database.password.description', 'Database authentication password')}
-                  value={settings.password || ''}
+                  value={settings?.password || ''}
                   onChange={(e) => setSettings({ ...settings, password: e.target.value })}
                   placeholder="••••••••"
+                  disabled={!loginEnabled}
                 />
               </div>
             </>
@@ -256,7 +282,7 @@ export default function AdminDatabaseSection() {
 
       {/* Save Button */}
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>

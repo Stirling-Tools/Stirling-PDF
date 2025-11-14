@@ -52,7 +52,7 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       setLoading(true);
       setError('');
 
-      await accountService.changePassword(currentPassword, newPassword);
+      await accountService.changePasswordOnLogin(currentPassword, newPassword);
 
       alert({
         alertType: 'success',

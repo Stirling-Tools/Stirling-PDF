@@ -75,6 +75,9 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith("/api/v1/auth/logout")
+                || trimmedUri.startsWith(
+                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
+                // enableLogin)
                 || trimmedUri.startsWith("/v1/api-docs")
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")

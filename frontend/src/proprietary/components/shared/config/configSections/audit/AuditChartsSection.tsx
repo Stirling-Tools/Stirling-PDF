@@ -53,7 +53,11 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'b
   );
 };
 
-const AuditChartsSection: React.FC = () => {
+interface AuditChartsSectionProps {
+  loginEnabled?: boolean;
+}
+
+const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({ loginEnabled = true }) => {
   const { t } = useTranslation();
   const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartsData, setChartsData] = useState<AuditChartsData | null>(null);
@@ -74,8 +78,27 @@ const AuditChartsSection: React.FC = () => {
       }
     };
 
-    fetchChartsData();
-  }, [timePeriod]);
+    if (loginEnabled) {
+      fetchChartsData();
+    } else {
+      // Provide example charts data when login is disabled
+      setChartsData({
+        eventsByType: {
+          labels: ['LOGIN', 'LOGOUT', 'SETTINGS_CHANGE', 'FILE_UPLOAD', 'FILE_DOWNLOAD'],
+          values: [342, 289, 145, 678, 523],
+        },
+        eventsByUser: {
+          labels: ['admin', 'user1', 'user2', 'user3', 'user4'],
+          values: [456, 321, 287, 198, 165],
+        },
+        eventsOverTime: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          values: [123, 145, 167, 189, 201, 87, 65],
+        },
+      });
+      setLoading(false);
+    }
+  }, [timePeriod, loginEnabled]);
 
   if (loading) {
     return (
@@ -123,7 +146,11 @@ const AuditChartsSection: React.FC = () => {
           </Text>
           <SegmentedControl
             value={timePeriod}
-            onChange={(value) => setTimePeriod(value as 'day' | 'week' | 'month')}
+            onChange={(value) => {
+              if (!loginEnabled) return;
+              setTimePeriod(value as 'day' | 'week' | 'month');
+            }}
+            disabled={!loginEnabled}
             data={[
               { label: t('audit.charts.day', 'Day'), value: 'day' },
               { label: t('audit.charts.week', 'Week'), value: 'week' },

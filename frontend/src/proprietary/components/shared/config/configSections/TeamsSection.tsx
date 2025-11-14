@@ -22,9 +22,12 @@ import { teamService, Team } from '@app/services/teamService';
 import { userManagementService, User } from '@app/services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import TeamDetailsSection from '@app/components/shared/config/configSections/TeamDetailsSection';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 export default function TeamsSection() {
   const { t } = useTranslation();
+  const { loginEnabled } = useLoginRequired();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [createModalOpened, setCreateModalOpened] = useState(false);
@@ -47,8 +50,18 @@ export default function TeamsSection() {
   const fetchTeams = async () => {
     try {
       setLoading(true);
-      const teamsData = await teamService.getTeams();
-      setTeams(teamsData);
+      if (loginEnabled) {
+        const teamsData = await teamService.getTeams();
+        setTeams(teamsData);
+      } else {
+        // Provide example data when login is disabled
+        const exampleTeams: Team[] = [
+          { id: 1, name: 'Engineering', userCount: 3 },
+          { id: 2, name: 'Marketing', userCount: 2 },
+          { id: 3, name: 'Internal', userCount: 1 },
+        ];
+        setTeams(exampleTeams);
+      }
     } catch (error) {
       console.error('Failed to fetch teams:', error);
       alert({ alertType: 'error', title: 'Failed to load teams' });
@@ -207,6 +220,7 @@ export default function TeamsSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">
           {t('workspace.teams.title')}
@@ -218,7 +232,7 @@ export default function TeamsSection() {
 
       {/* Header Actions */}
       <Group justify="flex-end">
-        <Button leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />} onClick={() => setCreateModalOpened(true)}>
+        <Button leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />} onClick={() => setCreateModalOpened(true)} disabled={!loginEnabled}>
           {t('workspace.teams.createNewTeam')}
         </Button>
       </Group>
@@ -257,8 +271,8 @@ export default function TeamsSection() {
               teams.map((team) => (
                 <Table.Tr
                   key={team.id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setViewingTeamId(team.id)}
+                  style={{ cursor: loginEnabled ? 'pointer' : 'default' }}
+                  onClick={() => loginEnabled && setViewingTeamId(team.id)}
                 >
                   <Table.Td>
                     <Group gap="xs">
@@ -290,18 +304,18 @@ export default function TeamsSection() {
                   <Table.Td onClick={(e) => e.stopPropagation()}>
                     <Menu position="bottom-end" withinPortal>
                       <Menu.Target>
-                        <ActionIcon variant="subtle" color="gray">
+                        <ActionIcon variant="subtle" color="gray" disabled={!loginEnabled}>
                           <LocalIcon icon="more-vert" width="1rem" height="1rem" />
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
-                        <Menu.Item leftSection={<LocalIcon icon="visibility" width="1rem" height="1rem" />} onClick={() => setViewingTeamId(team.id)}>
+                        <Menu.Item leftSection={<LocalIcon icon="visibility" width="1rem" height="1rem" />} onClick={() => setViewingTeamId(team.id)} disabled={!loginEnabled}>
                           {t('workspace.teams.viewTeam', 'View Team')}
                         </Menu.Item>
-                        <Menu.Item leftSection={<LocalIcon icon="group" width="1rem" height="1rem" />} onClick={() => openAddMemberModal(team)}>
+                        <Menu.Item leftSection={<LocalIcon icon="group" width="1rem" height="1rem" />} onClick={() => openAddMemberModal(team)} disabled={!loginEnabled}>
                           {t('workspace.teams.addMember')}
                         </Menu.Item>
-                        <Menu.Item leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />} onClick={() => openRenameModal(team)}>
+                        <Menu.Item leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />} onClick={() => openRenameModal(team)} disabled={!loginEnabled}>
                           {t('workspace.teams.renameTeamLabel')}
                         </Menu.Item>
                         <Menu.Divider />
@@ -309,7 +323,7 @@ export default function TeamsSection() {
                           color="red"
                           leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />}
                           onClick={() => handleDeleteTeam(team)}
-                          disabled={team.name === 'Internal'}
+                          disabled={!loginEnabled || team.name === 'Internal'}
                         >
                           {t('workspace.teams.deleteTeamLabel')}
                         </Menu.Item>

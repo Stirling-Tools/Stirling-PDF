@@ -6,6 +6,8 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface EndpointsSettingsData {
   toRemove?: string[];
@@ -14,6 +16,7 @@ interface EndpointsSettingsData {
 
 export default function AdminEndpointsSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -29,10 +32,16 @@ export default function AdminEndpointsSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled, fetchSettings]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       await saveSettings();
       showRestartModal();
@@ -45,7 +54,10 @@ export default function AdminEndpointsSection() {
     }
   };
 
-  if (loading) {
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -102,6 +114,8 @@ export default function AdminEndpointsSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       <div>
         <Text fw={600} size="lg">{t('admin.settings.endpoints.title', 'API Endpoints')}</Text>
         <Text size="sm" c="dimmed">
@@ -123,12 +137,16 @@ export default function AdminEndpointsSection() {
               }
               description={t('admin.settings.endpoints.toRemove.description', 'Select individual endpoints to disable')}
               value={settings.toRemove || []}
-              onChange={(value) => setSettings({ ...settings, toRemove: value })}
+              onChange={(value) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, toRemove: value });
+              }}
               data={commonEndpoints.map(endpoint => ({ value: endpoint, label: endpoint }))}
               searchable
               clearable
               placeholder="Select endpoints to disable"
               comboboxProps={{ zIndex: 1400 }}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -142,12 +160,16 @@ export default function AdminEndpointsSection() {
               }
               description={t('admin.settings.endpoints.groupsToRemove.description', 'Select endpoint groups to disable')}
               value={settings.groupsToRemove || []}
-              onChange={(value) => setSettings({ ...settings, groupsToRemove: value })}
+              onChange={(value) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, groupsToRemove: value });
+              }}
               data={commonGroups.map(group => ({ value: group, label: group }))}
               searchable
               clearable
               placeholder="Select groups to disable"
               comboboxProps={{ zIndex: 1400 }}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -160,7 +182,7 @@ export default function AdminEndpointsSection() {
       </Paper>
 
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>

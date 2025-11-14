@@ -7,6 +7,8 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface PremiumSettingsData {
   key?: string;
@@ -15,6 +17,7 @@ interface PremiumSettingsData {
 
 export default function AdminPremiumSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -30,10 +33,15 @@ export default function AdminPremiumSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
     try {
       await saveSettings();
       showRestartModal();
@@ -46,7 +54,9 @@ export default function AdminPremiumSection() {
     }
   };
 
-  if (loading) {
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -56,6 +66,7 @@ export default function AdminPremiumSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.premium.title', 'Premium & Enterprise')}</Text>
         <Text size="sm" c="dimmed">
@@ -98,6 +109,7 @@ export default function AdminPremiumSection() {
               value={settings.key || ''}
               onChange={(e) => setSettings({ ...settings, key: e.target.value })}
               placeholder="00000000-0000-0000-0000-000000000000"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -111,7 +123,12 @@ export default function AdminPremiumSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.enabled || false}
-                onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, enabled: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('enabled')} />
             </Group>
@@ -120,7 +137,7 @@ export default function AdminPremiumSection() {
       </Paper>
 
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>

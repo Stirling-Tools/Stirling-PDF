@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@app/auth/UseSession'
 import { useAppConfig } from '@app/contexts/AppConfigContext'
 import HomePage from '@app/pages/HomePage'
-import Login from '@app/routes/Login'
+// Login component is used via routing, not directly imported
 import FirstLoginModal from '@app/components/shared/FirstLoginModal'
 import { accountService } from '@app/services/accountService'
 
@@ -95,13 +95,7 @@ export default function Landing() {
     );
   }
 
-  // If we're at home route ("/"), show login directly (marketing/landing page)
-  // Otherwise navigate to login (fixes URL mismatch for tool routes)
-  const isHome = location.pathname === '/' || location.pathname === '';
-  if (isHome) {
-    return <Login />;
-  }
-
-  // For non-home routes without auth, navigate to login (preserves from location)
+  // No session - redirect to login page
+  // This ensures the URL always shows /login when not authenticated
   return <Navigate to="/login" replace state={{ from: location }} />;
 }
