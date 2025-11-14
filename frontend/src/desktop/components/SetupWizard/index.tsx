@@ -117,7 +117,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           {t('setup.description', 'Get started by choosing how you want to use Stirling PDF')}
         </Text>
 
-        <Stepper active={activeStep} breakpoint="sm">
+        <Stepper active={activeStep}>
           <Stepper.Step
             label={t('setup.step1.label', 'Choose Mode')}
             description={t('setup.step1.description', 'Offline or Server')}

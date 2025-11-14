@@ -1,7 +1,8 @@
 import React from 'react';
 import { Stack, Button, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconCloud, IconDeviceDesktop } from '@tabler/icons-react';
+import CloudIcon from '@mui/icons-material/Cloud';
+import ComputerIcon from '@mui/icons-material/Computer';
 
 interface ModeSelectionProps {
   onSelect: (mode: 'offline' | 'server') => void;
@@ -18,7 +19,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
         variant="light"
         onClick={() => onSelect('offline')}
         disabled={loading}
-        leftSection={<IconDeviceDesktop size={24} />}
+        leftSection={<ComputerIcon />}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
           <Text fw={600}>{t('setup.mode.offline.title', 'Use Offline')}</Text>
@@ -33,7 +34,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
         variant="light"
         onClick={() => onSelect('server')}
         disabled={loading}
-        leftSection={<IconCloud size={24} />}
+        leftSection={<CloudIcon />}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
           <Text fw={600}>{t('setup.mode.server.title', 'Connect to Server')}</Text>
