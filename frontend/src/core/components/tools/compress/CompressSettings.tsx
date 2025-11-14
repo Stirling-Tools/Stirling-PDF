@@ -41,11 +41,12 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
             min={1}
             max={9}
             step={1}
+            suffix=""
           />
           <Text size="xs" c="dimmed" style={{ marginTop: '8px' }}>
-            {parameters.compressionLevel <= 3 && t('compress.tooltip.qualityAdjustment.bullet1', '1-3 PDF compression')}
-            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.tooltip.qualityAdjustment.text', '4-6 lite image compression')}
-            {parameters.compressionLevel >= 7 && t('compress.tooltip.qualityAdjustment.bullet2', '7-9 intense image compression Will dramatically reduce image quality')}
+            {parameters.compressionLevel <= 3 && t('compress.compressionLevel.range1to3')}
+            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.compressionLevel.range4to6')}
+            {parameters.compressionLevel >= 7 && t('compress.compressionLevel.range7to9')}
           </Text>
         </Stack>
       )}
