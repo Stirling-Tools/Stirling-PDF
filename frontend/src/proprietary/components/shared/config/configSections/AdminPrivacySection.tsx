@@ -6,6 +6,8 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import apiClient from '@app/services/apiClient';
 
 interface PrivacySettingsData {
@@ -16,6 +18,7 @@ interface PrivacySettingsData {
 
 export default function AdminPrivacySection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -76,10 +79,16 @@ export default function AdminPrivacySection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled, fetchSettings]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       await saveSettings();
       showRestartModal();
@@ -92,7 +101,10 @@ export default function AdminPrivacySection() {
     }
   };
 
-  if (loading) {
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -102,6 +114,8 @@ export default function AdminPrivacySection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       <div>
         <Text fw={600} size="lg">{t('admin.settings.privacy.title', 'Privacy')}</Text>
         <Text size="sm" c="dimmed">
@@ -123,8 +137,13 @@ export default function AdminPrivacySection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.enableAnalytics || false}
-                onChange={(e) => setSettings({ ...settings, enableAnalytics: e.target.checked })}
+                checked={settings?.enableAnalytics || false}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, enableAnalytics: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('enableAnalytics')} />
             </Group>
@@ -139,8 +158,13 @@ export default function AdminPrivacySection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.metricsEnabled || false}
-                onChange={(e) => setSettings({ ...settings, metricsEnabled: e.target.checked })}
+                checked={settings?.metricsEnabled || false}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, metricsEnabled: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('metricsEnabled')} />
             </Group>
@@ -162,8 +186,13 @@ export default function AdminPrivacySection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.googleVisibility || false}
-                onChange={(e) => setSettings({ ...settings, googleVisibility: e.target.checked })}
+                checked={settings?.googleVisibility || false}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, googleVisibility: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('googleVisibility')} />
             </Group>
@@ -173,7 +202,7 @@ export default function AdminPrivacySection() {
 
       {/* Save Button */}
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>

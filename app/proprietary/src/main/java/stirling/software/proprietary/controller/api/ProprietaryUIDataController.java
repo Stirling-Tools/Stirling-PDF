@@ -116,6 +116,10 @@ public class ProprietaryUIDataController {
         LoginData data = new LoginData();
         Map<String, String> providerList = new HashMap<>();
         Security securityProps = applicationProperties.getSecurity();
+
+        // Add enableLogin flag so frontend doesn't need to call /app-config
+        data.setEnableLogin(securityProps.getEnableLogin());
+
         OAUTH2 oauth = securityProps.getOauth2();
 
         if (oauth != null && oauth.getEnabled()) {
@@ -448,6 +452,7 @@ public class ProprietaryUIDataController {
 
     @Data
     public static class LoginData {
+        private Boolean enableLogin;
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;

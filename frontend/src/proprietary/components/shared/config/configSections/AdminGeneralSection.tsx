@@ -1,17 +1,20 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge } from '@mantine/core';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface GeneralSettingsData {
   ui: {
     appNameNavbar?: string;
     languages?: string[];
+    logoStyle?: 'modern' | 'classic';
   };
   system: {
     defaultLocale?: string;
@@ -40,6 +43,7 @@ interface GeneralSettingsData {
 
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -108,14 +112,15 @@ export default function AdminGeneralSection() {
     saveTransformer: (settings) => {
       const deltaSettings: Record<string, any> = {
         // UI settings
-        'ui.appNameNavbar': settings.ui.appNameNavbar,
-        'ui.languages': settings.ui.languages,
+        'ui.appNameNavbar': settings.ui?.appNameNavbar,
+        'ui.languages': settings.ui?.languages,
+        'ui.logoStyle': settings.ui?.logoStyle,
         // System settings
-        'system.defaultLocale': settings.system.defaultLocale,
-        'system.showUpdate': settings.system.showUpdate,
-        'system.showUpdateOnlyAdmin': settings.system.showUpdateOnlyAdmin,
-        'system.customHTMLFiles': settings.system.customHTMLFiles,
-        'system.fileUploadLimit': settings.system.fileUploadLimit,
+        'system.defaultLocale': settings.system?.defaultLocale,
+        'system.showUpdate': settings.system?.showUpdate,
+        'system.showUpdateOnlyAdmin': settings.system?.showUpdateOnlyAdmin,
+        'system.customHTMLFiles': settings.system?.customHTMLFiles,
+        'system.fileUploadLimit': settings.system?.fileUploadLimit,
         // Premium custom metadata
         'premium.proFeatures.customMetadata.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
         'premium.proFeatures.customMetadata.author': settings.customMetadata?.author,
@@ -124,10 +129,10 @@ export default function AdminGeneralSection() {
       };
 
       if (settings.customPaths) {
-        deltaSettings['system.customPaths.pipeline.watchedFoldersDir'] = settings.customPaths.pipeline?.watchedFoldersDir;
-        deltaSettings['system.customPaths.pipeline.finishedFoldersDir'] = settings.customPaths.pipeline?.finishedFoldersDir;
-        deltaSettings['system.customPaths.operations.weasyprint'] = settings.customPaths.operations?.weasyprint;
-        deltaSettings['system.customPaths.operations.unoconvert'] = settings.customPaths.operations?.unoconvert;
+        deltaSettings['system.customPaths.pipeline.watchedFoldersDir'] = settings.customPaths?.pipeline?.watchedFoldersDir;
+        deltaSettings['system.customPaths.pipeline.finishedFoldersDir'] = settings.customPaths?.pipeline?.finishedFoldersDir;
+        deltaSettings['system.customPaths.operations.weasyprint'] = settings.customPaths?.operations?.weasyprint;
+        deltaSettings['system.customPaths.operations.unoconvert'] = settings.customPaths?.operations?.unoconvert;
       }
 
       return {
@@ -138,10 +143,21 @@ export default function AdminGeneralSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    // Only fetch real settings if login is enabled
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled, fetchSettings]);
+
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
 
   const handleSave = async () => {
+    // Block save if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       await saveSettings();
       showRestartModal();
@@ -154,7 +170,7 @@ export default function AdminGeneralSection() {
     }
   };
 
-  if (loading) {
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -164,6 +180,8 @@ export default function AdminGeneralSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       <div>
         <Text fw={600} size="lg">{t('admin.settings.general.title', 'System Settings')}</Text>
         <Text size="sm" c="dimmed">
@@ -185,9 +203,55 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.appNameNavbar.description', 'The name displayed in the navigation bar')}
-              value={settings.ui.appNameNavbar || ''}
+              value={settings.ui?.appNameNavbar || ''}
               onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appNameNavbar: e.target.value } })}
               placeholder="Stirling PDF"
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              <Group gap="xs">
+                <span>{t('admin.settings.general.logoStyle.label', 'Logo Style')}</span>
+                <PendingBadge show={isFieldPending('ui.logoStyle')} />
+              </Group>
+            </Text>
+            <Text size="xs" c="dimmed" mb="xs">
+              {t('admin.settings.general.logoStyle.description', 'Choose between the modern minimalist logo or the classic S icon')}
+            </Text>
+            <SegmentedControl
+              value={settings.ui?.logoStyle || 'classic'}
+              onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, logoStyle: value as 'modern' | 'classic' } })}
+              data={[
+                {
+                  value: 'classic',
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
+                      <img
+                        src="/branding/old/favicon.svg"
+                        alt="Classic logo"
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                      <span>{t('admin.settings.general.logoStyle.classic', 'Classic')}</span>
+                    </div>
+                  )
+                },
+                {
+                  value: 'modern',
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
+                      <img
+                        src="/branding/StirlingPDFLogoNoTextLight.svg"
+                        alt="Modern logo"
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                      <span>{t('admin.settings.general.logoStyle.modern', 'Modern')}</span>
+                    </div>
+                  )
+                },
+              ]}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -200,7 +264,7 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.languages.description', 'Limit which languages are available (empty = all languages)')}
-              value={settings.ui.languages || []}
+              value={settings.ui?.languages || []}
               onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, languages: value } })}
               data={[
                 { value: 'de_DE', label: 'Deutsch' },
@@ -218,6 +282,7 @@ export default function AdminGeneralSection() {
               clearable
               placeholder="Select languages"
               comboboxProps={{ zIndex: 1400 }}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -230,9 +295,10 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.defaultLocale.description', 'The default language for new users (e.g., en_US, es_ES)')}
-              value={settings.system.defaultLocale || ''}
+              value={ settings.system?.defaultLocale || ''}
               onChange={(e) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: e.target.value } })}
               placeholder="en_US"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -245,9 +311,10 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.fileUploadLimit.description', 'Maximum file upload size (e.g., 100MB, 1GB)')}
-              value={settings.system.fileUploadLimit || ''}
+              value={ settings.system?.fileUploadLimit || ''}
               onChange={(e) => setSettings({ ...settings, system: { ...settings.system, fileUploadLimit: e.target.value } })}
               placeholder="100MB"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -260,8 +327,9 @@ export default function AdminGeneralSection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.system.showUpdate || false}
+                checked={ settings.system?.showUpdate || false}
                 onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdate: e.target.checked } })}
+                disabled={!loginEnabled}
               />
               <PendingBadge show={isFieldPending('system.showUpdate')} />
             </Group>
@@ -276,8 +344,9 @@ export default function AdminGeneralSection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.system.showUpdateOnlyAdmin || false}
+                checked={ settings.system?.showUpdateOnlyAdmin || false}
                 onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdateOnlyAdmin: e.target.checked } })}
+                disabled={!loginEnabled}
               />
               <PendingBadge show={isFieldPending('system.showUpdateOnlyAdmin')} />
             </Group>
@@ -292,8 +361,9 @@ export default function AdminGeneralSection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.system.customHTMLFiles || false}
+                checked={settings.system?.customHTMLFiles || false}
                 onChange={(e) => setSettings({ ...settings, system: { ...settings.system, customHTMLFiles: e.target.checked } })}
+                disabled={!loginEnabled}
               />
               <PendingBadge show={isFieldPending('system.customHTMLFiles')} />
             </Group>
@@ -326,6 +396,7 @@ export default function AdminGeneralSection() {
                     autoUpdateMetadata: e.target.checked
                   }
                 })}
+                disabled={!loginEnabled}
               />
               <PendingBadge show={isFieldPending('customMetadata.autoUpdateMetadata')} />
             </Group>
@@ -349,6 +420,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="username"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -370,6 +442,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="Stirling-PDF"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -391,6 +464,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="Stirling-PDF"
+              disabled={!loginEnabled}
             />
           </div>
         </Stack>
@@ -429,6 +503,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="/pipeline/watchedFolders"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -453,6 +528,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="/pipeline/finishedFolders"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -479,6 +555,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="/opt/venv/bin/weasyprint"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -503,6 +580,7 @@ export default function AdminGeneralSection() {
                 }
               })}
               placeholder="/opt/venv/bin/unoconvert"
+              disabled={!loginEnabled}
             />
           </div>
         </Stack>
@@ -510,7 +588,7 @@ export default function AdminGeneralSection() {
 
       {/* Save Button */}
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
