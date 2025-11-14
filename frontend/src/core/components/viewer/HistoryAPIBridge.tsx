@@ -4,7 +4,7 @@ import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
-import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/core/constants/app';
+import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/constants/app';
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
