@@ -1,4 +1,4 @@
-import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
