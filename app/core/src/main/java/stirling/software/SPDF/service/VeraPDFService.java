@@ -61,90 +61,37 @@ public class VeraPDFService {
         }
     }
 
-    public static PDFVerificationResult validatePDF(InputStream pdfStream, String standardString)
-            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
-
-        byte[] pdfBytes = pdfStream.readAllBytes();
-        PDFAFlavour validationFlavour = PDFAFlavour.fromString(standardString);
-        Optional<PDFAFlavour> declaredPdfaFlavour = extractDeclaredPdfaFlavour(pdfBytes);
-
-        try (PDFAParser parser =
-                Foundries.defaultInstance()
-                        .createParser(new ByteArrayInputStream(pdfBytes), validationFlavour)) {
-            PDFAValidator validator =
-                    Foundries.defaultInstance().createValidator(validationFlavour, false);
-            ValidationResult result = validator.validate(parser);
-
-            return convertToVerificationResult(
-                    result, declaredPdfaFlavour.orElse(null), validationFlavour);
+    private static boolean isWarningByMessage(String message) {
+        // Check for null or blank message - explicit null check is necessary to avoid NPE
+        if (message == null || message.isBlank()) {
+            return false;
         }
+
+        String normalized = message.toLowerCase(Locale.ROOT);
+
+        return normalized.contains("recommended")
+                || normalized.contains("should")
+                || normalized.contains("optional")
+                || normalized.contains("missing recommended");
     }
 
-    public static List<PDFVerificationResult> validateAllDeclaredStandards(InputStream pdfStream)
-            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
-
-        byte[] pdfBytes = pdfStream.readAllBytes();
-        Optional<PDFAFlavour> declaredPdfaFlavour = extractDeclaredPdfaFlavour(pdfBytes);
-        List<PDFVerificationResult> results = new ArrayList<>();
-
-        List<PDFAFlavour> detectedFlavours;
-        try (PDFAParser detectionParser =
-                Foundries.defaultInstance().createParser(new ByteArrayInputStream(pdfBytes))) {
-            detectedFlavours = detectionParser.getFlavours();
+    private static boolean isWarningByClause(String clause) {
+        // Check for null or blank clause - explicit null check is necessary to avoid NPE
+        if (clause == null || clause.isBlank()) {
+            return false;
         }
 
-        List<PDFAFlavour> flavoursToValidate = new ArrayList<>();
+        if (clause.startsWith("6.7")) {
+            return true;
+        }
 
-        declaredPdfaFlavour.ifPresent(flavoursToValidate::add);
-
-        for (PDFAFlavour flavour : detectedFlavours) {
-            if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A)) {
-                if (declaredPdfaFlavour.isPresent() && !declaredPdfaFlavour.get().equals(flavour)) {
-                    flavoursToValidate.add(flavour);
-                } else if (declaredPdfaFlavour.isEmpty()) {
-                    log.debug(
-                            "Ignoring detected PDF/A flavour {} because no PDF/A declaration exists in XMP",
-                            flavour.getId());
-                }
-            } else if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_UA)
-                    || PDFFlavours.isFlavourFamily(
-                            flavour, PDFAFlavour.SpecificationFamily.WTPDF)) {
-                flavoursToValidate.add(flavour);
+        for (String criticalPrefix : CRITICAL_CLAUSE_PREFIXES) {
+            if (clause.startsWith(criticalPrefix)) {
+                return false;
             }
         }
 
-        if (declaredPdfaFlavour.isEmpty()) {
-            results.add(createNoPdfaDeclarationResult());
-        }
-
-        if (flavoursToValidate.isEmpty()) {
-            log.info("No verifiable PDF/A, PDF/UA, or WTPDF standards declared via XMP metadata");
-            return results;
-        }
-
-        for (PDFAFlavour flavour : flavoursToValidate) {
-            try (PDFAParser parser =
-                    Foundries.defaultInstance()
-                            .createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
-                PDFAValidator validator =
-                        Foundries.defaultInstance().createValidator(flavour, false);
-                ValidationResult result = validator.validate(parser);
-                PDFAFlavour declaredForResult =
-                        PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A)
-                                ? declaredPdfaFlavour.orElse(null)
-                                : flavour;
-                results.add(convertToVerificationResult(result, declaredForResult, flavour));
-            } catch (Exception e) {
-                log.error("Error validating standard {}: {}", flavour.getId(), e.getMessage());
-                results.add(
-                        buildErrorResult(
-                                declaredPdfaFlavour,
-                                flavour,
-                                "Validation error: " + e.getMessage()));
-            }
-        }
-
-        return results;
+        return true;
     }
 
     private static PDFVerificationResult convertToVerificationResult(
@@ -264,37 +211,90 @@ public class VeraPDFService {
         return ruleId != null && WARNING_RULES.contains(ruleId);
     }
 
-    private static boolean isWarningByMessage(String message) {
-        // isBlank() already handles null and empty strings
-        if (message == null || message.isBlank()) {
-            return false;
+    public PDFVerificationResult validatePDF(InputStream pdfStream, String standardString)
+            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
+
+        byte[] pdfBytes = pdfStream.readAllBytes();
+        PDFAFlavour validationFlavour = PDFAFlavour.fromString(standardString);
+        Optional<PDFAFlavour> declaredPdfaFlavour = extractDeclaredPdfaFlavour(pdfBytes);
+
+        try (PDFAParser parser =
+                Foundries.defaultInstance()
+                        .createParser(new ByteArrayInputStream(pdfBytes), validationFlavour)) {
+            PDFAValidator validator =
+                    Foundries.defaultInstance().createValidator(validationFlavour, false);
+            ValidationResult result = validator.validate(parser);
+
+            return convertToVerificationResult(
+                    result, declaredPdfaFlavour.orElse(null), validationFlavour);
         }
-
-        String normalized = message.toLowerCase(Locale.ROOT);
-
-        return normalized.contains("recommended")
-                || normalized.contains("should")
-                || normalized.contains("optional")
-                || normalized.contains("missing recommended");
     }
 
-    private static boolean isWarningByClause(String clause) {
-        // isBlank() already handles null and empty strings
-        if (clause == null || clause.isBlank()) {
-            return false;
+    public List<PDFVerificationResult> validateAllDeclaredStandards(InputStream pdfStream)
+            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
+
+        byte[] pdfBytes = pdfStream.readAllBytes();
+        Optional<PDFAFlavour> declaredPdfaFlavour = extractDeclaredPdfaFlavour(pdfBytes);
+        List<PDFVerificationResult> results = new ArrayList<>();
+
+        List<PDFAFlavour> detectedFlavours;
+        try (PDFAParser detectionParser =
+                Foundries.defaultInstance().createParser(new ByteArrayInputStream(pdfBytes))) {
+            detectedFlavours = detectionParser.getFlavours();
         }
 
-        if (clause.startsWith("6.7")) {
-            return true;
-        }
+        List<PDFAFlavour> flavoursToValidate = new ArrayList<>();
 
-        for (String criticalPrefix : CRITICAL_CLAUSE_PREFIXES) {
-            if (clause.startsWith(criticalPrefix)) {
-                return false;
+        declaredPdfaFlavour.ifPresent(flavoursToValidate::add);
+
+        for (PDFAFlavour flavour : detectedFlavours) {
+            if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A)) {
+                if (declaredPdfaFlavour.isPresent() && !declaredPdfaFlavour.get().equals(flavour)) {
+                    flavoursToValidate.add(flavour);
+                } else if (declaredPdfaFlavour.isEmpty()) {
+                    log.debug(
+                            "Ignoring detected PDF/A flavour {} because no PDF/A declaration exists in XMP",
+                            flavour.getId());
+                }
+            } else if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_UA)
+                    || PDFFlavours.isFlavourFamily(
+                            flavour, PDFAFlavour.SpecificationFamily.WTPDF)) {
+                flavoursToValidate.add(flavour);
             }
         }
 
-        return true;
+        if (declaredPdfaFlavour.isEmpty()) {
+            results.add(createNoPdfaDeclarationResult());
+        }
+
+        if (flavoursToValidate.isEmpty()) {
+            log.info("No verifiable PDF/A, PDF/UA, or WTPDF standards declared via XMP metadata");
+            return results;
+        }
+
+        for (PDFAFlavour flavour : flavoursToValidate) {
+            try (PDFAParser parser =
+                    Foundries.defaultInstance()
+                            .createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
+                PDFAValidator validator =
+                        Foundries.defaultInstance().createValidator(flavour, false);
+                ValidationResult result = validator.validate(parser);
+                PDFAFlavour declaredForResult =
+                        PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A)
+                                ? declaredPdfaFlavour.orElse(null)
+                                : flavour;
+                results.add(convertToVerificationResult(result, declaredForResult, flavour));
+            } catch (Exception e) {
+                log.error("Error validating standard {}: {}", flavour.getId(), e.getMessage());
+                results.add(
+                        buildErrorResult(
+                                declaredPdfaFlavour,
+                                flavour,
+                                "Validation error: " + e.getMessage()));
+            }
+        }
+
+        return results;
     }
 
     private static PDFVerificationResult createNoPdfaDeclarationResult() {
