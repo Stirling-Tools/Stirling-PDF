@@ -13,7 +13,11 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { useAuditFilters } from '@app/hooks/useAuditFilters';
 import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
 
-const AuditExportSection: React.FC = () => {
+interface AuditExportSectionProps {
+  loginEnabled?: boolean;
+}
+
+const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = true }) => {
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
   const [exporting, setExporting] = useState(false);
@@ -22,6 +26,8 @@ const AuditExportSection: React.FC = () => {
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters();
 
   const handleExport = async () => {
+    if (!loginEnabled) return;
+
     try {
       setExporting(true);
 
@@ -65,7 +71,11 @@ const AuditExportSection: React.FC = () => {
           </Text>
           <SegmentedControl
             value={exportFormat}
-            onChange={(value) => setExportFormat(value as 'csv' | 'json')}
+            onChange={(value) => {
+              if (!loginEnabled) return;
+              setExportFormat(value as 'csv' | 'json');
+            }}
+            disabled={!loginEnabled}
             data={[
               { label: 'CSV', value: 'csv' },
               { label: 'JSON', value: 'json' },
@@ -84,6 +94,7 @@ const AuditExportSection: React.FC = () => {
             users={users}
             onFilterChange={handleFilterChange}
             onClearFilters={handleClearFilters}
+            disabled={!loginEnabled}
           />
         </div>
 
@@ -93,7 +104,7 @@ const AuditExportSection: React.FC = () => {
             leftSection={<LocalIcon icon="download" width="1rem" height="1rem" />}
             onClick={handleExport}
             loading={exporting}
-            disabled={exporting}
+            disabled={!loginEnabled || exporting}
           >
             {t('audit.export.exportButton', 'Export Data')}
           </Button>

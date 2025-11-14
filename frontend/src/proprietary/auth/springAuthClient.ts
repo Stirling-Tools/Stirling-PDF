@@ -251,7 +251,7 @@ class SpringAuthClient {
    * This redirects to the Spring OAuth2 authorization endpoint
    */
   async signInWithOAuth(params: {
-    provider: 'github' | 'google' | 'apple' | 'azure';
+    provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc';
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
