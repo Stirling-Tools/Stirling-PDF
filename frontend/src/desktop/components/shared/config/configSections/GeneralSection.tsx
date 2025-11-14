@@ -9,8 +9,8 @@ import { DefaultAppSettings } from '@app/components/shared/config/configSections
 const GeneralSection: React.FC = () => {
   return (
     <Stack gap="lg">
-      <CoreGeneralSection />
       <DefaultAppSettings />
+      <CoreGeneralSection />
     </Stack>
   );
 };
