@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { BASE_PATH } from '@app/constants/app';
+import { useLogoPath } from '@app/hooks/useLogoPath';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -14,6 +15,7 @@ const LandingPage = () => {
   const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
   const [isUploadHover, setIsUploadHover] = React.useState(false);
+  const logoPath = useLogoPath();
 
   const handleFileDrop = async (files: File[]) => {
     await addFiles(files);
@@ -72,7 +74,7 @@ const LandingPage = () => {
           }}
         >
           <img
-            src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoNoTextDark.svg` : `${BASE_PATH}/branding/StirlingPDFLogoNoTextLight.svg`}
+            src={logoPath}
             alt="Stirling PDF Logo"
             style={{
               height: 'auto',
