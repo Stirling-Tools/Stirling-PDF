@@ -2206,7 +2206,7 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-    
+
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2262,7 +2262,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    
+
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -3338,6 +3338,11 @@
         "bullet1": "Lower values preserve quality",
         "bullet2": "Higher values reduce file size"
       },
+      "compressionLevel": {
+        "range1to3": "Lower values preserve quality but result in larger files",
+        "range4to6": "Medium compression with moderate quality reduction",
+        "range7to9": "Higher values reduce file size significantly but may reduce image clarity"
+      },
       "grayscale": {
         "title": "Grayscale",
         "text": "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
@@ -3354,6 +3359,11 @@
       "2": "Optimisation level:",
       "4": "Auto mode - Auto adjusts quality to get PDF to exact size",
       "5": "Expected PDF Size (e.g. 25MB, 10.8MB, 25KB)"
+    },
+    "compressionLevel": {
+      "range1to3": "Lower values preserve quality but result in larger files",
+      "range4to6": "Medium compression with moderate quality reduction",
+      "range7to9": "Higher values reduce file size significantly but may reduce image clarity"
     },
     "submit": "Compress"
   },
