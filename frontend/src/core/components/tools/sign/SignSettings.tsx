@@ -588,7 +588,9 @@ const SignSettings = ({
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
       }, PLACEMENT_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     onActivateSignaturePlacement?.();
@@ -625,7 +627,9 @@ const SignSettings = ({
 
     if (typeof window !== 'undefined') {
       const timer = window.setTimeout(trigger, PLACEMENT_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     trigger();
@@ -648,7 +652,9 @@ const SignSettings = ({
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
       }, FILE_SWITCH_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     onActivateSignaturePlacement?.();

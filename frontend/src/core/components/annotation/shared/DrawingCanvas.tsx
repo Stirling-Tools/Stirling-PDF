@@ -283,7 +283,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 touchAction: 'none',
                 backgroundColor: 'white',
                 width: '100%',
-                maxWidth: '800px',
+                maxWidth: '50rem',
                 height: '25rem',
                 cursor: 'crosshair',
               }}

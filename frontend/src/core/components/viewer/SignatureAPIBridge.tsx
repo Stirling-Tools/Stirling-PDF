@@ -14,6 +14,14 @@ const MIN_SIGNATURE_DIMENSION = 12;
 // This provides a good balance between visual fidelity and performance/memory usage.
 const TEXT_OVERSAMPLE_FACTOR = 2;
 
+type TextStampImageResult = {
+  dataUrl: string;
+  pixelWidth: number;
+  pixelHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+};
+
 const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
   if (!value || depth > 6) return undefined;
 
@@ -48,7 +56,7 @@ const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new S
 const createTextStampImage = (
   config: SignParameters,
   displaySize?: { width: number; height: number } | null
-): { dataUrl: string; pixelWidth: number; pixelHeight: number; displayWidth: number; displayHeight: number } | null => {
+): TextStampImageResult | null => {
   const text = (config.signerName ?? '').trim();
   if (!text) {
     return null;

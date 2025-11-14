@@ -31,17 +31,12 @@ export const SavedSignaturesSection = ({
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
   const [activeIndex, setActiveIndex] = useState(0);
   const activeSignature = signatures[activeIndex];
-  const activeSignatureRef = useRef<SavedSignature | null>(activeSignature ?? null);
   const appliedSignatureIdRef = useRef<string | null>(null);
   const onUseSignatureRef = useRef(onUseSignature);
 
   useEffect(() => {
     onUseSignatureRef.current = onUseSignature;
   }, [onUseSignature]);
-
-  useEffect(() => {
-    activeSignatureRef.current = activeSignature ?? null;
-  }, [activeSignature]);
 
   useEffect(() => {
     setLabelDrafts(prev => {
@@ -187,19 +182,18 @@ export const SavedSignaturesSection = ({
   };
 
   useEffect(() => {
-    const signature = activeSignatureRef.current;
-    if (!signature || disabled) {
+    if (!activeSignature || disabled) {
       appliedSignatureIdRef.current = null;
       return;
     }
 
-    if (appliedSignatureIdRef.current === signature.id) {
+    if (appliedSignatureIdRef.current === activeSignature.id) {
       return;
     }
 
-    appliedSignatureIdRef.current = signature.id;
-    onUseSignatureRef.current(signature);
-  }, [activeSignature?.id, disabled]);
+    appliedSignatureIdRef.current = activeSignature.id;
+    onUseSignatureRef.current(activeSignature);
+  }, [activeSignature, disabled]);
 
   return (
     <Stack gap="sm">

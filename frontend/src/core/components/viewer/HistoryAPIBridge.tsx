@@ -4,6 +4,7 @@ import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { uuidV4 } from '@embedpdf/models';
 import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
+import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/core/constants/app';
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
@@ -59,7 +60,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
                 data: storedImageData,
                 appearance: storedImageData,
               });
-            }, 50);
+            }, ANNOTATION_RECREATION_DELAY_MS);
           } catch (restoreError) {
             console.error('HistoryAPI: Failed to restore cropped signature:', restoreError);
           }
@@ -103,12 +104,12 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
                 // Small delay to ensure deletion completes
                 setTimeout(() => {
                   annotationApi.createAnnotation(event.pageIndex, restoredData);
-                }, 50);
+                }, ANNOTATION_RECREATION_DELAY_MS);
               } catch (error) {
                 console.error('HistoryAPI: Failed to restore annotation:', error);
               }
             }
-          }, 100);
+          }, ANNOTATION_VERIFICATION_DELAY_MS);
         }
       }
     };
