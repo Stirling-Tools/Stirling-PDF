@@ -9,6 +9,7 @@ import {
   Card,
   Divider,
   Group,
+  Menu,
   Modal,
   Pagination,
   Progress,
@@ -18,6 +19,7 @@ import {
   Switch,
   Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
@@ -27,6 +29,9 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import MergeTypeIcon from '@mui/icons-material/MergeType';
+import CallSplitIcon from '@mui/icons-material/CallSplit';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Rnd } from 'react-rnd';
 
 import {
@@ -937,16 +942,29 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     [editingGroupId, pageGroups],
   );
 
-  const orderedImages = useMemo(
-    () =>
-      [...pageImages].sort(
-        (first, second) => (first?.zOrder ?? -1_000_000) - (second?.zOrder ?? -1_000_000),
-      ),
-    [pageImages],
-  );
-  const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
-  const scaledWidth = pageWidth * scale;
-  const scaledHeight = pageHeight * scale;
+const orderedImages = useMemo(
+  () =>
+    [...pageImages].sort(
+      (first, second) => (first?.zOrder ?? -1_000_000) - (second?.zOrder ?? -1_000_000),
+    ),
+  [pageImages],
+);
+const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
+const scaledWidth = pageWidth * scale;
+const scaledHeight = pageHeight * scale;
+const selectionToolbarPosition = useMemo(() => {
+  if (!hasSelection) {
+    return null;
+  }
+  const firstSelected = pageGroups.find((group) => selectedGroupIds.has(group.id));
+  if (!firstSelected) {
+    return null;
+  }
+  const bounds = toCssBounds(currentPage, pageHeight, scale, firstSelected.bounds);
+  const top = Math.max(bounds.top - 40, 8);
+  const left = Math.min(Math.max(bounds.left, 8), Math.max(scaledWidth - 220, 8));
+  return { left, top };
+}, [hasSelection, pageGroups, selectedGroupIds, currentPage, pageHeight, scale, scaledWidth]);
 
   useEffect(() => {
     if (!hasDocument || !hasVectorPreview) {
@@ -1494,58 +1512,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
               />
             </Stack>
 
-            <Stack gap="xs">
-              <Group gap={4} align="center">
-                <Text fw={500} size="sm">
-                  {t('pdfTextEditor.options.manualGrouping.title', 'Manual Text Grouping')}
-                </Text>
-                <Badge size="xs" color="violet" variant="light">
-                  {t('pdfTextEditor.badges.beta', 'Beta')}
-                </Badge>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {t(
-                  'pdfTextEditor.options.manualGrouping.description',
-                  'Hold Ctrl (Cmd) or Shift while clicking to multi-select text boxes, then merge or ungroup them manually.',
-                )}
-              </Text>
-              <Group grow>
-                <Button
-                  size="xs"
-                  variant="subtle"
-                  disabled={!canMergeSelection}
-                  onClick={handleMergeSelection}
-                >
-                  {t('pdfTextEditor.manual.merge', 'Merge selection')}
-                </Button>
-                <Button
-                  size="xs"
-                  variant="subtle"
-                  disabled={!canUngroupSelection}
-                  onClick={handleUngroupSelection}
-                >
-                  {t('pdfTextEditor.manual.ungroup', 'Ungroup selection')}
-                </Button>
-              </Group>
-              <Group grow>
-                <Button
-                  size="xs"
-                  variant="light"
-                  disabled={!hasSelection}
-                  onClick={() => handleWidthAdjustment('expand')}
-                >
-                  {t('pdfTextEditor.manual.expandWidth', 'Expand to page edge')}
-                </Button>
-                <Button
-                  size="xs"
-                  variant="light"
-                  disabled={!hasWidthOverrides}
-                  onClick={() => handleWidthAdjustment('reset')}
-                >
-                  {t('pdfTextEditor.manual.resetWidth', 'Reset width')}
-                </Button>
-              </Group>
-            </Stack>
+            <Text size="xs" c="dimmed">
+              {t(
+                'pdfTextEditor.options.manualGrouping.descriptionInline',
+                'Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths.',
+              )}
+            </Text>
 
             <Group justify="space-between" align="center">
               <div>
@@ -1755,6 +1727,83 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           zIndex: 0,
                         }}
                       />
+                    )}
+                    {selectionToolbarPosition && (
+                      <Group
+                        gap={6}
+                        style={{
+                          position: 'absolute',
+                          left: `${selectionToolbarPosition.left}px`,
+                          top: `${selectionToolbarPosition.top}px`,
+                          zIndex: 3_000_000,
+                          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                          borderRadius: 999,
+                          padding: '4px 8px',
+                          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.45)',
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
+                {canMergeSelection && (
+                  <Tooltip label={t('pdfTextEditor.manual.mergeTooltip', 'Merge selected boxes')}>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.merge', 'Merge selection')}
+                      onClick={handleMergeSelection}
+                    >
+                      <MergeTypeIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                {canUngroupSelection && (
+                  <Tooltip label={t('pdfTextEditor.manual.ungroupTooltip', 'Split paragraph back into lines')}>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.ungroup', 'Ungroup selection')}
+                      onClick={handleUngroupSelection}
+                    >
+                      <CallSplitIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                <Menu withinPortal position="bottom-end" shadow="md" disabled={!hasSelection && !hasWidthOverrides}>
+                  <Menu.Target>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.widthMenu', 'Width options')}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                            <Menu.Item
+                              disabled={!hasSelection}
+                              onClick={() => handleWidthAdjustment('expand')}
+                            >
+                              {t('pdfTextEditor.manual.expandWidth', 'Expand to page edge')}
+                            </Menu.Item>
+                            <Menu.Item
+                              disabled={!hasWidthOverrides}
+                              onClick={() => handleWidthAdjustment('reset')}
+                            >
+                              {t('pdfTextEditor.manual.resetWidth', 'Reset width')}
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Group>
                     )}
                     {orderedImages.map((image, imageIndex) => {
                     if (!image?.imageData) {
