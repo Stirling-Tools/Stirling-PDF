@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - demo2
+      - demo
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
