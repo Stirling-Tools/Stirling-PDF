@@ -25,6 +25,12 @@ RUN apt-get update && apt-get install -y \
   python3-venv \
 # ss -tln
   iproute2 \
+# calibre requires these dependencies
+  wget \
+  xz-utils \
+  libopengl0 \
+  libxcb-cursor0 \
+  && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Setze die Environment Variable für setuptools
@@ -38,7 +44,7 @@ ENV SETUPTOOLS_USE_DISTUTILS=local \
 COPY .github/scripts/requirements_dev.txt /tmp/requirements_dev.txt
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
-  && pip install --no-cache-dir --require-hashes -r /tmp/requirements_dev.txt
+  && pip install --no-cache-dir --only-binary=:all: --require-hashes -r /tmp/requirements_dev.txt
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
