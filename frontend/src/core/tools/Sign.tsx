@@ -207,7 +207,7 @@ export const createSignatureTool = (config: SignatureToolConfig) => {
               onUpdateDrawSettings={updateDrawSettings}
               onUndo={undo}
               onRedo={redo}
-              onSave={handleSaveToSystem}
+              onSave={toolId === 'sign' ? handleSaveToSystem : undefined}
               translationScope={translationScope}
               allowedSignatureSources={allowedSignatureSources}
               defaultSignatureSource={defaultSignatureSource}

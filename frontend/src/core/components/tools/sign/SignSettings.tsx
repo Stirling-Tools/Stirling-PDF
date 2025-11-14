@@ -783,6 +783,7 @@ const SignSettings = ({
           textColor={parameters.textColor || '#000000'}
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
+          onAnyChange={() => setPlacementManuallyPaused(false)}
         />
         {renderSaveButtonRow('text', hasTextSignature, handleSaveTextSignature)}
       </Stack>

@@ -1994,8 +1994,8 @@
       "colorPickerTitle": "Choose stroke colour"
     },
     "text": {
-      "name": "Signer Name",
-      "placeholder": "Enter your full name",
+      "name": "Text",
+      "placeholder": "Enter text",
       "fontLabel": "Font",
       "fontSizeLabel": "Font size",
       "fontSizePlaceholder": "Type or select font size (8-200)",
@@ -5336,21 +5336,6 @@
   "addText": {
     "title": "Add Text",
     "header": "Add text to PDFs",
-    "upload": "Upload Image",
-    "draw": {
-      "title": "Draw your signature",
-      "clear": "Clear"
-    },
-    "canvas": {
-      "heading": "Draw your signature",
-      "clickToOpen": "Click to open the drawing canvas",
-      "modalTitle": "Draw your signature",
-      "colorLabel": "Colour",
-      "penSizeLabel": "Pen size",
-      "penSizePlaceholder": "Size",
-      "clear": "Clear canvas",
-      "colorPickerTitle": "Choose stroke colour"
-    },
     "text": {
       "name": "Text content",
       "placeholder": "Enter the text you want to add",
@@ -5359,81 +5344,20 @@
       "fontSizePlaceholder": "Type or select font size (8-200)",
       "colorLabel": "Text colour"
     },
-    "clear": "Clear",
-    "add": "Add",
-    "saved": {
-      "heading": "Saved text",
-      "description": "Reuse saved text snippets at any time.",
-      "emptyTitle": "No saved signatures yet",
-      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
-      "type": {
-        "canvas": "Drawing",
-        "image": "Upload",
-        "text": "Text"
-      },
-      "limitTitle": "Limit reached",
-      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
-      "carouselPosition": "{{current}} of {{total}}",
-      "prev": "Previous",
-      "next": "Next",
-      "delete": "Remove",
-      "label": "Label",
-      "defaultLabel": "Text snippet",
-      "defaultCanvasLabel": "Drawing snippet",
-      "defaultImageLabel": "Uploaded snippet",
-      "defaultTextLabel": "Typed snippet",
-      "saveButton": "Save signature",
-      "saveUnavailable": "Create a signature first to save it.",
-      "noChanges": "Current signature is already saved.",
-      "status": {
-        "saved": "Saved"
-      }
-    },
-    "save": "Save Text",
-    "applySignatures": "Apply Text",
-    "personalSigs": "Personal Signatures",
-    "sharedSigs": "Shared Signatures",
-    "noSavedSigs": "No saved signatures found",
-    "addToAll": "Add to all pages",
-    "delete": "Delete",
-    "first": "First page",
-    "last": "Last page",
-    "next": "Next page",
-    "previous": "Previous page",
-    "maintainRatio": "Toggle maintain aspect ratio",
-    "undo": "Undo",
-    "redo": "Redo",
-    "submit": "Sign Document",
     "steps": {
-      "configure": "Configure Signature"
+      "configure": "Configure Text"
     },
     "step": {
-      "createDesc": "Choose how you want to create the text",
-      "place": "Place & save",
-      "placeDesc": "Position the text on your PDF"
-    },
-    "type": {
-      "title": "Text creation method",
-      "draw": "Draw",
-      "canvas": "Canvas",
-      "image": "Upload",
-      "text": "Type",
-      "saved": "Saved"
-    },
-    "image": {
-      "label": "Upload signature image",
-      "placeholder": "Select image file",
-      "hint": "Upload a PNG or JPG image of your signature"
+      "createDesc": "Enter the text you want to add",
+      "place": "Place text",
+      "placeDesc": "Click on the PDF to add your text"
     },
     "instructions": {
       "title": "How to add text",
-      "canvas": "After drawing and closing the canvas, click anywhere on the PDF to place your text.",
-      "image": "After uploading your image above, click anywhere on the PDF to place it.",
-      "saved": "Select saved text above, then click anywhere on the PDF to place it.",
       "text": "After entering your text above, click anywhere on the PDF to place it.",
       "paused": "Placement paused",
       "resumeHint": "Resume placement to click and add your text.",
-      "noSignature": "Create text above to enable placement tools."
+      "noSignature": "Enter text above to enable placement."
     },
     "mode": {
       "move": "Move Text",
@@ -5441,9 +5365,6 @@
       "pause": "Pause placement",
       "resume": "Resume placement"
     },
-    "updateAndPlace": "Update and Place",
-    "activate": "Activate Signature Placement",
-    "deactivate": "Stop Placing Signatures",
     "results": {
       "title": "Add Text Results"
     },
