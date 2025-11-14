@@ -7,9 +7,7 @@ import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
   DEFAULT_VISIBILITY_THRESHOLD,
-  measureRenderedPageRect,
   useFitWidthResize,
-  ZoomViewport,
 } from '@app/utils/viewerZoom';
 import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 
@@ -73,18 +71,6 @@ export function ZoomAPIBridge() {
     }
   }, [spreadMode, zoomState?.zoomLevel, scheduleAutoZoom, requestFitWidth]);
 
-  const getViewportSnapshot = useCallback((): ZoomViewport | null => {
-    if (!zoomState || typeof zoomState !== 'object') {
-      return null;
-    }
-
-    if ('viewport' in zoomState) {
-      const candidate = (zoomState as { viewport?: ZoomViewport | null }).viewport;
-      return candidate ?? null;
-    }
-
-    return null;
-  }, [zoomState]);
 
   const isManagedZoom =
     !!zoom &&
@@ -137,8 +123,6 @@ export function ZoomAPIBridge() {
       const pagesPerSpread = currentSpreadMode !== SpreadMode.None ? 2 : 1;
       const metadataAspectRatio = getFirstPageAspectRatioFromStub(firstFileStub);
 
-      const viewport = getViewportSnapshot();
-
       if (cancelled) {
         return;
       }
@@ -185,7 +169,6 @@ export function ZoomAPIBridge() {
     firstFileId,
     firstFileStub,
     requestFitWidth,
-    getViewportSnapshot,
     autoZoomTick,
     spreadMode,
     triggerImmediateZoomUpdate,
