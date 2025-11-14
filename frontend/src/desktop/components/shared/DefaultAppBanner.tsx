@@ -4,15 +4,11 @@ import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { defaultAppService } from '@app/services/defaultAppService';
 import { alert } from '@app/components/toast';
 
-const PROMPT_DISMISSED_KEY = 'stirlingpdf_default_app_prompt_dismissed';
-
 export const DefaultAppBanner: React.FC = () => {
   const { t } = useTranslation();
-  const [promptDismissed, setPromptDismissed] = useState(() => {
-    return localStorage.getItem(PROMPT_DISMISSED_KEY) === 'true';
-  });
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     checkDefaultStatus();
@@ -59,8 +55,7 @@ export const DefaultAppBanner: React.FC = () => {
   };
 
   const handleDismissPrompt = () => {
-    setPromptDismissed(true);
-    localStorage.setItem(PROMPT_DISMISSED_KEY, 'true');
+    setDismissed(true);
   };
 
   return (
@@ -72,7 +67,7 @@ export const DefaultAppBanner: React.FC = () => {
       onButtonClick={handleSetDefault}
       onDismiss={handleDismissPrompt}
       loading={isLoading}
-      show={!promptDismissed && isDefault === false}
+      show={!dismissed && isDefault === false}
     />
   );
 };
