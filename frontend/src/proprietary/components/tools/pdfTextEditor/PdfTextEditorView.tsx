@@ -2168,7 +2168,8 @@ const selectionToolbarPosition = useMemo(() => {
                       // The renderGroupContainer wrapper adds 4px horizontal padding (2px left + 2px right)
                       // We need to add this to the container width to compensate, so the inner content
                       // has the full PDF-defined width available for text
-                      const WRAPPER_HORIZONTAL_PADDING = 4;
+                      // Add extra padding to prevent text from being too tight and wrapping prematurely
+                      const WRAPPER_HORIZONTAL_PADDING = 10;
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
