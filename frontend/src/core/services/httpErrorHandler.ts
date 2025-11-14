@@ -97,8 +97,6 @@ export async function handleHttpError(error: any): Promise<boolean> {
   const status: number | undefined = error?.response?.status;
   if (status === 401) {
     const pathname = window.location.pathname;
-    const errorMessage = error?.response?.data?.error || error?.response?.data?.message || '';
-    const isAuthenticationError = errorMessage.toLowerCase().includes('authentication');
 
     // Check if we're already on an auth page
     const isAuthPage = pathname.includes('/login') ||

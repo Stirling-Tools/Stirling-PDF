@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@app/auth/UseSession'
 import { useAppConfig } from '@app/contexts/AppConfigContext'
 import HomePage from '@app/pages/HomePage'
-import Login from '@app/routes/Login'
+// Login component is used via routing, not directly imported
 import FirstLoginModal from '@app/components/shared/FirstLoginModal'
 import { accountService } from '@app/services/accountService'
 

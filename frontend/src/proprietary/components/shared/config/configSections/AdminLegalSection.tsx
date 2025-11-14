@@ -20,7 +20,7 @@ interface LegalSettingsData {
 
 export default function AdminLegalSection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {

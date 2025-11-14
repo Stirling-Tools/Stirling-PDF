@@ -28,7 +28,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
-  const [enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
 
   // Fetch enabled SSO providers and login config from backend
   useEffect(() => {
@@ -182,9 +182,10 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = () => {
-    navigate('/auth/reset');
-  };
+  // Forgot password handler (currently unused, reserved for future implementation)
+  // const handleForgotPassword = () => {
+  //   navigate('/auth/reset');
+  // };
 
   return (
     <AuthLayout>

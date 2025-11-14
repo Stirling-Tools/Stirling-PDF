@@ -16,7 +16,7 @@ interface EndpointsSettingsData {
 
 export default function AdminEndpointsSection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {

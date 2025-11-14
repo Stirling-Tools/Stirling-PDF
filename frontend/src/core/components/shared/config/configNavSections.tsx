@@ -28,8 +28,8 @@ export interface ConfigColors {
 }
 
 export const createConfigNavSections = (
-  isAdmin: boolean = false,
-  runningEE: boolean = false,
+  _isAdmin: boolean = false,
+  _runningEE: boolean = false,
   _loginEnabled: boolean = false
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [

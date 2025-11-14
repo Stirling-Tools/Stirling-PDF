@@ -11,7 +11,7 @@ import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBann
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
+  const { loginEnabled } = useLoginRequired();
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
