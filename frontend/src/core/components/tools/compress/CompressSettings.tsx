@@ -1,4 +1,5 @@
 import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
+import SliderWithInput from '@app/components/shared/sliderWithInput/SliderWithInput';
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
@@ -32,24 +33,19 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
       {parameters.compressionMethod === 'quality' && (
         <Stack gap="sm">
           <Divider />
-          <Text size="sm" fw={500}>Compression Level</Text>
-          <Slider
-            min={1}
-            max={9}
-            step={1}
+          <SliderWithInput
+            label={t('compress.tooltip.qualityAdjustment.title', 'Compression Level')}
             value={parameters.compressionLevel}
             onChange={(value) => onParameterChange('compressionLevel', value)}
             disabled={disabled}
-            marks={[
-              { value: 1, label: 'Min 1' },
-              { value: 9, label: 'Max 9' },
-            ]}
-            label={(value) => `${value}`}
+            min={1}
+            max={9}
+            step={1}
           />
           <Text size="xs" c="dimmed" style={{ marginTop: '8px' }}>
-            {parameters.compressionLevel <= 3 && "1-3 PDF compression"}
-            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && "4-6 lite image compression"}
-            {parameters.compressionLevel >= 7 && "7-9 intense image compression Will dramatically reduce image quality"}
+            {parameters.compressionLevel <= 3 && t('compress.tooltip.qualityAdjustment.bullet1', '1-3 PDF compression')}
+            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.tooltip.qualityAdjustment.text', '4-6 lite image compression')}
+            {parameters.compressionLevel >= 7 && t('compress.tooltip.qualityAdjustment.bullet2', '7-9 intense image compression Will dramatically reduce image quality')}
           </Text>
         </Stack>
       )}

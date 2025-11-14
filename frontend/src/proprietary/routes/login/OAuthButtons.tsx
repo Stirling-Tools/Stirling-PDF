@@ -65,17 +65,17 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   return (
     <div className="oauth-container-vertical">
       {enabledProviders.map((p) => (
-        <Button
+        <button
           key={p.id}
+          type="button"
           onClick={() => onProviderClick(p.id as any)}
           disabled={isSubmitting}
           className="oauth-button-vertical"
           title={p.label}
-          variant="default"
-          leftSection={<img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />}
         >
-          {p.label}
-        </Button>
+          <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
+          <span>{p.label}</span>
+        </button>
       ))}
     </div>
   );
