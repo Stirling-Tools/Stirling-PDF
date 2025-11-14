@@ -45,6 +45,16 @@ pub fn run() {
     }))
     .setup(|_app| {
       add_log("🚀 Tauri app setup started".to_string());
+
+      // Process command line arguments on first launch
+      let args: Vec<String> = std::env::args().collect();
+      for arg in args.iter().skip(1) {
+        if std::path::Path::new(arg).exists() {
+          add_log(format!("📂 Initial file from command line: {}", arg));
+          add_opened_file(arg.clone());
+        }
+      }
+
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
     })
