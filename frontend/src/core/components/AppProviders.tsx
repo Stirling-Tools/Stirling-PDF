@@ -15,6 +15,7 @@ import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
+import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -64,15 +65,17 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                         <HotkeyProvider>
                           <SidebarProvider>
                             <ViewerProvider>
-                              <SignatureProvider>
-                                <RightRailProvider>
-                                  <TourOrchestrationProvider>
-                                    <AdminTourOrchestrationProvider>
-                                      {children}
-                                    </AdminTourOrchestrationProvider>
-                                  </TourOrchestrationProvider>
-                                </RightRailProvider>
-                              </SignatureProvider>
+                              <PageEditorProvider>
+                                <SignatureProvider>
+                                  <RightRailProvider>
+                                    <TourOrchestrationProvider>
+                                      <AdminTourOrchestrationProvider>
+                                        {children}
+                                      </AdminTourOrchestrationProvider>
+                                    </TourOrchestrationProvider>
+                                  </RightRailProvider>
+                                </SignatureProvider>
+                              </PageEditorProvider>
                             </ViewerProvider>
                           </SidebarProvider>
                         </HotkeyProvider>
