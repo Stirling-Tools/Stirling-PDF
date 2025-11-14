@@ -84,8 +84,7 @@ export default function AdminDatabaseSection() {
     if (loginEnabled) {
       fetchSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginEnabled]);
+  }, [loginEnabled, fetchSettings]);
 
   const handleSave = async () => {
     if (!validateLoginEnabled()) {

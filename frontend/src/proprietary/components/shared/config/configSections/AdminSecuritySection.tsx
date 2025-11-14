@@ -163,8 +163,7 @@ export default function AdminSecuritySection() {
     if (loginEnabled) {
       fetchSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginEnabled]);
+  }, [loginEnabled, fetchSettings]);
 
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
