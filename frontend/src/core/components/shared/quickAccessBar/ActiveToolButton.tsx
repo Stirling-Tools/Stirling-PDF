@@ -1,13 +1,13 @@
 /**
  * ActiveToolButton - Shows the currently selected tool at the top of the Quick Access Bar
  *
- * When a user selects a tool from the All Tools list, this component displays the tool's
+ * When a user selects a tool from the Tools list, this component displays the tool's
  * icon and name at the top of the navigation bar. It provides a quick way to see which
- * tool is currently active and offers a back button to return to the All Tools list.
+ * tool is currently active and offers a back button to return to the Tools list.
  *
  * Features:
  * - Shows tool icon and name when a tool is selected
- * - Hover to reveal back arrow for returning to All Tools
+ * - Hover to reveal back arrow for returning to Tools
  * - Smooth slide-down/slide-up animations
  * - Only appears for tools that don't have dedicated nav buttons (read, sign, automate)
  */
@@ -149,7 +149,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
                       handleBackToTools();
                     });
                   }}
-                  size={'xl'}
+                  size={'lg'}
                   variant="subtle"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
@@ -165,7 +165,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
                 >
                   <span className="iconContainer">
                     {isBackHover ? (
-                      <ArrowBackRoundedIcon sx={{ fontSize: '1.5rem' }} />
+                      <ArrowBackRoundedIcon sx={{ fontSize: '1.875rem' }} />
                     ) : (
                       indicatorTool.icon
                     )}

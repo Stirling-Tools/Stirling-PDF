@@ -68,7 +68,7 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   const restoreWorkbenchState = useCallback(async () => {
     console.log('Restoring workbench state, saved files count:', savedFilesRef.current.length);
 
-    // Go back to All Tools
+    // Go back to Tools
     handleBackToTools();
 
     // Clear all files (including tour sample)

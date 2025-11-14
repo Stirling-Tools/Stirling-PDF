@@ -80,7 +80,7 @@ export default function ToolSelector({
       // If no sections, create a simple group from filtered tools
       if (baseFilteredTools.length > 0) {
         return [{
-          name: 'All Tools',
+          name: 'Tools',
           subcategoryId: 'all' as any,
           tools: baseFilteredTools.map(([key, tool]) => ({ id: key, tool }))
         }];

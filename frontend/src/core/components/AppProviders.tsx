@@ -68,11 +68,11 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                               <PageEditorProvider>
                                 <SignatureProvider>
                                   <RightRailProvider>
-                                    <TourOrchestrationProvider>
-                                      <AdminTourOrchestrationProvider>
-                                        {children}
-                                      </AdminTourOrchestrationProvider>
-                                    </TourOrchestrationProvider>
+                                      <TourOrchestrationProvider>
+                                        <AdminTourOrchestrationProvider>
+                                          {children}
+                                        </AdminTourOrchestrationProvider>
+                                      </TourOrchestrationProvider>
                                   </RightRailProvider>
                                 </SignatureProvider>
                               </PageEditorProvider>

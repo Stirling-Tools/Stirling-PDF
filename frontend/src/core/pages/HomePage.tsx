@@ -218,7 +218,7 @@ export default function HomePage() {
           <div className="mobile-bottom-bar">
             <button
               className="mobile-bottom-button"
-              aria-label={t('quickAccess.allTools', 'All Tools')}
+              aria-label={t('quickAccess.allTools', 'Tools')}
               onClick={() => {
                 handleBackToTools();
                 if (isMobile) {
@@ -227,7 +227,7 @@ export default function HomePage() {
               }}
             >
               <AppsIcon sx={{ fontSize: '1.5rem' }} />
-              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'All Tools')}</span>
+              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'Tools')}</span>
             </button>
             <button
               className="mobile-bottom-button"
