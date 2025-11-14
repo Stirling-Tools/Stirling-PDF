@@ -31,7 +31,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       {/* Quality Adjustment */}
       {parameters.compressionMethod === 'quality' && (
-        <Stack gap="sm">
+        <Stack gap="md">
           <Divider />
           <SliderWithInput
             label={t('compress.tooltip.qualityAdjustment.title', 'Compression Level')}
@@ -43,10 +43,10 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
             step={1}
             suffix=""
           />
-          <Text size="xs" c="dimmed" style={{ marginTop: '8px' }}>
-            {parameters.compressionLevel <= 3 && t('compress.compressionLevel.range1to3')}
-            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.compressionLevel.range4to6')}
-            {parameters.compressionLevel >= 7 && t('compress.compressionLevel.range7to9')}
+          <Text size="xs" c="dimmed" mt={-4}>
+            {parameters.compressionLevel <= 3 && t('compress.compressionLevel.range1to3', 'Lower values preserve quality but result in larger files')}
+            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.compressionLevel.range4to6', 'Medium compression with moderate quality reduction')}
+            {parameters.compressionLevel >= 7 && t('compress.compressionLevel.range7to9', 'Higher values reduce file size significantly but may reduce image clarity')}
           </Text>
         </Stack>
       )}
