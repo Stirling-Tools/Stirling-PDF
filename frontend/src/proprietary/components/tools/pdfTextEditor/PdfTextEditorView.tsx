@@ -2084,7 +2084,8 @@ const selectionToolbarPosition = useMemo(() => {
                       const isActive = activeGroupId === group.id || editingGroupId === group.id;
                       const isEditing = editingGroupId === group.id;
                       const baseFontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
-                      const fontSizePx = Math.max(baseFontSize * scale, 6);
+                      // Reduce font size by ~2% to account for browser rendering differences and prevent wrapping
+                      const fontSizePx = Math.max(baseFontSize * scale * 0.98, 6);
                       const effectiveFontId = resolveFontIdForIndex(pageGroupIndex) ?? group.fontId;
                       const fontFamily = getFontFamily(effectiveFontId, group.pageIndex);
                       let lineHeightPx = getLineHeightPx(effectiveFontId, group.pageIndex, fontSizePx);
@@ -2154,9 +2155,12 @@ const selectionToolbarPosition = useMemo(() => {
                       const fontWeight = group.fontWeight || getFontWeight(effectiveFontId, group.pageIndex);
 
                       // Determine text wrapping behavior based on whether text has been changed
+                      // Only wrap if: it's a multi-line paragraph, width extended, or text changed
+                      // Don't wrap single lines just because we're in paragraph mode
                       const hasChanges = changed;
                       const widthExtended = resolvedWidth - baseWidth > 0.5;
-                      const enableWrap = isParagraphLayout || widthExtended || isEditing || hasChanges;
+                      const isMultiLineParagraph = isParagraphLayout && lineCount > 1;
+                      const enableWrap = isMultiLineParagraph || widthExtended || hasChanges;
                       const whiteSpace = enableWrap ? 'pre-wrap' : 'pre';
                       const wordBreak = enableWrap ? 'break-word' : 'normal';
                       const overflowWrap = enableWrap ? 'break-word' : 'normal';
@@ -2169,7 +2173,7 @@ const selectionToolbarPosition = useMemo(() => {
                       // We need to add this to the container width to compensate, so the inner content
                       // has the full PDF-defined width available for text
                       // Add extra padding to prevent text from being too tight and wrapping prematurely
-                      const WRAPPER_HORIZONTAL_PADDING = 10;
+                      const WRAPPER_HORIZONTAL_PADDING = 15;
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
@@ -2301,6 +2305,7 @@ const selectionToolbarPosition = useMemo(() => {
                       }
 
                       const textScale = textScales.get(group.id) ?? 1;
+                      // Apply scale when needed to prevent text overflow, even when editing
                       const shouldScale = autoScaleText && textScale < 0.98;
 
                       return (
@@ -2333,7 +2338,8 @@ const selectionToolbarPosition = useMemo(() => {
                                 data-text-content
                                 style={{
                                   pointerEvents: 'none',
-                                  display: enableWrap ? 'inline' : 'inline-block',
+                                  // Keep inline-block even when wrapping to maintain scaleX transform
+                                  display: 'inline-block',
                                   transform: shouldScale ? `scaleX(${textScale})` : 'none',
                                   transformOrigin: 'left center',
                                   whiteSpace,
