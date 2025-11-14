@@ -14,6 +14,10 @@ public class PDFVerificationResult {
 
     private String standard;
     private String standardName;
+    private String validationProfile;
+    private String validationProfileName;
+    private String complianceSummary;
+    private boolean declaredPdfa;
     private boolean compliant;
     private int totalFailures;
     private int totalWarnings;
