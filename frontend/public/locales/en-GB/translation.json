@@ -3682,6 +3682,12 @@
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Restart Required",
+      "loginRequired": "Login mode must be enabled to modify admin settings",
+      "loginDisabled": {
+        "title": "Login Mode Required",
+        "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
+        "readOnly": "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+      },
       "restart": {
         "title": "Restart Required",
         "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
@@ -3751,6 +3757,12 @@
             "label": "Default Producer",
             "description": "Default producer for PDF metadata"
           }
+        },
+        "logoStyle": {
+          "label": "Logo Style",
+          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "classic": "Classic",
+          "modern": "Modern"
         },
         "customPaths": {
           "label": "Custom Paths",
