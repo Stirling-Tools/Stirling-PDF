@@ -12,6 +12,8 @@ import {
   Provider,
 } from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface ConnectionsSettingsData {
   oauth2?: {
@@ -45,15 +47,10 @@ interface ConnectionsSettingsData {
 
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
-  const {
-    settings,
-    setSettings,
-    loading,
-    fetchSettings,
-    isFieldPending,
-  } = useAdminSettings<ConnectionsSettingsData>({
+  const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
     fetchTransformer: async () => {
       // Fetch security settings (oauth2, saml2)
@@ -106,57 +103,75 @@ export default function AdminConnectionsSection() {
     }
   });
 
+  const {
+    settings,
+    setSettings,
+    loading,
+    fetchSettings,
+    isFieldPending,
+  } = adminSettings;
+
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled, fetchSettings]);
+
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
 
   const isProviderConfigured = (provider: Provider): boolean => {
     if (provider.id === 'saml2') {
-      return settings.saml2?.enabled === true;
+      return settings?.saml2?.enabled === true;
     }
 
     if (provider.id === 'smtp') {
-      return settings.mail?.enabled === true;
+      return settings?.mail?.enabled === true;
     }
 
     if (provider.id === 'oauth2-generic') {
-      return settings.oauth2?.enabled === true;
+      return settings?.oauth2?.enabled === true;
     }
 
     // Check if specific OAuth2 provider is configured (has clientId)
-    const providerSettings = settings.oauth2?.client?.[provider.id];
+    const providerSettings = settings?.oauth2?.client?.[provider.id];
     return !!(providerSettings?.clientId);
   };
 
   const getProviderSettings = (provider: Provider): Record<string, any> => {
     if (provider.id === 'saml2') {
-      return settings.saml2 || {};
+      return settings?.saml2 || {};
     }
 
     if (provider.id === 'smtp') {
-      return settings.mail || {};
+      return settings?.mail || {};
     }
 
     if (provider.id === 'oauth2-generic') {
       // Generic OAuth2 settings are at the root oauth2 level
       return {
-        enabled: settings.oauth2?.enabled,
-        provider: settings.oauth2?.provider,
-        issuer: settings.oauth2?.issuer,
-        clientId: settings.oauth2?.clientId,
-        clientSecret: settings.oauth2?.clientSecret,
-        scopes: settings.oauth2?.scopes,
-        useAsUsername: settings.oauth2?.useAsUsername,
-        autoCreateUser: settings.oauth2?.autoCreateUser,
-        blockRegistration: settings.oauth2?.blockRegistration,
+        enabled: settings?.oauth2?.enabled,
+        provider: settings?.oauth2?.provider,
+        issuer: settings?.oauth2?.issuer,
+        clientId: settings?.oauth2?.clientId,
+        clientSecret: settings?.oauth2?.clientSecret,
+        scopes: settings?.oauth2?.scopes,
+        useAsUsername: settings?.oauth2?.useAsUsername,
+        autoCreateUser: settings?.oauth2?.autoCreateUser,
+        blockRegistration: settings?.oauth2?.blockRegistration,
       };
     }
 
     // Specific OAuth2 provider settings
-    return settings.oauth2?.client?.[provider.id] || {};
+    return settings?.oauth2?.client?.[provider.id] || {};
   };
 
   const handleProviderSave = async (provider: Provider, providerSettings: Record<string, any>) => {
+    // Block save if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
@@ -218,7 +233,12 @@ export default function AdminConnectionsSection() {
   };
 
   const handleProviderDisconnect = async (provider: Provider) => {
-    try {
+    // Block disconnect if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
+    try{
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
@@ -271,7 +291,7 @@ export default function AdminConnectionsSection() {
     }
   };
 
-  if (loading) {
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -280,9 +300,14 @@ export default function AdminConnectionsSection() {
   }
 
   const handleSSOAutoLoginSave = async () => {
+    // Block save if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       const deltaSettings = {
-        'premium.proFeatures.ssoAutoLogin': settings.ssoAutoLogin
+        'premium.proFeatures.ssoAutoLogin': settings?.ssoAutoLogin
       };
 
       const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
@@ -311,6 +336,8 @@ export default function AdminConnectionsSection() {
 
   return (
     <Stack gap="xl">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       {/* Header */}
       <div>
         <Text fw={600} size="lg">
@@ -341,11 +368,14 @@ export default function AdminConnectionsSection() {
             </div>
             <Group gap="xs">
               <Switch
-                checked={settings.ssoAutoLogin || false}
+                checked={settings?.ssoAutoLogin || false}
                 onChange={(e) => {
+                  if (!loginEnabled) return; // Block change when login disabled
                   setSettings({ ...settings, ssoAutoLogin: e.target.checked });
                   handleSSOAutoLoginSave();
                 }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('ssoAutoLogin')} />
             </Group>
@@ -369,6 +399,7 @@ export default function AdminConnectionsSection() {
                   settings={getProviderSettings(provider)}
                   onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
                   onDisconnect={() => handleProviderDisconnect(provider)}
+                  disabled={!loginEnabled}
                 />
               ))}
             </Stack>
@@ -392,6 +423,7 @@ export default function AdminConnectionsSection() {
                 provider={provider}
                 isConfigured={false}
                 onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
+                disabled={!loginEnabled}
               />
             ))}
           </Stack>
