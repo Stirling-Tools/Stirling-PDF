@@ -82,7 +82,7 @@ export default function AdminPrivacySection() {
     if (loginEnabled) {
       fetchSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loginEnabled]);
 
   const handleSave = async () => {

@@ -67,7 +67,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           eventType: 'LOGIN',
           username: 'admin',
           ipAddress: '192.168.1.100',
-          details: 'User logged in successfully',
+          details: { message: 'User logged in successfully' },
         },
         {
           id: '2',
@@ -75,7 +75,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           eventType: 'FILE_UPLOAD',
           username: 'user1',
           ipAddress: '192.168.1.101',
-          details: 'Uploaded document.pdf',
+          details: { message: 'Uploaded document.pdf' },
         },
         {
           id: '3',
@@ -83,7 +83,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           eventType: 'SETTINGS_CHANGE',
           username: 'admin',
           ipAddress: '192.168.1.100',
-          details: 'Modified system settings',
+          details: { message: 'Modified system settings' },
         },
         {
           id: '4',
@@ -91,7 +91,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           eventType: 'FILE_DOWNLOAD',
           username: 'user2',
           ipAddress: '192.168.1.102',
-          details: 'Downloaded report.pdf',
+          details: { message: 'Downloaded report.pdf' },
         },
         {
           id: '5',
@@ -99,7 +99,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           eventType: 'LOGOUT',
           username: 'user1',
           ipAddress: '192.168.1.101',
-          details: 'User logged out',
+          details: { message: 'User logged out' },
         },
       ]);
       setTotalPages(1);

@@ -64,12 +64,10 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     headerBorder: 'var(--modal-header-border)',
   }), []);
 
-  // Get isAdmin, runningEE, and enableLogin from app config
+  // Get isAdmin, runningEE, and loginEnabled from app config
   const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
-  const loginEnabled = config?.enableLogin ?? true;
-
-  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, loginEnabled, fullConfig: config });
+  const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>

@@ -85,11 +85,11 @@ const AdminUsageSection: React.FC = () => {
 
       setData({
         totalVisits: totalVisits,
+        totalEndpoints: filteredEndpoints.length,
         endpoints: filteredEndpoints,
       });
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayMode, dataType, loginEnabled]);
 
   const handleRefresh = () => {

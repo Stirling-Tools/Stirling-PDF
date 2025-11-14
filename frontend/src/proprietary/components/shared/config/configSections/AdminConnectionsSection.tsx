@@ -115,7 +115,7 @@ export default function AdminConnectionsSection() {
     if (loginEnabled) {
       fetchSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loginEnabled]);
 
   // Override loading state when login is disabled

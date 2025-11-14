@@ -16,7 +16,7 @@ interface EndpointsSettingsData {
 
 export default function AdminEndpointsSection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -35,7 +35,7 @@ export default function AdminEndpointsSection() {
     if (loginEnabled) {
       fetchSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loginEnabled]);
 
   const handleSave = async () => {

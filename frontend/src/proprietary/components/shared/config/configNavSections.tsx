@@ -14,6 +14,7 @@ import AdminFeaturesSection from '@app/components/shared/config/configSections/A
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
+import ApiKeys from '@app/components/shared/config/configSections/ApiKeys';
 
 /**
  * Proprietary extension of createConfigNavSections that adds all admin and workspace sections
@@ -21,7 +22,7 @@ import AdminUsageSection from '@app/components/shared/config/configSections/Admi
 export const createConfigNavSections = (
   isAdmin: boolean = false,
   runningEE: boolean = false,
-  loginEnabled: boolean = true
+  loginEnabled: boolean = false
 ): ConfigNavSection[] => {
   // Get the core sections (just Preferences)
   const sections = createCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
@@ -176,6 +177,25 @@ export const createConfigNavSections = (
         },
       ],
     });
+  }
+
+  // Add Developer section if login is enabled
+  if (loginEnabled) {
+    const developerSection: ConfigNavSection = {
+      title: 'Developer',
+      items: [
+        {
+          key: 'api-keys',
+          label: 'API Keys',
+          icon: 'key-rounded',
+          component: <ApiKeys />
+        },
+      ],
+    };
+
+    // Add Developer section after Preferences (or Workspace if it exists)
+    const insertIndex = isAdmin ? 2 : 1;
+    sections.splice(insertIndex, 0, developerSection);
   }
 
   return sections;
