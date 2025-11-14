@@ -520,8 +520,18 @@ const createGroup = (
   };
 };
 
+const cloneLineTemplate = (line: TextGroup): TextGroup => ({
+  ...line,
+  childLineGroups: null,
+  lineElementCounts: null,
+  lineSpacing: null,
+  elements: line.elements.map(cloneTextElement),
+  originalElements: line.originalElements.map(cloneTextElement),
+});
+
 const groupLinesIntoParagraphs = (
   lineGroups: TextGroup[],
+  pageWidth: number,
   metrics?: FontMetricsMap,
 ): TextGroup[] => {
   if (lineGroups.length === 0) {
@@ -530,6 +540,8 @@ const groupLinesIntoParagraphs = (
 
   const paragraphs: TextGroup[][] = [];
   let currentParagraph: TextGroup[] = [lineGroups[0]];
+  const bulletFlags = new Map<string, boolean>();
+  bulletFlags.set(lineGroups[0].id, false);
 
   for (let i = 1; i < lineGroups.length; i++) {
     const prevLine = lineGroups[i - 1];
@@ -561,11 +573,85 @@ const groupLinesIntoParagraphs = (
     const maxReasonableSpacing = avgFontSize * 3.0; // Max ~3x font size for normal line spacing
     const hasReasonableSpacing = lineSpacing <= maxReasonableSpacing;
 
+    // Check if current line looks like a bullet/list item
+    const prevRight = prevLine.bounds.right;
+    const currentRight = currentLine.bounds.right;
+    const prevWidth = prevRight - prevLeft;
+    const currentWidth = currentRight - currentLeft;
+
+    // Count word count to help identify bullets (typically short)
+    const prevWords = (prevLine.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
+    const currentWords = (currentLine.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
+    const prevText = (prevLine.text ?? '').trim();
+    const currentText = (currentLine.text ?? '').trim();
+
+    // Bullet detection - look for bullet markers or very short lines
+    const bulletMarkerRegex = /^[\u2022\u2023\u25E6\u2043\u2219•·◦‣⁃\-\*]\s|^\d+[\.\)]\s|^[a-z][\.\)]\s/i;
+    const prevHasBulletMarker = bulletMarkerRegex.test(prevText);
+    const currentHasBulletMarker = bulletMarkerRegex.test(currentText);
+
+    // True bullets are:
+    // 1. Have bullet markers/numbers OR
+    // 2. Very short (< 10 words) AND much narrower than average (< 60% of page width)
+    const headingKeywords = ['action items', 'next steps', 'notes', 'logistics', 'tasks'];
+    const normalizedPageWidth = pageWidth > 0 ? pageWidth : avgFontSize * 70;
+    const maxReferenceWidth = normalizedPageWidth > 0 ? normalizedPageWidth : avgFontSize * 70;
+    const indentDelta = currentLeft - prevLeft;
+    const indentThreshold = Math.max(avgFontSize * 0.6, 8);
+    const hasIndent = indentDelta > indentThreshold;
+    const currentWidthRatio = maxReferenceWidth > 0 ? currentWidth / maxReferenceWidth : 0;
+    const prevWidthRatio = maxReferenceWidth > 0 ? prevWidth / maxReferenceWidth : 0;
+    const prevLooksLikeHeading =
+      prevText.endsWith(':') ||
+      (prevWords <= 4 && prevWidthRatio < 0.4) ||
+      headingKeywords.some((keyword) => prevText.toLowerCase().includes(keyword));
+
+    const wrapCandidate =
+      !currentHasBulletMarker &&
+      !hasIndent &&
+      !prevLooksLikeHeading &&
+      currentWords <= 12 &&
+      currentWidthRatio < 0.45 &&
+      Math.abs(prevLeft - currentLeft) <= leftAlignmentTolerance &&
+      currentWidth < prevWidth * 0.85;
+
+    const currentIsBullet = wrapCandidate
+      ? false
+      : currentHasBulletMarker ||
+        (hasIndent && (currentWords <= 14 || currentWidthRatio <= 0.65)) ||
+        (prevLooksLikeHeading && (currentWords <= 16 || currentWidthRatio <= 0.8 || prevWidthRatio < 0.35)) ||
+        (currentWords <= 8 && currentWidthRatio <= 0.45 && prevWidth - currentWidth > avgFontSize * 4);
+
+    const prevIsBullet = bulletFlags.get(prevLine.id) ?? prevHasBulletMarker;
+    bulletFlags.set(currentLine.id, currentIsBullet);
+
+    // Detect paragraph→bullet transition
+    const likelyBulletStart = !prevIsBullet && currentIsBullet;
+
+    // Don't merge two consecutive bullets
+    const bothAreBullets = prevIsBullet && currentIsBullet;
+
     // Merge into paragraph if:
     // 1. Left aligned
     // 2. Same font
-    // 3. Reasonable line spacing (not a large gap indicating paragraph break)
-    const shouldMerge = isLeftAligned && sameFont && hasReasonableSpacing;
+    // 3. Reasonable line spacing
+    // 4. NOT transitioning to bullets
+    // 5. NOT both are bullets
+    const shouldMerge =
+      isLeftAligned &&
+      sameFont &&
+      hasReasonableSpacing &&
+      !likelyBulletStart &&
+      !bothAreBullets &&
+      !currentIsBullet;
+
+    if (i < 10 || likelyBulletStart || bothAreBullets || !shouldMerge) {
+      console.log(`  Line ${i}:`);
+      console.log(`    prev: "${prevText.substring(0, 40)}" (${prevWords}w, ${prevWidth.toFixed(0)}pt, marker:${prevHasBulletMarker}, bullet:${prevIsBullet})`);
+      console.log(`    curr: "${currentText.substring(0, 40)}" (${currentWords}w, ${currentWidth.toFixed(0)}pt, marker:${currentHasBulletMarker}, bullet:${currentIsBullet})`);
+      console.log(`    checks: leftAlign:${isLeftAligned} (${Math.abs(prevLeft - currentLeft).toFixed(1)}pt), sameFont:${sameFont}, spacing:${hasReasonableSpacing} (${lineSpacing.toFixed(1)}pt/${maxReasonableSpacing.toFixed(1)}pt)`);
+      console.log(`    decision: merge=${shouldMerge} (bulletStart:${likelyBulletStart}, bothBullets:${bothAreBullets})`);
+    }
 
     if (shouldMerge) {
       currentParagraph.push(currentLine);
@@ -587,17 +673,24 @@ const groupLinesIntoParagraphs = (
     }
 
     // Combine all elements from all lines
-    const allElements = lines.flatMap(line => line.originalElements);
+    const lineTemplates = lines.map(line => cloneLineTemplate(line));
+    const flattenedLineTemplates = lineTemplates.flatMap((line) =>
+      line.childLineGroups && line.childLineGroups.length > 0
+        ? line.childLineGroups
+        : [line],
+    );
+    const allLines = flattenedLineTemplates.length > 0 ? flattenedLineTemplates : lineTemplates;
+    const allElements = allLines.flatMap(line => line.originalElements);
     const pageIndex = lines[0].pageIndex;
-    const lineElementCounts = lines.map((line) => line.originalElements.length);
+    const lineElementCounts = allLines.map((line) => line.originalElements.length);
 
     // Create merged group with newlines between lines
-    const paragraphText = lines.map(line => line.text).join('\n');
-    const mergedBounds = mergeBounds(lines.map(line => line.bounds));
+    const paragraphText = allLines.map(line => line.text).join('\n');
+    const mergedBounds = mergeBounds(allLines.map(line => line.bounds));
     const spacingValues: number[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const prevBaseline = lines[i - 1].baseline ?? lines[i - 1].bounds.bottom;
-      const currentBaseline = lines[i].baseline ?? lines[i].bounds.bottom;
+    for (let i = 1; i < allLines.length; i++) {
+      const prevBaseline = allLines[i - 1].baseline ?? allLines[i - 1].bounds.bottom;
+      const currentBaseline = allLines[i].baseline ?? allLines[i].bounds.bottom;
       const spacing = Math.abs(prevBaseline - currentBaseline);
       if (spacing > 0) {
         spacingValues.push(spacing);
@@ -633,6 +726,7 @@ const groupLinesIntoParagraphs = (
       text: paragraphText,
       originalText: paragraphText,
       bounds: mergedBounds,
+      childLineGroups: allLines,
     };
   });
 };
@@ -742,7 +836,7 @@ export const groupPageTextElements = (
 
   if (groupingMode === 'paragraph') {
     // Paragraph mode: always apply grouping
-    return groupLinesIntoParagraphs(lineGroups, metrics);
+    return groupLinesIntoParagraphs(lineGroups, pageWidth, metrics);
   }
 
   // Auto mode: use heuristic to determine if we should group
@@ -801,12 +895,11 @@ export const groupPageTextElements = (
   const coefficientOfVariation = avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
 
   // Check each criterion
-  const criterion1 = multiLineGroups >= 2 && avgWordsPerGroup > 8;
-  const criterion2 = avgWordsPerGroup > 5;
-  const criterion3 = longTextRatio > 0.4;
-  const criterion4 = coefficientOfVariation > 0.5 || fullWidthRatio > 0.6; // High variance OR many full-width lines = paragraph text
+  const criterion1 = avgWordsPerGroup > 5;
+  const criterion2 = longTextRatio > 0.4;
+  const criterion3 = coefficientOfVariation > 0.5 || fullWidthRatio > 0.6; // High variance OR many full-width lines = paragraph text
 
-  const isParagraphPage = criterion1 && criterion2 && criterion3 && criterion4;
+  const isParagraphPage = criterion1 && criterion2 && criterion3;
 
   // Log detection stats
   console.log(`📄 Page ${pageIndex} Grouping Analysis (mode: ${groupingMode}):`);
@@ -823,24 +916,21 @@ export const groupPageTextElements = (
   console.log(`     • Std deviation: ${stdDev.toFixed(2)}`);
   console.log(`     • Coefficient of variation: ${coefficientOfVariation.toFixed(2)}`);
   console.log(`   Criteria:`);
-  console.log(`     1. Multi-line + Avg Words: ${criterion1 ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`        (${multiLineGroups} >= 2 AND ${avgWordsPerGroup.toFixed(2)} > 8)`);
-  console.log(`     2. Avg Words Only: ${criterion2 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`     1. Avg Words Per Group: ${criterion1 ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`        (${avgWordsPerGroup.toFixed(2)} > 5)`);
-  console.log(`     3. Long Text Ratio: ${criterion3 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`     2. Long Text Ratio: ${criterion2 ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`        (${(longTextRatio * 100).toFixed(1)}% > 40%)`);
-  console.log(`     4. Line Width Pattern: ${criterion4 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`     3. Line Width Pattern: ${criterion3 ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`        (CV ${coefficientOfVariation.toFixed(2)} > 0.5 OR ${(fullWidthRatio * 100).toFixed(1)}% > 60%)`);
   console.log(`        ${coefficientOfVariation > 0.5 ? '✓ High variance (varying line lengths)' : '✗ Low variance'} ${fullWidthRatio > 0.6 ? '✓ Many full-width lines (paragraph-like)' : '✗ Few full-width lines (list-like)'}`);
   console.log(`   Decision: ${isParagraphPage ? '📝 PARAGRAPH MODE' : '📋 LINE MODE'}`);
   if (isParagraphPage) {
-    console.log(`   Reason: All criteria passed (AND logic)`);
+    console.log(`   Reason: All three criteria passed (AND logic)`);
   } else {
     const failedReasons = [];
-    if (!criterion1) failedReasons.push('insufficient multi-line groups or word density');
-    if (!criterion2) failedReasons.push('low average words per group');
-    if (!criterion3) failedReasons.push('low ratio of long text groups');
-    if (!criterion4) failedReasons.push('low variance and few full-width lines (list-like structure)');
+    if (!criterion1) failedReasons.push('low average words per group');
+    if (!criterion2) failedReasons.push('low ratio of long text groups');
+    if (!criterion3) failedReasons.push('low variance and few full-width lines (list-like structure)');
     console.log(`   Reason: ${failedReasons.join(', ')}`);
   }
   console.log('');
@@ -848,7 +938,7 @@ export const groupPageTextElements = (
   // Only apply paragraph grouping if it looks like a paragraph-heavy page
   if (isParagraphPage) {
     console.log(`🔀 Applying paragraph grouping to page ${pageIndex}`);
-    return groupLinesIntoParagraphs(lineGroups, metrics);
+    return groupLinesIntoParagraphs(lineGroups, pageWidth, metrics);
   }
 
   // For sparse pages, keep lines separate

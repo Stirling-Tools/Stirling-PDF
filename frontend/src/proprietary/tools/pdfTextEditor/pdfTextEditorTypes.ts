@@ -168,6 +168,7 @@ export interface TextGroup {
   text: string;
   originalText: string;
   bounds: BoundingBox;
+  childLineGroups?: TextGroup[] | null;
 }
 
 export const DEFAULT_PAGE_WIDTH = 612;
@@ -219,4 +220,6 @@ export interface PdfTextEditorViewData {
   onGeneratePdf: () => void;
   onForceSingleTextElementChange: (value: boolean) => void;
   onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
+  onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;
+  onUngroupGroup: (pageIndex: number, groupId: string) => boolean;
 }
