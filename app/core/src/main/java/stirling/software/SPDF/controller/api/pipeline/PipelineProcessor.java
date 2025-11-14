@@ -233,7 +233,7 @@ public class PipelineProcessor {
      * Replaces occurrences of file names in the provided body with corresponding resource objects
      * from the given files map.
      */
-    private void replaceWithRessource(
+    private void replaceWithResource(
             MultiValueMap<String, Object> body, Map<String, Resource> files) {
         Set<String> fileNames = files.keySet();
         body.forEach(
