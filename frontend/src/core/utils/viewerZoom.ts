@@ -47,30 +47,15 @@ export function determineAutoZoom({
     return { type: 'fallback', zoom: Math.min(fitWidthZoom, fallbackZoom) };
   }
 
-  // Landscape pages need 100% visibility, portrait need 80%
+  // Landscape pages need 100% visibility, portrait need the specified threshold
   const isLandscape = aspectRatio < 1;
   const targetVisibility = isLandscape ? 100 : visibilityThreshold;
 
-  // Step 1: Calculate what zoom level shows targetVisibility% (80%) of page height
-  //
-  // At fitWidth, page dimensions are:
-  //   pageHeightAtFitWidth = (viewportWidth / pagesPerSpread) * aspectRatio
-  //
-  // For 80% of page to be visible:
-  //   viewportHeight / pageHeightAtZoom = targetVisibility / 100
-  //   viewportHeight / (pageHeightAtFitWidth * zoomRatio) = targetVisibility / 100
-  //
-  // Where zoomRatio = heightBasedZoom / fitWidthZoom
-  //
-  // Solving:
-  //   heightBasedZoom = fitWidthZoom * viewportHeight / (pageHeightAtFitWidth * targetVisibility / 100)
-  //   heightBasedZoom = fitWidthZoom * (viewportHeight / pageHeightAtFitWidth) * (100 / targetVisibility)
-
+  // Calculate zoom level that shows targetVisibility% of page height
   const pageHeightAtFitWidth = (viewportWidth / pagesPerSpread) * aspectRatio;
   const heightBasedZoom = fitWidthZoom * (viewportHeight / pageHeightAtFitWidth) / (targetVisibility / 100);
 
-  // Step 2: Compare with fitWidth
-  // Use whichever is smaller (more zoomed out) to ensure both constraints are met
+  // Use whichever zoom is smaller (more zoomed out) to satisfy both width and height constraints
   if (heightBasedZoom < fitWidthZoom) {
     // Need to zoom out from fitWidth to show enough height
     return { type: 'adjust', zoom: heightBasedZoom };
