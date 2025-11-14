@@ -119,7 +119,7 @@ export function ZoomAPIBridge() {
     }
 
     const fitWidthZoom = zoomState.currentZoomLevel;
-    if (!fitWidthZoom || fitWidthZoom <= 0) {
+    if (!fitWidthZoom || fitWidthZoom <= 0 || fitWidthZoom === 1) {
       return;
     }
 
@@ -143,20 +143,10 @@ export function ZoomAPIBridge() {
         return;
       }
 
-      const metrics = viewport ?? {};
-      const viewportWidth =
-        metrics.clientWidth ?? metrics.width ?? window.innerWidth ?? 0;
-      const viewportHeight =
-        metrics.clientHeight ?? metrics.height ?? window.innerHeight ?? 0;
+      const viewportWidth = window.innerWidth ?? 0;
+      const viewportHeight = window.innerHeight ?? 0;
 
       if (viewportWidth <= 0 || viewportHeight <= 0) {
-        return;
-      }
-
-      const pageRect = await measureRenderedPageRect({
-        shouldCancel: () => cancelled,
-      });
-      if (cancelled) {
         return;
       }
 
@@ -165,9 +155,7 @@ export function ZoomAPIBridge() {
         viewportHeight,
         fitWidthZoom,
         pagesPerSpread,
-        pageRect: pageRect
-          ? { width: pageRect.width, height: pageRect.height }
-          : undefined,
+        pageRect: undefined,
         metadataAspectRatio: metadataAspectRatio ?? null,
         visibilityThreshold: DEFAULT_VISIBILITY_THRESHOLD,
         fallbackZoom: DEFAULT_FALLBACK_ZOOM,
