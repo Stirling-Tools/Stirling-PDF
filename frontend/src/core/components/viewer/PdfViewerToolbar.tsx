@@ -43,23 +43,32 @@ export function PdfViewerToolbar({
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
-    registerImmediateScrollUpdate((currentPage, _totalPages) => {
+    const unregister = registerImmediateScrollUpdate((currentPage, _totalPages) => {
       setPageInput(currentPage);
     });
     setPageInput(scrollState.currentPage);
-  }, [registerImmediateScrollUpdate]);
+    return () => {
+      unregister?.();
+    };
+  }, [registerImmediateScrollUpdate, scrollState.currentPage]);
 
   // Register for immediate zoom updates and sync with actual zoom state
   useEffect(() => {
-    registerImmediateZoomUpdate(setDisplayZoomPercent);
+    const unregister = registerImmediateZoomUpdate(setDisplayZoomPercent);
     setDisplayZoomPercent(zoomState.zoomPercent || 140);
-  }, [zoomState.zoomPercent, registerImmediateZoomUpdate]);
+    return () => {
+      unregister?.();
+    };
+  }, [registerImmediateZoomUpdate, zoomState.zoomPercent]);
 
   useEffect(() => {
-    registerImmediateSpreadUpdate((_mode, isDual) => {
+    const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {
       setIsDualPageActive(isDual);
     });
     setIsDualPageActive(spreadState.isDualPage);
+    return () => {
+      unregister?.();
+    };
   }, [registerImmediateSpreadUpdate, spreadState.isDualPage]);
 
   const handleZoomOut = () => {

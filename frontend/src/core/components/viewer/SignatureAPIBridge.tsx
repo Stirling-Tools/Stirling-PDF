@@ -1,4 +1,4 @@
-import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef } from 'react';
+import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -123,9 +123,19 @@ const createTextStampImage = (
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
-  const { getZoomState } = useViewer();
-  const currentZoom = getZoomState()?.currentZoom ?? 1;
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate(percent => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => {
+      unregister?.();
+    };
+  }, [getZoomState, registerImmediateZoomUpdate]);
 
   const cssToPdfSize = useCallback(
     (size: { width: number; height: number }) => {
