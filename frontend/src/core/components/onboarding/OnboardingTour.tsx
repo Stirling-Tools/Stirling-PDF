@@ -123,7 +123,7 @@ export default function OnboardingTour() {
   const stepsConfig: Record<TourStep, StepType> = {
     [TourStep.ALL_TOOLS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.allTools', 'This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.'),
+      content: t('onboarding.allTools', 'This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.'),
       position: 'center',
       padding: 0,
       action: () => {
