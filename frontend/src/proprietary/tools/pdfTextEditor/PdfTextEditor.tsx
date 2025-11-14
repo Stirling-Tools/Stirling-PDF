@@ -18,6 +18,7 @@ import {
   PdfJsonPage,
   TextGroup,
   PdfTextEditorViewData,
+  BoundingBox,
 } from './pdfTextEditorTypes';
 import {
   deepCloneDocument,
@@ -26,6 +27,7 @@ import {
   restoreGlyphElements,
   extractDocumentImages,
   cloneImageElement,
+  cloneTextElement,
   valueOr,
 } from './pdfTextEditorUtils';
 import PdfTextEditorView from '@app/components/tools/pdfTextEditor/PdfTextEditorView';
@@ -52,6 +54,148 @@ const getAutoLoadKey = (file: File): string => {
   return `${file.name}|${file.size}|${file.lastModified}`;
 };
 
+const normalizeLineArray = (value: string | undefined | null, expected: number): string[] => {
+  const normalized = (value ?? '').replace(/\r/g, '');
+  if (expected <= 0) {
+    return [normalized];
+  }
+  const parts = normalized.split('\n');
+  if (parts.length === expected) {
+    return parts;
+  }
+  if (parts.length < expected) {
+    return parts.concat(Array(expected - parts.length).fill(''));
+  }
+  const head = parts.slice(0, Math.max(expected - 1, 0));
+  const tail = parts.slice(Math.max(expected - 1, 0)).join('\n');
+  return [...head, tail];
+};
+
+const cloneLineTemplate = (line: TextGroup, text?: string, originalText?: string): TextGroup => ({
+  ...line,
+  text: text ?? line.text,
+  originalText: originalText ?? line.originalText,
+  childLineGroups: null,
+  lineElementCounts: null,
+  lineSpacing: null,
+  elements: line.elements.map(cloneTextElement),
+  originalElements: line.originalElements.map(cloneTextElement),
+});
+
+const expandGroupToLines = (group: TextGroup): TextGroup[] => {
+  if (group.childLineGroups && group.childLineGroups.length > 0) {
+    const textLines = normalizeLineArray(group.text, group.childLineGroups.length);
+    const originalLines = normalizeLineArray(group.originalText, group.childLineGroups.length);
+    return group.childLineGroups.map((child, index) =>
+      cloneLineTemplate(child, textLines[index], originalLines[index]),
+    );
+  }
+  return [cloneLineTemplate(group)];
+};
+
+const mergeBoundingBoxes = (boxes: BoundingBox[]): BoundingBox => {
+  if (boxes.length === 0) {
+    return { left: 0, right: 0, top: 0, bottom: 0 };
+  }
+  return boxes.reduce(
+    (acc, box) => ({
+      left: Math.min(acc.left, box.left),
+      right: Math.max(acc.right, box.right),
+      top: Math.min(acc.top, box.top),
+      bottom: Math.max(acc.bottom, box.bottom),
+    }),
+    { ...boxes[0] },
+  );
+};
+
+const buildMergedGroupFromSelection = (groups: TextGroup[]): TextGroup | null => {
+  if (groups.length === 0) {
+    return null;
+  }
+
+  const lineTemplates = groups.flatMap(expandGroupToLines);
+  if (lineTemplates.length <= 1) {
+    return null;
+  }
+
+  const lineTexts = lineTemplates.map((line) => line.text ?? '');
+  const lineOriginalTexts = lineTemplates.map((line) => line.originalText ?? '');
+  const combinedOriginals = lineTemplates.flatMap((line) => line.originalElements.map(cloneTextElement));
+  const combinedElements = combinedOriginals.map(cloneTextElement);
+  const mergedBounds = mergeBoundingBoxes(lineTemplates.map((line) => line.bounds));
+
+  const spacingValues: number[] = [];
+  for (let index = 1; index < lineTemplates.length; index += 1) {
+    const prevBaseline = lineTemplates[index - 1].baseline ?? lineTemplates[index - 1].bounds.bottom;
+    const currentBaseline = lineTemplates[index].baseline ?? lineTemplates[index].bounds.bottom;
+    const spacing = Math.abs(prevBaseline - currentBaseline);
+    if (spacing > 0) {
+      spacingValues.push(spacing);
+    }
+  }
+  const averageSpacing =
+    spacingValues.length > 0
+      ? spacingValues.reduce((sum, value) => sum + value, 0) / spacingValues.length
+      : null;
+
+  const first = groups[0];
+  const lineElementCounts = lineTemplates.map((line) => Math.max(line.originalElements.length, 1));
+  const paragraph: TextGroup = {
+    ...first,
+    text: lineTexts.join('\n'),
+    originalText: lineOriginalTexts.join('\n'),
+    elements: combinedElements,
+    originalElements: combinedOriginals,
+    bounds: mergedBounds,
+    lineSpacing: averageSpacing,
+    lineElementCounts: lineElementCounts.length > 1 ? lineElementCounts : null,
+    childLineGroups: lineTemplates.map((line, index) =>
+      cloneLineTemplate(line, lineTexts[index], lineOriginalTexts[index]),
+    ),
+  };
+
+  return paragraph;
+};
+
+const splitParagraphGroup = (group: TextGroup): TextGroup[] => {
+  if (!group.childLineGroups || group.childLineGroups.length <= 1) {
+    return [];
+  }
+
+  const templateLines = group.childLineGroups.map((child) => cloneLineTemplate(child));
+  const lineCount = templateLines.length;
+  const textLines = normalizeLineArray(group.text, lineCount);
+  const originalLines = normalizeLineArray(group.originalText, lineCount);
+  const baseCounts =
+    group.lineElementCounts && group.lineElementCounts.length === lineCount
+      ? [...group.lineElementCounts]
+      : templateLines.map((line) => Math.max(line.originalElements.length, 1));
+
+  const totalOriginals = group.originalElements.length;
+  const counted = baseCounts.reduce((sum, count) => sum + count, 0);
+  if (counted < totalOriginals && baseCounts.length > 0) {
+    baseCounts[baseCounts.length - 1] += totalOriginals - counted;
+  }
+
+  let offset = 0;
+  return templateLines.map((template, index) => {
+    const take = Math.max(1, baseCounts[index] ?? 1);
+    const slice = group.originalElements.slice(offset, offset + take).map(cloneTextElement);
+    offset += take;
+    return {
+      ...template,
+      id: `${group.id}-line-${index + 1}-${Date.now()}-${index}`,
+      text: textLines[index] ?? '',
+      originalText: originalLines[index] ?? '',
+      elements: slice.map(cloneTextElement),
+      originalElements: slice,
+      lineElementCounts: null,
+      lineSpacing: null,
+      childLineGroups: null,
+    };
+  });
+};
+
 const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const {
@@ -63,6 +207,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
+  const { registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = navigationActions;
 
   const [loadedDocument, setLoadedDocument] = useState<PdfJsonDocument | null>(null);
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
@@ -89,6 +234,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [loadingImagePages, setLoadingImagePages] = useState<Set<number>>(new Set());
 
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
+  const originalGroupsRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
   const autoLoadKeyRef = useRef<string | null>(null);
   const loadRequestIdRef = useRef(0);
@@ -131,7 +277,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   const dirtyPages = useMemo(
-    () => getDirtyPages(groupsByPage, imagesByPage, originalImagesRef.current),
+    () => getDirtyPages(groupsByPage, imagesByPage, originalGroupsRef.current, originalImagesRef.current),
     [groupsByPage, imagesByPage],
   );
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
@@ -157,6 +303,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     const images = extractDocumentImages(cloned);
     const originalImages = images.map((page) => page.map(cloneImageElement));
     originalImagesRef.current = originalImages;
+    originalGroupsRef.current = groups.map((page) => page.map((group) => ({ ...group })));
     imagesByPageRef.current = images.map((page) => page.map(cloneImageElement));
     const initialLoaded = new Set<number>();
     originalImages.forEach((pageImages, index) => {
@@ -351,8 +498,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         let shouldUseLazyMode = false;
         let pendingJobId: string | null = null;
 
-        setErrorMessage(null);
-
         if (isPdf) {
           latestPdfRequestIdRef.current = requestId;
           setIsConverting(true);
@@ -539,7 +684,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
         setFileName(file.name);
         setErrorMessage(null);
-        autoLoadKeyRef.current = fileKey;
       } catch (error: any) {
         console.error('Failed to load file', error);
         console.error('Error details:', {
@@ -598,13 +742,83 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   const handleGroupDelete = useCallback((pageIndex: number, groupId: string) => {
+    console.log(`🗑️ Deleting group ${groupId} from page ${pageIndex}`);
+    setGroupsByPage((previous) => {
+      const updated = previous.map((groups, idx) => {
+        if (idx !== pageIndex) return groups;
+        const filtered = groups.filter((group) => group.id !== groupId);
+        console.log(`   Before: ${groups.length} groups, After: ${filtered.length} groups`);
+        return filtered;
+      });
+      return updated;
+    });
+  }, []);
+
+  const handleMergeGroups = useCallback((pageIndex: number, groupIds: string[]): boolean => {
+    if (groupIds.length < 2) {
+      return false;
+    }
+    let updated = false;
     setGroupsByPage((previous) =>
-      previous.map((groups, idx) =>
-        idx !== pageIndex
-          ? groups
-          : groups.map((group) => (group.id === groupId ? { ...group, text: '' } : group))
-      )
+      previous.map((groups, idx) => {
+        if (idx !== pageIndex) {
+          return groups;
+        }
+        const indices = groupIds
+          .map((id) => groups.findIndex((group) => group.id === id))
+          .filter((index) => index >= 0);
+        if (indices.length !== groupIds.length) {
+          return groups;
+        }
+        const sorted = [...indices].sort((a, b) => a - b);
+        for (let i = 1; i < sorted.length; i += 1) {
+          if (sorted[i] !== sorted[i - 1] + 1) {
+            return groups;
+          }
+        }
+        const selection = sorted.map((position) => groups[position]);
+        const merged = buildMergedGroupFromSelection(selection);
+        if (!merged) {
+          return groups;
+        }
+        const next = [
+          ...groups.slice(0, sorted[0]),
+          merged,
+          ...groups.slice(sorted[sorted.length - 1] + 1),
+        ];
+        updated = true;
+        return next;
+      }),
     );
+    return updated;
+  }, []);
+
+  const handleUngroupGroup = useCallback((pageIndex: number, groupId: string): boolean => {
+    let updated = false;
+    setGroupsByPage((previous) =>
+      previous.map((groups, idx) => {
+        if (idx !== pageIndex) {
+          return groups;
+        }
+        const targetIndex = groups.findIndex((group) => group.id === groupId);
+        if (targetIndex < 0) {
+          return groups;
+        }
+        const targetGroup = groups[targetIndex];
+        const splits = splitParagraphGroup(targetGroup);
+        if (splits.length <= 1) {
+          return groups;
+        }
+        const next = [
+          ...groups.slice(0, targetIndex),
+          ...splits,
+          ...groups.slice(targetIndex + 1),
+        ];
+        updated = true;
+        return next;
+      }),
+    );
+    return updated;
   }, []);
 
   const handleImageTransform = useCallback(
@@ -746,7 +960,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
   }, [buildPayload, onComplete]);
 
-  const handleGeneratePdf = useCallback(async () => {
+  const handleGeneratePdf = useCallback(async (skipComplete = false) => {
     try {
       setIsGeneratingPdf(true);
 
@@ -840,7 +1054,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
           downloadBlob(response.data, downloadName);
 
-          if (onComplete) {
+          if (onComplete && !skipComplete) {
             const pdfFile = new File([response.data], downloadName, { type: 'application/pdf' });
             onComplete([pdfFile]);
           }
@@ -881,7 +1095,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
       downloadBlob(response.data, downloadName);
 
-      if (onComplete) {
+      if (onComplete && !skipComplete) {
         const pdfFile = new File([response.data], downloadName, { type: 'application/pdf' });
         onComplete([pdfFile]);
       }
@@ -1052,7 +1266,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     forceSingleTextElement,
     groupingMode,
     requestPagePreview,
-    onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
     onGroupDelete: handleGroupDelete,
@@ -1061,9 +1274,17 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     onReset: handleResetEdits,
     onDownloadJson: handleDownloadJson,
     onGeneratePdf: handleGeneratePdf,
+    onGeneratePdfForNavigation: async () => {
+      // Generate PDF without triggering tool completion
+      await handleGeneratePdf(true);
+    },
     onForceSingleTextElementChange: setForceSingleTextElement,
     onGroupingModeChange: setGroupingMode,
+    onMergeGroups: handleMergeGroups,
+    onUngroupGroup: handleUngroupGroup,
   }), [
+    handleMergeGroups,
+    handleUngroupGroup,
     handleImageTransform,
     imagesByPage,
     pagePreviews,
@@ -1076,7 +1297,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     handleGroupTextChange,
     handleGroupDelete,
     handleImageReset,
-    handleLoadFile,
     handleResetEdits,
     handleSelectPage,
     hasChanges,
@@ -1155,14 +1375,30 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     unregisterCustomWorkbenchView,
   ]);
 
+  // Note: Compare tool doesn't auto-force workbench, and neither should we
+  // The workbench should be set when the tool is selected via proper channels
+  // (tool registry, tool picker, etc.) - not forced here
+
+  // Keep hasChanges in a ref for the checker to access
+  const hasChangesRef = useRef(hasChanges);
   useEffect(() => {
-    if (
-      navigationState.selectedTool === 'pdfTextEditor' &&
-      navigationState.workbench !== WORKBENCH_ID
-    ) {
-      navigationActions.setWorkbench(WORKBENCH_ID);
-    }
-  }, [navigationActions, navigationState.selectedTool, navigationState.workbench]);
+    hasChangesRef.current = hasChanges;
+    console.log('[PdfTextEditor] hasChanges updated to:', hasChanges);
+  }, [hasChanges]);
+
+  // Register unsaved changes checker for navigation guard
+  useEffect(() => {
+    const checker = () => {
+      console.log('[PdfTextEditor] Checking unsaved changes:', hasChangesRef.current);
+      return hasChangesRef.current;
+    };
+    registerUnsavedChangesChecker(checker);
+    console.log('[PdfTextEditor] Registered unsaved changes checker');
+    return () => {
+      console.log('[PdfTextEditor] Unregistered unsaved changes checker');
+      unregisterUnsavedChangesChecker();
+    };
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   const lastSentViewDataRef = useRef<PdfTextEditorViewData | null>(null);
 

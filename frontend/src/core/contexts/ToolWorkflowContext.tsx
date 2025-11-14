@@ -218,15 +218,25 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [customViewRegistry, customViewData]);
 
   useEffect(() => {
-    if (isBaseWorkbench(navigationState.workbench)) {
+    const { workbench } = navigationState;
+    if (isBaseWorkbench(workbench)) {
       return;
     }
 
-    const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
+    const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === workbench);
+    const expectedWorkbench = selectedTool?.workbench;
+    const workbenchOwnedBySelectedTool = expectedWorkbench === workbench;
+
     if (!currentCustomView || currentCustomView.data == null) {
+      // If the currently selected tool expects this custom workbench, allow it
+      // some time to register/populate the view instead of immediately bouncing
+      // the user back to Active Files.
+      if (workbenchOwnedBySelectedTool) {
+        return;
+      }
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench]);
+  }, [actions, customWorkbenchViews, navigationState.workbench, selectedTool]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 

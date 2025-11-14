@@ -173,10 +173,6 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     [document, pageIndex]
   );
 
-  if (!document || fontAnalysis.fonts.length === 0) {
-    return null;
-  }
-
   const { canReproducePerfectly, hasWarnings, summary, fonts } = fontAnalysis;
 
   const statusIcon = useMemo(() => {
@@ -189,6 +185,11 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     return <InfoIcon sx={{ fontSize: 16 }} />;
   }, [canReproducePerfectly, hasWarnings]);
 
+  // Early return AFTER all hooks are declared
+  if (!document || fontAnalysis.fonts.length === 0) {
+    return null;
+  }
+
   const statusColor = canReproducePerfectly ? 'green' : hasWarnings ? 'yellow' : 'blue';
 
   const pageLabel = pageIndex !== undefined
@@ -199,14 +200,30 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     <Accordion variant="contained" defaultValue={hasWarnings ? 'fonts' : undefined}>
       <Accordion.Item value="fonts">
         <Accordion.Control>
-          <Group gap="xs" wrap="nowrap">
-            {statusIcon}
-            <Text size="sm" fw={500}>
-              {pageLabel}
-            </Text>
-            <Badge size="xs" color={statusColor} variant="dot">
-              {fonts.length}
-            </Badge>
+          <Group gap="xs" wrap="wrap" style={{ flex: 1 }}>
+            <Group gap="xs" wrap="nowrap">
+              {statusIcon}
+              <Text size="sm" fw={500}>
+                {pageLabel}
+              </Text>
+              <Badge size="xs" color={statusColor} variant="dot">
+                {fonts.length}
+              </Badge>
+            </Group>
+
+            {/* Warning badges BEFORE expansion */}
+            <Group gap={4} wrap="wrap">
+              {summary.systemFallback > 0 && (
+                <Badge size="xs" color="yellow" variant="filled" leftSection={<WarningIcon sx={{ fontSize: 12 }} />}>
+                  {summary.systemFallback} {t('pdfTextEditor.fontAnalysis.fallback', 'fallback')}
+                </Badge>
+              )}
+              {summary.missing > 0 && (
+                <Badge size="xs" color="red" variant="filled" leftSection={<ErrorIcon sx={{ fontSize: 12 }} />}>
+                  {summary.missing} {t('pdfTextEditor.fontAnalysis.missing', 'missing')}
+                </Badge>
+              )}
+            </Group>
           </Group>
         </Accordion.Control>
         <Accordion.Panel>

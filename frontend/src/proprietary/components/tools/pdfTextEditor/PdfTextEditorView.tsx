@@ -8,8 +8,8 @@ import {
   Button,
   Card,
   Divider,
-  FileButton,
   Group,
+  Menu,
   Modal,
   Pagination,
   Progress,
@@ -19,6 +19,7 @@ import {
   Switch,
   Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
@@ -27,15 +28,19 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
+import MergeTypeIcon from '@mui/icons-material/MergeType';
+import CallSplitIcon from '@mui/icons-material/CallSplit';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Rnd } from 'react-rnd';
+import NavigationWarningModal from '@core/components/shared/NavigationWarningModal';
 
 import {
   PdfTextEditorViewData,
   PdfJsonFont,
   PdfJsonPage,
   ConversionProgress,
+  TextGroup,
 } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import { getImageBounds, pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
 import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
@@ -249,20 +254,16 @@ const buildFontLookupKeys = (
  * Analyzes text groups on a page to determine if it's paragraph-heavy or sparse.
  * Returns true if the page appears to be document-like with substantial text content.
  */
-const analyzePageContentType = (groups: TextGroup[]): boolean => {
+const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean => {
   if (groups.length === 0) return false;
 
   let multiLineGroups = 0;
   let totalWords = 0;
   let longTextGroups = 0;
   let totalGroups = 0;
-  const groupDetails: Array<{
-    id: string;
-    lines: number;
-    words: number;
-    chars: number;
-    text: string;
-  }> = [];
+  let fullWidthLines = 0;
+  const wordCounts: number[] = [];
+  const fullWidthThreshold = pageWidth * 0.7;
 
   groups.forEach((group) => {
     const text = (group.text || '').trim();
@@ -274,39 +275,45 @@ const analyzePageContentType = (groups: TextGroup[]): boolean => {
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
     totalWords += wordCount;
+    wordCounts.push(wordCount);
 
     // Count multi-line paragraphs
     if (lineCount > 1) {
       multiLineGroups++;
     }
 
-    // Count text groups with substantial content (more than a few words)
-    if (wordCount >= 5 || text.length >= 30) {
+    // Count text groups with substantial content (≥10 words or ≥50 chars)
+    if (wordCount >= 10 || text.length >= 50) {
       longTextGroups++;
     }
 
-    groupDetails.push({
-      id: group.id,
-      lines: lineCount,
-      words: wordCount,
-      chars: text.length,
-      text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-    });
+    // Check if this line extends close to the right margin
+    const rightEdge = group.bounds.right;
+    if (rightEdge >= fullWidthThreshold) {
+      fullWidthLines++;
+    }
   });
 
   if (totalGroups === 0) return false;
 
-  // Heuristics for paragraph mode:
-  // 1. Has multiple substantial multi-line groups (2+) AND decent average words
-  // 2. Average words per group > 12 (strong indicator of document text)
-  // 3. More than 40% of groups have substantial text (typical of documents)
   const avgWordsPerGroup = totalWords / totalGroups;
   const longTextRatio = longTextGroups / totalGroups;
+  const fullWidthRatio = fullWidthLines / totalGroups;
 
-  const isParagraphPage =
-    (multiLineGroups >= 2 && avgWordsPerGroup > 8) ||
-    avgWordsPerGroup > 12 ||
-    longTextRatio > 0.4;
+  // Calculate variance in line lengths
+  const variance = wordCounts.reduce((sum, count) => {
+    const diff = count - avgWordsPerGroup;
+    return sum + diff * diff;
+  }, 0) / totalGroups;
+  const stdDev = Math.sqrt(variance);
+  const coefficientOfVariation = avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
+
+  // All 3 criteria must pass for paragraph mode
+  const criterion1 = avgWordsPerGroup > 5;
+  const criterion2 = longTextRatio > 0.4;
+  const criterion3 = coefficientOfVariation > 0.5 || fullWidthRatio > 0.6;
+
+  const isParagraphPage = criterion1 && criterion2 && criterion3;
 
   return isParagraphPage;
 };
@@ -318,6 +325,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+  const [widthOverrides, setWidthOverrides] = useState<Map<string, number>>(new Map());
   const draggingImageRef = useRef<string | null>(null);
   const rndRefs = useRef<Map<string, any>>(new Map());
   const pendingDragUpdateRef = useRef<number | null>(null);
@@ -329,6 +338,39 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
+  const lastSelectedGroupIdRef = useRef<string | null>(null);
+  const widthOverridesRef = useRef<Map<string, number>>(widthOverrides);
+  const resizingRef = useRef<{
+    groupId: string;
+    startX: number;
+    startWidth: number;
+    baseWidth: number;
+    maxWidth: number;
+  } | null>(null);
+
+  // First-time banner state
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
+    try {
+      return localStorage.getItem('pdfTextEditor.welcomeBannerDismissed') !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const handleDismissWelcomeBanner = useCallback(() => {
+    // Just dismiss for this session, don't save to localStorage
+    setShowWelcomeBanner(false);
+  }, []);
+
+  const handleDontShowAgain = useCallback(() => {
+    // Save to localStorage to never show again
+    try {
+      localStorage.setItem('pdfTextEditor.welcomeBannerDismissed', 'true');
+    } catch {
+      // Ignore localStorage errors
+    }
+    setShowWelcomeBanner(false);
+  }, []);
 
   const {
     document: pdfDocument,
@@ -348,7 +390,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     forceSingleTextElement,
     groupingMode: externalGroupingMode,
     requestPagePreview,
-    onLoadJson,
     onSelectPage,
     onGroupEdit,
     onGroupDelete,
@@ -357,9 +398,36 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onReset,
     onDownloadJson,
     onGeneratePdf,
+    onGeneratePdfForNavigation,
     onForceSingleTextElementChange,
     onGroupingModeChange,
+    onMergeGroups,
+    onUngroupGroup,
   } = data;
+
+  // Define derived variables immediately after props destructuring, before any hooks
+  const pages = pdfDocument?.pages ?? [];
+  const currentPage = pages[selectedPage] ?? null;
+  const pageGroups = groupsByPage[selectedPage] ?? [];
+  const pageImages = imagesByPage[selectedPage] ?? [];
+  const pagePreview = pagePreviews.get(selectedPage);
+  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
+
+  // Debug logging for page dimensions
+  console.log(`📐 [PdfTextEditor] Page ${selectedPage + 1} Dimensions:`, {
+    pageWidth,
+    pageHeight,
+    aspectRatio: pageHeight > 0 ? (pageWidth / pageHeight).toFixed(3) : 'N/A',
+    currentPage: currentPage ? {
+      mediaBox: currentPage.mediaBox,
+      cropBox: currentPage.cropBox,
+      rotation: currentPage.rotation,
+    } : null,
+    documentMetadata: pdfDocument?.metadata ? {
+      title: pdfDocument.metadata.title,
+      pageCount: pages.length,
+    } : null,
+  });
 
   const handleModeChangeRequest = useCallback((newMode: GroupingMode) => {
     if (hasChanges && newMode !== externalGroupingMode) {
@@ -382,7 +450,16 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     setPendingModeChange(null);
   }, []);
 
-  const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
+  const clearSelection = useCallback(() => {
+    setSelectedGroupIds(new Set());
+    lastSelectedGroupIdRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    widthOverridesRef.current = widthOverrides;
+  }, [widthOverrides]);
+
+  const resolveFont = useCallback((fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
       return null;
     }
@@ -404,9 +481,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       return directUid;
     }
     return fonts.find((font) => font?.id === fontId) ?? null;
-  };
+  }, [pdfDocument?.fonts]);
 
-  const getFontFamily = (fontId: string | null | undefined, pageIndex: number | null | undefined): string => {
+  const getFontFamily = useCallback((fontId: string | null | undefined, pageIndex: number | null | undefined): string => {
     if (!fontId) {
       return 'sans-serif';
     }
@@ -437,123 +514,79 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     }
 
     return 'Arial, Helvetica, sans-serif';
-  };
+  }, [resolveFont, fontFamilies]);
 
-  const getFontMetricsFor = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): { unitsPerEm: number; ascent: number; descent: number } | undefined => {
-    if (!fontId) {
-      return undefined;
-    }
-    const font = resolveFont(fontId, pageIndex);
-    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
-    for (const key of lookupKeys) {
-      const metrics = fontMetrics.get(key);
-      if (metrics) {
-        return metrics;
+  useEffect(() => {
+    clearSelection();
+  }, [clearSelection, selectedPage]);
+
+  useEffect(() => {
+    clearSelection();
+  }, [clearSelection, externalGroupingMode]);
+
+  useEffect(() => {
+    setWidthOverrides(new Map());
+  }, [pdfDocument]);
+
+  useEffect(() => {
+    setSelectedGroupIds((prev) => {
+      const filtered = Array.from(prev).filter((id) => pageGroups.some((group) => group.id === id));
+      if (filtered.length === prev.size) {
+        return prev;
       }
-    }
-    return undefined;
-  };
-
-  const getLineHeightPx = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-    fontSizePx: number,
-  ): number => {
-    if (fontSizePx <= 0) {
-      return fontSizePx;
-    }
-    const metrics = getFontMetricsFor(fontId, pageIndex);
-    if (!metrics || metrics.unitsPerEm <= 0) {
-      return fontSizePx * 1.2;
-    }
-    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
-    const ascentUnits = metrics.ascent ?? unitsPerEm;
-    const descentUnits = Math.abs(metrics.descent ?? -(unitsPerEm * 0.2));
-    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
-    if (totalUnits <= 0) {
-      return fontSizePx * 1.2;
-    }
-    const lineHeight = (totalUnits / unitsPerEm) * fontSizePx;
-    return Math.max(lineHeight, fontSizePx * 1.05);
-  };
-
-  const getFontGeometry = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): {
-    unitsPerEm: number;
-    ascentUnits: number;
-    descentUnits: number;
-    totalUnits: number;
-    ascentRatio: number;
-    descentRatio: number;
-  } | undefined => {
-    const metrics = getFontMetricsFor(fontId, pageIndex);
-    if (!metrics) {
-      return undefined;
-    }
-    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
-    const rawAscent = metrics.ascent ?? unitsPerEm;
-    const rawDescent = metrics.descent ?? -(unitsPerEm * 0.2);
-    const ascentUnits = Number.isFinite(rawAscent) ? rawAscent : unitsPerEm;
-    const descentUnits = Number.isFinite(rawDescent) ? Math.abs(rawDescent) : unitsPerEm * 0.2;
-    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
-    if (totalUnits <= 0 || !Number.isFinite(totalUnits)) {
-      return undefined;
-    }
-    return {
-      unitsPerEm,
-      ascentUnits,
-      descentUnits,
-      totalUnits,
-      ascentRatio: ascentUnits / totalUnits,
-      descentRatio: descentUnits / totalUnits,
-    };
-  };
-
-  const getFontWeight = (
-    fontId: string | null | undefined,
-    pageIndex: number | null | undefined,
-  ): number | 'normal' | 'bold' => {
-    if (!fontId) {
-      return 'normal';
-    }
-    const font = resolveFont(fontId, pageIndex);
-    if (!font || !font.fontDescriptorFlags) {
-      return 'normal';
-    }
-
-    // PDF font descriptor flag bit 18 (value 262144 = 0x40000) indicates ForceBold
-    const FORCE_BOLD_FLAG = 262144;
-    if ((font.fontDescriptorFlags & FORCE_BOLD_FLAG) !== 0) {
-      return 'bold';
-    }
-
-    // Also check if font name contains "Bold"
-    const fontName = font.standard14Name || font.baseName || '';
-    if (fontName.toLowerCase().includes('bold')) {
-      return 'bold';
-    }
-
-    return 'normal';
-  };
-
-  const pages = pdfDocument?.pages ?? [];
-  const currentPage = pages[selectedPage] ?? null;
-  const pageGroups = groupsByPage[selectedPage] ?? [];
-  const pageImages = imagesByPage[selectedPage] ?? [];
-  const pagePreview = pagePreviews.get(selectedPage);
+      return new Set(filtered);
+    });
+    setWidthOverrides((prev) => {
+      const filtered = new Map<string, number>();
+      pageGroups.forEach((group) => {
+        if (prev.has(group.id)) {
+          filtered.set(group.id, prev.get(group.id) ?? 0);
+        }
+      });
+      if (filtered.size === prev.size) {
+        return prev;
+      }
+      return filtered;
+    });
+  }, [pageGroups]);
 
   // Detect if current page contains paragraph-heavy content
-  const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups), [pageGroups]);
+  const isParagraphPage = useMemo(() => {
+    const result = analyzePageContentType(pageGroups, pageWidth);
+    console.log(`🏷️ Page ${selectedPage} badge: ${result ? 'PARAGRAPH' : 'SPARSE'} (${pageGroups.length} groups)`);
+    return result;
+  }, [pageGroups, pageWidth, selectedPage]);
   const isParagraphLayout =
     externalGroupingMode === 'paragraph' || (externalGroupingMode === 'auto' && isParagraphPage);
-  const paragraphWhiteSpace = isParagraphLayout ? 'pre-wrap' : 'pre';
-  const paragraphWordBreak = isParagraphLayout ? 'break-word' : 'normal';
-  const paragraphOverflowWrap = isParagraphLayout ? 'break-word' : 'normal';
+
+  const resolveGroupWidth = useCallback(
+    (group: TextGroup): { width: number; base: number; max: number } => {
+      const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
+      const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+      const override = widthOverrides.get(group.id);
+      const resolved = override ? Math.min(Math.max(override, baseWidth), maxWidth) : baseWidth;
+      return { width: resolved, base: baseWidth, max: maxWidth };
+    },
+    [pageWidth, widthOverrides],
+  );
+
+  const selectedGroupIdsArray = useMemo(() => Array.from(selectedGroupIds), [selectedGroupIds]);
+  const selectionIndices = useMemo(() => {
+    return selectedGroupIdsArray
+      .map((id) => pageGroups.findIndex((group) => group.id === id))
+      .filter((index) => index >= 0)
+      .sort((a, b) => a - b);
+  }, [pageGroups, selectedGroupIdsArray]);
+  const canMergeSelection = selectionIndices.length >= 2 && selectionIndices.every((value, idx, array) => idx === 0 || value === array[idx - 1] + 1);
+  const paragraphSelectionIds = useMemo(() =>
+    selectedGroupIdsArray.filter((id) => {
+      const target = pageGroups.find((group) => group.id === id);
+      return target ? (target.childLineGroups?.length ?? 0) > 1 : false;
+    }),
+  [pageGroups, selectedGroupIdsArray]);
+  const canUngroupSelection = paragraphSelectionIds.length > 0;
+  const hasWidthOverrides = selectedGroupIdsArray.some((id) => widthOverrides.has(id));
+  const hasSelection = selectedGroupIdsArray.length > 0;
 
   const syncEditorValue = useCallback(
     (
@@ -581,6 +614,69 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       });
     },
     [editingGroupId, onGroupEdit],
+  );
+
+  const handleMergeSelection = useCallback(() => {
+    if (!canMergeSelection) {
+      return;
+    }
+    const orderedIds = selectionIndices
+      .map((index) => pageGroups[index]?.id)
+      .filter((value): value is string => Boolean(value));
+    if (orderedIds.length < 2) {
+      return;
+    }
+    const merged = onMergeGroups(selectedPage, orderedIds);
+    if (merged) {
+      clearSelection();
+    }
+  }, [canMergeSelection, selectionIndices, pageGroups, onMergeGroups, selectedPage, clearSelection]);
+
+  const handleUngroupSelection = useCallback(() => {
+    if (!canUngroupSelection) {
+      return;
+    }
+    let changed = false;
+    paragraphSelectionIds.forEach((id) => {
+      const result = onUngroupGroup(selectedPage, id);
+      if (result) {
+        changed = true;
+      }
+    });
+    if (changed) {
+      clearSelection();
+    }
+  }, [canUngroupSelection, paragraphSelectionIds, onUngroupGroup, selectedPage, clearSelection]);
+
+  const handleWidthAdjustment = useCallback(
+    (mode: 'expand' | 'reset') => {
+      if (mode === 'expand' && !hasSelection) {
+        return;
+      }
+      if (mode === 'reset' && !hasWidthOverrides) {
+        return;
+      }
+      const selectedGroups = selectedGroupIdsArray
+        .map((id) => pageGroups.find((group) => group.id === id))
+        .filter((group): group is TextGroup => Boolean(group));
+      if (selectedGroups.length === 0) {
+        return;
+      }
+      setWidthOverrides((prev) => {
+        const next = new Map(prev);
+        selectedGroups.forEach((group) => {
+          const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
+          const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+          if (mode === 'expand') {
+            next.set(group.id, maxWidth);
+          } else {
+            next.delete(group.id);
+          }
+        });
+        return next;
+      });
+    },
+    [hasSelection, hasWidthOverrides, selectedGroupIdsArray, pageGroups, pageWidth],
   );
 
   const extractPreferredFontId = useCallback((target?: TextGroup | null) => {
@@ -774,6 +870,110 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       });
     };
   }, [pdfDocument?.fonts]);
+
+  // Define helper functions that depend on hooks AFTER all hook calls
+  const getFontMetricsFor = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): { unitsPerEm: number; ascent: number; descent: number } | undefined => {
+    if (!fontId) {
+      return undefined;
+    }
+    const font = resolveFont(fontId, pageIndex);
+    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
+    for (const key of lookupKeys) {
+      const metrics = fontMetrics.get(key);
+      if (metrics) {
+        return metrics;
+      }
+    }
+    return undefined;
+  }, [resolveFont, fontMetrics]);
+
+  const getLineHeightPx = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+    fontSizePx: number,
+  ): number => {
+    if (fontSizePx <= 0) {
+      return fontSizePx;
+    }
+    const metrics = getFontMetricsFor(fontId, pageIndex);
+    if (!metrics || metrics.unitsPerEm <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const ascentUnits = metrics.ascent ?? unitsPerEm;
+    const descentUnits = Math.abs(metrics.descent ?? -(unitsPerEm * 0.2));
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const lineHeight = (totalUnits / unitsPerEm) * fontSizePx;
+    return Math.max(lineHeight, fontSizePx * 1.05);
+  }, [getFontMetricsFor]);
+
+  const getFontGeometry = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): {
+    unitsPerEm: number;
+    ascentUnits: number;
+    descentUnits: number;
+    totalUnits: number;
+    ascentRatio: number;
+    descentRatio: number;
+  } | undefined => {
+    const metrics = getFontMetricsFor(fontId, pageIndex);
+    if (!metrics) {
+      return undefined;
+    }
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const rawAscent = metrics.ascent ?? unitsPerEm;
+    const rawDescent = metrics.descent ?? -(unitsPerEm * 0.2);
+    const ascentUnits = Number.isFinite(rawAscent) ? rawAscent : unitsPerEm;
+    const descentUnits = Number.isFinite(rawDescent) ? Math.abs(rawDescent) : unitsPerEm * 0.2;
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits <= 0 || !Number.isFinite(totalUnits)) {
+      return undefined;
+    }
+    return {
+      unitsPerEm,
+      ascentUnits,
+      descentUnits,
+      totalUnits,
+      ascentRatio: ascentUnits / totalUnits,
+      descentRatio: descentUnits / totalUnits,
+    };
+  }, [getFontMetricsFor]);
+
+  const getFontWeight = useCallback((
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): number | 'normal' | 'bold' => {
+    if (!fontId) {
+      return 'normal';
+    }
+    const font = resolveFont(fontId, pageIndex);
+    if (!font || !font.fontDescriptorFlags) {
+      return 'normal';
+    }
+
+    // PDF font descriptor flag bit 18 (value 262144 = 0x40000) indicates ForceBold
+    const FORCE_BOLD_FLAG = 262144;
+    if ((font.fontDescriptorFlags & FORCE_BOLD_FLAG) !== 0) {
+      return 'bold';
+    }
+
+    // Also check if font name contains "Bold"
+    const fontName = font.standard14Name || font.baseName || '';
+    if (fontName.toLowerCase().includes('bold')) {
+      return 'bold';
+    }
+
+    return 'normal';
+  }, [resolveFont]);
+
   const visibleGroups = useMemo(
     () =>
       pageGroups
@@ -787,17 +987,40 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     [editingGroupId, pageGroups],
   );
 
-  const orderedImages = useMemo(
-    () =>
-      [...pageImages].sort(
-        (first, second) => (first?.zOrder ?? -1_000_000) - (second?.zOrder ?? -1_000_000),
-      ),
-    [pageImages],
-  );
-  const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
-  const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
-  const scaledWidth = pageWidth * scale;
-  const scaledHeight = pageHeight * scale;
+const orderedImages = useMemo(
+  () =>
+    [...pageImages].sort(
+      (first, second) => (first?.zOrder ?? -1_000_000) - (second?.zOrder ?? -1_000_000),
+    ),
+  [pageImages],
+);
+const scale = useMemo(() => {
+  const calculatedScale = Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5);
+  console.log(`🔍 [PdfTextEditor] Scale Calculation:`, {
+    MAX_RENDER_WIDTH,
+    pageWidth,
+    pageHeight,
+    calculatedScale: calculatedScale.toFixed(3),
+    scaledWidth: (pageWidth * calculatedScale).toFixed(2),
+    scaledHeight: (pageHeight * calculatedScale).toFixed(2),
+  });
+  return calculatedScale;
+}, [pageWidth, pageHeight]);
+const scaledWidth = pageWidth * scale;
+const scaledHeight = pageHeight * scale;
+const selectionToolbarPosition = useMemo(() => {
+  if (!hasSelection) {
+    return null;
+  }
+  const firstSelected = pageGroups.find((group) => selectedGroupIds.has(group.id));
+  if (!firstSelected) {
+    return null;
+  }
+  const bounds = toCssBounds(currentPage, pageHeight, scale, firstSelected.bounds);
+  const top = Math.max(bounds.top - 40, 8);
+  const left = Math.min(Math.max(bounds.left, 8), Math.max(scaledWidth - 220, 8));
+  return { left, top };
+}, [hasSelection, pageGroups, selectedGroupIds, currentPage, pageHeight, scale, scaledWidth]);
 
   useEffect(() => {
     if (!hasDocument || !hasVectorPreview) {
@@ -847,8 +1070,16 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           return;
         }
 
-        // Skip multi-line paragraphs - auto-scaling doesn't work well with wrapped text
+        // Only apply auto-scaling to unchanged text
+        const hasChanges = group.text !== group.originalText;
+        if (hasChanges) {
+          newScales.set(group.id, 1);
+          return;
+        }
+
         const lineCount = (group.text || '').split('\n').length;
+
+        // Skip multi-line paragraphs - auto-scaling doesn't work well with wrapped text
         if (lineCount > 1) {
           newScales.set(group.id, 1);
           return;
@@ -869,7 +1100,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
         textSpan.style.transform = 'none';
 
         const bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
-        const containerWidth = bounds.width;
+        const { width: resolvedWidth } = resolveGroupWidth(group);
+        const containerWidth = resolvedWidth * scale;
         const textWidth = textSpan.getBoundingClientRect().width;
 
         // Restore original transform
@@ -901,6 +1133,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     scale,
     fontFamilies.size,
     selectedPage,
+    isParagraphLayout,
+    resolveGroupWidth,
   ]);
 
   useLayoutEffect(() => {
@@ -971,6 +1205,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const handlePageChange = (pageNumber: number) => {
     setActiveGroupId(null);
     setEditingGroupId(null);
+    clearSelection();
     onSelectPage(pageNumber - 1);
   };
 
@@ -978,7 +1213,96 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     setEditingGroupId(null);
     setActiveGroupId(null);
     setActiveImageId(null);
+    clearSelection();
   };
+
+  const handleSelectionInteraction = useCallback(
+    (groupId: string, groupIndex: number, event: React.MouseEvent): boolean => {
+      const multiSelect = event.metaKey || event.ctrlKey;
+      const rangeSelect = event.shiftKey && lastSelectedGroupIdRef.current !== null;
+      setSelectedGroupIds((previous) => {
+        if (multiSelect) {
+          const next = new Set(previous);
+          if (next.has(groupId)) {
+            next.delete(groupId);
+          } else {
+            next.add(groupId);
+          }
+          return next;
+        }
+        if (rangeSelect) {
+          const anchorId = lastSelectedGroupIdRef.current;
+          const anchorIndex = anchorId ? pageGroups.findIndex((group) => group.id === anchorId) : -1;
+          if (anchorIndex === -1) {
+            return new Set([groupId]);
+          }
+          const start = Math.min(anchorIndex, groupIndex);
+          const end = Math.max(anchorIndex, groupIndex);
+          const next = new Set<string>();
+          for (let idx = start; idx <= end; idx += 1) {
+            const candidate = pageGroups[idx];
+            if (candidate) {
+              next.add(candidate.id);
+            }
+          }
+          return next;
+        }
+        return new Set([groupId]);
+      });
+      if (!rangeSelect) {
+        lastSelectedGroupIdRef.current = groupId;
+      }
+      return !(multiSelect || rangeSelect);
+    },
+    [pageGroups],
+  );
+
+  const handleResizeStart = useCallback(
+    (event: React.MouseEvent, group: TextGroup, currentWidth: number) => {
+      const baseWidth = Math.max(group.bounds.right - group.bounds.left, 1);
+      const maxWidth = Math.max(pageWidth - group.bounds.left, baseWidth);
+      event.stopPropagation();
+      event.preventDefault();
+      const startX = event.clientX;
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const context = resizingRef.current;
+        if (!context) {
+          return;
+        }
+        moveEvent.preventDefault();
+        const deltaPx = moveEvent.clientX - context.startX;
+        const deltaWidth = deltaPx / scale;
+        const nextWidth = Math.min(
+          Math.max(context.startWidth + deltaWidth, context.baseWidth),
+          context.maxWidth,
+        );
+        setWidthOverrides((prev) => {
+          const next = new Map(prev);
+          if (Math.abs(nextWidth - context.baseWidth) <= 0.5) {
+            next.delete(context.groupId);
+          } else {
+            next.set(context.groupId, nextWidth);
+          }
+          return next;
+        });
+      };
+      const handleMouseUp = () => {
+        resizingRef.current = null;
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+      resizingRef.current = {
+        groupId: group.id,
+        startX,
+        startWidth: currentWidth,
+        baseWidth,
+        maxWidth,
+      };
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    },
+    [pageWidth, scale],
+  );
 
   const renderGroupContainer = (
     groupId: string,
@@ -988,6 +1312,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     content: React.ReactNode,
     onActivate?: (event: React.MouseEvent) => void,
     onClick?: (event: React.MouseEvent) => void,
+    isSelected = false,
+    resizeHandle?: React.ReactNode,
   ) => (
     <Box
       component="div"
@@ -998,12 +1324,20 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
         marginTop: '-3px',
         outline: isActive
           ? '2px solid var(--mantine-color-blue-5)'
-          : isChanged
-            ? '1px solid var(--mantine-color-yellow-5)'
-            : 'none',
+          : isSelected
+            ? '1px solid var(--mantine-color-violet-5)'
+            : isChanged
+              ? '1px solid var(--mantine-color-yellow-5)'
+              : 'none',
         outlineOffset: '-1px',
         borderRadius: 6,
-        backgroundColor: isChanged || isActive ? 'rgba(250,255,189,0.28)' : 'transparent',
+        backgroundColor: isActive
+          ? 'rgba(184,212,255,0.35)'
+          : isSelected
+            ? 'rgba(206,190,255,0.32)'
+            : isChanged
+              ? 'rgba(250,255,189,0.28)'
+              : 'transparent',
         transition: 'outline 120ms ease, background-color 120ms ease',
         pointerEvents: 'auto',
         overflow: 'visible',
@@ -1023,6 +1357,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       }}
     >
       {content}
+      {resizeHandle}
       {activeGroupId === groupId && (
         <ActionIcon
           size="xs"
@@ -1033,14 +1368,37 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             position: 'absolute',
             top: -8,
             right: -8,
-            zIndex: 10,
+            zIndex: 9999,
             cursor: 'pointer',
+            pointerEvents: 'auto',
+          }}
+          onMouseDown={(event) => {
+            console.log(`❌ MOUSEDOWN on X button for group ${groupId}`);
+            event.stopPropagation();
+            event.preventDefault();
+
+            // Find the current group to check if it's already empty
+            const currentGroups = groupsByPage[pageIndex] ?? [];
+            const currentGroup = currentGroups.find(g => g.id === groupId);
+            const currentText = (currentGroup?.text ?? '').trim();
+
+            if (currentText.length === 0) {
+              // Already empty - remove the textbox entirely
+              console.log(`   Text already empty, removing textbox`);
+              onGroupDelete(pageIndex, groupId);
+              setActiveGroupId(null);
+              setEditingGroupId(null);
+            } else {
+              // Has text - clear it but keep the textbox
+              console.log(`   Clearing text (textbox remains)`);
+              onGroupEdit(pageIndex, groupId, '');
+            }
+            console.log(`   Operation completed`);
           }}
           onClick={(event) => {
+            console.log(`❌ X button ONCLICK fired for group ${groupId} on page ${pageIndex}`);
             event.stopPropagation();
-            onGroupDelete(pageIndex, groupId);
-            setActiveGroupId(null);
-            setEditingGroupId(null);
+            event.preventDefault();
           }}
         >
           <CloseIcon style={{ fontSize: 12 }} />
@@ -1110,19 +1468,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             </Group>
 
             <Stack gap="xs">
-              <FileButton onChange={onLoadJson} accept="application/pdf,application/json,.pdf,.json">
-                {(props) => (
-                  <Button
-                    variant="light"
-                    leftSection={<UploadIcon fontSize="small" />}
-                    loading={isConverting}
-                    fullWidth
-                    {...props}
-                  >
-                    {t('pdfTextEditor.actions.load', 'Load File')}
-                  </Button>
-                )}
-              </FileButton>
               <Button
                 variant="subtle"
                 leftSection={<AutorenewIcon fontSize="small" />}
@@ -1185,12 +1530,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                   {t('pdfTextEditor.options.groupingMode.title', 'Text Grouping Mode')}
                 </Text>
                 {externalGroupingMode === 'auto' && isParagraphPage && (
-                  <Badge size="xs" color="blue" variant="light">
+                  <Badge size="xs" color="blue" variant="light" key={`para-${selectedPage}`}>
                     {t('pdfTextEditor.pageType.paragraph', 'Paragraph page')}
                   </Badge>
                 )}
                 {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
-                  <Badge size="xs" color="gray" variant="light">
+                  <Badge size="xs" color="gray" variant="light" key={`sparse-${selectedPage}`}>
                     {t('pdfTextEditor.pageType.sparse', 'Sparse text')}
                   </Badge>
                 )}
@@ -1222,6 +1567,13 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                 fullWidth
               />
             </Stack>
+
+            <Text size="xs" c="dimmed">
+              {t(
+                'pdfTextEditor.options.manualGrouping.descriptionInline',
+                'Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths.',
+              )}
+            </Text>
 
             <Group justify="space-between" align="center">
               <div>
@@ -1379,6 +1731,82 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             )}
           </Group>
 
+          <Modal
+            opened={showWelcomeBanner}
+            onClose={handleDismissWelcomeBanner}
+            title={
+              <Group gap="xs">
+                <InfoOutlinedIcon fontSize="small" />
+                <Text fw={600}>{t('pdfTextEditor.welcomeBanner.title', 'Welcome to PDF Text Editor (Early Access)')}</Text>
+              </Group>
+            }
+            centered
+            size="lg"
+          >
+            <ScrollArea style={{ maxHeight: '70vh' }} offsetScrollbars>
+              <Stack gap="sm">
+                <Alert color="orange" variant="light" radius="md">
+                  <Text size="sm" fw={500}>
+                    {t('pdfTextEditor.welcomeBanner.experimental', 'This is an experimental feature in active development. Expect some instability and issues during use.')}
+                  </Text>
+                </Alert>
+                <Text size="sm">
+                  {t('pdfTextEditor.welcomeBanner.howItWorks', 'This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.')}
+                </Text>
+                <Divider />
+                <Text size="sm" fw={500} c="green.7">
+                  {t('pdfTextEditor.welcomeBanner.bestFor', 'Works Best With:')}
+                </Text>
+                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                  <li>{t('pdfTextEditor.welcomeBanner.bestFor1', 'Simple PDFs containing primarily text and images')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.bestFor2', 'Documents with standard paragraph formatting')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.bestFor3', 'Letters, essays, reports, and basic documents')}</li>
+                </Text>
+                <Divider />
+                <Text size="sm" fw={500} c="orange.7">
+                  {t('pdfTextEditor.welcomeBanner.notIdealFor', 'Not Ideal For:')}
+                </Text>
+                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor1', 'PDFs with special formatting like bullet points, tables, or multi-column layouts')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor2', 'Magazines, brochures, or heavily designed documents')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor3', 'Instruction manuals with complex layouts')}</li>
+                </Text>
+                <Divider />
+                <Text size="sm" fw={500}>
+                  {t('pdfTextEditor.welcomeBanner.limitations', 'Current Limitations:')}
+                </Text>
+                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                  <li>{t('pdfTextEditor.welcomeBanner.limitation1', 'Font rendering may differ slightly from the original PDF')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.limitation2', 'Complex graphics, form fields, and annotations are preserved but not editable')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.limitation3', 'Large files may take time to convert and process')}</li>
+                </Text>
+                <Divider />
+                <Text size="sm" fw={500}>
+                  {t('pdfTextEditor.welcomeBanner.knownIssues', 'Known Issues (Being Fixed):')}
+                </Text>
+                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                  <li>{t('pdfTextEditor.welcomeBanner.issue1', 'Text colour is not currently preserved (will be added soon)')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.issue2', 'Paragraph mode has more alignment and spacing issues - Single Line mode recommended')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.issue3', 'The preview display differs from the exported PDF - exported PDFs are closer to the original')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.issue4', 'Rotated text alignment may need manual adjustment')}</li>
+                  <li>{t('pdfTextEditor.welcomeBanner.issue5', 'Transparency and layering effects may vary from original')}</li>
+                </Text>
+                <Divider />
+                <Text size="xs" c="dimmed">
+                  {t('pdfTextEditor.welcomeBanner.feedback', 'This is an early access feature. Please report any issues you encounter to help us improve!')}
+                </Text>
+                <Group justify="flex-end" gap="sm" mt="md">
+                  <Button variant="default" onClick={handleDismissWelcomeBanner}>
+                    {t('pdfTextEditor.welcomeBanner.gotIt', 'Got it')}
+                  </Button>
+                  <Button onClick={handleDontShowAgain}>
+                    {t('pdfTextEditor.welcomeBanner.dontShowAgain', "Don't show again")}
+                  </Button>
+                </Group>
+              </Stack>
+            </ScrollArea>
+          </Modal>
+
           <Card
             withBorder
             padding="md"
@@ -1414,7 +1842,18 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                       borderRadius: '0.5rem',
                       overflow: 'hidden',
                     }}
-                    ref={containerRef}
+                    ref={(node) => {
+                      containerRef.current = node;
+                      if (node) {
+                        console.log(`🖼️ [PdfTextEditor] Canvas Rendered:`, {
+                          renderedWidth: node.offsetWidth,
+                          renderedHeight: node.offsetHeight,
+                          styleWidth: scaledWidth,
+                          styleHeight: scaledHeight,
+                          pageNumber: selectedPage + 1,
+                        });
+                      }
+                    }}
                   >
                     {pagePreview && (
                       <img
@@ -1431,6 +1870,83 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           zIndex: 0,
                         }}
                       />
+                    )}
+                    {selectionToolbarPosition && (
+                      <Group
+                        gap={6}
+                        style={{
+                          position: 'absolute',
+                          left: `${selectionToolbarPosition.left}px`,
+                          top: `${selectionToolbarPosition.top}px`,
+                          zIndex: 3_000_000,
+                          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                          borderRadius: 999,
+                          padding: '4px 8px',
+                          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.45)',
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
+                {canMergeSelection && (
+                  <Tooltip label={t('pdfTextEditor.manual.mergeTooltip', 'Merge selected boxes')}>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.merge', 'Merge selection')}
+                      onClick={handleMergeSelection}
+                    >
+                      <MergeTypeIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                {canUngroupSelection && (
+                  <Tooltip label={t('pdfTextEditor.manual.ungroupTooltip', 'Split paragraph back into lines')}>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.ungroup', 'Ungroup selection')}
+                      onClick={handleUngroupSelection}
+                    >
+                      <CallSplitIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                <Menu withinPortal position="bottom-end" shadow="md" disabled={!hasSelection && !hasWidthOverrides}>
+                  <Menu.Target>
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="blue"
+                      aria-label={t('pdfTextEditor.manual.widthMenu', 'Width options')}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                            <Menu.Item
+                              disabled={!hasSelection}
+                              onClick={() => handleWidthAdjustment('expand')}
+                            >
+                              {t('pdfTextEditor.manual.expandWidth', 'Expand to page edge')}
+                            </Menu.Item>
+                            <Menu.Item
+                              disabled={!hasWidthOverrides}
+                              onClick={() => handleWidthAdjustment('reset')}
+                            >
+                              {t('pdfTextEditor.manual.resetWidth', 'Reset width')}
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Group>
                     )}
                     {orderedImages.map((image, imageIndex) => {
                     if (!image?.imageData) {
@@ -1599,7 +2115,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
 
                       let containerLeft = bounds.left;
                       let containerTop = bounds.top;
-                      let containerWidth = Math.max(bounds.width, fontSizePx);
+                      const { width: resolvedWidth, base: baseWidth, max: maxWidth } = resolveGroupWidth(group);
+                      let containerWidth = Math.max(resolvedWidth * scale, fontSizePx);
                       let containerHeight = Math.max(bounds.height, paragraphHeightPx);
                       let transform: string | undefined;
                       let transformOrigin: React.CSSProperties['transformOrigin'];
@@ -1636,13 +2153,30 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                       const textColor = group.color || '#111827';
                       const fontWeight = group.fontWeight || getFontWeight(effectiveFontId, group.pageIndex);
 
+                      // Determine text wrapping behavior based on whether text has been changed
+                      const hasChanges = changed;
+                      const widthExtended = resolvedWidth - baseWidth > 0.5;
+                      const enableWrap = isParagraphLayout || widthExtended || isEditing || hasChanges;
+                      const whiteSpace = enableWrap ? 'pre-wrap' : 'pre';
+                      const wordBreak = enableWrap ? 'break-word' : 'normal';
+                      const overflowWrap = enableWrap ? 'break-word' : 'normal';
+
+                      // For paragraph mode, allow height to grow to accommodate lines without wrapping
+                      // For single-line mode, maintain fixed height based on PDF bounds
+                      const useFlexibleHeight = isEditing || enableWrap || (isParagraphLayout && lineCount > 1);
+
+                      // The renderGroupContainer wrapper adds 4px horizontal padding (2px left + 2px right)
+                      // We need to add this to the container width to compensate, so the inner content
+                      // has the full PDF-defined width available for text
+                      const WRAPPER_HORIZONTAL_PADDING = 4;
+
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
                         left: `${containerLeft}px`,
                         top: `${containerTop}px`,
-                        width: `${containerWidth}px`,
-                        height: isEditing ? 'auto' : `${containerHeight}px`,
-                        minHeight: `${containerHeight}px`,
+                        width: `${containerWidth + WRAPPER_HORIZONTAL_PADDING}px`,
+                        height: useFlexibleHeight ? 'auto' : `${containerHeight}px`,
+                        minHeight: useFlexibleHeight ? 'auto' : `${containerHeight}px`,
                         display: 'flex',
                         alignItems: 'flex-start',
                         justifyContent: 'flex-start',
@@ -1652,6 +2186,35 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                         transform,
                         transformOrigin,
                       };
+
+                      const showResizeHandle = !hasRotation && (selectedGroupIds.has(group.id) || activeGroupId === group.id);
+                      const resizeHandle = showResizeHandle ? (
+                        <Box
+                          role="button"
+                          aria-label={t('pdfTextEditor.manual.resizeHandle', 'Adjust text width')}
+                          onMouseDown={(event) => handleResizeStart(event, group, resolvedWidth)}
+                          style={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: -6,
+                            width: 12,
+                            height: 32,
+                            marginTop: -16,
+                            cursor: 'ew-resize',
+                            borderRadius: 6,
+                            backgroundColor: 'rgba(76, 110, 245, 0.35)',
+                            border: '1px solid rgba(76, 110, 245, 0.8)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: 9,
+                            userSelect: 'none',
+                          }}
+                        >
+                          ||
+                        </Box>
+                      ) : null;
 
                       if (isEditing) {
                         return (
@@ -1708,8 +2271,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                   width: '100%',
                                   minHeight: '100%',
                                   height: 'auto',
-                                  padding: 0,
-                                  backgroundColor: 'rgba(255,255,255,0.95)',
+                                  padding: '2px',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
                                   color: textColor,
                                   fontSize: `${fontSizePx}px`,
                                   fontFamily,
@@ -1718,15 +2281,19 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                   outline: 'none',
                                   border: 'none',
                                   display: 'block',
-                                  whiteSpace: paragraphWhiteSpace,
-                                  wordBreak: paragraphWordBreak,
-                                  overflowWrap: paragraphOverflowWrap,
+                                  whiteSpace,
+                                  wordBreak,
+                                  overflowWrap,
                                   cursor: 'text',
                                   overflow: 'visible',
                                 }}
                               >
                                 {group.text || '\u00A0'}
                               </div>,
+                              undefined,
+                              undefined,
+                              selectedGroupIds.has(group.id),
+                              resizeHandle,
                             )}
                           </Box>
                         );
@@ -1747,10 +2314,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               style={{
                                 width: '100%',
                                 minHeight: '100%',
-                                padding: 0,
-                                whiteSpace: paragraphWhiteSpace,
-                                wordBreak: paragraphWordBreak,
-                                overflowWrap: paragraphOverflowWrap,
+                                padding: '2px',
+                                whiteSpace,
+                                wordBreak,
+                                overflowWrap,
                                 fontSize: `${fontSizePx}px`,
                                 fontFamily,
                                 fontWeight,
@@ -1758,17 +2325,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 color: textColor,
                                 display: 'block',
                                 cursor: 'text',
-                                overflow: 'hidden',
+                                overflow: enableWrap ? 'visible' : 'hidden',
                               }}
                             >
                               <span
                                 data-text-content
                                 style={{
                                   pointerEvents: 'none',
-                                  display: 'inline-block',
+                                  display: enableWrap ? 'inline' : 'inline-block',
                                   transform: shouldScale ? `scaleX(${textScale})` : 'none',
                                   transformOrigin: 'left center',
-                                  whiteSpace: paragraphWhiteSpace,
+                                  whiteSpace,
                                 }}
                               >
                                 {group.text || '\u00A0'}
@@ -1776,12 +2343,35 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                             </div>,
                             undefined,
                             (event: React.MouseEvent) => {
+                              const shouldActivate = handleSelectionInteraction(group.id, pageGroupIndex, event);
+                              if (!shouldActivate) {
+                                setActiveGroupId(null);
+                                setEditingGroupId(null);
+                                return;
+                              }
+
                               const clickX = event.clientX;
                               const clickY = event.clientY;
 
                               setActiveGroupId(group.id);
                               setEditingGroupId(group.id);
                               caretOffsetsRef.current.delete(group.id);
+
+                              // Log group stats when selected
+                              const lines = (group.text ?? '').split('\n');
+                              const words = (group.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
+                              const chars = (group.text ?? '').length;
+                              const width = group.bounds.right - group.bounds.left;
+                              const height = group.bounds.bottom - group.bounds.top;
+                              const isMultiLine = lines.length > 1;
+                              console.log(`📝 Selected Text Group "${group.id}":`);
+                              console.log(`   Lines: ${lines.length}, Words: ${words}, Chars: ${chars}`);
+                              console.log(`   Dimensions: ${width.toFixed(1)}pt × ${height.toFixed(1)}pt`);
+                              console.log(`   Type: ${isMultiLine ? 'MULTI-LINE (paragraph)' : 'SINGLE-LINE'}`);
+                              console.log(`   Text preview: "${(group.text ?? '').substring(0, 80)}${(group.text ?? '').length > 80 ? '...' : ''}"`);
+                              if (isMultiLine) {
+                                console.log(`   Line spacing: ${group.lineSpacing?.toFixed(1) ?? 'unknown'}pt`);
+                              }
 
                               requestAnimationFrame(() => {
                                 const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
@@ -1814,6 +2404,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 }, 10);
                               });
                             },
+                            selectedGroupIds.has(group.id),
+                            resizeHandle,
                           )}
                         </Box>
                       );
@@ -1852,6 +2444,11 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           </Group>
         </Stack>
       </Modal>
+
+      {/* Navigation Warning Modal */}
+      <NavigationWarningModal
+        onApplyAndContinue={onGeneratePdfForNavigation}
+      />
     </Stack>
   );
 };

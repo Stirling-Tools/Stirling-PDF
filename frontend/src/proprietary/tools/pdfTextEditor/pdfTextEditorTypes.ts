@@ -168,6 +168,7 @@ export interface TextGroup {
   text: string;
   originalText: string;
   bounds: BoundingBox;
+  childLineGroups?: TextGroup[] | null;
 }
 
 export const DEFAULT_PAGE_WIDTH = 612;
@@ -199,7 +200,6 @@ export interface PdfTextEditorViewData {
   forceSingleTextElement: boolean;
   groupingMode: 'auto' | 'paragraph' | 'singleLine';
   requestPagePreview: (pageIndex: number, scale: number) => void;
-  onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
   onGroupDelete: (pageIndex: number, groupId: string) => void;
@@ -218,6 +218,9 @@ export interface PdfTextEditorViewData {
   onReset: () => void;
   onDownloadJson: () => void;
   onGeneratePdf: () => void;
+  onGeneratePdfForNavigation: () => Promise<void>;
   onForceSingleTextElementChange: (value: boolean) => void;
   onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
+  onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;
+  onUngroupGroup: (pageIndex: number, groupId: string) => boolean;
 }
