@@ -11,6 +11,7 @@ interface AuditFiltersFormProps {
   users: string[];
   onFilterChange: (key: keyof AuditFilters, value: any) => void;
   onClearFilters: () => void;
+  disabled?: boolean;
 }
 
 /**
@@ -22,6 +23,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
   users,
   onFilterChange,
   onClearFilters,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
@@ -33,6 +35,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         value={filters.eventType}
         onChange={(value) => onFilterChange('eventType', value || undefined)}
         clearable
+        disabled={disabled}
         style={{ flex: 1, minWidth: 200 }}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
       />
@@ -43,6 +46,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         onChange={(value) => onFilterChange('username', value || undefined)}
         clearable
         searchable
+        disabled={disabled}
         style={{ flex: 1, minWidth: 200 }}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
       />
@@ -53,6 +57,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           onFilterChange('startDate', value ?? undefined)
         }
         clearable
+        disabled={disabled}
         style={{ flex: 1, minWidth: 150 }}
         popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
       />
@@ -63,10 +68,11 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           onFilterChange('endDate', value ?? undefined)
         }
         clearable
+        disabled={disabled}
         style={{ flex: 1, minWidth: 150 }}
         popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
       />
-      <Button variant="outline" onClick={onClearFilters}>
+      <Button variant="outline" onClick={onClearFilters} disabled={disabled}>
         {t('audit.events.clearFilters', 'Clear')}
       </Button>
     </Group>

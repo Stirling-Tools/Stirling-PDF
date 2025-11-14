@@ -17,18 +17,11 @@ on:
     branches: [main, V2]
     paths:
       - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
+      - 'frontend/src/desktop/**'
+      - 'frontend/tsconfig.desktop.json'
       - '.github/workflows/tauri-build.yml'
   push:
     branches: [main, V2]
-    paths:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
-      - '.github/workflows/tauri-build.yml'
 
 permissions:
   contents: read
