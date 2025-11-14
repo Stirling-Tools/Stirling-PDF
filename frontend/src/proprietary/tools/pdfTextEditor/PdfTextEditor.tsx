@@ -207,6 +207,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
+  const { registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = navigationActions;
 
   const [loadedDocument, setLoadedDocument] = useState<PdfJsonDocument | null>(null);
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
@@ -959,7 +960,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
   }, [buildPayload, onComplete]);
 
-  const handleGeneratePdf = useCallback(async () => {
+  const handleGeneratePdf = useCallback(async (skipComplete = false) => {
     try {
       setIsGeneratingPdf(true);
 
@@ -1053,7 +1054,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
           downloadBlob(response.data, downloadName);
 
-          if (onComplete) {
+          if (onComplete && !skipComplete) {
             const pdfFile = new File([response.data], downloadName, { type: 'application/pdf' });
             onComplete([pdfFile]);
           }
@@ -1094,7 +1095,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
       downloadBlob(response.data, downloadName);
 
-      if (onComplete) {
+      if (onComplete && !skipComplete) {
         const pdfFile = new File([response.data], downloadName, { type: 'application/pdf' });
         onComplete([pdfFile]);
       }
@@ -1273,6 +1274,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     onReset: handleResetEdits,
     onDownloadJson: handleDownloadJson,
     onGeneratePdf: handleGeneratePdf,
+    onGeneratePdfForNavigation: async () => {
+      // Generate PDF without triggering tool completion
+      await handleGeneratePdf(true);
+    },
     onForceSingleTextElementChange: setForceSingleTextElement,
     onGroupingModeChange: setGroupingMode,
     onMergeGroups: handleMergeGroups,
@@ -1370,14 +1375,30 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     unregisterCustomWorkbenchView,
   ]);
 
+  // Note: Compare tool doesn't auto-force workbench, and neither should we
+  // The workbench should be set when the tool is selected via proper channels
+  // (tool registry, tool picker, etc.) - not forced here
+
+  // Keep hasChanges in a ref for the checker to access
+  const hasChangesRef = useRef(hasChanges);
   useEffect(() => {
-    if (
-      navigationState.selectedTool === 'pdfTextEditor' &&
-      navigationState.workbench !== WORKBENCH_ID
-    ) {
-      navigationActions.setWorkbench(WORKBENCH_ID);
-    }
-  }, [navigationActions, navigationState.selectedTool, navigationState.workbench]);
+    hasChangesRef.current = hasChanges;
+    console.log('[PdfTextEditor] hasChanges updated to:', hasChanges);
+  }, [hasChanges]);
+
+  // Register unsaved changes checker for navigation guard
+  useEffect(() => {
+    const checker = () => {
+      console.log('[PdfTextEditor] Checking unsaved changes:', hasChangesRef.current);
+      return hasChangesRef.current;
+    };
+    registerUnsavedChangesChecker(checker);
+    console.log('[PdfTextEditor] Registered unsaved changes checker');
+    return () => {
+      console.log('[PdfTextEditor] Unregistered unsaved changes checker');
+      unregisterUnsavedChangesChecker();
+    };
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   const lastSentViewDataRef = useRef<PdfTextEditorViewData | null>(null);
 

@@ -218,6 +218,7 @@ export interface PdfTextEditorViewData {
   onReset: () => void;
   onDownloadJson: () => void;
   onGeneratePdf: () => void;
+  onGeneratePdfForNavigation: () => Promise<void>;
   onForceSingleTextElementChange: (value: boolean) => void;
   onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
   onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;

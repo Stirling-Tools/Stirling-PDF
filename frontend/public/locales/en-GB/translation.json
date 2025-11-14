@@ -4533,6 +4533,32 @@
       "cancel": "Cancel",
       "confirm": "Reset and Change Mode"
     },
+    "welcomeBanner": {
+      "title": "Welcome to PDF Text Editor (Early Access)",
+      "experimental": "This is an experimental feature in active development. Expect some instability and issues during use.",
+      "howItWorks": "This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.",
+      "bestFor": "Works Best With:",
+      "bestFor1": "Simple PDFs containing primarily text and images",
+      "bestFor2": "Documents with standard paragraph formatting",
+      "bestFor3": "Letters, essays, reports, and basic documents",
+      "notIdealFor": "Not Ideal For:",
+      "notIdealFor1": "PDFs with special formatting like bullet points, tables, or multi-column layouts",
+      "notIdealFor2": "Magazines, brochures, or heavily designed documents",
+      "notIdealFor3": "Instruction manuals with complex layouts",
+      "limitations": "Current Limitations:",
+      "limitation1": "Font rendering may differ slightly from the original PDF",
+      "limitation2": "Complex graphics, form fields, and annotations are preserved but not editable",
+      "limitation3": "Large files may take time to convert and process",
+      "knownIssues": "Known Issues (Being Fixed):",
+      "issue1": "Text colour is not currently preserved (will be added soon)",
+      "issue2": "Paragraph mode has more alignment and spacing issues - Single Line mode recommended",
+      "issue3": "The preview display differs from the exported PDF - exported PDFs are closer to the original",
+      "issue4": "Rotated text alignment may need manual adjustment",
+      "issue5": "Transparency and layering effects may vary from original",
+      "feedback": "This is an early access feature. Please report any issues you encounter to help us improve!",
+      "gotIt": "Got it",
+      "dontShowAgain": "Don't show again"
+    },
     "disclaimer": {
       "heading": "Preview limitations",
       "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
@@ -4579,6 +4605,21 @@
       "standard14": "Standard PDF Font",
       "warnings": "Warnings",
       "suggestions": "Notes"
+    },
+    "manual": {
+      "mergeTooltip": "Merge selected boxes into a single paragraph",
+      "merge": "Merge selection",
+      "ungroupTooltip": "Split paragraph back into separate lines",
+      "ungroup": "Ungroup selection",
+      "widthMenu": "Width options",
+      "expandWidth": "Expand to page edge",
+      "resetWidth": "Reset width",
+      "resizeHandle": "Adjust text width"
+    },
+    "options": {
+      "manualGrouping": {
+        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
+      }
     }
   },
   "workspace": {
