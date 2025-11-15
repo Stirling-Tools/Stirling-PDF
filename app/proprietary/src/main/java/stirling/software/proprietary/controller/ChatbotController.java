@@ -45,21 +45,7 @@ public class ChatbotController {
             @RequestBody ChatbotSessionCreateRequest request) {
         ChatbotSession session = chatbotService.createSession(request);
         ChatbotSettings settings = featureProperties.current();
-        ChatbotSessionResponse response =
-                ChatbotSessionResponse.builder()
-                        .sessionId(session.getSessionId())
-                        .documentId(session.getDocumentId())
-                        .alphaWarning(settings.alphaWarning())
-                        .ocrRequested(session.isOcrRequested())
-                        .imageContentDetected(session.isImageContentDetected())
-                        .textCharacters(session.getTextCharacters())
-                        .estimatedTokens(session.getEstimatedTokens())
-                        .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
-                        .createdAt(session.getCreatedAt())
-                        .warnings(sessionWarnings(settings, session))
-                        .metadata(session.getMetadata())
-                        .usageSummary(session.getUsageSummary())
-                        .build();
+        ChatbotSessionResponse response = toResponse(session, settings);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -76,22 +62,19 @@ public class ChatbotController {
                 sessionRegistry
                         .findById(sessionId)
                         .orElseThrow(() -> new ChatbotException("Session not found"));
-        ChatbotSessionResponse response =
-                ChatbotSessionResponse.builder()
-                        .sessionId(session.getSessionId())
-                        .documentId(session.getDocumentId())
-                        .alphaWarning(settings.alphaWarning())
-                        .ocrRequested(session.isOcrRequested())
-                        .imageContentDetected(session.isImageContentDetected())
-                        .textCharacters(session.getTextCharacters())
-                        .estimatedTokens(session.getEstimatedTokens())
-                        .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
-                        .createdAt(session.getCreatedAt())
-                        .warnings(sessionWarnings(settings, session))
-                        .metadata(session.getMetadata())
-                        .usageSummary(session.getUsageSummary())
-                        .build();
+        ChatbotSessionResponse response = toResponse(session, settings);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/document/{documentId}")
+    public ResponseEntity<ChatbotSessionResponse> getSessionByDocument(
+            @PathVariable String documentId) {
+        ChatbotSettings settings = featureProperties.current();
+        ChatbotSession session =
+                sessionRegistry
+                        .findByDocumentId(documentId)
+                        .orElseThrow(() -> new ChatbotException("Session not found"));
+        return ResponseEntity.ok(toResponse(session, settings));
     }
 
     @DeleteMapping("/session/{sessionId}")
@@ -122,5 +105,22 @@ public class ChatbotController {
         }
 
         return warnings;
+    }
+
+    private ChatbotSessionResponse toResponse(ChatbotSession session, ChatbotSettings settings) {
+        return ChatbotSessionResponse.builder()
+                .sessionId(session.getSessionId())
+                .documentId(session.getDocumentId())
+                .alphaWarning(settings.alphaWarning())
+                .ocrRequested(session.isOcrRequested())
+                .imageContentDetected(session.isImageContentDetected())
+                .textCharacters(session.getTextCharacters())
+                .estimatedTokens(session.getEstimatedTokens())
+                .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
+                .createdAt(session.getCreatedAt())
+                .warnings(sessionWarnings(settings, session))
+                .metadata(session.getMetadata())
+                .usageSummary(session.getUsageSummary())
+                .build();
     }
 }
