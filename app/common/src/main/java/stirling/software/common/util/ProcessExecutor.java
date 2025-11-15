@@ -26,6 +26,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
+    private static final String ERROR_KEYWORD = "ERROR";
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
@@ -207,7 +208,7 @@ public class ProcessExecutor {
                                             != null) {
                                         errorLines.add(line);
                                         if (liveUpdates) {
-                                            if (line.toUpperCase().contains("ERROR")) {
+                                            if (line.toUpperCase().contains(ERROR_KEYWORD)) {
                                                 errorDetected.set(true);
                                             }
                                             if (errorDetected.get()) {
@@ -239,7 +240,7 @@ public class ProcessExecutor {
                                             != null) {
                                         outputLines.add(line);
                                         if (liveUpdates) {
-                                            if (line.toUpperCase().contains("ERROR")) {
+                                            if (line.toUpperCase().contains(ERROR_KEYWORD)) {
                                                 errorDetected.set(true);
                                             }
                                             if (errorDetected.get()) {
