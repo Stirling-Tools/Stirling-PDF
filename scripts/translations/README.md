@@ -2,6 +2,43 @@
 
 This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-GB golden truth file.
 
+## Quick Start - Automated Translation (RECOMMENDED)
+
+The **fastest and easiest way** to translate a language is using the automated pipeline:
+
+```bash
+# Set your OpenAI API key
+export OPENAI_API_KEY=your_openai_api_key_here
+
+# Translate a language automatically (extract → translate → merge → beautify → verify)
+python3 scripts/translations/auto_translate.py es-ES
+
+# With custom batch size (default: 500 entries per batch)
+python3 scripts/translations/auto_translate.py es-ES --batch-size 600
+
+# Keep temporary files for inspection
+python3 scripts/translations/auto_translate.py es-ES --no-cleanup
+```
+
+**What it does:**
+1. Extracts untranslated entries from the language file
+2. Splits into batches (default 500 entries each)
+3. Translates each batch using GPT-5 with specialized prompts
+4. Validates placeholders are preserved
+5. Merges translated batches
+6. Applies translations to language file
+7. Beautifies structure to match en-GB
+8. Cleans up temporary files
+9. Reports final completion percentage
+
+**Time:** ~8-10 minutes per language with 1200+ untranslated entries
+
+**Cost:** ~$2-4 per language using GPT-5 (or use `gpt-5-mini` for lower cost)
+
+See [`auto_translate.py`](#auto_translatepy-automated-translation-pipeline) for full details.
+
+---
+
 ## Scripts Overview
 
 ### 0. Validation Scripts (Run First!)
@@ -191,7 +228,97 @@ python scripts/translations/compact_translator.py it-IT --output to_translate.js
 - Batch size control for manageable chunks
 - 50-80% fewer characters than other extraction methods
 
-### 5. `json_beautifier.py`
+### 5. `auto_translate.py` - Automated Translation Pipeline
+
+**NEW: Fully automated translation workflow using GPT-5.**
+
+Combines all translation steps into a single command that handles everything from extraction to verification.
+
+**Usage:**
+```bash
+# Basic usage (requires OPENAI_API_KEY environment variable)
+export OPENAI_API_KEY=your_api_key
+python3 scripts/translations/auto_translate.py es-ES
+
+# With inline API key
+python3 scripts/translations/auto_translate.py es-ES --api-key YOUR_KEY
+
+# Custom batch size (default: 500 entries)
+python3 scripts/translations/auto_translate.py es-ES --batch-size 600
+
+# Custom timeout per batch (default: 600 seconds / 10 minutes)
+python3 scripts/translations/auto_translate.py es-ES --timeout 900
+
+# Keep temporary files for debugging
+python3 scripts/translations/auto_translate.py es-ES --no-cleanup
+
+# Skip final verification
+python3 scripts/translations/auto_translate.py es-ES --skip-verification
+```
+
+**Features:**
+- Fully automated end-to-end translation pipeline
+- Uses GPT-5 with specialized prompts for Stirling PDF
+- Preserves all placeholders ({n}, {{variable}}, etc.)
+- Maintains consistent terminology
+- Validates translations automatically
+- Creates backups before modifying files
+- Reports detailed progress and final completion %
+
+**Pipeline Steps:**
+1. **Extract**: Finds all untranslated entries
+2. **Split**: Divides into manageable batches (default: 500 entries)
+3. **Translate**: Uses GPT-5 to translate each batch with specialized prompts
+4. **Validate**: Ensures placeholders are preserved
+5. **Merge**: Combines all translated batches
+6. **Apply**: Updates the language file
+7. **Beautify**: Restructures to match en-GB format
+8. **Cleanup**: Removes temporary files
+9. **Verify**: Reports final completion percentage
+
+**Translation Quality:**
+- Preserves ALL placeholders exactly as-is
+- Keeps HTML tags intact (<strong>, <br>, etc.)
+- Doesn't translate technical terms (PDF, API, OAuth2, etc.)
+- Maintains consistent terminology throughout
+- Uses appropriate formal/informal tone per language
+
+**Supported Languages:**
+All language codes from `frontend/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
+
+### 6. `batch_translator.py` - GPT-5 Translation Engine
+
+Low-level translation script used by `auto_translate.py`. Can be used standalone for manual batch translation.
+
+**Usage:**
+```bash
+# Translate single batch file
+python3 scripts/translations/batch_translator.py my_batch.json --language es-ES --api-key YOUR_KEY
+
+# Translate multiple batches
+python3 scripts/translations/batch_translator.py batch_*.json --language de-DE --api-key YOUR_KEY
+
+# Use different GPT model
+python3 scripts/translations/batch_translator.py batch.json --language fr-FR --model gpt-5-mini
+
+# Skip validation
+python3 scripts/translations/batch_translator.py batch.json --language it-IT --skip-validation
+```
+
+**Features:**
+- Translates JSON batch files using OpenAI GPT-5
+- Specialized system prompts for Stirling PDF translations
+- Automatic placeholder validation
+- Supports pattern matching for multiple files
+- Configurable model selection (gpt-5, gpt-5-mini, gpt-5-nano)
+- Rate limiting with configurable delays
+
+**Models:**
+- `gpt-5` (default): Best quality, $1.25/1M input, $10/1M output
+- `gpt-5-mini`: Balanced quality/cost
+- `gpt-5-nano`: Fastest, most economical
+
+### 7. `json_beautifier.py`
 Restructures and beautifies translation JSON files to match en-GB structure exactly.
 
 **Usage:**

@@ -1,43 +1,50 @@
 {
   "toolPanel": {
     "modePrompt": {
-      "title": "Choose how you browse tools",
-      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
-      "sidebarTitle": "Sidebar mode",
-      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
-      "recommended": "Recommended",
-      "chooseSidebar": "Use sidebar mode",
-      "fullscreenTitle": "Fullscreen mode - (legacy)",
-      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
-      "chooseFullscreen": "Use fullscreen mode",
-      "dismiss": "Maybe later"
+      "title": "选择浏览工具的方式",
+      "description": "预览两种布局并决定如何探索 Stirling PDF 工具。",
+      "sidebarTitle": "侧边栏模式",
+      "sidebarDescription": "将工具与您的工作区并列，便于快速切换。",
+      "recommended": "推荐",
+      "chooseSidebar": "使用侧边栏模式",
+      "fullscreenTitle": "全屏模式 -（旧版）",
+      "fullscreenDescription": "在覆盖工作区的目录中浏览每个工具，直到您选定一个。",
+      "chooseFullscreen": "使用全屏模式",
+      "dismiss": "稍后再说"
     },
     "fullscreen": {
-      "showDetails": "Show Details",
-      "comingSoon": "Coming soon:",
-      "favorite": "Add to favourites",
-      "favorites": "Favourites",
-      "heading": "All tools (fullscreen view)",
-      "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
-      "recommended": "Recommended",
-      "unfavorite": "Remove from favourites"
+      "showDetails": "显示详情",
+      "comingSoon": "即将推出：",
+      "favorite": "添加到收藏",
+      "favorites": "收藏",
+      "heading": "所有工具（全屏视图）",
+      "noResults": "尝试调整搜索或切换描述显示以找到所需内容。",
+      "recommended": "推荐",
+      "unfavorite": "从收藏中移除"
     },
-    "placeholder": "Choose a tool to get started",
+    "placeholder": "选择一个工具以开始",
     "toggle": {
-      "fullscreen": "Switch to fullscreen mode",
-      "sidebar": "Switch to sidebar mode"
+      "fullscreen": "切换到全屏模式",
+      "sidebar": "切换到侧边栏模式"
     }
   },
   "unsavedChanges": "您的 PDF 有未保存的更改。您想做什么?",
-  "areYouSure": "Are you sure you want to leave?",
+  "areYouSure": "确定要离开吗？",
   "unsavedChangesTitle": "未保存的更改",
   "keepWorking": "继续工作",
   "discardChanges": "放弃更改",
   "applyAndContinue": "应用并继续",
   "exportAndContinue": "导出并继续",
+  "zipWarning": {
+    "title": "大型 ZIP 文件",
+    "message": "此 ZIP 包含 {{count}} 个文件。仍要解压？",
+    "cancel": "取消",
+    "confirm": "解压"
+  },
   "language": {
     "direction": "ltr"
   },
+  "cancel": "取消",
   "addPageNumbers": {
     "fontSize": "字体大小",
     "fontName": "字体名称",
@@ -55,25 +62,25 @@
     "numberPagesDesc": "要添加页码的页数，默认为“所有”，也可以接受1-5或2,5,9等",
     "customNumberDesc": "默认为 {n}，也可以接受“第 {n} 页/共 {total} 页”，“文本-{n}”，“{filename}-{n}”",
     "submit": "添加页码",
-    "configuration": "Configuration",
-    "customize": "Customize Appearance",
-    "pagesAndStarting": "Pages & Starting Number",
-    "positionAndPages": "Position & Pages",
+    "configuration": "配置",
+    "customize": "自定义外观",
+    "pagesAndStarting": "页面与起始编号",
+    "positionAndPages": "位置与页面",
     "error": {
-      "failed": "Add page numbers operation failed"
+      "failed": "添加页码操作失败"
     },
     "results": {
-      "title": "Page Number Results"
+      "title": "页码结果"
     },
-    "preview": "Position Selection",
-    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
+    "preview": "位置选择",
+    "previewDisclaimer": "预览为近似效果。最终输出可能因 PDF 字体度量而有所不同。"
   },
   "pageSelectionPrompt": "自定义页面选择（输入以逗号分隔的页码列表或函数：1,5,6、2n+1）：",
-  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
-  "marginTooltip": "Distance between the page number and the edge of the page.",
-  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
-  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
-  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
+  "startingNumberTooltip": "要显示的第一个数字。后续页面将从此数字递增。",
+  "marginTooltip": "页码与页面边缘的距离。",
+  "fontSizeTooltip": "页码文本的点数大小。数值越大文字越大。",
+  "fontTypeTooltip": "页码的字体族。根据文档风格选择。",
+  "customTextTooltip": "可选的自定义页码格式。使用 {n} 作为数字占位符。例如：“第 {n} 页”将显示“第 1 页”“第 2 页”等。",
   "pdfPrompt": "选择 PDF",
   "multiPdfPrompt": "选择多个 PDF（2个或更多）",
   "multiPdfDropPrompt": "选择（或拖拽）所需的 PDF",
@@ -94,18 +101,20 @@
   "save": "保存",
   "saveToBrowser": "保存到浏览器",
   "download": "下载",
-  "pin": "Pin File (keep active after tool run)",
-  "unpin": "Unpin File (replace after tool run)",
+  "pin": "固定文件（在工具运行后保持激活）",
+  "unpin": "取消固定文件（在工具运行后替换）",
   "undoOperationTooltip": "点击撤销上一次操作并还原原始文件",
   "undo": "撤销",
+  "back": "返回",
+  "nothingToUndo": "没有可撤销的操作",
   "moreOptions": "更多选项",
   "editYourNewFiles": "编辑您的新文件",
   "close": "关闭",
-  "openInViewer": "Open in Viewer",
-  "confirmClose": "Confirm Close",
-  "confirmCloseMessage": "Are you sure you want to close this file?",
-  "confirmCloseCancel": "Cancel",
-  "confirmCloseConfirm": "Close File",
+  "openInViewer": "在查看器中打开",
+  "confirmClose": "确认关闭",
+  "confirmCloseMessage": "确定要关闭此文件吗？",
+  "confirmCloseCancel": "取消",
+  "confirmCloseConfirm": "关闭文件",
   "fileSelected": "已选：{{filename}}",
   "chooseFile": "选择文件",
   "filesSelected": "选中的文件",
@@ -116,8 +125,8 @@
     "addFiles": "添加文件",
     "selectFromWorkbench": "从工作台中选择文件或 ",
     "selectMultipleFromWorkbench": "从工作台中至少选择 {{count}} 个文件或 ",
-    "created": "Created",
-    "size": "File Size"
+    "created": "创建时间",
+    "size": "文件大小"
   },
   "noFavourites": "没有添加收藏夹",
   "downloadComplete": "下载完成",
@@ -250,7 +259,7 @@
     "title": "你想协助改善Stirling PDF吗",
     "paragraph1": "Stirling PDF有选择性分析功能，可以帮助我们改进产品。我们不跟踪任何个人信息或文件内容。",
     "paragraph2": "请考虑启用分析来帮助Stirling-PDF的发展，并让我们更好地了解我们的用户。",
-    "learnMore": "Learn more",
+    "learnMore": "了解详情",
     "enable": "启用分析功能",
     "disable": "禁用分析功能",
     "settings": "您可以在 config/settings.yml 文件中变更分析功能的设定"
@@ -296,52 +305,52 @@
       "help": "保存先前输入以供日后使用"
     },
     "general": {
-      "title": "General",
-      "description": "Configure general application preferences.",
-      "account": "Account",
-      "accountDescription": "Manage your account settings",
-      "user": "User",
-      "signedInAs": "Signed in as",
-      "logout": "Log out",
+      "title": "通用",
+      "description": "配置通用应用偏好。",
+      "account": "账户",
+      "accountDescription": "管理您的账户设置",
+      "user": "用户",
+      "signedInAs": "登录身份",
+      "logout": "退出登录",
       "enableFeatures": {
-        "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organization.",
-        "action": "Configure",
-        "and": "and",
-        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation",
-        "dismiss": "Dismiss"
+        "title": "面向系统管理员",
+        "intro": "为您的组织启用用户认证、团队管理和工作区功能。",
+        "action": "配置",
+        "and": "和",
+        "benefit": "启用用户角色、团队协作、管理员控制和企业功能。",
+        "learnMore": "在文档中了解更多",
+        "dismiss": "关闭"
       },
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "defaultToolPickerMode": "Default tool picker mode",
-      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "autoUnzip": "自动解压 API 响应",
+      "autoUnzipDescription": "自动从 ZIP 响应中提取文件",
+      "autoUnzipTooltip": "自动解压 API 操作返回的 ZIP 文件。禁用以保持 ZIP 文件不变。这不会影响自动化工作流。",
+      "autoUnzipFileLimit": "自动解压文件数量上限",
+      "autoUnzipFileLimitDescription": "从 ZIP 中提取的最大文件数",
+      "autoUnzipFileLimitTooltip": "仅当 ZIP 包含不超过此数量的文件时才解压。调高以提取更大的 ZIP。",
+      "defaultToolPickerMode": "默认工具选择器模式",
+      "defaultToolPickerModeDescription": "选择工具选择器默认以全屏或侧边栏打开",
       "mode": {
-        "fullscreen": "Fullscreen",
-        "sidebar": "Sidebar"
+        "fullscreen": "全屏",
+        "sidebar": "侧边栏"
       }
     },
     "hotkeys": {
-      "title": "Keyboard Shortcuts",
-      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "title": "键盘快捷键",
+      "description": "将鼠标悬停在工具上查看其快捷键，或在下方自定义。点击“更改快捷键”，然后按新的组合键。按 Esc 取消。",
       "errorModifier": {
-        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
-        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+        "mac": "请在快捷键中包含 ⌘（Command）、⌥（Option）或其他修饰键。",
+        "windows": "请在快捷键中包含 Ctrl、Alt 或其他修饰键。"
       },
-      "errorConflict": "Shortcut already used by {{tool}}.",
-      "none": "Not assigned",
-      "customBadge": "Custom",
-      "defaultLabel": "Default: {{shortcut}}",
-      "capturing": "Press keys… (Esc to cancel)",
-      "change": "Change shortcut",
-      "reset": "Reset",
-      "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set",
-      "searchPlaceholder": "Search tools..."
+      "errorConflict": "快捷键已被 {{tool}} 使用。",
+      "none": "未分配",
+      "customBadge": "自定义",
+      "defaultLabel": "默认：{{shortcut}}",
+      "capturing": "按下按键…（按 Esc 取消）",
+      "change": "更改快捷键",
+      "reset": "重置",
+      "shortcut": "快捷键",
+      "noShortcut": "未设置快捷键",
+      "searchPlaceholder": "搜索工具..."
     }
   },
   "changeCreds": {
@@ -413,8 +422,8 @@
     "top20": "前20",
     "all": "全部",
     "refresh": "刷新",
-    "dataTypeLabel": "Data Type:",
-    "dataTypeAll": "All",
+    "dataTypeLabel": "数据类型：",
+    "dataTypeAll": "全部",
     "dataTypeApi": "API",
     "dataTypeUi": "UI",
     "totalEndpoints": "端点总数",
@@ -431,9 +440,7 @@
     "top": "顶部",
     "numberOfVisits": "访问次数",
     "visitsTooltip": "访问次数：{0}(占总数的{1}%)",
-    "retry": "重试",
-    "includeHomepage": "包含主页('/')",
-    "includeLoginPage": "包含登录页('/login')"
+    "retry": "重试"
   },
   "database": {
     "title": "数据库 导入/导出",
@@ -475,14 +482,14 @@
     "globalPopularity": "按全球热度",
     "sortBy": "排序:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
+      "brandAlt": "Stirling PDF 标志",
+      "openFiles": "打开文件",
+      "swipeHint": "左右滑动以切换视图",
+      "tools": "工具",
+      "toolsSlide": "工具选择面板",
+      "viewSwitcher": "切换工作区视图",
+      "workbenchSlide": "工作区面板",
+      "workspace": "工作区"
     },
     "multiTool": {
       "tags": "多个,工具",
@@ -775,21 +782,8 @@
       "desc": "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
     },
     "overlay-pdfs": {
-      "desc": "Overlay one PDF on top of another",
-      "title": "Overlay PDFs"
-    },
-    "overlayPdfs": {
-      "title": "叠加 PDF",
-      "desc": "将一个 PDF 叠加到另一个 PDF 之上",
-      "tags": "叠加,组合,堆叠"
-    },
-    "fakeScan": {
-      "title": "伪扫描",
-      "desc": "创建看起来像扫描件的 PDF"
-    },
-    "replaceColorPdf": {
-      "title": "替换和反转颜色",
-      "desc": "替换 PDF 中文本和背景的颜色，并将PDF反转颜色以减小文件大小"
+      "desc": "将一个 PDF 叠加在另一个之上",
+      "title": "叠加 PDF"
     }
   },
   "landing": {
@@ -981,49 +975,49 @@
         "bullet3": "允许重复：处理重复的书签名称"
       },
       "byDocCount": {
-        "bullet1": "Enter the number of output files you want",
-        "bullet2": "Pages are distributed as evenly as possible",
-        "bullet3": "Useful when you need a specific number of files",
-        "text": "Create a specific number of output files by evenly distributing pages across them.",
-        "title": "Split by Document Count"
+        "bullet1": "输入所需的输出文件数量",
+        "bullet2": "页面将尽可能均匀分配",
+        "bullet3": "当您需要特定数量的文件时很有用",
+        "text": "通过将页面均匀分配到多个文件，创建指定数量的输出文件。",
+        "title": "按文档数量拆分"
       },
       "byPageCount": {
-        "bullet1": "Enter the number of pages per output file",
-        "bullet2": "Last file may have fewer pages if not evenly divisible",
-        "bullet3": "Useful for batch processing workflows",
-        "text": "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
-        "title": "Split by Page Count"
+        "bullet1": "输入每个输出文件的页数",
+        "bullet2": "如果无法整除，最后一个文件的页数可能较少",
+        "bullet3": "适用于批处理工作流",
+        "text": "创建多个具有特定页数的 PDF。非常适合制作均匀的文档分段。",
+        "title": "按页数拆分"
       },
       "byPageDivider": {
-        "bullet1": "Print divider sheets from the download link",
-        "bullet2": "Insert divider sheets between your documents",
-        "bullet3": "Scan all documents together as one PDF",
-        "bullet4": "Upload - divider pages are automatically detected and removed",
-        "bullet5": "Enable Duplex Mode if scanning both sides of divider sheets",
-        "text": "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
-        "title": "Split by Page Divider"
+        "bullet1": "从下载链接打印分隔页",
+        "bullet2": "在文档之间插入分隔页",
+        "bullet3": "将所有文档一起扫描为一个 PDF",
+        "bullet4": "上传——会自动检测并移除分隔页",
+        "bullet5": "如果扫描分隔页的双面，请启用双工模式",
+        "text": "使用带有 QR 码的实体分隔页自动拆分扫描文档。非常适合处理合并扫描的多份文档。",
+        "title": "按分隔页拆分"
       }
     },
     "methodSelection": {
       "tooltip": {
-        "bullet1": "Click on a method card to select it",
-        "bullet2": "Hover over each card to see a quick description",
-        "bullet3": "The settings step will appear after you select a method",
-        "bullet4": "You can change methods at any time before processing",
+        "bullet1": "点击方法卡片进行选择",
+        "bullet2": "将鼠标悬停在每张卡片上查看简要说明",
+        "bullet3": "选择方法后会显示设置步骤",
+        "bullet4": "在处理前可随时更改方法",
         "header": {
-          "text": "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
-          "title": "Split Method Selection"
+          "text": "选择您希望如何拆分 PDF 文档。每种方法都针对不同用例和文档类型进行了优化。",
+          "title": "拆分方法选择"
         },
-        "title": "Choose Your Split Method"
+        "title": "选择您的拆分方法"
       }
     },
-    "selectMethod": "Select a split method",
-    "tags": "页面操作，划分，多页面，剪切，服务器端"
+    "selectMethod": "选择一种拆分方法",
+    "resultsTitle": "拆分结果"
   },
   "rotate": {
     "title": "旋转 PDF",
     "submit": "旋转",
-    "selectRotation": "Select Rotation Angle (Clockwise)",
+    "selectRotation": "选择旋转角度（顺时针）",
     "error": {
       "failed": "旋转 PDF 时发生错误。"
     },
@@ -1043,8 +1037,7 @@
         "title": "控件",
         "text": "使用旋转按钮调整方向。左键逆时针，右键顺时针。每次点击旋转 90°。"
       }
-    },
-    "tags": "服务器端"
+    }
   },
   "convert": {
     "title": "转换",
@@ -1113,7 +1106,11 @@
     "markdown": "Markdown",
     "textRtf": "文本/RTF",
     "grayscale": "灰度",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "转换文件时发生错误。",
+    "cbzOptions": "CBZ 转 PDF 选项",
+    "optimizeForEbook": "为电子书阅读器优化 PDF（使用 Ghostscript）",
+    "cbzOutputOptions": "PDF 转 CBZ 选项",
+    "cbzDpi": "图像渲染的 DPI"
   },
   "imageToPdf": {
     "tags": "转换、图像、JPG、图片、照片"
@@ -1153,17 +1150,17 @@
       "10": "奇偶合并",
       "11": "复制所有页面",
       "desc": {
-        "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
-        "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
-        "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
-        "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
-        "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
-        "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
-        "REMOVE_FIRST": "Remove the first page from the document.",
-        "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document.",
-        "REMOVE_LAST": "Remove the last page from the document.",
-        "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
-        "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+        "BOOKLET_SORT": "为小册子打印排列页面（最后、第一、第二、倒数第二，…）。",
+        "CUSTOM": "使用自定义的页面编号或表达式序列来定义新顺序。",
+        "DUPLEX_SORT": "如同双面扫描仪先扫所有正面，再扫所有背面进行交错（1, n, 2, n-1, …）。",
+        "DUPLICATE": "根据自定义顺序计数复制每一页（例如：每页复制 4 次，4×）。",
+        "ODD_EVEN_MERGE": "通过交替页面合并两个 PDF：第一个取奇数页，第二个取偶数页。",
+        "ODD_EVEN_SPLIT": "将文档拆分为两个输出：所有奇数页和所有偶数页。",
+        "REMOVE_FIRST": "从文档中移除第一页。",
+        "REMOVE_FIRST_AND_LAST": "同时移除文档的第一页和最后一页。",
+        "REMOVE_LAST": "从文档中移除最后一页。",
+        "REVERSE_ORDER": "将文档翻转，使最后一页变为第一页，依此类推。",
+        "SIDE_STITCH_BOOKLET_SORT": "用于侧订小册子打印的页面排列（针对侧边装订优化）。"
       }
     },
     "desc": {
@@ -1231,8 +1228,8 @@
       "spacing": {
         "horizontal": "水平间距",
         "vertical": "垂直间距",
-        "height": "Height Spacing",
-        "width": "Width Spacing"
+        "height": "高度间距",
+        "width": "宽度间距"
       },
       "convertToImage": "将 PDF 页面转为图像"
     },
@@ -1377,8 +1374,8 @@
       }
     },
     "type": {
-      "1": "Text",
-      "2": "Image"
+      "1": "文本",
+      "2": "图像"
     }
   },
   "permissions": {
@@ -1453,24 +1450,24 @@
     "submit": "删除"
   },
   "extractPages": {
-    "title": "Extract Pages",
+    "title": "提取页面",
     "pageNumbers": {
-      "label": "Pages to Extract",
-      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+      "label": "要提取的页面",
+      "placeholder": "例如：1,3,5-8 或 odd & 1-10"
     },
     "settings": {
-      "title": "Settings"
+      "title": "设置"
     },
     "tooltip": {
-      "description": "Extracts the selected pages into a new PDF, preserving order."
+      "description": "将所选页面提取到新的 PDF，保留顺序。"
     },
     "error": {
-      "failed": "Failed to extract pages"
+      "failed": "提取页面失败"
     },
     "results": {
-      "title": "Pages Extracted"
+      "title": "已提取的页面"
     },
-    "submit": "Extract Pages"
+    "submit": "提取页面"
   },
   "pageSelection": {
     "tooltip": {
@@ -1514,41 +1511,41 @@
         "title": "示例"
       },
       "complex": {
-        "bullet1": "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
-        "bullet2": "<strong>10-,2n-1</strong> → from page 10 to end + odd pages",
-        "description": "Mix different types.",
-        "title": "Complex Combinations"
+        "bullet1": "<strong>1,3-5,8,2n</strong> → 第 1、3–5、8 页，加上所有偶数页",
+        "bullet2": "<strong>10-,2n-1</strong> → 第 10 页到末尾 + 奇数页",
+        "description": "混合不同类型。",
+        "title": "复杂组合"
       },
-      "description": "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword.",
+      "description": "选择要用于操作的页面。支持单页、范围、公式以及 all 关键字。",
       "individual": {
-        "bullet1": "<strong>1,3,5</strong> → selects pages 1, 3, 5",
-        "bullet2": "<strong>2,7,12</strong> → selects pages 2, 7, 12",
-        "description": "Enter numbers separated by commas.",
-        "title": "Individual Pages"
+        "bullet1": "<strong>1,3,5</strong> → 选择第 1、3、5 页",
+        "bullet2": "<strong>2,7,12</strong> → 选择第 2、7、12 页",
+        "description": "输入用逗号分隔的数字。",
+        "title": "单个页面"
       },
       "mathematical": {
-        "bullet1": "<strong>2n</strong> → all even pages (2, 4, 6…)",
-        "bullet2": "<strong>2n-1</strong> → all odd pages (1, 3, 5…)",
-        "bullet3": "<strong>3n</strong> → every 3rd page (3, 6, 9…)",
-        "bullet4": "<strong>4n-1</strong> → pages 3, 7, 11, 15…",
-        "description": "Use n in formulas for patterns.",
-        "title": "Mathematical Functions"
+        "bullet1": "<strong>2n</strong> → 所有偶数页（2、4、6…）",
+        "bullet2": "<strong>2n-1</strong> → 所有奇数页（1、3、5…）",
+        "bullet3": "<strong>3n</strong> → 每隔 3 页（3、6、9…）",
+        "bullet4": "<strong>4n-1</strong> → 第 3、7、11、15 页…",
+        "description": "在公式中使用 n 表示模式。",
+        "title": "数学函数"
       },
       "ranges": {
-        "bullet1": "<strong>3-6</strong> → selects pages 3–6",
-        "bullet2": "<strong>10-15</strong> → selects pages 10–15",
-        "bullet3": "<strong>5-</strong> → selects pages 5 to end",
-        "description": "Use - for consecutive pages.",
-        "title": "Page Ranges"
+        "bullet1": "<strong>3-6</strong> → 选择第 3–6 页",
+        "bullet2": "<strong>10-15</strong> → 选择第 10–15 页",
+        "bullet3": "<strong>5-</strong> → 选择第 5 页到末尾",
+        "description": "使用 - 表示连续页面。",
+        "title": "页面范围"
       },
       "special": {
-        "bullet1": "<strong>all</strong> → selects all pages",
-        "title": "Special Keywords"
+        "bullet1": "<strong>all</strong> → 选择所有页面",
+        "title": "特殊关键字"
       }
     }
   },
   "bulkSelection": {
-    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
+    "syntaxError": "存在语法问题。请参阅页面选择提示以获得帮助。",
     "header": {
       "title": "页面选择指南"
     },
@@ -1741,8 +1738,7 @@
           "bullet3": "Unknown：未指定陷印状态"
         }
       }
-    },
-    "tags": "标题、作者、日期、创建、时间、发布者、制作人、统计数据"
+    }
   },
   "fileToPDF": {
     "tags": "转换、格式、文档、图片、幻灯片、文本、转换、Office、Docs、Word、Excel、PowerPoint",
@@ -1857,7 +1853,7 @@
       }
     },
     "error": {
-      "failed": "OCR operation failed"
+      "failed": "OCR 操作失败"
     }
   },
   "extractImages": {
@@ -2021,15 +2017,15 @@
     },
     "instructions": {
       "title": "如何添加签名",
-      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
-      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "canvas": "在画布中绘制签名后，关闭弹窗，然后在 PDF 上任意位置点击以放置。",
+      "image": "在上方上传您的签名图像后，在 PDF 上任意位置点击以放置。",
+      "text": "在上方输入您的姓名后，在 PDF 上任意位置点击以放置签名。"
     },
     "mode": {
-      "move": "Move Signature",
-      "place": "Place Signature"
+      "move": "移动签名",
+      "place": "放置签名"
     },
-    "updateAndPlace": "Update and Place",
+    "updateAndPlace": "更新并放置",
     "activate": "激活签名放置",
     "deactivate": "停止放置签名",
     "results": {
@@ -2037,8 +2033,7 @@
     },
     "error": {
       "failed": "签署 PDF 时发生错误。"
-    },
-    "tags": "授权、缩写、手绘签名、文本签名、图像签名"
+    }
   },
   "flatten": {
     "title": "展平",
@@ -2087,8 +2082,7 @@
         "bullet3": "批注与备注仍可见",
         "bullet4": "书签仍可用于导航"
       }
-    },
-    "tags": "静态、停用、非交互、简化"
+    }
   },
   "repair": {
     "tags": "修复、恢复、纠正、恢复",
@@ -2151,12 +2145,11 @@
     },
     "submit": "删除空白",
     "error": {
-      "failed": "Failed to remove blank pages"
+      "failed": "删除空白页失败"
     },
     "results": {
-      "title": "Removed Blank Pages"
-    },
-    "tags": "清理、简化、非内容、整理"
+      "title": "已删除空白页"
+    }
   },
   "removeAnnotations": {
     "tags": "评论、高亮、笔记、标注、删除",
@@ -2178,15 +2171,101 @@
     "tags": "区分、对比、更改、分析",
     "title": "比较",
     "header": "比较PDF",
-    "highlightColor": {
-      "1": "高亮颜色 1:",
-      "2": "高亮颜色 2:"
+    "clearSelected": "清除已选择",
+    "clear": {
+      "confirmTitle": "清除所选 PDF？",
+      "confirmBody": "这将关闭当前比较并带您返回到“活动文件”。",
+      "confirm": "清除并返回"
     },
-    "document": {
-      "1": "文档 1",
-      "2": "文档 2"
+    "review": {
+      "title": "比较结果",
+      "actionsHint": "查看比较、切换文档角色或导出摘要。",
+      "switchOrder": "切换顺序",
+      "exportSummary": "导出摘要"
     },
-    "submit": "比较",
+    "base": {
+      "label": "原始文档",
+      "placeholder": "选择原始 PDF"
+    },
+    "comparison": {
+      "label": "已编辑文档",
+      "placeholder": "选择编辑后的 PDF"
+    },
+    "addFilesHint": "在“文件”步骤中添加 PDF 以启用选择。",
+    "noFiles": "尚无可用 PDF",
+    "pages": "页面",
+    "selection": {
+      "originalEditedTitle": "选择原始和已编辑的 PDF"
+    },
+    "original": {
+      "label": "原始 PDF"
+    },
+    "edited": {
+      "label": "已编辑 PDF"
+    },
+    "swap": {
+      "confirmTitle": "重新运行比较？",
+      "confirmBody": "这将重新运行工具。确定要交换原始和已编辑的顺序吗？",
+      "confirm": "交换并重新运行"
+    },
+    "cta": "比较",
+    "loading": "正在比较...",
+    "summary": {
+      "baseHeading": "原始文档",
+      "comparisonHeading": "已编辑文档",
+      "pageLabel": "页"
+    },
+    "rendering": {
+      "pageNotReadyTitle": "页面尚未渲染",
+      "pageNotReadyBody": "某些页面仍在渲染中。它们准备好后导航将自动对齐。",
+      "rendering": "正在渲染",
+      "inProgress": "至少有一个 PDF 体积很大，在渲染完成之前滚动不会很流畅",
+      "pagesRendered": "页已渲染",
+      "complete": "页面渲染完成"
+    },
+    "dropdown": {
+      "deletionsLabel": "删除",
+      "additionsLabel": "新增",
+      "deletions": "删除（{{count}}）",
+      "additions": "新增（{{count}}）",
+      "searchPlaceholder": "搜索更改...",
+      "noResults": "未找到更改"
+    },
+    "actions": {
+      "stackVertically": "垂直堆叠",
+      "placeSideBySide": "并排放置",
+      "zoomOut": "缩小",
+      "zoomIn": "放大",
+      "resetView": "重置视图",
+      "unlinkScrollPan": "取消链接滚动和平移",
+      "linkScrollPan": "链接滚动和平移",
+      "unlinkScroll": "取消链接滚动",
+      "linkScroll": "链接滚动"
+    },
+    "toasts": {
+      "unlinkedTitle": "已启用独立滚动和平移",
+      "unlinkedBody": "提示：上/下箭头同时滚动两个窗格；平移只移动活动窗格。"
+    },
+    "error": {
+      "selectRequired": "请选择一个原始和一个已编辑文档。",
+      "filesMissing": "无法找到所选文件。请重新选择。",
+      "generic": "无法比较这些文件。"
+    },
+    "status": {
+      "extracting": "正在提取文本...",
+      "processing": "正在分析差异...",
+      "complete": "比较已就绪"
+    },
+    "longJob": {
+      "title": "大型比较进行中",
+      "body": "这些 PDF 总页数超过 2,000。处理可能需要几分钟。"
+    },
+    "slowOperation": {
+      "title": "仍在处理…",
+      "body": "此次比较比平常更久。您可以让其继续或取消。",
+      "cancel": "取消比较"
+    },
+    "newLine": "换行",
     "complex": {
       "message": "提供的一份或两份文件是大文件，比较的准确性可能会降低。"
     },
@@ -2199,6 +2278,16 @@
       "text": {
         "message": "所选的 PDF 文件中有一个或两个没有文本内容。请选择包含文本的 PDF 文件进行对比。"
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "这些文档看起来差异很大。为节省时间，已停止比较。"
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "这些 PDF 看起来差异很大",
+      "body": "目前相似之处很少。如果它们并非相关文档，您可以停止比较。",
+      "stopButton": "停止比较"
     }
   },
   "certSign": {
@@ -2259,11 +2348,11 @@
           "bullet4": "可选添加徽标"
         }
       },
-      "invisible": "Invisible",
+      "invisible": "不可见",
       "options": {
-        "title": "Signature Details"
+        "title": "签名详情"
       },
-      "visible": "Visible"
+      "visible": "可见"
     },
     "sign": {
       "submit": "签署 PDF",
@@ -2325,21 +2414,21 @@
         }
       }
     },
-    "chooseCertificate": "Choose Certificate File",
-    "chooseJksFile": "Choose JKS File",
-    "chooseP12File": "Choose PKCS12 File",
-    "choosePfxFile": "Choose PFX File",
-    "choosePrivateKey": "Choose Private Key File",
-    "location": "Location",
+    "chooseCertificate": "选择证书文件",
+    "chooseJksFile": "选择 JKS 文件",
+    "chooseP12File": "选择 PKCS12 文件",
+    "choosePfxFile": "选择 PFX 文件",
+    "choosePrivateKey": "选择私钥文件",
+    "location": "位置",
     "logoTitle": "Logo",
-    "name": "Name",
-    "noLogo": "No Logo",
-    "pageNumber": "Page Number",
-    "password": "Certificate Password",
-    "passwordOptional": "Leave empty if no password",
-    "reason": "Reason",
-    "serverCertMessage": "Using server certificate - no files or password required",
-    "showLogo": "Show Logo"
+    "name": "名称",
+    "noLogo": "无 Logo",
+    "pageNumber": "页码",
+    "password": "证书密码",
+    "passwordOptional": "如无密码则留空",
+    "reason": "原因",
+    "serverCertMessage": "使用服务器证书 - 无需文件或密码",
+    "showLogo": "显示 Logo"
   },
   "removeCertSign": {
     "tags": "身份验证、PEM、P12、官方、加密",
@@ -2367,14 +2456,14 @@
     "addBorder": "添加边框",
     "submit": "提交",
     "desc": {
-      "2": "Place 2 pages side-by-side on a single sheet.",
-      "3": "Place 3 pages on a single sheet in a single row.",
-      "4": "Place 4 pages on a single sheet (2 × 2 grid).",
-      "9": "Place 9 pages on a single sheet (3 × 3 grid).",
-      "16": "Place 16 pages on a single sheet (4 × 4 grid)."
+      "2": "将 2 页并排放在一张纸上。",
+      "3": "将 3 页以单行放在一张纸上。",
+      "4": "将 4 页放在一张纸上（2 × 2 网格）。",
+      "9": "将 9 页放在一张纸上（3 × 3 网格）。",
+      "16": "将 16 页放在一张纸上（4 × 4 网格）。"
     },
     "error": {
-      "failed": "An error occurred while creating the multi-page layout."
+      "failed": "创建多页布局时发生错误。"
     }
   },
   "bookletImposition": {
@@ -2562,20 +2651,20 @@
     "coordinates": {
       "title": "位置与尺寸",
       "x": {
-        "label": "X Position",
-        "desc": "Left edge (points)"
+        "label": "X 位置",
+        "desc": "左边缘（点）"
       },
       "y": {
-        "label": "Y Position",
-        "desc": "Bottom edge (points)"
+        "label": "Y 位置",
+        "desc": "下边缘（点）"
       },
       "width": {
-        "label": "Width",
-        "desc": "Crop width (points)"
+        "label": "宽度",
+        "desc": "裁剪宽度（点）"
       },
       "height": {
-        "label": "Height",
-        "desc": "Crop height (points)"
+        "label": "高度",
+        "desc": "裁剪高度（点）"
       }
     },
     "error": {
@@ -2596,10 +2685,9 @@
       "title": "裁剪结果"
     },
     "automation": {
-      "info": "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
-      "reference": "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
-    },
-    "tags": "修剪、缩小、编辑、形状"
+      "info": "以 PDF 点为单位输入裁剪坐标。原点 (0,0) 位于左下角。这些值将应用于此自动化中处理的所有 PDF。",
+      "reference": "参考：A4 页面为 595.28 × 841.89 点（210mm × 297mm）。1 英寸 = 72 点。"
+    }
   },
   "autoSplitPDF": {
     "tags": "基于 QR 码、分离、扫描分割、整理",
@@ -2680,7 +2768,14 @@
     "title": "显示 JavaScript",
     "header": "显示 JavaScript",
     "downloadJS": "下载 JavaScript",
-    "submit": "显示"
+    "submit": "显示",
+    "results": "结果",
+    "processing": "正在提取 JavaScript...",
+    "done": "已提取 JavaScript",
+    "singleFileWarning": "此工具一次只支持一个文件。请选择单个文件。",
+    "view": {
+      "title": "已提取的 JavaScript"
+    }
   },
   "redact": {
     "tags": "涂改,隐藏,涂黑,黑色,标记,遮蔽,手动",
@@ -2809,15 +2904,15 @@
   "overlay-pdfs": {
     "tags": "叠加",
     "header": "叠加 PDF 文件",
-    "title": "Overlay PDFs",
-    "desc": "Overlay one PDF on top of another",
+    "title": "叠加 PDF",
+    "desc": "将一个 PDF 叠加在另一个之上",
     "baseFile": {
       "label": "选择基础 PDF 文件"
     },
     "overlayFiles": {
       "label": "选择需要叠加在基础上的 PDF 文件",
-      "placeholder": "Choose PDF(s)...",
-      "addMore": "Add more PDFs..."
+      "placeholder": "选择 PDF...",
+      "addMore": "添加更多 PDF..."
     },
     "mode": {
       "label": "选择叠加模式",
@@ -2828,8 +2923,8 @@
     "counts": {
       "label": "叠加次数（仅限固定重复叠加模式）",
       "placeholder": "输入用逗号分隔的次数（例如：2,3,1）",
-      "item": "Count for file",
-      "noFiles": "Add overlay files to configure counts"
+      "item": "文件计数",
+      "noFiles": "添加叠加文件以配置计数"
     },
     "position": {
       "label": "选择叠加位置",
@@ -2838,41 +2933,41 @@
     },
     "submit": "提交",
     "settings": {
-      "title": "Settings"
+      "title": "设置"
     },
     "results": {
-      "title": "Overlay Results"
+      "title": "叠加结果"
     },
     "tooltip": {
       "header": {
-        "title": "Overlay PDFs Overview"
+        "title": "叠加 PDF 概览"
       },
       "description": {
-        "title": "Description",
-        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+        "title": "说明",
+        "text": "将一个基础 PDF 与一个或多个叠加 PDF 组合。可按页以不同模式应用叠加，并放置在前景或背景。"
       },
       "mode": {
-        "title": "Overlay Mode",
-        "text": "Choose how to distribute overlay pages across the base PDF pages.",
-        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
-        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
-        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+        "title": "叠加模式",
+        "text": "选择如何将叠加页面分配到基础 PDF 的页面。",
+        "sequential": "顺序叠加：先使用第一个叠加 PDF 的页面直到结束，再转到下一个。",
+        "interleaved": "交错叠加：依次从每个叠加中取一页。",
+        "fixedRepeat": "固定重复叠加：在切换到下一个之前，从每个叠加中取固定数量的页面。使用“计数”设置数量。"
       },
       "position": {
-        "title": "Overlay Position",
-        "text": "Foreground places the overlay on top of the page. Background places it behind."
+        "title": "叠加位置",
+        "text": "前景将叠加置于页面之上。背景将其置于页面之下。"
       },
       "overlayFiles": {
-        "title": "Overlay Files",
-        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+        "title": "叠加文件",
+        "text": "选择一个或多个要叠加到基础上的 PDF。在顺序和固定重复模式下，这些文件的顺序会影响页面应用方式。"
       },
       "counts": {
-        "title": "Counts (Fixed Repeat only)",
-        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+        "title": "计数（仅限固定重复）",
+        "text": "为每个叠加文件提供一个正数，表示在切换到下一个之前要取的页数。模式为固定重复时必填。"
       }
     },
     "error": {
-      "failed": "An error occurred while overlaying PDFs."
+      "failed": "叠加 PDF 时发生错误。"
     }
   },
   "split-by-sections": {
@@ -2909,16 +3004,16 @@
     "customColor": "自定义文本颜色",
     "submit": "提交",
     "noStampSelected": "未选择印章。返回到第 1 步。",
-    "customPosition": "Drag the stamp to the desired location in the preview window.",
+    "customPosition": "在预览窗口中拖动图章到期望位置。",
     "error": {
-      "failed": "An error occurred while adding stamp to the PDF."
+      "failed": "向 PDF 添加图章时发生错误。"
     },
-    "imageSize": "Image Size",
-    "margin": "Margin",
-    "positionAndFormatting": "Position & Formatting",
-    "quickPosition": "Select a position on the page to place the stamp.",
+    "imageSize": "图像大小",
+    "margin": "边距",
+    "positionAndFormatting": "位置与格式",
+    "quickPosition": "选择页面上的一个位置以放置图章。",
     "results": {
-      "title": "Stamp Results"
+      "title": "图章结果"
     }
   },
   "removeImagePdf": {
@@ -2938,7 +3033,7 @@
       "_value": "状态",
       "valid": "有效",
       "invalid": "无效",
-      "complete": "Validation complete"
+      "complete": "验证完成"
     },
     "signer": "签署者",
     "date": "日期",
@@ -2966,7 +3061,7 @@
       "keyUsage": "密钥用途",
       "selfSigned": "自签名",
       "bits": "比特",
-      "details": "Certificate Details"
+      "details": "证书详情"
     },
     "signature": {
       "info": "签名信息",
@@ -2974,105 +3069,105 @@
       "mathValid": "签名在数学上有效，但:"
     },
     "selectCustomCert": "X.509 自签名证书（可选）",
-    "downloadCsv": "Download CSV",
-    "downloadJson": "Download JSON",
-    "downloadPdf": "Download PDF Report",
+    "downloadCsv": "下载 CSV",
+    "downloadJson": "下载 JSON",
+    "downloadPdf": "下载 PDF 报告",
     "downloadType": {
       "csv": "CSV",
       "json": "JSON",
       "pdf": "PDF"
     },
     "error": {
-      "allFailed": "Unable to validate the selected files.",
-      "partial": "Some files could not be validated.",
-      "reportGeneration": "Could not generate the PDF report. JSON and CSV are available.",
-      "unexpected": "Unexpected error during validation."
+      "allFailed": "无法验证所选文件。",
+      "partial": "部分文件无法验证。",
+      "reportGeneration": "无法生成 PDF 报告。JSON 和 CSV 可用。",
+      "unexpected": "验证过程中出现意外错误。"
     },
-    "finalizing": "Preparing downloads...",
+    "finalizing": "正在准备下载...",
     "issue": {
-      "certExpired": "Certificate expired",
-      "certRevocationUnknown": "Certificate revocation status unknown",
-      "certRevoked": "Certificate revoked",
-      "chainInvalid": "Certificate chain invalid",
-      "signatureInvalid": "Signature cryptographic check failed",
-      "trustInvalid": "Certificate not trusted"
+      "certExpired": "证书已过期",
+      "certRevocationUnknown": "证书吊销状态未知",
+      "certRevoked": "证书已吊销",
+      "chainInvalid": "证书链无效",
+      "signatureInvalid": "签名加密校验失败",
+      "trustInvalid": "证书不受信任"
     },
-    "noResults": "Run the validation to generate a report.",
-    "noSignaturesShort": "No signatures",
-    "processing": "Validating signatures...",
+    "noResults": "运行验证以生成报告。",
+    "noSignaturesShort": "无签名",
+    "processing": "正在验证签名...",
     "report": {
-      "continued": "Continued",
-      "downloads": "Downloads",
-      "entryLabel": "Signature Summary",
+      "continued": "续",
+      "downloads": "下载",
+      "entryLabel": "签名摘要",
       "fields": {
-        "created": "Created",
-        "fileSize": "File Size",
-        "signatureCount": "Total Signatures",
-        "signatureDate": "Signature Date"
+        "created": "创建时间",
+        "fileSize": "文件大小",
+        "signatureCount": "签名总数",
+        "signatureDate": "签名日期"
       },
-      "filesEvaluated": "{{count}} files evaluated",
-      "footer": "Validated via Stirling PDF",
-      "generatedAt": "Generated",
-      "noPdf": "PDF report will be available after a successful validation.",
-      "page": "Page",
-      "shortTitle": "Signature Summary",
-      "signatureCountLabel": "{{count}} signatures",
-      "signaturesFound": "{{count}} signatures detected",
-      "signaturesValid": "{{count}} fully valid",
-      "title": "Signature Validation Report"
+      "filesEvaluated": "已评估 {{count}} 个文件",
+      "footer": "通过 Stirling PDF 验证",
+      "generatedAt": "生成时间",
+      "noPdf": "成功验证后将提供 PDF 报告。",
+      "page": "页",
+      "shortTitle": "签名摘要",
+      "signatureCountLabel": "{{count}} 个签名",
+      "signaturesFound": "检测到 {{count}} 个签名",
+      "signaturesValid": "{{count}} 个完全有效",
+      "title": "签名验证报告"
     },
     "settings": {
-      "certHint": "Upload a trusted X.509 certificate to validate against a custom trust source.",
-      "title": "Validation Settings"
+      "certHint": "上传受信任的 X.509 证书以针对自定义信任源进行验证。",
+      "title": "验证设置"
     },
-    "signatureDate": "Signature Date",
-    "totalSignatures": "Total Signatures"
+    "signatureDate": "签名日期",
+    "totalSignatures": "签名总数"
   },
   "replaceColor": {
     "tags": "替换颜色,页面操作,后端,服务器端",
     "labels": {
-      "settings": "Settings",
-      "colourOperation": "Colour operation"
+      "settings": "设置",
+      "colourOperation": "颜色操作"
     },
     "options": {
-      "highContrast": "High contrast",
-      "invertAll": "Invert all colours",
-      "custom": "Custom",
-      "cmyk": "Convert to CMYK"
+      "highContrast": "高对比度",
+      "invertAll": "反转所有颜色",
+      "custom": "自定义",
+      "cmyk": "转换为 CMYK"
     },
     "tooltip": {
       "header": {
-        "title": "Replace & Invert Colour Settings Overview"
+        "title": "替换与反转颜色设置概览"
       },
       "description": {
-        "title": "Description",
-        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+        "title": "说明",
+        "text": "转换 PDF 颜色以提升可读性和可访问性。可选择高对比度预设、反转所有颜色，或创建自定义配色方案。"
       },
       "highContrast": {
-        "title": "High Contrast",
-        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
-        "bullet1": "White text on black background - Classic dark mode",
-        "bullet2": "Black text on white background - Standard high contrast",
-        "bullet3": "Yellow text on black background - High visibility option",
-        "bullet4": "Green text on black background - Alternative high contrast"
+        "title": "高对比度",
+        "text": "应用预定义的高对比度配色组合，以提升可读性并符合无障碍规范。",
+        "bullet1": "白字黑底——经典深色模式",
+        "bullet2": "黑字白底——标准高对比度",
+        "bullet3": "黄字黑底——高可见性选项",
+        "bullet4": "绿字黑底——替代高对比度"
       },
       "invertAll": {
-        "title": "Invert All Colours",
-        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+        "title": "反转所有颜色",
+        "text": "完全反转 PDF 中的所有颜色，形成类似底片的效果。用于创建文档的深色模式版本，或在弱光环境下减轻眼疲劳。"
       },
       "custom": {
-        "title": "Custom Colours",
-        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
-        "bullet1": "Text colour - Choose the colour for text elements",
-        "bullet2": "Background colour - Set the background colour for the document"
+        "title": "自定义颜色",
+        "text": "使用取色器定义自己的文本和背景颜色。非常适合创建品牌化文档或满足特定无障碍需求。",
+        "bullet1": "文本颜色——选择文本元素的颜色",
+        "bullet2": "背景颜色——设置文档的背景颜色"
       },
       "cmyk": {
-        "title": "Convert to CMYK",
-        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
+        "title": "转换为 CMYK",
+        "text": "将 PDF 从 RGB 色彩空间转换为 CMYK 色彩空间，优化用于专业印刷。该过程将颜色转换为打印机使用的青、品红、黄、黑模型。"
       }
     },
     "error": {
-      "failed": "An error occurred while processing the colour replacement."
+      "failed": "处理颜色替换时发生错误。"
     }
   },
   "login": {
@@ -3084,6 +3179,7 @@
     "rememberme": "记住我",
     "invalid": "用户名或密码无效。",
     "locked": "您的账户已被锁定。",
+    "sessionExpired": "您的会话已过期。请重新登录。",
     "signinTitle": "请登录",
     "ssoSignIn": "通过单点登录登录",
     "oAuth2AutoCreateDisabled": "OAuth2 自动创建用户已禁用",
@@ -3106,11 +3202,11 @@
     "enterEmail": "输入您的邮箱",
     "enterPassword": "输入您的密码",
     "loggingIn": "正在登录…",
-    "username": "Username",
-    "enterUsername": "Enter username",
-    "useEmailInstead": "Login with email",
-    "forgotPassword": "Forgot your password?",
-    "logIn": "Log In",
+    "username": "用户名",
+    "enterUsername": "输入用户名",
+    "useEmailInstead": "使用邮箱登录",
+    "forgotPassword": "忘记密码？",
+    "logIn": "登录",
     "signingIn": "正在登录…",
     "login": "登录",
     "or": "或",
@@ -3129,9 +3225,9 @@
     "passwordResetSent": "密码重置链接已发送至 {{email}}！请检查邮箱并按指引操作。",
     "failedToSignIn": "使用 {{provider}} 登录失败：{{message}}",
     "unexpectedError": "意外错误：{{message}}",
-    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
-    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "accountCreatedSuccess": "账户创建成功！现在可以登录。",
+    "passwordChangedSuccess": "密码修改成功！请使用新密码登录。",
+    "credentialsUpdated": "您的凭据已更新。请重新登录。"
   },
   "signup": {
     "title": "创建账户",
@@ -3155,11 +3251,11 @@
     "checkEmailConfirmation": "请检查邮箱中的确认链接以完成注册。",
     "accountCreatedSuccessfully": "账户创建成功！您现在可以登录。",
     "unexpectedError": "意外错误：{{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
+    "useEmailInstead": "改用邮箱",
+    "nameRequired": "必须填写姓名",
+    "emailRequired": "必须填写邮箱",
+    "passwordRequired": "必须填写密码",
+    "confirmPasswordRequired": "请确认密码"
   },
   "pdfToSinglePage": {
     "title": "PDF 转单页",
@@ -3199,22 +3295,22 @@
   "adjustContrast": {
     "title": "调整对比度",
     "header": "调整对比度",
-    "basic": "Basic Adjustments",
+    "basic": "基本调整",
     "contrast": "对比度：",
     "brightness": "亮度：",
     "saturation": "饱和度：",
     "download": "下载",
-    "adjustColors": "Adjust Colors",
-    "blue": "Blue",
-    "confirm": "Confirm",
+    "adjustColors": "调整颜色",
+    "blue": "蓝色",
+    "confirm": "确认",
     "error": {
-      "failed": "Failed to adjust colors/contrast"
+      "failed": "调整颜色/对比度失败"
     },
-    "green": "Green",
-    "noPreview": "Select a PDF to preview",
-    "red": "Red",
+    "green": "绿色",
+    "noPreview": "选择一个PDF进行预览",
+    "red": "红色",
     "results": {
-      "title": "Adjusted PDF"
+      "title": "已调整的PDF"
     }
   },
   "compress": {
@@ -3364,10 +3460,10 @@
     "removeImage": "删除图像",
     "submit": "删除图像",
     "error": {
-      "failed": "Failed to remove images from the PDF."
+      "failed": "从PDF中移除图像失败。"
     },
     "results": {
-      "title": "Remove Images Results"
+      "title": "移除图像结果"
     }
   },
   "splitByChapters": {
@@ -3445,7 +3541,7 @@
       }
     },
     "services": {
-      "posthog": "PostHog Analytics",
+      "posthog": "PostHog 分析",
       "scarf": "Scarf Pixel"
     }
   },
@@ -3509,17 +3605,18 @@
     "rotateLeft": "向左旋转",
     "rotateRight": "向右旋转",
     "toggleSidebar": "切换侧边栏",
-    "exportSelected": "Export Selected Pages",
-    "toggleAnnotations": "Toggle Annotations Visibility",
-    "annotationMode": "Toggle Annotation Mode",
-    "draw": "Draw",
-    "save": "Save"
+    "exportSelected": "导出所选页面",
+    "toggleAnnotations": "切换注释可见性",
+    "annotationMode": "切换注释模式",
+    "draw": "绘制",
+    "save": "保存",
+    "saveChanges": "保存更改"
   },
   "search": {
     "title": "搜索 PDF",
     "placeholder": "输入搜索词…",
-    "noResults": "No results found",
-    "searching": "Searching..."
+    "noResults": "未找到结果",
+    "searching": "正在搜索..."
   },
   "guestBanner": {
     "title": "您正在以访客身份使用 Stirling PDF！",
@@ -3557,462 +3654,482 @@
     "automate": "自动化",
     "files": "文件",
     "activity": "活动",
-    "help": "Help",
-    "account": "Account",
+    "help": "帮助",
+    "account": "账户",
     "config": "配置",
-    "adminSettings": "Admin Settings",
-    "allTools": "全部工具"
+    "settings": "设置",
+    "adminSettings": "管理设置",
+    "allTools": "全部工具",
+    "reader": "阅读器",
+    "helpMenu": {
+      "toolsTour": "工具导览",
+      "toolsTourDesc": "了解这些工具能做什么",
+      "adminTour": "管理导览",
+      "adminTourDesc": "浏览管理设置与功能"
+    }
   },
   "admin": {
-    "error": "Error",
-    "success": "Success",
-    "expand": "Expand",
-    "close": "Close",
+    "error": "错误",
+    "success": "成功",
+    "expand": "展开",
+    "close": "关闭",
     "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "启用",
+      "inactive": "未启用"
     },
     "settings": {
-      "title": "Admin Settings",
-      "workspace": "Workspace",
-      "fetchError": "Failed to load settings",
-      "saveError": "Failed to save settings",
-      "saved": "Settings saved successfully",
-      "saveSuccess": "Settings saved successfully",
-      "save": "Save Changes",
-      "restartRequired": "Restart Required",
-      "restart": {
-        "title": "Restart Required",
-        "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
-        "question": "Would you like to restart the server now or later?",
-        "now": "Restart Now",
-        "later": "Restart Later"
+      "title": "管理设置",
+      "workspace": "工作区",
+      "fetchError": "加载设置失败",
+      "saveError": "保存设置失败",
+      "saved": "设置保存成功",
+      "saveSuccess": "设置保存成功",
+      "save": "保存更改",
+      "restartRequired": "需要重启",
+      "loginRequired": "必须启用登录模式才能修改管理设置",
+      "loginDisabled": {
+        "title": "需要登录模式",
+        "message": "必须启用登录模式才能修改管理设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。",
+        "readOnly": "下方设置显示示例值供参考。启用登录模式以查看和编辑实际配置。"
       },
-      "restarting": "Restarting Server",
-      "restartingMessage": "The server is restarting. Please wait a moment...",
-      "restartError": "Failed to restart server. Please restart manually.",
+      "restart": {
+        "title": "需要重启",
+        "message": "设置已成功保存。需要重启服务器才能生效。",
+        "question": "现在重启服务器还是稍后？",
+        "now": "立即重启",
+        "later": "稍后重启"
+      },
+      "restarting": "正在重启服务器",
+      "restartingMessage": "服务器正在重启。请稍候...",
+      "restartError": "重启服务器失败。请手动重启。",
       "general": {
-        "title": "System Settings",
-        "description": "Configure system-wide application settings including branding and default behaviour.",
-        "ui": "User Interface",
-        "system": "System",
+        "title": "系统设置",
+        "description": "配置全局应用设置，包括品牌和默认行为。",
+        "ui": "用户界面",
+        "system": "系统",
         "appName": {
-          "label": "Application Name",
-          "description": "The name displayed in the browser tab and home page"
+          "label": "应用名称",
+          "description": "在浏览器标签和主页显示的名称"
         },
         "appNameNavbar": {
-          "label": "Navbar Brand",
-          "description": "The name displayed in the navigation bar"
+          "label": "导航栏品牌",
+          "description": "在导航栏显示的名称"
         },
         "homeDescription": {
-          "label": "Home Description",
-          "description": "The description text shown on the home page"
+          "label": "主页描述",
+          "description": "主页上显示的描述文本"
         },
         "defaultLocale": {
-          "label": "Default Locale",
-          "description": "The default language for new users (e.g., en_US, es_ES)"
+          "label": "默认语言区域",
+          "description": "新用户的默认语言（例如：en_US、es_ES）"
         },
         "fileUploadLimit": {
-          "label": "File Upload Limit",
-          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+          "label": "文件上传限制",
+          "description": "最大文件上传大小（例如：100MB、1GB）"
         },
         "showUpdate": {
-          "label": "Show Update Notifications",
-          "description": "Display notifications when a new version is available"
+          "label": "显示更新通知",
+          "description": "当有新版本可用时显示通知"
         },
         "showUpdateOnlyAdmin": {
-          "label": "Show Updates to Admins Only",
-          "description": "Restrict update notifications to admin users only"
+          "label": "仅向管理员显示更新",
+          "description": "仅向管理员用户显示更新通知"
         },
         "customHTMLFiles": {
-          "label": "Custom HTML Files",
-          "description": "Allow serving custom HTML files from the customFiles directory"
+          "label": "自定义HTML文件",
+          "description": "允许从 customFiles 目录提供自定义HTML文件"
         },
         "languages": {
-          "label": "Available Languages",
-          "description": "Languages that users can select from (leave empty to enable all languages)"
+          "label": "可用语言",
+          "description": "用户可选择的语言（留空启用所有语言）"
         },
         "customMetadata": {
-          "label": "Custom Metadata",
+          "label": "自定义元数据",
           "autoUpdate": {
-            "label": "Auto Update Metadata",
-            "description": "Automatically update PDF metadata on all processed documents"
+            "label": "自动更新元数据",
+            "description": "对所有处理的文档自动更新PDF元数据"
           },
           "author": {
-            "label": "Default Author",
-            "description": "Default author for PDF metadata (e.g., username)"
+            "label": "默认作者",
+            "description": "PDF元数据的默认作者（例如：用户名）"
           },
           "creator": {
-            "label": "Default Creator",
-            "description": "Default creator for PDF metadata"
+            "label": "默认创建者",
+            "description": "PDF元数据的默认创建者"
           },
           "producer": {
-            "label": "Default Producer",
-            "description": "Default producer for PDF metadata"
+            "label": "默认生产者",
+            "description": "PDF元数据的默认生产者"
           }
         },
+        "logoStyle": {
+          "label": "徽标样式",
+          "description": "在现代极简徽标与经典S图标之间选择",
+          "classic": "经典",
+          "modern": "现代"
+        },
         "customPaths": {
-          "label": "Custom Paths",
-          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "label": "自定义路径",
+          "description": "配置用于流水线处理和外部工具的自定义文件系统路径",
           "pipeline": {
-            "label": "Pipeline Directories",
+            "label": "流水线目录",
             "watchedFoldersDir": {
-              "label": "Watched Folders Directory",
-              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+              "label": "监视文件夹目录",
+              "description": "监视流水线接收PDF的目录（留空为默认：/pipeline/watchedFolders）"
             },
             "finishedFoldersDir": {
-              "label": "Finished Folders Directory",
-              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+              "label": "已完成文件夹目录",
+              "description": "输出处理后PDF的目录（留空为默认：/pipeline/finishedFolders）"
             }
           },
           "operations": {
-            "label": "External Tool Paths",
+            "label": "外部工具路径",
             "weasyprint": {
-              "label": "WeasyPrint Executable",
-              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+              "label": "WeasyPrint 可执行文件",
+              "description": "用于 HTML 转 PDF 的 WeasyPrint 可执行文件路径（留空为默认：/opt/venv/bin/weasyprint）"
             },
             "unoconvert": {
-              "label": "Unoconvert Executable",
-              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+              "label": "Unoconvert 可执行文件",
+              "description": "用于文档转换的 LibreOffice unoconvert 路径（留空为默认：/opt/venv/bin/unoconvert）"
             }
           }
         }
       },
       "security": {
-        "title": "Security",
-        "description": "Configure authentication, login behaviour, and security policies.",
+        "title": "安全",
+        "description": "配置身份验证、登录行为和安全策略。",
         "ssoNotice": {
-          "title": "Looking for SSO/SAML settings?",
-          "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+          "title": "正在查找 SSO/SAML 设置？",
+          "message": "OAuth2 和 SAML2 身份验证提供商已移动到“连接”菜单，便于管理。"
         },
-        "authentication": "Authentication",
+        "authentication": "身份验证",
         "enableLogin": {
-          "label": "Enable Login",
-          "description": "Require users to log in before accessing the application"
+          "label": "启用登录",
+          "description": "访问应用前要求用户登录"
         },
         "loginMethod": {
-          "label": "Login Method",
-          "description": "The authentication method to use for user login",
-          "all": "All Methods",
-          "normal": "Username/Password Only",
-          "oauth2": "OAuth2 Only",
-          "saml2": "SAML2 Only"
+          "label": "登录方式",
+          "description": "用户登录使用的身份验证方式",
+          "all": "所有方式",
+          "normal": "仅用户名/密码",
+          "oauth2": "仅 OAuth2",
+          "saml2": "仅 SAML2"
         },
         "loginAttemptCount": {
-          "label": "Login Attempt Limit",
-          "description": "Maximum number of failed login attempts before account lockout"
+          "label": "登录尝试次数限制",
+          "description": "达到该失败次数后将锁定账户"
         },
         "loginResetTimeMinutes": {
-          "label": "Login Reset Time (minutes)",
-          "description": "Time before failed login attempts are reset"
+          "label": "登录重置时间（分钟）",
+          "description": "重置失败尝试计数的时间"
         },
         "csrfDisabled": {
-          "label": "Disable CSRF Protection",
-          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+          "label": "禁用CSRF保护",
+          "description": "禁用跨站请求伪造保护（不建议）"
         },
         "initialLogin": {
-          "label": "Initial Login",
+          "label": "初始登录",
           "username": {
-            "label": "Initial Username",
-            "description": "The username for the initial admin account"
+            "label": "初始用户名",
+            "description": "初始管理员账户的用户名"
           },
           "password": {
-            "label": "Initial Password",
-            "description": "The password for the initial admin account"
+            "label": "初始密码",
+            "description": "初始管理员账户的密码"
           }
         },
         "jwt": {
-          "label": "JWT Configuration",
+          "label": "JWT 配置",
           "secureCookie": {
-            "label": "Secure Cookie",
-            "description": "Require HTTPS for JWT cookies (recommended for production)"
+            "label": "安全 Cookie",
+            "description": "对 JWT Cookie 要求 HTTPS（生产环境推荐）"
           },
           "keyRetentionDays": {
-            "label": "Key Retention Days",
-            "description": "Number of days to retain old JWT keys for verification"
+            "label": "密钥保留天数",
+            "description": "保留旧JWT密钥用于验证的天数"
           },
           "persistence": {
-            "label": "Enable Key Persistence",
-            "description": "Store JWT keys persistently to survive server restarts"
+            "label": "启用密钥持久化",
+            "description": "持久化存储 JWT 密钥以跨越服务器重启"
           },
           "enableKeyRotation": {
-            "label": "Enable Key Rotation",
-            "description": "Automatically rotate JWT signing keys periodically"
+            "label": "启用密钥轮换",
+            "description": "定期自动轮换 JWT 签名密钥"
           },
           "enableKeyCleanup": {
-            "label": "Enable Key Cleanup",
-            "description": "Automatically remove expired JWT keys"
+            "label": "启用密钥清理",
+            "description": "自动移除过期的 JWT 密钥"
           }
         },
         "audit": {
-          "label": "Audit Logging",
+          "label": "审计日志",
           "enabled": {
-            "label": "Enable Audit Logging",
-            "description": "Track user actions and system events for compliance and security monitoring"
+            "label": "启用审计日志",
+            "description": "跟踪用户操作和系统事件以满足合规与安全监控"
           },
           "level": {
-            "label": "Audit Level",
-            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+            "label": "审计级别",
+            "description": "0=OFF，1=BASIC，2=STANDARD，3=VERBOSE"
           },
           "retentionDays": {
-            "label": "Audit Retention (days)",
-            "description": "Number of days to retain audit logs"
+            "label": "审计保留（天）",
+            "description": "审计日志的保留天数"
           }
         },
         "htmlUrlSecurity": {
-          "label": "HTML URL Security",
-          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "label": "HTML URL 安全",
+          "description": "配置HTML处理的URL访问限制以防止SSRF攻击",
           "enabled": {
-            "label": "Enable URL Security",
-            "description": "Enable URL security restrictions for HTML to PDF conversions"
+            "label": "启用URL安全",
+            "description": "为 HTML 转 PDF 启用URL安全限制"
           },
           "level": {
-            "label": "Security Level",
-            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-            "max": "Maximum (Whitelist Only)",
-            "medium": "Medium (Block Internal)",
-            "off": "Off (No Restrictions)"
+            "label": "安全级别",
+            "description": "MAX：仅白名单，MEDIUM：阻止内网，OFF：不限制",
+            "max": "最高（仅白名单）",
+            "medium": "中等（阻止内网）",
+            "off": "关闭（无限制）"
           },
-          "advanced": "Advanced Settings",
+          "advanced": "高级设置",
           "allowedDomains": {
-            "label": "Allowed Domains (Whitelist)",
-            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+            "label": "允许的域名（白名单）",
+            "description": "每行一个域名（例如：cdn.example.com）。当级别为 MAX 时仅允许这些域名"
           },
           "blockedDomains": {
-            "label": "Blocked Domains (Blacklist)",
-            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+            "label": "阻止的域名（黑名单）",
+            "description": "每行一个域名（例如：malicious.com）。需要额外阻止的域名"
           },
           "internalTlds": {
-            "label": "Internal TLDs",
-            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+            "label": "内部 TLD",
+            "description": "每行一个 TLD（例如：.local、.internal）。阻止包含这些 TLD 模式的域名"
           },
-          "networkBlocking": "Network Blocking",
+          "networkBlocking": "网络阻断",
           "blockPrivateNetworks": {
-            "label": "Block Private Networks",
-            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+            "label": "阻止私有网络",
+            "description": "阻止 RFC 1918 私有网络（10.x.x.x、192.168.x.x、172.16-31.x.x）"
           },
           "blockLocalhost": {
-            "label": "Block Localhost",
-            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+            "label": "阻止本地主机",
+            "description": "阻止 localhost 和回环地址（127.x.x.x、::1）"
           },
           "blockLinkLocal": {
-            "label": "Block Link-Local Addresses",
-            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+            "label": "阻止链路本地地址",
+            "description": "阻止链路本地地址（169.254.x.x、fe80::/10）"
           },
           "blockCloudMetadata": {
-            "label": "Block Cloud Metadata Endpoints",
-            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+            "label": "阻止云元数据端点",
+            "description": "阻止云提供商元数据端点（169.254.169.254）"
           }
         }
       },
       "connections": {
-        "title": "Connections",
-        "description": "Configure external authentication providers like OAuth2 and SAML.",
-        "linkedServices": "Linked Services",
-        "unlinkedServices": "Unlinked Services",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "disconnected": "Provider disconnected successfully",
-        "disconnectError": "Failed to disconnect provider",
+        "title": "连接",
+        "description": "配置 OAuth2 和 SAML 等外部身份验证提供商。",
+        "linkedServices": "已连接的服务",
+        "unlinkedServices": "未连接的服务",
+        "connect": "连接",
+        "disconnect": "断开连接",
+        "disconnected": "已成功断开提供商",
+        "disconnectError": "断开提供商失败",
         "ssoAutoLogin": {
-          "label": "SSO Auto Login",
-          "enable": "Enable SSO Auto Login",
-          "description": "Automatically redirect to SSO login when authentication is required"
+          "label": "SSO 自动登录",
+          "enable": "启用 SSO 自动登录",
+          "description": "需要身份验证时自动重定向到 SSO 登录"
         },
         "oauth2": {
           "label": "OAuth2",
           "enabled": {
-            "label": "Enable OAuth2",
-            "description": "Allow users to authenticate using OAuth2 providers"
+            "label": "启用 OAuth2",
+            "description": "允许用户使用 OAuth2 提供商进行身份验证"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The OAuth2 provider to use for authentication"
+            "label": "提供商",
+            "description": "用于身份验证的 OAuth2 提供商"
           },
           "issuer": {
-            "label": "Issuer URL",
-            "description": "The OAuth2 provider issuer URL"
+            "label": "发行者 URL",
+            "description": "OAuth2 提供商发行者 URL"
           },
           "clientId": {
-            "label": "Client ID",
-            "description": "The OAuth2 client ID from your provider"
+            "label": "客户端 ID",
+            "description": "来自提供商的 OAuth2 客户端 ID"
           },
           "clientSecret": {
-            "label": "Client Secret",
-            "description": "The OAuth2 client secret from your provider"
+            "label": "客户端密钥",
+            "description": "来自提供商的 OAuth2 客户端密钥"
           },
           "useAsUsername": {
-            "label": "Use as Username",
-            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+            "label": "用作用户名",
+            "description": "用作用户名的 OAuth2 claim（例如：email、sub）"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first OAuth2 login"
+            "label": "自动创建用户",
+            "description": "首次通过 OAuth2 登录时自动创建用户账户"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via OAuth2"
+            "label": "阻止注册",
+            "description": "阻止通过 OAuth2 进行新用户注册"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
-            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+            "label": "OAuth2 范围",
+            "description": "逗号分隔的 OAuth2 范围列表（例如：openid、profile、email）"
           }
         },
         "saml2": {
           "label": "SAML2",
           "enabled": {
-            "label": "Enable SAML2",
-            "description": "Allow users to authenticate using SAML2 providers"
+            "label": "启用 SAML2",
+            "description": "允许用户使用 SAML2 提供商进行身份验证"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The SAML2 provider name"
+            "label": "提供商",
+            "description": "SAML2 提供商名称"
           },
           "registrationId": {
-            "label": "Registration ID",
-            "description": "The SAML2 registration identifier"
+            "label": "注册 ID",
+            "description": "SAML2 注册标识符"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first SAML2 login"
+            "label": "自动创建用户",
+            "description": "首次通过 SAML2 登录时自动创建用户账户"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via SAML2"
+            "label": "阻止注册",
+            "description": "阻止通过 SAML2 进行新用户注册"
           }
         }
       },
       "database": {
-        "title": "Database",
-        "description": "Configure custom database connection settings for enterprise deployments.",
-        "configuration": "Database Configuration",
+        "title": "数据库",
+        "description": "为企业部署配置自定义数据库连接设置。",
+        "configuration": "数据库配置",
         "enableCustom": {
-          "label": "Enable Custom Database",
-          "description": "Use your own custom database configuration instead of the default embedded database"
+          "label": "启用自定义数据库",
+          "description": "使用自定义数据库配置，替代默认的内嵌数据库"
         },
         "customUrl": {
-          "label": "Custom Database URL",
-          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+          "label": "自定义数据库 URL",
+          "description": "完整 JDBC 连接字符串（例如：jdbc:postgresql://localhost:5432/postgres）。如果填写，将不使用下面的单独连接设置。"
         },
         "type": {
-          "label": "Database Type",
-          "description": "Type of database (not used if custom URL is provided)"
+          "label": "数据库类型",
+          "description": "数据库类型（提供自定义 URL 时不使用）"
         },
         "hostName": {
-          "label": "Host Name",
-          "description": "Database server hostname (not used if custom URL is provided)"
+          "label": "主机名",
+          "description": "数据库服务器主机名（提供自定义 URL 时不使用）"
         },
         "port": {
-          "label": "Port",
-          "description": "Database server port (not used if custom URL is provided)"
+          "label": "端口",
+          "description": "数据库服务器端口（提供自定义 URL 时不使用）"
         },
         "name": {
-          "label": "Database Name",
-          "description": "Name of the database (not used if custom URL is provided)"
+          "label": "数据库名称",
+          "description": "数据库名称（提供自定义 URL 时不使用）"
         },
         "username": {
-          "label": "Username",
-          "description": "Database authentication username"
+          "label": "用户名",
+          "description": "数据库身份验证用户名"
         },
         "password": {
-          "label": "Password",
-          "description": "Database authentication password"
+          "label": "密码",
+          "description": "数据库身份验证密码"
         }
       },
       "privacy": {
-        "title": "Privacy",
-        "description": "Configure privacy and data collection settings.",
-        "analytics": "Analytics & Tracking",
+        "title": "隐私",
+        "description": "配置隐私与数据收集设置。",
+        "analytics": "分析与跟踪",
         "enableAnalytics": {
-          "label": "Enable Analytics",
-          "description": "Collect anonymous usage analytics to help improve the application"
+          "label": "启用分析",
+          "description": "收集匿名使用分析以帮助改进应用"
         },
         "metricsEnabled": {
-          "label": "Enable Metrics",
-          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+          "label": "启用指标",
+          "description": "启用性能与使用指标收集。为管理员提供 API 端点以访问指标数据"
         },
-        "searchEngine": "Search Engine Visibility",
+        "searchEngine": "搜索引擎可见性",
         "googleVisibility": {
-          "label": "Google Visibility",
-          "description": "Allow search engines to index this application"
+          "label": "Google 可见性",
+          "description": "允许搜索引擎索引此应用"
         }
       },
       "advanced": {
-        "title": "Advanced",
-        "description": "Configure advanced features and experimental functionality.",
-        "features": "Feature Flags",
-        "processing": "Processing",
+        "title": "高级",
+        "description": "配置高级功能与实验性功能。",
+        "features": "功能开关",
+        "processing": "处理",
         "endpoints": {
-          "label": "Endpoints",
-          "manage": "Manage API Endpoints",
-          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+          "label": "端点",
+          "manage": "管理 API 端点",
+          "description": "端点管理通过 YAML 配置。详情参见文档以启用/禁用特定端点。"
         },
         "enableAlphaFunctionality": {
-          "label": "Enable Alpha Features",
-          "description": "Enable experimental and alpha-stage features (may be unstable)"
+          "label": "启用 Alpha 功能",
+          "description": "启用实验性与 Alpha 阶段功能（可能不稳定）"
         },
         "enableUrlToPDF": {
-          "label": "Enable URL to PDF",
-          "description": "Allow conversion of web pages to PDF documents"
+          "label": "启用 URL 转 PDF",
+          "description": "允许将网页转换为 PDF 文档"
         },
         "maxDPI": {
-          "label": "Maximum DPI",
-          "description": "Maximum DPI for image processing (0 = unlimited)"
+          "label": "最大 DPI",
+          "description": "图像处理的最大 DPI（0 = 不限）"
         },
         "tessdataDir": {
-          "label": "Tessdata Directory",
-          "description": "Path to the tessdata directory for OCR language files"
+          "label": "tessdata 目录",
+          "description": "OCR 语言文件的 tessdata 目录路径"
         },
         "disableSanitize": {
-          "label": "Disable HTML Sanitization",
-          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+          "label": "禁用 HTML 清理",
+          "description": "警告：存在安全风险——禁用 HTML 清理可能导致 XSS 漏洞"
         },
         "tempFileManagement": {
-          "label": "Temp File Management",
-          "description": "Configure temporary file storage and cleanup behavior",
+          "label": "临时文件管理",
+          "description": "配置临时文件存储与清理行为",
           "baseTmpDir": {
-            "label": "Base Temp Directory",
-            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+            "label": "基础临时目录",
+            "description": "临时文件的基础目录（留空为默认：java.io.tmpdir/stirling-pdf）"
           },
           "libreofficeDir": {
-            "label": "LibreOffice Temp Directory",
-            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+            "label": "LibreOffice 临时目录",
+            "description": "LibreOffice 临时文件目录（留空为默认：baseTmpDir/libreoffice）"
           },
           "systemTempDir": {
-            "label": "System Temp Directory",
-            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+            "label": "系统临时目录",
+            "description": "需要清理的系统临时目录（仅在启用 cleanupSystemTemp 时使用）"
           },
           "prefix": {
-            "label": "Temp File Prefix",
-            "description": "Prefix for temp file names"
+            "label": "临时文件前缀",
+            "description": "临时文件名的前缀"
           },
           "maxAgeHours": {
-            "label": "Max Age (hours)",
-            "description": "Maximum age in hours before temp files are cleaned up"
+            "label": "最大保留时长（小时）",
+            "description": "临时文件清理前的最大小时数"
           },
           "cleanupIntervalMinutes": {
-            "label": "Cleanup Interval (minutes)",
-            "description": "How often to run cleanup (in minutes)"
+            "label": "清理间隔（分钟）",
+            "description": "运行清理的频率（分钟）"
           },
           "startupCleanup": {
-            "label": "Startup Cleanup",
-            "description": "Clean up old temp files on application startup"
+            "label": "启动时清理",
+            "description": "应用启动时清理旧临时文件"
           },
           "cleanupSystemTemp": {
-            "label": "Cleanup System Temp",
-            "description": "Whether to clean broader system temp directory (use with caution)"
+            "label": "清理系统临时目录",
+            "description": "是否清理更广泛的系统临时目录（谨慎使用）"
           }
         },
         "processExecutor": {
-          "label": "Process Executor Limits",
-          "description": "Configure session limits and timeouts for each process executor",
+          "label": "进程执行器限制",
+          "description": "为各进程执行器配置会话数量限制与超时",
           "sessionLimit": {
-            "label": "Session Limit",
-            "description": "Maximum concurrent instances"
+            "label": "会话上限",
+            "description": "最大并发实例数"
           },
           "timeout": {
-            "label": "Timeout (minutes)",
-            "description": "Maximum execution time"
+            "label": "超时（分钟）",
+            "description": "最大执行时间"
           },
           "libreOffice": "LibreOffice",
           "pdfToHtml": "PDF to HTML",
@@ -4027,124 +4144,124 @@
         }
       },
       "mail": {
-        "title": "Mail Server",
-        "description": "Configure SMTP settings for sending email notifications.",
-        "smtp": "SMTP Configuration",
+        "title": "邮件服务器",
+        "description": "配置 SMTP，用于发送邮件通知。",
+        "smtp": "SMTP 配置",
         "enabled": {
-          "label": "Enable Mail",
-          "description": "Enable email notifications and SMTP functionality"
+          "label": "启用邮件",
+          "description": "启用邮件通知与 SMTP 功能"
         },
         "host": {
-          "label": "SMTP Host",
-          "description": "The hostname or IP address of your SMTP server"
+          "label": "SMTP 主机",
+          "description": "您的 SMTP 服务器主机名或 IP 地址"
         },
         "port": {
-          "label": "SMTP Port",
-          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+          "label": "SMTP 端口",
+          "description": "SMTP 连接端口号（通常为 25、465 或 587）"
         },
         "username": {
-          "label": "SMTP Username",
-          "description": "Username for SMTP authentication"
+          "label": "SMTP 用户名",
+          "description": "SMTP 身份验证用户名"
         },
         "password": {
-          "label": "SMTP Password",
-          "description": "Password for SMTP authentication"
+          "label": "SMTP 密码",
+          "description": "SMTP 身份验证密码"
         },
         "from": {
-          "label": "From Address",
-          "description": "The email address to use as the sender"
+          "label": "发件地址",
+          "description": "用作发件人的邮箱地址"
         },
         "enableInvites": {
-          "label": "Enable Email Invites",
-          "description": "Allow admins to invite users via email with auto-generated passwords"
+          "label": "启用邮件邀请",
+          "description": "允许管理员通过邮件邀请用户并自动生成密码"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
-          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+          "label": "前端 URL",
+          "description": "前端基础 URL（例如：https://pdf.example.com）。用于在邮件中生成邀请链接。留空则使用后端 URL。"
         }
       },
       "legal": {
-        "title": "Legal Documents",
-        "description": "Configure links to legal documents and policies.",
+        "title": "法律文档",
+        "description": "配置法律文档与政策的链接。",
         "disclaimer": {
-          "title": "Legal Responsibility Warning",
-          "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+          "title": "法律责任警告",
+          "message": "通过自定义这些法律文档，您将对确保遵守所有适用的法律法规承担全部责任，包括但不限于 GDPR 及其他欧盟数据保护要求。仅在以下情况修改这些设置：（1）您运行的是个人/私有实例，（2）您不在欧盟管辖范围内并了解当地法律义务，或（3）您已获得适当的法律咨询，并接受对所有用户数据和法律合规承担全部责任。Stirling-PDF 及其开发者不对您的法律义务承担任何责任。"
         },
         "termsAndConditions": {
-          "label": "Terms and Conditions",
-          "description": "URL or filename to terms and conditions"
+          "label": "条款与条件",
+          "description": "条款与条件的 URL 或文件名"
         },
         "privacyPolicy": {
-          "label": "Privacy Policy",
-          "description": "URL or filename to privacy policy"
+          "label": "隐私政策",
+          "description": "隐私政策的 URL 或文件名"
         },
         "accessibilityStatement": {
-          "label": "Accessibility Statement",
-          "description": "URL or filename to accessibility statement"
+          "label": "无障碍声明",
+          "description": "无障碍声明的 URL 或文件名"
         },
         "cookiePolicy": {
-          "label": "Cookie Policy",
-          "description": "URL or filename to cookie policy"
+          "label": "Cookie 政策",
+          "description": "Cookie 政策的 URL 或文件名"
         },
         "impressum": {
           "label": "Impressum",
-          "description": "URL or filename to impressum (required in some jurisdictions)"
+          "description": "Impressum 的 URL 或文件名（某些司法辖区要求）"
         }
       },
       "premium": {
-        "title": "Premium & Enterprise",
-        "description": "Configure your premium or enterprise license key.",
-        "license": "License Configuration",
+        "title": "高级版与企业版",
+        "description": "配置您的高级版或企业版许可证密钥。",
+        "license": "许可证配置",
         "key": {
-          "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "label": "许可证密钥",
+          "description": "输入您的高级版或企业版许可证密钥"
         },
         "enabled": {
-          "label": "Enable Premium Features",
-          "description": "Enable license key checks for pro/enterprise features"
+          "label": "启用高级功能",
+          "description": "启用对专业/企业功能的许可证密钥检查"
         },
         "movedFeatures": {
-          "title": "Premium Features Distributed",
-          "message": "Premium and Enterprise features are now organized in their respective sections:"
+          "title": "高级功能已分类",
+          "message": "高级版和企业版功能现已在各自的部分中进行组织："
         }
       },
       "features": {
-        "title": "Features",
-        "description": "Configure optional features and functionality.",
+        "title": "功能",
+        "description": "配置可选功能与特性。",
         "serverCertificate": {
-          "label": "Server Certificate",
-          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "label": "服务器证书",
+          "description": "配置“使用 Stirling-PDF 签名”功能的服务端证书生成",
           "enabled": {
-            "label": "Enable Server Certificate",
-            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+            "label": "启用服务器证书",
+            "description": "为“使用 Stirling-PDF 签名”选项启用服务端证书"
           },
           "organizationName": {
-            "label": "Organization Name",
-            "description": "Organization name for generated certificates"
+            "label": "组织名称",
+            "description": "生成证书的组织名称"
           },
           "validity": {
-            "label": "Certificate Validity (days)",
-            "description": "Number of days the certificate will be valid"
+            "label": "证书有效期（天）",
+            "description": "证书的有效天数"
           },
           "regenerateOnStartup": {
-            "label": "Regenerate on Startup",
-            "description": "Generate new certificate on each application startup"
+            "label": "启动时重新生成",
+            "description": "每次应用启动时生成新证书"
           }
         }
       },
       "endpoints": {
-        "title": "API Endpoints",
-        "description": "Control which API endpoints and endpoint groups are available.",
-        "management": "Endpoint Management",
+        "title": "API 端点",
+        "description": "控制可用的 API 端点及端点组。",
+        "management": "端点管理",
         "toRemove": {
-          "label": "Disabled Endpoints",
-          "description": "Select individual endpoints to disable"
+          "label": "已禁用的端点",
+          "description": "选择要禁用的单个端点"
         },
         "groupsToRemove": {
-          "label": "Disabled Endpoint Groups",
-          "description": "Select endpoint groups to disable"
+          "label": "已禁用的端点组",
+          "description": "选择要禁用的端点组"
         },
-        "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
+        "note": "注意：禁用端点会限制 API 访问，但不会移除 UI 组件。更改生效需要重启。"
       }
     }
   },
@@ -4173,7 +4290,7 @@
     "dragFilesInOrClick": "拖入文件或点击“添加文件”浏览"
   },
   "fileEditor": {
-    "addFiles": "Add Files"
+    "addFiles": "添加文件"
   },
   "fileManager": {
     "title": "上传 PDF 文件",
@@ -4203,7 +4320,7 @@
     "lastModified": "上次修改",
     "toolChain": "已应用工具",
     "restore": "恢复",
-    "unzip": "Unzip",
+    "unzip": "解压",
     "searchFiles": "搜索文件…",
     "recent": "最近",
     "localFiles": "本地文件",
@@ -4229,17 +4346,16 @@
     "download": "下载",
     "delete": "删除",
     "unsupported": "不支持",
-    "addToUpload": "Add to Upload",
-    "deleteAll": "Delete All",
-    "loadingFiles": "Loading files...",
-    "noFiles": "No files available",
-    "noFilesFound": "No files found matching your search",
-    "openInPageEditor": "Open in Page Editor",
-    "showAll": "Show All",
-    "sortByDate": "Sort by Date",
-    "sortByName": "Sort by Name",
-    "sortBySize": "Sort by Size",
-    "dropFilesHint": "将文件拖到此处即可上传"
+    "addToUpload": "添加至上传",
+    "deleteAll": "删除全部",
+    "loadingFiles": "正在加载文件...",
+    "noFiles": "没有可用的文件",
+    "noFilesFound": "未找到与搜索匹配的文件",
+    "openInPageEditor": "在页面编辑器中打开",
+    "showAll": "显示全部",
+    "sortByDate": "按日期排序",
+    "sortByName": "按名称排序",
+    "sortBySize": "按大小排序"
   },
   "storage": {
     "temporaryNotice": "文件临时存储在您的浏览器中，可能会被自动清除",
@@ -4509,6 +4625,12 @@
     }
   },
   "common": {
+    "previous": "上一页",
+    "next": "下一页",
+    "collapse": "折叠",
+    "expand": "展开",
+    "collapsed": "已折叠",
+    "lines": "行",
     "copy": "复制",
     "copied": "已复制！",
     "refresh": "刷新",
@@ -4517,12 +4639,12 @@
     "used": "已用",
     "available": "可用",
     "cancel": "取消",
-    "preview": "Preview"
+    "preview": "预览"
   },
   "config": {
     "overview": {
-      "title": "Application Configuration",
-      "description": "Current application settings and configuration details."
+      "title": "应用配置",
+      "description": "当前应用设置与配置信息。"
     },
     "account": {
       "overview": {
@@ -4545,6 +4667,12 @@
       }
     },
     "apiKeys": {
+      "intro": "使用您的 API 密钥以编程方式访问 Stirling PDF 的处理能力。",
+      "docsTitle": "API 文档",
+      "docsDescription": "了解如何与 Stirling PDF 集成：",
+      "docsLink": "API 文档",
+      "schemaLink": "API 架构参考",
+      "usage": "在所有 API 请求中将此密钥放入 X-API-KEY 头中。",
       "description": "用于访问 Stirling 一系列 PDF 工具的 API 密钥。可复制到您的项目，或刷新以生成新密钥。",
       "publicKeyAriaLabel": "公共 API 密钥",
       "copyKeyAriaLabel": "复制 API 密钥",
@@ -4581,58 +4709,58 @@
       "title": "附件结果"
     },
     "error": {
-      "failed": "Add attachments operation failed"
+      "failed": "添加附件操作失败"
     }
   },
   "termsAndConditions": "条款与条件",
   "logOut": "退出登录",
   "addAttachments": {
     "error": {
-      "failed": "An error occurred while adding attachments to the PDF."
+      "failed": "向PDF添加附件时发生错误。"
     }
   },
   "autoRename": {
-    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+    "description": "此工具将基于内容自动重命名 PDF 文件。它会分析文档以从文本中找到最合适的标题。"
   },
-  "customPosition": "Custom Position",
-  "details": "Details",
-  "downloadUnavailable": "Download unavailable for this item",
-  "invalidUndoData": "Cannot undo: invalid operation data",
+  "customPosition": "自定义位置",
+  "details": "详情",
+  "downloadUnavailable": "此项不支持下载",
+  "invalidUndoData": "无法撤销：操作数据无效",
   "margin": {
-    "large": "Large",
-    "medium": "Medium",
-    "small": "Small",
-    "xLarge": "Extra Large"
+    "large": "大",
+    "medium": "中",
+    "small": "小",
+    "xLarge": "特大"
   },
-  "noFilesToUndo": "Cannot undo: no files were processed in the last operation",
-  "noOperationToUndo": "No operation to undo",
-  "noValidFiles": "No valid files to process",
-  "operationCancelled": "Operation cancelled",
+  "noFilesToUndo": "无法撤销：上一次操作未处理任何文件",
+  "noOperationToUndo": "没有可撤销的操作",
+  "noValidFiles": "没有可处理的有效文件",
+  "operationCancelled": "操作已取消",
   "pageEdit": {
-    "deselectAll": "Select None",
-    "selectAll": "Select All"
+    "deselectAll": "取消全选",
+    "selectAll": "全选"
   },
-  "quickPosition": "Quick Position",
+  "quickPosition": "快速定位",
   "reorganizePages": {
     "error": {
-      "failed": "Failed to reorganize pages"
+      "failed": "重新组织页面失败"
     },
     "results": {
-      "title": "Pages Reorganized"
+      "title": "页面已重新组织"
     },
     "settings": {
-      "title": "Settings"
+      "title": "设置"
     },
-    "submit": "Reorganize Pages"
+    "submit": "重新组织页面"
   },
   "replace-color": {
     "options": {
-      "fill": "Fill colour",
-      "gradient": "Gradient"
+      "fill": "填充颜色",
+      "gradient": "渐变"
     },
-    "previewOverlayOpacity": "Preview overlay opacity",
-    "previewOverlayTransparency": "Preview overlay transparency",
-    "previewOverlayVisibility": "Show preview overlay",
+    "previewOverlayOpacity": "预览叠加层不透明度",
+    "previewOverlayTransparency": "预览叠加层透明度",
+    "previewOverlayVisibility": "显示预览叠加层",
     "selectText": {
       "1": "替换或反转颜色选项",
       "2": "默认（默认高对比度颜色）",
@@ -4645,508 +4773,519 @@
       "9": "黑底绿字",
       "10": "选择文本颜色",
       "11": "选择背景颜色",
-      "12": "Choose start colour",
-      "13": "Choose end colour"
+      "12": "选择起始颜色",
+      "13": "选择结束颜色"
     },
     "submit": "取代",
-    "title": "替换-反转-颜色",
-    "header": "替换-反转 PDF 颜色"
+    "title": "替换-反转-颜色"
   },
-  "size": "Size",
-  "submit": "Submit",
-  "success": "Success",
+  "size": "大小",
+  "submit": "提交",
+  "success": "成功",
   "tools": {
-    "noSearchResults": "No tools found",
-    "noTools": "No tools available"
+    "noSearchResults": "未找到工具",
+    "noTools": "没有可用的工具"
   },
-  "undoDataMismatch": "Cannot undo: operation data is corrupted",
-  "undoFailed": "Failed to undo operation",
-  "undoQuotaError": "Cannot undo: insufficient storage space",
-  "undoStorageError": "Undo completed but some files could not be saved to storage",
-  "undoSuccess": "Operation undone successfully",
-  "unsupported": "Unsupported",
+  "undoDataMismatch": "无法撤销：操作数据已损坏",
+  "undoFailed": "撤销操作失败",
+  "undoQuotaError": "无法撤销：存储空间不足",
+  "undoStorageError": "已撤销，但部分文件无法保存到存储中",
+  "undoSuccess": "已成功撤销操作",
+  "unsupported": "不受支持",
   "onboarding": {
     "welcomeModal": {
-      "title": "Welcome to Stirling PDF!",
-      "description": "Would you like to take a quick 1-minute tour to learn the key features and how to get started?",
-      "helpHint": "You can always access this tour later from the <strong>Help</strong> button in the bottom left.",
-      "startTour": "Start Tour",
-      "maybeLater": "Maybe Later",
-      "dontShowAgain": "Don't Show Again"
+      "title": "欢迎使用 Stirling PDF！",
+      "description": "您想进行一个 1 分钟的快速导览，了解关键功能和如何开始使用吗？",
+      "helpHint": "您随时可以通过左下角的 <strong>帮助</strong> 按钮再次访问本导览。",
+      "startTour": "开始导览",
+      "maybeLater": "稍后再说",
+      "dontShowAgain": "不再显示"
     },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
-    "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
-    "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
-    "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
-    "fileSources": "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
-    "workbench": "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
-    "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
-    "viewer": "The <strong>Viewer</strong> lets you read and annotate your PDFs.",
-    "pageEditor": "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting.",
-    "activeFiles": "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process.",
-    "fileCheckbox": "Clicking one of the files selects it for processing. You can select multiple files for batch operations.",
-    "selectControls": "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
-    "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
-    "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
-    "results": "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
-    "fileReplacement": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
-    "pinButton": "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them.",
-    "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again.",
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Finish",
-    "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "selectCropTool": "让我们选择 <strong>裁剪</strong> 工具，演示如何使用其中一个工具。",
+    "toolInterface": "这是 <strong>裁剪</strong> 工具界面。正如您所见，目前内容不多，因为我们还没有添加可处理的 PDF 文件。",
+    "filesButton": "快速访问栏上的 <strong>文件</strong> 按钮可用于上传 PDF，以便使用工具。",
+    "fileSources": "您可以在此上传新文件或访问最近的文件。本次导览将使用一个示例文件。",
+    "workbench": "这是 <strong>工作台</strong> - 用于查看和编辑 PDF 的主要区域。",
+    "viewSwitcher": "使用这些控件选择您希望如何查看 PDF。",
+    "viewer": "<strong>查看器</strong> 允许您阅读并注释 PDF。",
+    "pageEditor": "<strong>页面编辑器</strong> 可对 PDF 中的页面执行多种操作，如重新排序、旋转和删除。",
+    "activeFiles": "<strong>活动文件</strong> 视图显示您已加载到工具中的所有 PDF，并允许您选择要处理的文件。",
+    "fileCheckbox": "单击某个文件即可选择其进行处理。您可以选择多个文件以进行批量操作。",
+    "selectControls": "<strong>右侧栏</strong> 包含快速全选/取消全选所有活动 PDF 的按钮，以及更改应用主题或语言的按钮。",
+    "cropSettings": "现在我们已选择要裁剪的文件，可以配置裁剪工具，选择要将 PDF 裁剪到的区域。",
+    "runButton": "配置完成后，使用此按钮在所有选中的 PDF 上运行该工具。",
+    "results": "工具运行完成后，<strong>审阅</strong> 步骤会在此面板显示结果预览，并允许您撤销操作或下载文件。 ",
+    "fileReplacement": "修改后的文件会自动替换工作台中的原始文件，方便您继续使用更多工具处理。",
+    "pinButton": "如果您希望在运行工具后文件仍保持为活动状态，可以使用 <strong>固定</strong> 按钮。",
+    "wrapUp": "一切就绪！您已了解应用的主要区域及其用法。随时点击 <strong>帮助</strong> 按钮重新查看本导览。",
+    "previous": "上一步",
+    "next": "下一步",
+    "finish": "完成",
+    "startTour": "开始导览",
+    "startTourDescription": "查看 Stirling PDF 的关键功能导览"
+  },
+  "adminOnboarding": {
+    "welcome": "欢迎使用 <strong>管理员引导</strong>！让我们一起探索提供给系统管理员的强大企业功能和设置。",
+    "configButton": "点击 <strong>配置</strong> 按钮以访问所有系统设置和管理控制。",
+    "settingsOverview": "这是 <strong>设置面板</strong>。管理员设置按类别组织，便于导航。",
+    "teamsAndUsers": "在此管理 <strong>团队</strong> 和个人用户。您可以通过电子邮件、可共享链接邀请新用户，或自行为他们创建自定义账户。",
+    "systemCustomization": "我们提供丰富的界面自定义方式：<strong>系统设置</strong>可更改应用名称和语言，<strong>功能</strong>用于服务器证书管理，<strong>端点</strong>可为您的用户启用或禁用特定工具。",
+    "databaseSection": "针对高级生产环境，我们提供 <strong>外部数据库连接</strong> 设置，以便与您现有的基础设施集成。",
+    "connectionsSection": "<strong>连接</strong>部分支持多种登录方式，包括自定义 SSO 和 SAML 提供商（如 Google 和 GitHub），以及用于通知和通信的电子邮件集成。",
+    "adminTools": "最后，我们还提供高级管理工具，如用于跟踪系统活动的 <strong>审计</strong> 和用于监控用户与平台交互的 <strong>使用分析</strong>。",
+    "wrapUp": "这就是管理员导览！您已看到让 Stirling PDF 成为强大且可定制解决方案的企业功能。可随时从 <strong>帮助</strong> 菜单访问本导览。"
   },
   "workspace": {
-    "title": "Workspace",
+    "title": "工作区",
     "people": {
-      "title": "People",
-      "description": "Manage workspace members and their permissions",
-      "loading": "Loading people...",
-      "searchMembers": "Search members...",
-      "addMembers": "Add Members",
+      "title": "成员",
+      "description": "管理工作区成员及其权限",
+      "loading": "正在加载成员...",
+      "searchMembers": "搜索成员...",
+      "addMembers": "添加成员",
       "inviteMembers": {
-        "label": "Invite Members",
-        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+        "label": "邀请成员",
+        "subtitle": "在下方输入或粘贴电子邮件地址，用逗号分隔。您的工作区将按成员计费。"
       },
-      "user": "User",
-      "role": "Role",
-      "team": "Team",
-      "status": "Status",
-      "actions": "Actions",
-      "noMembersFound": "No members found",
-      "active": "Active",
-      "disabled": "Disabled",
-      "activeSession": "Active session",
-      "member": "Member",
-      "admin": "Admin",
+      "user": "用户",
+      "role": "角色",
+      "team": "团队",
+      "status": "状态",
+      "actions": "操作",
+      "noMembersFound": "未找到成员",
+      "active": "启用",
+      "disabled": "已禁用",
+      "activeSession": "活动会话",
+      "member": "成员",
+      "admin": "管理员",
       "roleDescriptions": {
-        "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "admin": "可管理设置并邀请成员，具有完整管理权限。",
+        "member": "可查看和编辑共享文件，但不能管理工作区设置或成员。",
+        "user": "用户"
       },
-      "editRole": "Edit Role",
-      "enable": "Enable",
-      "disable": "Disable",
-      "deleteUser": "Delete User",
-      "deleteUserSuccess": "User deleted successfully",
-      "deleteUserError": "Failed to delete user",
-      "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+      "editRole": "编辑角色",
+      "enable": "启用",
+      "disable": "禁用",
+      "deleteUser": "删除用户",
+      "deleteUserSuccess": "用户删除成功",
+      "deleteUserError": "删除用户失败",
+      "confirmDelete": "确定要删除此用户吗？此操作无法撤销。",
       "addMember": {
-        "title": "Add Member",
-        "username": "Username (Email)",
+        "title": "添加成员",
+        "username": "用户名（电子邮件）",
         "usernamePlaceholder": "user@example.com",
-        "password": "Password",
-        "passwordPlaceholder": "Enter password",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "forcePasswordChange": "Force password change on first login",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "usernameRequired": "Username and password are required",
-        "passwordTooShort": "Password must be at least 6 characters",
-        "success": "User created successfully",
-        "error": "Failed to create user"
+        "password": "密码",
+        "passwordPlaceholder": "输入密码",
+        "role": "角色",
+        "team": "团队（可选）",
+        "teamPlaceholder": "选择团队",
+        "forcePasswordChange": "首次登录时强制修改密码",
+        "cancel": "取消",
+        "submit": "添加成员",
+        "usernameRequired": "必须填写用户名和密码",
+        "passwordTooShort": "密码长度至少为 6 个字符",
+        "success": "用户创建成功",
+        "error": "创建用户失败"
       },
       "editMember": {
-        "title": "Edit Member",
-        "editing": "Editing:",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "cancel": "Cancel",
-        "submit": "Update Member",
-        "success": "User updated successfully",
-        "error": "Failed to update user"
+        "title": "编辑成员",
+        "editing": "正在编辑：",
+        "role": "角色",
+        "team": "团队（可选）",
+        "teamPlaceholder": "选择团队",
+        "cancel": "取消",
+        "submit": "更新成员",
+        "success": "用户更新成功",
+        "error": "更新用户失败"
       },
       "toggleEnabled": {
-        "success": "User status updated successfully",
-        "error": "Failed to update user status"
+        "success": "用户状态更新成功",
+        "error": "更新用户状态失败"
       },
       "delete": {
-        "success": "User deleted successfully",
-        "error": "Failed to delete user"
+        "success": "用户删除成功",
+        "error": "删除用户失败"
       },
       "emailInvite": {
-        "tab": "Email Invite",
-        "description": "Type or paste in emails below, separated by commas. Users will receive login credentials via email.",
-        "emails": "Email Addresses",
+        "tab": "电子邮件邀请",
+        "description": "在下方输入或粘贴电子邮件地址，用逗号分隔。用户将通过电子邮件收到登录凭据。",
+        "emails": "电子邮件地址",
         "emailsPlaceholder": "user1@example.com, user2@example.com",
-        "emailsRequired": "At least one email address is required",
-        "submit": "Send Invites",
-        "success": "user(s) invited successfully",
-        "partialSuccess": "Some invites failed",
-        "allFailed": "Failed to invite users",
-        "error": "Failed to send invites"
+        "emailsRequired": "至少需要一个电子邮件地址",
+        "submit": "发送邀请",
+        "success": "已成功邀请用户",
+        "partialSuccess": "部分邀请失败",
+        "allFailed": "邀请用户失败",
+        "error": "发送邀请失败"
       },
       "directInvite": {
-        "tab": "Direct Create"
+        "tab": "直接创建"
       },
       "inviteLinkTab": {
-        "tab": "Invite Link"
+        "tab": "邀请链接"
       },
       "inviteLink": {
-        "description": "Generate a secure link that allows the user to set their own password",
-        "email": "Email Address",
-        "emailPlaceholder": "user@example.com (optional)",
-        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
-        "emailRequired": "Email address is required",
-        "emailOptional": "Optional - leave blank for a general invite link",
-        "emailRequiredForSend": "Email address is required to send email notification",
-        "expiryHours": "Expiry Hours",
-        "expiryDescription": "How many hours until the link expires",
-        "sendEmail": "Send invite link via email",
-        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
-        "smtpRequired": "SMTP not configured",
-        "generate": "Generate Link",
-        "generated": "Invite Link Generated",
-        "copied": "Link copied to clipboard",
-        "success": "Invite link generated successfully",
-        "successWithEmail": "Invite link generated and sent via email",
-        "emailFailed": "Invite link generated, but email failed",
-        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
-        "error": "Failed to generate invite link",
-        "submit": "Generate Invite Link"
+        "description": "生成一个安全链接，允许用户自行设置密码",
+        "email": "电子邮件地址",
+        "emailPlaceholder": "user@example.com（可选）",
+        "emailDescription": "可选 - 留空以生成任何人可使用的通用邀请链接",
+        "emailRequired": "必须填写电子邮件地址",
+        "emailOptional": "可选 - 留空以生成通用邀请链接",
+        "emailRequiredForSend": "发送电子邮件通知需要提供电子邮件地址",
+        "expiryHours": "有效期（小时）",
+        "expiryDescription": "链接多少小时后过期",
+        "sendEmail": "通过电子邮件发送邀请链接",
+        "sendEmailDescription": "如果启用，邀请链接将发送到指定的电子邮件地址",
+        "smtpRequired": "未配置 SMTP",
+        "generate": "生成链接",
+        "generated": "已生成邀请链接",
+        "copied": "链接已复制到剪贴板",
+        "success": "邀请链接生成成功",
+        "successWithEmail": "邀请链接已生成并通过电子邮件发送",
+        "emailSent": "邀请链接已生成并通过电子邮件发送",
+        "emailFailed": "邀请链接已生成，但邮件发送失败",
+        "emailFailedDetails": "错误：{0}。请手动分享邀请链接。",
+        "error": "生成邀请链接失败",
+        "submit": "生成邀请链接"
       },
       "inviteMode": {
-        "username": "Username",
-        "email": "Email",
-        "link": "Link",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "username": "用户名",
+        "email": "电子邮件",
+        "link": "链接",
+        "emailDisabled": "电子邮件邀请需要 SMTP 配置并在设置中将 mail.enableInvites=true"
       },
       "license": {
-        "users": "users",
-        "availableSlots": "Available Slots",
-        "grandfathered": "Grandfathered",
-        "grandfatheredShort": "{{count}} grandfathered",
-        "fromLicense": "from license",
-        "slotsAvailable": "{{count}} user slot(s) available",
-        "noSlotsAvailable": "No slots available",
-        "currentUsage": "Currently using {{current}} of {{max}} user licences"
+        "users": "用户",
+        "availableSlots": "可用名额",
+        "grandfathered": "历史保留",
+        "grandfatheredShort": "{{count}} 个历史保留",
+        "fromLicense": "来自许可证",
+        "slotsAvailable": "{{count}} 个用户名额可用",
+        "noSlotsAvailable": "没有可用名额",
+        "currentUsage": "当前已使用 {{current}} / {{max}} 个用户许可证"
       }
     },
     "teams": {
-      "title": "Teams",
-      "description": "Manage teams and organize workspace members",
-      "loading": "Loading teams...",
-      "loadingDetails": "Loading team details...",
-      "createNewTeam": "Create New Team",
-      "teamName": "Team Name",
-      "totalMembers": "Total Members",
-      "actions": "Actions",
-      "noTeamsFound": "No teams found",
-      "noMembers": "No members in this team",
-      "system": "System",
-      "addMember": "Add Member",
-      "viewTeam": "View Team",
-      "removeMember": "Remove from team",
-      "cannotRemoveFromSystemTeam": "Cannot remove from system team",
-      "renameTeamLabel": "Rename Team",
-      "deleteTeamLabel": "Delete Team",
-      "cannotDeleteInternal": "Cannot delete the Internal team",
-      "confirmDelete": "Are you sure you want to delete this team? This team must be empty to delete.",
-      "confirmRemove": "Remove user from this team?",
-      "cannotRenameInternal": "Cannot rename the Internal team",
-      "cannotAddToInternal": "Cannot add members to the Internal team",
-      "teamNotFound": "Team not found",
-      "backToTeams": "Back to Teams",
-      "memberCount": "{{count}} members",
-      "removeMemberSuccess": "User removed from team",
-      "removeMemberError": "Failed to remove user from team",
+      "title": "团队",
+      "description": "管理团队并组织工作区成员",
+      "loading": "正在加载团队...",
+      "loadingDetails": "正在加载团队详情...",
+      "createNewTeam": "创建新团队",
+      "teamName": "团队名称",
+      "totalMembers": "成员总数",
+      "actions": "操作",
+      "noTeamsFound": "未找到团队",
+      "noMembers": "此团队中没有成员",
+      "system": "系统",
+      "addMember": "添加成员",
+      "viewTeam": "查看团队",
+      "removeMember": "从团队移除",
+      "cannotRemoveFromSystemTeam": "不能从系统团队中移除",
+      "renameTeamLabel": "重命名团队",
+      "deleteTeamLabel": "删除团队",
+      "cannotDeleteInternal": "不能删除内部团队",
+      "confirmDelete": "确定要删除此团队吗？删除前该团队必须为空。",
+      "confirmRemove": "将该用户从此团队移除？",
+      "cannotRenameInternal": "不能重命名内部团队",
+      "cannotAddToInternal": "不能向内部团队添加成员",
+      "teamNotFound": "未找到团队",
+      "backToTeams": "返回团队列表",
+      "memberCount": "{{count}} 名成员",
+      "removeMemberSuccess": "已将用户从团队移除",
+      "removeMemberError": "从团队移除用户失败",
       "createTeam": {
-        "title": "Create New Team",
-        "teamName": "Team Name",
-        "teamNamePlaceholder": "Enter team name",
-        "cancel": "Cancel",
-        "submit": "Create Team",
-        "nameRequired": "Team name is required",
-        "success": "Team created successfully",
-        "error": "Failed to create team"
+        "title": "创建新团队",
+        "teamName": "团队名称",
+        "teamNamePlaceholder": "输入团队名称",
+        "cancel": "取消",
+        "submit": "创建团队",
+        "nameRequired": "必须填写团队名称",
+        "success": "团队创建成功",
+        "error": "创建团队失败"
       },
       "renameTeam": {
-        "title": "Rename Team",
-        "renaming": "Renaming:",
-        "newTeamName": "New Team Name",
-        "newTeamNamePlaceholder": "Enter new team name",
-        "cancel": "Cancel",
-        "submit": "Rename Team",
-        "nameRequired": "Team name is required",
-        "success": "Team renamed successfully",
-        "error": "Failed to rename team"
+        "title": "重命名团队",
+        "renaming": "正在重命名：",
+        "newTeamName": "新团队名称",
+        "newTeamNamePlaceholder": "输入新团队名称",
+        "cancel": "取消",
+        "submit": "重命名团队",
+        "nameRequired": "必须填写团队名称",
+        "success": "团队重命名成功",
+        "error": "重命名团队失败"
       },
       "deleteTeam": {
-        "success": "Team deleted successfully",
-        "error": "Failed to delete team. Make sure the team is empty.",
-        "teamMustBeEmpty": "Team must be empty before deletion"
+        "success": "团队删除成功",
+        "error": "删除团队失败。请确保团队为空。",
+        "teamMustBeEmpty": "删除前团队必须为空"
       },
       "addMemberToTeam": {
-        "title": "Add Member to Team",
-        "addingTo": "Adding to",
-        "selectUser": "Select User",
-        "selectUserPlaceholder": "Choose a user",
-        "selectUserRequired": "Please select a user",
-        "currentlyIn": "currently in",
-        "willBeMoved": "Note: This user will be moved from their current team to this team.",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "userRequired": "Please select a user",
-        "success": "Member added to team successfully",
-        "error": "Failed to add member to team"
+        "title": "将成员添加到团队",
+        "addingTo": "添加到",
+        "selectUser": "选择用户",
+        "selectUserPlaceholder": "选择一个用户",
+        "selectUserRequired": "请选择一个用户",
+        "currentlyIn": "当前所在",
+        "willBeMoved": "注意：该用户将从其当前团队移动到此团队。",
+        "cancel": "取消",
+        "submit": "添加成员",
+        "userRequired": "请选择一个用户",
+        "success": "成功将成员添加到团队",
+        "error": "添加成员到团队失败"
       },
       "changeTeam": {
-        "label": "Change Team",
-        "title": "Change Team",
-        "changing": "Moving",
-        "selectTeam": "Select Team",
-        "selectTeamPlaceholder": "Choose a team",
-        "selectTeamRequired": "Please select a team",
-        "success": "Team changed successfully",
-        "error": "Failed to change team",
-        "submit": "Change Team"
+        "label": "更改团队",
+        "title": "更改团队",
+        "changing": "正在移动",
+        "selectTeam": "选择团队",
+        "selectTeamPlaceholder": "选择一个团队",
+        "selectTeamRequired": "请选择一个团队",
+        "success": "团队更改成功",
+        "error": "更改团队失败",
+        "submit": "更改团队"
       }
     }
   },
   "plan": {
-    "currency": "Currency",
-    "popular": "Popular",
-    "current": "Current Plan",
-    "upgrade": "Upgrade",
-    "contact": "Contact Us",
-    "customPricing": "Custom",
-    "showComparison": "Compare All Features",
-    "hideComparison": "Hide Feature Comparison",
-    "featureComparison": "Feature Comparison",
+    "currency": "货币",
+    "popular": "热门",
+    "current": "当前套餐",
+    "upgrade": "升级",
+    "contact": "联系我们",
+    "customPricing": "自定义",
+    "showComparison": "比较全部功能",
+    "hideComparison": "隐藏功能对比",
+    "featureComparison": "功能对比",
     "activePlan": {
-      "title": "Active Plan",
-      "subtitle": "Your current subscription details"
+      "title": "当前套餐",
+      "subtitle": "您当前的订阅详情"
     },
     "availablePlans": {
-      "title": "Available Plans",
-      "subtitle": "Choose the plan that fits your needs"
+      "title": "可用套餐",
+      "subtitle": "选择符合您需求的套餐"
     },
     "static": {
-      "title": "Billing Information",
-      "message": "Online billing is not currently configured. To upgrade your plan or manage subscriptions, please contact us directly.",
-      "contactSales": "Contact Sales",
-      "contactToUpgrade": "Contact us to upgrade or customize your plan",
-      "maxUsers": "Max Users",
-      "upTo": "Up to"
+      "title": "账单信息",
+      "message": "当前未配置在线计费。若要升级套餐或管理订阅，请直接联系我们。",
+      "contactSales": "联系销售",
+      "contactToUpgrade": "联系我们以升级或定制您的套餐",
+      "maxUsers": "最大用户数",
+      "upTo": "最多"
     },
     "period": {
-      "month": "month"
+      "month": "月"
     },
     "free": {
-      "name": "Free",
-      "highlight1": "Limited Tool Usage Per week",
-      "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "name": "免费",
+      "highlight1": "每周工具使用次数有限",
+      "highlight2": "可使用所有工具",
+      "highlight3": "社区支持"
     },
     "pro": {
-      "name": "Pro",
-      "highlight1": "Unlimited Tool Usage",
-      "highlight2": "Advanced PDF tools",
-      "highlight3": "No watermarks"
+      "name": "专业版",
+      "highlight1": "工具使用不限",
+      "highlight2": "高级 PDF 工具",
+      "highlight3": "无水印"
     },
     "enterprise": {
-      "name": "Enterprise",
-      "highlight1": "Custom pricing",
-      "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "name": "企业版",
+      "highlight1": "自定义定价",
+      "highlight2": "专属支持",
+      "highlight3": "最新功能"
     },
     "feature": {
-      "title": "Feature",
-      "pdfTools": "Basic PDF Tools",
-      "fileSize": "File Size Limit",
-      "automation": "Automate tool workflows",
-      "api": "API Access",
-      "priority": "Priority Support",
-      "customPricing": "Custom Pricing"
+      "title": "功能",
+      "pdfTools": "基础 PDF 工具",
+      "fileSize": "文件大小限制",
+      "automation": "工具流程自动化",
+      "api": "API 访问",
+      "priority": "优先支持",
+      "customPricing": "自定义定价"
     }
   },
   "subscription": {
     "status": {
-      "active": "Active",
-      "pastDue": "Past Due",
-      "canceled": "Canceled",
-      "incomplete": "Incomplete",
-      "trialing": "Trial",
-      "none": "No Subscription"
+      "active": "有效",
+      "pastDue": "逾期",
+      "canceled": "已取消",
+      "incomplete": "未完成",
+      "trialing": "试用",
+      "none": "无订阅"
     },
-    "renewsOn": "Renews on {{date}}",
-    "cancelsOn": "Cancels on {{date}}"
+    "renewsOn": "于 {{date}} 续订",
+    "cancelsOn": "于 {{date}} 取消"
   },
   "billing": {
-    "manageBilling": "Manage Billing",
+    "manageBilling": "管理账单",
     "portal": {
-      "error": "Failed to open billing portal"
+      "error": "无法打开计费门户"
     }
   },
   "payment": {
-    "preparing": "Preparing your checkout...",
-    "upgradeTitle": "Upgrade to {{planName}}",
-    "success": "Payment Successful!",
-    "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
-    "autoClose": "This window will close automatically...",
-    "error": "Payment Error"
+    "preparing": "正在准备结账...",
+    "upgradeTitle": "升级到 {{planName}}",
+    "success": "支付成功！",
+    "successMessage": "您的订阅已成功激活。您将很快收到确认邮件。",
+    "autoClose": "此窗口将自动关闭...",
+    "error": "支付错误"
   },
   "firstLogin": {
-    "title": "First Time Login",
-    "welcomeTitle": "Welcome!",
-    "welcomeMessage": "For security reasons, you must change your password on your first login.",
-    "loggedInAs": "Logged in as",
-    "error": "Error",
-    "currentPassword": "Current Password",
-    "enterCurrentPassword": "Enter your current password",
-    "newPassword": "New Password",
-    "enterNewPassword": "Enter new password (min 8 characters)",
-    "confirmPassword": "Confirm New Password",
-    "reEnterNewPassword": "Re-enter new password",
-    "changePassword": "Change Password",
-    "allFieldsRequired": "All fields are required",
-    "passwordsDoNotMatch": "New passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMustBeDifferent": "New password must be different from current password",
-    "passwordChangedSuccess": "Password changed successfully! Please log in again.",
-    "passwordChangeFailed": "Failed to change password. Please check your current password."
+    "title": "首次登录",
+    "welcomeTitle": "欢迎！",
+    "welcomeMessage": "出于安全原因，您必须在首次登录时修改密码。",
+    "loggedInAs": "当前登录为",
+    "error": "错误",
+    "currentPassword": "当前密码",
+    "enterCurrentPassword": "输入当前密码",
+    "newPassword": "新密码",
+    "enterNewPassword": "输入新密码（至少 8 个字符）",
+    "confirmPassword": "确认新密码",
+    "reEnterNewPassword": "再次输入新密码",
+    "changePassword": "更改密码",
+    "allFieldsRequired": "所有字段均为必填",
+    "passwordsDoNotMatch": "两次输入的新密码不一致",
+    "passwordTooShort": "密码长度至少为 8 个字符",
+    "passwordMustBeDifferent": "新密码必须不同于当前密码",
+    "passwordChangedSuccess": "密码修改成功！请重新登录。",
+    "passwordChangeFailed": "修改密码失败。请检查您的当前密码。"
   },
   "invite": {
-    "welcome": "Welcome to Stirling PDF",
-    "invalidToken": "Invalid invitation link",
-    "validationError": "Failed to validate invitation link",
-    "passwordRequired": "Password is required",
-    "passwordTooShort": "Password must be at least 6 characters",
-    "passwordMismatch": "Passwords do not match",
-    "acceptError": "Failed to create account",
-    "validating": "Validating invitation...",
-    "invalidInvitation": "Invalid Invitation",
-    "goToLogin": "Go to Login",
-    "welcomeTitle": "You've been invited!",
-    "welcomeSubtitle": "Complete your account setup to get started",
-    "accountFor": "Creating account for",
-    "linkExpires": "Link expires",
-    "email": "Email address",
-    "emailPlaceholder": "Enter your email address",
-    "emailRequired": "Email address is required",
-    "invalidEmail": "Invalid email address",
-    "choosePassword": "Choose a password",
-    "passwordPlaceholder": "Enter your password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Re-enter your password",
-    "createAccount": "Create Account",
-    "creating": "Creating Account...",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "welcome": "欢迎使用 Stirling PDF",
+    "invalidToken": "无效的邀请链接",
+    "validationError": "验证邀请链接失败",
+    "passwordRequired": "必须填写密码",
+    "passwordTooShort": "密码长度至少为 6 个字符",
+    "passwordMismatch": "两次密码不一致",
+    "acceptError": "创建账户失败",
+    "validating": "正在验证邀请...",
+    "invalidInvitation": "无效的邀请",
+    "goToLogin": "前往登录",
+    "welcomeTitle": "您已被邀请！",
+    "welcomeSubtitle": "完成账户设置即可开始使用",
+    "accountFor": "正在为以下用户创建账户",
+    "linkExpires": "链接过期时间",
+    "email": "电子邮件地址",
+    "emailPlaceholder": "输入您的电子邮件地址",
+    "emailRequired": "必须填写电子邮件地址",
+    "invalidEmail": "无效的电子邮件地址",
+    "choosePassword": "选择密码",
+    "passwordPlaceholder": "输入您的密码",
+    "confirmPassword": "确认密码",
+    "confirmPasswordPlaceholder": "再次输入您的密码",
+    "createAccount": "创建账户",
+    "creating": "正在创建账户...",
+    "alreadyHaveAccount": "已经有账户？",
+    "signIn": "登录"
   },
   "audit": {
     "error": {
-      "title": "Error loading audit system"
+      "title": "加载审计系统时出错"
     },
-    "notAvailable": "Audit system not available",
-    "notAvailableMessage": "The audit system is not configured or not available.",
-    "disabled": "Audit logging is disabled",
-    "disabledMessage": "Enable audit logging in your application configuration to track system events.",
+    "notAvailable": "审计系统不可用",
+    "notAvailableMessage": "审计系统未配置或不可用。",
+    "disabled": "已禁用审计日志",
+    "disabledMessage": "请在应用配置中启用审计日志以跟踪系统事件。",
     "systemStatus": {
-      "title": "System Status",
-      "status": "Audit Logging",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "level": "Audit Level",
-      "retention": "Retention Period",
-      "days": "days",
-      "totalEvents": "Total Events"
+      "title": "系统状态",
+      "status": "审计日志",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "level": "审计级别",
+      "retention": "保留期限",
+      "days": "天",
+      "totalEvents": "事件总数"
     },
     "tabs": {
-      "dashboard": "Dashboard",
-      "events": "Audit Events",
-      "export": "Export"
+      "dashboard": "仪表板",
+      "events": "审计事件",
+      "export": "导出"
     },
     "charts": {
-      "title": "Audit Dashboard",
-      "error": "Error loading charts",
-      "day": "Day",
-      "week": "Week",
-      "month": "Month",
-      "byType": "Events by Type",
-      "byUser": "Events by User",
-      "overTime": "Events Over Time"
+      "title": "审计仪表板",
+      "error": "加载图表时出错",
+      "day": "日",
+      "week": "周",
+      "month": "月",
+      "byType": "按类型统计事件",
+      "byUser": "按用户统计事件",
+      "overTime": "事件随时间变化"
     },
     "events": {
-      "title": "Audit Events",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "error": "Error loading events",
-      "noEvents": "No events found",
-      "timestamp": "Timestamp",
-      "type": "Type",
-      "user": "User",
-      "ipAddress": "IP Address",
-      "actions": "Actions",
-      "viewDetails": "View Details",
-      "eventDetails": "Event Details",
-      "details": "Details"
+      "title": "审计事件",
+      "filterByType": "按类型筛选",
+      "filterByUser": "按用户筛选",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "clearFilters": "清除",
+      "error": "加载事件时出错",
+      "noEvents": "未找到事件",
+      "timestamp": "时间戳",
+      "type": "类型",
+      "user": "用户",
+      "ipAddress": "IP 地址",
+      "actions": "操作",
+      "viewDetails": "查看详情",
+      "eventDetails": "事件详情",
+      "details": "详情"
     },
     "export": {
-      "title": "Export Audit Data",
-      "description": "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
-      "format": "Export Format",
-      "filters": "Filters (Optional)",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "exportButton": "Export Data",
-      "error": "Failed to export data"
+      "title": "导出审计数据",
+      "description": "将审计事件导出为 CSV 或 JSON 格式。使用筛选器限定导出数据。",
+      "format": "导出格式",
+      "filters": "筛选器（可选）",
+      "filterByType": "按类型筛选",
+      "filterByUser": "按用户筛选",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "clearFilters": "清除",
+      "exportButton": "导出数据",
+      "error": "导出数据失败"
     }
   },
   "usage": {
-    "noData": "No data available",
-    "error": "Error loading usage statistics",
-    "noDataMessage": "No usage statistics are currently available.",
+    "noData": "暂无数据",
+    "error": "加载使用统计时出错",
+    "noDataMessage": "当前暂无使用统计。",
     "controls": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All",
-      "refresh": "Refresh",
-      "dataTypeLabel": "Data Type:",
+      "top10": "前 10",
+      "top20": "前 20",
+      "all": "全部",
+      "refresh": "刷新",
+      "dataTypeLabel": "数据类型：",
       "dataType": {
-        "all": "All",
+        "all": "全部",
         "api": "API",
         "ui": "UI"
       }
     },
     "showing": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All"
+      "top10": "前 10",
+      "top20": "前 20",
+      "all": "全部"
     },
     "stats": {
-      "totalEndpoints": "Total Endpoints",
-      "totalVisits": "Total Visits",
-      "showing": "Showing",
-      "selectedVisits": "Selected Visits"
+      "totalEndpoints": "端点总数",
+      "totalVisits": "访问总数",
+      "showing": "显示",
+      "selectedVisits": "所选访问次数"
     },
     "chart": {
-      "title": "Endpoint Usage Chart"
+      "title": "端点使用图表"
     },
     "table": {
-      "title": "Detailed Statistics",
-      "endpoint": "Endpoint",
-      "visits": "Visits",
-      "percentage": "Percentage",
-      "noData": "No data available"
+      "title": "详细统计",
+      "endpoint": "端点",
+      "visits": "访问次数",
+      "percentage": "百分比",
+      "noData": "无可用数据"
     }
   },
   "backendHealth": {
-    "checking": "Checking backend status...",
-    "online": "Backend Online",
-    "offline": "Backend Offline"
-  },
-  "replaceColorPdf": {
-    "tags": "更换颜色，页面操作，后端，服务器端"
+    "checking": "正在检查后端状态...",
+    "online": "后端在线",
+    "offline": "后端离线",
+    "starting": "后端正在启动...",
+    "wait": "请等待后端完成启动后再试。"
   }
 }
