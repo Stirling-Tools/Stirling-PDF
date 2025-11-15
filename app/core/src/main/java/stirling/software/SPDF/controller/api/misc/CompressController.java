@@ -791,6 +791,16 @@ public class CompressController {
                 currentFile = originalFile;
             }
 
+            // Apply linearization as final step if requested
+            if (Boolean.TRUE.equals(request.getLinearize()) && isQpdfEnabled()) {
+                try {
+                    applyLinearization(currentFile, tempFiles);
+                    log.info("PDF linearization applied successfully");
+                } catch (IOException e) {
+                    log.warn("PDF linearization failed, continuing without linearization", e);
+                }
+            }
+
             String outputFilename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
@@ -807,6 +817,36 @@ public class CompressController {
                     log.warn("Failed to delete temporary file: {}", tempFile, e);
                 }
             }
+        }
+    }
+
+    // Apply PDF linearization using QPDF
+    private void applyLinearization(Path currentFile, List<Path> tempFiles) throws IOException {
+        log.info("Applying PDF linearization to: {}", currentFile);
+
+        // Create output file for linearization
+        Path linearizedOutputFile = Files.createTempFile("linearized_output_", ".pdf");
+        tempFiles.add(linearizedOutputFile);
+
+        // Build QPDF command for linearization only
+        List<String> command = new ArrayList<>();
+        command.add("qpdf");
+        command.add("--linearize");
+        command.add(currentFile.toString());
+        command.add(linearizedOutputFile.toString());
+
+        try {
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                            .runCommandWithOutputHandling(command);
+
+            // Update current file to the linearized output
+            Files.copy(linearizedOutputFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("PDF linearization completed successfully");
+        } catch (Exception e) {
+            log.warn("PDF linearization failed", e);
+            throw new IOException("PDF linearization failed", e);
         }
     }
 
