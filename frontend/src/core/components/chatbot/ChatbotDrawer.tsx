@@ -39,6 +39,8 @@ interface ChatMessage {
   confidence?: number;
   modelUsed?: string;
   createdAt: Date;
+  documentId?: string;
+  documentName?: string;
 }
 
 function createMessageId() {
@@ -89,6 +91,7 @@ const ChatbotDrawer = () => {
   const sessionStatus = selectedSessionEntry?.status ?? 'idle';
   const sessionError = selectedSessionEntry?.error;
   const sessionInfo: ChatbotSessionInfo | null = selectedSessionEntry?.session ?? null;
+  const selectedDocumentName = selectedFile?.name ?? selectedSessionEntry?.fileName;
   const contextStats =
           selectedSessionEntry?.status === 'ready' && selectedSessionEntry?.characterCount !== undefined
                   ? {
@@ -162,11 +165,6 @@ const ChatbotDrawer = () => {
       maybeShowUsageWarning(sessionInfo.usageSummary);
     }
   }, [sessionInfo?.sessionId]);
-
-  useEffect(() => {
-    setMessages([]);
-    setWarnings([]);
-  }, [selectedFileId]);
 
   const maybeShowUsageWarning = (usage?: ChatbotUsageSummary | null) => {
     if (!usage) {
@@ -286,6 +284,8 @@ const ChatbotDrawer = () => {
       role: 'user',
       content: trimmedPrompt,
       createdAt: new Date(),
+      documentId: selectedFileId,
+      documentName: selectedDocumentName,
     };
     setMessages((prev) => [...prev, userMessage]);
     setPrompt('');
@@ -322,6 +322,8 @@ const ChatbotDrawer = () => {
     confidence: reply.confidence,
     modelUsed: reply.modelUsed,
     createdAt: new Date(),
+    documentId: selectedFileId,
+    documentName: selectedDocumentName,
   });
 
   const fileOptions = useMemo(
@@ -398,7 +400,7 @@ const ChatbotDrawer = () => {
             boxShadow: '0 2px 12px rgba(16,24,40,0.06)',
           }}
         >
-          <Group justify="space-between" mb={4} gap="xs">
+          <Group justify="space-between" mb={4} gap="xs" align="flex-start">
             <Text size="xs" c={isUser ? 'rgba(255,255,255,0.8)' : 'dimmed'} tt="uppercase">
               {isUser ? t('chatbot.userLabel', 'You') : t('chatbot.botLabel', 'Stirling Bot')}
             </Text>
@@ -421,6 +423,16 @@ const ChatbotDrawer = () => {
             <Text size="xs" c="dimmed" mt={4}>
               {t('chatbot.modelTag', 'Model: {{name}}', { name: message.modelUsed })}
             </Text>
+          )}
+          {message.documentName && (
+            <Badge
+              size="xs"
+              variant="light"
+              color={isUser ? 'blue' : 'gray'}
+              mt={6}
+            >
+              {message.documentName}
+            </Badge>
           )}
         </Box>
       </Box>
