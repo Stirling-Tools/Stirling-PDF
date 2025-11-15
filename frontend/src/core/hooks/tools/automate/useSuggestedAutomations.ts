@@ -71,7 +71,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       {
         id: "pre-publish-sanitization",
         name: t("automation.suggested.prePublishSanitization", "Pre-publish Sanitization"),
-        description: t("automation.suggested.prePublishSanitizationDesc", "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms and layers to prevent data leakage before publishing PDFs online."),
+        description: t("automation.suggested.prePublishSanitizationDesc", "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."),
         operations: [
           {
             operation: "sanitize",

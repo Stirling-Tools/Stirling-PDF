@@ -8,7 +8,7 @@
         "removeEmbeddedFiles": true,
         "removeXMPMetadata": true,
         "removeMetadata": true,
-        "removeLinks": false,
+        "removeLinks": true,
         "removeFonts": false
       }
     },
