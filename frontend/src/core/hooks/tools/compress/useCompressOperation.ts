@@ -19,6 +19,7 @@ export const buildCompressFormData = (parameters: CompressParameters, file: File
   }
 
   formData.append("grayscale", parameters.grayscale.toString());
+  formData.append("linearize", parameters.linearize.toString());
   return formData;
 };
 
