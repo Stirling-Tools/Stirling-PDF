@@ -114,6 +114,23 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               ]}
             />
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.rememberInputs', 'Remember tool inputs')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  'settings.general.rememberInputsDescription',
+                  'Store the last settings you used for each tool on this device'
+                )}
+              </Text>
+            </div>
+            <Switch
+              checked={preferences.rememberFormInputs}
+              onChange={(event) => updatePreference('rememberFormInputs', event.currentTarget.checked)}
+            />
+          </div>
           <Tooltip
             label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
             multiline

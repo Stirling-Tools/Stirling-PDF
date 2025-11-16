@@ -329,6 +329,8 @@
       "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
       "defaultToolPickerMode": "Default tool picker mode",
       "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "rememberInputs": "Remember tool inputs",
+      "rememberInputsDescription": "Store the last settings you used for each tool on this device",
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"

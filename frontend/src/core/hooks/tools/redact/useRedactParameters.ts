@@ -43,6 +43,7 @@ export const useRedactParameters = (): RedactParametersHook => {
       }
       // Manual mode validation would go here when implemented
       return false;
-    }
+    },
+    storageKey: 'redact'
   });
 };

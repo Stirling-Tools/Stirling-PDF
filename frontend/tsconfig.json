@@ -36,6 +36,7 @@
         "src/proprietary/*",
         "src/core/*"
       ],
+      "@testing/*": ["src/testing/*"],
       "@desktop/*": ["src/desktop/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]

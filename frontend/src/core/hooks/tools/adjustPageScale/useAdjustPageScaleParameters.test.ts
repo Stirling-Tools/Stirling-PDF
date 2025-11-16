@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAdjustPageScaleParameters, defaultParameters, PageSize, AdjustPageScaleParametersHook } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderAdjustPageScaleHook = () => renderHook(() => useAdjustPageScaleParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useAdjustPageScaleParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
     expect(result.current.parameters.scaleFactor).toBe(1.0);
@@ -19,7 +22,7 @@ describe('useAdjustPageScaleParameters', () => {
     { paramName: 'pageSize' as const, value: PageSize.LETTER },
     { paramName: 'pageSize' as const, value: PageSize.LEGAL },
   ])('should update parameter $paramName to $value', ({ paramName, value }) => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     act(() => {
       result.current.updateParameter(paramName, value);
@@ -29,7 +32,7 @@ describe('useAdjustPageScaleParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     // First, change some parameters
     act(() => {
@@ -49,7 +52,7 @@ describe('useAdjustPageScaleParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     expect(result.current.getEndpointName()).toBe('scale-pages');
   });
@@ -96,7 +99,7 @@ describe('useAdjustPageScaleParameters', () => {
       expected: false
     }
   ])('should validate parameters correctly $description', ({ setup, expected }) => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     act(() => {
       setup(result.current);
@@ -106,7 +109,7 @@ describe('useAdjustPageScaleParameters', () => {
   });
 
   test('should handle all PageSize enum values', () => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     Object.values(PageSize).forEach(pageSize => {
       act(() => {
@@ -119,7 +122,7 @@ describe('useAdjustPageScaleParameters', () => {
   });
 
   test('should handle scale factor edge cases', () => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+    const { result } = renderAdjustPageScaleHook();
 
     // Test very small valid scale factor
     act(() => {

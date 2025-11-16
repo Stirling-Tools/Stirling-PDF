@@ -6,13 +6,16 @@
 import { describe, test, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderConvertHook = () => renderHook(() => useConvertParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
 
   describe('Single File Detection', () => {
 
     test('should detect single file extension and set auto-target', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const pdfFile = [{ name: 'document.pdf' }];
 
@@ -27,7 +30,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle unknown file types with file-to-pdf fallback', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const unknownFile = [{ name: 'document.xyz' }, { name: 'image.jpggg' }];
 
@@ -41,7 +44,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle files without extensions', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const noExtFile = [{ name: 'document' }];
 
@@ -59,7 +62,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Multiple Identical Files', () => {
 
     test('should detect multiple PDF files and set auto-target', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const pdfFiles = [
         { name: 'doc1.pdf' },
@@ -78,7 +81,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle multiple unknown file types with fallback', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const unknownFiles = [
         { name: 'file1.xyz' },
@@ -98,7 +101,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Smart Detection - All Images', () => {
 
     test('should detect all image files and enable smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const imageFiles = [
         { name: 'photo1.jpg' },
@@ -117,7 +120,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle mixed case image extensions', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const imageFiles = [
         { name: 'photo1.JPG' },
@@ -136,7 +139,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Smart Detection - All Web Files', () => {
 
     test('should detect all web files and enable web smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const webFiles = [
         { name: 'page1.html' },
@@ -154,7 +157,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle mixed case web extensions', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const webFiles = [
         { name: 'page1.HTML' },
@@ -170,7 +173,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should detect multiple web files and enable web smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const zipFiles = [
         { name: 'site1.zip' },
@@ -191,7 +194,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Smart Detection - Mixed File Types', () => {
 
     test('should detect mixed file types and enable smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const mixedFiles = [
         { name: 'document.pdf' },
@@ -210,7 +213,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should detect mixed images and documents as mixed type', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const mixedFiles = [
         { name: 'photo.jpg' },
@@ -227,7 +230,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle mixed with unknown file types', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const mixedFiles = [
         { name: 'document.pdf' },
@@ -247,7 +250,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Smart Detection Endpoint Resolution', () => {
 
     test('should return correct endpoint for image smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const imageFiles = [
         { name: 'photo1.jpg' },
@@ -263,7 +266,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should return correct endpoint for web smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const webFiles = [
         { name: 'page1.html' },
@@ -279,7 +282,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should return correct endpoint for mixed smart detection', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const mixedFiles = [
         { name: 'document.pdf' },
@@ -298,7 +301,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Auto-Target Selection Logic', () => {
 
     test('should select single available target automatically', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       // Markdown has only one conversion target (PDF)
       const mdFile = [{ name: 'readme.md' }];
@@ -312,7 +315,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should not auto-select when multiple targets available', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       // PDF has multiple conversion targets, so no auto-selection
       const pdfFile = [{ name: 'document.pdf' }];
@@ -330,7 +333,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
   describe('Edge Cases', () => {
 
     test('should handle empty file names', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const emptyFiles = [{ name: '' }];
 
@@ -343,7 +346,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
 
     test('should handle malformed file objects', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const malformedFiles: Array<{name: string}> = [
         { name: 'valid.pdf' },

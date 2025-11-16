@@ -1,16 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { defaultParameters, useSanitizeParameters } from '@app/hooks/tools/sanitize/useSanitizeParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderSanitizeHook = () => renderHook(() => useSanitizeParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useSanitizeParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should update individual parameters', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     act(() => {
       result.current.updateParameter('removeXMPMetadata', true);
@@ -23,7 +26,7 @@ describe('useSanitizeParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     // First, change some parameters
     act(() => {
@@ -43,13 +46,13 @@ describe('useSanitizeParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     expect(result.current.getEndpointName()).toBe('sanitize-pdf');
   });
 
   test('should validate parameters correctly', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     // Default state should be valid (has removeJavaScript and removeEmbeddedFiles enabled)
     expect(result.current.validateParameters()).toBe(true);
@@ -71,7 +74,7 @@ describe('useSanitizeParameters', () => {
   });
 
   test('should handle all parameter types correctly', () => {
-    const { result } = renderHook(() => useSanitizeParameters());
+    const { result } = renderSanitizeHook();
 
     const allParameters = Object.keys(defaultParameters) as (keyof typeof defaultParameters)[];
 

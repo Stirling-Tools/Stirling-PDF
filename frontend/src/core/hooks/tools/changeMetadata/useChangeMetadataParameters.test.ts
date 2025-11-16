@@ -2,10 +2,13 @@ import { renderHook, act } from '@testing-library/react';
 import { defaultParameters, useChangeMetadataParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
 import { TrappedStatus } from '@app/types/metadata';
 import { describe, expect, test } from 'vitest';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderChangeMetadataHook = () => renderHook(() => useChangeMetadataParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useChangeMetadataParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useChangeMetadataParameters());
+    const { result } = renderChangeMetadataHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
@@ -23,7 +26,7 @@ describe('useChangeMetadataParameters', () => {
       { paramName: 'trapped', value: TrappedStatus.TRUE },
       { paramName: 'deleteAll', value: true },
     ] as const)('should update $paramName parameter', ({ paramName, value }) => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         result.current.updateParameter(paramName, value);
@@ -48,7 +51,7 @@ describe('useChangeMetadataParameters', () => {
       { description: 'no meaningful content', updates: {}, expected: false },
       { description: 'whitespace only', updates: { title: '   ', author: '   ' }, expected: false },
     ])('should validate correctly when $description', ({ updates, expected }) => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         Object.entries(updates).forEach(([key, value]) => {
@@ -64,7 +67,7 @@ describe('useChangeMetadataParameters', () => {
       { description: 'valid modification date', updates: { title: 'Test', modificationDate: new Date('2025/01/17 14:30:00') }, expected: true },
       { description: 'empty dates are valid', updates: { title: 'Test', creationDate: null, modificationDate: null }, expected: true },
     ])('should validate dates correctly with $description', ({ updates, expected }) => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         Object.entries(updates).forEach(([key, value]) => {
@@ -78,7 +81,7 @@ describe('useChangeMetadataParameters', () => {
 
   describe('custom metadata', () => {
     test('should add custom metadata with sequential IDs', () => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         result.current.addCustomMetadata();
@@ -93,7 +96,7 @@ describe('useChangeMetadataParameters', () => {
     });
 
     test('should remove custom metadata by ID', () => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         result.current.addCustomMetadata();
@@ -109,7 +112,7 @@ describe('useChangeMetadataParameters', () => {
     });
 
     test('should update custom metadata by ID', () => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         result.current.addCustomMetadata();
@@ -129,7 +132,7 @@ describe('useChangeMetadataParameters', () => {
     });
 
     test('should validate with custom metadata', () => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       act(() => {
         result.current.addCustomMetadata();
@@ -145,7 +148,7 @@ describe('useChangeMetadataParameters', () => {
     });
 
     test('should generate unique IDs for multiple custom entries', () => {
-      const { result } = renderHook(() => useChangeMetadataParameters());
+      const { result } = renderChangeMetadataHook();
 
       for (let i = 0; i < 3; i++) {
         act(() => {
@@ -161,7 +164,7 @@ describe('useChangeMetadataParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useChangeMetadataParameters());
+    const { result } = renderChangeMetadataHook();
 
     expect(result.current.getEndpointName()).toBe('update-metadata');
   });

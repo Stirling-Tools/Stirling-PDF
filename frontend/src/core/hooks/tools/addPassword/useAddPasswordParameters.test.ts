@@ -2,10 +2,13 @@ import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAddPasswordParameters, defaultParameters, AddPasswordParametersHook } from '@app/hooks/tools/addPassword/useAddPasswordParameters';
 import { defaultParameters as defaultChangePermissionsParameters, ChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderAddPasswordHook = () => renderHook(() => useAddPasswordParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useAddPasswordParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
@@ -15,7 +18,7 @@ describe('useAddPasswordParameters', () => {
     { paramName: 'ownerPassword' as const, value: 'owner-password' },
     { paramName: 'keyLength' as const, value: 256 }
   ])('should update parameter $paramName', ({ paramName, value }) => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     act(() => {
       result.current.updateParameter(paramName, value);
@@ -28,7 +31,7 @@ describe('useAddPasswordParameters', () => {
     { paramName: 'preventAssembly' as const },
     { paramName: 'preventPrinting' as const }
   ])('should update boolean permission parameter $paramName', ({ paramName }) => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     act(() => {
       result.current.permissions.updateParameter(paramName, true);
@@ -38,7 +41,7 @@ describe('useAddPasswordParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     // First, change some parameters
     act(() => {
@@ -60,7 +63,7 @@ describe('useAddPasswordParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     expect(result.current.getEndpointName()).toBe('add-password');
   });
@@ -112,7 +115,7 @@ describe('useAddPasswordParameters', () => {
       }
     }
   ])('should validate parameters correctly $description', ({ setup }) => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     // Default state should be valid
     expect(result.current.validateParameters()).toBe(true);
@@ -126,7 +129,7 @@ describe('useAddPasswordParameters', () => {
   });
 
   test.each(Object.keys(defaultChangePermissionsParameters) as Array<keyof ChangePermissionsParameters>)('should handle boolean restriction parameter %s', (param) => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     act(() => {
       result.current.resetParameters();
@@ -137,7 +140,7 @@ describe('useAddPasswordParameters', () => {
   });
 
   test('should handle mixed parameter types in updateParameter', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
+    const { result } = renderAddPasswordHook();
 
     act(() => {
       result.current.updateParameter('password', 'test-string');

@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRedactParameters, defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderRedactHook = () => renderHook(() => useRedactParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useRedactParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useRedactParameters());
+    const { result } = renderRedactHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
@@ -18,7 +21,7 @@ describe('useRedactParameters', () => {
     { paramName: 'customPadding' as const, value: 0.5 },
     { paramName: 'convertPDFToImage' as const, value: false }
   ])('should update parameter $paramName', ({ paramName, value }) => {
-    const { result } = renderHook(() => useRedactParameters());
+    const { result } = renderRedactHook();
 
     act(() => {
       result.current.updateParameter(paramName, value);
@@ -28,7 +31,7 @@ describe('useRedactParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useRedactParameters());
+    const { result } = renderRedactHook();
 
     // Modify some parameters
     act(() => {
@@ -52,7 +55,7 @@ describe('useRedactParameters', () => {
       { description: 'not validate when wordsToRedact contains only empty strings in automatic mode', wordsToRedact: ['', '  ', ''], expected: false },
       { description: 'validate when wordsToRedact contains at least one non-empty word in automatic mode', wordsToRedact: ['', 'valid', '  '], expected: true },
     ])('should $description', ({ wordsToRedact, expected }) => {
-      const { result } = renderHook(() => useRedactParameters());
+      const { result } = renderRedactHook();
 
       act(() => {
         result.current.updateParameter('mode', 'automatic');
@@ -63,7 +66,7 @@ describe('useRedactParameters', () => {
     });
 
     test('should not validate in manual mode (not implemented)', () => {
-      const { result } = renderHook(() => useRedactParameters());
+      const { result } = renderRedactHook();
 
       act(() => {
         result.current.updateParameter('mode', 'manual');
@@ -75,7 +78,7 @@ describe('useRedactParameters', () => {
 
   describe('endpoint handling', () => {
     test('should return correct endpoint for automatic mode', () => {
-      const { result } = renderHook(() => useRedactParameters());
+      const { result } = renderRedactHook();
 
       act(() => {
         result.current.updateParameter('mode', 'automatic');
@@ -85,7 +88,7 @@ describe('useRedactParameters', () => {
     });
 
     test('should throw error for manual mode (not implemented)', () => {
-      const { result } = renderHook(() => useRedactParameters());
+      const { result } = renderRedactHook();
 
       act(() => {
         result.current.updateParameter('mode', 'manual');
@@ -96,7 +99,7 @@ describe('useRedactParameters', () => {
   });
 
   test('should maintain parameter state across updates', () => {
-    const { result } = renderHook(() => useRedactParameters());
+    const { result } = renderRedactHook();
 
     act(() => {
       result.current.updateParameter('redactColor', '#FF0000');
@@ -117,7 +120,7 @@ describe('useRedactParameters', () => {
   });
 
   test('should handle array parameter updates correctly', () => {
-    const { result } = renderHook(() => useRedactParameters());
+    const { result } = renderRedactHook();
 
     act(() => {
       result.current.updateParameter('wordsToRedact', ['initial']);

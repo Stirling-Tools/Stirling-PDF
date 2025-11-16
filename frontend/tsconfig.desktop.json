@@ -9,7 +9,8 @@
       ],
       "@desktop/*": ["src/desktop/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@testing/*": ["src/testing/*"]
     }
   },
   "exclude": [

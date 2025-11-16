@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useMergeParameters, defaultParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderMergeHook = () => renderHook(() => useMergeParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useMergeParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useMergeParameters());
+    const { result } = renderMergeHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
@@ -15,7 +18,7 @@ describe('useMergeParameters', () => {
     { paramName: 'generateTableOfContents' as const, value: true },
     { paramName: 'generateTableOfContents' as const, value: false }
   ])('should update parameter $paramName to $value', ({ paramName, value }) => {
-    const { result } = renderHook(() => useMergeParameters());
+    const { result } = renderMergeHook();
 
     act(() => {
       result.current.updateParameter(paramName, value);
@@ -25,7 +28,7 @@ describe('useMergeParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useMergeParameters());
+    const { result } = renderMergeHook();
 
     // First, change some parameters
     act(() => {
@@ -45,7 +48,7 @@ describe('useMergeParameters', () => {
   });
 
   test('should validate parameters correctly - always returns true', () => {
-    const { result } = renderHook(() => useMergeParameters());
+    const { result } = renderMergeHook();
 
     // Default state should be valid
     expect(result.current.validateParameters()).toBe(true);

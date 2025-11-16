@@ -1,16 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRemovePasswordParameters, defaultParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderRemovePasswordHook = () => renderHook(() => useRemovePasswordParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useRemovePasswordParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+    const { result } = renderRemovePasswordHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should update password parameter', () => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+    const { result } = renderRemovePasswordHook();
 
     act(() => {
       result.current.updateParameter('password', 'test-password');
@@ -20,7 +23,7 @@ describe('useRemovePasswordParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+    const { result } = renderRemovePasswordHook();
 
     // First, change the password
     act(() => {
@@ -38,7 +41,7 @@ describe('useRemovePasswordParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+    const { result } = renderRemovePasswordHook();
 
     expect(result.current.getEndpointName()).toBe('remove-password');
   });
@@ -70,7 +73,7 @@ describe('useRemovePasswordParameters', () => {
       expectedValid: true
     }
   ])('should validate parameters correctly $description', ({ password, expectedValid }) => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+    const { result } = renderRemovePasswordHook();
 
     act(() => {
       result.current.updateParameter('password', password);
