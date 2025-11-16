@@ -114,6 +114,20 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               ]}
             />
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.hideUnavailableTools', 'Hide unavailable tools')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('settings.general.hideUnavailableToolsDescription', 'Remove tools that have been disabled by your server instead of showing them greyed out.')}
+              </Text>
+            </div>
+            <Switch
+              checked={preferences.hideUnavailableTools}
+              onChange={(event) => updatePreference('hideUnavailableTools', event.currentTarget.checked)}
+            />
+          </div>
           <Tooltip
             label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
             multiline

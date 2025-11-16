@@ -80,6 +80,7 @@ import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
+import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from '@app/constants/splitConstants';
 import CompressSettings from "@app/components/tools/compress/CompressSettings";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
@@ -379,6 +380,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: Array.from(new Set(Object.values(SPLIT_ENDPOINT_NAMES))),
         operationConfig: splitOperationConfig,
         automationSettings: SplitAutomationSettings,
         synonyms: getSynonyms(t, "split")
@@ -446,6 +448,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.bookletImposition.desc", "Create booklets with proper page ordering and multi-page layout for printing and binding"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: ["booklet-imposition"],
       },
       pdfToSinglePage: {
 
@@ -578,7 +581,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"],
+        endpoints: ["remove-cert-sign"],
         operationConfig: removeCertificateSignOperationConfig,
         synonyms: getSynonyms(t, "removeCertSign"),
         automationSettings: null,
@@ -607,7 +610,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         name: t("home.autoRename.title", "Auto Rename PDF File"),
         component: AutoRename,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"],
+        endpoints: ["auto-rename"],
         operationConfig: autoRenameOperationConfig,
         description: t("home.autoRename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,

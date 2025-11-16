@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
@@ -178,6 +179,18 @@ public class ConfigController {
         for (String endpoint : endpointArray) {
             String trimmedEndpoint = endpoint.trim();
             result.put(trimmedEndpoint, endpointConfiguration.isEndpointEnabled(trimmedEndpoint));
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/endpoints-availability")
+    public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
+            @RequestParam(name = "endpoints") String endpoints) {
+        Map<String, EndpointAvailability> result = new HashMap<>();
+        String[] endpointArray = endpoints.split(",");
+        for (String endpoint : endpointArray) {
+            String trimmedEndpoint = endpoint.trim();
+            result.put(trimmedEndpoint, endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
     }
