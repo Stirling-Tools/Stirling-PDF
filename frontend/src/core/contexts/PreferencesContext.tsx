@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { preferencesService, UserPreferences } from '@app/services/preferencesService';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { preferencesService, UserPreferences, PREFERENCES_STORAGE_KEY } from '@app/services/preferencesService';
+import { addLocalSettingsListener } from '@app/utils/localSettingsEvents';
 
 interface PreferencesContextValue {
   preferences: UserPreferences;
@@ -17,6 +18,17 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Load preferences synchronously on mount
     return preferencesService.getAllPreferences();
   });
+
+  useEffect(() => {
+    return addLocalSettingsListener(detail => {
+      if (detail.origin !== 'remote') {
+        return;
+      }
+      if (detail.keys.includes(PREFERENCES_STORAGE_KEY)) {
+        setPreferences(preferencesService.getAllPreferences());
+      }
+    });
+  }, []);
 
   const updatePreference = useCallback(
     <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {

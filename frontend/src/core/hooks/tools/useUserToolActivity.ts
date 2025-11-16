@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ToolId } from '@app/types/toolId';
+import { addLocalSettingsListener, emitLocalSettingsEvent } from '@app/utils/localSettingsEvents';
 
 const RECENT_TOOLS_KEY = 'stirlingpdf.recentTools';
 const FAVORITE_TOOLS_KEY = 'stirlingpdf.favoriteTools';
@@ -36,6 +37,44 @@ export function useToolHistory() {
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    return addLocalSettingsListener(detail => {
+      if (detail.origin !== 'remote') {
+        return;
+      }
+
+      if (detail.keys.includes(FAVORITE_TOOLS_KEY)) {
+        const favoritesStr = window.localStorage.getItem(FAVORITE_TOOLS_KEY);
+        if (favoritesStr) {
+          try {
+            setFavoriteTools(JSON.parse(favoritesStr));
+          } catch {
+            setFavoriteTools([]);
+          }
+        } else {
+          setFavoriteTools([]);
+        }
+      }
+
+      if (detail.keys.includes(RECENT_TOOLS_KEY)) {
+        const recentStr = window.localStorage.getItem(RECENT_TOOLS_KEY);
+        if (recentStr) {
+          try {
+            setRecentTools(JSON.parse(recentStr));
+          } catch {
+            setRecentTools([]);
+          }
+        } else {
+          setRecentTools([]);
+        }
+      }
+    });
+  }, []);
+
 
   // Toggle favorite status
   const toggleFavorite = useCallback((toolId: ToolId) => {
@@ -49,6 +88,7 @@ export function useToolHistory() {
         ? prev.filter((id) => id !== toolId)
         : [...prev, toolId];
       window.localStorage.setItem(FAVORITE_TOOLS_KEY, JSON.stringify(updated));
+      emitLocalSettingsEvent([FAVORITE_TOOLS_KEY], 'local');
       return updated;
     });
   }, []);

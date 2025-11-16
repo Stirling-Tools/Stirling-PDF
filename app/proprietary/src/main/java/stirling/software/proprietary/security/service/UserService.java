@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.service;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -371,12 +372,26 @@ public class UserService implements UserServiceInterface {
             if (settingsMap == null) {
                 settingsMap = new HashMap<>();
             }
+            Map<String, String> sanitizedUpdates =
+                    updates == null ? Collections.emptyMap() : new HashMap<>(updates);
             settingsMap.clear();
-            settingsMap.putAll(updates);
+            settingsMap.putAll(sanitizedUpdates);
             user.setSettings(settingsMap);
             userRepository.save(user);
             databaseService.exportDatabase();
         }
+    }
+
+    public Map<String, String> getUserSettings(String username) {
+        Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
+        if (userOpt.isEmpty()) {
+            return null;
+        }
+        Map<String, String> settingsMap = userOpt.get().getSettings();
+        if (settingsMap == null) {
+            return new HashMap<>();
+        }
+        return new HashMap<>(settingsMap);
     }
 
     public Optional<User> findByUsername(String username) {

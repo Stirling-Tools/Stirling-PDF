@@ -3,6 +3,7 @@ import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings,
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { ToolId } from '@app/types/toolId';
 import { ToolCategoryId, ToolRegistryEntry } from '@app/data/toolsTaxonomy';
+import { addLocalSettingsListener, emitLocalSettingsEvent } from '@app/utils/localSettingsEvents';
 
 type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 
@@ -110,7 +111,24 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     window.localStorage.setItem(STORAGE_KEY, serializeBindings(customBindings));
+    emitLocalSettingsEvent([STORAGE_KEY], 'local');
   }, [customBindings]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    return addLocalSettingsListener(detail => {
+      if (detail.origin !== 'remote') {
+        return;
+      }
+      if (detail.keys.includes(STORAGE_KEY)) {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        setCustomBindings(deserializeBindings(stored));
+      }
+    });
+  }, []);
 
   const isBindingAvailable = useCallback((binding: HotkeyBinding, excludeToolId?: ToolId) => {
     const normalized = normalizeBinding(binding);

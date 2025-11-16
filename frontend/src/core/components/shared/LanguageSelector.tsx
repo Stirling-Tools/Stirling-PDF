@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Button, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '@app/i18n';
+import { emitLocalSettingsEvent } from '@app/utils/localSettingsEvents';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import styles from '@app/components/shared/LanguageSelector.module.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
@@ -178,6 +179,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
     // Simulate processing time for smooth transition
     setTimeout(() => {
       i18n.changeLanguage(value);
+      emitLocalSettingsEvent(['i18nextLng'], 'local');
 
       setTimeout(() => {
         setPendingLanguage(null);

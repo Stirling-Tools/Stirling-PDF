@@ -1,5 +1,6 @@
 import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '@app/constants/toolPanel';
 import { type ThemeMode, getSystemTheme } from '@app/constants/theme';
+import { emitLocalSettingsEvent } from '@app/utils/localSettingsEvents';
 
 export interface UserPreferences {
   autoUnzip: boolean;
@@ -9,6 +10,7 @@ export interface UserPreferences {
   toolPanelModePromptSeen: boolean;
   showLegacyToolDescriptions: boolean;
   hasCompletedOnboarding: boolean;
+  syncSettingsAcrossDevices: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -19,9 +21,11 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   toolPanelModePromptSeen: false,
   showLegacyToolDescriptions: false,
   hasCompletedOnboarding: false,
+  syncSettingsAcrossDevices: false,
 };
 
-const STORAGE_KEY = 'stirlingpdf_preferences';
+export const PREFERENCES_STORAGE_KEY = 'stirlingpdf_preferences';
+const STORAGE_KEY = PREFERENCES_STORAGE_KEY;
 
 class PreferencesService {
   getPreference<K extends keyof UserPreferences>(
@@ -51,6 +55,7 @@ class PreferencesService {
       const preferences = stored ? JSON.parse(stored) : {};
       preferences[key] = value;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+      emitLocalSettingsEvent([STORAGE_KEY], 'local');
     } catch (error) {
       console.error('Error writing preference:', key, error);
     }
@@ -76,6 +81,7 @@ class PreferencesService {
   clearAllPreferences(): void {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      emitLocalSettingsEvent([STORAGE_KEY], 'local');
     } catch (error) {
       console.error('Error clearing preferences:', error);
       throw error;

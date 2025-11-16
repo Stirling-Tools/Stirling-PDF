@@ -168,6 +168,28 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               />
             </div>
           </Tooltip>
+
+          <Tooltip
+            label={t('settings.general.syncSettingsTooltip', 'Automatically back up your preferences to your account so they follow you on every device.')}
+            multiline
+            w={300}
+            withArrow
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
+              <div>
+                <Text fw={500} size="sm">
+                  {t('settings.general.syncSettings', 'Sync settings across devices')}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t('settings.general.syncSettingsDescription', 'Carry your theme, language, favorites, and hotkeys to other browsers when signed in.')}
+                </Text>
+              </div>
+              <Switch
+                checked={preferences.syncSettingsAcrossDevices}
+                onChange={(event) => updatePreference('syncSettingsAcrossDevices', event.currentTarget.checked)}
+              />
+            </div>
+          </Tooltip>
         </Stack>
       </Paper>
     </Stack>

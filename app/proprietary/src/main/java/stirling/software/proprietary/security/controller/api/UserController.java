@@ -36,6 +36,8 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UserSettingsRequest;
+import stirling.software.proprietary.security.model.api.user.UserSettingsResponse;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -58,6 +60,37 @@ public class UserController {
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @GetMapping("/settings")
+    public ResponseEntity<?> getUserSettings(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "notAuthenticated", "message", "User not authenticated"));
+        }
+        Map<String, String> settings = userService.getUserSettings(principal.getName());
+        if (settings == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "userNotFound", "message", "User not found"));
+        }
+        return ResponseEntity.ok(new UserSettingsResponse(settings));
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PutMapping("/settings")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
+    public ResponseEntity<?> saveUserSettings(
+            @RequestBody UserSettingsRequest request, Principal principal)
+            throws SQLException, UnsupportedProviderException {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "notAuthenticated", "message", "User not authenticated"));
+        }
+        Map<String, String> updates =
+                request != null && request.settings() != null ? request.settings() : Map.of();
+        userService.updateUserSettings(principal.getName(), updates);
+        return ResponseEntity.ok(new UserSettingsResponse(updates));
+    }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
