@@ -9,6 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { StirlingFileStub } from '@app/types/fileContext';
@@ -56,7 +57,14 @@ const FileEditorThumbnail = ({
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
-  const { pinFile, unpinFile, isFilePinned, activeFiles, actions: fileActions } = useFileContext();
+  const {
+    pinFile,
+    unpinFile,
+    isFilePinned,
+    activeFiles,
+    actions: fileActions,
+    openEncryptedUnlockPrompt,
+  } = useFileContext();
   const { state } = useFileState();
   const hasError = state.ui.errorFileIds.includes(file.id);
 
@@ -77,6 +85,7 @@ const FileEditorThumbnail = ({
   const isZipFile = zipFileService.isZipFileStub(file);
 
   const pageCount = file.processedFile?.totalPages || 0;
+  const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
   const handleRef = useRef<HTMLSpanElement | null>(null);
 
@@ -301,6 +310,21 @@ const FileEditorThumbnail = ({
 
         {/* Action buttons group */}
         <div className={styles.headerActions}>
+          {isEncrypted && (
+            <Tooltip label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}>
+              <ActionIcon
+                aria-label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}
+                variant="subtle"
+                className={styles.headerIconButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEncryptedUnlockPrompt(file.id);
+                }}
+              >
+                <LockOpenIcon fontSize="small" />
+              </ActionIcon>
+            </Tooltip>
+          )}
           {/* Pin/Unpin icon */}
           <Tooltip label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}>
             <ActionIcon

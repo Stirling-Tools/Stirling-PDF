@@ -1,5 +1,4 @@
-import { Modal, Stack, Text, Button, PasswordInput, Group, ThemeIcon } from '@mantine/core';
-import LockResetIcon from '@mui/icons-material/LockReset';
+import { Modal, Stack, Text, Button, PasswordInput, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { type KeyboardEventHandler } from 'react';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
@@ -14,10 +13,6 @@ interface EncryptedPdfUnlockModalProps {
   onUnlock: () => void;
   onSkip: () => void;
 }
-
-const ICON_STYLE = {
-  fontSize: 30,
-};
 
 const EncryptedPdfUnlockModal = ({
   opened,
@@ -41,7 +36,7 @@ const EncryptedPdfUnlockModal = ({
     <Modal
       opened={opened}
       onClose={onSkip}
-      title={t('encryptedPdfUnlock.title', 'Remove password to continue?')}
+      title={t('encryptedPdfUnlock.title', 'Remove password to continue')}
       centered
       size="md"
       closeOnClickOutside={!isProcessing}
@@ -50,15 +45,6 @@ const EncryptedPdfUnlockModal = ({
     >
       <Stack gap="md">
         <Stack gap={4} ta="center">
-          <ThemeIcon
-            variant="light"
-            color="blue"
-            radius="xl"
-            size={72}
-            style={{ alignSelf: 'center' }}
-          >
-            <LockResetIcon style={ICON_STYLE} />
-          </ThemeIcon>
           <Text fw={600}>{fileName}</Text>
           <Text c="dimmed">
             {t(
@@ -70,8 +56,8 @@ const EncryptedPdfUnlockModal = ({
 
         <Stack gap={4}>
           <PasswordInput
-            label={t('removePassword.password.label', 'Current Password')}
-            placeholder={t('removePassword.password.placeholder', 'Enter current password')}
+            label={t('removePassword.password.label', 'PDF password')}
+            placeholder={t('removePassword.password.placeholder', 'Enter the PDF password')}
             value={password}
             onChange={(event) => onPasswordChange(event.currentTarget.value)}
             onKeyDown={handleKeyDown}

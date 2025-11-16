@@ -302,6 +302,7 @@ export interface FileContextActions {
   trackBlobUrl: (url: string) => void;
   scheduleCleanup: (fileId: FileId, delay?: number) => void;
   cleanupFile: (fileId: FileId) => void;
+  openEncryptedUnlockPrompt: (fileId: FileId) => void;
 }
 
 // File selectors (separate from actions to avoid re-renders)

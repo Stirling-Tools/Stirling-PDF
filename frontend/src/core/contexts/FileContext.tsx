@@ -145,6 +145,27 @@ function FileContextInner({
     setActiveEncryptedFileId(null);
   }, [activeEncryptedFileId]);
 
+  const promptEncryptedUnlock = useCallback((fileId: FileId) => {
+    const stub = stateRef.current.files.byId[fileId];
+    if (!stub?.processedFile?.isEncrypted) {
+      return;
+    }
+
+    dismissedEncryptedFilesRef.current.delete(fileId);
+
+    setEncryptedQueue(prevQueue => prevQueue.filter(id => id !== fileId));
+
+    setActiveEncryptedFileId(currentActiveId => {
+      if (currentActiveId && currentActiveId !== fileId) {
+        setEncryptedQueue(prevQueue => {
+          const withoutDuplicates = prevQueue.filter(id => id !== currentActiveId && id !== fileId);
+          return [currentActiveId, ...withoutDuplicates];
+        });
+      }
+      return fileId;
+    });
+  }, []);
+
   // Create stable selectors (memoized once to avoid re-renders)
   const selectors = useMemo<FileContextSelectors>(() =>
     createFileSelectors(stateRef, filesRef),
@@ -348,7 +369,8 @@ function FileContextInner({
     trackBlobUrl: lifecycleManager.trackBlobUrl,
     cleanupFile: (fileId: FileId) => lifecycleManager.cleanupFile(fileId, stateRef),
     scheduleCleanup: (fileId: FileId, delay?: number) =>
-      lifecycleManager.scheduleCleanup(fileId, delay, stateRef)
+      lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
+    openEncryptedUnlockPrompt: promptEncryptedUnlock
   }), [
     baseActions,
     addRawFiles,
@@ -360,7 +382,8 @@ function FileContextInner({
     pinFileWrapper,
     unpinFileWrapper,
     indexedDB,
-    enablePersistence
+    enablePersistence,
+    promptEncryptedUnlock
   ]);
 
   // Split context values to minimize re-renders
