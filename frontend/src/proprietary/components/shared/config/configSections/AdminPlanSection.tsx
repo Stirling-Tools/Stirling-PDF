@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup } from '@app/services/licenseService';
 import StripeCheckout from '@app/components/shared/StripeCheckout';
-import AvailablePlansSection from './plan/AvailablePlansSection';
-import ActivePlanSection from './plan/ActivePlanSection';
-import StaticPlanSection from './plan/StaticPlanSection';
+import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
+import ActivePlanSection from '@app/components/shared/config/configSections/plan//ActivePlanSection';
+import StaticPlanSection from '@app/components/shared/config/configSections/plan//StaticPlanSection';
 import { userManagementService } from '@app/services/userManagementService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { alert } from '@app/components/toast';
@@ -15,7 +15,6 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
-import { convertOperationConfig } from '@app/hooks/tools/convert/useConvertOperation';
 
 interface PremiumSettingsData {
   key?: string;
