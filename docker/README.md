@@ -47,6 +47,7 @@ docker-compose -f docker/compose/docker-compose.fat.yml up --build
 ## Configuration
 
 - **Backend URL**: Set `VITE_API_BASE_URL` environment variable for custom backend locations
+- **Load-balanced backends**: Provide a comma-separated list via `VITE_API_BASE_URLS` (for example `https://api-1.example.com,https://api-2.example.com`) to let the web client distribute requests across multiple backend nodes without an external proxy
 - **Custom Ports**: Modify port mappings in docker-compose files
 - **Memory Limits**: Adjust memory limits per variant (2G ultra-lite, 4G standard, 6G fat)
 

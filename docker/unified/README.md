@@ -108,6 +108,7 @@ Swagger UI at: `http://localhost:8080/swagger-ui/index.html`
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VITE_API_BASE_URL` | `http://backend:8080` | Backend URL for API proxying |
+| `VITE_API_BASE_URLS` | _(empty)_ | Optional comma-separated list of backend URLs for the React client to load balance across (requires the browser to reach those URLs directly) |
 
 ### Standard Configuration
 
@@ -269,6 +270,10 @@ docker build \
         MODE: FRONTEND
         VITE_API_BASE_URL: http://load-balancer:8080
   ```
+  You can also skip the external load balancer for browser clients by defining
+  `VITE_API_BASE_URLS` with a comma-separated list of backend URLs. The
+  Stirling-PDF frontend will round-robin requests across the provided hosts and
+  temporarily avoid nodes that return network errors/5xx responses.
 
 ---
 

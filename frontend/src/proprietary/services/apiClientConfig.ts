@@ -1,4 +1,3 @@
-import { isTauri } from '@tauri-apps/api/core';
 import {
   createBackendBalancer,
   resolveConfiguredBackendUrls,
@@ -16,25 +15,16 @@ const backendBalancer: BackendBalancer = createBackendBalancer(configuredUrls, {
   failureCooldownMs,
 });
 
-function getTauriBaseUrl(): string {
-  if (import.meta.env.DEV) {
-    return '/';
-  }
-  return import.meta.env.VITE_DESKTOP_BACKEND_URL || 'http://localhost:8080';
+/**
+ * Select the next backend base URL using the configured strategy.
+ */
+export function getApiBaseUrl(): string {
+  return backendBalancer.getNextBaseUrl();
 }
 
 /**
- * Desktop override: Determine base URL depending on Tauri environment
+ * Notify the balancer that a backend failed so it can be temporarily deprioritized.
  */
-export function getApiBaseUrl(): string {
-  if (!isTauri()) {
-    return backendBalancer.getNextBaseUrl();
-  }
-  return getTauriBaseUrl();
-}
-
 export function reportBackendFailure(baseUrl?: string | null): void {
-  if (!isTauri()) {
-    backendBalancer.reportFailure(baseUrl ?? undefined);
-  }
+  backendBalancer.reportFailure(baseUrl ?? undefined);
 }

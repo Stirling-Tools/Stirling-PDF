@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
+import { parseBackendUrlList } from '@proprietary/services/backendBalancer';
 
 interface EndpointConfig {
   backendUrl: string;
@@ -241,10 +242,12 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 export function useEndpointConfig(): EndpointConfig {
   const backendUrl = useMemo(() => {
     const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
+    const apiBaseCandidates = parseBackendUrlList(import.meta.env.VITE_API_BASE_URLS);
+    const firstConfiguredBase = apiBaseCandidates[0] || import.meta.env.VITE_API_BASE_URL;
 
     return runtimeEnv?.STIRLING_BACKEND_URL
       || import.meta.env.VITE_DESKTOP_BACKEND_URL
-      || import.meta.env.VITE_API_BASE_URL
+      || firstConfiguredBase
       || 'http://localhost:8080';
   }, []);
 
