@@ -16,6 +16,7 @@ interface StripeCheckoutProps {
   email: string;
   onSuccess?: (sessionId: string) => void;
   onError?: (error: string) => void;
+  onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void;
 }
 
 type CheckoutState = {
@@ -32,6 +33,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   email,
   onSuccess,
   onError,
+  onLicenseActivated,
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<CheckoutState>({ status: 'idle' });
@@ -103,6 +105,27 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         if (response.status === 'ready' && response.license_key) {
           setLicenseKey(response.license_key);
           setPollingStatus('ready');
+
+          // Save license key to backend
+          try {
+            const saveResponse = await licenseService.saveLicenseKey(response.license_key);
+            if (saveResponse.success) {
+              console.log(`License key activated on backend: ${saveResponse.licenseType}`);
+
+              // Fetch and pass license info to parent
+              try {
+                const licenseInfo = await licenseService.getLicenseInfo();
+                onLicenseActivated?.(licenseInfo);
+              } catch (infoError) {
+                console.error('Error fetching license info:', infoError);
+              }
+            } else {
+              console.error('Failed to save license key to backend:', saveResponse.error);
+            }
+          } catch (error) {
+            console.error('Error saving license key to backend:', error);
+          }
+
           return;
         }
 

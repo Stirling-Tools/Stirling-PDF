@@ -1,10 +1,14 @@
 package stirling.software.proprietary.controller.api;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,10 +17,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 /**
- * Admin controller for license management. Provides installation ID for Stripe checkout metadata.
+ * Admin controller for license management. Provides installation ID for Stripe checkout metadata
+ * and endpoints for managing license keys.
  */
 @RestController
 @Slf4j
@@ -24,6 +32,11 @@ import stirling.software.common.util.GeneralUtils;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Tag(name = "Admin License Management", description = "Admin-only License Management APIs")
 public class AdminLicenseController {
+
+    @Autowired(required = false)
+    private LicenseKeyChecker licenseKeyChecker;
+
+    @Autowired private ApplicationProperties applicationProperties;
 
     /**
      * Get the installation ID (machine fingerprint) for this self-hosted instance. This ID is used
@@ -37,7 +50,6 @@ public class AdminLicenseController {
             description =
                     "Returns the unique installation ID (MAC-based fingerprint) for this"
                             + " self-hosted instance")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, String>> getInstallationId() {
         try {
             String installationId = GeneralUtils.generateMachineFingerprint();
@@ -47,6 +59,97 @@ public class AdminLicenseController {
             log.error("Failed to generate installation ID", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("error", "Failed to generate installation ID"));
+        }
+    }
+
+    /**
+     * Save and activate a license key. This endpoint accepts a license key from the frontend (e.g.,
+     * after Stripe checkout) and activates it on the backend.
+     *
+     * @param request Map containing the license key
+     * @return Response with success status, license type, and whether restart is required
+     */
+    @PostMapping("/license-key")
+    @Operation(
+            summary = "Save and activate license key",
+            description =
+                    "Accepts a license key and activates it on the backend. Returns the activated"
+                            + " license type.")
+    public ResponseEntity<Map<String, Object>> saveLicenseKey(
+            @RequestBody Map<String, String> request) {
+        String licenseKey = request.get("licenseKey");
+
+        if (licenseKey == null || licenseKey.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "error", "License key is required"));
+        }
+
+        try {
+            if (licenseKeyChecker == null) {
+                return ResponseEntity.internalServerError()
+                        .body(Map.of("success", false, "error", "License checker not available"));
+            }
+
+            // Use existing LicenseKeyChecker to update and validate license
+            licenseKeyChecker.updateLicenseKey(licenseKey.trim());
+
+            // Get current license status
+            License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("licenseType", license.name());
+            response.put("requiresRestart", false); // Dynamic evaluation works
+            response.put("message", "License key saved and activated");
+
+            log.info("License key saved and activated: type={}", license.name());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to save license key", e);
+            return ResponseEntity.badRequest()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Failed to activate license: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get information about the current license key status, including license type, enabled status,
+     * and max users.
+     *
+     * @return Map containing license information
+     */
+    @GetMapping("/license-info")
+    @Operation(
+            summary = "Get license information",
+            description =
+                    "Returns information about the current license including type, enabled status,"
+                            + " and max users")
+    public ResponseEntity<Map<String, Object>> getLicenseInfo() {
+        try {
+            Map<String, Object> response = new HashMap<>();
+
+            if (licenseKeyChecker != null) {
+                License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+                response.put("licenseType", license.name());
+            } else {
+                response.put("licenseType", License.NORMAL.name());
+            }
+
+            ApplicationProperties.Premium premium = applicationProperties.getPremium();
+            response.put("enabled", premium.isEnabled());
+            response.put("maxUsers", premium.getMaxUsers());
+            response.put("hasKey", premium.getKey() != null && !premium.getKey().trim().isEmpty());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to get license info", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Failed to retrieve license information"));
         }
     }
 }

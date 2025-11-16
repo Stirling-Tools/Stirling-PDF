@@ -429,6 +429,35 @@ const licenseService = {
 
     return data as LicenseKeyResponse;
   },
+
+  /**
+   * Save license key to backend
+   */
+  async saveLicenseKey(licenseKey: string): Promise<{success: boolean; licenseType?: string; message?: string; error?: string}> {
+    try {
+      const response = await apiClient.post('/api/v1/admin/license-key', {
+        licenseKey: licenseKey,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error saving license key:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get current license information from backend
+   */
+  async getLicenseInfo(): Promise<{licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}> {
+    try {
+      const response = await apiClient.get('/api/v1/admin/license-info');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching license info:', error);
+      throw error;
+    }
+  },
 };
 
 export default licenseService;

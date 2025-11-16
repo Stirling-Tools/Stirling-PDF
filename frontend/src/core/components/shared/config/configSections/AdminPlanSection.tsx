@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import { PlanTierGroup } from '@app/services/licenseService';
+import licenseService, { PlanTierGroup } from '@app/services/licenseService';
 import StripeCheckout from '@app/components/shared/StripeCheckout';
 import AvailablePlansSection from './plan/AvailablePlansSection';
 import ActivePlanSection from './plan/ActivePlanSection';
@@ -15,6 +15,7 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { convertOperationConfig } from '@app/hooks/tools/convert/useConvertOperation';
 
 interface PremiumSettingsData {
   key?: string;
@@ -29,6 +30,8 @@ const AdminPlanSection: React.FC = () => {
   const [currency, setCurrency] = useState<string>('gbp');
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [currentLicenseInfo, setCurrentLicenseInfo] = useState<any>(null);
+  const [licenseInfoLoading, setLicenseInfoLoading] = useState(false);
+  const [licenseInfoError, setLicenseInfoError] = useState<string | null>(null);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
   const [email, setEmail] = useState<string>('');
   const { plans, currentSubscription, loading, error, refetch } = usePlans(currency);
@@ -51,6 +54,7 @@ const AdminPlanSection: React.FC = () => {
   useEffect(() => {
     const fetchLicenseInfo = async () => {
       try {
+        console.log('Fetching user and license info for plan section');
         const adminData = await userManagementService.getUsers();
 
         // Determine plan name based on config flags
@@ -66,17 +70,32 @@ const AdminPlanSection: React.FC = () => {
           maxUsers: adminData.maxAllowedUsers,
           grandfathered: adminData.grandfatheredUserCount > 0,
         });
+
+        // Also fetch license info from new backend endpoint
+        try {
+          setLicenseInfoLoading(true);
+          setLicenseInfoError(null);
+          const backendLicenseInfo = await licenseService.getLicenseInfo();
+          setCurrentLicenseInfo(backendLicenseInfo);
+          setLicenseInfoLoading(false);
+        } catch (licenseErr: any) {
+          console.error('Failed to fetch backend license info:', licenseErr);
+          setLicenseInfoLoading(false);
+          setLicenseInfoError(licenseErr?.response?.data?.error || licenseErr?.message || 'Unknown error');
+          // Don't overwrite existing info if backend call fails
+        }
       } catch (err) {
         console.error('Failed to fetch license info:', err);
       }
+
     };
 
     // Check if Stripe is configured
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if (!stripeKey || error) {
       setUseStaticVersion(true);
-      fetchLicenseInfo();
     }
+    fetchLicenseInfo();
 
     // Fetch premium settings
     fetchPremiumSettings();
@@ -150,6 +169,11 @@ const AdminPlanSection: React.FC = () => {
     // Error is already displayed in the StripeCheckout component
   }, []);
 
+  const handleLicenseActivated = useCallback((licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => {
+    console.log('License activated:', licenseInfo);
+    setCurrentLicenseInfo(licenseInfo);
+  }, []);
+
   const handleCheckoutClose = useCallback(() => {
     setCheckoutOpen(false);
     setSelectedPlanGroup(null);
@@ -187,6 +211,37 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* License Information Display - Always visible */}
+      <Alert
+        color={licenseInfoLoading ? "gray" : licenseInfoError ? "red" : currentLicenseInfo?.enabled ? "green" : "blue"}
+        title={t('admin.plan.licenseInfo', 'License Information')}
+      >
+        {licenseInfoLoading ? (
+          <Group gap="xs">
+            <Loader size="sm" />
+            <Text size="sm">{t('admin.plan.loadingLicense', 'Loading license information...')}</Text>
+          </Group>
+        ) : licenseInfoError ? (
+          <Text size="sm" c="red">{t('admin.plan.licenseError', 'Failed to load license info')}: {licenseInfoError}</Text>
+        ) : currentLicenseInfo ? (
+          <Stack gap="xs">
+            <Text size="sm">
+              <strong>{t('admin.plan.licenseType', 'License Type')}:</strong> {currentLicenseInfo.licenseType}
+            </Text>
+            <Text size="sm">
+              <strong>{t('admin.plan.status', 'Status')}:</strong> {currentLicenseInfo.enabled ? t('admin.plan.active', 'Active') : t('admin.plan.inactive', 'Inactive')}
+            </Text>
+            {currentLicenseInfo.licenseType === 'ENTERPRISE' && currentLicenseInfo.maxUsers > 0 && (
+              <Text size="sm">
+                <strong>{t('admin.plan.maxUsers', 'Max Users')}:</strong> {currentLicenseInfo.maxUsers}
+              </Text>
+            )}
+          </Stack>
+        ) : (
+          <Text size="sm">{t('admin.plan.noLicenseInfo', 'No license information available')}</Text>
+        )}
+      </Alert>
+
       {/* Customer Information Section */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
@@ -240,6 +295,7 @@ const AdminPlanSection: React.FC = () => {
           email={email}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
+          onLicenseActivated={handleLicenseActivated}
         />
       )}
 
