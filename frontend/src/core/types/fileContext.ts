@@ -23,6 +23,7 @@ export interface ProcessedFileMetadata {
   pages: ProcessedFilePage[];
   totalPages?: number;
   lastProcessed?: number;
+  isEncrypted?: boolean;
   [key: string]: any;
 }
 
