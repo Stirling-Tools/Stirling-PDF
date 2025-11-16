@@ -29,33 +29,57 @@ export default function Login() {
   const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const [backendStatusDetails, setBackendStatusDetails] = useState<string | null>(null);
 
   // Fetch enabled SSO providers and login config from backend
   useEffect(() => {
     const fetchProviders = async () => {
       try {
         const response = await fetch(`${BASE_PATH}/api/v1/proprietary/ui-data/login`);
-        if (response.ok) {
-          const data = await response.json();
 
-          // Check if login is disabled - if so, redirect to home
-          if (data.enableLogin === false) {
-            console.debug('[Login] Login disabled, redirecting to home');
-            navigate('/');
+        if (!response.ok) {
+          if (response.status === 404 || response.status === 503) {
+            console.warn(`[Login] Login config endpoint unavailable (status ${response.status})`);
+            setBackendUnavailable(true);
+            setBackendStatusDetails(response.statusText || null);
             return;
           }
 
-          setEnableLogin(data.enableLogin ?? true);
-
-          // Extract provider IDs from the providerList map
-          // The keys are like "/oauth2/authorization/google" - extract the last part
-          const providerIds = Object.keys(data.providerList || {})
-            .map(key => key.split('/').pop())
-            .filter((id): id is string => id !== undefined);
-          setEnabledProviders(providerIds);
+          const errorText = await response.text();
+          throw new Error(errorText || `Failed to fetch login configuration (${response.status})`);
         }
+
+        const data = await response.json();
+
+        if (!data || data.enableLogin === null) {
+          console.warn('[Login] Login config returned empty or null data - showing backend unavailable message');
+          setBackendUnavailable(true);
+          setBackendStatusDetails(null);
+          return;
+        }
+
+        // Check if login is disabled - if so, redirect to home
+        if (data.enableLogin === false) {
+          console.debug('[Login] Login disabled, redirecting to home');
+          navigate('/');
+          return;
+        }
+
+        setBackendUnavailable(false);
+        setBackendStatusDetails(null);
+        setEnableLogin(data.enableLogin ?? true);
+
+        // Extract provider IDs from the providerList map
+        // The keys are like "/oauth2/authorization/google" - extract the last part
+        const providerIds = Object.keys(data.providerList || {})
+          .map(key => key.split('/').pop())
+          .filter((id): id is string => id !== undefined);
+        setEnabledProviders(providerIds);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
+        setBackendUnavailable(true);
+        setBackendStatusDetails(err instanceof Error ? err.message : null);
       }
     };
     fetchProviders();
@@ -187,68 +211,97 @@ export default function Login() {
   //   navigate('/auth/reset');
   // };
 
+  const loginHeaderTitle = backendUnavailable ? undefined : (t('login.login') || 'Sign in');
+
   return (
     <AuthLayout>
-      <LoginHeader title={t('login.login') || 'Sign in'} />
+      <LoginHeader title={loginHeaderTitle} />
 
-      {/* Success message */}
-      {successMessage && (
-        <div style={{
-          padding: '1rem',
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          border: '1px solid rgba(34, 197, 94, 0.3)',
-          borderRadius: '0.5rem',
-          color: '#16a34a'
-        }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', textAlign: 'center' }}>
-            {successMessage}
+      {backendUnavailable ? (
+        <div
+          className="auth-section"
+          style={{
+            padding: '1.5rem',
+            marginTop: '1rem',
+            borderRadius: '0.75rem',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.2)',
+          }}
+        >
+          <p style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', textAlign: 'center' }}>
+            {t('login.backendLoadingTitle', 'Backend starting up')}
           </p>
+          <p style={{ margin: 0, textAlign: 'center', color: 'rgba(15, 23, 42, 0.8)' }}>
+            {t('login.backendLoadingMessage', 'Backend is currently loading and/or not started. Please wait a few moments and try again.')}
+          </p>
+          {backendStatusDetails && (
+            <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', textAlign: 'center', color: 'rgba(15, 23, 42, 0.6)' }}>
+              {backendStatusDetails}
+            </p>
+          )}
         </div>
-      )}
+      ) : (
+        <>
+          {/* Success message */}
+          {successMessage && (
+            <div style={{
+              padding: '1rem',
+              marginBottom: '1rem',
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
+              borderRadius: '0.5rem',
+              color: '#16a34a'
+            }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', textAlign: 'center' }}>
+                {successMessage}
+              </p>
+            </div>
+          )}
 
-      <ErrorMessage error={error} />
+          <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <OAuthButtons
-        onProviderClick={signInWithProvider}
-        isSubmitting={isSigningIn}
-        layout="vertical"
-        enabledProviders={enabledProviders}
-      />
-
-      {/* Divider between OAuth and Email - only show if SSO is available */}
-      {hasSSOProviders && (
-        <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
-      )}
-
-      {/* Sign in with email button - only show if SSO providers exist */}
-      {hasSSOProviders && !showEmailForm && (
-        <div className="auth-section">
-          <button
-            type="button"
-            onClick={() => setShowEmailForm(true)}
-            disabled={isSigningIn}
-            className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-          >
-            {t('login.useEmailInstead', 'Login with email')}
-          </button>
-        </div>
-      )}
-
-      {/* Email form - show by default if no SSO, or when button clicked */}
-      {showEmailForm && (
-        <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
-          <EmailPasswordForm
-            email={email}
-            password={password}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            onSubmit={signInWithEmail}
+          {/* OAuth first */}
+          <OAuthButtons
+            onProviderClick={signInWithProvider}
             isSubmitting={isSigningIn}
-            submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
+            layout="vertical"
+            enabledProviders={enabledProviders}
           />
-        </div>
+
+          {/* Divider between OAuth and Email - only show if SSO is available */}
+          {hasSSOProviders && (
+            <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+          )}
+
+          {/* Sign in with email button - only show if SSO providers exist */}
+          {hasSSOProviders && !showEmailForm && (
+            <div className="auth-section">
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(true)}
+                disabled={isSigningIn}
+                className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
+              >
+                {t('login.useEmailInstead', 'Login with email')}
+              </button>
+            </div>
+          )}
+
+          {/* Email form - show by default if no SSO, or when button clicked */}
+          {showEmailForm && (
+            <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
+              <EmailPasswordForm
+                email={email}
+                password={password}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                onSubmit={signInWithEmail}
+                isSubmitting={isSigningIn}
+                submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
+              />
+            </div>
+          )}
+        </>
       )}
 
     </AuthLayout>
