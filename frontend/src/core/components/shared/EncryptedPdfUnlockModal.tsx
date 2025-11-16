@@ -56,8 +56,8 @@ const EncryptedPdfUnlockModal = ({
 
         <Stack gap={4}>
           <PasswordInput
-            label={t('removePassword.password.label', 'PDF password')}
-            placeholder={t('removePassword.password.placeholder', 'Enter the PDF password')}
+            label={t('encryptedPdfUnlock.password.label', 'PDF password')}
+            placeholder={t('encryptedPdfUnlock.password.placeholder', 'Enter the PDF password')}
             value={password}
             onChange={(event) => onPasswordChange(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
