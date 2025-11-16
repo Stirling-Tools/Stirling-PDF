@@ -1,7 +1,8 @@
-import { Modal, Stack, Text, Button, PasswordInput, Group } from '@mantine/core';
+import { Modal, Stack, Text, Button, PasswordInput, Group, ThemeIcon } from '@mantine/core';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import { useTranslation } from 'react-i18next';
 import { type KeyboardEventHandler } from 'react';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface EncryptedPdfUnlockModalProps {
   opened: boolean;
@@ -15,8 +16,7 @@ interface EncryptedPdfUnlockModalProps {
 }
 
 const ICON_STYLE = {
-  fontSize: 40,
-  color: 'var(--mantine-color-blue-7)'
+  fontSize: 30,
 };
 
 const EncryptedPdfUnlockModal = ({
@@ -46,15 +46,24 @@ const EncryptedPdfUnlockModal = ({
       size="md"
       closeOnClickOutside={!isProcessing}
       closeOnEscape={!isProcessing}
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="md">
         <Stack gap={4} ta="center">
-          <LockResetIcon style={ICON_STYLE} />
+          <ThemeIcon
+            variant="light"
+            color="blue"
+            radius="xl"
+            size={72}
+            style={{ alignSelf: 'center' }}
+          >
+            <LockResetIcon style={ICON_STYLE} />
+          </ThemeIcon>
           <Text fw={600}>{fileName}</Text>
           <Text c="dimmed">
             {t(
               'encryptedPdfUnlock.description',
-              'This PDF is password protected. We can automatically run the Remove Password tool so you can continue using other tools.'
+              'This PDF is password protected. Enter the password so you can continue working with it.'
             )}
           </Text>
         </Stack>
@@ -74,12 +83,6 @@ const EncryptedPdfUnlockModal = ({
               {errorMessage}
             </Text>
           ) : null}
-          <Text size="xs" c="dimmed">
-            {t(
-              'encryptedPdfUnlock.historyInfo',
-              'The unlocked file will appear in your file history as if the Remove Password tool was run.'
-            )}
-          </Text>
         </Stack>
 
         <Group justify="space-between">
