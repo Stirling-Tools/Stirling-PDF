@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -19,6 +22,7 @@ import stirling.software.common.service.UserServiceInterface;
 
 @ConfigApi
 @Hidden
+@Slf4j
 public class ConfigController {
 
     private final ApplicationProperties applicationProperties;
@@ -58,9 +62,15 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
+            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
 
             // Security settings
-            configData.put("enableLogin", applicationProperties.getSecurity().getEnableLogin());
+            // enableLogin requires both the config flag AND proprietary features to be loaded
+            // If userService is null, proprietary module isn't loaded
+            // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
+            boolean enableLogin =
+                    applicationProperties.getSecurity().getEnableLogin() && userService != null;
+            configData.put("enableLogin", enableLogin);
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();
@@ -77,6 +87,22 @@ public class ConfigController {
                 }
             }
             configData.put("isAdmin", isAdmin);
+
+            // Check if this is a new server (version was 0.0.0 before initialization)
+            configData.put("isNewServer", InitialSetup.isNewServer());
+
+            // Check if the current user is a first-time user
+            boolean isNewUser =
+                    false; // Default to false when security is disabled or user not found
+            if (userService != null) {
+                try {
+                    isNewUser = userService.isCurrentUserFirstLogin();
+                } catch (Exception e) {
+                    // If there's an error, assume not new user for safety
+                    isNewUser = false;
+                }
+            }
+            configData.put("isNewUser", isNewUser);
 
             // System settings
             configData.put(

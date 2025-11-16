@@ -14,6 +14,8 @@ import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
@@ -39,7 +41,7 @@ export default function RightRail() {
   const { sidebarRefs } = useSidebarContext();
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
-  const { toggleTheme } = useRainbowThemeContext();
+  const { toggleTheme, themeMode } = useRainbowThemeContext();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
 
   const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
@@ -195,7 +197,11 @@ export default function RightRail() {
               className="right-rail-icon"
               onClick={toggleTheme}
             >
-              <LocalIcon icon="contrast" width="1.5rem" height="1.5rem" />
+              {themeMode === 'dark' ? (
+                <LightModeIcon sx={{ fontSize: '1.5rem' }} />
+              ) : (
+                <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
+              )}
             </ActionIcon>,
             t('rightRail.toggleTheme', 'Toggle Theme')
           )}

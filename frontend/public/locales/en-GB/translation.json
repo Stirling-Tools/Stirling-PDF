@@ -35,9 +35,16 @@
   "discardChanges": "Discard & Leave",
   "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
+  "zipWarning": {
+    "title": "Large ZIP File",
+    "message": "This ZIP contains {{count}} files. Extract anyway?",
+    "cancel": "Cancel",
+    "confirm": "Extract"
+  },
   "language": {
     "direction": "ltr"
   },
+  "cancel": "Cancel",
   "addPageNumbers": {
     "fontSize": "Font Size",
     "fontName": "Font Name",
@@ -98,6 +105,8 @@
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
+  "back": "Back",
+  "nothingToUndo": "Nothing to undo",
   "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
@@ -1002,7 +1011,8 @@
         "title": "Choose Your Split Method"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "Select a split method",
+    "resultsTitle": "Split Results"
   },
   "rotate": {
     "title": "Rotate PDF",
@@ -1096,7 +1106,11 @@
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
     "grayscale": "Greyscale",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "An error occurred while converting the file.",
+    "cbzOptions": "CBZ to PDF Options",
+    "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+    "cbzOutputOptions": "PDF to CBZ Options",
+    "cbzDpi": "DPI for image rendering"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -2157,15 +2171,99 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "highlightColor": {
-      "1": "Highlight Colour 1:",
-      "2": "Highlight Colour 2:"
+    "clearSelected": "Clear selected",
+    "clear": {
+      "confirmTitle": "Clear selected PDFs?",
+      "confirmBody": "This will close the current comparison and take you back to Active Files.",
+      "confirm": "Clear and return"
     },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
+    "review": {
+      "title": "Comparison Result",
+      "actionsHint": "Review the comparison, switch document roles, or export the summary.",
+      "switchOrder": "Switch order",
+      "exportSummary": "Export summary"
     },
-    "submit": "Compare",
+    "base": {
+      "label": "Original document",
+      "placeholder": "Select the original PDF"
+    },
+    "comparison": {
+      "label": "Edited document",
+      "placeholder": "Select the edited PDF"
+    },
+    "addFilesHint": "Add PDFs in the Files step to enable selection.",
+    "noFiles": "No PDFs available yet",
+    "pages": "Pages",
+    "selection": {
+      "originalEditedTitle": "Select Original and Edited PDFs"
+    },
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
+    "swap": {
+      "confirmTitle": "Re-run comparison?",
+      "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+      "confirm": "Swap and Re-run"
+    },
+    "cta": "Compare",
+    "loading": "Comparing...",
+    
+    "summary": {
+      "baseHeading": "Original document",
+      "comparisonHeading": "Edited document",
+      "pageLabel": "Page"
+    },
+    "rendering": {
+      "pageNotReadyTitle": "Page not rendered yet",
+      "pageNotReadyBody": "Some pages are still rendering. Navigation will snap once they are ready.",
+      "rendering": "rendering",
+      "inProgress": "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+      "pagesRendered": "pages rendered",
+      "complete": "Page rendering complete"
+    },
+    "dropdown": {
+      "deletionsLabel": "Deletions",
+      "additionsLabel": "Additions",
+      "deletions": "Deletions ({{count}})",
+      "additions": "Additions ({{count}})",
+      "searchPlaceholder": "Search changes...",
+      "noResults": "No changes found"
+    },
+    "actions": {
+      "stackVertically": "Stack vertically",
+      "placeSideBySide": "Place side by side",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view",
+      "unlinkScrollPan": "Unlink scroll and pan",
+      "linkScrollPan": "Link scroll and pan",
+      "unlinkScroll": "Unlink scroll",
+      "linkScroll": "Link scroll"
+    },
+    "toasts": {
+      "unlinkedTitle": "Independent scroll & pan enabled",
+      "unlinkedBody": "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
+    },
+    "error": {
+      "selectRequired": "Select a original and edited document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analysing differences...",
+      "complete": "Comparison ready"
+    },
+    "longJob": {
+      "title": "Large comparison in progress",
+      "body": "These PDFs together exceed 2,000 pages. Processing can take several minutes."
+    },
+    "slowOperation": {
+      "title": "Still working…",
+      "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
+      "cancel": "Cancel comparison"
+    },
+    
+    "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
     },
@@ -2178,6 +2276,16 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "These documents appear highly dissimilar. Comparison was stopped to save time."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "These PDFs look highly different",
+      "body": "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
+      "stopButton": "Stop comparison"
     }
   },
   "certSign": {
@@ -2658,7 +2766,14 @@
     "title": "Show Javascript",
     "header": "Show Javascript",
     "downloadJS": "Download Javascript",
-    "submit": "Show"
+    "submit": "Show",
+    "results": "Result",
+    "processing": "Extracting JavaScript...",
+    "done": "JavaScript extracted",
+    "singleFileWarning": "This tool only supports one file at a time. Please select a single file.",
+    "view": {
+      "title": "Extracted JavaScript"
+    }
   },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
@@ -3062,6 +3177,7 @@
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
     "signinTitle": "Please sign in",
     "ssoSignIn": "Login via Single Sign-on",
     "oAuth2AutoCreateDisabled": "OAUTH2 Auto-Create User Disabled",
@@ -3491,7 +3607,8 @@
     "toggleAnnotations": "Toggle Annotations Visibility",
     "annotationMode": "Toggle Annotation Mode",
     "draw": "Draw",
-    "save": "Save"
+    "save": "Save",
+    "saveChanges": "Save Changes"
   },
   "search": {
     "title": "Search PDF",
@@ -3538,8 +3655,10 @@
     "help": "Help",
     "account": "Account",
     "config": "Config",
+    "settings": "Settings",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools",
+    "allTools": "Tools",
+    "reader": "Reader",
     "helpMenu": {
       "toolsTour": "Tools Tour",
       "toolsTourDesc": "Learn what the tools can do",
@@ -3565,6 +3684,12 @@
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Restart Required",
+      "loginRequired": "Login mode must be enabled to modify admin settings",
+      "loginDisabled": {
+        "title": "Login Mode Required",
+        "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
+        "readOnly": "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+      },
       "restart": {
         "title": "Restart Required",
         "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
@@ -3634,6 +3759,12 @@
             "label": "Default Producer",
             "description": "Default producer for PDF metadata"
           }
+        },
+        "logoStyle": {
+          "label": "Logo Style",
+          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "classic": "Classic",
+          "modern": "Modern"
         },
         "customPaths": {
           "label": "Custom Paths",
@@ -4492,6 +4623,12 @@
     }
   },
   "common": {
+    "previous": "Previous",
+    "next": "Next",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapsed": "collapsed",
+    "lines": "lines",
     "copy": "Copy",
     "copied": "Copied!",
     "refresh": "Refresh",
@@ -4528,6 +4665,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Use your API key to programmatically access Stirling PDF's processing capabilities.",
+      "docsTitle": "API Documentation",
+      "docsDescription": "Learn more about integrating with Stirling PDF:",
+      "docsLink": "API Documentation",
+      "schemaLink": "API Schema Reference",
+      "usage": "Include this key in the X-API-KEY header with all API requests.",
       "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
       "publicKeyAriaLabel": "Public API key",
       "copyKeyAriaLabel": "Copy API key",
@@ -4656,7 +4799,7 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
-    "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
+    "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
     "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
@@ -4716,7 +4859,8 @@
       "admin": "Admin",
       "roleDescriptions": {
         "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "member": "Can view and edit shared files, but cannot manage workspace settings or members.",
+        "user": "User"
       },
       "editRole": "Edit Role",
       "enable": "Enable",
@@ -4797,6 +4941,7 @@
         "copied": "Link copied to clipboard",
         "success": "Invite link generated successfully",
         "successWithEmail": "Invite link generated and sent via email",
+        "emailSent": "Invite link generated and sent via email",
         "emailFailed": "Invite link generated, but email failed",
         "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
         "error": "Failed to generate invite link",
