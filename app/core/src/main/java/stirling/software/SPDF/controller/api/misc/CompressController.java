@@ -968,9 +968,6 @@ public class CompressController {
         if (request.getNormalize()) {
             command.add("--normalize-content=y");
         }
-        if (request.getLinearize()) {
-            command.add("--linearize");
-        }
         command.add("--recompress-flate");
         command.add("--compression-level=" + qpdfCompressionLevel);
         command.add("--compress-streams=y");
