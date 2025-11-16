@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.chatbot.ChatbotDocumentCacheEntry;
+import stirling.software.proprietary.model.chatbot.ChatbotHistoryEntry;
 import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
@@ -42,6 +43,9 @@ import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 @RequiredArgsConstructor
 public class ChatbotConversationService {
 
+    private static final int SUMMARY_TRIGGER_MULTIPLIER = 3;
+    private static final int SUMMARY_TRANSCRIPT_MAX_CHARS = 4000;
+
     private final ChatModel chatModel;
     private final ChatbotSessionRegistry sessionRegistry;
     private final ChatbotCacheService cacheService;
@@ -50,6 +54,7 @@ public class ChatbotConversationService {
     private final ChatbotContextCompressor contextCompressor;
     private final ChatbotMemoryService memoryService;
     private final ChatbotUsageService usageService;
+    private final ChatbotConversationStore conversationStore;
     private final ObjectMapper objectMapper;
     private final AtomicBoolean modelSwitchVerified = new AtomicBoolean(false);
 
@@ -84,6 +89,9 @@ public class ChatbotConversationService {
         String contextSummary =
                 contextCompressor.summarize(
                         context, (int) Math.max(settings.maxPromptCharacters() / 2, 1000));
+        List<ChatbotHistoryEntry> conversationHistory =
+                loadConversationHistory(session.getSessionId());
+        String conversationSummary = loadConversationSummary(session.getSessionId());
 
         ModelReply nanoReply =
                 invokeModel(
@@ -93,7 +101,9 @@ public class ChatbotConversationService {
                         session,
                         context,
                         contextSummary,
-                        cacheEntry.getMetadata());
+                        cacheEntry.getMetadata(),
+                        conversationHistory,
+                        conversationSummary);
 
         boolean shouldEscalate =
                 request.isAllowEscalation()
@@ -113,7 +123,9 @@ public class ChatbotConversationService {
                             session,
                             context,
                             contextSummary,
-                            cacheEntry.getMetadata());
+                            cacheEntry.getMetadata(),
+                            conversationHistory,
+                            conversationSummary);
         }
 
         ChatbotUsageSummary usageSummary =
@@ -124,6 +136,10 @@ public class ChatbotConversationService {
         session.setUsageSummary(usageSummary);
 
         memoryService.recordTurn(session, request.getPrompt(), finalReply.answer());
+        recordHistoryTurn(session, "user", request.getPrompt());
+        recordHistoryTurn(session, "assistant", finalReply.answer());
+        maybeSummarizeConversation(settings, session);
+        enforceHistoryRetention(session);
 
         return ChatbotResponse.builder()
                 .sessionId(request.getSessionId())
@@ -210,9 +226,20 @@ public class ChatbotConversationService {
             ChatbotSession session,
             List<Document> context,
             String contextSummary,
-            Map<String, String> metadata) {
+            Map<String, String> metadata,
+            List<ChatbotHistoryEntry> history,
+            String conversationSummary) {
         Prompt requestPrompt =
-                buildPrompt(settings, model, prompt, session, context, contextSummary, metadata);
+                buildPrompt(
+                        settings,
+                        model,
+                        prompt,
+                        session,
+                        context,
+                        contextSummary,
+                        metadata,
+                        history,
+                        conversationSummary);
         ChatResponse response;
         try {
             response = chatModel.call(requestPrompt);
@@ -256,13 +283,16 @@ public class ChatbotConversationService {
             ChatbotSession session,
             List<Document> context,
             String contextSummary,
-            Map<String, String> metadata) {
+            Map<String, String> metadata,
+            List<ChatbotHistoryEntry> history,
+            String conversationSummary) {
         String chunkOutline = buildChunkOutline(context);
         String metadataSummary =
                 metadata.entrySet().stream()
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
                         .reduce((left, right) -> left + ", " + right)
                         .orElse("none");
+        String recentTurns = buildConversationOutline(history);
 
         String imageDirective =
                 session.isImageContentDetected()
@@ -281,6 +311,12 @@ public class ChatbotConversationService {
                         + session.isOcrRequested()
                         + "\n"
                         + imageDirective
+                        + "\nConversation summary:\n"
+                        + (StringUtils.hasText(conversationSummary)
+                                ? conversationSummary
+                                : "No persistent summary available.")
+                        + "\nRecent conversation turns:\n"
+                        + recentTurns
                         + "\nContext summary:\n"
                         + contextSummary
                         + "\nContext outline:\n"
@@ -323,6 +359,27 @@ public class ChatbotConversationService {
             outline.append("- Chunk ").append(order).append(": ").append(snippet).append("\n");
         }
         return outline.toString();
+    }
+
+    private String buildConversationOutline(List<ChatbotHistoryEntry> history) {
+        if (history == null || history.isEmpty()) {
+            return "No earlier turns stored for this session.";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (ChatbotHistoryEntry entry : history) {
+            if (entry == null || !StringUtils.hasText(entry.content())) {
+                continue;
+            }
+            builder.append(entry.role()).append(": ").append(entry.content().trim());
+            if (StringUtils.hasText(entry.documentName())) {
+                builder.append(" (doc: ").append(entry.documentName()).append(")");
+            }
+            builder.append("\n");
+        }
+        if (!StringUtils.hasText(builder)) {
+            return "Conversation history available but empty after filtering.";
+        }
+        return builder.toString();
     }
 
     private ModelReply parseModelResponse(
@@ -385,5 +442,158 @@ public class ChatbotConversationService {
 
     private long toLong(Integer value) {
         return value == null ? 0L : value.longValue();
+    }
+
+    private List<ChatbotHistoryEntry> loadConversationHistory(String sessionId) {
+        if (conversationStore == null || !StringUtils.hasText(sessionId)) {
+            return List.of();
+        }
+        try {
+            return conversationStore.getRecentTurns(sessionId, conversationStore.defaultWindow());
+        } catch (RuntimeException ex) {
+            log.debug("Conversation history unavailable: {}", ex.getMessage());
+            return List.of();
+        }
+    }
+
+    private String loadConversationSummary(String sessionId) {
+        if (conversationStore == null || !StringUtils.hasText(sessionId)) {
+            return "";
+        }
+        try {
+            return conversationStore.loadSummary(sessionId);
+        } catch (RuntimeException ex) {
+            log.debug("Conversation summary unavailable: {}", ex.getMessage());
+            return "";
+        }
+    }
+
+    private void recordHistoryTurn(ChatbotSession session, String role, String content) {
+        if (conversationStore == null
+                || session == null
+                || !StringUtils.hasText(session.getSessionId())
+                || !StringUtils.hasText(content)) {
+            return;
+        }
+        String documentName =
+                Optional.ofNullable(session.getMetadata())
+                        .map(meta -> meta.getOrDefault("documentName", ""))
+                        .orElse("");
+        ChatbotHistoryEntry entry =
+                conversationStore.createEntry(role, content, session.getDocumentId(), documentName);
+        try {
+            conversationStore.appendTurn(session.getSessionId(), entry);
+        } catch (RuntimeException ex) {
+            log.debug("Failed to persist chatbot conversation turn: {}", ex.getMessage());
+        }
+    }
+
+    private void maybeSummarizeConversation(ChatbotSettings settings, ChatbotSession session) {
+        if (conversationStore == null
+                || session == null
+                || !StringUtils.hasText(session.getSessionId())) {
+            return;
+        }
+        int window = conversationStore.defaultWindow();
+        long historySize = conversationStore.historyLength(session.getSessionId());
+        if (historySize < Math.max(window * SUMMARY_TRIGGER_MULTIPLIER, window + 1)) {
+            return;
+        }
+        List<ChatbotHistoryEntry> entries =
+                conversationStore.getRecentTurns(
+                        session.getSessionId(), conversationStore.retentionWindow());
+        if (entries.isEmpty() || entries.size() <= window) {
+            return;
+        }
+        int cutoff = entries.size() - window;
+        List<ChatbotHistoryEntry> summarizable = entries.subList(0, cutoff);
+        String existingSummary = loadConversationSummary(session.getSessionId());
+        String updatedSummary =
+                summarizeHistory(settings, session, summarizable, existingSummary);
+        if (StringUtils.hasText(updatedSummary)) {
+            try {
+                conversationStore.storeSummary(session.getSessionId(), updatedSummary);
+                conversationStore.trimHistory(session.getSessionId(), window);
+            } catch (RuntimeException ex) {
+                log.debug("Failed to persist chatbot summary: {}", ex.getMessage());
+            }
+        }
+    }
+
+    private String summarizeHistory(
+            ChatbotSettings settings,
+            ChatbotSession session,
+            List<ChatbotHistoryEntry> entries,
+            String existingSummary) {
+        if (entries == null || entries.isEmpty()) {
+            return existingSummary;
+        }
+        String priorSummary =
+                StringUtils.hasText(existingSummary)
+                        ? existingSummary
+                        : "No previous summary available.";
+        String transcript = buildSummaryTranscript(entries);
+        if (!StringUtils.hasText(transcript)) {
+            return existingSummary;
+        }
+        String systemPrompt =
+                "You maintain a concise running summary of Stirling PDF Bot conversations. "
+                        + "Capture user goals, referenced documents, and key conclusions in under 200 words.";
+        String userPrompt =
+                "Existing summary:\n"
+                        + priorSummary
+                        + "\n\nNew conversation turns:\n"
+                        + transcript
+                        + "\n\nRespond with the updated summary only.";
+        Prompt prompt =
+                new Prompt(
+                        List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)),
+                        buildChatOptions(settings, settings.models().primary()));
+        try {
+            ChatResponse response = chatModel.call(prompt);
+            return Optional.ofNullable(response)
+                    .map(ChatResponse::getResults)
+                    .filter(results -> !results.isEmpty())
+                    .map(results -> results.get(0).getOutput().getText())
+                    .map(String::trim)
+                    .filter(StringUtils::hasText)
+                    .orElse(existingSummary);
+        } catch (RuntimeException ex) {
+            log.debug("Conversation summarisation failed: {}", ex.getMessage());
+            return existingSummary;
+        }
+    }
+
+    private String buildSummaryTranscript(List<ChatbotHistoryEntry> entries) {
+        StringBuilder builder = new StringBuilder();
+        for (ChatbotHistoryEntry entry : entries) {
+            if (entry == null || !StringUtils.hasText(entry.content())) {
+                continue;
+            }
+            if (builder.length() >= SUMMARY_TRANSCRIPT_MAX_CHARS) {
+                builder.append("\n[conversation truncated]");
+                break;
+            }
+            builder.append(entry.role()).append(": ").append(entry.content().trim());
+            if (StringUtils.hasText(entry.documentName())) {
+                builder.append(" (doc: ").append(entry.documentName()).append(")");
+            }
+            builder.append("\n");
+        }
+        return builder.toString();
+    }
+
+    private void enforceHistoryRetention(ChatbotSession session) {
+        if (conversationStore == null
+                || session == null
+                || !StringUtils.hasText(session.getSessionId())) {
+            return;
+        }
+        try {
+            conversationStore.trimHistory(
+                    session.getSessionId(), conversationStore.retentionWindow());
+        } catch (RuntimeException ex) {
+            log.debug("Failed to enforce chatbot history retention: {}", ex.getMessage());
+        }
     }
 }
