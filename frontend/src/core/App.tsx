@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AppProviders } from "@app/components/AppProviders";
+import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import HomePage from "@app/pages/HomePage";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
@@ -16,8 +17,10 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <AppProviders>
-        <HomePage />
-        <OnboardingTour />
+        <AppLayout>
+          <HomePage />
+          <OnboardingTour />
+        </AppLayout>
       </AppProviders>
     </Suspense>
   );
