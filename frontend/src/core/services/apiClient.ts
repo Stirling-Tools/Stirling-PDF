@@ -7,6 +7,7 @@ import { getApiBaseUrl } from '@app/services/apiClientConfig';
 const apiClient = axios.create({
   baseURL: getApiBaseUrl(),
   responseType: 'json',
+  withCredentials: true,
 });
 
 // Setup interceptors (core does nothing, proprietary adds JWT auth)
