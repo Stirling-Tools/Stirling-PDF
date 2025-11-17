@@ -129,61 +129,53 @@ public class SecurityConfiguration {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // Read CORS allowed origins from settings
-        if (applicationProperties.getSystem() != null
-                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
-                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+        List<String> configuredOrigins = null;
+        if (applicationProperties.getSystem() != null) {
+            configuredOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
+        }
 
-            List<String> allowedOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
-
-            CorsConfiguration cfg = new CorsConfiguration();
-
-            // Use setAllowedOriginPatterns for better wildcard and port support
-            cfg.setAllowedOriginPatterns(allowedOrigins);
+        CorsConfiguration cfg = new CorsConfiguration();
+        if (configuredOrigins != null && !configuredOrigins.isEmpty()) {
+            cfg.setAllowedOriginPatterns(configuredOrigins);
             log.debug(
                     "CORS configured with allowed origin patterns from settings.yml: {}",
-                    allowedOrigins);
-
-            // Set allowed methods explicitly (including OPTIONS for preflight)
-            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-            // Set allowed headers explicitly
-            cfg.setAllowedHeaders(
-                    List.of(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "X-API-KEY",
-                            "X-CSRF-TOKEN"));
-
-            // Set exposed headers (headers that the browser can access)
-            cfg.setExposedHeaders(
-                    List.of(
-                            "WWW-Authenticate",
-                            "X-Total-Count",
-                            "X-Page-Number",
-                            "X-Page-Size",
-                            "Content-Disposition",
-                            "Content-Type"));
-
-            // Allow credentials (cookies, authorization headers)
-            cfg.setAllowCredentials(true);
-
-            // Set max age for preflight cache
-            cfg.setMaxAge(3600L);
-
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", cfg);
-            return source;
+                    configuredOrigins);
         } else {
-            // No CORS origins configured - return null to disable CORS processing entirely
-            // This avoids empty CORS policy that unexpectedly rejects preflights
+            // Default to allowing all origins when nothing is configured
+            cfg.setAllowedOriginPatterns(List.of("*"));
             log.info(
-                    "CORS is disabled - no allowed origins configured in settings.yml (system.corsAllowedOrigins)");
-            return null;
+                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
         }
+
+        // Explicitly configure supported HTTP methods (include OPTIONS for preflight)
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        cfg.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "X-API-KEY",
+                        "X-CSRF-TOKEN",
+                        "X-XSRF-TOKEN"));
+
+        cfg.setExposedHeaders(
+                List.of(
+                        "WWW-Authenticate",
+                        "X-Total-Count",
+                        "X-Page-Number",
+                        "X-Page-Size",
+                        "Content-Disposition",
+                        "Content-Type"));
+
+        cfg.setAllowCredentials(true);
+        cfg.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        return source;
     }
 
     @Bean
