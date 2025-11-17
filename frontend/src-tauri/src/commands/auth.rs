@@ -126,3 +126,90 @@ pub async fn clear_user_info(app_handle: AppHandle) -> Result<(), String> {
     log::info!("User info cleared successfully");
     Ok(())
 }
+
+// Response types for Spring Boot login
+#[derive(Debug, Deserialize)]
+struct SpringBootSession {
+    access_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpringBootUser {
+    username: String,
+    email: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpringBootLoginResponse {
+    session: SpringBootSession,
+    user: SpringBootUser,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LoginResponse {
+    pub token: String,
+    pub username: String,
+    pub email: Option<String>,
+}
+
+/// Login command - makes HTTP request from Rust to bypass CORS
+/// Supports Spring Boot authentication (self-hosted)
+#[tauri::command]
+pub async fn login(
+    server_url: String,
+    username: String,
+    password: String,
+) -> Result<LoginResponse, String> {
+    log::info!("Login attempt for user: {} to server: {}", username, server_url);
+
+    // Build login URL
+    let login_url = format!("{}/api/v1/auth/login", server_url.trim_end_matches('/'));
+    log::debug!("Login URL: {}", login_url);
+
+    // Create HTTP client
+    let client = reqwest::Client::new();
+
+    // Make login request
+    let response = client
+        .post(&login_url)
+        .json(&serde_json::json!({
+            "username": username,
+            "password": password,
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?;
+
+    let status = response.status();
+    log::debug!("Login response status: {}", status);
+
+    if !status.is_success() {
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        log::error!("Login failed with status {}: {}", status, error_text);
+
+        return Err(if status.as_u16() == 401 {
+            "Invalid username or password".to_string()
+        } else if status.as_u16() == 403 {
+            "Access denied".to_string()
+        } else {
+            format!("Login failed: {}", status)
+        });
+    }
+
+    // Parse Spring Boot response format
+    let login_response: SpringBootLoginResponse = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    log::info!("Login successful for user: {}", login_response.user.username);
+
+    Ok(LoginResponse {
+        token: login_response.session.access_token,
+        username: login_response.user.username,
+        email: login_response.user.email,
+    })
+}

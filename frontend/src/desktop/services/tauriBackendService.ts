@@ -44,6 +44,21 @@ export class TauriBackendService {
     this.statusListeners.forEach(listener => listener(status));
   }
 
+  /**
+   * Initialize health monitoring for an external server (server mode)
+   * Does not start bundled backend, but enables health checks
+   */
+  async initializeExternalBackend(): Promise<void> {
+    if (this.backendStarted) {
+      return;
+    }
+
+    console.log('[TauriBackendService] Initializing external backend monitoring');
+    this.backendStarted = true; // Mark as active for health checks
+    this.setStatus('starting');
+    this.beginHealthMonitoring();
+  }
+
   async startBackend(backendUrl?: string): Promise<void> {
     if (this.backendStarted) {
       return;

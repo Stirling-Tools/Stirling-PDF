@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';

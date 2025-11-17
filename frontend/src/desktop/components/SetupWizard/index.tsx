@@ -81,8 +81,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       // Set connection mode to server
       await connectionModeService.switchToServer(serverConfig);
 
-      // Start local backend (for hybrid execution support)
-      await tauriBackendService.startBackend();
+      // Initialize health monitoring for external server
+      await tauriBackendService.initializeExternalBackend();
 
       // Complete setup
       onComplete();

@@ -5414,7 +5414,13 @@
       "autoUnzipDescription": "Automatically extract files from ZIP responses",
       "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
       "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP"
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default"
     },
     "hotkeys": {
       "errorConflict": "Shortcut already used by {{tool}}.",

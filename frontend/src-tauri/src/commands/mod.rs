@@ -19,6 +19,7 @@ pub use auth::{
     clear_user_info,
     get_auth_token,
     get_user_info,
+    login,
     save_auth_token,
     save_user_info,
 };

@@ -1,5 +1,8 @@
 import { isTauri } from '@tauri-apps/api/core';
 
+// Default backend URL from environment variables (fallback for production builds)
+const DEFAULT_BACKEND_URL = import.meta.env.VITE_DESKTOP_BACKEND_URL || import.meta.env.VITE_API_BASE_URL || '';
+
 /**
  * Desktop override: Determine base URL depending on Tauri environment
  */
@@ -9,9 +12,10 @@ export function getApiBaseUrl(): string {
   }
 
   if (import.meta.env.DEV) {
-    // During tauri dev we rely on Vite proxy, so use relative path to avoid CORS preflight
-    return '/';
+    // During tauri dev we rely on Vite proxy, so use empty string to avoid double-slash issue
+    // (baseURL "/" + url "/api/..." = "//api/..." which browsers treat as protocol-relative URL)
+    return '';
   }
 
-  return import.meta.env.VITE_DESKTOP_BACKEND_URL || 'http://localhost:8080';
+  return DEFAULT_BACKEND_URL;
 }

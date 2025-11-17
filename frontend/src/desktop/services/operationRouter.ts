@@ -41,6 +41,11 @@ export class OperationRouter {
    * @returns Base URL for API calls
    */
   async getBaseUrl(_operation?: string): Promise<string> {
+    // In DEV mode, return empty string so URLs stay relative and go through Vite proxy
+    if (import.meta.env.DEV) {
+      return '';
+    }
+
     const target = await this.getExecutionTarget(_operation);
 
     if (target === 'local') {

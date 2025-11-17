@@ -6,6 +6,12 @@ export interface UserInfo {
   email?: string;
 }
 
+interface LoginResponse {
+  token: string;
+  username: string;
+  email: string | null;
+}
+
 export type AuthStatus = 'authenticated' | 'unauthenticated' | 'refreshing';
 
 export class AuthService {
@@ -44,13 +50,14 @@ export class AuthService {
     try {
       console.log('Logging in to:', serverUrl);
 
-      // Call the server's login endpoint
-      const response = await axios.post(`${serverUrl}/api/v1/auth/login`, {
+      // Call Rust login command (bypasses CORS)
+      const response = await invoke<LoginResponse>('login', {
+        serverUrl,
         username,
         password,
       });
 
-      const { token, username: returnedUsername, email } = response.data;
+      const { token, username: returnedUsername, email } = response;
 
       // Save the token to keyring
       await invoke('save_auth_token', { token });
@@ -63,7 +70,7 @@ export class AuthService {
 
       const userInfo: UserInfo = {
         username: returnedUsername || username,
-        email,
+        email: email || undefined,
       };
 
       this.setAuthStatus('authenticated', userInfo);
@@ -74,14 +81,9 @@ export class AuthService {
       console.error('Login failed:', error);
       this.setAuthStatus('unauthenticated', null);
 
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Invalid username or password');
-        } else if (error.response?.status === 403) {
-          throw new Error('Access denied');
-        } else if (error.code === 'ERR_NETWORK') {
-          throw new Error('Network error - could not connect to server');
-        }
+      // Rust commands return string errors
+      if (typeof error === 'string') {
+        throw new Error(error);
       }
 
       throw new Error('Login failed. Please try again.');
