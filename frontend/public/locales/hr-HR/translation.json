@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "izvuci,skeniraj",
-      "title": "OCR / Čišćenje skeniranih dokumenata",
+      "title": "OCR / Čišćenje skenova",
       "desc": "Čišćenje skenira i otkriva tekst sa slika unutar PDF-a i ponovno ga dodaje kao tekst."
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detektiraj,razdvoji,fotografije",
-      "title": "Detektiraj i razdvoji skenirane fotografije",
+      "title": "Otkrij i podijeli sken-slike",
       "desc": "Detektirajte i razdvojite skenirane fotografije u zasebne stranice"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "ukloni,izbriši,otključaj",
-      "title": "Ukloni potpis sertifikata",
+      "title": "Ukloni potpis certifikata",
       "desc": "Uklonite potpis sertifikata iz PDF-a"
     },
     "pageLayout": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "promijeni veličinu,prilagodi,skaliraj",
-      "title": "Prilagodite veličinu/razmjer stranice",
+      "title": "Podesi veličinu stranice",
       "desc": "Promijenite veličinu/razmjer stranice i/ili njezin sadržaj."
     },
     "addPageNumbers": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "automatski-detekcija,temeljen-na-zaglavlju,organiziraj,preimenuj",
-      "title": "Automatski preimenuj PDF datoteku",
+      "title": "Auto preimenuj PDF",
       "desc": "Automatski preimenuje PDF datoteku na temelju detektiranog zaglavlja"
     },
     "adjustContrast": {
@@ -648,7 +648,7 @@
     },
     "autoSplitPDF": {
       "tags": "automatski,razdijeli,QR",
-      "title": "Automatsko dijeljenje stranica",
+      "title": "Auto podijeli stranice",
       "desc": "Automatsko dijeljenje skeniranog PDF-a s fizičkim QR kodom za dijeljenje stranica"
     },
     "sanitize": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "info,metapodaci,detalji",
-      "title": "Dohvati SVE informacije o PDF-u",
+      "title": "Dohvati sve info o PDF-u",
       "desc": "Dohvaća sve moguće informacije o PDF-ovima"
     },
     "pdfToSinglePage": {
@@ -678,7 +678,7 @@
     },
     "splitBySections": {
       "tags": "razdvoji,sekcije,podijeli",
-      "title": "Razdvoji PDF po sekcijama",
+      "title": "Podijeli PDF po sekcijama",
       "desc": "Podijelite svaku stranicu PDF-a na manje vodoravne i okomite sekcije"
     },
     "addStamp": {
@@ -693,7 +693,7 @@
     },
     "splitByChapters": {
       "tags": "razdvoji,poglavlja,struktura",
-      "title": "Podijeli PDF prema glavama",
+      "title": "Podijeli PDF po poglavljima",
       "desc": "Podijeli PDF na više datoteka prema njegovom strukturnom obliku glava."
     },
     "validateSignature": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "automatski,razdijeli,veličina",
-      "title": "Automatska podjela po veličini/broju",
+      "title": "Auto dijeli po veličini/broju",
       "desc": "Podijelite jedan PDF na više dokumenata na temelju veličine, broja stranica ili broja dokumenata"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatizacija,mapa,skeniranje",
-      "title": "Automatizirano skeniranje mapa",
+      "title": "Auto skeniranje mapa",
       "desc": "Poveznica na vodič za automatizirano skeniranje mapa"
     },
     "devSsoGuide": {
@@ -3649,15 +3649,15 @@
   },
   "quickAccess": {
     "read": "Čitanje",
-    "sign": "Potpisati",
-    "automate": "Automatizacija",
+    "sign": "Potpiši",
+    "automate": "Auto",
     "files": "Datoteke",
-    "activity": "Aktivnost",
+    "activity": "Dnevnik",
     "help": "Pomoć",
     "account": "Račun",
-    "config": "Konfiguracija",
+    "config": "Postavke",
     "settings": "Postavke",
-    "adminSettings": "Administratorske postavke",
+    "adminSettings": "Admin postavke",
     "allTools": "All Tools",
     "reader": "Čitač",
     "helpMenu": {

@@ -470,7 +470,7 @@
     "desc": "Bütün PDF ehtiyaclarınız üçün lokal-host edilən biraddımlıq həll.",
     "searchBar": "Xüsusiyyətləri axtar...",
     "viewPdf": {
-      "title": "PDF-ə Bax/Redaktə et",
+      "title": "Bax/Redaktə et PDF",
       "desc": "Bax, sitat götür, mətn və ya şəkil əlavə et"
     },
     "setFavorites": "Seçilmişləri təyin et",
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "aşkarlama,böl,şəkillər",
-      "title": "Skan olunmuş şəkilləri aşkarlayıb böl",
+      "title": "Skan şəkilləri tap və böl",
       "desc": "Skan olunmuş şəkilləri aşkarlayın və ayrıca səhifələrə bölün"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "sil,çıxar,kilidi aç",
-      "title": "Sertifikat İmzasını Sil",
+      "title": "Sertifikat imzasını sil",
       "desc": "PDF-dən Sertifikat imzasını götür"
     },
     "pageLayout": {
@@ -623,12 +623,12 @@
     },
     "scalePages": {
       "tags": "ölçüləndir,tənzimlə,miqyasla",
-      "title": "Səhifə ölçüsünü/Miqyasını Dəyiş",
+      "title": "Səhifə ölçüsünü tənzimlə",
       "desc": "Səhifənin və/və ya onun məzmununun ölçüsünü və miqyasını dəyiş"
     },
     "addPageNumbers": {
       "tags": "nömrə,səhifələmə,say",
-      "title": "Səhifələri Nömrələ",
+      "title": "Səhifələri nömrələ",
       "desc": "Sənədin səhifələrinə təyin edilmiş yerdə nömrələr əlavə edin"
     },
     "autoRename": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "avtomatlaşdırma,qovluq,skan",
-      "title": "Avtomatlaşdırılmış qovluq skan edilməsi",
+      "title": "Avtomatik qovluq skanı",
       "desc": "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
     },
     "devSsoGuide": {
@@ -765,7 +765,7 @@
       "desc": "SSO təlimatına keçid"
     },
     "devAirgapped": {
-      "title": "Şəbəkədən təcrid olunmuş quraşdırma",
+      "title": "Şəbəkəsiz quraşdırma",
       "desc": "Təcrid edilmiş quraşdırma təlimatına keçid"
     },
     "addPassword": {
@@ -3651,12 +3651,12 @@
   "quickAccess": {
     "read": "Oxu",
     "sign": "İmzala",
-    "automate": "Avtomatlaşdır",
+    "automate": "Auto",
     "files": "Fayllar",
-    "activity": "Fəaliyyət",
+    "activity": "Aktivlik",
     "help": "Kömək",
     "account": "Hesab",
-    "config": "Konfiqurasiya",
+    "config": "Ayarlar",
     "settings": "Ayarlar",
     "adminSettings": "Admin Ayarları",
     "allTools": "All Tools",

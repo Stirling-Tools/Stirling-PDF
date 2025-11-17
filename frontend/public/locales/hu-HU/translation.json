@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "kivonatol,szkennel",
-      "title": "OCR / Szkennelt dokumentumok tisztítása",
+      "title": "OCR / tisztítás",
       "desc": "Szkennelt dokumentumok tisztítása és szövegfelismerés képekből, majd visszaadása szerkeszthető szövegként"
     },
     "extractImages": {
@@ -583,7 +583,7 @@
     },
     "certSign": {
       "tags": "hitelesít,PEM,P12,hivatalos,titkosít,aláír,tanúsítvány,PKCS12,JKS,szerver,kézi,automatikus",
-      "title": "Tanúsítvánnyal aláírás",
+      "title": "Aláírás tanúsítvánnyal",
       "desc": "PDF aláírása tanúsítvánnyal/kulccsal (PEM/P12)"
     },
     "repair": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "könyvjelzők,tartalom,szerkesztés",
-      "title": "Szerkesztés vagy hozzáadás a PDF tartalomjegyzékéhez",
+      "title": "Tartalomjegyzék szerkesztése",
       "desc": "PDF dokumentumokban könyvjelzők és tartalomjegyzék hozzáadása vagy szerkesztése"
     },
     "manageCertificates": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "automatikus,feloszt,méret",
-      "title": "Automatikus felosztás méret/darabszám szerint",
+      "title": "Auto felosztás méret/darab",
       "desc": "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
     },
     "replaceColor": {
@@ -765,7 +765,7 @@
       "desc": "Hivatkozás az SSO útmutatóra"
     },
     "devAirgapped": {
-      "title": "Elszigetelt (air‑gapped) beállítás",
+      "title": "Air-gapped beállítás",
       "desc": "Hivatkozás az elszigetelt környezet beállítási útmutatójára"
     },
     "addPassword": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Olvasás",
     "sign": "Aláírás",
-    "automate": "Automatizálás",
+    "automate": "Autom.",
     "files": "Fájlok",
-    "activity": "Tevékenység",
+    "activity": "Napló",
     "help": "Súgó",
     "account": "Fiók",
-    "config": "Konfiguráció",
-    "settings": "Beállítások",
-    "adminSettings": "Admin beállítások",
+    "config": "Konfig",
+    "settings": "Beáll.",
+    "adminSettings": "Admin beáll.",
     "allTools": "All Tools",
     "reader": "Olvasó",
     "helpMenu": {

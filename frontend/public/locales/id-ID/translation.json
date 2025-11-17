@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "ubah-ukuran,atur,skala",
-      "title": "Menyesuaikan ukuran/skala halaman",
+      "title": "Atur ukuran/skala halaman",
       "desc": "Mengubah ukuran/skala halaman dan/atau isinya."
     },
     "addPageNumbers": {
@@ -648,7 +648,7 @@
     },
     "autoSplitPDF": {
       "tags": "otomatis,pecah,QR",
-      "title": "Membagi Halaman Secara Otomatis",
+      "title": "Pisah halaman otomatis",
       "desc": "Membagi PDF yang dipindai secara otomatis dengan Kode QR pembagi halaman yang dipindai secara fisik"
     },
     "sanitize": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "info,metadata,detail",
-      "title": "Dapatkan Semua Info tentang PDF",
+      "title": "Info lengkap PDF",
       "desc": "Mengambil setiap dan semua informasi yang mungkin ada pada PDF"
     },
     "pdfToSinglePage": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "otomatis,pecah,ukuran",
-      "title": "Pemisahan Otomatis berdasarkan Ukuran/Hitungan",
+      "title": "Pisah otomatis ukuran/jumlah",
       "desc": "Membagi satu PDF menjadi beberapa dokumen berdasarkan ukuran, jumlah halaman, atau jumlah dokumen"
     },
     "replaceColor": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Baca",
     "sign": "Tanda Tangan",
-    "automate": "Otomatisasi",
+    "automate": "Otomasi",
     "files": "File",
-    "activity": "Aktivitas",
+    "activity": "Kegiatan",
     "help": "Bantuan",
     "account": "Akun",
-    "config": "Konfigurasi",
-    "settings": "Pengaturan",
-    "adminSettings": "Pengaturan Admin",
+    "config": "Konfig",
+    "settings": "Setelan",
+    "adminSettings": "Setelan Admin",
     "allTools": "All Tools",
     "reader": "Pembaca",
     "helpMenu": {

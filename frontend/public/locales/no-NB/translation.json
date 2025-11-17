@@ -470,7 +470,7 @@
     "desc": "Din lokale one-stop-shop for alle dine PDF-behov.",
     "searchBar": "Søk etter funksjoner...",
     "viewPdf": {
-      "title": "Vis/Rediger PDF",
+      "title": "Vis/rediger PDF",
       "desc": "Vis, annoter, legg til tekst eller bilder"
     },
     "setFavorites": "Angi Favoritter",
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "oppdag,del,bilder",
-      "title": "Oppdag og del skannede bilder",
+      "title": "Oppdag & del skannede bilder",
       "desc": "Oppdag og del skannede bilder i separate sider"
     },
     "sign": {
@@ -703,7 +703,7 @@
     },
     "swagger": {
       "tags": "API,dokumentasjon,test",
-      "title": "API-dokumentasjon",
+      "title": "API Docs",
       "desc": "Vis API-dokumentasjon og test endepunkter"
     },
     "scannerEffect": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "bokmerker,innhold,rediger",
-      "title": "Rediger innholdsfortegnelse",
+      "title": "Rediger innholdsliste",
       "desc": "Legg til eller rediger bokmerker og innholdsfortegnelse i PDF-dokumenter"
     },
     "manageCertificates": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,del,størrelse",
-      "title": "Auto Del etter Størrelse/Antall",
+      "title": "Auto-del størrelse/antall",
       "desc": "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
     },
     "replaceColor": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Les",
     "sign": "Signer",
-    "automate": "Automatiser",
+    "automate": "Auto",
     "files": "Filer",
-    "activity": "Aktivitet",
+    "activity": "Logg",
     "help": "Hjelp",
     "account": "Konto",
-    "config": "Konfigurasjon",
-    "settings": "Innstillinger",
-    "adminSettings": "Admin-innstillinger",
+    "config": "Oppsett",
+    "settings": "Innst.",
+    "adminSettings": "Admin Innst.",
     "allTools": "All Tools",
     "reader": "Leser",
     "helpMenu": {

@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detekovat,rozdělit,fotky",
-      "title": "Detekovat a rozdělit skenované fotografie",
+      "title": "Najít a rozdělit fotky",
       "desc": "Detekovat a rozdělit skenované fotografie na samostatné stránky"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "odebrat,smazat,odemknout",
-      "title": "Odstranit podpis certifikátu",
+      "title": "Odebrat cert. podpis",
       "desc": "Odstranit podpis certifikátu z PDF"
     },
     "pageLayout": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "změnit velikost,upravit,škálovat",
-      "title": "Upravit velikost/měřítko stránky",
+      "title": "Změnit velikost/měřítko",
       "desc": "Změnit velikost/měřítko stránky a/nebo jejího obsahu."
     },
     "addPageNumbers": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatizace,složka,skenování",
-      "title": "Automatizované skenování složek",
+      "title": "Autom. skenování složek",
       "desc": "Odkaz na průvodce automatizovaným skenováním složek"
     },
     "devSsoGuide": {
@@ -765,7 +765,7 @@
       "desc": "Odkaz na průvodce SSO"
     },
     "devAirgapped": {
-      "title": "Nastavení v odpojeném prostředí",
+      "title": "Offline nastavení",
       "desc": "Odkaz na průvodce nastavením v odpojeném prostředí"
     },
     "addPassword": {
@@ -3650,14 +3650,14 @@
   "quickAccess": {
     "read": "Číst",
     "sign": "Podepsat",
-    "automate": "Automatizovat",
+    "automate": "Automat.",
     "files": "Soubory",
     "activity": "Aktivita",
     "help": "Nápověda",
     "account": "Účet",
-    "config": "Konfigurace",
-    "settings": "Nastavení",
-    "adminSettings": "Nastavení správce",
+    "config": "Konfig.",
+    "settings": "Nastav.",
+    "adminSettings": "Admin nastav.",
     "allTools": "All Tools",
     "reader": "Čtečka",
     "helpMenu": {

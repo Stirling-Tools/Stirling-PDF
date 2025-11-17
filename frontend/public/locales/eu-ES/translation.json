@@ -548,7 +548,7 @@
     },
     "unlockPDFForms": {
       "tags": "desblokeatu,gaitu,editatu",
-      "title": "Desblokeatu PDF inprimakiak",
+      "title": "PDF inprimakiak desblokeatu",
       "desc": "Kendu irakurtzeko soilik propietatea PDF dokumentuko inprimaki-eremuetan."
     },
     "changeMetadata": {
@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "ateratu,eskaneatu",
-      "title": "OCR exekutatu PDFan eta/edo garbiketa-eskaneatzeak",
+      "title": "OCR / Eskaneoak garbitu",
       "desc": "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa"
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detektatu,banatu,argazkiak",
-      "title": "Detektatu eta banatu eskaneatutako argazkiak",
+      "title": "Argazki eskaneatuak zatitu",
       "desc": "Detektatu eta banatu eskaneatutako argazkiak orri bereizietan"
     },
     "sign": {
@@ -633,12 +633,12 @@
     },
     "autoRename": {
       "tags": "auto-detektatu,goiburuetan oinarritua,antolatu,berrerrotulatu",
-      "title": "PDF fitxategia automatikoki berrizendatu",
+      "title": "Automatikoki berrizendatu PDF",
       "desc": "PDF fitxategi bat automatikoki berrizendatzen du detektatutako goiburuaren arabera"
     },
     "adjustContrast": {
       "tags": "kontrastea,distira,saturazioa",
-      "title": "Koloreak/kontrastea doitu",
+      "title": "Kolore/kontraste doitu",
       "desc": "PDF baten kontrastea, saturazioa eta distira doitzea"
     },
     "crop": {
@@ -658,12 +658,12 @@
     },
     "getPdfInfo": {
       "tags": "info,metadata,xehotasunak",
-      "title": "Lortu informazio guztia PDF-tik",
+      "title": "Lortu PDF informazio osoa",
       "desc": "Eskuratu PDF fitxategiko Informazio guztia"
     },
     "pdfToSinglePage": {
       "tags": "batu,elkartu,bakarra",
-      "title": "PDF fitxategia, orrialde handi bakar batera",
+      "title": "PDF orri bakar handira",
       "desc": "PDF orri guztiak orri handi bakar batean konbinatzen ditu"
     },
     "showJS": {
@@ -743,11 +743,11 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,banatu,tamaina",
-      "title": "Banaketa automatikoa tamainaren/kopuruaren arabera",
+      "title": "Autom. zatitu tamaina/kop.",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "replaceColor": {
-      "title": "Ordeztu eta alderantzikatu kolorea",
+      "title": "Ordeztu eta inbertitu kolorea",
       "desc": "Ordeztu edo alderantzikatu koloreak PDF dokumentuetan"
     },
     "devApi": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatizazioa,karpeta,eskaneatzea",
-      "title": "Karpeta eskaneatze automatizatua",
+      "title": "Karpeta eskaneatze autom.",
       "desc": "Esteka karpeta eskaneatze automatizatuaren gidara"
     },
     "devSsoGuide": {
@@ -3651,16 +3651,16 @@
   "quickAccess": {
     "read": "Irakurri",
     "sign": "Sinatu",
-    "automate": "Automatizatu",
-    "files": "Fitxategiak",
+    "automate": "Autom.",
+    "files": "Fitx.",
     "activity": "Jarduera",
     "help": "Laguntza",
     "account": "Kontua",
-    "config": "Konfigurazioa",
-    "settings": "Ezarpenak",
-    "adminSettings": "Admin ezarpenak",
+    "config": "Konfig.",
+    "settings": "Aukerak",
+    "adminSettings": "Admin aukerak",
     "allTools": "All Tools",
-    "reader": "Irakurgailua",
+    "reader": "Irakurri",
     "helpMenu": {
       "toolsTour": "Tresnen ibilaldia",
       "toolsTourDesc": "Ikasi tresnek zer egin dezaketen",

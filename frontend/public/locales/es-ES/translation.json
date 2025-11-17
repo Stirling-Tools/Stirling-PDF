@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "extraer,escanear",
-      "title": "Ejecutar OCR en PDF y/o tareas de limpieza",
+      "title": "OCR / Limpiar escaneos",
       "desc": "Limpiar escaneos y detectar texto en imágenes dentro de un PDF para volver a agregarlo como texto editable"
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detectar,dividir,fotos",
-      "title": "Detectar y Dividir Fotos Escaneadas",
+      "title": "Detecta y separa fotos",
       "desc": "Detecte y divida fotos escaneadas en páginas separadas"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "eliminar,borrar,desbloquear",
-      "title": "Quitar firma de certificado",
+      "title": "Eliminar firma de cert.",
       "desc": "Eliminar firma de certificado del PDF"
     },
     "pageLayout": {
@@ -623,12 +623,12 @@
     },
     "scalePages": {
       "tags": "redimensionar,ajustar,escalar",
-      "title": "Escalar/ajustar tamaño de página",
+      "title": "Ajustar tamaño/escala",
       "desc": "Escalar/cambiar el tamaño de una pagina y/o su contenido"
     },
     "addPageNumbers": {
       "tags": "número,paginación,contar",
-      "title": "Añadir números de página",
+      "title": "Numerar páginas",
       "desc": "Añadir números de página en un documento en una ubicación concreta"
     },
     "autoRename": {
@@ -3653,13 +3653,13 @@
     "sign": "Firmar",
     "automate": "Automatizar",
     "files": "Archivos",
-    "activity": "Actividad",
+    "activity": "Registro",
     "help": "Ayuda",
     "account": "Cuenta",
-    "config": "Configuración",
-    "settings": "Configuración",
-    "adminSettings": "Configuración de administración",
-    "allTools": "Todas las Herramientas",
+    "config": "Conf.",
+    "settings": "Ajustes",
+    "adminSettings": "Ajustes admin",
+    "allTools": "Herram.",
     "reader": "Lector",
     "helpMenu": {
       "toolsTour": "Recorrido por las herramientas",

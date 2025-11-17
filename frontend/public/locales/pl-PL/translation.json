@@ -633,12 +633,12 @@
     },
     "autoRename": {
       "tags": "automatyczne wykrywanie,nagłówek,organizuj,przemianuj",
-      "title": "Automatycznie zmień nazwę pliku PDF",
+      "title": "Autozmiana nazwy PDF",
       "desc": "Automatycznie zmienia nazwę pliku PDF na podstawie wykrytego nagłówka"
     },
     "adjustContrast": {
       "tags": "kontrast,jasność,nasycenie",
-      "title": "Zmień kolor/nasycenie/jasność",
+      "title": "Kolory/kontrast",
       "desc": "Zmień kolor/nasycenie/jasność w dokumencie PDF"
     },
     "crop": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "informacje,metadane,szczegóły",
-      "title": "Pobierz informacje o pliku PDF",
+      "title": "Info o PDF",
       "desc": "Pobiera wszelkie informacje o pliku PDF"
     },
     "pdfToSinglePage": {
@@ -698,7 +698,7 @@
     },
     "validateSignature": {
       "tags": "waliduj,zweryfikuj,certyfikat",
-      "title": "Sprawdź poprawność podpisu PDF",
+      "title": "Weryfikuj podpis PDF",
       "desc": "Weryfikuj podpisy cyfrowe i certyfikaty w dokumentach PDF"
     },
     "swagger": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatyzacja,folder,skanowanie",
-      "title": "Automatyczne skanowanie folderów",
+      "title": "Auto skan folderów",
       "desc": "Link do przewodnika automatycznego skanowania folderów"
     },
     "devSsoGuide": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Czytaj",
     "sign": "Podpis",
-    "automate": "Automatyzuj",
+    "automate": "Auto",
     "files": "Pliki",
-    "activity": "Aktywność",
+    "activity": "Historia",
     "help": "Pomoc",
     "account": "Konto",
-    "config": "Konfiguracja",
-    "settings": "Ustawienia",
-    "adminSettings": "Ustawienia administratora",
+    "config": "Konfig",
+    "settings": "Ustaw.",
+    "adminSettings": "Ustaw. admina",
     "allTools": "All Tools",
     "reader": "Czytnik",
     "helpMenu": {

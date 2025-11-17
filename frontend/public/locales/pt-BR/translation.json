@@ -548,7 +548,7 @@
     },
     "unlockPDFForms": {
       "tags": "desbloquear,habilitar,editar",
-      "title": "Desbloquear Formulários do PDF",
+      "title": "Desbloquear Formulários PDF",
       "desc": "Remove a propriedade de apenas leitura de formulários em um documento PDF."
     },
     "changeMetadata": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detectar,dividir,fotos",
-      "title": "Detectar e dividir fotos digitalizadas",
+      "title": "Separar fotos escaneadas",
       "desc": "Detectar e dividir fotos digitalizadas em páginas separadas"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "remover,excluir,desbloquear",
-      "title": "Remover Assinatura com Certificado",
+      "title": "Apagar assinatura certificada",
       "desc": "Remover assinatura com Certificado/Chave (PEM/P12/JKS) em um PDF."
     },
     "pageLayout": {
@@ -698,7 +698,7 @@
     },
     "validateSignature": {
       "tags": "validar,verificar,certificado",
-      "title": "Verificar Assinatura com Certificado",
+      "title": "Validar assinatura do PDF",
       "desc": "Verifica assinatura digital e certificado em um PDF."
     },
     "swagger": {
@@ -3651,15 +3651,15 @@
   "quickAccess": {
     "read": "Ler",
     "sign": "Assinar",
-    "automate": "Automatizar",
+    "automate": "Automat.",
     "files": "Arquivos",
-    "activity": "Atividade",
+    "activity": "Ativ.",
     "help": "Ajuda",
     "account": "Conta",
     "config": "Config",
-    "settings": "Configurações",
-    "adminSettings": "Configurações de administrador",
-    "allTools": "Todas as ferramentas",
+    "settings": "Ajustes",
+    "adminSettings": "Ajustes admin",
+    "allTools": "Ferram.",
     "reader": "Leitor",
     "helpMenu": {
       "toolsTour": "Tour das ferramentas",

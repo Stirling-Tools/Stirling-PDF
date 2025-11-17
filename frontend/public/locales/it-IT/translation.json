@@ -528,7 +528,7 @@
     },
     "addAttachments": {
       "tags": "incorpora,allega,includi",
-      "title": "Aggiungi allegati",
+      "title": "Allega file",
       "desc": "Aggiungi o rimuovi file incorporati (allegati) da/verso un PDF"
     },
     "watermark": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "rileva,dividi,foto",
-      "title": "Rileva/Dividi foto scansionate",
+      "title": "Rileva e dividi foto scannate",
       "desc": "Divide più foto all’interno di una foto/PDF"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "rimuovi,elimina,sblocca",
-      "title": "Rimuovere firma dal certificato",
+      "title": "Rimuovi firma digitale",
       "desc": "Rimuovi la firma del certificato dal PDF"
     },
     "pageLayout": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "ridimensiona,adatta,scala",
-      "title": "Regola le dimensioni/scala della pagina",
+      "title": "Ridimensiona pagine",
       "desc": "Modificare le dimensioni/scala della pagina e/o dei suoi contenuti."
     },
     "addPageNumbers": {
@@ -658,12 +658,12 @@
     },
     "getPdfInfo": {
       "tags": "info,metadati,dettagli",
-      "title": "Ottieni TUTTE le informazioni in PDF",
+      "title": "Info complete sul PDF",
       "desc": "Raccogli tutte le informazioni possibili sui PDF"
     },
     "pdfToSinglePage": {
       "tags": "combina,unisci,singola",
-      "title": "PDF in un'unica pagina di grandi dimensioni",
+      "title": "PDF in unica pagina grande",
       "desc": "Unisce tutte le pagine PDF in un'unica grande pagina"
     },
     "showJS": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,dividi,dimensione",
-      "title": "Divisione automatica per dimensione/numero",
+      "title": "Dividi auto per peso/pagine",
       "desc": "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automazione,cartella,scansione",
-      "title": "Scansione cartelle automatizzata",
+      "title": "Scansione automatica cartelle",
       "desc": "Link alla guida per scansione cartelle automatizzata"
     },
     "devSsoGuide": {
@@ -3651,15 +3651,15 @@
   "quickAccess": {
     "read": "Leggi",
     "sign": "Firma",
-    "automate": "Automatizza",
+    "automate": "Automaz.",
     "files": "File",
     "activity": "Attività",
     "help": "Guida",
     "account": "Account",
     "config": "Config",
-    "settings": "Impostazioni",
-    "adminSettings": "Impostazioni amministratore",
-    "allTools": "Tutti gli strumenti",
+    "settings": "Opzioni",
+    "adminSettings": "Opzioni Admin",
+    "allTools": "Funzioni",
     "reader": "Lettore",
     "helpMenu": {
       "toolsTour": "Tour strumenti",

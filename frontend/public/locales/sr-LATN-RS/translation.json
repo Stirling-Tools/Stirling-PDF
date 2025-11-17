@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "izvuci,skeniraj",
-      "title": "OCR / Čišćenje skenova",
+      "title": "OCR / Čisti skenove",
       "desc": "Čišćenje skenova i detektovanje teksta sa slika unutar PDF-a i ponovno dodavanje kao teksta."
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detektuj,podeli,fotografije",
-      "title": "Otkrij i podeli skenirane fotografije",
+      "title": "Nađi i podeli skenirane slike",
       "desc": "Otkrivanje i deljenje skeniranih fotografija na zasebne strane"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "ukloni,obriši,otključaj",
-      "title": "Uklanjanje digitalnog potpisa",
+      "title": "Ukloni potpis sertifikata",
       "desc": "Uklanjanje digitalnog potpisa sa sertifikatom iz PDF-a"
     },
     "pageLayout": {
@@ -703,7 +703,7 @@
     },
     "swagger": {
       "tags": "API,dokumentacija,test",
-      "title": "API dokumentacija",
+      "title": "API dok.",
       "desc": "Pogledajte API dokumentaciju i testirajte krajnje tačke"
     },
     "scannerEffect": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "obeleživači,sadržaj,uredi",
-      "title": "Izmeni sadržaj",
+      "title": "Uredi sadržaj",
       "desc": "Dodaj ili izmeni obeleživače i sadržaj u PDF dokumentima"
     },
     "manageCertificates": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Čitanje",
     "sign": "Potpis",
-    "automate": "Automatizuj",
+    "automate": "Auto radnje",
     "files": "Fajlovi",
-    "activity": "Aktivnost",
+    "activity": "Istorija",
     "help": "Pomoć",
     "account": "Nalog",
-    "config": "Konfiguracija",
-    "settings": "Podešavanja",
-    "adminSettings": "Admin podešavanja",
+    "config": "Konfig",
+    "settings": "Postavke",
+    "adminSettings": "Admin postavke",
     "allTools": "All Tools",
     "reader": "Čitač",
     "helpMenu": {

@@ -470,7 +470,7 @@
     "desc": "Ihre lokal gehostete All-in-one-Lösung für alle Ihre PDF-Anforderungen.",
     "searchBar": "Suche nach Funktionen...",
     "viewPdf": {
-      "title": "PDF anzeigen/bearbeiten",
+      "title": "PDF ansehen & ändern",
       "desc": "Anzeigen, Kommentieren, Text oder Bilder hinzufügen"
     },
     "setFavorites": "Favoriten festlegen",
@@ -548,7 +548,7 @@
     },
     "unlockPDFForms": {
       "tags": "entsperren,aktivieren,bearbeiten",
-      "title": "Schreibgeschützte PDF-Formfelder entfernen",
+      "title": "PDF-Formulare entsperren",
       "desc": "Entfernen Sie die schreibgeschützte Eigenschaft von Formularfeldern in einem PDF-Dokument."
     },
     "changeMetadata": {
@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "extrahieren,scannen",
-      "title": "Führe OCR/Cleanup-Scans aus",
+      "title": "OCR & Scans bereinigen",
       "desc": "Cleanup scannt und erkennt Text aus Bildern in einer PDF-Datei und fügt ihn erneut als Text hinzu"
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "erkennen,teilen,fotos",
-      "title": "Gescannte Fotos erkennen/aufteilen",
+      "title": "Scanfotos erkennen & teilen",
       "desc": "Teilt mehrere Fotos aus einem Foto/PDF auf"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "entfernen,löschen,entsperren",
-      "title": "Zertifikatsignatur entfernen",
+      "title": "Zert.-Signatur entfernen",
       "desc": "Zertifikatsignatur aus PDF entfernen"
     },
     "pageLayout": {
@@ -618,12 +618,12 @@
     },
     "bookletImposition": {
       "tags": "broschüre,druck,bindung",
-      "title": "Broschüren-Layout",
+      "title": "Broschürendruck",
       "desc": "Broschüren mit korrekter Seitenreihenfolge und mehrseitigem Layout für Druck und Bindung erstellen"
     },
     "scalePages": {
       "tags": "größe ändern,anpassen,skalieren",
-      "title": "Seitengröße/Skalierung anpassen",
+      "title": "Seitenmaß ändern",
       "desc": "Größe/Skalierung der Seite und/oder des Inhalts ändern"
     },
     "addPageNumbers": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "auto-erkennung,kopfzeilen-basiert,organisieren,umbenennen",
-      "title": "PDF-Datei automatisch umbenennen",
+      "title": "PDF automatisch umbenennen",
       "desc": "Benennt eine PDF-Datei automatisch basierend auf der erkannten Überschrift um"
     },
     "adjustContrast": {
@@ -658,12 +658,12 @@
     },
     "getPdfInfo": {
       "tags": "info,metadaten,details",
-      "title": "Alle Informationen anzeigen",
+      "title": "Alle PDF-Infos",
       "desc": "Erfasst alle möglichen Informationen in einer PDF"
     },
     "pdfToSinglePage": {
       "tags": "kombinieren,zusammenführen,einzeln",
-      "title": "PDF zu einer Seite zusammenfassen",
+      "title": "PDF auf eine Seite",
       "desc": "Fügt alle PDF-Seiten zu einer einzigen großen Seite zusammen"
     },
     "showJS": {
@@ -673,12 +673,12 @@
     },
     "redact": {
       "tags": "zensieren,schwärzen,verbergen",
-      "title": "Manuell zensieren/schwärzen",
+      "title": "Schwärzen",
       "desc": "Zensiere (Schwärze) eine PDF-Datei durch Auswählen von Text, gezeichneten Formen und/oder ausgewählten Seite(n)"
     },
     "splitBySections": {
       "tags": "teilen,abschnitte,aufteilen",
-      "title": "PDF nach Abschnitten aufteilen",
+      "title": "PDF in Abschnitte teilen",
       "desc": "Jede Seite einer PDF in kleinere horizontale und vertikale Abschnitte unterteilen"
     },
     "addStamp": {
@@ -693,7 +693,7 @@
     },
     "splitByChapters": {
       "tags": "teilen,kapitel,struktur",
-      "title": "PDF-Datei nach Kapiteln aufteilen",
+      "title": "PDF nach Kapiteln teilen",
       "desc": "Aufteilung einer PDF-Datei in mehrere Dateien auf Basis der Kapitelstruktur."
     },
     "validateSignature": {
@@ -703,7 +703,7 @@
     },
     "swagger": {
       "tags": "API,dokumentation,test",
-      "title": "API-Dokumentation",
+      "title": "API-Doku",
       "desc": "API-Dokumentation anzeigen und Endpunkte testen"
     },
     "scannerEffect": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "lesezeichen,inhalt,bearbeiten",
-      "title": "Inhaltsverzeichnis bearbeiten",
+      "title": "Inhaltsverz. bearbeiten",
       "desc": "Hinzufügen oder Bearbeiten von Lesezeichen und Inhaltsverzeichnissen in PDF-Dokumenten"
     },
     "manageCertificates": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatisierung,ordner,scannen",
-      "title": "Automatische Ordnerüberwachung",
+      "title": "Autom. Ordner-Scan",
       "desc": "Link zum Leitfaden für automatisches Ordner-Scannen"
     },
     "devSsoGuide": {
@@ -765,7 +765,7 @@
       "desc": "Link zum SSO-Leitfaden"
     },
     "devAirgapped": {
-      "title": "Offline-Installation",
+      "title": "Offline-Setup",
       "desc": "Link zum Air-Gap-Einrichtungsleitfaden"
     },
     "addPassword": {
@@ -3650,16 +3650,16 @@
   },
   "quickAccess": {
     "read": "Lesen",
-    "sign": "Signieren",
-    "automate": "Automatisieren",
+    "sign": "Signatur",
+    "automate": "Autom.",
     "files": "Dateien",
-    "activity": "Aktivität",
+    "activity": "Verlauf",
     "help": "Hilfe",
     "account": "Konto",
-    "config": "Konfiguration",
-    "settings": "Einstellungen",
-    "adminSettings": "Admin-Einstellungen",
-    "allTools": "Alle Werkzeuge",
+    "config": "Konfig",
+    "settings": "Optionen",
+    "adminSettings": "Admin Optionen",
+    "allTools": "Tools",
     "reader": "Reader",
     "helpMenu": {
       "toolsTour": "Tool-Tour",

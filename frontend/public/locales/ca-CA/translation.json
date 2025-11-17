@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detecta,separa,fotos",
-      "title": "Detecta i separa fotos escanejades",
+      "title": "Detecta i divideix fotos",
       "desc": "Detecta i separa fotos escanejades en pàgines separades"
     },
     "sign": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "redimensiona,ajusta,escala",
-      "title": "Ajusta la mida/escala de la pàgina",
+      "title": "Ajusta mida/escala de pàgina",
       "desc": "Canvia la mida/escala de la pàgina i/o del seu contingut."
     },
     "addPageNumbers": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "detecció automàtica,basat en capçalera,organitza,reenomena",
-      "title": "Canvia el nom del fitxer PDF automàticament",
+      "title": "Reanomena PDF automàticament",
       "desc": "Canvia automàticament el nom d'un fitxer PDF en funció de la capçalera detectada"
     },
     "adjustContrast": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "info,metadades,detalls",
-      "title": "Obteniu Tota la Informació sobre el PDF",
+      "title": "Tota la informació del PDF",
       "desc": "Recupera tota la informació possible sobre els PDFs"
     },
     "pdfToSinglePage": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "automàtic,separa,mida",
-      "title": "Divisió Automàtica per Mida/Quantitat",
+      "title": "Divideix auto per mida/pàg.",
       "desc": "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatització,carpeta,escaneig",
-      "title": "Escaneig automàtic de carpetes",
+      "title": "Escaneig automàtic de carpeta",
       "desc": "Enllaç a la guia d'escaneig automàtic de carpetes"
     },
     "devSsoGuide": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Llegeix",
     "sign": "Signa",
-    "automate": "Automatitza",
+    "automate": "Auto",
     "files": "Fitxers",
-    "activity": "Activitat",
+    "activity": "Registre",
     "help": "Ajuda",
     "account": "Compte",
     "config": "Config",
-    "settings": "Configuració",
-    "adminSettings": "Configuració d'administració",
+    "settings": "Ajustos",
+    "adminSettings": "Ajustos admin",
     "allTools": "All Tools",
     "reader": "Lector",
     "helpMenu": {

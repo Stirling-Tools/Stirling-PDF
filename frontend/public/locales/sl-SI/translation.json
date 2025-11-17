@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "zaznaj,razdeli,fotografije",
-      "title": "Zaznaj in razdeli skenirane fotografije",
+      "title": "Zaznaj in razdeli skene slik",
       "desc": "Zaznaj in razdeli skenirane fotografije na ločene strani"
     },
     "sign": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "spremeni velikost,prilagodi,skaliraj",
-      "title": "Prilagodi velikost/merilo strani",
+      "title": "Prilagodi velikost/merilo",
       "desc": "Spremenite velikost/merilo strani in/ali njeno vsebino."
     },
     "addPageNumbers": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "samodejno zaznaj,na osnovi glave,organizira,preimenuj",
-      "title": "Samodejno preimenuj PDF datoteko",
+      "title": "Samodejno preimenuj PDF",
       "desc": "Samodejno preimenuje datoteko PDF na podlagi zaznane glave"
     },
     "adjustContrast": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "info,metapodatki,podrobnosti",
-      "title": "Pridobite VSE informacije o PDF-ju",
+      "title": "Pridobi vse podatke o PDF",
       "desc": "Zgrabi vse možne informacije o PDF-jih"
     },
     "pdfToSinglePage": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "samodejno,razdeli,velikost",
-      "title": "Samodejna razdelitev po velikosti/številu",
+      "title": "Samodejno razdeli po vel./št.",
       "desc": "Razdeli en PDF na več dokumentov glede na velikost, število strani ali število dokumentov"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "avtomatizacija,mapa,skeniranje",
-      "title": "Avtomatizirano skeniranje map",
+      "title": "Samodejno skeniranje map",
       "desc": "Povezava do vodiča za avtomatizirano skeniranje map"
     },
     "devSsoGuide": {
@@ -765,7 +765,7 @@
       "desc": "Povezava do vodiča za SSO"
     },
     "devAirgapped": {
-      "title": "Namestitev v izoliranem omrežju",
+      "title": "Izolirana namestitev",
       "desc": "Povezava do vodiča za namestitev v izoliranem omrežju"
     },
     "addPassword": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Preberi",
     "sign": "Podpiši",
-    "automate": "Avtomatizacija",
+    "automate": "Poteki",
     "files": "Datoteke",
-    "activity": "Dejavnost",
+    "activity": "Dnevnik",
     "help": "Pomoč",
     "account": "Račun",
-    "config": "Konfiguracija",
-    "settings": "Nastavitve",
-    "adminSettings": "Skrbniške nastavitve",
+    "config": "Konfig.",
+    "settings": "Možnosti",
+    "adminSettings": "Skrbnik",
     "allTools": "All Tools",
     "reader": "Bralnik",
     "helpMenu": {

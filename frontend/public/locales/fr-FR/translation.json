@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "détecter,diviser,photos",
-      "title": "Détecter & scinder des photos scannées",
+      "title": "Séparer photos scannées",
       "desc": "Détecter et scinder des photos scannées en pages séparées"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "retirer,supprimer,déverrouiller",
-      "title": "Supprimer la signature par certificat",
+      "title": "Retirer signature certifiée",
       "desc": "Supprimez la signature par certificat d'un PDF"
     },
     "pageLayout": {
@@ -623,22 +623,22 @@
     },
     "scalePages": {
       "tags": "redimensionner,ajuster,mettre à l’échelle",
-      "title": "Ajuster l'échelle ou la taille",
+      "title": "Régler taille/échelle page",
       "desc": "Modifiez la taille ou l'échelle d'une page et/ou de son contenu."
     },
     "addPageNumbers": {
       "tags": "numéro,pagination,compter",
-      "title": "Ajouter des numéros de page",
+      "title": "Numéroter pages",
       "desc": "Ajoutez des numéros de page dans un PDF à un emplacement défini."
     },
     "autoRename": {
       "tags": "détection automatique,basé-en-tête,organiser,renommer",
-      "title": "Renommer automatiquement le fichier PDF",
+      "title": "Renommer PDF auto",
       "desc": "Renomme automatiquement un fichier PDF sur la base de son en-tête détecté"
     },
     "adjustContrast": {
       "tags": "contraste,luminosité,saturation",
-      "title": "Ajuster les couleurs",
+      "title": "Ajuster couleurs et contraste",
       "desc": "Ajustez le contraste, la saturation et la luminosité d'un PDF."
     },
     "crop": {
@@ -648,7 +648,7 @@
     },
     "autoSplitPDF": {
       "tags": "auto,diviser,QR",
-      "title": "Séparer automatiquement les pages",
+      "title": "Scinder pages auto",
       "desc": "Séparez automatiquement le PDF numérisé avec le code QR du diviseur de page numérisé."
     },
     "sanitize": {
@@ -698,7 +698,7 @@
     },
     "validateSignature": {
       "tags": "valider,vérifier,certificat",
-      "title": "Valider la signature du fichier PDF",
+      "title": "Valider signature PDF",
       "desc": "Vérifier les signatures numériques et les certificats des documents PDF"
     },
     "swagger": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "signets,contenu,éditer",
-      "title": "Modifier la table des matières",
+      "title": "Modifier sommaire",
       "desc": "Ajouter ou modifier les signets et la table des matières dans les documents PDF"
     },
     "manageCertificates": {
@@ -743,11 +743,11 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,diviser,taille",
-      "title": "Séparer automatiquement par taille/nombre",
+      "title": "Scinder auto taille/pages",
       "desc": "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
     },
     "replaceColor": {
-      "title": "Remplacer & Inverser la couleur",
+      "title": "Remplacer & inverser couleurs",
       "desc": "Remplacer ou inverser les couleurs dans les documents PDF"
     },
     "devApi": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatisation,dossier,analyse",
-      "title": "Analyse automatisée de dossiers",
+      "title": "Scan auto de dossiers",
       "desc": "Lien vers le guide d’analyse de dossier automatisée"
     },
     "devSsoGuide": {
@@ -3651,15 +3651,15 @@
   "quickAccess": {
     "read": "Lire",
     "sign": "Signer",
-    "automate": "Automatiser",
+    "automate": "Auto",
     "files": "Fichiers",
     "activity": "Activité",
     "help": "Aide",
     "account": "Compte",
-    "config": "Configuration",
-    "settings": "Paramètres",
-    "adminSettings": "Paramètres d’administration",
-    "allTools": "Tous les outils",
+    "config": "Config",
+    "settings": "Réglages",
+    "adminSettings": "Réglages admin",
+    "allTools": "Outils",
     "reader": "Lecteur",
     "helpMenu": {
       "toolsTour": "Visite des outils",

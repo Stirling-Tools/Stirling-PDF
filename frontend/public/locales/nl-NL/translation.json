@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "verwijderen,wissen,ontgrendelen",
-      "title": "Verwijder certificaat",
+      "title": "Cert. signatuur wissen",
       "desc": "Verwijder certificaat van PDF"
     },
     "pageLayout": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "automatisch detecteren,op kop gebaseerd,organiseren,herlabelen",
-      "title": "PDF-bestand automatisch hernoemen",
+      "title": "PDF automatisch hernoemen",
       "desc": "Hernoemt een PDF-bestand automatisch op basis van de gedetecteerde kop"
     },
     "adjustContrast": {
@@ -3650,15 +3650,15 @@
   },
   "quickAccess": {
     "read": "Lezen",
-    "sign": "Ondertekenen",
-    "automate": "Automatiseren",
-    "files": "Bestanden",
-    "activity": "Activiteit",
+    "sign": "Teken",
+    "automate": "Autom.",
+    "files": "Bestand",
+    "activity": "Logboek",
     "help": "Help",
     "account": "Account",
-    "config": "Configuratie",
-    "settings": "Instellingen",
-    "adminSettings": "Beheerinstellingen",
+    "config": "Config",
+    "settings": "Opties",
+    "adminSettings": "Beheer",
     "allTools": "All Tools",
     "reader": "Reader",
     "helpMenu": {

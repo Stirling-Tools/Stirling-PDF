@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "zmeniť veľkosť,prispôsobiť,škálovať",
-      "title": "Prispôsobiť veľkosť/škálovanie stránok",
+      "title": "Upraviť veľkosť/mierku strán",
       "desc": "Zmeniť veľkosť/škálovanie stránky a/alebo jej obsahu."
     },
     "addPageNumbers": {
@@ -633,7 +633,7 @@
     },
     "autoRename": {
       "tags": "automaticky zistiť,na základe hlavičky,organizovať,premenovať",
-      "title": "Automaticky premenovať PDF súbor",
+      "title": "Auto premenovať PDF",
       "desc": "Automaticky premenuje PDF súbor podľa zistenej hlavičky"
     },
     "adjustContrast": {
@@ -648,7 +648,7 @@
     },
     "autoSplitPDF": {
       "tags": "auto,rozdeliť,QR",
-      "title": "Automatické rozdelenie stránok",
+      "title": "Auto rozdeliť strany",
       "desc": "Automatické rozdelenie skenovaného PDF pomocou fyzického skenovaného rozdeľovača stránok QR kódom"
     },
     "sanitize": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "info,metaúdaje,detaily",
-      "title": "Získať všetky informácie o PDF",
+      "title": "Získať info o PDF",
       "desc": "Získava všetky dostupné informácie o PDF"
     },
     "pdfToSinglePage": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,rozdeliť,veľkosť",
-      "title": "Automatické rozdelenie podľa veľkosti/počtu",
+      "title": "Auto rozdeliť veľkosť/počet",
       "desc": "Rozdelí jeden PDF na viacero dokumentov na základe veľkosti, počtu stránok alebo počtu dokumentov"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automatizácia,priečinok,skenovanie",
-      "title": "Automatizované skenovanie priečinkov",
+      "title": "Auto skenovanie priečinkov",
       "desc": "Odkaz na príručku k automatizovanému skenovaniu priečinkov"
     },
     "devSsoGuide": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Čítať",
     "sign": "Podpísať",
-    "automate": "Automatizovať",
+    "automate": "Auto",
     "files": "Súbory",
     "activity": "Aktivita",
     "help": "Pomoc",
     "account": "Účet",
-    "config": "Konfigurácia",
-    "settings": "Nastavenia",
-    "adminSettings": "Administrátorské nastavenia",
+    "config": "Konfig",
+    "settings": "Nast.",
+    "adminSettings": "Admin nast.",
     "allTools": "All Tools",
     "reader": "Čítačka",
     "helpMenu": {

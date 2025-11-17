@@ -470,7 +470,7 @@
     "desc": "Un singur punct de oprire găzduit local pentru toate nevoile tale legate de fișiere PDF.",
     "searchBar": "Caută funcționalități...",
     "viewPdf": {
-      "title": "Vizualizați/Editați PDF",
+      "title": "Vezi/Editează PDF",
       "desc": "Vizualizează, adnotează, adaugă text sau imagini"
     },
     "setFavorites": "Setați favoritele",
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detectează,împarte,fotografii",
-      "title": "Detectează și împarte fotografiile scanate",
+      "title": "Detectează & separă scanuri",
       "desc": "Detectați și împărțiți fotografiile scanate în pagini separate"
     },
     "sign": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "redimensionează,ajustează,scalează",
-      "title": "Ajustează dimensiunea/scala paginii",
+      "title": "Ajustează mărime/scală pagină",
       "desc": "Modifică dimensiunea/scala paginii și/sau a conținutului său."
     },
     "addPageNumbers": {
@@ -658,12 +658,12 @@
     },
     "getPdfInfo": {
       "tags": "info,metadate,detalii",
-      "title": "Obține TOATE Informațiile despre PDF",
+      "title": "Informații complete PDF",
       "desc": "Extrage orice și toate informațiile posibile despre PDF-uri"
     },
     "pdfToSinglePage": {
       "tags": "combină,unește,singură",
-      "title": "PDF într-o Singură Pagină Mare",
+      "title": "PDF într-o pagină mare",
       "desc": "Îmbină toate paginile PDF într-o singură pagină mare"
     },
     "showJS": {
@@ -743,11 +743,11 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,împarte,dimensiune",
-      "title": "Despărțire Automată după Dimensiune/Număr",
+      "title": "Auto-împărțire mărime/pagini",
       "desc": "Împarte un singur PDF în mai multe documente bazat pe dimensiune, număr de pagini sau număr de documente"
     },
     "replaceColor": {
-      "title": "Înlocuire și inversare culoare",
+      "title": "Schimbă și inversează culori",
       "desc": "Înlocuiți sau inversați culorile în documente PDF"
     },
     "devApi": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Citire",
     "sign": "Semnează",
-    "automate": "Automatizare",
+    "automate": "Auto",
     "files": "Fișiere",
-    "activity": "Activitate",
+    "activity": "Jurnal",
     "help": "Ajutor",
     "account": "Cont",
     "config": "Config",
     "settings": "Setări",
-    "adminSettings": "Setări de administrator",
+    "adminSettings": "Setări admin",
     "allTools": "All Tools",
     "reader": "Cititor",
     "helpMenu": {

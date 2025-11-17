@@ -648,7 +648,7 @@
     },
     "autoSplitPDF": {
       "tags": "uathoibríoch,roinn,QR",
-      "title": "Leathanaigh Scoilte Uathoibríoch",
+      "title": "Scoilt uathoibríoch",
       "desc": "Auto Scoilt PDF Scanta le Cód QR scoilteoir leathanach scanadh fisiciúil"
     },
     "sanitize": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "uathoibríoch,roinn,méid",
-      "title": "Auto Scoilte de réir Méid/Comhaireamh",
+      "title": "Scoilt auto: méid/líon",
       "desc": "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na leathanach, nó comhaireamh doiciméad"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "uathoibriú,fillteán,scanta",
-      "title": "Scanadh Fillteáin Uathoibrithe",
+      "title": "Scanadh Fillteán Uathoibríoch",
       "desc": "Nasc le treoir scantha fillteán uathoibrithe"
     },
     "devSsoGuide": {
@@ -3650,17 +3650,17 @@
   },
   "quickAccess": {
     "read": "Léigh",
-    "sign": "Comhartha",
-    "automate": "Uathoibrigh",
+    "sign": "Sínigh",
+    "automate": "Auto",
     "files": "Comhaid",
-    "activity": "Gníomhaíocht",
+    "activity": "Stair",
     "help": "Cabhair",
     "account": "Cuntas",
-    "config": "Cumraíocht",
-    "settings": "Socruithe",
-    "adminSettings": "Socruithe Riarthóra",
+    "config": "Cumraigh",
+    "settings": "Socruí",
+    "adminSettings": "Socruí riar.",
     "allTools": "All Tools",
-    "reader": "Léitheoir",
+    "reader": "Léamh",
     "helpMenu": {
       "toolsTour": "Turas na nUirlisí",
       "toolsTourDesc": "Faigh amach cad is féidir leis na huirlisí a dhéanamh",

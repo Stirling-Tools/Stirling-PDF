@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "extrair,digitalizar",
-      "title": "OCR / Limpeza de digitalizações",
+      "title": "OCR / Limpar digitalizações",
       "desc": "Limpa digitalizações e deteta texto de imagens dentro de um PDF e readiciona-o como texto."
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detetar,dividir,fotos",
-      "title": "Detetar e dividir fotos digitalizadas",
+      "title": "Detetar e separar fotos",
       "desc": "Detetar e dividir fotos digitalizadas em páginas separadas"
     },
     "sign": {
@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "remover,eliminar,desbloquear",
-      "title": "Remover Assinatura de Certificado",
+      "title": "Remover assinatura digital",
       "desc": "Remove assinatura de certificado do PDF"
     },
     "pageLayout": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "redimensionar,ajustar,escalar",
-      "title": "Ajustar tamanho/escala de página",
+      "title": "Ajustar tamanho/escala",
       "desc": "Alterar o tamanho/escala de uma página e/ou os seus conteúdos."
     },
     "addPageNumbers": {
@@ -633,12 +633,12 @@
     },
     "autoRename": {
       "tags": "deteção automática,baseado em cabeçalho,organizar,renomear",
-      "title": "Renomear automaticamente ficheiro PDF",
+      "title": "Auto-renomear PDF",
       "desc": "Renomeia automaticamente um ficheiro PDF com base no cabeçalho detetado"
     },
     "adjustContrast": {
       "tags": "contraste,brilho,saturação",
-      "title": "Ajustar Cores/Contraste",
+      "title": "Ajustar cores/contraste",
       "desc": "Ajustar Contraste, Saturação e Brilho de um PDF"
     },
     "crop": {
@@ -658,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "informação,metadados,detalhes",
-      "title": "Obter TODA Informação sobre PDF",
+      "title": "Obter toda a info do PDF",
       "desc": "Obtém qualquer e toda informação possível sobre PDFs"
     },
     "pdfToSinglePage": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,dividir,tamanho",
-      "title": "Divisão Automática por Tamanho/Contagem",
+      "title": "Auto-dividir por tamanho/n.º",
       "desc": "Dividir um único PDF em múltiplos documentos baseado em tamanho, contagem de páginas, ou contagem de documentos"
     },
     "replaceColor": {
@@ -757,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automação,pasta,varrimento",
-      "title": "Varrimento automático de pastas",
+      "title": "Varrimento auto de pastas",
       "desc": "Ligação para o guia de varrimento automático de pastas"
     },
     "devSsoGuide": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Ler",
     "sign": "Assinar",
-    "automate": "Automatizar",
-    "files": "Ficheiros",
-    "activity": "Atividade",
+    "automate": "Auto",
+    "files": "Fich.",
+    "activity": "Registo",
     "help": "Ajuda",
     "account": "Conta",
-    "config": "Configuração",
-    "settings": "Definições",
-    "adminSettings": "Definições de administrador",
+    "config": "Config.",
+    "settings": "Ajustes",
+    "adminSettings": "Ajustes admin",
     "allTools": "All Tools",
     "reader": "Leitor",
     "helpMenu": {

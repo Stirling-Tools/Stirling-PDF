@@ -548,7 +548,7 @@
     },
     "unlockPDFForms": {
       "tags": "kilit_aç,etkinleştir,düzenle",
-      "title": "PDF Formlarının Kilidini Kaldır",
+      "title": "PDF Form Kilidini Aç",
       "desc": "Form alanlarını düzenlenebilir hâle getir."
     },
     "changeMetadata": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "algıla,böl,fotoğraflar",
-      "title": "Taranan Fotoğrafları Algıla ve Böl",
+      "title": "Taranan Fotoğrafı Bul ve Böl",
       "desc": "Taranan fotoğrafları algılayıp ayrı sayfalara bölün"
     },
     "sign": {
@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "yeniden_boyutlandır,ayarla,ölçekle",
-      "title": "Sayfa boyutunu/ölçeğini ayarla",
+      "title": "Sayfa boyutu/ölçeği ayarla",
       "desc": "Bir sayfanın ve/veya içeriğinin boyutunu/ölçeğini değiştirir"
     },
     "addPageNumbers": {
@@ -633,12 +633,12 @@
     },
     "autoRename": {
       "tags": "otomatik_algılama,başlık_tabanlı,düzenle,yeniden_adlandır",
-      "title": "PDF Dosyasını Otomatik Yeniden Adlandır",
+      "title": "PDF'yi Otomatik Adlandır",
       "desc": "Algılanan başlığına göre bir PDF dosyasını otomatik olarak yeniden adlandırır"
     },
     "adjustContrast": {
       "tags": "kontrast,parlaklık,doygunluk",
-      "title": "Renkleri/Kontrastı Ayarla",
+      "title": "Renk ve Kontrast Ayarla",
       "desc": "Bir PDF'in Kontrastını, Doygunluğunu ve Parlaklığını ayarlar"
     },
     "crop": {
@@ -743,11 +743,11 @@
     },
     "autoSizeSplitPDF": {
       "tags": "otomatik,böl,boyut",
-      "title": "Boyut/Sayıya Göre Otomatik Bölme",
+      "title": "Otomatik Boyut/Sayıya Böl",
       "desc": "Tek bir PDF'yi boyut, sayfa sayısı veya belge sayısına göre birden fazla belgeye bölün"
     },
     "replaceColor": {
-      "title": "Rengi Değiştir ve Tersine Çevir",
+      "title": "Rengi Değiştir & Ters Çevir",
       "desc": "PDF belgelerindeki renkleri değiştirin veya tersine çevirin"
     },
     "devApi": {
@@ -3651,14 +3651,14 @@
   "quickAccess": {
     "read": "Oku",
     "sign": "İmzala",
-    "automate": "Otomatikleştir",
+    "automate": "Otomatik",
     "files": "Dosyalar",
     "activity": "Etkinlik",
     "help": "Yardım",
     "account": "Hesap",
-    "config": "Yapılandırma",
+    "config": "Ayarlar",
     "settings": "Ayarlar",
-    "adminSettings": "Yönetici Ayarları",
+    "adminSettings": "Admin Ayarları",
     "allTools": "All Tools",
     "reader": "Okuyucu",
     "helpMenu": {

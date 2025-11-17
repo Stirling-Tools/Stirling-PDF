@@ -558,7 +558,7 @@
     },
     "ocr": {
       "tags": "extrahera,skanna",
-      "title": "OCR / Rensningsskanningar",
+      "title": "OCR / Rensa skanningar",
       "desc": "Rengör skanningar och upptäcker text från bilder i en PDF och lägger till den igen som text."
     },
     "extractImages": {
@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "identifiera,dela,foton",
-      "title": "Identifiera och dela skannade foton",
+      "title": "Hitta & dela skann-foton",
       "desc": "Identifiera och dela skannade foton till separata sidor"
     },
     "sign": {
@@ -608,17 +608,17 @@
     },
     "removeCertSign": {
       "tags": "ta bort,radera,låsa upp",
-      "title": "Ta bort certifikatsignatur",
+      "title": "Ta bort cert-signatur",
       "desc": "Ta bort certifikatsignatur från PDF"
     },
     "pageLayout": {
       "tags": "layout,arrangera,kombinera",
-      "title": "Flersidigt layout",
+      "title": "Flersidig layout",
       "desc": "Slå samman flera sidor av ett PDF-dokument till en enda sida"
     },
     "bookletImposition": {
       "tags": "häfte,skriv ut,bindning",
-      "title": "Häftesimposition",
+      "title": "Broschyrutskrift",
       "desc": "Skapa häften med korrekt sidordning och flersidigt upplägg för utskrift och bindning"
     },
     "scalePages": {
@@ -3656,9 +3656,9 @@
     "activity": "Aktivitet",
     "help": "Hjälp",
     "account": "Konto",
-    "config": "Konfiguration",
-    "settings": "Inställningar",
-    "adminSettings": "Administrationsinställningar",
+    "config": "Konfig",
+    "settings": "Inst.",
+    "adminSettings": "Admin inst.",
     "allTools": "All Tools",
     "reader": "Läsare",
     "helpMenu": {

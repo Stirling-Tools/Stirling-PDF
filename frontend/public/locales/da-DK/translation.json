@@ -693,7 +693,7 @@
     },
     "splitByChapters": {
       "tags": "opdel,kapitler,struktur",
-      "title": "Partitioner PDF efter kapitler",
+      "title": "Opdel PDF efter kapitler",
       "desc": "Partitioner en PDF i flere filer baseret på dens kapitelstruktur."
     },
     "validateSignature": {
@@ -703,7 +703,7 @@
     },
     "swagger": {
       "tags": "API,dokumentation,test",
-      "title": "API-dokumentation",
+      "title": "API-vejledning",
       "desc": "Se API-dokumentation og test endpoints"
     },
     "scannerEffect": {
@@ -713,7 +713,7 @@
     },
     "editTableOfContents": {
       "tags": "bogmærker,indhold,rediger",
-      "title": "Rediger indholdsfortegnelse",
+      "title": "Rediger indholdsliste",
       "desc": "Tilføj eller rediger bogmærker og indholdsfortegnelser i PDF-dokumenter"
     },
     "manageCertificates": {
@@ -743,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,opdel,størrelse",
-      "title": "Auto Opdel efter Størrelse/Antal",
+      "title": "Auto-opdel størrelse/antal",
       "desc": "Opdel en enkelt PDF i flere dokumenter baseret på størrelse, sideantal eller dokumentantal"
     },
     "replaceColor": {
@@ -3650,15 +3650,15 @@
   },
   "quickAccess": {
     "read": "Læs",
-    "sign": "Underskriv",
-    "automate": "Automatiser",
+    "sign": "Signer",
+    "automate": "Automat.",
     "files": "Filer",
-    "activity": "Aktivitet",
+    "activity": "Historik",
     "help": "Hjælp",
     "account": "Konto",
-    "config": "Konfiguration",
-    "settings": "Indstillinger",
-    "adminSettings": "Adminindstillinger",
+    "config": "Konfig.",
+    "settings": "Indstil.",
+    "adminSettings": "Admin Indstil.",
     "allTools": "All Tools",
     "reader": "Læser",
     "helpMenu": {
