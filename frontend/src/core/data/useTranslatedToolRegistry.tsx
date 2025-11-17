@@ -204,7 +204,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         component: AddText,
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        subcategoryId: SubcategoryId.GENERAL,
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'addText'),
@@ -691,16 +691,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: replaceColorOperationConfig,
         automationSettings: ReplaceColorSettings,
         synonyms: getSynonyms(t, "replaceColor"),
-      },
-      addImage: {
-        icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.addImage.title", "Add Image"),
-        component: null,
-        description: t("home.addImage.desc", "Add images to PDF documents"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "addImage"),
-        automationSettings: null
       },
       editTableOfContents: {
         icon: <LocalIcon icon="bookmark-add-rounded" width="1.5rem" height="1.5rem" />,

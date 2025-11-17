@@ -72,13 +72,6 @@ const SignSettings = ({
       t(`${translationScope}.${key}`, { defaultValue, ...options }),
     [t, translationScope]
   );
-  const allowedSignatureTypes = useMemo(
-    () =>
-      allowedSignatureSources.filter(
-        (source): source is SignParameters['signatureType'] => source !== 'saved'
-      ),
-    [allowedSignatureSources]
-  );
   const effectiveDefaultSource =
     (defaultSignatureSource && allowedSignatureSources.includes(defaultSignatureSource)
       ? defaultSignatureSource
@@ -429,7 +422,17 @@ const SignSettings = ({
           reader.readAsDataURL(file);
         });
 
+        // Reset pause state and directly activate placement
+        setPlacementManuallyPaused(false);
+        lastAppliedPlacementKey.current = null;
         setImageSignatureData(result);
+
+        // Directly activate placement on image upload
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+        } else {
+          onActivateSignaturePlacement?.();
+        }
       } catch (error) {
         console.error('Error reading file:', error);
       }
@@ -440,15 +443,24 @@ const SignSettings = ({
   };
 
   // Handle signature data changes
-  const handleCanvasSignatureChange = (data: string | null) => {
+  const handleCanvasSignatureChange = useCallback((data: string | null) => {
     const nextValue = data ?? undefined;
-    setCanvasSignatureData(prev => {
-      if (prev === nextValue) {
-        return prev;
+    setCanvasSignatureData(prevData => {
+      // Reset pause state and trigger placement for signature changes
+      // (onDrawingComplete handles initial activation)
+      if (prevData && prevData !== nextValue && nextValue) {
+        setPlacementManuallyPaused(false);
+        lastAppliedPlacementKey.current = null;
+        // Directly activate placement on signature change
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+        } else {
+          onActivateSignaturePlacement?.();
+        }
       }
       return nextValue;
     });
-  };
+  }, [onActivateSignaturePlacement]);
 
   const hasCanvasSignature = useMemo(() => Boolean(canvasSignatureData), [canvasSignatureData]);
   const hasImageSignature = useMemo(() => Boolean(imageSignatureData), [imageSignatureData]);
@@ -652,6 +664,7 @@ const SignSettings = ({
     isPlacementManuallyPaused,
     onActivateSignaturePlacement,
     onDeactivateSignature,
+    placementSignatureKey,
   ]);
 
   useEffect(() => {
@@ -783,7 +796,16 @@ const SignSettings = ({
           textColor={parameters.textColor || '#000000'}
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
-          onAnyChange={() => setPlacementManuallyPaused(false)}
+          onAnyChange={() => {
+            setPlacementManuallyPaused(false);
+            lastAppliedPlacementKey.current = null;
+            // Directly activate placement on text changes
+            if (typeof window !== 'undefined') {
+              window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+            } else {
+              onActivateSignaturePlacement?.();
+            }
+          }}
         />
         {renderSaveButtonRow('text', hasTextSignature, handleSaveTextSignature)}
       </Stack>
