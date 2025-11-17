@@ -47,8 +47,8 @@ export interface PlansResponse {
 
 export interface CheckoutSessionRequest {
   lookup_key: string;       // Stripe lookup key (e.g., 'selfhosted:server:monthly')
-  email: string;            // Customer email (required for self-hosted)
   installation_id?: string; // Installation ID from backend (MAC-based fingerprint)
+  current_license_key?: string; // Current license key for upgrades
   requires_seats?: boolean; // Whether to add adjustable seat pricing
   seat_count?: number;      // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
   successUrl?: string;
@@ -73,6 +73,14 @@ export interface LicenseKeyResponse {
   license_key?: string;
   email?: string;
   plan?: string;
+}
+
+export interface LicenseInfo {
+  licenseType: 'NORMAL' | 'PRO' | 'ENTERPRISE';
+  enabled: boolean;
+  maxUsers: number;
+  hasKey: boolean;
+  licenseKey?: string; // The actual license key (for upgrades)
 }
 
 // Currency symbol mapping
@@ -365,8 +373,8 @@ const licenseService = {
       body: {
         self_hosted: true,
         lookup_key: request.lookup_key,
-        email: request.email,
         installation_id: request.installation_id,
+        current_license_key: request.current_license_key,
         requires_seats: request.requires_seats,
         seat_count: request.seat_count || 1,
         callback_base_url: window.location.origin,
@@ -449,7 +457,7 @@ const licenseService = {
   /**
    * Get current license information from backend
    */
-  async getLicenseInfo(): Promise<{licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}> {
+  async getLicenseInfo(): Promise<LicenseInfo> {
     try {
       const response = await apiClient.get('/api/v1/admin/license-info');
       return response.data;
@@ -458,6 +466,33 @@ const licenseService = {
       throw error;
     }
   },
+};
+
+/**
+ * Map license type to plan tier
+ * @param licenseInfo - Current license information
+ * @returns Plan tier: 'free' | 'server' | 'enterprise'
+ */
+export const mapLicenseToTier = (licenseInfo: LicenseInfo | null): 'free' | 'server' | 'enterprise' | null => {
+  if (!licenseInfo) return null;
+
+  // No license or NORMAL type = Free tier
+  if (licenseInfo.licenseType === 'NORMAL' || !licenseInfo.enabled) {
+    return 'free';
+  }
+
+  // PRO type (no seats) = Server tier
+  if (licenseInfo.licenseType === 'PRO') {
+    return 'server';
+  }
+
+  // ENTERPRISE type (with seats) = Enterprise tier
+  if (licenseInfo.licenseType === 'ENTERPRISE' && licenseInfo.maxUsers > 0) {
+    return 'enterprise';
+  }
+
+  // Default fallback
+  return 'free';
 };
 
 export default licenseService;

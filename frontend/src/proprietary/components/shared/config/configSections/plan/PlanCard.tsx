@@ -1,15 +1,17 @@
 import React from 'react';
 import { Button, Card, Badge, Text, Group, Stack, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { PlanTierGroup } from '@app/services/licenseService';
+import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
 
 interface PlanCardProps {
   planGroup: PlanTierGroup;
   isCurrentTier: boolean;
+  isDowngrade: boolean;
+  currentLicenseInfo?: LicenseInfo | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
 }
 
-const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgradeClick }) => {
+const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, onUpgradeClick }) => {
   const { t } = useTranslation();
 
   // Render Free plan
@@ -24,8 +26,20 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgrade
           display: 'flex',
           flexDirection: 'column',
           minHeight: '400px',
+          borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
+          borderWidth: isCurrentTier ? '2px' : undefined,
         }}
       >
+        {isCurrentTier && (
+          <Badge
+            color="green"
+            variant="filled"
+            size="sm"
+            style={{ position: 'absolute', top: '1rem', right: '1rem' }}
+          >
+            {t('plan.current', 'Current Plan')}
+          </Badge>
+        )}
         <Stack gap="md" style={{ height: '100%' }}>
           <div>
             <Text size="xl" fw={700} mb="xs">
@@ -86,9 +100,20 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgrade
         display: 'flex',
         flexDirection: 'column',
         minHeight: '400px',
+        borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
+        borderWidth: isCurrentTier ? '2px' : undefined,
       }}
     >
-      {planGroup.popular && (
+      {isCurrentTier ? (
+        <Badge
+          color="green"
+          variant="filled"
+          size="sm"
+          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
+        >
+          {t('plan.current', 'Current Plan')}
+        </Badge>
+      ) : planGroup.popular ? (
         <Badge
           variant="filled"
           size="sm"
@@ -96,7 +121,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgrade
         >
           {t('plan.popular', 'Popular')}
         </Badge>
-      )}
+      ) : null}
 
       <Stack gap="md" style={{ height: '100%' }}>
         {/* Tier Name */}
@@ -137,7 +162,12 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgrade
             </Group>
           )}
 
-
+          {/* Show seat count for enterprise plans when current */}
+          {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
+            <Text size="sm" c="green" fw={500} mt="xs">
+              {t('plan.licensedSeats', 'Licensed: {{count}} seats', { count: currentLicenseInfo.maxUsers })}
+            </Text>
+          )}
         </div>
 
         <Divider />
@@ -155,16 +185,18 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, onUpgrade
 
         {/* Single Upgrade Button */}
         <Button
-          variant={isCurrentTier ? 'light' : 'filled'}
+          variant={isCurrentTier || isDowngrade ? 'light' : 'filled'}
           fullWidth
           onClick={() => onUpgradeClick(planGroup)}
-          disabled={isCurrentTier}
+          disabled={isCurrentTier || isDowngrade}
         >
           {isCurrentTier
             ? t('plan.current', 'Current Plan')
-            : isEnterprise
-              ? t('plan.selectPlan', 'Select Plan')
-              : t('plan.upgrade', 'Upgrade')}
+            : isDowngrade
+              ? t('plan.includedInCurrent', 'Included in Your Plan')
+              : isEnterprise
+                ? t('plan.selectPlan', 'Select Plan')
+                : t('plan.upgrade', 'Upgrade')}
         </Button>
       </Stack>
     </Card>

@@ -1,18 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { Button, Card, Badge, Text, Collapse } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import licenseService, { PlanTier, PlanTierGroup } from '@app/services/licenseService';
+import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import PlanCard from './PlanCard';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
   currentPlanId?: string;
-  onUpgradeClick: (plan: PlanTier) => void;
+  currentLicenseInfo?: LicenseInfo | null;
+  onUpgradeClick: (planGroup: PlanTierGroup) => void;
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   plans,
   currentPlanId,
+  currentLicenseInfo,
   onUpgradeClick,
 }) => {
   const { t } = useTranslation();
@@ -23,13 +25,42 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
     return licenseService.groupPlansByTier(plans);
   }, [plans]);
 
-  // Determine if the current tier matches
+  // Calculate current tier from license info
+  const currentTier = useMemo(() => {
+    return mapLicenseToTier(currentLicenseInfo || null);
+  }, [currentLicenseInfo]);
+
+  // Determine if the current tier matches (checks both Stripe subscription and license)
   const isCurrentTier = (tierGroup: PlanTierGroup): boolean => {
-    if (!currentPlanId) return false;
-    return (
+    // Check Stripe subscription match
+    if (currentPlanId && (
       tierGroup.monthly?.id === currentPlanId ||
       tierGroup.yearly?.id === currentPlanId
-    );
+    )) {
+      return true;
+    }
+    // Check license tier match
+    if (currentTier && tierGroup.tier === currentTier) {
+      return true;
+    }
+    return false;
+  };
+
+  // Determine if selecting this plan would be a downgrade
+  const isDowngrade = (tierGroup: PlanTierGroup): boolean => {
+    if (!currentTier) return false;
+
+    // Define tier hierarchy: enterprise > server > free
+    const tierHierarchy: Record<string, number> = {
+      'enterprise': 3,
+      'server': 2,
+      'free': 1
+    };
+
+    const currentLevel = tierHierarchy[currentTier] || 0;
+    const targetLevel = tierHierarchy[tierGroup.tier] || 0;
+
+    return currentLevel > targetLevel;
   };
 
   return (
@@ -60,6 +91,8 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             key={group.tier}
             planGroup={group}
             isCurrentTier={isCurrentTier(group)}
+            isDowngrade={isDowngrade(group)}
+            currentLicenseInfo={currentLicenseInfo}
             onUpgradeClick={onUpgradeClick}
           />
         ))}

@@ -13,7 +13,7 @@ interface StripeCheckoutProps {
   opened: boolean;
   onClose: () => void;
   planGroup: PlanTierGroup;
-  email: string;
+  minimumSeats?: number;
   onSuccess?: (sessionId: string) => void;
   onError?: (error: string) => void;
   onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void;
@@ -30,7 +30,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   opened,
   onClose,
   planGroup,
-  email,
+  minimumSeats = 1,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -67,11 +67,24 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         setInstallationId(fetchedInstallationId);
       }
 
+      // Fetch current license key for upgrades
+      let currentLicenseKey: string | undefined;
+      try {
+        const licenseInfo = await licenseService.getLicenseInfo();
+        if (licenseInfo && licenseInfo.licenseKey) {
+          currentLicenseKey = licenseInfo.licenseKey;
+          console.log('Found existing license for upgrade');
+        }
+      } catch (error) {
+        console.warn('Could not fetch license info, proceeding as new license:', error);
+      }
+
       const response = await licenseService.createCheckoutSession({
         lookup_key: selectedPlan.lookupKey,
-        email,
         installation_id: fetchedInstallationId,
+        current_license_key: currentLicenseKey,
         requires_seats: selectedPlan.requiresSeats,
+        seat_count: minimumSeats,
         successUrl: `${window.location.origin}/settings/adminPlan?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/settings/adminPlan`,
       });
@@ -210,6 +223,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         );
 
       case 'ready':
+        {
         if (!state.clientSecret || !selectedPlan) return null;
 
         // Build period selector data with prices
@@ -275,7 +289,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             </Grid.Col>
           </Grid>
         );
-
+      }
       case 'success':
         return (
           <Alert color="green" title={t('payment.success', 'Payment Successful!')}>

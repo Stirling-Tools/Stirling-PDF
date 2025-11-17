@@ -2,12 +2,11 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup } from '@app/services/licenseService';
-import StripeCheckout from '@app/components/shared/StripeCheckout';
+import licenseService, { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
+import { useCheckout } from '@app/contexts/CheckoutContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
 import ActivePlanSection from '@app/components/shared/config/configSections/plan//ActivePlanSection';
 import StaticPlanSection from '@app/components/shared/config/configSections/plan//StaticPlanSection';
-import { userManagementService } from '@app/services/userManagementService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -15,6 +14,7 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface PremiumSettingsData {
   key?: string;
@@ -24,15 +24,11 @@ interface PremiumSettingsData {
 const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
+  const { openCheckout } = useCheckout();
   const [currency, setCurrency] = useState<string>('gbp');
   const [useStaticVersion, setUseStaticVersion] = useState(false);
-  const [currentLicenseInfo, setCurrentLicenseInfo] = useState<any>(null);
-  const [licenseInfoLoading, setLicenseInfoLoading] = useState(false);
-  const [licenseInfoError, setLicenseInfoError] = useState<string | null>(null);
+  const [currentLicenseInfo, setCurrentLicenseInfo] = useState<LicenseInfo | null>(null);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
-  const [email, setEmail] = useState<string>('');
   const { plans, currentSubscription, loading, error, refetch } = usePlans(currency);
 
   // Premium/License key management
@@ -53,40 +49,16 @@ const AdminPlanSection: React.FC = () => {
   useEffect(() => {
     const fetchLicenseInfo = async () => {
       try {
-        console.log('Fetching user and license info for plan section');
-        const adminData = await userManagementService.getUsers();
-
-        // Determine plan name based on config flags
-        let planName = 'Free';
-        if (config?.runningEE) {
-          planName = 'Enterprise';
-        } else if (config?.runningProOrHigher || adminData.premiumEnabled) {
-          planName = 'Pro';
-        }
-
-        setCurrentLicenseInfo({
-          planName,
-          maxUsers: adminData.maxAllowedUsers,
-          grandfathered: adminData.grandfatheredUserCount > 0,
-        });
-
-        // Also fetch license info from new backend endpoint
+        // Fetch license info from backend endpoint
         try {
-          setLicenseInfoLoading(true);
-          setLicenseInfoError(null);
           const backendLicenseInfo = await licenseService.getLicenseInfo();
           setCurrentLicenseInfo(backendLicenseInfo);
-          setLicenseInfoLoading(false);
         } catch (licenseErr: any) {
           console.error('Failed to fetch backend license info:', licenseErr);
-          setLicenseInfoLoading(false);
-          setLicenseInfoError(licenseErr?.response?.data?.error || licenseErr?.message || 'Unknown error');
-          // Don't overwrite existing info if backend call fails
         }
       } catch (err) {
         console.error('Failed to fetch license info:', err);
       }
-
     };
 
     // Check if Stripe is configured
@@ -125,61 +97,26 @@ const AdminPlanSection: React.FC = () => {
 
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
-      // Validate email is provided
-      if (!email || !email.trim()) {
-        alert({
-          alertType: 'warning',
-          title: t('admin.plan.emailRequired.title', 'Email Required'),
-          body: t('admin.plan.emailRequired.message', 'Please enter your email address before proceeding'),
-        });
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        alert({
-          alertType: 'warning',
-          title: t('admin.plan.invalidEmail.title', 'Invalid Email'),
-          body: t('admin.plan.invalidEmail.message', 'Please enter a valid email address'),
-        });
-        return;
-      }
-
-      setSelectedPlanGroup(planGroup);
-      setCheckoutOpen(true);
+      // Use checkout context to open checkout modal
+      openCheckout(planGroup.tier, {
+        currency,
+        onSuccess: () => {
+          // Refetch plans and license info after successful payment
+          refetch();
+          const fetchLicenseInfo = async () => {
+            try {
+              const backendLicenseInfo = await licenseService.getLicenseInfo();
+              setCurrentLicenseInfo(backendLicenseInfo);
+            } catch (err) {
+              console.error('Failed to refetch license info:', err);
+            }
+          };
+          fetchLicenseInfo();
+        },
+      });
     },
-    [email, t]
+    [openCheckout, currency, refetch]
   );
-
-  const handlePaymentSuccess = useCallback(
-    (sessionId: string) => {
-      console.log('Payment successful, session:', sessionId);
-
-      // Don't refetch here - will refetch when modal closes to avoid re-renders
-      // Don't close modal - let user view license key and close manually
-      // Modal will show "You can now close this window" when ready
-    },
-    []
-  );
-
-  const handlePaymentError = useCallback((error: string) => {
-    console.error('Payment error:', error);
-    // Error is already displayed in the StripeCheckout component
-  }, []);
-
-  const handleLicenseActivated = useCallback((licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => {
-    console.log('License activated:', licenseInfo);
-    setCurrentLicenseInfo(licenseInfo);
-  }, []);
-
-  const handleCheckoutClose = useCallback(() => {
-    setCheckoutOpen(false);
-    setSelectedPlanGroup(null);
-
-    // Refetch plans after modal closes to update subscription display
-    refetch();
-  }, [refetch]);
 
   // Show static version if Stripe is not configured or there's an error
   if (useStaticVersion) {
@@ -210,66 +147,22 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* License Information Display - Always visible */}
-      <Alert
-        color={licenseInfoLoading ? "gray" : licenseInfoError ? "red" : currentLicenseInfo?.enabled ? "green" : "blue"}
-        title={t('admin.plan.licenseInfo', 'License Information')}
-      >
-        {licenseInfoLoading ? (
-          <Group gap="xs">
-            <Loader size="sm" />
-            <Text size="sm">{t('admin.plan.loadingLicense', 'Loading license information...')}</Text>
-          </Group>
-        ) : licenseInfoError ? (
-          <Text size="sm" c="red">{t('admin.plan.licenseError', 'Failed to load license info')}: {licenseInfoError}</Text>
-        ) : currentLicenseInfo ? (
-          <Stack gap="xs">
-            <Text size="sm">
-              <strong>{t('admin.plan.licenseType', 'License Type')}:</strong> {currentLicenseInfo.licenseType}
-            </Text>
-            <Text size="sm">
-              <strong>{t('admin.plan.status', 'Status')}:</strong> {currentLicenseInfo.enabled ? t('admin.plan.active', 'Active') : t('admin.plan.inactive', 'Inactive')}
-            </Text>
-            {currentLicenseInfo.licenseType === 'ENTERPRISE' && currentLicenseInfo.maxUsers > 0 && (
-              <Text size="sm">
-                <strong>{t('admin.plan.maxUsers', 'Max Users')}:</strong> {currentLicenseInfo.maxUsers}
-              </Text>
-            )}
-          </Stack>
-        ) : (
-          <Text size="sm">{t('admin.plan.noLicenseInfo', 'No license information available')}</Text>
-        )}
-      </Alert>
-
-      {/* Customer Information Section */}
+      {/* Currency Selection */}
       <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
+        <Group justify="space-between" align="center">
           <Text size="lg" fw={600}>
-            {t('admin.plan.customerInfo', 'Customer Information')}
+            {t('plan.currency', 'Currency')}
           </Text>
-          <TextInput
-            label={t('admin.plan.email.label', 'Email Address')}
-            description={t('admin.plan.email.description', 'This email will be used to manage your subscription and billing')}
-            placeholder="admin@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            type="email"
+          <Select
+            value={currency}
+            onChange={(value) => setCurrency(value || 'gbp')}
+            data={currencyOptions}
+            searchable
+            clearable={false}
+            w={300}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
           />
-          <Group justify="space-between" align="center">
-            <Text size="lg" fw={600}>
-              {t('plan.currency', 'Currency')}
-            </Text>
-            <Select
-              value={currency}
-              onChange={(value) => setCurrency(value || 'gbp')}
-              data={currencyOptions}
-              searchable
-              clearable={false}
-              w={300}
-            />
-          </Group>
-        </Stack>
+        </Group>
       </Paper>
 
       {currentSubscription && (
@@ -282,21 +175,9 @@ const AdminPlanSection: React.FC = () => {
       <AvailablePlansSection
         plans={plans}
         currentPlanId={currentSubscription?.plan.id}
+        currentLicenseInfo={currentLicenseInfo}
         onUpgradeClick={handleUpgradeClick}
       />
-
-      {/* Stripe Checkout Modal */}
-      {selectedPlanGroup && (
-        <StripeCheckout
-          opened={checkoutOpen}
-          onClose={handleCheckoutClose}
-          planGroup={selectedPlanGroup}
-          email={email}
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
-          onLicenseActivated={handleLicenseActivated}
-        />
-      )}
 
       <Divider />
 

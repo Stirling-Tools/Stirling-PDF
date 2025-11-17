@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller.api;
+package stirling.software.proprietary.security.controller.api;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
@@ -35,6 +36,9 @@ public class AdminLicenseController {
 
     @Autowired(required = false)
     private LicenseKeyChecker licenseKeyChecker;
+
+    @Autowired(required = false)
+    private KeygenLicenseVerifier keygenLicenseVerifier;
 
     @Autowired private ApplicationProperties applicationProperties;
 
@@ -89,6 +93,8 @@ public class AdminLicenseController {
                 return ResponseEntity.internalServerError()
                         .body(Map.of("success", false, "error", "License checker not available"));
             }
+            // assume premium enabled when setting license key
+            applicationProperties.getPremium().setEnabled(true);
 
             // Use existing LicenseKeyChecker to update and validate license
             licenseKeyChecker.updateLicenseKey(licenseKey.trim());
@@ -96,9 +102,29 @@ public class AdminLicenseController {
             // Get current license status
             License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
 
+            // Auto-enable premium features if license is valid
+            if (license != License.NORMAL) {
+                GeneralUtils.saveKeyToSettings("premium.enabled", true);
+                // Enable premium features
+
+                // Save maxUsers from license metadata
+                Integer maxUsers = applicationProperties.getPremium().getMaxUsers();
+                if (maxUsers != null) {
+                    GeneralUtils.saveKeyToSettings("premium.maxUsers", maxUsers);
+                }
+
+                log.info(
+                        "Premium features enabled: type={}, maxUsers={}", license.name(), maxUsers);
+            } else {
+                GeneralUtils.saveKeyToSettings("premium.enabled", false);
+                log.info("License key is not valid for premium features: type={}", license.name());
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("licenseType", license.name());
+            response.put("enabled", applicationProperties.getPremium().isEnabled());
+            response.put("maxUsers", applicationProperties.getPremium().getMaxUsers());
             response.put("requiresRestart", false); // Dynamic evaluation works
             response.put("message", "License key saved and activated");
 
@@ -144,6 +170,11 @@ public class AdminLicenseController {
             response.put("enabled", premium.isEnabled());
             response.put("maxUsers", premium.getMaxUsers());
             response.put("hasKey", premium.getKey() != null && !premium.getKey().trim().isEmpty());
+
+            // Include license key for upgrades (admin-only endpoint)
+            if (premium.getKey() != null && !premium.getKey().trim().isEmpty()) {
+                response.put("licenseKey", premium.getKey());
+            }
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

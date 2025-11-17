@@ -113,7 +113,7 @@ public class LicenseKeyChecker {
 
     public void updateLicenseKey(String newKey) throws IOException {
         applicationProperties.getPremium().setKey(newKey);
-        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
+        GeneralUtils.saveKeyToSettings("premium.key", newKey);
         evaluateLicense();
         synchronizeLicenseSettings();
     }
