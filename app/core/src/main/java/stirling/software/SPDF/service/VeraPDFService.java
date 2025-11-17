@@ -189,27 +189,7 @@ public class VeraPDFService {
         }
     }
 
-    public PDFVerificationResult validatePDF(InputStream pdfStream, String standardString)
-            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
-
-        byte[] pdfBytes = pdfStream.readAllBytes();
-        PDFAFlavour validationFlavour = PDFAFlavour.fromString(standardString);
-
-        try (PDFAParser parser =
-                Foundries.defaultInstance()
-                        .createParser(new ByteArrayInputStream(pdfBytes), validationFlavour)) {
-
-            PDFAFlavour declaredFlavour = parser.getFlavour();
-
-            PDFAValidator validator =
-                    Foundries.defaultInstance().createValidator(validationFlavour, false);
-            ValidationResult result = validator.validate(parser);
-
-            return convertToVerificationResult(result, declaredFlavour, validationFlavour);
-        }
-    }
-
-    public List<PDFVerificationResult> validateAllDeclaredStandards(InputStream pdfStream)
+    public List<PDFVerificationResult> validatePDF(InputStream pdfStream)
             throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
 
         byte[] pdfBytes = pdfStream.readAllBytes();
@@ -233,7 +213,7 @@ public class VeraPDFService {
 
         for (PDFAFlavour flavour : detectedFlavours) {
             if (flavour.equals(declaredFlavour)) {
-                continue; // Skip if already added as declared
+                continue;
             }
 
             if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A)) {

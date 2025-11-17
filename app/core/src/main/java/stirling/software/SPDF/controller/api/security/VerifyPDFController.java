@@ -37,15 +37,15 @@ public class VerifyPDFController {
     @Operation(
             summary = "Verify PDF Standards Compliance",
             description =
-                    "Validates PDF files against PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards"
-                            + " using veraPDF. Can auto-detect declared standards or verify against"
-                            + " a specific standard. Input:PDF Output:JSON Type:SISO")
+                    "Validates PDF files against the standards declared in their metadata. "
+                            + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
+                            + "from the document's XMP metadata and validates compliance. "
+                            + "Input:PDF Output:JSON Type:SISO")
     @PostMapping(value = "/verify-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
             @ModelAttribute PDFVerificationRequest request) {
 
         MultipartFile file = request.getFileInput();
-        String standard = request.getStandard();
 
         if (file == null || file.isEmpty()) {
             throw ExceptionUtils.createRuntimeException(
@@ -53,20 +53,9 @@ public class VerifyPDFController {
         }
 
         try {
-            List<PDFVerificationResult> results;
+            log.info("Detecting and verifying standards in PDF '{}'", file.getOriginalFilename());
 
-            if (standard != null && !standard.trim().isEmpty()) {
-                log.info(
-                        "Verifying PDF '{}' against standard: {}",
-                        file.getOriginalFilename(),
-                        standard);
-                PDFVerificationResult result =
-                        veraPDFService.validatePDF(file.getInputStream(), standard.trim());
-                results = List.of(result);
-            } else {
-                log.info("Auto-detecting standards in PDF '{}'", file.getOriginalFilename());
-                results = veraPDFService.validateAllDeclaredStandards(file.getInputStream());
-            }
+            List<PDFVerificationResult> results = veraPDFService.validatePDF(file.getInputStream());
 
             log.info(
                     "Verification complete for '{}': {} standard(s) checked",
