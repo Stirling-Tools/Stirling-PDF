@@ -3,7 +3,8 @@ import { AppProviders as ProprietaryAppProviders } from "@proprietary/components
 import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
 import { SetupWizard } from '@app/components/SetupWizard';
-import { useAppInitialization } from '@app/hooks/useAppInitialization';
+import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
+import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 
 /**
@@ -13,7 +14,11 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
  * - Shows setup wizard on first launch
  */
 export function AppProviders({ children }: { children: ReactNode }) {
-  const { isFirstLaunch, setupComplete } = useAppInitialization();
+  const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
+
+  // Initialize backend on app startup (only if setup is complete)
+  const shouldStartBackend = setupComplete && !isFirstLaunch;
+  useBackendInitializer(shouldStartBackend);
 
   // Show setup wizard on first launch
   if (isFirstLaunch && !setupComplete) {
