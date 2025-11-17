@@ -11,25 +11,20 @@ export const buildRemovePasswordFormData = (parameters: RemovePasswordParameters
   return formData;
 };
 
-// Static configuration object (without toolType to avoid circular dependencies)
+// Static configuration object
 export const removePasswordOperationConfig = {
+  toolType: ToolType.singleFile,
   buildFormData: buildRemovePasswordFormData,
   operationType: 'removePassword',
   endpoint: '/api/v1/security/remove-password',
   defaultParameters,
 } as const;
 
-// Internal configuration with toolType for useToolOperation
-const internalConfig = {
-  ...removePasswordOperationConfig,
-  toolType: ToolType.singleFile,
-};
-
 export const useRemovePasswordOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<RemovePasswordParameters>({
-    ...internalConfig,
+    ...removePasswordOperationConfig,
     getErrorMessage: createStandardErrorHandler(t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.'))
   });
 };
