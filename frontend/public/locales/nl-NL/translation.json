@@ -608,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "verwijderen,wissen,ontgrendelen",
-      "title": "Cert. signatuur wissen",
+      "title": "Cert.-handtekening verwijderen",
       "desc": "Verwijder certificaat van PDF"
     },
     "pageLayout": {

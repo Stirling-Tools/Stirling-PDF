@@ -568,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "detecta,separa,fotos",
-      "title": "Detecta i divideix fotos",
+      "title": "Detecta i divideix escanejats",
       "desc": "Detecta i separa fotos escanejades en pàgines separades"
     },
     "sign": {

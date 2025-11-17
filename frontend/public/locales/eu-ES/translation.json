@@ -638,7 +638,7 @@
     },
     "adjustContrast": {
       "tags": "kontrastea,distira,saturazioa",
-      "title": "Kolore/kontraste doitu",
+      "title": "Koloreak/kontrastea doitu",
       "desc": "PDF baten kontrastea, saturazioa eta distira doitzea"
     },
     "crop": {

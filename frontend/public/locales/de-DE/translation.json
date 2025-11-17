@@ -623,7 +623,7 @@
     },
     "scalePages": {
       "tags": "größe ändern,anpassen,skalieren",
-      "title": "Seitenmaß ändern",
+      "title": "Seitengröße / -skalierung",
       "desc": "Größe/Skalierung der Seite und/oder des Inhalts ändern"
     },
     "addPageNumbers": {

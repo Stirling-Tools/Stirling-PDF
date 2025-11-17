@@ -470,7 +470,7 @@
     "desc": "Bütün PDF ehtiyaclarınız üçün lokal-host edilən biraddımlıq həll.",
     "searchBar": "Xüsusiyyətləri axtar...",
     "viewPdf": {
-      "title": "Bax/Redaktə et PDF",
+      "title": "PDF-ə bax/redaktə et",
       "desc": "Bax, sitat götür, mətn və ya şəkil əlavə et"
     },
     "setFavorites": "Seçilmişləri təyin et",
@@ -3656,7 +3656,7 @@
     "activity": "Aktivlik",
     "help": "Kömək",
     "account": "Hesab",
-    "config": "Ayarlar",
+    "config": "Konfiq",
     "settings": "Ayarlar",
     "adminSettings": "Admin Ayarları",
     "allTools": "All Tools",
