@@ -332,7 +332,10 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
-      }
+      },
+      "syncSettings": "Sync settings across devices",
+      "syncSettingsDescription": "Carry your theme, language, favourites, and hotkeys to other browsers when signed in.",
+      "syncSettingsTooltip": "Automatically back up your preferences to your account so they follow you on every device."
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
