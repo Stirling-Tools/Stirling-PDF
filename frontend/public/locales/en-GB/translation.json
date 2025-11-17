@@ -3225,7 +3225,9 @@
     "unexpectedError": "Unexpected error: {{message}}",
     "accountCreatedSuccess": "Account created successfully! You can now sign in.",
     "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again.",
+    "backendLoadingTitle": "Backend starting up",
+    "backendLoadingMessage": "Backend is currently loading and/or not started. Please wait a few moments and try again."
   },
   "signup": {
     "title": "Create an account",
