@@ -148,11 +148,40 @@ public class ExternalAppDepConfig {
                                     "WeasyPrint version could not be determined ({} --version)",
                                     command));
         }
+
+        // Extra: enforce minimum qpdf version if command matches
+        if (isQpdf(command)) {
+            Optional<String> version = getVersionSafe(command, "--version");
+            version.ifPresentOrElse(
+                    v -> {
+                        Version installed = new Version(v);
+                        Version required = new Version("12.0.0");
+                        if (installed.compareTo(required) < 0) {
+                            List<String> affectedGroups =
+                                    commandToGroupMapping.getOrDefault(command, List.of("qpdf"));
+                            for (String group : affectedGroups) {
+                                endpointConfiguration.disableGroup(group);
+                            }
+                            log.warn(
+                                    "qpdf version {} is below required {} - disabling group(s): {}",
+                                    installed,
+                                    required,
+                                    String.join(", ", affectedGroups));
+                        } else {
+                            log.info("qpdf {} meets minimum {}", installed, required);
+                        }
+                    },
+                    () -> log.warn("qpdf version could not be determined ({} --version)", command));
+        }
     }
 
     private boolean isWeasyprint(String command) {
         return Objects.equals(command, weasyprintPath)
                 || command.toLowerCase(Locale.ROOT).contains("weasyprint");
+    }
+
+    private boolean isQpdf(String command) {
+        return command.toLowerCase(Locale.ROOT).contains("qpdf");
     }
 
     private List<String> getAffectedFeatures(String group) {
