@@ -63,7 +63,8 @@ public class PdfOverlayController {
             int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
-                    Overlay overlay = new Overlay()) {
+                    Overlay overlay = new Overlay();
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 Map<Integer, String> overlayGuide =
                         prepareOverlayGuide(
                                 basePdf.getNumberOfPages(),
@@ -79,7 +80,6 @@ public class PdfOverlayController {
                     overlay.setOverlayPosition(Overlay.Position.BACKGROUND);
                 }
 
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
@@ -140,12 +140,11 @@ public class PdfOverlayController {
                 overlayFileIndex = (overlayFileIndex + 1) % overlayFiles.length;
             }
 
-            try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex])) {
-                PDDocument singlePageDocument = new PDDocument();
+            try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex]);
+                    PDDocument singlePageDocument = new PDDocument()) {
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
                 File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
                 singlePageDocument.save(tempFile);
-                singlePageDocument.close();
 
                 overlayGuide.put(basePageIndex, tempFile.getAbsolutePath());
                 tempFiles.add(tempFile); // Keep track of the temporary file for cleanup
@@ -202,6 +201,3 @@ public class PdfOverlayController {
         }
     }
 }
-
-// Additional classes like OverlayPdfsRequest, WebResponseUtils, etc. are assumed to be defined
-// elsewhere.

@@ -621,7 +621,8 @@ public class ScannerEffectController {
                             sharedPdfBytes != null
                                     ? pdfDocumentFactory.load(sharedPdfBytes)
                                     : pdfDocumentFactory.load(processingInput);
-                    PDDocument outputDocument = new PDDocument()) {
+                    PDDocument outputDocument = new PDDocument();
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
                 int totalPages = document.getNumberOfPages();
                 if (totalPages == 0) {
@@ -701,7 +702,6 @@ public class ScannerEffectController {
 
                     writeProcessedPagesToDocument(processedPages, outputDocument);
 
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     outputDocument.save(outputStream);
 
                     return WebResponseUtils.bytesToWebResponse(
