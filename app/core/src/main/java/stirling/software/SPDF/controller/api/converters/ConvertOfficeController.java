@@ -91,6 +91,7 @@ public class ConvertOfficeController {
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
+        Path libreOfficeProfile = null;
         try {
             ProcessExecutorResult result;
             // Run Unoconvert command
@@ -110,8 +111,10 @@ public class ConvertOfficeController {
                                 .runCommandWithOutputHandling(command);
             } // Run soffice command
             else {
+                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                 List<String> command = new ArrayList<>();
-                command.add("soffice");
+                command.add(runtimePathConfig.getSOfficePath());
+                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
                 command.add("--convert-to");
@@ -166,6 +169,9 @@ public class ConvertOfficeController {
                 Files.deleteIfExists(inputPath);
             } catch (IOException e) {
                 log.warn("Failed to delete temp input file: {}", inputPath, e);
+            }
+            if (libreOfficeProfile != null) {
+                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
     }

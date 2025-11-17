@@ -14,15 +14,18 @@ docker: &docker
   - Dockerfile.fat
   - Dockerfile.ultra-lite
   - ".github/workflows/build.yml"
+  - scripts/init.sh
+  - scripts/init-without-ocr.sh
+  - exampleYmlFiles/**
 
 project: &project
   - app/(common|core|proprietary)/src/(main|test)/java/**
   - *build
-  - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
+  - "app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
-  - 'testing/**/!(requirements*.txt|requirements*.in)*'
+  - "testing/**/!(requirements*.txt|requirements*.in)*"
   - *docker
   - gradle.properties
   - gradlew

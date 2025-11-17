@@ -150,6 +150,8 @@ system:
       weasyprint: '' # Defaults to /opt/venv/bin/weasyprint
       unoconvert: '' # Defaults to /opt/venv/bin/unoconvert
       calibre: '' # Defaults to /usr/bin/ebook-convert
+      ocrmypdf: '' # Defaults to /usr/bin/ocrmypdff
+      soffice: '' # Defaults to /usr/bin/soffice
   fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: '' # Defaults to java.io.tmpdir/stirling-pdf

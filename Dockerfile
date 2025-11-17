@@ -42,10 +42,10 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 RUN apk add --no-cache bash \
     && ln -sf /bin/bash /bin/sh \
     && printf '%s\n' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
-      > /etc/apk/repositories && \
+    'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
+    'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
+    'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
+    > /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
     ca-certificates \
@@ -103,8 +103,15 @@ RUN apk add --no-cache bash \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
     ln -sf /bin/busybox /bin/sh
 
+RUN mkdir -p /opt/calibre \
+    && if command -v ebook-convert >/dev/null 2>&1; then \
+    ln -sf "$(command -v ebook-convert)" /opt/calibre/ebook-convert; \
+    else \
+    echo "ebook-convert not found in PATH" >&2; exit 1; \
+    fi
+
 EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
+CMD []
