@@ -1420,6 +1420,19 @@
       "line2": "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
       "line3": "Import bookmarks from the selected PDF or from a JSON file to save time."
     },
+    "workbench": {
+      "empty": {
+        "title": "Open the tool to start editing",
+        "description": "Select the Edit Table of Contents tool to load its workspace."
+      },
+      "tabTitle": "Outline workspace",
+      "subtitle": "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+      "noFile": "No PDF selected",
+      "fileLabel": "Changes will be applied to the currently selected PDF.",
+      "filePrompt": "Select a PDF from your library or upload a new one to begin.",
+      "changeFile": "Change PDF",
+      "selectFile": "Select PDF"
+    },
     "editor": {
       "heading": "Bookmark editor",
       "description": "Add, nest, and reorder bookmarks to craft your PDF outline.",
@@ -1462,9 +1475,13 @@
       "copiedBody": "Bookmark JSON copied successfully.",
       "copyFailed": "Copy failed"
     },
+    "error": {
+      "failed": "Failed to update the table of contents"
+    },
     "submit": "Apply table of contents",
     "results": {
-      "title": "Updated PDF with bookmarks"
+      "title": "Updated PDF with bookmarks",
+      "subtitle": "Download the processed file or undo the operation below."
     }
   },
   "removePages": {

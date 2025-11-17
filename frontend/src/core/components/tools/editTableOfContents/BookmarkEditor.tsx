@@ -4,9 +4,10 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Card,
+  Flex,
   Group,
   NumberInput,
+  Paper,
   Stack,
   Text,
   TextInput,
@@ -159,20 +160,30 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
     const chevronIcon = bookmark.expanded ? 'expand-more-rounded' : 'chevron-right-rounded';
 
     return (
-      <Card key={bookmark.id} withBorder radius="md" p="md">
+      <Paper
+        key={bookmark.id}
+        radius="md"
+        withBorder
+        p="md"
+        style={{
+          borderColor: 'var(--border-default)',
+          background: level === 0 ? 'var(--bg-elevated)' : 'rgba(255,255,255,0.55)',
+        }}
+      >
         <Stack gap="sm">
-          <Group justify="space-between" align="flex-start">
-            <Group gap="xs" align="center">
+          <Flex align="flex-start" justify="space-between" gap="md">
+            <Group gap="sm" align="flex-start">
               <ActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => hasChildren && handleToggle(bookmark.id)}
                 disabled={disabled || !hasChildren}
                 aria-label={t('editTableOfContents.editor.actions.toggle', 'Toggle children')}
+                style={{ marginTop: 4 }}
               >
                 <LocalIcon icon={chevronIcon} />
               </ActionIcon>
-              <div>
+              <Stack gap={2}>
                 <Group gap="xs" align="center">
                   <Text fw={600}>{bookmark.title || t('editTableOfContents.editor.untitled', 'Untitled bookmark')}</Text>
                   {level > 0 && (
@@ -184,12 +195,12 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                 <Text size="sm" c="dimmed">
                   {t('editTableOfContents.editor.pagePreview', { page: bookmark.pageNumber })}
                 </Text>
-              </div>
+              </Stack>
             </Group>
             <Group gap="xs">
               <Tooltip label={t('editTableOfContents.editor.actions.addChild', 'Add child bookmark')}>
                 <ActionIcon
-                  variant="light"
+                  variant="subtle"
                   color="green"
                   onClick={() => handleAddChild(bookmark.id)}
                   disabled={disabled}
@@ -199,7 +210,7 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               </Tooltip>
               <Tooltip label={t('editTableOfContents.editor.actions.addSibling', 'Add sibling bookmark')}>
                 <ActionIcon
-                  variant="light"
+                  variant="subtle"
                   color="blue"
                   onClick={() => handleAddSibling(bookmark.id)}
                   disabled={disabled}
@@ -209,7 +220,7 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               </Tooltip>
               <Tooltip label={t('editTableOfContents.editor.actions.remove', 'Remove bookmark')}>
                 <ActionIcon
-                  variant="light"
+                  variant="subtle"
                   color="red"
                   onClick={() => handleRemove(bookmark.id)}
                   disabled={disabled}
@@ -218,17 +229,19 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                 </ActionIcon>
               </Tooltip>
             </Group>
-          </Group>
+          </Flex>
 
           {bookmark.expanded && (
             <Stack gap="sm">
               <TextInput
+                size="sm"
                 label={t('editTableOfContents.editor.field.title', 'Bookmark title')}
                 value={bookmark.title}
                 onChange={event => handleTitleChange(bookmark.id, event.currentTarget.value)}
                 disabled={disabled}
               />
               <NumberInput
+                size="sm"
                 label={t('editTableOfContents.editor.field.page', 'Target page number')}
                 min={1}
                 clampBehavior="strict"
@@ -240,14 +253,14 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
           )}
 
           {bookmark.expanded && hasChildren && (
-            <Stack gap="sm" pl="lg">
+            <Stack gap="sm" pl="lg" style={{ borderLeft: '1px solid var(--border-default)' }}>
               {bookmark.children.map(child => (
                 <Fragment key={child.id}>{renderBookmark(child, level + 1)}</Fragment>
               ))}
             </Stack>
           )}
         </Stack>
-      </Card>
+      </Paper>
     );
   };
 
@@ -261,7 +274,8 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
           </Text>
         </div>
         <Button
-          variant="light"
+          variant="default"
+          color="blue"
           leftSection={<LocalIcon icon="bookmark-add-rounded" />}
           onClick={handleAddTopLevel}
           disabled={disabled}
@@ -271,8 +285,8 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
       </Group>
 
       {bookmarks.length === 0 ? (
-        <Card withBorder radius="md" ta="center" py="xl">
-          <Stack gap="xs" align="center">
+        <Paper withBorder radius="md" ta="center" py="xl">
+          <Stack gap="xs" align="center" px="lg">
             <LocalIcon icon="bookmark-add-rounded" style={{ fontSize: '2.25rem' }} />
             <Text fw={600}>{t('editTableOfContents.editor.empty.title', 'No bookmarks yet')}</Text>
             <Text size="sm" c="dimmed" maw={420}>
@@ -280,6 +294,7 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
             </Text>
             <Button
               variant="subtle"
+              color="blue"
               leftSection={<LocalIcon icon="add-rounded" />}
               onClick={handleAddTopLevel}
               disabled={disabled}
@@ -287,7 +302,7 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               {t('editTableOfContents.editor.empty.action', 'Add first bookmark')}
             </Button>
           </Stack>
-        </Card>
+        </Paper>
       ) : (
         <Stack gap="sm">
           {bookmarks.map(bookmark => renderBookmark(bookmark))}
@@ -296,4 +311,3 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
     </Stack>
   );
 }
-

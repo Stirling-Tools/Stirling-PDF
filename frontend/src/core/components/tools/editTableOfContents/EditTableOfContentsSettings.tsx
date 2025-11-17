@@ -12,14 +12,13 @@ import {
   Tooltip,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import BookmarkEditor from '@app/components/tools/editTableOfContents/BookmarkEditor';
 import { BookmarkNode } from '@app/utils/editTableOfContents';
 
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
   replaceExisting: boolean;
   onReplaceExistingChange: (value: boolean) => void;
-  onBookmarksChange: (bookmarks: BookmarkNode[]) => void;
+  onSelectFiles: () => void;
   onLoadFromPdf: () => void;
   onImportJson: (file: File) => void;
   onImportClipboard: () => void;
@@ -37,7 +36,7 @@ export default function EditTableOfContentsSettings({
   bookmarks,
   replaceExisting,
   onReplaceExistingChange,
-  onBookmarksChange,
+  onSelectFiles,
   onLoadFromPdf,
   onImportJson,
   onImportClipboard,
@@ -61,7 +60,19 @@ export default function EditTableOfContentsSettings({
   return (
     <Stack gap="lg">
       <Stack gap="xs">
-        <Text fw={600}>{t('editTableOfContents.actions.source', 'Load bookmarks')}</Text>
+        <Group justify="space-between" align="center">
+          <Text fw={600}>{t('editTableOfContents.actions.source', 'Load bookmarks')}</Text>
+          <Button
+            variant="subtle"
+            color="blue"
+            leftSection={<LocalIcon icon="folder-rounded" />}
+            onClick={onSelectFiles}
+          >
+            {selectedFileName
+              ? t('editTableOfContents.workbench.changeFile', 'Change PDF')
+              : t('editTableOfContents.workbench.selectFile', 'Select PDF')}
+          </Button>
+        </Group>
         <Group gap="xs" align="center">
           <Text size="sm" c="dimmed">
             {selectedFileName
@@ -72,6 +83,8 @@ export default function EditTableOfContentsSettings({
         <Group gap="sm" wrap="wrap">
           <Tooltip label={!selectedFileName ? t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.') : ''} disabled={Boolean(selectedFileName)}>
             <Button
+              variant="default"
+              color="blue"
               leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
               onClick={onLoadFromPdf}
               loading={isLoading}
@@ -86,7 +99,11 @@ export default function EditTableOfContentsSettings({
             disabled={disabled}
           >
             {(props) => (
-              <Button {...props} variant="light" leftSection={<LocalIcon icon="upload-rounded" />}
+              <Button
+                {...props}
+                variant="outline"
+                color="gray"
+                leftSection={<LocalIcon icon="upload-rounded" />}
                 disabled={disabled}
               >
                 {t('editTableOfContents.actions.importJson', 'Import JSON')}
@@ -98,7 +115,8 @@ export default function EditTableOfContentsSettings({
             disabled={canReadClipboard}
           >
             <Button
-              variant="light"
+              variant="outline"
+              color="gray"
               leftSection={<LocalIcon icon="content-paste-rounded" />}
               onClick={onImportClipboard}
               disabled={disabled || !canReadClipboard}
@@ -120,7 +138,8 @@ export default function EditTableOfContentsSettings({
         <Text fw={600}>{t('editTableOfContents.actions.export', 'Export bookmarks')}</Text>
         <Group gap="sm" wrap="wrap">
           <Button
-            variant="light"
+            variant="outline"
+            color="gray"
             leftSection={<LocalIcon icon="download-rounded" />}
             onClick={onExportJson}
             disabled={disabled || bookmarks.length === 0}
@@ -132,7 +151,8 @@ export default function EditTableOfContentsSettings({
             disabled={canWriteClipboard}
           >
             <Button
-              variant="light"
+              variant="outline"
+              color="gray"
               leftSection={<LocalIcon icon="content-copy-rounded" />}
               onClick={onExportClipboard}
               disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
@@ -161,8 +181,6 @@ export default function EditTableOfContentsSettings({
         ))}
       </Stack>
 
-      <BookmarkEditor bookmarks={bookmarks} onChange={onBookmarksChange} disabled={disabled} />
     </Stack>
   );
 }
-
