@@ -69,7 +69,7 @@ export interface InviteUsersResponse {
 }
 
 export interface InviteLinkRequest {
-  email: string;
+  email?: string;
   role: string;
   teamId?: number;
   expiryHours?: number;

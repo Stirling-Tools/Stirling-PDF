@@ -7,6 +7,8 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface AdvancedSettingsData {
   enableAlphaFunctionality?: boolean;
@@ -55,6 +57,7 @@ interface AdvancedSettingsData {
 export default function AdminAdvancedSection() {
   const { t } = useTranslation();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
 
   const {
     settings,
@@ -165,10 +168,15 @@ export default function AdminAdvancedSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
     try {
       await saveSettings();
       showRestartModal();
@@ -181,7 +189,9 @@ export default function AdminAdvancedSection() {
     }
   };
 
-  if (loading) {
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -191,6 +201,7 @@ export default function AdminAdvancedSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.advanced.title', 'Advanced')}</Text>
         <Text size="sm" c="dimmed">
@@ -213,7 +224,12 @@ export default function AdminAdvancedSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.enableAlphaFunctionality || false}
-                onChange={(e) => setSettings({ ...settings, enableAlphaFunctionality: e.target.checked })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, enableAlphaFunctionality: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('enableAlphaFunctionality')} />
             </Group>
@@ -229,7 +245,12 @@ export default function AdminAdvancedSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.enableUrlToPDF || false}
-                onChange={(e) => setSettings({ ...settings, enableUrlToPDF: e.target.checked })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, enableUrlToPDF: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('enableUrlToPDF')} />
             </Group>
@@ -245,7 +266,12 @@ export default function AdminAdvancedSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.disableSanitize || false}
-                onChange={(e) => setSettings({ ...settings, disableSanitize: e.target.checked })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({ ...settings, disableSanitize: e.target.checked });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('disableSanitize')} />
             </Group>
@@ -271,6 +297,7 @@ export default function AdminAdvancedSection() {
               onChange={(value) => setSettings({ ...settings, maxDPI: Number(value) })}
               min={0}
               max={3000}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -286,6 +313,7 @@ export default function AdminAdvancedSection() {
               value={settings.tessdataDir || ''}
               onChange={(e) => setSettings({ ...settings, tessdataDir: e.target.value })}
               placeholder="/usr/share/tessdata"
+              disabled={!loginEnabled}
             />
           </div>
         </Stack>
@@ -311,6 +339,7 @@ export default function AdminAdvancedSection() {
                 tempFileManagement: { ...settings.tempFileManagement, baseTmpDir: e.target.value }
               })}
               placeholder="Default: java.io.tmpdir/stirling-pdf"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -324,6 +353,7 @@ export default function AdminAdvancedSection() {
                 tempFileManagement: { ...settings.tempFileManagement, libreofficeDir: e.target.value }
               })}
               placeholder="Default: baseTmpDir/libreoffice"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -337,6 +367,7 @@ export default function AdminAdvancedSection() {
                 tempFileManagement: { ...settings.tempFileManagement, systemTempDir: e.target.value }
               })}
               placeholder="System temp directory path"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -350,6 +381,7 @@ export default function AdminAdvancedSection() {
                 tempFileManagement: { ...settings.tempFileManagement, prefix: e.target.value }
               })}
               placeholder="stirling-pdf-"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -364,6 +396,7 @@ export default function AdminAdvancedSection() {
               })}
               min={1}
               max={720}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -378,6 +411,7 @@ export default function AdminAdvancedSection() {
               })}
               min={1}
               max={1440}
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -391,10 +425,15 @@ export default function AdminAdvancedSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.tempFileManagement?.startupCleanup ?? true}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  tempFileManagement: { ...settings.tempFileManagement, startupCleanup: e.target.checked }
-                })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({
+                    ...settings,
+                    tempFileManagement: { ...settings.tempFileManagement, startupCleanup: e.target.checked }
+                  });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('tempFileManagement.startupCleanup')} />
             </Group>
@@ -410,10 +449,15 @@ export default function AdminAdvancedSection() {
             <Group gap="xs">
               <Switch
                 checked={settings.tempFileManagement?.cleanupSystemTemp ?? false}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  tempFileManagement: { ...settings.tempFileManagement, cleanupSystemTemp: e.target.checked }
-                })}
+                onChange={(e) => {
+                  if (!loginEnabled) return;
+                  setSettings({
+                    ...settings,
+                    tempFileManagement: { ...settings.tempFileManagement, cleanupSystemTemp: e.target.checked }
+                  });
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('tempFileManagement.cleanupSystemTemp')} />
             </Group>
@@ -448,6 +492,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -462,6 +507,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -485,6 +531,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -499,6 +546,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -522,6 +570,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -536,6 +585,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -559,6 +609,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -573,6 +624,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -596,6 +648,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -610,6 +663,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -633,6 +687,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -647,6 +702,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -670,6 +726,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -684,6 +741,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -707,6 +765,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -721,6 +780,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -744,6 +804,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -758,6 +819,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -781,6 +843,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={100}
+                    disabled={!loginEnabled}
                   />
                   <NumberInput
                     label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
@@ -795,6 +858,7 @@ export default function AdminAdvancedSection() {
                     })}
                     min={1}
                     max={240}
+                    disabled={!loginEnabled}
                   />
                 </Stack>
               </Accordion.Panel>
@@ -805,7 +869,7 @@ export default function AdminAdvancedSection() {
 
       {/* Save Button */}
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
