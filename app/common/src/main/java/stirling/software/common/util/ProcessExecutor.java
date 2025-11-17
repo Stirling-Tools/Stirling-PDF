@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -25,6 +26,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
+    private static final String ERROR_KEYWORD = "ERROR";
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
@@ -175,6 +177,7 @@ public class ProcessExecutor {
         String messages = "";
         int exitCode = 1;
         semaphore.acquire();
+        AtomicBoolean errorDetected = new AtomicBoolean(false);
         try {
 
             log.info("Running command: {}", String.join(" ", command));
@@ -204,7 +207,16 @@ public class ProcessExecutor {
                                                             errorReader, 5_000_000))
                                             != null) {
                                         errorLines.add(line);
-                                        if (liveUpdates) log.info(line);
+                                        if (liveUpdates) {
+                                            if (line.toUpperCase().contains(ERROR_KEYWORD)) {
+                                                errorDetected.set(true);
+                                            }
+                                            if (errorDetected.get()) {
+                                                log.info(line);
+                                            } else {
+                                                log.debug(line);
+                                            }
+                                        }
                                     }
                                 } catch (InterruptedIOException e) {
                                     log.warn("Error reader thread was interrupted due to timeout.");
@@ -227,7 +239,16 @@ public class ProcessExecutor {
                                                             outputReader, 5_000_000))
                                             != null) {
                                         outputLines.add(line);
-                                        if (liveUpdates) log.info(line);
+                                        if (liveUpdates) {
+                                            if (line.toUpperCase().contains(ERROR_KEYWORD)) {
+                                                errorDetected.set(true);
+                                            }
+                                            if (errorDetected.get()) {
+                                                log.info(line);
+                                            } else {
+                                                log.debug(line);
+                                            }
+                                        }
                                     }
                                 } catch (InterruptedIOException e) {
                                     log.warn("Error reader thread was interrupted due to timeout.");
