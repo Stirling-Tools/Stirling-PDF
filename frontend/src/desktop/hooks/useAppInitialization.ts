@@ -17,31 +17,45 @@ export function useAppInitialization(): void {
   // Get file management actions
   const { addFiles } = useFileManagement();
 
-  // Handle file opened with app (Tauri mode)
-  const { openedFilePath, loading: openedFileLoading } = useOpenedFile();
+  // Handle files opened with app (Tauri mode)
+  const { openedFilePaths, loading: openedFileLoading } = useOpenedFile();
 
-  // Load opened file and add directly to FileContext
+  // Load opened files and add directly to FileContext
   useEffect(() => {
-    if (openedFilePath && !openedFileLoading) {
-      const loadOpenedFile = async () => {
-        try {
-          const fileData = await fileOpenService.readFileAsArrayBuffer(openedFilePath);
-          if (fileData) {
-            // Create a File object from the ArrayBuffer
-            const file = new File([fileData.arrayBuffer], fileData.fileName, {
-              type: 'application/pdf'
-            });
-
-            // Add directly to FileContext
-            await addFiles([file]);
-            console.log('[Desktop] Opened file added to FileContext:', fileData.fileName);
-          }
-        } catch (error) {
-          console.error('[Desktop] Failed to load opened file:', error);
-        }
-      };
-
-      loadOpenedFile();
+    if (openedFilePaths.length === 0 || openedFileLoading) {
+      return;
     }
-  }, [openedFilePath, openedFileLoading, addFiles]);
+
+    const loadOpenedFiles = async () => {
+      try {
+        const filesArray: File[] = [];
+
+        await Promise.all(
+          openedFilePaths.map(async (filePath) => {
+            try {
+              const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
+              if (fileData) {
+                const file = new File([fileData.arrayBuffer], fileData.fileName, {
+                  type: 'application/pdf'
+                });
+                filesArray.push(file);
+                console.log('[Desktop] Loaded file:', fileData.fileName);
+              }
+            } catch (error) {
+              console.error('[Desktop] Failed to load file:', filePath, error);
+            }
+          })
+        );
+
+        if (filesArray.length > 0) {
+          await addFiles(filesArray);
+          console.log(`[Desktop] ${filesArray.length} opened file(s) added to FileContext`);
+        }
+      } catch (error) {
+        console.error('[Desktop] Failed to load opened files:', error);
+      }
+    };
+
+    loadOpenedFiles();
+  }, [openedFilePaths, openedFileLoading, addFiles]);
 }

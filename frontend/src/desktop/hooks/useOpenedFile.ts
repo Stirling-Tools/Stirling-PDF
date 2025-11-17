@@ -1,47 +1,48 @@
 import { useState, useEffect } from 'react';
 import { fileOpenService } from '@app/services/fileOpenService';
+import { listen } from '@tauri-apps/api/event';
 
 export function useOpenedFile() {
-  const [openedFilePath, setOpenedFilePath] = useState<string | null>(null);
+  const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkForOpenedFile = async () => {
-      console.log('🔍 Checking for opened file...');
+    // Function to read and process files from storage
+    const readFilesFromStorage = async () => {
+      console.log('🔍 Reading files from storage...');
       try {
-        const filePath = await fileOpenService.getOpenedFile();
-        console.log('🔍 fileOpenService.getOpenedFile() returned:', filePath);
-        
-        if (filePath) {
-          console.log('✅ App opened with file:', filePath);
-          setOpenedFilePath(filePath);
-          
-          // Clear the file from service state after consuming it
-          await fileOpenService.clearOpenedFile();
-        } else {
-          console.log('ℹ️ No file was opened with the app');
-        }
+        const filePaths = await fileOpenService.getOpenedFiles();
+        console.log('🔍 fileOpenService.getOpenedFiles() returned:', filePaths);
 
+        if (filePaths.length > 0) {
+          console.log(`✅ Found ${filePaths.length} file(s) in storage:`, filePaths);
+          setOpenedFilePaths(filePaths);
+          await fileOpenService.clearOpenedFiles();
+        }
       } catch (error) {
-        console.error('❌ Failed to check for opened file:', error);
+        console.error('❌ Failed to read files from storage:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkForOpenedFile();
+    // Read files on mount
+    readFilesFromStorage();
 
-    // Listen for runtime file open events (abstracted through service)
-    const unlistenRuntimeEvents = fileOpenService.onFileOpened((filePath: string) => {
-      console.log('📂 Runtime file open event:', filePath);
-      setOpenedFilePath(filePath);
+    // Listen for files-changed events (when new files are added to storage)
+    let unlisten: (() => void) | undefined;
+    listen('files-changed', async () => {
+      console.log('📂 files-changed event received, re-reading storage...');
+      await readFilesFromStorage();
+    }).then(unlistenFn => {
+      unlisten = unlistenFn;
     });
 
     // Cleanup function
     return () => {
-      unlistenRuntimeEvents();
+      if (unlisten) unlisten();
     };
   }, []);
 
-  return { openedFilePath, loading };
+  return { openedFilePaths, loading };
 }

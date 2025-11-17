@@ -2,11 +2,13 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@app/auth/UseSession';
 import { useTranslation } from 'react-i18next';
+import { useLogoPath } from '@app/hooks/useLogoPath';
 
 export default function LoggedInState() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const logoPath = useLogoPath();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -34,7 +36,13 @@ export default function LoggedInState() {
         padding: '32px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <img
+              src={logoPath}
+              alt="Stirling PDF Logo"
+              style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+            />
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669', marginBottom: '8px' }}>
             {t('login.youAreLoggedIn')}
           </h1>
