@@ -42,9 +42,7 @@ public class MetricsController {
 
     @PostConstruct
     public void init() {
-        Boolean metricsEnabled = applicationProperties.getMetrics().getEnabled();
-        if (metricsEnabled == null) metricsEnabled = true;
-        this.metricsEnabled = metricsEnabled;
+        metricsEnabled = applicationProperties.getMetrics().isEnabled();
     }
 
     @GetMapping("/status")
@@ -361,7 +359,7 @@ public class MetricsController {
         long hours = duration.toHoursPart();
         long minutes = duration.toMinutesPart();
         long seconds = duration.toSecondsPart();
-        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
+        return String.format(Locale.ROOT, "%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 
     @Setter

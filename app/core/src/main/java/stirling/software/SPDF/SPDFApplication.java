@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -155,7 +156,7 @@ public class SPDFApplication {
             boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
             if (browserOpen) {
                 try {
-                    String os = System.getProperty("os.name").toLowerCase();
+                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
                     Runtime rt = Runtime.getRuntime();
 
                     if (os.contains("win")) {
@@ -196,7 +197,7 @@ public class SPDFApplication {
         log.info("Navigate to {}", url);
     }
 
-    private static String[] getActiveProfile(String[] args) {
+    protected static String[] getActiveProfile(String[] args) {
         // 1. Check for explicitly passed profiles
         if (args != null) {
             for (String arg : args) {
@@ -220,7 +221,7 @@ public class SPDFApplication {
         }
     }
 
-    private static boolean isClassPresent(String className) {
+    protected static boolean isClassPresent(String className) {
         try {
             Class.forName(className, false, SPDFApplication.class.getClassLoader());
             return true;

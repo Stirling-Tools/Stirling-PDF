@@ -1,8 +1,6 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,10 +9,18 @@ import org.junit.jupiter.api.Test;
 
 public class ImageProcessingUtilsTest {
 
+    private static void fillImageWithColor(BufferedImage image) {
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                image.setRGB(x, y, Color.RED.getRGB());
+            }
+        }
+    }
+
     @Test
     void testConvertColorTypeToGreyscale() {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        fillImageWithColor(sourceImage, Color.RED);
+        fillImageWithColor(sourceImage);
 
         BufferedImage convertedImage =
                 ImageProcessingUtils.convertColorType(sourceImage, "greyscale");
@@ -33,7 +39,7 @@ public class ImageProcessingUtilsTest {
     @Test
     void testConvertColorTypeToBlackWhite() {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        fillImageWithColor(sourceImage, Color.RED);
+        fillImageWithColor(sourceImage);
 
         BufferedImage convertedImage =
                 ImageProcessingUtils.convertColorType(sourceImage, "blackwhite");
@@ -51,7 +57,7 @@ public class ImageProcessingUtilsTest {
     @Test
     void testConvertColorTypeToFullColor() {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        fillImageWithColor(sourceImage, Color.RED);
+        fillImageWithColor(sourceImage);
 
         BufferedImage convertedImage =
                 ImageProcessingUtils.convertColorType(sourceImage, "fullcolor");
@@ -63,20 +69,12 @@ public class ImageProcessingUtilsTest {
     @Test
     void testConvertColorTypeInvalid() {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        fillImageWithColor(sourceImage, Color.RED);
+        fillImageWithColor(sourceImage);
 
         BufferedImage convertedImage =
                 ImageProcessingUtils.convertColorType(sourceImage, "invalidtype");
 
         assertNotNull(convertedImage);
         assertEquals(sourceImage, convertedImage);
-    }
-
-    private void fillImageWithColor(BufferedImage image, Color color) {
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                image.setRGB(x, y, color.getRGB());
-            }
-        }
     }
 }

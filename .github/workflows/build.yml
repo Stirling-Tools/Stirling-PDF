@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -110,18 +110,32 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
+            app/core/build/reports/jacoco/test
             app/core/build/reports/tests/
             app/core/build/test-results/
             app/core/build/reports/problems/
             app/common/build/reports/tests/
             app/common/build/test-results/
+            app/common/build/reports/jacoco/test
             app/common/build/reports/problems/
             app/proprietary/build/reports/tests/
             app/proprietary/build/test-results/
+            app/proprietary/build/reports/jacoco/test
             app/proprietary/build/reports/problems/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+      - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
+        id: jacoco
+        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
+        with:
+          paths: |
+            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 10
+          min-coverage-changed-files: 0
+          comment-type: summary
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
@@ -129,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -162,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -211,7 +225,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -252,7 +266,7 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    needs: [files-changed, build]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -260,7 +274,7 @@ jobs:
         docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -285,7 +299,7 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       - name: Set up Docker Buildx
         id: buildx

@@ -47,6 +47,13 @@ public class ConverterWebController {
         return "convert/cbr-to-pdf";
     }
 
+    @GetMapping("/ebook-to-pdf")
+    @Hidden
+    public String convertEbookToPdfForm(Model model) {
+        model.addAttribute("currentPage", "ebook-to-pdf");
+        return "convert/ebook-to-pdf";
+    }
+
     @GetMapping("/pdf-to-cbr")
     @Hidden
     public String convertPdfToCbrForm(Model model) {
@@ -185,5 +192,19 @@ public class ConverterWebController {
     public String convertEmlToPdfForm(Model model) {
         model.addAttribute("currentPage", "eml-to-pdf");
         return "convert/eml-to-pdf";
+    }
+
+    @GetMapping("/pdf-to-video")
+    @Hidden
+    public String pdfToVideo(Model model) {
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            model.addAttribute("maxDPI", properties.getSystem().getMaxDPI());
+        } else {
+            model.addAttribute("maxDPI", 500);
+        }
+        model.addAttribute("currentPage", "pdf-to-video");
+        return "convert/pdf-to-video";
     }
 }

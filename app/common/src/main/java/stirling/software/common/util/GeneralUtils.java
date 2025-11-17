@@ -33,7 +33,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
-    /** Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe. */
+    /**
+     * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
+     */
     private static final int MAX_DNS_ADDRESSES = 20;
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
@@ -298,8 +300,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and
-     * {@code https} protocols are permitted, and local/private/multicast ranges are blocked.
+     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and {@code
+     * https} protocols are permitted, and local/private/multicast ranges are blocked.
      *
      * @param urlStr the URL to probe
      * @param connectTimeout connection timeout in milliseconds
@@ -417,8 +419,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to
-     * {@code true} (conservative) to avoid misuse.
+     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to {@code
+     * true} (conservative) to avoid misuse.
      *
      * @param address 4-byte IPv4 address
      * @return {@code true} if private/reserved
@@ -488,8 +490,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed
-     * input defaults to {@code false} (conservative) to avoid misuse.
+     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed input
+     * defaults to {@code false} (conservative) to avoid misuse.
      *
      * @param address 16-byte IPv6 address
      * @return {@code true} if IPv4-mapped
@@ -543,7 +545,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException("Invalid default unit: " + defaultUnit);
         }
 
-        sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.trim().toUpperCase(Locale.ROOT);
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
 
         try {
@@ -572,7 +574,7 @@ public class GeneralUtils {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
                 // Use provided default unit or fall back to MB
-                String unit = defaultUnit != null ? defaultUnit.toUpperCase() : "MB";
+                String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
                 double value = Double.parseDouble(sizeStr);
                 return switch (unit) {
                     case "TB" -> (long) (value * 1024L * 1024L * 1024L * 1024L);
@@ -614,13 +616,14 @@ public class GeneralUtils {
         if (bytes < 1024) {
             return bytes + " B";
         } else if (bytes < 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f KB", bytes / 1024.0);
+            return String.format(Locale.ROOT, "%.2f KB", bytes / 1024.0);
         } else if (bytes < 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f MB", bytes / (1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f MB", bytes / (1024.0 * 1024.0));
         } else if (bytes < 1024L * 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
         } else {
-            return String.format(Locale.US, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+            return String.format(
+                    Locale.ROOT, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
         }
     }
 
@@ -880,7 +883,7 @@ public class GeneralUtils {
                         byte[] mac = net.getHardwareAddress();
                         if (mac != null && mac.length > 0) {
                             for (byte b : mac) {
-                                sb.append(String.format("%02X", b));
+                                sb.append(String.format(Locale.ROOT, "%02X", b));
                             }
                             break; // Use the first valid network interface
                         }
@@ -890,7 +893,7 @@ public class GeneralUtils {
                 byte[] mac = network.getHardwareAddress();
                 if (mac != null) {
                     for (byte b : mac) {
-                        sb.append(String.format("%02X", b));
+                        sb.append(String.format(Locale.ROOT, "%02X", b));
                     }
                 }
             }
