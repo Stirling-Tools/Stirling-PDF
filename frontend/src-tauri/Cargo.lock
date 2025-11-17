@@ -644,6 +644,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "core-services"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0aa845ab21b847ee46954be761815f18f16469b29ef3ba250241b1b8bab659a"
+dependencies = [
+ "core-foundation 0.10.1",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3941,6 +3950,8 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 name = "stirling-pdf"
 version = "0.1.0"
 dependencies = [
+ "core-foundation 0.10.1",
+ "core-services",
  "log",
  "reqwest 0.11.27",
  "serde",
