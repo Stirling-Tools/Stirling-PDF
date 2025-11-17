@@ -53,10 +53,12 @@ public class SplitPDFController {
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
+        MultipartFile file = request.getFileInput();
 
         try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-                PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
+                PDDocument document = pdfDocumentFactory.load(file)) {
+
+            List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);
@@ -74,7 +76,8 @@ public class SplitPDFController {
             int previousPageNumber = 0;
             for (int splitPoint : pageNumbers) {
                 try (PDDocument splitDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+                                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     for (int i = previousPageNumber; i <= splitPoint; i++) {
                         PDPage page = document.getPage(i);
                         splitDocument.addPage(page);
@@ -85,7 +88,6 @@ public class SplitPDFController {
                     // Transfer metadata to split pdf
                     // PdfMetadataService.setMetadataToPdf(splitDocument, metadata);
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     splitDocument.save(baos);
                     splitDocumentsBoas.add(baos);
                 } catch (Exception e) {
@@ -125,18 +127,6 @@ public class SplitPDFController {
                             request.getFileInput().getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
                     data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
-
-        } finally {
-            try {
-                // Close all ByteArrayOutputStreams
-                for (ByteArrayOutputStream baos : splitDocumentsBoas) {
-                    if (baos != null) {
-                        baos.close();
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Error while cleaning up resources", e);
-            }
         }
     }
 }

@@ -23,8 +23,16 @@
                 <div class="mb-3">
                   <label for="outputFormat" th:text="#{pdfToPDFA.outputFormat}"></label>
                   <select class="form-control" name="outputFormat" id="outputFormat">
-                    <option value="pdfa-1">PDF/A-1b</option>
-                    <option value="pdfa">PDF/A-2b</option>
+                    <optgroup th:label="#{pdfToPDFA.pdfaFormats}">
+                      <option value="pdfa-1">PDF/A-1b</option>
+                      <option selected="selected" value="pdfa">PDF/A-2b (default)</option>
+                      <option value="pdfa-3">PDF/A-3b</option>
+                    </optgroup>
+                    <optgroup th:label="#{pdfToPDFA.pdfxFormats}">
+                      <option value="pdfx-1">PDF/X-1</option>
+                      <option value="pdfx-3">PDF/X-3</option>
+                      <option value="pdfx-4">PDF/X-4</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div id="result" class="alert-warning"></div>

@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -86,7 +85,6 @@ public class EditTableOfContentsController {
             PDOutlineItem child = current.getFirstChild();
             if (child != null) {
                 List<Map<String, Object>> children = new ArrayList<>();
-                PDOutlineNode parent = current;
 
                 while (child != null) {
                     // Recursively process child items
@@ -152,7 +150,8 @@ public class EditTableOfContentsController {
             @ModelAttribute EditTableOfContentsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
+        try (PDDocument document = pdfDocumentFactory.load(file);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
@@ -166,7 +165,6 @@ public class EditTableOfContentsController {
             addBookmarksToOutline(document, outline, bookmarks);
 
             // Save the document to a byte array
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
 
             return WebResponseUtils.bytesToWebResponse(
