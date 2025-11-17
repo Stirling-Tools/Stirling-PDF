@@ -689,6 +689,16 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "addImage"),
         automationSettings: null
       },
+      editTableOfContents: {
+        icon: <LocalIcon icon="bookmark-add-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.editTableOfContents.title", "Edit Table of Contents"),
+        component: null,
+        description: t("home.editTableOfContents.desc", "Add or edit bookmarks and table of contents in PDF documents"),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        synonyms: getSynonyms(t, "editTableOfContents"),
+        automationSettings: null
+      },
       scannerEffect: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerEffect.title", "Scanner Effect"),
