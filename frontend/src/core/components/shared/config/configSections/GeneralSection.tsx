@@ -36,6 +36,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
     localStorage.setItem(BANNER_DISMISSED_KEY, 'true');
   };
 
+  const syncSettingsTooltip = loginDisabled
+    ? t('settings.general.syncSettingsLoginDisabled', 'Login must be enabled to sync settings across devices.')
+    : t('settings.general.syncSettingsTooltip', 'Automatically back up your preferences to your account so they follow you on every device.');
+
   return (
     <Stack gap="lg">
       {!hideTitle && (
@@ -169,12 +173,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
             </div>
           </Tooltip>
 
-          <Tooltip
-            label={t('settings.general.syncSettingsTooltip', 'Automatically back up your preferences to your account so they follow you on every device.')}
-            multiline
-            w={300}
-            withArrow
-          >
+          <Tooltip label={syncSettingsTooltip} multiline w={300} withArrow>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
               <div>
                 <Text fw={500} size="sm">
@@ -187,6 +186,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               <Switch
                 checked={preferences.syncSettingsAcrossDevices}
                 onChange={(event) => updatePreference('syncSettingsAcrossDevices', event.currentTarget.checked)}
+                disabled={loginDisabled}
               />
             </div>
           </Tooltip>
