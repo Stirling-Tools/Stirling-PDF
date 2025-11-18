@@ -136,49 +136,57 @@ export class TauriBackendService {
   }
 
   async checkBackendHealth(): Promise<boolean> {
+    const mode = await connectionModeService.getCurrentMode();
+
+    // For remote server mode, check the configured server
+    if (mode !== 'offline') {
+      const serverConfig = await connectionModeService.getServerConfig();
+      if (!serverConfig) {
+        console.error('[TauriBackendService] Server mode but no server URL configured');
+        this.setStatus('unhealthy');
+        return false;
+      }
+
+      try {
+        const baseUrl = serverConfig.url.replace(/\/$/, '');
+        const healthUrl = `${baseUrl}/api/v1/info/status`;
+        const response = await fetch(healthUrl, {
+          method: 'GET',
+          connectTimeout: 5000,
+        });
+
+        const isHealthy = response.ok;
+        this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
+        return isHealthy;
+      } catch (error) {
+        const errorStr = String(error);
+        if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
+          console.error('[TauriBackendService] Server health check failed:', error);
+        }
+        this.setStatus('unhealthy');
+        return false;
+      }
+    }
+
+    // For offline mode, check the bundled backend via Rust
     if (!this.backendStarted) {
       this.setStatus('stopped');
       return false;
     }
 
+    if (!this.backendPort) {
+      console.debug('[TauriBackendService] Backend port not available yet');
+      return false;
+    }
+
     try {
-      // Determine health check URL based on connection mode
-      const mode = await connectionModeService.getCurrentMode();
-      let healthUrl: string;
-
-      if (mode === 'offline') {
-        // Use dynamically assigned port for bundled backend
-        if (!this.backendPort) {
-          console.debug('[TauriBackendService] Backend port not available yet');
-          return false;
-        }
-        healthUrl = `http://localhost:${this.backendPort}/api/v1/info/status`;
-      } else {
-        // Use configured server URL
-        const serverConfig = await connectionModeService.getServerConfig();
-        if (!serverConfig) {
-          console.error('[TauriBackendService] Server mode but no server URL configured');
-          this.setStatus('unhealthy');
-          return false;
-        }
-        const baseUrl = serverConfig.url.replace(/\/$/, '');
-        healthUrl = `${baseUrl}/api/v1/info/status`;
-      }
-
-      // Make health check request using Tauri's native HTTP client (bypasses CORS)
-      const response = await fetch(healthUrl, {
-        method: 'GET',
-        connectTimeout: 5000,
-      });
-
-      const isHealthy = response.ok;
+      const isHealthy = await invoke<boolean>('check_backend_health', { port: this.backendPort });
       this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
       return isHealthy;
     } catch (error) {
-      // Don't log common startup errors
       const errorStr = String(error);
       if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-        console.error('[TauriBackendService] Health check failed:', error);
+        console.error('[TauriBackendService] Bundled backend health check failed:', error);
       }
       this.setStatus('unhealthy');
       return false;
