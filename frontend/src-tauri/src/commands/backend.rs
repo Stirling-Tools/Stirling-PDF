@@ -5,14 +5,29 @@ use std::path::PathBuf;
 use crate::utils::add_log;
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
-// Store backend process handle globally
+// Store backend process handle and port globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
+static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
 
 // Helper function to reset starting flag
 fn reset_starting_flag() {
     let mut starting_guard = BACKEND_STARTING.lock().unwrap();
     *starting_guard = false;
+}
+
+// Extract port number from "Stirling-PDF running on port: PORT" log line
+fn extract_port_from_running_log(log_line: &str) -> Option<u16> {
+    // Look for pattern: "running on port: PORT"
+    if let Some(start) = log_line.find("running on port: ") {
+        let after_prefix = &log_line[start + 17..]; // Skip "running on port: "
+        // Take digits until whitespace or end of line
+        let port_str: String = after_prefix.chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        return port_str.parse::<u16>().ok();
+    }
+    None
 }
 
 // Check if backend is already running or starting
@@ -151,8 +166,9 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
+        "-Dserver.port=0",  // Let OS assign an available port
         "-jar",
-        jar_path.to_str().unwrap()
+        jar_path.to_str().unwrap(),
     ];
     
     // Log the equivalent command for external testing
@@ -239,16 +255,21 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📤 Backend: {}", output_str));
                     
-                    // Look for startup indicators
-                    if output_str.contains("Started SPDFApplication") || 
-                       output_str.contains("Navigate to "){
+                    // Look for actual runtime port from web server initialization
+                    // Format: "Stirling-PDF running on port: PORT"
+                    if output_str.contains("running on port:") {
                         _startup_detected = true;
-                        add_log(format!("🎉 Backend startup detected: {}", output_str));
+                        if let Some(port) = extract_port_from_running_log(&output_str) {
+                            let mut port_guard = BACKEND_PORT.lock().unwrap();
+                            *port_guard = Some(port);
+                            add_log(format!("🎉 Backend started on port: {}", port));
+                            add_log(format!("🔌 Navigate to: http://localhost:{}/", port));
+                        }
                     }
-                    
-                    // Look for port binding
-                    if output_str.contains("8080") {
-                        add_log(format!("🔌 Port 8080 related output: {}", output_str));
+
+                    if output_str.contains("Started SPDFApplication") {
+                        _startup_detected = true;
+                        add_log(format!("🎉 Backend startup completed: {}", output_str));
                     }
                 }
                 tauri_plugin_shell::process::CommandEvent::Stderr(output) => {
@@ -384,6 +405,13 @@ pub async fn start_backend(
     add_log("✅ Backend startup sequence completed, starting flag cleared".to_string());
     
     Ok("Backend startup initiated successfully with bundled JRE".to_string())
+}
+
+// Get the dynamically assigned backend port
+#[tauri::command]
+pub fn get_backend_port() -> Option<u16> {
+    let port_guard = BACKEND_PORT.lock().unwrap();
+    *port_guard
 }
 
 // Cleanup function to stop backend on app exit

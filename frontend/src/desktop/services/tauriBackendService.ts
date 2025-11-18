@@ -6,6 +6,7 @@ export class TauriBackendService {
   private static instance: TauriBackendService;
   private backendStarted = false;
   private backendStatus: BackendStatus = 'stopped';
+  private backendPort: number | null = null;
   private healthMonitor: Promise<void> | null = null;
   private startPromise: Promise<void> | null = null;
   private statusListeners = new Set<(status: BackendStatus) => void>();
@@ -27,6 +28,14 @@ export class TauriBackendService {
 
   isBackendHealthy(): boolean {
     return this.backendStatus === 'healthy';
+  }
+
+  getBackendPort(): number | null {
+    return this.backendPort;
+  }
+
+  getBackendUrl(): string | null {
+    return this.backendPort ? `http://localhost:${this.backendPort}` : null;
   }
 
   subscribeToStatus(listener: (status: BackendStatus) => void): () => void {
@@ -71,10 +80,14 @@ export class TauriBackendService {
     this.setStatus('starting');
 
     this.startPromise = invoke('start_backend', { backendUrl })
-      .then((result) => {
+      .then(async (result) => {
         console.log('Backend started:', result);
         this.backendStarted = true;
         this.setStatus('starting');
+
+        // Poll for the dynamically assigned port
+        await this.waitForPort();
+
         this.beginHealthMonitoring();
       })
       .catch((error) => {
@@ -87,6 +100,24 @@ export class TauriBackendService {
       });
 
     return this.startPromise;
+  }
+
+  private async waitForPort(maxAttempts = 30): Promise<void> {
+    console.log('[TauriBackendService] Waiting for backend port assignment...');
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const port = await invoke<number | null>('get_backend_port');
+        if (port) {
+          this.backendPort = port;
+          console.log(`[TauriBackendService] Backend port detected: ${port}`);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to get backend port:', error);
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    throw new Error('Failed to detect backend port after 15 seconds');
   }
 
   private beginHealthMonitoring() {
@@ -137,6 +168,7 @@ export class TauriBackendService {
   reset(): void {
     console.log('[TauriBackendService] Resetting backend state');
     this.backendStarted = false;
+    this.backendPort = null;
     this.setStatus('stopped');
     this.healthMonitor = null;
     this.startPromise = null;

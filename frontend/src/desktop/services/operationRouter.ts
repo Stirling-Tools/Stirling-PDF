@@ -1,4 +1,5 @@
 import { connectionModeService } from '@app/services/connectionModeService';
+import { tauriBackendService } from '@app/services/tauriBackendService';
 
 export type ExecutionTarget = 'local' | 'remote';
 
@@ -41,22 +42,22 @@ export class OperationRouter {
    * @returns Base URL for API calls
    */
   async getBaseUrl(_operation?: string): Promise<string> {
-    // In DEV mode, return empty string so URLs stay relative and go through Vite proxy
-    if (import.meta.env.DEV) {
-      return '';
-    }
-
     const target = await this.getExecutionTarget(_operation);
 
     if (target === 'local') {
-      return 'http://localhost:8080';
+      // Use dynamically assigned port from backend service
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) {
+        throw new Error('Backend URL not available - backend may still be starting');
+      }
+      return backendUrl;
     }
 
     // Remote: get from server config
     const serverConfig = await connectionModeService.getServerConfig();
     if (!serverConfig) {
-      console.warn('No server config found, falling back to local');
-      return 'http://localhost:8080';
+      console.warn('No server config found');
+      throw new Error('Server configuration not found');
     }
 
     return serverConfig.url;

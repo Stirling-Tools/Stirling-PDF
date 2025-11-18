@@ -13,6 +13,7 @@ use commands::{
     clear_user_info,
     is_default_pdf_handler,
     get_auth_token,
+    get_backend_port,
     get_connection_config,
     get_opened_files,
     get_user_info,
@@ -75,6 +76,7 @@ pub fn run() {
     })
     .invoke_handler(tauri::generate_handler![
       start_backend,
+      get_backend_port,
       check_backend_health,
       get_opened_files,
       clear_opened_files,
