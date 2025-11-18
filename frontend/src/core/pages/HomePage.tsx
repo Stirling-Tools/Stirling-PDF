@@ -19,7 +19,6 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
-import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
 
 import "@app/pages/HomePage.css";
@@ -166,7 +165,6 @@ export default function HomePage() {
         opened={showAnalyticsModal}
         onClose={() => setShowAnalyticsModal(false)}
       />
-      <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
