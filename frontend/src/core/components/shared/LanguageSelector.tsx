@@ -272,8 +272,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
           <ScrollArea h={190} type="scroll">
             <div className={styles.languageGrid}>
               {languageOptions.map((option, index) => {
-                // Enable languages with >90% translation completion
-                const enabledLanguages = ['en-GB', 'ar-AR', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'pt-BR', 'ru-RU', 'zh-CN'];
+                const enabledLanguages = [
+                  'en-GB', 'zh-CN', 'zh-TW', 'ar-AR', 'fa-IR', 'tr-TR', 'uk-UA', 'zh-BO', 'sl-SI',
+                  'ru-RU', 'ja-JP', 'ko-KR', 'hu-HU', 'ga-IE', 'bg-BG', 'es-ES', 'hi-IN', 'hr-HR',
+                  'el-GR', 'ml-ML', 'pt-BR', 'pl-PL', 'pt-PT', 'sk-SK', 'sr-LATN-RS', 'no-NB',
+                  'th-TH', 'vi-VN', 'az-AZ', 'eu-ES', 'de-DE', 'sv-SE', 'it-IT', 'ca-CA', 'id-ID',
+                  'ro-RO', 'fr-FR', 'nl-NL', 'da-DK', 'cs-CZ'
+                ];
                 const isDisabled = !enabledLanguages.includes(option.value);
 
                 return (

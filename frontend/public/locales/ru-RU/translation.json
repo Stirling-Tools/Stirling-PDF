@@ -1,43 +1,50 @@
 {
   "toolPanel": {
     "modePrompt": {
-      "title": "Choose how you browse tools",
-      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
-      "sidebarTitle": "Sidebar mode",
-      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
-      "recommended": "Recommended",
-      "chooseSidebar": "Use sidebar mode",
-      "fullscreenTitle": "Fullscreen mode - (legacy)",
-      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
-      "chooseFullscreen": "Use fullscreen mode",
-      "dismiss": "Maybe later"
+      "title": "Выберите способ просмотра инструментов",
+      "description": "Просмотрите оба варианта и решите, как исследовать инструменты Stirling PDF.",
+      "sidebarTitle": "Режим боковой панели",
+      "sidebarDescription": "Держите инструменты рядом с рабочей областью для быстрого переключения.",
+      "recommended": "Рекомендуется",
+      "chooseSidebar": "Использовать режим боковой панели",
+      "fullscreenTitle": "Полноэкранный режим — (устаревший)",
+      "fullscreenDescription": "Просматривайте все инструменты в каталоге, который покрывает рабочую область, пока вы не выберете один.",
+      "chooseFullscreen": "Использовать полноэкранный режим",
+      "dismiss": "Позже"
     },
     "fullscreen": {
-      "showDetails": "Show Details",
-      "comingSoon": "Coming soon:",
-      "favorite": "Add to favourites",
-      "favorites": "Favourites",
-      "heading": "All tools (fullscreen view)",
-      "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
-      "recommended": "Recommended",
-      "unfavorite": "Remove from favourites"
+      "showDetails": "Показать сведения",
+      "comingSoon": "Скоро:",
+      "favorite": "Добавить в избранное",
+      "favorites": "Избранное",
+      "heading": "Все инструменты (полноэкранный вид)",
+      "noResults": "Попробуйте изменить поиск или включить описания, чтобы найти нужное.",
+      "recommended": "Рекомендуется",
+      "unfavorite": "Удалить из избранного"
     },
-    "placeholder": "Choose a tool to get started",
+    "placeholder": "Выберите инструмент, чтобы начать",
     "toggle": {
-      "fullscreen": "Switch to fullscreen mode",
-      "sidebar": "Switch to sidebar mode"
+      "fullscreen": "Переключиться в полноэкранный режим",
+      "sidebar": "Переключиться в режим боковой панели"
     }
   },
   "unsavedChanges": "У вас есть несохранённые изменения в вашем PDF. Что вы хотите сделать?",
-  "areYouSure": "Are you sure you want to leave?",
+  "areYouSure": "Вы уверены, что хотите уйти?",
   "unsavedChangesTitle": "Несохранённые изменения",
   "keepWorking": "Продолжить работу",
   "discardChanges": "Отменить изменения",
   "applyAndContinue": "Применить и продолжить",
   "exportAndContinue": "Экспорт и продолжить",
+  "zipWarning": {
+    "title": "Большой ZIP-файл",
+    "message": "Этот ZIP содержит {{count}} файлов. Все равно извлечь?",
+    "cancel": "Отмена",
+    "confirm": "Извлечь"
+  },
   "language": {
     "direction": "ltr"
   },
+  "cancel": "Отмена",
   "addPageNumbers": {
     "fontSize": "Размер шрифта",
     "fontName": "Название шрифта",
@@ -55,25 +62,25 @@
     "numberPagesDesc": "Какие страницы нумеровать, по умолчанию 'все', также принимает 1-5 или 2,5,9 и т.д.",
     "customNumberDesc": "По умолчанию {n}, также принимает 'Страница {n} из {total}', 'Текст-{n}', '{filename}-{n}'",
     "submit": "Добавить номера страниц",
-    "configuration": "Configuration",
-    "customize": "Customize Appearance",
-    "pagesAndStarting": "Pages & Starting Number",
-    "positionAndPages": "Position & Pages",
+    "configuration": "Конфигурация",
+    "customize": "Настроить внешний вид",
+    "pagesAndStarting": "Страницы и начальный номер",
+    "positionAndPages": "Положение и страницы",
     "error": {
-      "failed": "Add page numbers operation failed"
+      "failed": "Не удалось добавить номера страниц"
     },
     "results": {
-      "title": "Page Number Results"
+      "title": "Результаты нумерации страниц"
     },
-    "preview": "Position Selection",
-    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
+    "preview": "Выбор положения",
+    "previewDisclaimer": "Предпросмотр приблизительный. Итог может отличаться из‑за метрик шрифтов PDF."
   },
   "pageSelectionPrompt": "Выбор страниц (Введите список номеров страниц через запятую 1,5,6 или функции типа 2n+1):",
-  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
-  "marginTooltip": "Distance between the page number and the edge of the page.",
-  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
-  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
-  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
+  "startingNumberTooltip": "Первый отображаемый номер. Последующие страницы увеличиваются от этого номера.",
+  "marginTooltip": "Расстояние между номером страницы и краем страницы.",
+  "fontSizeTooltip": "Размер текста номера страницы в пунктах. Большие числа — больше текст.",
+  "fontTypeTooltip": "Семейство шрифтов для номеров страниц. Выберите в соответствии со стилем документа.",
+  "customTextTooltip": "Необязательный пользовательский формат номеров. Используйте {n} как заполнитель числа. Пример: «Страница {n}» покажет «Страница 1», «Страница 2» и т. д.",
   "pdfPrompt": "Выберите PDF-файл(ы)",
   "multiPdfPrompt": "Выберите PDF-файлы (2+)",
   "multiPdfDropPrompt": "Выберите (или перетащите) все необходимые PDF-файлы",
@@ -94,18 +101,20 @@
   "save": "Сохранить",
   "saveToBrowser": "Сохранить в браузере",
   "download": "Скачать",
-  "pin": "Pin File (keep active after tool run)",
-  "unpin": "Unpin File (replace after tool run)",
+  "pin": "Закрепить файл (оставить активным после выполнения инструмента)",
+  "unpin": "Открепить файл (заменить после выполнения инструмента)",
   "undoOperationTooltip": "Нажмите, чтобы отменить последнюю операцию и восстановить исходные файлы",
   "undo": "Отменить",
+  "back": "Назад",
+  "nothingToUndo": "Отменять нечего",
   "moreOptions": "Больше параметров",
   "editYourNewFiles": "Отредактируйте ваши новые файлы",
   "close": "Закрыть",
-  "openInViewer": "Open in Viewer",
-  "confirmClose": "Confirm Close",
-  "confirmCloseMessage": "Are you sure you want to close this file?",
-  "confirmCloseCancel": "Cancel",
-  "confirmCloseConfirm": "Close File",
+  "openInViewer": "Открыть в просмотрщике",
+  "confirmClose": "Подтвердить закрытие",
+  "confirmCloseMessage": "Вы уверены, что хотите закрыть этот файл?",
+  "confirmCloseCancel": "Отмена",
+  "confirmCloseConfirm": "Закрыть файл",
   "fileSelected": "Выбрано: {{filename}}",
   "chooseFile": "Выбрать файл",
   "filesSelected": "файлов выбрано",
@@ -116,8 +125,8 @@
     "addFiles": "Добавить файлы",
     "selectFromWorkbench": "Выберите файлы из рабочей области или ",
     "selectMultipleFromWorkbench": "Выберите не менее {{count}} файлов из рабочей области или ",
-    "created": "Created",
-    "size": "File Size"
+    "created": "Создан",
+    "size": "Размер файла"
   },
   "noFavourites": "Нет избранного",
   "downloadComplete": "Загрузка завершена",
@@ -250,7 +259,7 @@
     "title": "Хотите улучшить Stirling PDF?",
     "paragraph1": "В Stirling PDF есть опциональная аналитика для улучшения продукта. Мы не отслеживаем личную информацию или содержимое файлов.",
     "paragraph2": "Пожалуйста, рассмотрите возможность включения аналитики, чтобы помочь развитию Stirling-PDF и позволить нам лучше понимать наших пользователей.",
-    "learnMore": "Learn more",
+    "learnMore": "Подробнее",
     "enable": "Включить аналитику",
     "disable": "Отключить аналитику",
     "settings": "Вы можете изменить настройки аналитики в файле config/settings.yml"
@@ -296,52 +305,52 @@
       "help": "Включите для сохранения ранее использованных данных для будущих запусков"
     },
     "general": {
-      "title": "General",
-      "description": "Configure general application preferences.",
-      "account": "Account",
-      "accountDescription": "Manage your account settings",
-      "user": "User",
-      "signedInAs": "Signed in as",
-      "logout": "Log out",
+      "title": "Общие",
+      "description": "Настройте общие параметры приложения.",
+      "account": "Учетная запись",
+      "accountDescription": "Управление настройками учетной записи",
+      "user": "Пользователь",
+      "signedInAs": "Вы вошли как",
+      "logout": "Выйти",
       "enableFeatures": {
-        "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organization.",
-        "action": "Configure",
-        "and": "and",
-        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation",
-        "dismiss": "Dismiss"
+        "title": "Для системных администраторов",
+        "intro": "Включите аутентификацию пользователей, управление командами и функции рабочей области для вашей организации.",
+        "action": "Настроить",
+        "and": "и",
+        "benefit": "Включает роли пользователей, командную работу, админ‑контроль и корпоративные функции.",
+        "learnMore": "Подробнее в документации",
+        "dismiss": "Скрыть"
       },
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "defaultToolPickerMode": "Default tool picker mode",
-      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "autoUnzip": "Автораспаковка ответов API",
+      "autoUnzipDescription": "Автоматически извлекать файлы из ZIP‑ответов",
+      "autoUnzipTooltip": "Автоматически извлекать ZIP‑файлы, возвращаемые операциями API. Отключите, чтобы сохранять ZIP‑файлы как есть. Не влияет на автоматизации.",
+      "autoUnzipFileLimit": "Лимит автораспаковки файлов",
+      "autoUnzipFileLimitDescription": "Максимальное число файлов для извлечения из ZIP",
+      "autoUnzipFileLimitTooltip": "Распаковывать только если ZIP содержит не больше указанного количества файлов. Увеличьте для извлечения больших ZIP.",
+      "defaultToolPickerMode": "Режим выбора инструмента по умолчанию",
+      "defaultToolPickerModeDescription": "Выберите, должен ли выбор инструментов по умолчанию открываться в полноэкранном режиме или в боковой панели",
       "mode": {
-        "fullscreen": "Fullscreen",
-        "sidebar": "Sidebar"
+        "fullscreen": "Полноэкранный",
+        "sidebar": "Боковая панель"
       }
     },
     "hotkeys": {
-      "title": "Keyboard Shortcuts",
-      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "title": "Горячие клавиши",
+      "description": "Наведите на инструмент, чтобы увидеть его сочетание, или настройте ниже. Нажмите «Изменить сочетание» и введите новую комбинацию. Нажмите Esc для отмены.",
       "errorModifier": {
-        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
-        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+        "mac": "Добавьте ⌘ (Command), ⌥ (Option) или другой модификатор в сочетание.",
+        "windows": "Добавьте Ctrl, Alt или другой модификатор в сочетание."
       },
-      "errorConflict": "Shortcut already used by {{tool}}.",
-      "none": "Not assigned",
-      "customBadge": "Custom",
-      "defaultLabel": "Default: {{shortcut}}",
-      "capturing": "Press keys… (Esc to cancel)",
-      "change": "Change shortcut",
-      "reset": "Reset",
-      "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set",
-      "searchPlaceholder": "Search tools..."
+      "errorConflict": "Сочетание уже используется инструментом {{tool}}.",
+      "none": "Не назначено",
+      "customBadge": "Пользовательское",
+      "defaultLabel": "По умолчанию: {{shortcut}}",
+      "capturing": "Нажмите клавиши… (Esc — отмена)",
+      "change": "Изменить сочетание",
+      "reset": "Сброс",
+      "shortcut": "Сочетание",
+      "noShortcut": "Сочетание не задано",
+      "searchPlaceholder": "Поиск инструментов..."
     }
   },
   "changeCreds": {
@@ -413,8 +422,8 @@
     "top20": "Топ 20",
     "all": "Все",
     "refresh": "Обновить",
-    "dataTypeLabel": "Data Type:",
-    "dataTypeAll": "All",
+    "dataTypeLabel": "Тип данных:",
+    "dataTypeAll": "Все",
     "dataTypeApi": "API",
     "dataTypeUi": "UI",
     "totalEndpoints": "Всего конечных точек",
@@ -431,9 +440,7 @@
     "top": "Топ",
     "numberOfVisits": "Количество посещений",
     "visitsTooltip": "Посещения: {0} ({1}% от общего числа)",
-    "retry": "Повторить",
-    "includeHomepage": "Включить главную страницу ('/')",
-    "includeLoginPage": "Включить страницу входа ('/login')"
+    "retry": "Повторить"
   },
   "database": {
     "title": "Импорт/экспорт базы данных",
@@ -475,14 +482,14 @@
     "globalPopularity": "Популярности",
     "sortBy": "Сортировать по:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
+      "brandAlt": "Логотип Stirling PDF",
+      "openFiles": "Открыть файлы",
+      "swipeHint": "Смахните влево или вправо для переключения видов",
+      "tools": "Инструменты",
+      "toolsSlide": "Панель выбора инструментов",
+      "viewSwitcher": "Переключить вид рабочей области",
+      "workbenchSlide": "Панель рабочей области",
+      "workspace": "Рабочая область"
     },
     "multiTool": {
       "tags": "несколько,инструменты",
@@ -561,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "обнаружить,разделить,фото",
-      "title": "Обнаружить и разделить отсканированные фото",
+      "title": "Найти и разбить скан-фото",
       "desc": "Обнаружение и разбиение отсканированных фотографий на отдельные страницы"
     },
     "sign": {
@@ -626,7 +633,7 @@
     },
     "autoRename": {
       "tags": "автообнаружение,заголовок,организация,переименование",
-      "title": "Автопереименование PDF",
+      "title": "Автопереим. PDF",
       "desc": "Автоматически переименовывает PDF по обнаруженному заголовку"
     },
     "adjustContrast": {
@@ -736,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "авто,разделить,размер",
-      "title": "Авторазделение по размеру/количеству",
+      "title": "Авторазбить по размеру/стр.",
       "desc": "Разделяет один PDF на несколько документов на основе размера, количества страниц или количества документов"
     },
     "replaceColor": {
@@ -775,13 +782,8 @@
       "desc": "Создавайте многошаговые процессы, связывая PDF-действия. Идеально для повторяющихся задач."
     },
     "overlay-pdfs": {
-      "desc": "Overlay one PDF on top of another",
-      "title": "Overlay PDFs"
-    },
-    "overlayPdfs": {
-      "tags": "оверлей,объединить,сложить",
-      "title": "Наложить PDF",
-      "desc": "Наложение одного PDF поверх другого"
+      "desc": "Наложить один PDF поверх другого",
+      "title": "Наложение PDF"
     }
   },
   "landing": {
@@ -822,14 +824,14 @@
     "tags": "объединение,операции со страницами,серверная часть",
     "title": "Объединить",
     "removeDigitalSignature": {
-      "label": "Remove digital signature in the merged file?",
+      "label": "Удалить цифровую подпись в объединенном файле?",
       "tooltip": {
         "title": "Удалить цифровую подпись",
         "description": "Цифровые подписи становятся недействительными при объединении. Отметьте, чтобы удалить их из итогового PDF."
       }
     },
     "generateTableOfContents": {
-      "label": "Generate table of contents in the merged file?",
+      "label": "Сгенерировать оглавление в объединенном файле?",
       "tooltip": {
         "title": "Сгенерировать оглавление",
         "description": "Автоматически создаёт кликабельное оглавление в объединённом PDF на основе исходных имён файлов и номеров страниц."
@@ -973,48 +975,49 @@
         "bullet3": "Разрешить дубликаты: обрабатывать повторяющиеся названия закладок"
       },
       "byDocCount": {
-        "bullet1": "Enter the number of output files you want",
-        "bullet2": "Pages are distributed as evenly as possible",
-        "bullet3": "Useful when you need a specific number of files",
-        "text": "Create a specific number of output files by evenly distributing pages across them.",
-        "title": "Split by Document Count"
+        "bullet1": "Укажите количество выходных файлов",
+        "bullet2": "Страницы распределяются максимально равномерно",
+        "bullet3": "Полезно, когда нужен определенный набор файлов",
+        "text": "Создайте заданное число выходных файлов, равномерно распределив по ним страницы.",
+        "title": "Разделить по количеству документов"
       },
       "byPageCount": {
-        "bullet1": "Enter the number of pages per output file",
-        "bullet2": "Last file may have fewer pages if not evenly divisible",
-        "bullet3": "Useful for batch processing workflows",
-        "text": "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
-        "title": "Split by Page Count"
+        "bullet1": "Укажите число страниц на выходной файл",
+        "bullet2": "Последний файл может содержать меньше страниц, если деление нецелое",
+        "bullet3": "Полезно для пакетной обработки",
+        "text": "Создайте несколько PDF с фиксированным числом страниц в каждом. Идеально для равномерных блоков документа.",
+        "title": "Разделить по количеству страниц"
       },
       "byPageDivider": {
-        "bullet1": "Print divider sheets from the download link",
-        "bullet2": "Insert divider sheets between your documents",
-        "bullet3": "Scan all documents together as one PDF",
-        "bullet4": "Upload - divider pages are automatically detected and removed",
-        "bullet5": "Enable Duplex Mode if scanning both sides of divider sheets",
-        "text": "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
-        "title": "Split by Page Divider"
+        "bullet1": "Распечатайте листы‑разделители по ссылке загрузки",
+        "bullet2": "Вставьте листы‑разделители между документами",
+        "bullet3": "Отсканируйте все документы вместе в один PDF",
+        "bullet4": "Загрузка — разделители страниц автоматически распознаются и удаляются",
+        "bullet5": "Включите дуплексный режим, если сканируете обе стороны разделителей",
+        "text": "Автоматически разделяйте отсканированные документы с помощью физических листов‑разделителей с QR‑кодами. Отлично для обработки нескольких документов, отсканированных вместе.",
+        "title": "Разделить по разделителям страниц"
       }
     },
     "methodSelection": {
       "tooltip": {
-        "bullet1": "Click on a method card to select it",
-        "bullet2": "Hover over each card to see a quick description",
-        "bullet3": "The settings step will appear after you select a method",
-        "bullet4": "You can change methods at any time before processing",
+        "bullet1": "Нажмите на карточку метода, чтобы выбрать его",
+        "bullet2": "Наведите на каждую карточку, чтобы увидеть краткое описание",
+        "bullet3": "Шаг настроек появится после выбора метода",
+        "bullet4": "Вы можете менять метод в любое время до обработки",
         "header": {
-          "text": "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
-          "title": "Split Method Selection"
+          "text": "Выберите способ разделения PDF. Каждый метод оптимизирован для разных сценариев и типов документов.",
+          "title": "Выбор метода разделения"
         },
-        "title": "Choose Your Split Method"
+        "title": "Выберите метод разделения"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "Выберите метод разделения",
+    "resultsTitle": "Результаты разделения"
   },
   "rotate": {
     "title": "Повернуть PDF",
     "submit": "Повернуть",
-    "selectRotation": "Select Rotation Angle (Clockwise)",
+    "selectRotation": "Выберите угол поворота (по часовой стрелке)",
     "error": {
       "failed": "Произошла ошибка при повороте PDF."
     },
@@ -1103,7 +1106,11 @@
     "markdown": "Markdown",
     "textRtf": "Текст/RTF",
     "grayscale": "Оттенки серого",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "Произошла ошибка при конвертации файла.",
+    "cbzOptions": "Параметры CBZ → PDF",
+    "optimizeForEbook": "Оптимизировать PDF для ридеров (использует Ghostscript)",
+    "cbzOutputOptions": "Параметры PDF → CBZ",
+    "cbzDpi": "DPI для отрисовки изображений"
   },
   "imageToPdf": {
     "tags": "конвертация,изображение,jpg,картинка,фото"
@@ -1143,17 +1150,17 @@
       "10": "Объединение четных-нечетных",
       "11": "Дублировать все страницы",
       "desc": {
-        "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
-        "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
-        "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
-        "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
-        "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
-        "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
-        "REMOVE_FIRST": "Remove the first page from the document.",
-        "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document.",
-        "REMOVE_LAST": "Remove the last page from the document.",
-        "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
-        "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+        "BOOKLET_SORT": "Упорядочить страницы для печати буклета (последняя, первая, вторая, предпоследняя, …).",
+        "CUSTOM": "Использовать пользовательскую последовательность номеров или выражений для нового порядка.",
+        "DUPLEX_SORT": "Чередовать лицевые, затем оборотные, как если бы дуплекс‑сканер сканировал все лицевые, затем все оборотные (1, n, 2, n-1, …).",
+        "DUPLICATE": "Дублировать каждую страницу согласно количеству в пользовательском порядке (например, 4 — каждая страница ×4).",
+        "ODD_EVEN_MERGE": "Объединить два PDF, чередуя страницы: нечетные из первого, четные из второго.",
+        "ODD_EVEN_SPLIT": "Разделить документ на два файла: все нечетные страницы и все четные страницы.",
+        "REMOVE_FIRST": "Удалить первую страницу документа.",
+        "REMOVE_FIRST_AND_LAST": "Удалить первую и последнюю страницы документа.",
+        "REMOVE_LAST": "Удалить последнюю страницу документа.",
+        "REVERSE_ORDER": "Перевернуть порядок страниц так, чтобы последняя стала первой и т. д.",
+        "SIDE_STITCH_BOOKLET_SORT": "Упорядочить страницы для брошюровки со стороны (оптимизировано для бокового переплета)."
       }
     },
     "desc": {
@@ -1221,18 +1228,18 @@
       "spacing": {
         "horizontal": "Горизонтальный интервал",
         "vertical": "Вертикальный интервал",
-        "height": "Height Spacing",
-        "width": "Width Spacing"
+        "height": "Интервал по высоте",
+        "width": "Интервал по ширине"
       },
       "convertToImage": "Превратить страницы PDF в изображения"
     },
     "alphabet": {
-      "roman": "Roman/Latin",
-      "arabic": "Arabic",
-      "japanese": "Japanese",
-      "korean": "Korean",
-      "chinese": "Chinese",
-      "thai": "Thai"
+      "roman": "Латиница",
+      "arabic": "Арабский",
+      "japanese": "Японский",
+      "korean": "Корейский",
+      "chinese": "Китайский",
+      "thai": "Тайский"
     },
     "steps": {
       "type": "Тип водяного знака",
@@ -1367,8 +1374,8 @@
       }
     },
     "type": {
-      "1": "Text",
-      "2": "Image"
+      "1": "Текст",
+      "2": "Изображение"
     }
   },
   "permissions": {
@@ -1443,24 +1450,24 @@
     "submit": "Удалить"
   },
   "extractPages": {
-    "title": "Extract Pages",
+    "title": "Извлечь страницы",
     "pageNumbers": {
-      "label": "Pages to Extract",
-      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+      "label": "Страницы для извлечения",
+      "placeholder": "например, 1,3,5-8 или odd & 1-10"
     },
     "settings": {
-      "title": "Settings"
+      "title": "Настройки"
     },
     "tooltip": {
-      "description": "Extracts the selected pages into a new PDF, preserving order."
+      "description": "Извлекает выбранные страницы в новый PDF, сохраняя порядок."
     },
     "error": {
-      "failed": "Failed to extract pages"
+      "failed": "Не удалось извлечь страницы"
     },
     "results": {
-      "title": "Pages Extracted"
+      "title": "Страницы извлечены"
     },
-    "submit": "Extract Pages"
+    "submit": "Извлечь страницы"
   },
   "pageSelection": {
     "tooltip": {
@@ -1504,41 +1511,41 @@
         "title": "Примеры"
       },
       "complex": {
-        "bullet1": "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
-        "bullet2": "<strong>10-,2n-1</strong> → from page 10 to end + odd pages",
-        "description": "Mix different types.",
-        "title": "Complex Combinations"
+        "bullet1": "<strong>1,3-5,8,2n</strong> → страницы 1, 3–5, 8, плюс четные",
+        "bullet2": "<strong>10-,2n-1</strong> → с 10‑й страницы до конца + нечетные страницы",
+        "description": "Смешивайте разные типы.",
+        "title": "Сложные комбинации"
       },
-      "description": "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword.",
+      "description": "Выберите, какие страницы использовать. Поддерживаются отдельные номера, диапазоны, формулы и ключевое слово all.",
       "individual": {
-        "bullet1": "<strong>1,3,5</strong> → selects pages 1, 3, 5",
-        "bullet2": "<strong>2,7,12</strong> → selects pages 2, 7, 12",
-        "description": "Enter numbers separated by commas.",
-        "title": "Individual Pages"
+        "bullet1": "<strong>1,3,5</strong> → выбирает страницы 1, 3, 5",
+        "bullet2": "<strong>2,7,12</strong> → выбирает страницы 2, 7, 12",
+        "description": "Введите числа, разделенные запятыми.",
+        "title": "Отдельные страницы"
       },
       "mathematical": {
-        "bullet1": "<strong>2n</strong> → all even pages (2, 4, 6…)",
-        "bullet2": "<strong>2n-1</strong> → all odd pages (1, 3, 5…)",
-        "bullet3": "<strong>3n</strong> → every 3rd page (3, 6, 9…)",
-        "bullet4": "<strong>4n-1</strong> → pages 3, 7, 11, 15…",
-        "description": "Use n in formulas for patterns.",
-        "title": "Mathematical Functions"
+        "bullet1": "<strong>2n</strong> → все четные страницы (2, 4, 6…)",
+        "bullet2": "<strong>2n-1</strong> → все нечетные страницы (1, 3, 5…)",
+        "bullet3": "<strong>3n</strong> → каждая 3‑я страница (3, 6, 9…)",
+        "bullet4": "<strong>4n-1</strong> → страницы 3, 7, 11, 15…",
+        "description": "Используйте n в формулах для шаблонов.",
+        "title": "Математические функции"
       },
       "ranges": {
-        "bullet1": "<strong>3-6</strong> → selects pages 3–6",
-        "bullet2": "<strong>10-15</strong> → selects pages 10–15",
-        "bullet3": "<strong>5-</strong> → selects pages 5 to end",
-        "description": "Use - for consecutive pages.",
-        "title": "Page Ranges"
+        "bullet1": "<strong>3-6</strong> → выбирает страницы 3–6",
+        "bullet2": "<strong>10-15</strong> → выбирает страницы 10–15",
+        "bullet3": "<strong>5-</strong> → выбирает страницы с 5‑й до конца",
+        "description": "Используйте - для последовательных страниц.",
+        "title": "Диапазоны страниц"
       },
       "special": {
-        "bullet1": "<strong>all</strong> → selects all pages",
-        "title": "Special Keywords"
+        "bullet1": "<strong>all</strong> → выбирает все страницы",
+        "title": "Специальные ключевые слова"
       }
     }
   },
   "bulkSelection": {
-    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
+    "syntaxError": "Есть ошибка синтаксиса. См. советы по выбору страниц.",
     "header": {
       "title": "Памятка по выбору страниц"
     },
@@ -1661,9 +1668,9 @@
     },
     "trapped": {
       "label": "Статус trapping",
-      "unknown": "Unknown",
-      "true": "True",
-      "false": "False"
+      "unknown": "Неизвестно",
+      "true": "Истина",
+      "false": "Ложь"
     },
     "advanced": {
       "title": "Дополнительные параметры"
@@ -1846,7 +1853,7 @@
       }
     },
     "error": {
-      "failed": "OCR operation failed"
+      "failed": "Операция OCR не выполнена"
     }
   },
   "extractImages": {
@@ -2010,15 +2017,15 @@
     },
     "instructions": {
       "title": "Как добавить подпись",
-      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
-      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "canvas": "После того как вы нарисуете подпись на холсте, закройте окно и щелкните в любом месте PDF, чтобы разместить подпись.",
+      "image": "После загрузки изображения подписи выше щелкните в любом месте PDF, чтобы разместить ее.",
+      "text": "После ввода вашего имени выше щелкните в любом месте PDF, чтобы поставить подпись."
     },
     "mode": {
-      "move": "Move Signature",
-      "place": "Place Signature"
+      "move": "Переместить подпись",
+      "place": "Разместить подпись"
     },
-    "updateAndPlace": "Update and Place",
+    "updateAndPlace": "Обновить и разместить",
     "activate": "Активировать размещение подписи",
     "deactivate": "Остановить размещение подписей",
     "results": {
@@ -2044,7 +2051,7 @@
       "stepTitle": "Параметры уплощения",
       "title": "Параметры уплощения",
       "flattenOnlyForms": {
-        "label": "Flatten only forms",
+        "label": "Сплющивать только формы",
         "desc": "Уплощать только поля форм, оставляя прочие интерактивные элементы"
       },
       "note": "Уплощение удаляет интерактивные элементы из PDF, делая их нередактируемыми."
@@ -2138,10 +2145,10 @@
     },
     "submit": "Удалить пустые",
     "error": {
-      "failed": "Failed to remove blank pages"
+      "failed": "Не удалось удалить пустые страницы"
     },
     "results": {
-      "title": "Removed Blank Pages"
+      "title": "Удалены пустые страницы"
     }
   },
   "removeAnnotations": {
@@ -2164,15 +2171,101 @@
     "tags": "различие,контраст,изменения,анализ",
     "title": "Сравнить",
     "header": "Сравнить PDF",
-    "highlightColor": {
-      "1": "Цвет выделения 1:",
-      "2": "Цвет выделения 2:"
+    "clearSelected": "Очистить выбранное",
+    "clear": {
+      "confirmTitle": "Очистить выбранные PDF?",
+      "confirmBody": "Это закроет текущее сравнение и вернет вас к Активным файлам.",
+      "confirm": "Очистить и вернуться"
     },
-    "document": {
-      "1": "Документ 1",
-      "2": "Документ 2"
+    "review": {
+      "title": "Результат сравнения",
+      "actionsHint": "Просмотрите сравнение, поменяйте роли документов или экспортируйте сводку.",
+      "switchOrder": "Поменять порядок",
+      "exportSummary": "Экспортировать сводку"
     },
-    "submit": "Сравнить",
+    "base": {
+      "label": "Исходный документ",
+      "placeholder": "Выберите исходный PDF"
+    },
+    "comparison": {
+      "label": "Измененный документ",
+      "placeholder": "Выберите измененный PDF"
+    },
+    "addFilesHint": "Добавьте PDF на шаге «Файлы», чтобы включить выбор.",
+    "noFiles": "Пока нет доступных PDF",
+    "pages": "Страницы",
+    "selection": {
+      "originalEditedTitle": "Выберите исходный и измененный PDF"
+    },
+    "original": {
+      "label": "Исходный PDF"
+    },
+    "edited": {
+      "label": "Измененный PDF"
+    },
+    "swap": {
+      "confirmTitle": "Выполнить сравнение заново?",
+      "confirmBody": "Инструмент будет запущен заново. Вы уверены, что хотите поменять местами Исходный и Измененный?",
+      "confirm": "Поменять местами и выполнить снова"
+    },
+    "cta": "Сравнить",
+    "loading": "Сравнение...",
+    "summary": {
+      "baseHeading": "Исходный документ",
+      "comparisonHeading": "Измененный документ",
+      "pageLabel": "Стр."
+    },
+    "rendering": {
+      "pageNotReadyTitle": "Страница еще не отрисована",
+      "pageNotReadyBody": "Некоторые страницы еще отрисовываются. Навигация станет точной, когда они будут готовы.",
+      "rendering": "отрисовка",
+      "inProgress": "Как минимум один из этих PDF очень большой, прокрутка будет не плавной до завершения отрисовки",
+      "pagesRendered": "страниц отрисовано",
+      "complete": "Отрисовка страниц завершена"
+    },
+    "dropdown": {
+      "deletionsLabel": "Удаления",
+      "additionsLabel": "Добавления",
+      "deletions": "Удаления ({{count}})",
+      "additions": "Добавления ({{count}})",
+      "searchPlaceholder": "Поиск изменений...",
+      "noResults": "Изменений не найдено"
+    },
+    "actions": {
+      "stackVertically": "Расположить вертикально",
+      "placeSideBySide": "Расположить рядом",
+      "zoomOut": "Уменьшить масштаб",
+      "zoomIn": "Увеличить масштаб",
+      "resetView": "Сбросить вид",
+      "unlinkScrollPan": "Развязать прокрутку и панорамирование",
+      "linkScrollPan": "Связать прокрутку и панорамирование",
+      "unlinkScroll": "Развязать прокрутку",
+      "linkScroll": "Связать прокрутку"
+    },
+    "toasts": {
+      "unlinkedTitle": "Включены независимые прокрутка и панорамирование",
+      "unlinkedBody": "Совет: стрелки Вверх/Вниз прокручивают обе панели; панорамирование перемещает только активную панель."
+    },
+    "error": {
+      "selectRequired": "Выберите исходный и измененный документ.",
+      "filesMissing": "Не удалось найти выбранные файлы. Выберите их заново.",
+      "generic": "Не удалось сравнить эти файлы."
+    },
+    "status": {
+      "extracting": "Извлечение текста...",
+      "processing": "Анализ различий...",
+      "complete": "Сравнение готово"
+    },
+    "longJob": {
+      "title": "Выполняется большое сравнение",
+      "body": "Эти PDF вместе превышают 2,000 страниц. Обработка может занять несколько минут."
+    },
+    "slowOperation": {
+      "title": "Все еще работаем…",
+      "body": "Это сравнение занимает больше времени, чем обычно. Вы можете продолжить или отменить.",
+      "cancel": "Отменить сравнение"
+    },
+    "newLine": "новая строка",
     "complex": {
       "message": "Один или оба предоставленных документа являются большими файлами, точность сравнения может быть снижена"
     },
@@ -2185,6 +2278,16 @@
       "text": {
         "message": "Выбранные PDF-файлы не содержат текстового содержимого. Пожалуйста, выберите PDF-файлы с текстом для сравнения."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "Документы кажутся сильно различными. Сравнение прекращено для экономии времени."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "Эти PDF сильно отличаются",
+      "body": "Пока обнаружено очень мало сходств. Вы можете остановить сравнение, если это несвязанные документы.",
+      "stopButton": "Остановить сравнение"
     }
   },
   "certSign": {
@@ -2245,11 +2348,11 @@
           "bullet4": "Можно добавить логотип"
         }
       },
-      "invisible": "Invisible",
+      "invisible": "Невидимая",
       "options": {
-        "title": "Signature Details"
+        "title": "Сведения о подписи"
       },
-      "visible": "Visible"
+      "visible": "Видимая"
     },
     "sign": {
       "submit": "Подписать PDF",
@@ -2311,21 +2414,21 @@
         }
       }
     },
-    "chooseCertificate": "Choose Certificate File",
-    "chooseJksFile": "Choose JKS File",
-    "chooseP12File": "Choose PKCS12 File",
-    "choosePfxFile": "Choose PFX File",
-    "choosePrivateKey": "Choose Private Key File",
-    "location": "Location",
-    "logoTitle": "Logo",
-    "name": "Name",
-    "noLogo": "No Logo",
-    "pageNumber": "Page Number",
-    "password": "Certificate Password",
-    "passwordOptional": "Leave empty if no password",
-    "reason": "Reason",
-    "serverCertMessage": "Using server certificate - no files or password required",
-    "showLogo": "Show Logo"
+    "chooseCertificate": "Выберите файл сертификата",
+    "chooseJksFile": "Выберите файл JKS",
+    "chooseP12File": "Выберите файл PKCS12",
+    "choosePfxFile": "Выберите файл PFX",
+    "choosePrivateKey": "Выберите файл закрытого ключа",
+    "location": "Местоположение",
+    "logoTitle": "Логотип",
+    "name": "Имя",
+    "noLogo": "Без логотипа",
+    "pageNumber": "Номер страницы",
+    "password": "Пароль сертификата",
+    "passwordOptional": "Оставьте пустым, если пароля нет",
+    "reason": "Причина",
+    "serverCertMessage": "Используется сертификат сервера — файлы и пароль не требуются",
+    "showLogo": "Показывать логотип"
   },
   "removeCertSign": {
     "tags": "аутентификация,PEM,P12,официальный,расшифровка",
@@ -2353,14 +2456,14 @@
     "addBorder": "Добавить границы",
     "submit": "Отправить",
     "desc": {
-      "2": "Place 2 pages side-by-side on a single sheet.",
-      "3": "Place 3 pages on a single sheet in a single row.",
-      "4": "Place 4 pages on a single sheet (2 × 2 grid).",
-      "9": "Place 9 pages on a single sheet (3 × 3 grid).",
-      "16": "Place 16 pages on a single sheet (4 × 4 grid)."
+      "2": "Разместить 2 страницы рядом на одном листе.",
+      "3": "Разместить 3 страницы в один ряд на одном листе.",
+      "4": "Разместить 4 страницы на одном листе (сетка 2 × 2).",
+      "9": "Разместить 9 страниц на одном листе (сетка 3 × 3).",
+      "16": "Разместить 16 страниц на одном листе (сетка 4 × 4)."
     },
     "error": {
-      "failed": "An error occurred while creating the multi-page layout."
+      "failed": "Произошла ошибка при создании многополосного макета."
     }
   },
   "bookletImposition": {
@@ -2548,20 +2651,20 @@
     "coordinates": {
       "title": "Положение и размер",
       "x": {
-        "label": "X Position",
-        "desc": "Left edge (points)"
+        "label": "Положение X",
+        "desc": "Левая граница (пункты)"
       },
       "y": {
-        "label": "Y Position",
-        "desc": "Bottom edge (points)"
+        "label": "Положение Y",
+        "desc": "Нижняя граница (пункты)"
       },
       "width": {
-        "label": "Width",
-        "desc": "Crop width (points)"
+        "label": "Ширина",
+        "desc": "Ширина обрезки (пункты)"
       },
       "height": {
-        "label": "Height",
-        "desc": "Crop height (points)"
+        "label": "Высота",
+        "desc": "Высота обрезки (пункты)"
       }
     },
     "error": {
@@ -2582,8 +2685,8 @@
       "title": "Результаты обрезки"
     },
     "automation": {
-      "info": "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
-      "reference": "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
+      "info": "Введите координаты обрезки в пунктах PDF. Начало (0,0) находится в левом нижнем углу. Эти значения будут применены ко всем PDF, обрабатываемым в этой автоматизации.",
+      "reference": "Справка: страница A4 — 595.28 × 841.89 пунктов (210 мм × 297 мм). 1 дюйм = 72 пункта."
     }
   },
   "autoSplitPDF": {
@@ -2665,7 +2768,14 @@
     "title": "Показать Javascript",
     "header": "Показать Javascript",
     "downloadJS": "Скачать Javascript",
-    "submit": "Показать"
+    "submit": "Показать",
+    "results": "Результат",
+    "processing": "Извлечение JavaScript...",
+    "done": "JavaScript извлечен",
+    "singleFileWarning": "Этот инструмент поддерживает только один файл за раз. Пожалуйста, выберите один файл.",
+    "view": {
+      "title": "Извлеченный JavaScript"
+    }
   },
   "redact": {
     "tags": "Редактирование,Скрытие,зачернение,чёрный,маркер,скрытый,ручной",
@@ -2794,15 +2904,15 @@
   "overlay-pdfs": {
     "tags": "Наложение",
     "header": "Наложение PDF-файлов",
-    "title": "Overlay PDFs",
-    "desc": "Overlay one PDF on top of another",
+    "title": "Наложение PDF",
+    "desc": "Наложить один PDF поверх другого",
     "baseFile": {
       "label": "Выберите базовый PDF-файл"
     },
     "overlayFiles": {
       "label": "Выберите накладываемые PDF-файлы",
-      "placeholder": "Choose PDF(s)...",
-      "addMore": "Add more PDFs..."
+      "placeholder": "Выберите PDF...",
+      "addMore": "Добавить еще PDF..."
     },
     "mode": {
       "label": "Выберите режим наложения",
@@ -2813,8 +2923,8 @@
     "counts": {
       "label": "Количество наложений (для режима фиксированного повторения)",
       "placeholder": "Введите количество через запятую (например, 2,3,1)",
-      "item": "Count for file",
-      "noFiles": "Add overlay files to configure counts"
+      "item": "Количество для файла",
+      "noFiles": "Добавьте файлы наложения, чтобы настроить количества"
     },
     "position": {
       "label": "Выберите позицию наложения",
@@ -2823,41 +2933,41 @@
     },
     "submit": "Отправить",
     "settings": {
-      "title": "Settings"
+      "title": "Настройки"
     },
     "results": {
-      "title": "Overlay Results"
+      "title": "Результаты наложения"
     },
     "tooltip": {
       "header": {
-        "title": "Overlay PDFs Overview"
+        "title": "Обзор наложения PDF"
       },
       "description": {
-        "title": "Description",
-        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+        "title": "Описание",
+        "text": "Объедините базовый PDF с одним или несколькими PDF наложения. Наложения можно применять постранично в разных режимах и размещать на переднем плане или фоне."
       },
       "mode": {
-        "title": "Overlay Mode",
-        "text": "Choose how to distribute overlay pages across the base PDF pages.",
-        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
-        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
-        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+        "title": "Режим наложения",
+        "text": "Выберите, как распределять страницы наложения по страницам базового PDF.",
+        "sequential": "Последовательное наложение: использовать страницы из первого PDF наложения до конца, затем перейти к следующему.",
+        "interleaved": "Чередующееся наложение: брать по одной странице из каждого наложения по очереди.",
+        "fixedRepeat": "Фиксированное повторение: брать заданное число страниц из каждого наложения перед переходом к следующему. Используйте «Количества», чтобы задать числа."
       },
       "position": {
-        "title": "Overlay Position",
-        "text": "Foreground places the overlay on top of the page. Background places it behind."
+        "title": "Положение наложения",
+        "text": "Передний план размещает наложение поверх страницы. Фон — позади."
       },
       "overlayFiles": {
-        "title": "Overlay Files",
-        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+        "title": "Файлы наложения",
+        "text": "Выберите один или несколько PDF для наложения на базу. Порядок файлов влияет на применение страниц в режимах «Последовательное» и «Фиксированное повторение»."
       },
       "counts": {
-        "title": "Counts (Fixed Repeat only)",
-        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+        "title": "Количества (только для фиксированного повторения)",
+        "text": "Укажите положительное число для каждого файла наложения — сколько страниц брать перед переходом к следующему. Обязательно, если выбран режим «Фиксированное повторение»."
       }
     },
     "error": {
-      "failed": "An error occurred while overlaying PDFs."
+      "failed": "Произошла ошибка при наложении PDF."
     }
   },
   "split-by-sections": {
@@ -2894,16 +3004,16 @@
     "customColor": "Пользовательский цвет текста",
     "submit": "Отправить",
     "noStampSelected": "Штамп не выбран. Вернитесь к Шагу 1.",
-    "customPosition": "Drag the stamp to the desired location in the preview window.",
+    "customPosition": "Перетащите штамп в нужное место в окне предварительного просмотра.",
     "error": {
-      "failed": "An error occurred while adding stamp to the PDF."
+      "failed": "Произошла ошибка при добавлении штампа в PDF."
     },
-    "imageSize": "Image Size",
-    "margin": "Margin",
-    "positionAndFormatting": "Position & Formatting",
-    "quickPosition": "Select a position on the page to place the stamp.",
+    "imageSize": "Размер изображения",
+    "margin": "Отступ",
+    "positionAndFormatting": "Положение и форматирование",
+    "quickPosition": "Выберите положение на странице для размещения штампа.",
     "results": {
-      "title": "Stamp Results"
+      "title": "Результаты штампа"
     }
   },
   "removeImagePdf": {
@@ -2923,7 +3033,7 @@
       "_value": "Статус",
       "valid": "Действительна",
       "invalid": "Недействительна",
-      "complete": "Validation complete"
+      "complete": "Проверка завершена"
     },
     "signer": "Подписант",
     "date": "Дата",
@@ -2951,7 +3061,7 @@
       "keyUsage": "Использование ключа",
       "selfSigned": "Самоподписанный",
       "bits": "бит",
-      "details": "Certificate Details"
+      "details": "Сведения о сертификате"
     },
     "signature": {
       "info": "Информация о подписи",
@@ -2959,105 +3069,105 @@
       "mathValid": "Подпись математически корректна, НО:"
     },
     "selectCustomCert": "Пользовательский файл сертификата X.509 (Необязательно)",
-    "downloadCsv": "Download CSV",
-    "downloadJson": "Download JSON",
-    "downloadPdf": "Download PDF Report",
+    "downloadCsv": "Скачать CSV",
+    "downloadJson": "Скачать JSON",
+    "downloadPdf": "Скачать отчет PDF",
     "downloadType": {
       "csv": "CSV",
       "json": "JSON",
       "pdf": "PDF"
     },
     "error": {
-      "allFailed": "Unable to validate the selected files.",
-      "partial": "Some files could not be validated.",
-      "reportGeneration": "Could not generate the PDF report. JSON and CSV are available.",
-      "unexpected": "Unexpected error during validation."
+      "allFailed": "Не удалось проверить выбранные файлы.",
+      "partial": "Некоторые файлы не удалось проверить.",
+      "reportGeneration": "Не удалось создать отчет PDF. Доступны JSON и CSV.",
+      "unexpected": "Неожиданная ошибка при проверке."
     },
-    "finalizing": "Preparing downloads...",
+    "finalizing": "Подготовка загрузок...",
     "issue": {
-      "certExpired": "Certificate expired",
-      "certRevocationUnknown": "Certificate revocation status unknown",
-      "certRevoked": "Certificate revoked",
-      "chainInvalid": "Certificate chain invalid",
-      "signatureInvalid": "Signature cryptographic check failed",
-      "trustInvalid": "Certificate not trusted"
+      "certExpired": "Сертификат просрочен",
+      "certRevocationUnknown": "Неизвестен статус отзыва сертификата",
+      "certRevoked": "Сертификат отозван",
+      "chainInvalid": "Цепочка сертификатов недействительна",
+      "signatureInvalid": "Криптографическая проверка подписи не пройдена",
+      "trustInvalid": "Сертификат не доверен"
     },
-    "noResults": "Run the validation to generate a report.",
-    "noSignaturesShort": "No signatures",
-    "processing": "Validating signatures...",
+    "noResults": "Запустите проверку, чтобы сформировать отчет.",
+    "noSignaturesShort": "Нет подписей",
+    "processing": "Проверка подписей...",
     "report": {
-      "continued": "Continued",
-      "downloads": "Downloads",
-      "entryLabel": "Signature Summary",
+      "continued": "Продолжение",
+      "downloads": "Загрузки",
+      "entryLabel": "Сводка по подписи",
       "fields": {
-        "created": "Created",
-        "fileSize": "File Size",
-        "signatureCount": "Total Signatures",
-        "signatureDate": "Signature Date"
+        "created": "Создан",
+        "fileSize": "Размер файла",
+        "signatureCount": "Всего подписей",
+        "signatureDate": "Дата подписи"
       },
-      "filesEvaluated": "{{count}} files evaluated",
-      "footer": "Validated via Stirling PDF",
-      "generatedAt": "Generated",
-      "noPdf": "PDF report will be available after a successful validation.",
-      "page": "Page",
-      "shortTitle": "Signature Summary",
-      "signatureCountLabel": "{{count}} signatures",
-      "signaturesFound": "{{count}} signatures detected",
-      "signaturesValid": "{{count}} fully valid",
-      "title": "Signature Validation Report"
+      "filesEvaluated": "{{count}} файлов проверено",
+      "footer": "Проверено через Stirling PDF",
+      "generatedAt": "Сформировано",
+      "noPdf": "Отчет PDF будет доступен после успешной проверки.",
+      "page": "Страница",
+      "shortTitle": "Сводка по подписи",
+      "signatureCountLabel": "{{count}} подписей",
+      "signaturesFound": "{{count}} подписей обнаружено",
+      "signaturesValid": "{{count}} полностью действительных",
+      "title": "Отчет о проверке подписей"
     },
     "settings": {
-      "certHint": "Upload a trusted X.509 certificate to validate against a custom trust source.",
-      "title": "Validation Settings"
+      "certHint": "Загрузите доверенный сертификат X.509 для проверки по пользовательскому источнику доверия.",
+      "title": "Настройки проверки"
     },
-    "signatureDate": "Signature Date",
-    "totalSignatures": "Total Signatures"
+    "signatureDate": "Дата подписи",
+    "totalSignatures": "Всего подписей"
   },
   "replaceColor": {
     "tags": "Замена цвета,Операции со страницами,Back end,на стороне сервера",
     "labels": {
-      "settings": "Settings",
-      "colourOperation": "Colour operation"
+      "settings": "Настройки",
+      "colourOperation": "Операция с цветом"
     },
     "options": {
-      "highContrast": "High contrast",
-      "invertAll": "Invert all colours",
-      "custom": "Custom",
-      "cmyk": "Convert to CMYK"
+      "highContrast": "Высокая контрастность",
+      "invertAll": "Инвертировать все цвета",
+      "custom": "Пользовательский",
+      "cmyk": "Преобразовать в CMYK"
     },
     "tooltip": {
       "header": {
-        "title": "Replace & Invert Colour Settings Overview"
+        "title": "Обзор настроек замены и инверсии цветов"
       },
       "description": {
-        "title": "Description",
-        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+        "title": "Описание",
+        "text": "Преобразуйте цвета PDF для повышения читаемости и доступности. Выберите предустановки высокой контрастности, инвертируйте все цвета или создайте собственные схемы."
       },
       "highContrast": {
-        "title": "High Contrast",
-        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
-        "bullet1": "White text on black background - Classic dark mode",
-        "bullet2": "Black text on white background - Standard high contrast",
-        "bullet3": "Yellow text on black background - High visibility option",
-        "bullet4": "Green text on black background - Alternative high contrast"
+        "title": "Высокая контрастность",
+        "text": "Примените предустановленные высококонтрастные комбинации, разработанные для лучшей читаемости и соответствия требованиям доступности.",
+        "bullet1": "Белый текст на черном фоне — классический темный режим",
+        "bullet2": "Черный текст на белом фоне — стандартная высокая контрастность",
+        "bullet3": "Желтый текст на черном фоне — вариант высокой видимости",
+        "bullet4": "Зеленый текст на черном фоне — альтернативная высокая контрастность"
       },
       "invertAll": {
-        "title": "Invert All Colours",
-        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+        "title": "Инвертировать все цвета",
+        "text": "Полностью инвертируйте все цвета в PDF, создавая эффект негатива. Полезно для темного режима или снижения нагрузки на глаза при слабом освещении."
       },
       "custom": {
-        "title": "Custom Colours",
-        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
-        "bullet1": "Text colour - Choose the colour for text elements",
-        "bullet2": "Background colour - Set the background colour for the document"
+        "title": "Пользовательские цвета",
+        "text": "Определите собственные цвета текста и фона с помощью палитр. Подходит для брендированных документов или специфических требований доступности.",
+        "bullet1": "Цвет текста — выберите цвет для текстовых элементов",
+        "bullet2": "Цвет фона — задайте фон документа"
       },
       "cmyk": {
-        "title": "Convert to CMYK",
-        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
+        "title": "Преобразовать в CMYK",
+        "text": "Преобразуйте PDF из цветового пространства RGB в CMYK, оптимизированный для профессиональной печати. Этот процесс переводит цвета в модель Cyan, Magenta, Yellow, Black, используемую принтерами."
       }
     },
     "error": {
-      "failed": "An error occurred while processing the colour replacement."
+      "failed": "Произошла ошибка при обработке замены цвета."
     }
   },
   "login": {
@@ -3069,6 +3179,7 @@
     "rememberme": "Запомнить меня",
     "invalid": "Неверное имя пользователя или пароль.",
     "locked": "Ваша учетная запись заблокирована.",
+    "sessionExpired": "Сеанс истек. Пожалуйста, войдите снова.",
     "signinTitle": "Пожалуйста, войдите",
     "ssoSignIn": "Вход через единый вход",
     "oAuth2AutoCreateDisabled": "Автоматическое создание пользователей OAuth2 отключено",
@@ -3086,16 +3197,16 @@
     "toManySessions": "У вас слишком много активных сессий",
     "logoutMessage": "Вы вышли из системы.",
     "youAreLoggedIn": "Вы вошли в систему!",
-    "email": "Email",
+    "email": "Электронная почта",
     "password": "Пароль",
     "enterEmail": "Введите ваш email",
     "enterPassword": "Введите ваш пароль",
     "loggingIn": "Вход...",
-    "username": "Username",
-    "enterUsername": "Enter username",
-    "useEmailInstead": "Login with email",
-    "forgotPassword": "Forgot your password?",
-    "logIn": "Log In",
+    "username": "Имя пользователя",
+    "enterUsername": "Введите имя пользователя",
+    "useEmailInstead": "Войти по электронной почте",
+    "forgotPassword": "Забыли пароль?",
+    "logIn": "Войти",
     "signingIn": "Входим...",
     "login": "Войти",
     "or": "Или",
@@ -3114,15 +3225,15 @@
     "passwordResetSent": "Ссылка для сброса пароля отправлена на {{email}}! Проверьте почту и следуйте инструкциям.",
     "failedToSignIn": "Не удалось войти через {{provider}}: {{message}}",
     "unexpectedError": "Непредвиденная ошибка: {{message}}",
-    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
-    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "accountCreatedSuccess": "Учетная запись успешно создана! Теперь вы можете войти.",
+    "passwordChangedSuccess": "Пароль успешно изменен! Пожалуйста, войдите с новым паролем.",
+    "credentialsUpdated": "Ваши учетные данные обновлены. Пожалуйста, войдите снова."
   },
   "signup": {
     "title": "Создать аккаунт",
     "subtitle": "Присоединяйтесь к Stirling PDF, чтобы начать",
     "name": "Имя",
-    "email": "Email",
+    "email": "Электронная почта",
     "password": "Пароль",
     "confirmPassword": "Подтвердите пароль",
     "enterName": "Введите ваше имя",
@@ -3140,11 +3251,11 @@
     "checkEmailConfirmation": "Проверьте почту и перейдите по ссылке для завершения регистрации.",
     "accountCreatedSuccessfully": "Аккаунт успешно создан! Теперь вы можете войти.",
     "unexpectedError": "Непредвиденная ошибка: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
+    "useEmailInstead": "Вместо этого использовать электронную почту",
+    "nameRequired": "Имя обязательно",
+    "emailRequired": "Требуется электронная почта",
+    "passwordRequired": "Требуется пароль",
+    "confirmPasswordRequired": "Пожалуйста, подтвердите пароль"
   },
   "pdfToSinglePage": {
     "title": "PDF в одну страницу",
@@ -3184,22 +3295,22 @@
   "adjustContrast": {
     "title": "Настройка контраста",
     "header": "Настройка контраста",
-    "basic": "Basic Adjustments",
+    "basic": "Базовые настройки",
     "contrast": "Контраст:",
     "brightness": "Яркость:",
     "saturation": "Насыщенность:",
     "download": "Скачать",
-    "adjustColors": "Adjust Colors",
-    "blue": "Blue",
-    "confirm": "Confirm",
+    "adjustColors": "Настройка цветов",
+    "blue": "Синий",
+    "confirm": "Подтвердить",
     "error": {
-      "failed": "Failed to adjust colors/contrast"
+      "failed": "Не удалось настроить цвета/контраст"
     },
-    "green": "Green",
-    "noPreview": "Select a PDF to preview",
-    "red": "Red",
+    "green": "Зеленый",
+    "noPreview": "Выберите PDF для предварительного просмотра",
+    "red": "Красный",
     "results": {
-      "title": "Adjusted PDF"
+      "title": "Скорректированный PDF"
     }
   },
   "compress": {
@@ -3349,10 +3460,10 @@
     "removeImage": "Удалить изображение",
     "submit": "Удалить изображение",
     "error": {
-      "failed": "Failed to remove images from the PDF."
+      "failed": "Не удалось удалить изображения из PDF."
     },
     "results": {
-      "title": "Remove Images Results"
+      "title": "Результаты удаления изображений"
     }
   },
   "splitByChapters": {
@@ -3494,17 +3605,18 @@
     "rotateLeft": "Повернуть влево",
     "rotateRight": "Повернуть вправо",
     "toggleSidebar": "Показать/скрыть боковую панель",
-    "exportSelected": "Export Selected Pages",
-    "toggleAnnotations": "Toggle Annotations Visibility",
-    "annotationMode": "Toggle Annotation Mode",
-    "draw": "Draw",
-    "save": "Save"
+    "exportSelected": "Экспортировать выбранные страницы",
+    "toggleAnnotations": "Показать/скрыть аннотации",
+    "annotationMode": "Переключить режим аннотаций",
+    "draw": "Рисовать",
+    "save": "Сохранить",
+    "saveChanges": "Сохранить изменения"
   },
   "search": {
     "title": "Поиск по PDF",
     "placeholder": "Введите поисковый запрос...",
-    "noResults": "No results found",
-    "searching": "Searching..."
+    "noResults": "Ничего не найдено",
+    "searching": "Поиск..."
   },
   "guestBanner": {
     "title": "Вы используете Stirling PDF как гость!",
@@ -3539,465 +3651,485 @@
   "quickAccess": {
     "read": "Чтение",
     "sign": "Подпись",
-    "automate": "Автоматизация",
+    "automate": "Авто",
     "files": "Файлы",
-    "activity": "Активность",
-    "help": "Help",
-    "account": "Account",
-    "config": "Конфигурация",
-    "adminSettings": "Admin Settings",
-    "allTools": "Все инструменты"
+    "activity": "Журнал",
+    "help": "Справка",
+    "account": "Учетная запись",
+    "config": "Конфиг",
+    "settings": "Опции",
+    "adminSettings": "Админ. настр.",
+    "allTools": "Инстр.",
+    "reader": "Читалка",
+    "helpMenu": {
+      "toolsTour": "Обзор инструментов",
+      "toolsTourDesc": "Узнайте, что умеют инструменты",
+      "adminTour": "Обзор администрирования",
+      "adminTourDesc": "Изучите настройки и функции администрирования"
+    }
   },
   "admin": {
-    "error": "Error",
-    "success": "Success",
-    "expand": "Expand",
-    "close": "Close",
+    "error": "Ошибка",
+    "success": "Успех",
+    "expand": "Развернуть",
+    "close": "Закрыть",
     "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "Активно",
+      "inactive": "Неактивно"
     },
     "settings": {
-      "title": "Admin Settings",
-      "workspace": "Workspace",
-      "fetchError": "Failed to load settings",
-      "saveError": "Failed to save settings",
-      "saved": "Settings saved successfully",
-      "saveSuccess": "Settings saved successfully",
-      "save": "Save Changes",
-      "restartRequired": "Restart Required",
-      "restart": {
-        "title": "Restart Required",
-        "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
-        "question": "Would you like to restart the server now or later?",
-        "now": "Restart Now",
-        "later": "Restart Later"
+      "title": "Настройки администратора",
+      "workspace": "Рабочая область",
+      "fetchError": "Не удалось загрузить настройки",
+      "saveError": "Не удалось сохранить настройки",
+      "saved": "Настройки успешно сохранены",
+      "saveSuccess": "Настройки успешно сохранены",
+      "save": "Сохранить изменения",
+      "restartRequired": "Требуется перезапуск",
+      "loginRequired": "Для изменения настроек администратора должен быть включен режим входа",
+      "loginDisabled": {
+        "title": "Требуется режим входа",
+        "message": "Для изменения настроек администратора должен быть включен режим входа. Установите SECURITY_ENABLELOGIN=true в окружении или security.enableLogin: true в settings.yml, затем перезапустите сервер.",
+        "readOnly": "Ниже приведены примерные значения для справки. Включите режим входа, чтобы просматривать и редактировать фактическую конфигурацию."
       },
-      "restarting": "Restarting Server",
-      "restartingMessage": "The server is restarting. Please wait a moment...",
-      "restartError": "Failed to restart server. Please restart manually.",
+      "restart": {
+        "title": "Требуется перезапуск",
+        "message": "Настройки успешно сохранены. Для вступления изменений в силу требуется перезапуск сервера.",
+        "question": "Перезапустить сервер сейчас или позже?",
+        "now": "Перезапустить сейчас",
+        "later": "Перезапустить позже"
+      },
+      "restarting": "Перезапуск сервера",
+      "restartingMessage": "Сервер перезапускается. Пожалуйста, подождите...",
+      "restartError": "Не удалось перезапустить сервер. Пожалуйста, перезапустите вручную.",
       "general": {
-        "title": "System Settings",
-        "description": "Configure system-wide application settings including branding and default behaviour.",
-        "ui": "User Interface",
-        "system": "System",
+        "title": "Системные настройки",
+        "description": "Настройте системные параметры приложения, включая брендинг и поведение по умолчанию.",
+        "ui": "Пользовательский интерфейс",
+        "system": "Система",
         "appName": {
-          "label": "Application Name",
-          "description": "The name displayed in the browser tab and home page"
+          "label": "Название приложения",
+          "description": "Имя, отображаемое на вкладке браузера и на главной странице"
         },
         "appNameNavbar": {
-          "label": "Navbar Brand",
-          "description": "The name displayed in the navigation bar"
+          "label": "Название в панели навигации",
+          "description": "Имя, отображаемое в панели навигации"
         },
         "homeDescription": {
-          "label": "Home Description",
-          "description": "The description text shown on the home page"
+          "label": "Описание главной страницы",
+          "description": "Текст описания, показываемый на главной странице"
         },
         "defaultLocale": {
-          "label": "Default Locale",
-          "description": "The default language for new users (e.g., en_US, es_ES)"
+          "label": "Локаль по умолчанию",
+          "description": "Язык по умолчанию для новых пользователей (например, en_US, es_ES)"
         },
         "fileUploadLimit": {
-          "label": "File Upload Limit",
-          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+          "label": "Лимит загрузки файлов",
+          "description": "Максимальный размер загружаемого файла (например, 100MB, 1GB)"
         },
         "showUpdate": {
-          "label": "Show Update Notifications",
-          "description": "Display notifications when a new version is available"
+          "label": "Показывать уведомления об обновлениях",
+          "description": "Показывать уведомления при наличии новой версии"
         },
         "showUpdateOnlyAdmin": {
-          "label": "Show Updates to Admins Only",
-          "description": "Restrict update notifications to admin users only"
+          "label": "Показывать обновления только администраторам",
+          "description": "Ограничить уведомления об обновлениях только администраторам"
         },
         "customHTMLFiles": {
-          "label": "Custom HTML Files",
-          "description": "Allow serving custom HTML files from the customFiles directory"
+          "label": "Пользовательские HTML-файлы",
+          "description": "Разрешить отдачу пользовательских HTML-файлов из каталога customFiles"
         },
         "languages": {
-          "label": "Available Languages",
-          "description": "Languages that users can select from (leave empty to enable all languages)"
+          "label": "Доступные языки",
+          "description": "Языки, которые пользователи могут выбрать (оставьте пустым, чтобы включить все языки)"
         },
         "customMetadata": {
-          "label": "Custom Metadata",
+          "label": "Пользовательские метаданные",
           "autoUpdate": {
-            "label": "Auto Update Metadata",
-            "description": "Automatically update PDF metadata on all processed documents"
+            "label": "Автообновление метаданных",
+            "description": "Автоматически обновлять метаданные PDF во всех обработанных документах"
           },
           "author": {
-            "label": "Default Author",
-            "description": "Default author for PDF metadata (e.g., username)"
+            "label": "Автор по умолчанию",
+            "description": "Автор по умолчанию для метаданных PDF (например, имя пользователя)"
           },
           "creator": {
-            "label": "Default Creator",
-            "description": "Default creator for PDF metadata"
+            "label": "Создатель по умолчанию",
+            "description": "Создатель по умолчанию для метаданных PDF"
           },
           "producer": {
-            "label": "Default Producer",
-            "description": "Default producer for PDF metadata"
+            "label": "Производитель по умолчанию",
+            "description": "Производитель по умолчанию для метаданных PDF"
           }
         },
+        "logoStyle": {
+          "label": "Стиль логотипа",
+          "description": "Выберите между современным минималистичным логотипом и классической иконкой S",
+          "classic": "Классический",
+          "modern": "Современный"
+        },
         "customPaths": {
-          "label": "Custom Paths",
-          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "label": "Пользовательские пути",
+          "description": "Настройте пользовательские пути файловой системы для обработки в конвейере и внешних инструментов",
           "pipeline": {
-            "label": "Pipeline Directories",
+            "label": "Каталоги конвейера",
             "watchedFoldersDir": {
-              "label": "Watched Folders Directory",
-              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+              "label": "Каталог отслеживаемых папок",
+              "description": "Каталог, где конвейер отслеживает входящие PDF (оставьте пустым по умолчанию: /pipeline/watchedFolders)"
             },
             "finishedFoldersDir": {
-              "label": "Finished Folders Directory",
-              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+              "label": "Каталог завершенных папок",
+              "description": "Каталог, куда выводятся обработанные PDF (оставьте пустым по умолчанию: /pipeline/finishedFolders)"
             }
           },
           "operations": {
-            "label": "External Tool Paths",
+            "label": "Пути к внешним инструментам",
             "weasyprint": {
-              "label": "WeasyPrint Executable",
-              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+              "label": "Исполняемый файл WeasyPrint",
+              "description": "Путь к исполняемому файлу WeasyPrint для конвертации HTML в PDF (оставьте пустым по умолчанию: /opt/venv/bin/weasyprint)"
             },
             "unoconvert": {
-              "label": "Unoconvert Executable",
-              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+              "label": "Исполняемый файл Unoconvert",
+              "description": "Путь к LibreOffice unoconvert для конвертации документов (оставьте пустым по умолчанию: /opt/venv/bin/unoconvert)"
             }
           }
         }
       },
       "security": {
-        "title": "Security",
-        "description": "Configure authentication, login behaviour, and security policies.",
+        "title": "Безопасность",
+        "description": "Настройка аутентификации, поведения входа и политик безопасности.",
         "ssoNotice": {
-          "title": "Looking for SSO/SAML settings?",
-          "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+          "title": "Ищете настройки SSO/SAML?",
+          "message": "Провайдеры аутентификации OAuth2 и SAML2 перемещены в меню «Подключения» для упрощения управления."
         },
-        "authentication": "Authentication",
+        "authentication": "Аутентификация",
         "enableLogin": {
-          "label": "Enable Login",
-          "description": "Require users to log in before accessing the application"
+          "label": "Включить вход",
+          "description": "Требовать вход пользователей перед доступом к приложению"
         },
         "loginMethod": {
-          "label": "Login Method",
-          "description": "The authentication method to use for user login",
-          "all": "All Methods",
-          "normal": "Username/Password Only",
-          "oauth2": "OAuth2 Only",
-          "saml2": "SAML2 Only"
+          "label": "Способ входа",
+          "description": "Метод аутентификации для входа пользователей",
+          "all": "Все методы",
+          "normal": "Только имя пользователя/пароль",
+          "oauth2": "Только OAuth2",
+          "saml2": "Только SAML2"
         },
         "loginAttemptCount": {
-          "label": "Login Attempt Limit",
-          "description": "Maximum number of failed login attempts before account lockout"
+          "label": "Лимит попыток входа",
+          "description": "Максимальное число неудачных попыток входа до блокировки учетной записи"
         },
         "loginResetTimeMinutes": {
-          "label": "Login Reset Time (minutes)",
-          "description": "Time before failed login attempts are reset"
+          "label": "Время сброса попыток (минуты)",
+          "description": "Время до сброса счетчика неудачных попыток входа"
         },
         "csrfDisabled": {
-          "label": "Disable CSRF Protection",
-          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+          "label": "Отключить защиту CSRF",
+          "description": "Отключить защиту от межсайтовой подделки запросов (не рекомендуется)"
         },
         "initialLogin": {
-          "label": "Initial Login",
+          "label": "Первичный вход",
           "username": {
-            "label": "Initial Username",
-            "description": "The username for the initial admin account"
+            "label": "Начальное имя пользователя",
+            "description": "Имя пользователя для начальной учетной записи администратора"
           },
           "password": {
-            "label": "Initial Password",
-            "description": "The password for the initial admin account"
+            "label": "Начальный пароль",
+            "description": "Пароль для начальной учетной записи администратора"
           }
         },
         "jwt": {
-          "label": "JWT Configuration",
+          "label": "Конфигурация JWT",
           "secureCookie": {
-            "label": "Secure Cookie",
-            "description": "Require HTTPS for JWT cookies (recommended for production)"
+            "label": "Безопасная cookie",
+            "description": "Требовать HTTPS для cookie с JWT (рекомендуется для продакшена)"
           },
           "keyRetentionDays": {
-            "label": "Key Retention Days",
-            "description": "Number of days to retain old JWT keys for verification"
+            "label": "Срок хранения ключей (дней)",
+            "description": "Количество дней хранения старых ключей JWT для проверки"
           },
           "persistence": {
-            "label": "Enable Key Persistence",
-            "description": "Store JWT keys persistently to survive server restarts"
+            "label": "Включить постоянность ключей",
+            "description": "Хранить ключи JWT постоянно, чтобы переживать перезапуски сервера"
           },
           "enableKeyRotation": {
-            "label": "Enable Key Rotation",
-            "description": "Automatically rotate JWT signing keys periodically"
+            "label": "Включить ротацию ключей",
+            "description": "Автоматически периодически ротировать ключи подписи JWT"
           },
           "enableKeyCleanup": {
-            "label": "Enable Key Cleanup",
-            "description": "Automatically remove expired JWT keys"
+            "label": "Включить очистку ключей",
+            "description": "Автоматически удалять просроченные ключи JWT"
           }
         },
         "audit": {
-          "label": "Audit Logging",
+          "label": "Журналирование аудита",
           "enabled": {
-            "label": "Enable Audit Logging",
-            "description": "Track user actions and system events for compliance and security monitoring"
+            "label": "Включить журналирование аудита",
+            "description": "Отслеживать действия пользователей и системные события для соответствия требованиям и мониторинга безопасности"
           },
           "level": {
-            "label": "Audit Level",
+            "label": "Уровень аудита",
             "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
           },
           "retentionDays": {
-            "label": "Audit Retention (days)",
-            "description": "Number of days to retain audit logs"
+            "label": "Срок хранения аудита (дни)",
+            "description": "Количество дней хранения журналов аудита"
           }
         },
         "htmlUrlSecurity": {
-          "label": "HTML URL Security",
-          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "label": "Безопасность URL для HTML",
+          "description": "Настройка ограничений доступа по URL при обработке HTML для предотвращения атак SSRF",
           "enabled": {
-            "label": "Enable URL Security",
-            "description": "Enable URL security restrictions for HTML to PDF conversions"
+            "label": "Включить безопасность URL",
+            "description": "Включить ограничения безопасности URL для конвертации HTML в PDF"
           },
           "level": {
-            "label": "Security Level",
-            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-            "max": "Maximum (Whitelist Only)",
-            "medium": "Medium (Block Internal)",
-            "off": "Off (No Restrictions)"
+            "label": "Уровень безопасности",
+            "description": "MAX: только белый список, MEDIUM: блокировка внутренних сетей, OFF: без ограничений",
+            "max": "Максимальный (только белый список)",
+            "medium": "Средний (блокировать внутренние)",
+            "off": "Выкл. (без ограничений)"
           },
-          "advanced": "Advanced Settings",
+          "advanced": "Расширенные настройки",
           "allowedDomains": {
-            "label": "Allowed Domains (Whitelist)",
-            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+            "label": "Разрешенные домены (белый список)",
+            "description": "По одному домену на строку (например, cdn.example.com). Разрешены только эти домены при уровне MAX"
           },
           "blockedDomains": {
-            "label": "Blocked Domains (Blacklist)",
-            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+            "label": "Заблокированные домены (черный список)",
+            "description": "По одному домену на строку (например, malicious.com). Дополнительные домены для блокировки"
           },
           "internalTlds": {
-            "label": "Internal TLDs",
-            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+            "label": "Внутренние TLD",
+            "description": "По одному TLD на строку (например, .local, .internal). Блокировать домены с такими TLD-шаблонами"
           },
-          "networkBlocking": "Network Blocking",
+          "networkBlocking": "Блокировка сети",
           "blockPrivateNetworks": {
-            "label": "Block Private Networks",
-            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+            "label": "Блокировать частные сети",
+            "description": "Блокировать частные сети RFC 1918 (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
           },
           "blockLocalhost": {
-            "label": "Block Localhost",
-            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+            "label": "Блокировать localhost",
+            "description": "Блокировать localhost и loopback-адреса (127.x.x.x, ::1)"
           },
           "blockLinkLocal": {
-            "label": "Block Link-Local Addresses",
-            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+            "label": "Блокировать link-local адреса",
+            "description": "Блокировать адреса link-local (169.254.x.x, fe80::/10)"
           },
           "blockCloudMetadata": {
-            "label": "Block Cloud Metadata Endpoints",
-            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+            "label": "Блокировать эндпойнты метаданных облака",
+            "description": "Блокировать эндпойнты метаданных облачных провайдеров (169.254.169.254)"
           }
         }
       },
       "connections": {
-        "title": "Connections",
-        "description": "Configure external authentication providers like OAuth2 and SAML.",
-        "linkedServices": "Linked Services",
-        "unlinkedServices": "Unlinked Services",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "disconnected": "Provider disconnected successfully",
-        "disconnectError": "Failed to disconnect provider",
+        "title": "Подключения",
+        "description": "Настройка внешних провайдеров аутентификации, таких как OAuth2 и SAML.",
+        "linkedServices": "Подключенные сервисы",
+        "unlinkedServices": "Отключенные сервисы",
+        "connect": "Подключить",
+        "disconnect": "Отключить",
+        "disconnected": "Провайдер успешно отключен",
+        "disconnectError": "Не удалось отключить провайдера",
         "ssoAutoLogin": {
-          "label": "SSO Auto Login",
-          "enable": "Enable SSO Auto Login",
-          "description": "Automatically redirect to SSO login when authentication is required"
+          "label": "Автовход через SSO",
+          "enable": "Включить автовход через SSO",
+          "description": "Автоматически перенаправлять на вход через SSO при требуемой аутентификации"
         },
         "oauth2": {
           "label": "OAuth2",
           "enabled": {
-            "label": "Enable OAuth2",
-            "description": "Allow users to authenticate using OAuth2 providers"
+            "label": "Включить OAuth2",
+            "description": "Разрешить пользователям аутентификацию через провайдеров OAuth2"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The OAuth2 provider to use for authentication"
+            "label": "Провайдер",
+            "description": "Провайдер OAuth2, используемый для аутентификации"
           },
           "issuer": {
-            "label": "Issuer URL",
-            "description": "The OAuth2 provider issuer URL"
+            "label": "URL издателя",
+            "description": "URL издателя провайдера OAuth2"
           },
           "clientId": {
-            "label": "Client ID",
-            "description": "The OAuth2 client ID from your provider"
+            "label": "ID клиента",
+            "description": "ID клиента OAuth2 от вашего провайдера"
           },
           "clientSecret": {
-            "label": "Client Secret",
-            "description": "The OAuth2 client secret from your provider"
+            "label": "Секрет клиента",
+            "description": "Секрет клиента OAuth2 от вашего провайдера"
           },
           "useAsUsername": {
-            "label": "Use as Username",
-            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+            "label": "Использовать как имя пользователя",
+            "description": "Какое утверждение OAuth2 использовать как имя пользователя (например, email, sub)"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first OAuth2 login"
+            "label": "Автоматически создавать пользователей",
+            "description": "Автоматически создавать учетные записи при первом входе через OAuth2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via OAuth2"
+            "label": "Блокировать регистрацию",
+            "description": "Запретить регистрацию новых пользователей через OAuth2"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
-            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+            "label": "Scopes OAuth2",
+            "description": "Список scopes OAuth2 через запятую (например, openid, profile, email)"
           }
         },
         "saml2": {
           "label": "SAML2",
           "enabled": {
-            "label": "Enable SAML2",
-            "description": "Allow users to authenticate using SAML2 providers"
+            "label": "Включить SAML2",
+            "description": "Разрешить пользователям аутентификацию через провайдеров SAML2"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The SAML2 provider name"
+            "label": "Провайдер",
+            "description": "Имя провайдера SAML2"
           },
           "registrationId": {
-            "label": "Registration ID",
-            "description": "The SAML2 registration identifier"
+            "label": "ID регистрации",
+            "description": "Идентификатор регистрации SAML2"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first SAML2 login"
+            "label": "Автоматически создавать пользователей",
+            "description": "Автоматически создавать учетные записи при первом входе через SAML2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via SAML2"
+            "label": "Блокировать регистрацию",
+            "description": "Запретить регистрацию новых пользователей через SAML2"
           }
         }
       },
       "database": {
-        "title": "Database",
-        "description": "Configure custom database connection settings for enterprise deployments.",
-        "configuration": "Database Configuration",
+        "title": "База данных",
+        "description": "Настройка пользовательского подключения к базе данных для корпоративных внедрений.",
+        "configuration": "Конфигурация базы данных",
         "enableCustom": {
-          "label": "Enable Custom Database",
-          "description": "Use your own custom database configuration instead of the default embedded database"
+          "label": "Включить пользовательскую базу данных",
+          "description": "Использовать собственную конфигурацию базы данных вместо встроенной по умолчанию"
         },
         "customUrl": {
-          "label": "Custom Database URL",
-          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+          "label": "Пользовательский URL базы данных",
+          "description": "Полная строка подключения JDBC (например, jdbc:postgresql://localhost:5432/postgres). Если указано, параметры ниже не используются."
         },
         "type": {
-          "label": "Database Type",
-          "description": "Type of database (not used if custom URL is provided)"
+          "label": "Тип базы данных",
+          "description": "Тип базы данных (не используется, если указан пользовательский URL)"
         },
         "hostName": {
-          "label": "Host Name",
-          "description": "Database server hostname (not used if custom URL is provided)"
+          "label": "Имя хоста",
+          "description": "Имя хоста сервера базы данных (не используется, если указан пользовательский URL)"
         },
         "port": {
-          "label": "Port",
-          "description": "Database server port (not used if custom URL is provided)"
+          "label": "Порт",
+          "description": "Порт сервера базы данных (не используется, если указан пользовательский URL)"
         },
         "name": {
-          "label": "Database Name",
-          "description": "Name of the database (not used if custom URL is provided)"
+          "label": "Имя базы данных",
+          "description": "Имя базы данных (не используется, если указан пользовательский URL)"
         },
         "username": {
-          "label": "Username",
-          "description": "Database authentication username"
+          "label": "Имя пользователя",
+          "description": "Имя пользователя для аутентификации в базе данных"
         },
         "password": {
-          "label": "Password",
-          "description": "Database authentication password"
+          "label": "Пароль",
+          "description": "Пароль для аутентификации в базе данных"
         }
       },
       "privacy": {
-        "title": "Privacy",
-        "description": "Configure privacy and data collection settings.",
-        "analytics": "Analytics & Tracking",
+        "title": "Конфиденциальность",
+        "description": "Настройка параметров конфиденциальности и сбора данных.",
+        "analytics": "Аналитика и отслеживание",
         "enableAnalytics": {
-          "label": "Enable Analytics",
-          "description": "Collect anonymous usage analytics to help improve the application"
+          "label": "Включить аналитику",
+          "description": "Собирать анонимную аналитику использования для улучшения приложения"
         },
         "metricsEnabled": {
-          "label": "Enable Metrics",
-          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+          "label": "Включить метрики",
+          "description": "Включить сбор показателей производительности и использования. Предоставляет эндпойнт API для доступа администраторов к данным метрик"
         },
-        "searchEngine": "Search Engine Visibility",
+        "searchEngine": "Видимость для поисковых систем",
         "googleVisibility": {
-          "label": "Google Visibility",
-          "description": "Allow search engines to index this application"
+          "label": "Видимость в Google",
+          "description": "Разрешить поисковым системам индексировать это приложение"
         }
       },
       "advanced": {
-        "title": "Advanced",
-        "description": "Configure advanced features and experimental functionality.",
-        "features": "Feature Flags",
-        "processing": "Processing",
+        "title": "Расширенные",
+        "description": "Настройка продвинутых функций и экспериментальных возможностей.",
+        "features": "Флаги функций",
+        "processing": "Обработка",
         "endpoints": {
-          "label": "Endpoints",
-          "manage": "Manage API Endpoints",
-          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+          "label": "Эндпойнты",
+          "manage": "Управление эндпойнтами API",
+          "description": "Управление эндпойнтами настраивается через YAML. Подробности о включении/отключении конкретных эндпойнтов смотрите в документации."
         },
         "enableAlphaFunctionality": {
-          "label": "Enable Alpha Features",
-          "description": "Enable experimental and alpha-stage features (may be unstable)"
+          "label": "Включить функции Alpha",
+          "description": "Включить экспериментальные и альфа-функции (могут быть нестабильными)"
         },
         "enableUrlToPDF": {
-          "label": "Enable URL to PDF",
-          "description": "Allow conversion of web pages to PDF documents"
+          "label": "Включить URL to PDF",
+          "description": "Разрешить конвертацию веб-страниц в PDF-документы"
         },
         "maxDPI": {
-          "label": "Maximum DPI",
-          "description": "Maximum DPI for image processing (0 = unlimited)"
+          "label": "Максимальный DPI",
+          "description": "Максимальный DPI для обработки изображений (0 = без ограничений)"
         },
         "tessdataDir": {
-          "label": "Tessdata Directory",
-          "description": "Path to the tessdata directory for OCR language files"
+          "label": "Каталог tessdata",
+          "description": "Путь к каталогу tessdata для языковых файлов OCR"
         },
         "disableSanitize": {
-          "label": "Disable HTML Sanitization",
-          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+          "label": "Отключить очистку HTML",
+          "description": "ВНИМАНИЕ: Риск безопасности — отключение очистки HTML может привести к уязвимостям XSS"
         },
         "tempFileManagement": {
-          "label": "Temp File Management",
-          "description": "Configure temporary file storage and cleanup behavior",
+          "label": "Управление временными файлами",
+          "description": "Настройка хранения временных файлов и поведения очистки",
           "baseTmpDir": {
-            "label": "Base Temp Directory",
-            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+            "label": "Базовый каталог временных файлов",
+            "description": "Базовый каталог для временных файлов (оставьте пустым по умолчанию: java.io.tmpdir/stirling-pdf)"
           },
           "libreofficeDir": {
-            "label": "LibreOffice Temp Directory",
-            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+            "label": "Каталог временных файлов LibreOffice",
+            "description": "Каталог для временных файлов LibreOffice (оставьте пустым по умолчанию: baseTmpDir/libreoffice)"
           },
           "systemTempDir": {
-            "label": "System Temp Directory",
-            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+            "label": "Системный каталог временных файлов",
+            "description": "Системный временный каталог для очистки (используется только при включенном cleanupSystemTemp)"
           },
           "prefix": {
-            "label": "Temp File Prefix",
-            "description": "Prefix for temp file names"
+            "label": "Префикс временных файлов",
+            "description": "Префикс для имен временных файлов"
           },
           "maxAgeHours": {
-            "label": "Max Age (hours)",
-            "description": "Maximum age in hours before temp files are cleaned up"
+            "label": "Макс. возраст (часы)",
+            "description": "Максимальный возраст в часах перед очисткой временных файлов"
           },
           "cleanupIntervalMinutes": {
-            "label": "Cleanup Interval (minutes)",
-            "description": "How often to run cleanup (in minutes)"
+            "label": "Интервал очистки (минуты)",
+            "description": "Как часто запускать очистку (в минутах)"
           },
           "startupCleanup": {
-            "label": "Startup Cleanup",
-            "description": "Clean up old temp files on application startup"
+            "label": "Очистка при запуске",
+            "description": "Очищать старые временные файлы при запуске приложения"
           },
           "cleanupSystemTemp": {
-            "label": "Cleanup System Temp",
-            "description": "Whether to clean broader system temp directory (use with caution)"
+            "label": "Очищать системный временный каталог",
+            "description": "Очищать более широкий системный временный каталог (используйте с осторожностью)"
           }
         },
         "processExecutor": {
-          "label": "Process Executor Limits",
-          "description": "Configure session limits and timeouts for each process executor",
+          "label": "Ограничения исполнителей процессов",
+          "description": "Настройка лимитов сессий и тайм-аутов для каждого исполнителя процесса",
           "sessionLimit": {
-            "label": "Session Limit",
-            "description": "Maximum concurrent instances"
+            "label": "Лимит сессий",
+            "description": "Максимальное количество одновременных экземпляров"
           },
           "timeout": {
-            "label": "Timeout (minutes)",
-            "description": "Maximum execution time"
+            "label": "Тайм-аут (минуты)",
+            "description": "Максимальное время выполнения"
           },
           "libreOffice": "LibreOffice",
           "pdfToHtml": "PDF to HTML",
@@ -4012,124 +4144,124 @@
         }
       },
       "mail": {
-        "title": "Mail Server",
-        "description": "Configure SMTP settings for sending email notifications.",
-        "smtp": "SMTP Configuration",
+        "title": "Почтовый сервер",
+        "description": "Настройка параметров SMTP для отправки email-уведомлений.",
+        "smtp": "Конфигурация SMTP",
         "enabled": {
-          "label": "Enable Mail",
-          "description": "Enable email notifications and SMTP functionality"
+          "label": "Включить почту",
+          "description": "Включить email-уведомления и функциональность SMTP"
         },
         "host": {
-          "label": "SMTP Host",
-          "description": "The hostname or IP address of your SMTP server"
+          "label": "Хост SMTP",
+          "description": "Имя хоста или IP-адрес вашего сервера SMTP"
         },
         "port": {
-          "label": "SMTP Port",
-          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+          "label": "Порт SMTP",
+          "description": "Номер порта для соединения SMTP (обычно 25, 465 или 587)"
         },
         "username": {
-          "label": "SMTP Username",
-          "description": "Username for SMTP authentication"
+          "label": "Имя пользователя SMTP",
+          "description": "Имя пользователя для аутентификации SMTP"
         },
         "password": {
-          "label": "SMTP Password",
-          "description": "Password for SMTP authentication"
+          "label": "Пароль SMTP",
+          "description": "Пароль для аутентификации SMTP"
         },
         "from": {
-          "label": "From Address",
-          "description": "The email address to use as the sender"
+          "label": "Адрес отправителя",
+          "description": "Адрес email, используемый как отправитель"
         },
         "enableInvites": {
-          "label": "Enable Email Invites",
-          "description": "Allow admins to invite users via email with auto-generated passwords"
+          "label": "Включить приглашения по email",
+          "description": "Разрешить администраторам приглашать пользователей по email с автогенерацией паролей"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
-          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+          "label": "URL фронтенда",
+          "description": "Базовый URL для фронтенда (например, https://pdf.example.com). Используется для генерации ссылок-приглашений в письмах. Оставьте пустым, чтобы использовать URL бэкенда."
         }
       },
       "legal": {
-        "title": "Legal Documents",
-        "description": "Configure links to legal documents and policies.",
+        "title": "Юридические документы",
+        "description": "Настройка ссылок на юридические документы и политики.",
         "disclaimer": {
-          "title": "Legal Responsibility Warning",
-          "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+          "title": "Предупреждение об ответственности",
+          "message": "Настраивая эти юридические документы, вы полностью берете на себя ответственность за соблюдение всех применимых законов и норм, включая, помимо прочего, GDPR и другие требования ЕС по защите данных. Изменяйте эти настройки только если: (1) вы управляете личным/частным экземпляром, (2) вы находитесь за пределами юрисдикции ЕС и понимаете свои местные правовые обязательства, или (3) вы получили надлежащую юридическую консультацию и принимаете единоличную ответственность за все пользовательские данные и соблюдение законодательства. Stirling-PDF и его разработчики не несут ответственности за ваши юридические обязательства."
         },
         "termsAndConditions": {
-          "label": "Terms and Conditions",
-          "description": "URL or filename to terms and conditions"
+          "label": "Условия и положения",
+          "description": "URL или имя файла для условий и положений"
         },
         "privacyPolicy": {
-          "label": "Privacy Policy",
-          "description": "URL or filename to privacy policy"
+          "label": "Политика конфиденциальности",
+          "description": "URL или имя файла для политики конфиденциальности"
         },
         "accessibilityStatement": {
-          "label": "Accessibility Statement",
-          "description": "URL or filename to accessibility statement"
+          "label": "Заявление о доступности",
+          "description": "URL или имя файла для заявления о доступности"
         },
         "cookiePolicy": {
-          "label": "Cookie Policy",
-          "description": "URL or filename to cookie policy"
+          "label": "Политика cookie",
+          "description": "URL или имя файла для политики cookie"
         },
         "impressum": {
           "label": "Impressum",
-          "description": "URL or filename to impressum (required in some jurisdictions)"
+          "description": "URL или имя файла для impressum (требуется в некоторых юрисдикциях)"
         }
       },
       "premium": {
-        "title": "Premium & Enterprise",
-        "description": "Configure your premium or enterprise license key.",
-        "license": "License Configuration",
+        "title": "Премиум и Enterprise",
+        "description": "Настройте ключ лицензии премиум или enterprise.",
+        "license": "Конфигурация лицензии",
         "key": {
-          "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "label": "Лицензионный ключ",
+          "description": "Введите ваш премиум или enterprise лицензионный ключ"
         },
         "enabled": {
-          "label": "Enable Premium Features",
-          "description": "Enable license key checks for pro/enterprise features"
+          "label": "Включить премиум-функции",
+          "description": "Включить проверку лицензии для pro/enterprise функций"
         },
         "movedFeatures": {
-          "title": "Premium Features Distributed",
-          "message": "Premium and Enterprise features are now organized in their respective sections:"
+          "title": "Премиум-функции распределены",
+          "message": "Премиум и Enterprise функции теперь размещены в соответствующих разделах:"
         }
       },
       "features": {
-        "title": "Features",
-        "description": "Configure optional features and functionality.",
+        "title": "Функции",
+        "description": "Настройка дополнительных функций и возможностей.",
         "serverCertificate": {
-          "label": "Server Certificate",
-          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "label": "Серверный сертификат",
+          "description": "Настройка серверной генерации сертификата для функции «Подписать с Stirling-PDF»",
           "enabled": {
-            "label": "Enable Server Certificate",
-            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+            "label": "Включить серверный сертификат",
+            "description": "Включить серверный сертификат для опции «Подписать с Stirling-PDF»"
           },
           "organizationName": {
-            "label": "Organization Name",
-            "description": "Organization name for generated certificates"
+            "label": "Название организации",
+            "description": "Название организации для создаваемых сертификатов"
           },
           "validity": {
-            "label": "Certificate Validity (days)",
-            "description": "Number of days the certificate will be valid"
+            "label": "Срок действия сертификата (дни)",
+            "description": "Количество дней действия сертификата"
           },
           "regenerateOnStartup": {
-            "label": "Regenerate on Startup",
-            "description": "Generate new certificate on each application startup"
+            "label": "Пересоздавать при запуске",
+            "description": "Генерировать новый сертификат при каждом запуске приложения"
           }
         }
       },
       "endpoints": {
-        "title": "API Endpoints",
-        "description": "Control which API endpoints and endpoint groups are available.",
-        "management": "Endpoint Management",
+        "title": "Эндпойнты API",
+        "description": "Управляйте доступностью эндпойнтов API и групп эндпойнтов.",
+        "management": "Управление эндпойнтами",
         "toRemove": {
-          "label": "Disabled Endpoints",
-          "description": "Select individual endpoints to disable"
+          "label": "Отключенные эндпойнты",
+          "description": "Выберите отдельные эндпойнты для отключения"
         },
         "groupsToRemove": {
-          "label": "Disabled Endpoint Groups",
-          "description": "Select endpoint groups to disable"
+          "label": "Отключенные группы эндпойнтов",
+          "description": "Выберите группы эндпойнтов для отключения"
         },
-        "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
+        "note": "Примечание: Отключение эндпойнтов ограничивает доступ к API, но не удаляет компоненты интерфейса. Для применения изменений требуется перезапуск."
       }
     }
   },
@@ -4158,7 +4290,7 @@
     "dragFilesInOrClick": "Перетащите файлы или нажмите «Добавить файлы», чтобы выбрать"
   },
   "fileEditor": {
-    "addFiles": "Add Files"
+    "addFiles": "Добавить файлы"
   },
   "fileManager": {
     "title": "Загрузить PDF-файлы",
@@ -4188,12 +4320,12 @@
     "lastModified": "Дата изменения",
     "toolChain": "Применённые инструменты",
     "restore": "Восстановить",
-    "unzip": "Unzip",
+    "unzip": "Распаковать",
     "searchFiles": "Поиск файлов...",
     "recent": "Недавние",
     "localFiles": "Локальные файлы",
     "googleDrive": "Google Drive",
-    "googleDriveShort": "Drive",
+    "googleDriveShort": "Диск",
     "myFiles": "Мои файлы",
     "noRecentFiles": "Недавние файлы не найдены",
     "googleDriveNotAvailable": "Интеграция с Google Drive недоступна",
@@ -4214,17 +4346,16 @@
     "download": "Скачать",
     "delete": "Удалить",
     "unsupported": "Не поддерживается",
-    "addToUpload": "Add to Upload",
-    "deleteAll": "Delete All",
-    "loadingFiles": "Loading files...",
-    "noFiles": "No files available",
-    "noFilesFound": "No files found matching your search",
-    "openInPageEditor": "Open in Page Editor",
-    "showAll": "Show All",
-    "sortByDate": "Sort by Date",
-    "sortByName": "Sort by Name",
-    "sortBySize": "Sort by Size",
-    "dropFilesHint": "Перетащите файлы сюда, чтобы загрузить"
+    "addToUpload": "Добавить к загрузке",
+    "deleteAll": "Удалить все",
+    "loadingFiles": "Загрузка файлов...",
+    "noFiles": "Нет доступных файлов",
+    "noFilesFound": "По вашему запросу файлы не найдены",
+    "openInPageEditor": "Открыть в редакторе страниц",
+    "showAll": "Показать все",
+    "sortByDate": "Сортировать по дате",
+    "sortByName": "Сортировать по имени",
+    "sortBySize": "Сортировать по размеру"
   },
   "storage": {
     "temporaryNotice": "Файлы временно сохраняются в вашем браузере и могут быть автоматически удалены",
@@ -4244,7 +4375,7 @@
       "generic": "Сбой санитизации",
       "failed": "Произошла ошибка при санитизации PDF."
     },
-    "filenamePrefix": "sanitised",
+    "filenamePrefix": "очищено",
     "sanitizationResults": "Результаты санитизации",
     "steps": {
       "files": "Файлы",
@@ -4258,27 +4389,27 @@
       "title": "Параметры санитизации",
       "note": "Выберите элементы, которые хотите удалить из PDF. Должен быть выбран хотя бы один вариант.",
       "removeJavaScript": {
-        "label": "Remove JavaScript",
+        "label": "Удалить JavaScript",
         "desc": "Удалить действия и скрипты JavaScript из PDF"
       },
       "removeEmbeddedFiles": {
-        "label": "Remove Embedded Files",
+        "label": "Удалить встроенные файлы",
         "desc": "Удалить любые файлы, встроенные в PDF"
       },
       "removeXMPMetadata": {
-        "label": "Remove XMP Metadata",
+        "label": "Удалить XMP-метаданные",
         "desc": "Удалить XMP-метаданные из PDF"
       },
       "removeMetadata": {
-        "label": "Remove Document Metadata",
+        "label": "Удалить метаданные документа",
         "desc": "Удалить информацию о документе (название, автор и т. д.)"
       },
       "removeLinks": {
-        "label": "Remove Links",
+        "label": "Удалить ссылки",
         "desc": "Удалить внешние ссылки и действия запуска из PDF"
       },
       "removeFonts": {
-        "label": "Remove Fonts",
+        "label": "Удалить шрифты",
         "desc": "Удалить встроенные шрифты из PDF"
       }
     }
@@ -4288,7 +4419,7 @@
     "desc": "Зашифруйте ваш PDF-документ паролем.",
     "completed": "Парольная защита применена",
     "submit": "Зашифровать",
-    "filenamePrefix": "encrypted",
+    "filenamePrefix": "зашифровано",
     "error": {
       "failed": "Произошла ошибка при шифровании PDF."
     },
@@ -4397,7 +4528,7 @@
       "placeholder": "Введите текущий пароль",
       "completed": "Пароль указан"
     },
-    "filenamePrefix": "decrypted",
+    "filenamePrefix": "расшифровано",
     "error": {
       "failed": "Произошла ошибка при удалении пароля из PDF."
     },
@@ -4494,6 +4625,12 @@
     }
   },
   "common": {
+    "previous": "Предыдущий",
+    "next": "Далее",
+    "collapse": "Свернуть",
+    "expand": "Развернуть",
+    "collapsed": "свернуто",
+    "lines": "строк",
     "copy": "Копировать",
     "copied": "Скопировано!",
     "refresh": "Обновить",
@@ -4502,12 +4639,12 @@
     "used": "использовано",
     "available": "доступно",
     "cancel": "Отмена",
-    "preview": "Preview"
+    "preview": "Предпросмотр"
   },
   "config": {
     "overview": {
-      "title": "Application Configuration",
-      "description": "Current application settings and configuration details."
+      "title": "Конфигурация приложения",
+      "description": "Текущие настройки и подробности конфигурации приложения."
     },
     "account": {
       "overview": {
@@ -4530,6 +4667,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Используйте свой API-ключ для программного доступа к возможностям обработки Stirling PDF.",
+      "docsTitle": "Документация API",
+      "docsDescription": "Узнайте больше об интеграции со Stirling PDF:",
+      "docsLink": "Документация API",
+      "schemaLink": "Справочник по схеме API",
+      "usage": "Добавляйте этот ключ в заголовок X-API-KEY во всех запросах к API.",
       "description": "Ваш API-ключ для доступа к набору PDF-инструментов Stirling. Скопируйте его в ваш проект или обновите, чтобы сгенерировать новый.",
       "publicKeyAriaLabel": "Публичный API-ключ",
       "copyKeyAriaLabel": "Скопировать API-ключ",
@@ -4566,568 +4709,583 @@
       "title": "Результаты вложений"
     },
     "error": {
-      "failed": "Add attachments operation failed"
+      "failed": "Не удалось выполнить добавление вложений"
     }
   },
   "termsAndConditions": "Условия и положения",
   "logOut": "Выйти",
   "addAttachments": {
     "error": {
-      "failed": "An error occurred while adding attachments to the PDF."
+      "failed": "Произошла ошибка при добавлении вложений в PDF."
     }
   },
   "autoRename": {
-    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+    "description": "Этот инструмент автоматически переименует PDF-файлы на основе их содержимого. Он анализирует документ, чтобы найти наиболее подходящий заголовок из текста."
   },
-  "customPosition": "Custom Position",
-  "details": "Details",
-  "downloadUnavailable": "Download unavailable for this item",
-  "invalidUndoData": "Cannot undo: invalid operation data",
+  "customPosition": "Пользовательское положение",
+  "details": "Подробности",
+  "downloadUnavailable": "Загрузка недоступна для этого элемента",
+  "invalidUndoData": "Нельзя отменить: неверные данные операции",
   "margin": {
-    "large": "Large",
-    "medium": "Medium",
-    "small": "Small",
-    "xLarge": "Extra Large"
+    "large": "Большой",
+    "medium": "Средний",
+    "small": "Малый",
+    "xLarge": "Очень большой"
   },
-  "noFilesToUndo": "Cannot undo: no files were processed in the last operation",
-  "noOperationToUndo": "No operation to undo",
-  "noValidFiles": "No valid files to process",
-  "operationCancelled": "Operation cancelled",
+  "noFilesToUndo": "Нельзя отменить: в последней операции не было обработанных файлов",
+  "noOperationToUndo": "Нет операции для отмены",
+  "noValidFiles": "Нет подходящих файлов для обработки",
+  "operationCancelled": "Операция отменена",
   "pageEdit": {
-    "deselectAll": "Select None",
-    "selectAll": "Select All"
+    "deselectAll": "Снять выделение",
+    "selectAll": "Выбрать все"
   },
-  "quickPosition": "Quick Position",
+  "quickPosition": "Быстрое положение",
   "reorganizePages": {
     "error": {
-      "failed": "Failed to reorganize pages"
+      "failed": "Не удалось изменить порядок страниц"
     },
     "results": {
-      "title": "Pages Reorganized"
+      "title": "Порядок страниц изменен"
     },
     "settings": {
-      "title": "Settings"
+      "title": "Настройки"
     },
-    "submit": "Reorganize Pages"
+    "submit": "Изменить порядок страниц"
   },
   "replace-color": {
     "options": {
-      "fill": "Fill colour",
-      "gradient": "Gradient"
+      "fill": "Цвет заливки",
+      "gradient": "Градиент"
     },
-    "previewOverlayOpacity": "Preview overlay opacity",
-    "previewOverlayTransparency": "Preview overlay transparency",
-    "previewOverlayVisibility": "Show preview overlay",
+    "previewOverlayOpacity": "Непрозрачность наложения предпросмотра",
+    "previewOverlayTransparency": "Прозрачность наложения предпросмотра",
+    "previewOverlayVisibility": "Показывать наложение предпросмотра",
     "selectText": {
-      "1": "Replace or invert colour options",
-      "2": "Default (preset high contrast colours)",
-      "3": "Custom (choose your own colours)",
-      "4": "Full invert (invert all colours)",
-      "5": "High contrast color options",
-      "6": "White text on black background",
-      "7": "Black text on white background",
-      "8": "Yellow text on black background",
-      "9": "Green text on black background",
-      "10": "Choose text Color",
-      "11": "Choose background Color",
-      "12": "Choose start colour",
-      "13": "Choose end colour"
+      "1": "Параметры замены или инвертирования цвета",
+      "2": "По умолчанию (предустановленные высококонтрастные цвета)",
+      "3": "Пользовательские (выберите свои цвета)",
+      "4": "Полная инверсия (инвертировать все цвета)",
+      "5": "Параметры высококонтрастных цветов",
+      "6": "Белый текст на черном фоне",
+      "7": "Черный текст на белом фоне",
+      "8": "Желтый текст на черном фоне",
+      "9": "Зеленый текст на черном фоне",
+      "10": "Выберите цвет текста",
+      "11": "Выберите цвет фона",
+      "12": "Выберите начальный цвет",
+      "13": "Выберите конечный цвет"
     },
-    "submit": "Replace",
-    "title": "Replace-Invert-Color"
+    "submit": "Заменить",
+    "title": "Замена/инвертирование цвета"
   },
-  "size": "Size",
-  "submit": "Submit",
-  "success": "Success",
+  "size": "Размер",
+  "submit": "Отправить",
+  "success": "Успешно",
   "tools": {
-    "noSearchResults": "No tools found",
-    "noTools": "No tools available"
+    "noSearchResults": "Инструменты не найдены",
+    "noTools": "Нет доступных инструментов"
   },
-  "undoDataMismatch": "Cannot undo: operation data is corrupted",
-  "undoFailed": "Failed to undo operation",
-  "undoQuotaError": "Cannot undo: insufficient storage space",
-  "undoStorageError": "Undo completed but some files could not be saved to storage",
-  "undoSuccess": "Operation undone successfully",
-  "unsupported": "Unsupported",
+  "undoDataMismatch": "Нельзя отменить: данные операции повреждены",
+  "undoFailed": "Не удалось отменить операцию",
+  "undoQuotaError": "Нельзя отменить: недостаточно места на диске",
+  "undoStorageError": "Отмена выполнена, но некоторые файлы не удалось сохранить в хранилище",
+  "undoSuccess": "Операция успешно отменена",
+  "unsupported": "Не поддерживается",
   "onboarding": {
     "welcomeModal": {
-      "title": "Welcome to Stirling PDF!",
-      "description": "Would you like to take a quick 1-minute tour to learn the key features and how to get started?",
-      "helpHint": "You can always access this tour later from the <strong>Help</strong> button in the bottom left.",
-      "startTour": "Start Tour",
-      "maybeLater": "Maybe Later",
-      "dontShowAgain": "Don't Show Again"
+      "title": "Добро пожаловать в Stirling PDF!",
+      "description": "Хотите пройти короткий 1‑минутный тур по ключевым функциям и началу работы?",
+      "helpHint": "Вы всегда можете открыть этот тур позже с помощью кнопки <strong>Справка</strong> в левом нижнем углу.",
+      "startTour": "Начать тур",
+      "maybeLater": "Позже",
+      "dontShowAgain": "Больше не показывать"
     },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
-    "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
-    "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
-    "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
-    "fileSources": "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
-    "workbench": "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
-    "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
-    "viewer": "The <strong>Viewer</strong> lets you read and annotate your PDFs.",
-    "pageEditor": "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting.",
-    "activeFiles": "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process.",
-    "fileCheckbox": "Clicking one of the files selects it for processing. You can select multiple files for batch operations.",
-    "selectControls": "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
-    "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
-    "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
-    "results": "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
-    "fileReplacement": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
-    "pinButton": "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them.",
-    "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again.",
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Finish",
-    "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "selectCropTool": "Давайте выберем инструмент <strong>Обрезка</strong>, чтобы показать, как пользоваться одним из инструментов.",
+    "toolInterface": "Это интерфейс инструмента <strong>Обрезка</strong>. Как видите, здесь пока немного элементов, потому что мы еще не добавили PDF-файлы для работы.",
+    "filesButton": "Кнопка <strong>Файлы</strong> на панели быстрого доступа позволяет загружать PDF, с которыми будут работать инструменты.",
+    "fileSources": "Здесь вы можете загрузить новые файлы или открыть недавние. Для тура мы используем образец файла.",
+    "workbench": "Это <strong>Рабочая область</strong> — основная зона, где вы просматриваете и редактируете свои PDF.",
+    "viewSwitcher": "Используйте эти элементы управления, чтобы выбрать режим просмотра PDF.",
+    "viewer": "<strong>Просмотрщик</strong> позволяет читать и аннотировать ваши PDF.",
+    "pageEditor": "<strong>Редактор страниц</strong> позволяет выполнять различные операции со страницами PDF, такие как изменение порядка, поворот и удаление.",
+    "activeFiles": "Вид <strong>Активные файлы</strong> показывает все PDF, загруженные в инструмент, и позволяет выбрать, какие из них обрабатывать.",
+    "fileCheckbox": "Щелчок по файлу выбирает его для обработки. Можно выбрать несколько файлов для пакетных операций.",
+    "selectControls": "<strong>Правая панель</strong> содержит кнопки для быстрого выбора/снятия выделения всех активных PDF, а также кнопки смены темы приложения и языка.",
+    "cropSettings": "Теперь, когда мы выбрали файл для обрезки, можно настроить инструмент «Обрезка», чтобы выбрать область, до которой нужно обрезать PDF.",
+    "runButton": "После настройки инструмента эта кнопка позволяет запустить инструмент для всех выбранных PDF.",
+    "results": "После завершения работы инструмента шаг <strong>Проверка</strong> покажет предпросмотр результатов в этой панели и позволит отменить операцию или скачать файл.",
+    "fileReplacement": "Измененный файл автоматически заменит исходный файл в Рабочей области, что позволит легко прогнать его через другие инструменты.",
+    "pinButton": "Вы можете использовать кнопку <strong>Закрепить</strong>, если хотите, чтобы файлы оставались активными после выполнения над ними инструментов.",
+    "wrapUp": "Готово! Вы узнали об основных областях приложения и о том, как ими пользоваться. Нажимайте кнопку <strong>Справка</strong> в любое время, чтобы снова посмотреть этот тур.",
+    "previous": "Предыдущий",
+    "next": "Далее",
+    "finish": "Готово",
+    "startTour": "Начать тур",
+    "startTourDescription": "Пройдите ознакомительный тур по ключевым функциям Stirling PDF"
+  },
+  "adminOnboarding": {
+    "welcome": "Добро пожаловать в <strong>Тур для администраторов</strong>! Давайте изучим мощные корпоративные функции и настройки, доступные системным администраторам.",
+    "configButton": "Нажмите кнопку <strong>Config</strong>, чтобы получить доступ ко всем системным настройкам и административным элементам управления.",
+    "settingsOverview": "Это <strong>Панель настроек</strong>. Настройки администратора организованы по категориям для удобной навигации.",
+    "teamsAndUsers": "Управляйте здесь <strong>Командами</strong> и отдельными пользователями. Вы можете приглашать новых пользователей по электронной почте, через общие ссылки или создавать им учетные записи вручную.",
+    "systemCustomization": "У нас есть множество способов настроить интерфейс: <strong>Системные настройки</strong> позволяют менять имя приложения и языки, <strong>Функции</strong> — управлять серверным сертификатом, а <strong>Эндпойнты</strong> — включать или отключать конкретные инструменты для ваших пользователей.",
+    "databaseSection": "Для продвинутых продакшн-сред имеется настройка <strong>подключения внешних баз данных</strong>, чтобы интегрироваться с вашей существующей инфраструктурой.",
+    "connectionsSection": "Раздел <strong>Подключения</strong> поддерживает различные методы входа, включая кастомные SSO и SAML провайдеры, такие как Google и GitHub, а также интеграции с email для уведомлений и коммуникаций.",
+    "adminTools": "Наконец, у нас есть расширенные инструменты администрирования, такие как <strong>Аудит</strong> для отслеживания активности системы и <strong>Аналитика использования</strong> для мониторинга взаимодействия пользователей с платформой.",
+    "wrapUp": "Это был тур для администраторов! Вы увидели корпоративные функции, которые делают Stirling PDF мощным и настраиваемым решением для организаций. Откройте этот тур в любое время из меню <strong>Справка</strong>."
   },
   "workspace": {
-    "title": "Workspace",
+    "title": "Рабочая область",
     "people": {
-      "title": "People",
-      "description": "Manage workspace members and their permissions",
-      "loading": "Loading people...",
-      "searchMembers": "Search members...",
-      "addMembers": "Add Members",
+      "title": "Люди",
+      "description": "Управляйте участниками рабочей области и их правами",
+      "loading": "Загрузка участников...",
+      "searchMembers": "Поиск участников...",
+      "addMembers": "Добавить участников",
       "inviteMembers": {
-        "label": "Invite Members",
-        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+        "label": "Пригласить участников",
+        "subtitle": "Введите или вставьте ниже адреса email, разделяя их запятыми. Ваша рабочая область будет тарифицироваться по числу участников."
       },
-      "user": "User",
-      "role": "Role",
-      "team": "Team",
-      "status": "Status",
-      "actions": "Actions",
-      "noMembersFound": "No members found",
-      "active": "Active",
-      "disabled": "Disabled",
-      "activeSession": "Active session",
-      "member": "Member",
-      "admin": "Admin",
+      "user": "Пользователь",
+      "role": "Роль",
+      "team": "Команда",
+      "status": "Статус",
+      "actions": "Действия",
+      "noMembersFound": "Участники не найдены",
+      "active": "Активен",
+      "disabled": "Отключен",
+      "activeSession": "Активный сеанс",
+      "member": "Участник",
+      "admin": "Администратор",
       "roleDescriptions": {
-        "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "admin": "Может управлять настройками и приглашать участников, имеет полный административный доступ.",
+        "member": "Может просматривать и редактировать общие файлы, но не может управлять настройками рабочей области или участниками.",
+        "user": "Пользователь"
       },
-      "editRole": "Edit Role",
-      "enable": "Enable",
-      "disable": "Disable",
-      "deleteUser": "Delete User",
-      "deleteUserSuccess": "User deleted successfully",
-      "deleteUserError": "Failed to delete user",
-      "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+      "editRole": "Изменить роль",
+      "enable": "Включить",
+      "disable": "Отключить",
+      "deleteUser": "Удалить пользователя",
+      "deleteUserSuccess": "Пользователь успешно удален",
+      "deleteUserError": "Не удалось удалить пользователя",
+      "confirmDelete": "Вы уверены, что хотите удалить этого пользователя? Это действие нельзя отменить.",
       "addMember": {
-        "title": "Add Member",
-        "username": "Username (Email)",
+        "title": "Добавить участника",
+        "username": "Имя пользователя (email)",
         "usernamePlaceholder": "user@example.com",
-        "password": "Password",
-        "passwordPlaceholder": "Enter password",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "forcePasswordChange": "Force password change on first login",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "usernameRequired": "Username and password are required",
-        "passwordTooShort": "Password must be at least 6 characters",
-        "success": "User created successfully",
-        "error": "Failed to create user"
+        "password": "Пароль",
+        "passwordPlaceholder": "Введите пароль",
+        "role": "Роль",
+        "team": "Команда (необязательно)",
+        "teamPlaceholder": "Выберите команду",
+        "forcePasswordChange": "Требовать смену пароля при первом входе",
+        "cancel": "Отмена",
+        "submit": "Добавить участника",
+        "usernameRequired": "Требуются имя пользователя и пароль",
+        "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+        "success": "Пользователь успешно создан",
+        "error": "Не удалось создать пользователя"
       },
       "editMember": {
-        "title": "Edit Member",
-        "editing": "Editing:",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "cancel": "Cancel",
-        "submit": "Update Member",
-        "success": "User updated successfully",
-        "error": "Failed to update user"
+        "title": "Редактировать участника",
+        "editing": "Редактирование:",
+        "role": "Роль",
+        "team": "Команда (необязательно)",
+        "teamPlaceholder": "Выберите команду",
+        "cancel": "Отмена",
+        "submit": "Обновить участника",
+        "success": "Пользователь успешно обновлен",
+        "error": "Не удалось обновить пользователя"
       },
       "toggleEnabled": {
-        "success": "User status updated successfully",
-        "error": "Failed to update user status"
+        "success": "Статус пользователя успешно обновлен",
+        "error": "Не удалось обновить статус пользователя"
       },
       "delete": {
-        "success": "User deleted successfully",
-        "error": "Failed to delete user"
+        "success": "Пользователь успешно удален",
+        "error": "Не удалось удалить пользователя"
       },
       "emailInvite": {
-        "tab": "Email Invite",
-        "description": "Type or paste in emails below, separated by commas. Users will receive login credentials via email.",
-        "emails": "Email Addresses",
+        "tab": "Приглашение по email",
+        "description": "Введите или вставьте ниже адреса email, разделяя их запятыми. Пользователи получат учетные данные для входа по email.",
+        "emails": "Адреса email",
         "emailsPlaceholder": "user1@example.com, user2@example.com",
-        "emailsRequired": "At least one email address is required",
-        "submit": "Send Invites",
-        "success": "user(s) invited successfully",
-        "partialSuccess": "Some invites failed",
-        "allFailed": "Failed to invite users",
-        "error": "Failed to send invites"
+        "emailsRequired": "Требуется хотя бы один адрес email",
+        "submit": "Отправить приглашения",
+        "success": "Пользователи успешно приглашены",
+        "partialSuccess": "Некоторые приглашения не отправлены",
+        "allFailed": "Не удалось пригласить пользователей",
+        "error": "Не удалось отправить приглашения"
       },
       "directInvite": {
-        "tab": "Direct Create"
+        "tab": "Прямое создание"
       },
       "inviteLinkTab": {
-        "tab": "Invite Link"
+        "tab": "Ссылка-приглашение"
       },
       "inviteLink": {
-        "description": "Generate a secure link that allows the user to set their own password",
-        "email": "Email Address",
-        "emailPlaceholder": "user@example.com (optional)",
-        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
-        "emailRequired": "Email address is required",
-        "emailOptional": "Optional - leave blank for a general invite link",
-        "emailRequiredForSend": "Email address is required to send email notification",
-        "expiryHours": "Expiry Hours",
-        "expiryDescription": "How many hours until the link expires",
-        "sendEmail": "Send invite link via email",
-        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
-        "smtpRequired": "SMTP not configured",
-        "generate": "Generate Link",
-        "generated": "Invite Link Generated",
-        "copied": "Link copied to clipboard",
-        "success": "Invite link generated successfully",
-        "successWithEmail": "Invite link generated and sent via email",
-        "emailFailed": "Invite link generated, but email failed",
-        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
-        "error": "Failed to generate invite link",
-        "submit": "Generate Invite Link"
+        "description": "Сгенерировать защищенную ссылку, позволяющую пользователю задать свой пароль",
+        "email": "Адрес email",
+        "emailPlaceholder": "user@example.com (необязательно)",
+        "emailDescription": "Необязательно — оставьте пустым для общей ссылки-приглашения, которую может использовать любой",
+        "emailRequired": "Требуется адрес email",
+        "emailOptional": "Необязательно — оставьте пустым для общей ссылки-приглашения",
+        "emailRequiredForSend": "Для отправки уведомления по email требуется адрес email",
+        "expiryHours": "Срок действия (часы)",
+        "expiryDescription": "Через сколько часов истечет срок действия ссылки",
+        "sendEmail": "Отправить ссылку-приглашение по электронной почте",
+        "sendEmailDescription": "Если включено, ссылка-приглашение будет отправлена на указанный адрес электронной почты",
+        "smtpRequired": "SMTP не настроен",
+        "generate": "Сгенерировать ссылку",
+        "generated": "Ссылка-приглашение создана",
+        "copied": "Ссылка скопирована в буфер обмена",
+        "success": "Ссылка-приглашение успешно создана",
+        "successWithEmail": "Ссылка-приглашение создана и отправлена по электронной почте",
+        "emailSent": "Ссылка-приглашение создана и отправлена по электронной почте",
+        "emailFailed": "Ссылка-приглашение создана, но письмо не отправлено",
+        "emailFailedDetails": "Ошибка: {0}. Пожалуйста, поделитесь ссылкой-приглашением вручную.",
+        "error": "Не удалось создать ссылку-приглашение",
+        "submit": "Создать ссылку-приглашение"
       },
       "inviteMode": {
-        "username": "Username",
-        "email": "Email",
-        "link": "Link",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "username": "Имя пользователя",
+        "email": "Электронная почта",
+        "link": "Ссылка",
+        "emailDisabled": "Приглашения по email требуют настройки SMTP и mail.enableInvites=true в настройках"
       },
       "license": {
-        "users": "users",
-        "availableSlots": "Available Slots",
-        "grandfathered": "Grandfathered",
-        "grandfatheredShort": "{{count}} grandfathered",
-        "fromLicense": "from license",
-        "slotsAvailable": "{{count}} user slot(s) available",
-        "noSlotsAvailable": "No slots available",
-        "currentUsage": "Currently using {{current}} of {{max}} user licences"
+        "users": "пользователи",
+        "availableSlots": "Доступные места",
+        "grandfathered": "На прежних условиях",
+        "grandfatheredShort": "{{count}} на прежних условиях",
+        "fromLicense": "по лицензии",
+        "slotsAvailable": "{{count}} доступных мест для пользователей",
+        "noSlotsAvailable": "Нет доступных мест",
+        "currentUsage": "Используется {{current}} из {{max}} пользовательских лицензий"
       }
     },
     "teams": {
-      "title": "Teams",
-      "description": "Manage teams and organize workspace members",
-      "loading": "Loading teams...",
-      "loadingDetails": "Loading team details...",
-      "createNewTeam": "Create New Team",
-      "teamName": "Team Name",
-      "totalMembers": "Total Members",
-      "actions": "Actions",
-      "noTeamsFound": "No teams found",
-      "noMembers": "No members in this team",
-      "system": "System",
-      "addMember": "Add Member",
-      "viewTeam": "View Team",
-      "removeMember": "Remove from team",
-      "cannotRemoveFromSystemTeam": "Cannot remove from system team",
-      "renameTeamLabel": "Rename Team",
-      "deleteTeamLabel": "Delete Team",
-      "cannotDeleteInternal": "Cannot delete the Internal team",
-      "confirmDelete": "Are you sure you want to delete this team? This team must be empty to delete.",
-      "confirmRemove": "Remove user from this team?",
-      "cannotRenameInternal": "Cannot rename the Internal team",
-      "cannotAddToInternal": "Cannot add members to the Internal team",
-      "teamNotFound": "Team not found",
-      "backToTeams": "Back to Teams",
-      "memberCount": "{{count}} members",
-      "removeMemberSuccess": "User removed from team",
-      "removeMemberError": "Failed to remove user from team",
+      "title": "Команды",
+      "description": "Управляйте командами и организуйте участников рабочего пространства",
+      "loading": "Загрузка команд...",
+      "loadingDetails": "Загрузка сведений о команде...",
+      "createNewTeam": "Создать новую команду",
+      "teamName": "Название команды",
+      "totalMembers": "Всего участников",
+      "actions": "Действия",
+      "noTeamsFound": "Команды не найдены",
+      "noMembers": "В этой команде нет участников",
+      "system": "Системная",
+      "addMember": "Добавить участника",
+      "viewTeam": "Просмотреть команду",
+      "removeMember": "Удалить из команды",
+      "cannotRemoveFromSystemTeam": "Нельзя удалить из системной команды",
+      "renameTeamLabel": "Переименовать команду",
+      "deleteTeamLabel": "Удалить команду",
+      "cannotDeleteInternal": "Нельзя удалить команду Internal",
+      "confirmDelete": "Вы уверены, что хотите удалить эту команду? Для удаления команда должна быть пустой.",
+      "confirmRemove": "Удалить пользователя из этой команды?",
+      "cannotRenameInternal": "Нельзя переименовать команду Internal",
+      "cannotAddToInternal": "Нельзя добавлять участников в команду Internal",
+      "teamNotFound": "Команда не найдена",
+      "backToTeams": "Назад к командам",
+      "memberCount": "{{count}} участников",
+      "removeMemberSuccess": "Пользователь удален из команды",
+      "removeMemberError": "Не удалось удалить пользователя из команды",
       "createTeam": {
-        "title": "Create New Team",
-        "teamName": "Team Name",
-        "teamNamePlaceholder": "Enter team name",
-        "cancel": "Cancel",
-        "submit": "Create Team",
-        "nameRequired": "Team name is required",
-        "success": "Team created successfully",
-        "error": "Failed to create team"
+        "title": "Создать новую команду",
+        "teamName": "Название команды",
+        "teamNamePlaceholder": "Введите название команды",
+        "cancel": "Отмена",
+        "submit": "Создать команду",
+        "nameRequired": "Требуется название команды",
+        "success": "Команда успешно создана",
+        "error": "Не удалось создать команду"
       },
       "renameTeam": {
-        "title": "Rename Team",
-        "renaming": "Renaming:",
-        "newTeamName": "New Team Name",
-        "newTeamNamePlaceholder": "Enter new team name",
-        "cancel": "Cancel",
-        "submit": "Rename Team",
-        "nameRequired": "Team name is required",
-        "success": "Team renamed successfully",
-        "error": "Failed to rename team"
+        "title": "Переименовать команду",
+        "renaming": "Переименование:",
+        "newTeamName": "Новое название команды",
+        "newTeamNamePlaceholder": "Введите новое название команды",
+        "cancel": "Отмена",
+        "submit": "Переименовать команду",
+        "nameRequired": "Требуется название команды",
+        "success": "Команда успешно переименована",
+        "error": "Не удалось переименовать команду"
       },
       "deleteTeam": {
-        "success": "Team deleted successfully",
-        "error": "Failed to delete team. Make sure the team is empty.",
-        "teamMustBeEmpty": "Team must be empty before deletion"
+        "success": "Команда успешно удалена",
+        "error": "Не удалось удалить команду. Убедитесь, что команда пуста.",
+        "teamMustBeEmpty": "Перед удалением команда должна быть пустой"
       },
       "addMemberToTeam": {
-        "title": "Add Member to Team",
-        "addingTo": "Adding to",
-        "selectUser": "Select User",
-        "selectUserPlaceholder": "Choose a user",
-        "selectUserRequired": "Please select a user",
-        "currentlyIn": "currently in",
-        "willBeMoved": "Note: This user will be moved from their current team to this team.",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "userRequired": "Please select a user",
-        "success": "Member added to team successfully",
-        "error": "Failed to add member to team"
+        "title": "Добавить участника в команду",
+        "addingTo": "Добавление в",
+        "selectUser": "Выберите пользователя",
+        "selectUserPlaceholder": "Выберите пользователя",
+        "selectUserRequired": "Пожалуйста, выберите пользователя",
+        "currentlyIn": "сейчас в",
+        "willBeMoved": "Примечание: этот пользователь будет перемещен из текущей команды в эту команду.",
+        "cancel": "Отмена",
+        "submit": "Добавить участника",
+        "userRequired": "Пожалуйста, выберите пользователя",
+        "success": "Участник успешно добавлен в команду",
+        "error": "Не удалось добавить участника в команду"
       },
       "changeTeam": {
-        "label": "Change Team",
-        "title": "Change Team",
-        "changing": "Moving",
-        "selectTeam": "Select Team",
-        "selectTeamPlaceholder": "Choose a team",
-        "selectTeamRequired": "Please select a team",
-        "success": "Team changed successfully",
-        "error": "Failed to change team",
-        "submit": "Change Team"
+        "label": "Изменить команду",
+        "title": "Изменить команду",
+        "changing": "Перемещение",
+        "selectTeam": "Выберите команду",
+        "selectTeamPlaceholder": "Выберите команду",
+        "selectTeamRequired": "Пожалуйста, выберите команду",
+        "success": "Команда успешно изменена",
+        "error": "Не удалось изменить команду",
+        "submit": "Изменить команду"
       }
     }
   },
   "plan": {
-    "currency": "Currency",
-    "popular": "Popular",
-    "current": "Current Plan",
-    "upgrade": "Upgrade",
-    "contact": "Contact Us",
-    "customPricing": "Custom",
-    "showComparison": "Compare All Features",
-    "hideComparison": "Hide Feature Comparison",
-    "featureComparison": "Feature Comparison",
+    "currency": "Валюта",
+    "popular": "Популярный",
+    "current": "Текущий план",
+    "upgrade": "Обновить",
+    "contact": "Связаться с нами",
+    "customPricing": "Индивидуально",
+    "showComparison": "Сравнить все функции",
+    "hideComparison": "Скрыть сравнение функций",
+    "featureComparison": "Сравнение функций",
     "activePlan": {
-      "title": "Active Plan",
-      "subtitle": "Your current subscription details"
+      "title": "Активный план",
+      "subtitle": "Детали вашей текущей подписки"
     },
     "availablePlans": {
-      "title": "Available Plans",
-      "subtitle": "Choose the plan that fits your needs"
+      "title": "Доступные планы",
+      "subtitle": "Выберите план, подходящий вашим потребностям"
     },
     "static": {
-      "title": "Billing Information",
-      "message": "Online billing is not currently configured. To upgrade your plan or manage subscriptions, please contact us directly.",
-      "contactSales": "Contact Sales",
-      "contactToUpgrade": "Contact us to upgrade or customize your plan",
-      "maxUsers": "Max Users",
-      "upTo": "Up to"
+      "title": "Платежная информация",
+      "message": "Онлайн-выставление счетов не настроено. Чтобы обновить план или управлять подписками, пожалуйста, свяжитесь с нами напрямую.",
+      "contactSales": "Связаться с отделом продаж",
+      "contactToUpgrade": "Свяжитесь с нами, чтобы обновить или настроить ваш план",
+      "maxUsers": "Максимум пользователей",
+      "upTo": "До"
     },
     "period": {
-      "month": "month"
+      "month": "месяц"
     },
     "free": {
-      "name": "Free",
-      "highlight1": "Limited Tool Usage Per week",
-      "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "name": "Бесплатный",
+      "highlight1": "Ограниченное использование инструментов в неделю",
+      "highlight2": "Доступ ко всем инструментам",
+      "highlight3": "Поддержка сообщества"
     },
     "pro": {
       "name": "Pro",
-      "highlight1": "Unlimited Tool Usage",
-      "highlight2": "Advanced PDF tools",
-      "highlight3": "No watermarks"
+      "highlight1": "Неограниченное использование инструментов",
+      "highlight2": "Расширенные инструменты PDF",
+      "highlight3": "Без водяных знаков"
     },
     "enterprise": {
-      "name": "Enterprise",
-      "highlight1": "Custom pricing",
-      "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "name": "Корпоративный",
+      "highlight1": "Индивидуальная цена",
+      "highlight2": "Персональная поддержка",
+      "highlight3": "Последние функции"
     },
     "feature": {
-      "title": "Feature",
-      "pdfTools": "Basic PDF Tools",
-      "fileSize": "File Size Limit",
-      "automation": "Automate tool workflows",
-      "api": "API Access",
-      "priority": "Priority Support",
-      "customPricing": "Custom Pricing"
+      "title": "Функция",
+      "pdfTools": "Базовые инструменты PDF",
+      "fileSize": "Ограничение размера файла",
+      "automation": "Автоматизация рабочих процессов",
+      "api": "Доступ к API",
+      "priority": "Приоритетная поддержка",
+      "customPricing": "Индивидуальная цена"
     }
   },
   "subscription": {
     "status": {
-      "active": "Active",
-      "pastDue": "Past Due",
-      "canceled": "Canceled",
-      "incomplete": "Incomplete",
-      "trialing": "Trial",
-      "none": "No Subscription"
+      "active": "Активна",
+      "pastDue": "Просрочена",
+      "canceled": "Отменена",
+      "incomplete": "Незавершена",
+      "trialing": "Пробная",
+      "none": "Без подписки"
     },
-    "renewsOn": "Renews on {{date}}",
-    "cancelsOn": "Cancels on {{date}}"
+    "renewsOn": "Продлевается {{date}}",
+    "cancelsOn": "Отменяется {{date}}"
   },
   "billing": {
-    "manageBilling": "Manage Billing",
+    "manageBilling": "Управление платежами",
     "portal": {
-      "error": "Failed to open billing portal"
+      "error": "Не удалось открыть портал оплаты"
     }
   },
   "payment": {
-    "preparing": "Preparing your checkout...",
-    "upgradeTitle": "Upgrade to {{planName}}",
-    "success": "Payment Successful!",
-    "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
-    "autoClose": "This window will close automatically...",
-    "error": "Payment Error"
+    "preparing": "Подготовка к оплате...",
+    "upgradeTitle": "Обновить до {{planName}}",
+    "success": "Платеж успешно выполнен!",
+    "successMessage": "Ваша подписка успешно активирована. Вскоре вы получите письмо с подтверждением.",
+    "autoClose": "Это окно закроется автоматически...",
+    "error": "Ошибка оплаты"
   },
   "firstLogin": {
-    "title": "First Time Login",
-    "welcomeTitle": "Welcome!",
-    "welcomeMessage": "For security reasons, you must change your password on your first login.",
-    "loggedInAs": "Logged in as",
-    "error": "Error",
-    "currentPassword": "Current Password",
-    "enterCurrentPassword": "Enter your current password",
-    "newPassword": "New Password",
-    "enterNewPassword": "Enter new password (min 8 characters)",
-    "confirmPassword": "Confirm New Password",
-    "reEnterNewPassword": "Re-enter new password",
-    "changePassword": "Change Password",
-    "allFieldsRequired": "All fields are required",
-    "passwordsDoNotMatch": "New passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMustBeDifferent": "New password must be different from current password",
-    "passwordChangedSuccess": "Password changed successfully! Please log in again.",
-    "passwordChangeFailed": "Failed to change password. Please check your current password."
+    "title": "Первый вход",
+    "welcomeTitle": "Добро пожаловать!",
+    "welcomeMessage": "В целях безопасности при первом входе необходимо изменить пароль.",
+    "loggedInAs": "Вы вошли как",
+    "error": "Ошибка",
+    "currentPassword": "Текущий пароль",
+    "enterCurrentPassword": "Введите текущий пароль",
+    "newPassword": "Новый пароль",
+    "enterNewPassword": "Введите новый пароль (не менее 8 символов)",
+    "confirmPassword": "Подтвердите новый пароль",
+    "reEnterNewPassword": "Введите новый пароль ещё раз",
+    "changePassword": "Изменить пароль",
+    "allFieldsRequired": "Все поля обязательны",
+    "passwordsDoNotMatch": "Новые пароли не совпадают",
+    "passwordTooShort": "Пароль должен содержать не менее 8 символов",
+    "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего пароля",
+    "passwordChangedSuccess": "Пароль успешно изменен! Пожалуйста, войдите снова.",
+    "passwordChangeFailed": "Не удалось изменить пароль. Проверьте текущий пароль."
   },
   "invite": {
-    "welcome": "Welcome to Stirling PDF",
-    "invalidToken": "Invalid invitation link",
-    "validationError": "Failed to validate invitation link",
-    "passwordRequired": "Password is required",
-    "passwordTooShort": "Password must be at least 6 characters",
-    "passwordMismatch": "Passwords do not match",
-    "acceptError": "Failed to create account",
-    "validating": "Validating invitation...",
-    "invalidInvitation": "Invalid Invitation",
-    "goToLogin": "Go to Login",
-    "welcomeTitle": "You've been invited!",
-    "welcomeSubtitle": "Complete your account setup to get started",
-    "accountFor": "Creating account for",
-    "linkExpires": "Link expires",
-    "email": "Email address",
-    "emailPlaceholder": "Enter your email address",
-    "emailRequired": "Email address is required",
-    "invalidEmail": "Invalid email address",
-    "choosePassword": "Choose a password",
-    "passwordPlaceholder": "Enter your password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Re-enter your password",
-    "createAccount": "Create Account",
-    "creating": "Creating Account...",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "welcome": "Добро пожаловать в Stirling PDF",
+    "invalidToken": "Недействительная ссылка-приглашение",
+    "validationError": "Не удалось проверить ссылку-приглашение",
+    "passwordRequired": "Пароль обязателен",
+    "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+    "passwordMismatch": "Пароли не совпадают",
+    "acceptError": "Не удалось создать учетную запись",
+    "validating": "Проверка приглашения...",
+    "invalidInvitation": "Недействительное приглашение",
+    "goToLogin": "Перейти к входу",
+    "welcomeTitle": "Вас пригласили!",
+    "welcomeSubtitle": "Завершите настройку учетной записи, чтобы начать",
+    "accountFor": "Создание учетной записи для",
+    "linkExpires": "Ссылка истекает",
+    "email": "Адрес электронной почты",
+    "emailPlaceholder": "Введите адрес электронной почты",
+    "emailRequired": "Требуется адрес электронной почты",
+    "invalidEmail": "Недействительный адрес электронной почты",
+    "choosePassword": "Выберите пароль",
+    "passwordPlaceholder": "Введите пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "confirmPasswordPlaceholder": "Введите пароль ещё раз",
+    "createAccount": "Создать учетную запись",
+    "creating": "Создание учетной записи...",
+    "alreadyHaveAccount": "Уже есть учетная запись?",
+    "signIn": "Войти"
   },
   "audit": {
     "error": {
-      "title": "Error loading audit system"
+      "title": "Ошибка загрузки системы аудита"
     },
-    "notAvailable": "Audit system not available",
-    "notAvailableMessage": "The audit system is not configured or not available.",
-    "disabled": "Audit logging is disabled",
-    "disabledMessage": "Enable audit logging in your application configuration to track system events.",
+    "notAvailable": "Система аудита недоступна",
+    "notAvailableMessage": "Система аудита не настроена или недоступна.",
+    "disabled": "Журнал аудита отключен",
+    "disabledMessage": "Включите журнал аудита в конфигурации приложения, чтобы отслеживать события системы.",
     "systemStatus": {
-      "title": "System Status",
-      "status": "Audit Logging",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "level": "Audit Level",
-      "retention": "Retention Period",
-      "days": "days",
-      "totalEvents": "Total Events"
+      "title": "Состояние системы",
+      "status": "Журнал аудита",
+      "enabled": "Включен",
+      "disabled": "Отключен",
+      "level": "Уровень аудита",
+      "retention": "Срок хранения",
+      "days": "дн.",
+      "totalEvents": "Всего событий"
     },
     "tabs": {
-      "dashboard": "Dashboard",
-      "events": "Audit Events",
-      "export": "Export"
+      "dashboard": "Панель",
+      "events": "События аудита",
+      "export": "Экспорт"
     },
     "charts": {
-      "title": "Audit Dashboard",
-      "error": "Error loading charts",
-      "day": "Day",
-      "week": "Week",
-      "month": "Month",
-      "byType": "Events by Type",
-      "byUser": "Events by User",
-      "overTime": "Events Over Time"
+      "title": "Панель аудита",
+      "error": "Ошибка загрузки графиков",
+      "day": "День",
+      "week": "Неделя",
+      "month": "Месяц",
+      "byType": "События по типу",
+      "byUser": "События по пользователям",
+      "overTime": "События во времени"
     },
     "events": {
-      "title": "Audit Events",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "error": "Error loading events",
-      "noEvents": "No events found",
-      "timestamp": "Timestamp",
-      "type": "Type",
-      "user": "User",
-      "ipAddress": "IP Address",
-      "actions": "Actions",
-      "viewDetails": "View Details",
-      "eventDetails": "Event Details",
-      "details": "Details"
+      "title": "События аудита",
+      "filterByType": "Фильтр по типу",
+      "filterByUser": "Фильтр по пользователю",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "clearFilters": "Очистить",
+      "error": "Ошибка загрузки событий",
+      "noEvents": "Событий не найдено",
+      "timestamp": "Метка времени",
+      "type": "Тип",
+      "user": "Пользователь",
+      "ipAddress": "IP-адрес",
+      "actions": "Действия",
+      "viewDetails": "Просмотреть подробности",
+      "eventDetails": "Подробности события",
+      "details": "Подробности"
     },
     "export": {
-      "title": "Export Audit Data",
-      "description": "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
-      "format": "Export Format",
-      "filters": "Filters (Optional)",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "exportButton": "Export Data",
-      "error": "Failed to export data"
+      "title": "Экспорт данных аудита",
+      "description": "Экспортируйте события аудита в формат CSV или JSON. Используйте фильтры, чтобы ограничить экспортируемые данные.",
+      "format": "Формат экспорта",
+      "filters": "Фильтры (необязательно)",
+      "filterByType": "Фильтр по типу",
+      "filterByUser": "Фильтр по пользователю",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "clearFilters": "Очистить",
+      "exportButton": "Экспортировать данные",
+      "error": "Не удалось экспортировать данные"
     }
   },
   "usage": {
-    "noData": "No data available",
-    "error": "Error loading usage statistics",
-    "noDataMessage": "No usage statistics are currently available.",
+    "noData": "Данные недоступны",
+    "error": "Ошибка загрузки статистики использования",
+    "noDataMessage": "Статистика использования временно недоступна.",
     "controls": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All",
-      "refresh": "Refresh",
-      "dataTypeLabel": "Data Type:",
+      "top10": "Топ-10",
+      "top20": "Топ-20",
+      "all": "Все",
+      "refresh": "Обновить",
+      "dataTypeLabel": "Тип данных:",
       "dataType": {
-        "all": "All",
+        "all": "Все",
         "api": "API",
         "ui": "UI"
       }
     },
     "showing": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All"
+      "top10": "Топ-10",
+      "top20": "Топ-20",
+      "all": "Все"
     },
     "stats": {
-      "totalEndpoints": "Total Endpoints",
-      "totalVisits": "Total Visits",
-      "showing": "Showing",
-      "selectedVisits": "Selected Visits"
+      "totalEndpoints": "Всего конечных точек",
+      "totalVisits": "Всего посещений",
+      "showing": "Показано",
+      "selectedVisits": "Выбранные посещения"
     },
     "chart": {
-      "title": "Endpoint Usage Chart"
+      "title": "График использования конечных точек"
     },
     "table": {
-      "title": "Detailed Statistics",
-      "endpoint": "Endpoint",
-      "visits": "Visits",
-      "percentage": "Percentage",
-      "noData": "No data available"
+      "title": "Подробная статистика",
+      "endpoint": "Конечная точка",
+      "visits": "Посещения",
+      "percentage": "Процент",
+      "noData": "Данные недоступны"
     }
   },
   "backendHealth": {
-    "checking": "Checking backend status...",
-    "online": "Backend Online",
-    "offline": "Backend Offline"
+    "checking": "Проверка состояния бэкенда...",
+    "online": "Бэкенд онлайн",
+    "offline": "Бэкенд офлайн",
+    "starting": "Бэкенд запускается...",
+    "wait": "Дождитесь завершения запуска бэкенда и попробуйте снова."
   }
 }

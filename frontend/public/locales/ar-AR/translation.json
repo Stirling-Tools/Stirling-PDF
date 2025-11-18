@@ -1,43 +1,50 @@
 {
   "toolPanel": {
     "modePrompt": {
-      "title": "Choose how you browse tools",
-      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
-      "sidebarTitle": "Sidebar mode",
-      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
-      "recommended": "Recommended",
-      "chooseSidebar": "Use sidebar mode",
-      "fullscreenTitle": "Fullscreen mode - (legacy)",
-      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
-      "chooseFullscreen": "Use fullscreen mode",
-      "dismiss": "Maybe later"
+      "title": "اختر كيفية تصفح الأدوات",
+      "description": "عاين التخطيطين وقرّر كيف تريد استكشاف أدوات Stirling PDF.",
+      "sidebarTitle": "وضع الشريط الجانبي",
+      "sidebarDescription": "أبقِ الأدوات بجانب مساحة عملك للتبديل السريع.",
+      "recommended": "موصى به",
+      "chooseSidebar": "استخدم وضع الشريط الجانبي",
+      "fullscreenTitle": "وضع ملء الشاشة - (قديم)",
+      "fullscreenDescription": "تصفّح كل أداة في كتالوج يغطي مساحة العمل حتى تختار واحدة.",
+      "chooseFullscreen": "استخدم وضع ملء الشاشة",
+      "dismiss": "ربما لاحقًا"
     },
     "fullscreen": {
-      "showDetails": "Show Details",
-      "comingSoon": "Coming soon:",
-      "favorite": "Add to favourites",
-      "favorites": "Favourites",
-      "heading": "All tools (fullscreen view)",
-      "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
-      "recommended": "Recommended",
-      "unfavorite": "Remove from favourites"
+      "showDetails": "إظهار التفاصيل",
+      "comingSoon": "قريبًا:",
+      "favorite": "إضافة إلى المفضلة",
+      "favorites": "المفضلة",
+      "heading": "كل الأدوات (عرض ملء الشاشة)",
+      "noResults": "جرّب ضبط البحث أو تبديل الوصف للعثور على ما تحتاجه.",
+      "recommended": "موصى به",
+      "unfavorite": "إزالة من المفضلة"
     },
-    "placeholder": "Choose a tool to get started",
+    "placeholder": "اختر أداة للبدء",
     "toggle": {
-      "fullscreen": "Switch to fullscreen mode",
-      "sidebar": "Switch to sidebar mode"
+      "fullscreen": "التبديل إلى وضع ملء الشاشة",
+      "sidebar": "التبديل إلى وضع الشريط الجانبي"
     }
   },
   "unsavedChanges": "لديك تغييرات غير محفوظة على ملف PDF. ماذا تريد أن تفعل؟",
-  "areYouSure": "Are you sure you want to leave?",
+  "areYouSure": "هل أنت متأكد أنك تريد المغادرة؟",
   "unsavedChangesTitle": "تغييرات غير محفوظة",
   "keepWorking": "واصل العمل",
   "discardChanges": "تجاهل التغييرات",
   "applyAndContinue": "تطبيق والمتابعة",
   "exportAndContinue": "تصدير ومتابعة",
+  "zipWarning": {
+    "title": "ملف ZIP كبير",
+    "message": "هذا الملف ZIP يحتوي على {{count}} ملفات. هل تريد الاستخراج على أي حال؟",
+    "cancel": "إلغاء",
+    "confirm": "استخراج"
+  },
   "language": {
     "direction": "rtl"
   },
+  "cancel": "إلغاء",
   "addPageNumbers": {
     "fontSize": "حجم الخط",
     "fontName": "اسم الخط",
@@ -55,25 +62,25 @@
     "numberPagesDesc": "أي الصفحات المراد ترقيمها، الافتراضي 'الكل'، يقبل أيضًا 1-5 أو 2,5,9 إلخ",
     "customNumberDesc": "الافتراضي هو {n}، يقبل أيضًا 'الصفحة {n} من {total}'، 'نص-{n}'، '{filename}-{n}",
     "submit": "إضافة أرقام الصفحات",
-    "configuration": "Configuration",
-    "customize": "Customize Appearance",
-    "pagesAndStarting": "Pages & Starting Number",
-    "positionAndPages": "Position & Pages",
+    "configuration": "الإعداد",
+    "customize": "تخصيص المظهر",
+    "pagesAndStarting": "الصفحات والرقم الابتدائي",
+    "positionAndPages": "الموضع والصفحات",
     "error": {
-      "failed": "Add page numbers operation failed"
+      "failed": "فشلت عملية إضافة أرقام الصفحات"
     },
     "results": {
-      "title": "Page Number Results"
+      "title": "نتائج ترقيم الصفحات"
     },
-    "preview": "Position Selection",
-    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
+    "preview": "اختيار الموضع",
+    "previewDisclaimer": "المعاينة تقديرية. قد يختلف الناتج النهائي بسبب مقاييس خطوط PDF."
   },
   "pageSelectionPrompt": "اختيار الصفحات المخصص (أدخل قائمة بأرقام الصفحات مفصولة بفواصل 1،5،6 أو دوال مثل 2n+1):",
-  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
-  "marginTooltip": "Distance between the page number and the edge of the page.",
-  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
-  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
-  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
+  "startingNumberTooltip": "أول رقم سيتم عرضه. ستزداد الأرقام في الصفحات التالية ابتداءً من هذا الرقم.",
+  "marginTooltip": "المسافة بين رقم الصفحة وحافة الصفحة.",
+  "fontSizeTooltip": "حجم نص رقم الصفحة بالنقاط. الأرقام الأكبر تنتج نصًا أكبر.",
+  "fontTypeTooltip": "عائلة الخط لأرقام الصفحات. اختر بناءً على نمط مستندك.",
+  "customTextTooltip": "تنسيق مخصص اختياري لأرقام الصفحات. استخدم {n} كعنصر نائب للرقم. مثال: \"Page {n}\" سيعرض \"Page 1\" و\"Page 2\" وهكذا.",
   "pdfPrompt": "اختر PDF",
   "multiPdfPrompt": "اختر ملفات PDF (2+)",
   "multiPdfDropPrompt": "حدد (أو اسحب وأفلت) جميع ملفات PDF التي تحتاجها",
@@ -94,18 +101,20 @@
   "save": "حفظ",
   "saveToBrowser": "حفظ في المتصفح",
   "download": "تنزيل",
-  "pin": "Pin File (keep active after tool run)",
-  "unpin": "Unpin File (replace after tool run)",
+  "pin": "تثبيت الملف (إبقاؤه نشطًا بعد تشغيل الأداة)",
+  "unpin": "إلغاء تثبيت الملف (استبداله بعد تشغيل الأداة)",
   "undoOperationTooltip": "انقر للتراجع عن آخر عملية واستعادة الملفات الأصلية",
   "undo": "تراجع",
+  "back": "رجوع",
+  "nothingToUndo": "لا شيء للتراجع عنه",
   "moreOptions": "خيارات إضافية",
   "editYourNewFiles": "حرّر ملفاتك الجديدة",
   "close": "إغلاق",
-  "openInViewer": "Open in Viewer",
-  "confirmClose": "Confirm Close",
-  "confirmCloseMessage": "Are you sure you want to close this file?",
-  "confirmCloseCancel": "Cancel",
-  "confirmCloseConfirm": "Close File",
+  "openInViewer": "فتح في العارض",
+  "confirmClose": "تأكيد الإغلاق",
+  "confirmCloseMessage": "هل أنت متأكد أنك تريد إغلاق هذا الملف؟",
+  "confirmCloseCancel": "إلغاء",
+  "confirmCloseConfirm": "إغلاق الملف",
   "fileSelected": "المحدد: {{filename}}",
   "chooseFile": "اختر ملفًا",
   "filesSelected": "الملفات المحددة",
@@ -116,8 +125,8 @@
     "addFiles": "إضافة ملفات",
     "selectFromWorkbench": "اختر ملفات من طاولة العمل أو ",
     "selectMultipleFromWorkbench": "اختر على الأقل {{count}} ملفًا من طاولة العمل أو ",
-    "created": "Created",
-    "size": "File Size"
+    "created": "تاريخ الإنشاء",
+    "size": "حجم الملف"
   },
   "noFavourites": "لم تتم إضافة أي مفضلات",
   "downloadComplete": "إكتمل التحميل",
@@ -250,7 +259,7 @@
     "title": "هل تريد تحسين Stirling PDF؟",
     "paragraph1": "Stirling PDF يحتوي على إحصائيات مختصة للمساعدة في تحسين المنتج. لا نتبع أي معلومات شخصية أو محتوى الملفات.",
     "paragraph2": "يرجى مراعاة تفعيل الإحصائيات لمساعدتنا على نمو Stirling-PDF وتوفير فهم أفضل لمستخدمينا.",
-    "learnMore": "Learn more",
+    "learnMore": "اعرف المزيد",
     "enable": "تفعيل الإحصائيات",
     "disable": "تعطيل الإحصائيات",
     "settings": "يمكنك تغيير إعدادات الإحصائيات في ملف config/settings.yml"
@@ -296,52 +305,52 @@
       "help": "تمكين لتخزين الإدخالات المستخدمة سابقًا للتشغيلات المستقبلية"
     },
     "general": {
-      "title": "General",
-      "description": "Configure general application preferences.",
-      "account": "Account",
-      "accountDescription": "Manage your account settings",
-      "user": "User",
-      "signedInAs": "Signed in as",
-      "logout": "Log out",
+      "title": "عام",
+      "description": "تهيئة تفضيلات التطبيق العامة.",
+      "account": "الحساب",
+      "accountDescription": "إدارة إعدادات حسابك",
+      "user": "المستخدم",
+      "signedInAs": "مسجل الدخول كـ",
+      "logout": "تسجيل الخروج",
       "enableFeatures": {
-        "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organization.",
-        "action": "Configure",
-        "and": "and",
-        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation",
-        "dismiss": "Dismiss"
+        "title": "لمدراء النظام",
+        "intro": "فعّل مصادقة المستخدمين وإدارة الفرق وميزات مساحة العمل لمؤسستك.",
+        "action": "تكوين",
+        "and": "و",
+        "benefit": "يُفعّل أدوار المستخدمين، والتعاون عبر الفرق، وضوابط المشرف، وميزات المؤسسات.",
+        "learnMore": "تعرّف أكثر في التوثيق",
+        "dismiss": "تجاهل"
       },
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "defaultToolPickerMode": "Default tool picker mode",
-      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "autoUnzip": "فك ضغط استجابات API تلقائيًا",
+      "autoUnzipDescription": "استخراج الملفات تلقائيًا من استجابات ZIP",
+      "autoUnzipTooltip": "فك ضغط ملفات ZIP التي تُعاد من عمليات API تلقائيًا. عطّل للحفاظ على ملفات ZIP كما هي. هذا لا يؤثر على سير عمل الأتمتة.",
+      "autoUnzipFileLimit": "حد فك الضغط التلقائي للملفات",
+      "autoUnzipFileLimitDescription": "الحد الأقصى لعدد الملفات المطلوب استخراجها من ZIP",
+      "autoUnzipFileLimitTooltip": "لا يتم فك الضغط إلا إذا احتوى ملف ZIP على هذا العدد من الملفات أو أقل. ارفع القيمة لاستخراج ملفات ZIP الأكبر.",
+      "defaultToolPickerMode": "وضع منتقي الأدوات الافتراضي",
+      "defaultToolPickerModeDescription": "اختر ما إذا كان منتقي الأدوات يفتح افتراضيًا بملء الشاشة أو في الشريط الجانبي",
       "mode": {
-        "fullscreen": "Fullscreen",
-        "sidebar": "Sidebar"
+        "fullscreen": "ملء الشاشة",
+        "sidebar": "الشريط الجانبي"
       }
     },
     "hotkeys": {
-      "title": "Keyboard Shortcuts",
-      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "title": "اختصارات لوحة المفاتيح",
+      "description": "حرّك المؤشر فوق أداة لرؤية اختصارها أو خصّصه أدناه. انقر \"تغيير الاختصار\" ثم اضغط مجموعة مفاتيح جديدة. اضغط Esc للإلغاء.",
       "errorModifier": {
-        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
-        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+        "mac": "ضمّن ⌘ (Command) أو ⌥ (Option) أو مُعدِّلًا آخر في الاختصار.",
+        "windows": "ضمّن Ctrl أو Alt أو مُعدِّلًا آخر في الاختصار."
       },
-      "errorConflict": "Shortcut already used by {{tool}}.",
-      "none": "Not assigned",
-      "customBadge": "Custom",
-      "defaultLabel": "Default: {{shortcut}}",
-      "capturing": "Press keys… (Esc to cancel)",
-      "change": "Change shortcut",
-      "reset": "Reset",
-      "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set",
-      "searchPlaceholder": "Search tools..."
+      "errorConflict": "الاختصار مستخدم بالفعل بواسطة {{tool}}.",
+      "none": "غير معيّن",
+      "customBadge": "مخصص",
+      "defaultLabel": "الافتراضي: {{shortcut}}",
+      "capturing": "اضغط المفاتيح… (Esc للإلغاء)",
+      "change": "تغيير الاختصار",
+      "reset": "إعادة ضبط",
+      "shortcut": "اختصار",
+      "noShortcut": "لا يوجد اختصار معيّن",
+      "searchPlaceholder": "ابحث في الأدوات..."
     }
   },
   "changeCreds": {
@@ -413,10 +422,10 @@
     "top20": "أعلى 20",
     "all": "الكل",
     "refresh": "تحديث",
-    "dataTypeLabel": "Data Type:",
-    "dataTypeAll": "All",
+    "dataTypeLabel": "نوع البيانات:",
+    "dataTypeAll": "الكل",
     "dataTypeApi": "API",
-    "dataTypeUi": "UI",
+    "dataTypeUi": "واجهة المستخدم",
     "totalEndpoints": "إجمالي المسارات",
     "totalVisits": "إجمالي الزيارات",
     "showing": "يعرض",
@@ -431,9 +440,7 @@
     "top": "الأعلى",
     "numberOfVisits": "عدد الزيارات",
     "visitsTooltip": "الزيارات: {0} ({1}% من الإجمالي)",
-    "retry": "إعادة المحاولة",
-    "includeHomepage": "تضمين الصفحة الرئيسية ('/')",
-    "includeLoginPage": "تضمين صفحة تسجيل الدخول ('/login')"
+    "retry": "إعادة المحاولة"
   },
   "database": {
     "title": "استيراد/تصدير قاعدة البيانات",
@@ -475,14 +482,14 @@
     "globalPopularity": "الشعبية العالمية",
     "sortBy": "فرز حسب:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
+      "brandAlt": "شعار Stirling PDF",
+      "openFiles": "فتح ملفات",
+      "swipeHint": "اسحب لليسار أو اليمين للتبديل بين العروض",
+      "tools": "الأدوات",
+      "toolsSlide": "لوحة اختيار الأدوات",
+      "viewSwitcher": "تبديل عرض مساحة العمل",
+      "workbenchSlide": "لوحة مساحة العمل",
+      "workspace": "مساحة العمل"
     },
     "multiTool": {
       "tags": "متعدد،أدوات",
@@ -551,7 +558,7 @@
     },
     "ocr": {
       "tags": "استخراج،مسح",
-      "title": "تشغيل OCR على PDF و / أو مسح ضوئي",
+      "title": "OCR وتنظيف المسح الضوئي",
       "desc": "يقوم برنامج التنظيف بمسح واكتشاف النص من الصور داخل ملف PDF ويعيد إضافته كنص"
     },
     "extractImages": {
@@ -561,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "كشف،تقسيم،صور",
-      "title": "اكتشاف وتقسيم الصور الممسوحة",
+      "title": "كشف وتقسيم صور ممسوحة",
       "desc": "اكتشاف الصور الممسوحة وتقسيمها إلى صفحات منفصلة"
     },
     "sign": {
@@ -616,7 +623,7 @@
     },
     "scalePages": {
       "tags": "تغيير حجم،ضبط،تحجيم",
-      "title": "ضبط حجم/مقياس الصفحة",
+      "title": "تعديل حجم/مقياس الصفحة",
       "desc": "تغيير حجم/مقياس الصفحة و/أو محتواها."
     },
     "addPageNumbers": {
@@ -626,12 +633,12 @@
     },
     "autoRename": {
       "tags": "كشف تلقائي،مستند للعناوين،تنظيم،إعادة وسم",
-      "title": "إعادة تسمية ملف PDF تلقائيًا",
+      "title": "إعادة تسمية PDF تلقائيًا",
       "desc": "إعادة تسمية ملف PDF تلقائيًا استنادًا إلى العنوان المكتشف"
     },
     "adjustContrast": {
       "tags": "تباين،سطوع،تشبّع",
-      "title": "ضبط الألوان/التباين",
+      "title": "ضبط ألوان/التباين",
       "desc": "ضبط التباين والتشبع والسطوع لملف PDF"
     },
     "crop": {
@@ -651,7 +658,7 @@
     },
     "getPdfInfo": {
       "tags": "معلومات،بيانات وصفية،تفاصيل",
-      "title": "الحصول على جميع المعلومات عن PDF",
+      "title": "كل معلومات PDF",
       "desc": "يجمع أي وكل المعلومات الممكنة عن ملفات PDF"
     },
     "pdfToSinglePage": {
@@ -686,7 +693,7 @@
     },
     "splitByChapters": {
       "tags": "تقسيم،فصول،بنية",
-      "title": "تجزئة المستندات PDF حسب الفصول",
+      "title": "تقسيم PDF حسب الفصول",
       "desc": "قسم مستند PDF إلى ملفات متعددة بناءً على هيكل فصوله."
     },
     "validateSignature": {
@@ -736,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "تلقائي،تقسيم،حجم",
-      "title": "تقسيم تلقائي حسب الحجم/العدد",
+      "title": "تقسيم تلقائي بالحجم/العدد",
       "desc": "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
     },
     "replaceColor": {
@@ -775,13 +782,8 @@
       "desc": "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة إجراءات PDF. مثالي للمهام المتكررة."
     },
     "overlay-pdfs": {
-      "desc": "Overlay one PDF on top of another",
-      "title": "Overlay PDFs"
-    },
-    "overlayPdfs": {
-      "tags": "تراكب،دمج،تكديس",
-      "title": "تراكب ملفات PDF",
-      "desc": "تراكب ملفات PDF فوق ملف PDF آخر"
+      "desc": "تراكب ملف PDF فوق آخر",
+      "title": "تراكب ملفات PDF"
     }
   },
   "landing": {
@@ -822,14 +824,14 @@
     "tags": "دمج,عمليات الصفحة,الخلفية,جانب الخادم",
     "title": "دمج",
     "removeDigitalSignature": {
-      "label": "Remove digital signature in the merged file?",
+      "label": "إزالة التوقيع الرقمي في الملف المدمج؟",
       "tooltip": {
         "title": "إزالة التوقيع الرقمي",
         "description": "سيتم إبطال التواقيع الرقمية عند دمج الملفات. حدّد هذا لإزالتها من ملف PDF النهائي."
       }
     },
     "generateTableOfContents": {
-      "label": "Generate table of contents in the merged file?",
+      "label": "إنشاء جدول محتويات في الملف المدمج؟",
       "tooltip": {
         "title": "إنشاء جدول المحتويات",
         "description": "ينشئ تلقائيًا جدول محتويات قابلًا للنقر في PDF المدمج استنادًا إلى أسماء الملفات الأصلية وأرقام الصفحات."
@@ -973,48 +975,49 @@
         "bullet3": "السماح بالتكرارات: معالجة أسماء الإشارات المرجعية المكررة"
       },
       "byDocCount": {
-        "bullet1": "Enter the number of output files you want",
-        "bullet2": "Pages are distributed as evenly as possible",
-        "bullet3": "Useful when you need a specific number of files",
-        "text": "Create a specific number of output files by evenly distributing pages across them.",
-        "title": "Split by Document Count"
+        "bullet1": "أدخل عدد الملفات الناتجة التي تريدها",
+        "bullet2": "ستُوزَّع الصفحات بأكبر قدر ممكن من التساوي",
+        "bullet3": "مفيد عندما تحتاج عددًا معينًا من الملفات",
+        "text": "أنشئ عددًا محددًا من الملفات الناتجة عبر توزيع الصفحات عليها بالتساوي.",
+        "title": "تقسيم حسب عدد المستندات"
       },
       "byPageCount": {
-        "bullet1": "Enter the number of pages per output file",
-        "bullet2": "Last file may have fewer pages if not evenly divisible",
-        "bullet3": "Useful for batch processing workflows",
-        "text": "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
-        "title": "Split by Page Count"
+        "bullet1": "أدخل عدد الصفحات لكل ملف ناتج",
+        "bullet2": "قد يحتوي الملف الأخير على صفحات أقل إذا لم يكن القسمة متساوية",
+        "bullet3": "مفيد لعمليات المعالجة الدفعية",
+        "text": "أنشئ عدة ملفات PDF بعدد صفحات محدد لكل منها. مثالي لإنشاء أجزاء مستند موحّدة.",
+        "title": "تقسيم حسب عدد الصفحات"
       },
       "byPageDivider": {
-        "bullet1": "Print divider sheets from the download link",
-        "bullet2": "Insert divider sheets between your documents",
-        "bullet3": "Scan all documents together as one PDF",
-        "bullet4": "Upload - divider pages are automatically detected and removed",
-        "bullet5": "Enable Duplex Mode if scanning both sides of divider sheets",
-        "text": "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
-        "title": "Split by Page Divider"
+        "bullet1": "اطبع أوراق الفواصل من رابط التنزيل",
+        "bullet2": "أدرج أوراق فواصل بين مستنداتك",
+        "bullet3": "امسح كل المستندات معًا كملف PDF واحد",
+        "bullet4": "ارفع الملف - ستُكتشف صفحات الفواصل وتُزال تلقائيًا",
+        "bullet5": "فعّل Duplex Mode إذا كنت تمسح وجهي أوراق الفواصل",
+        "text": "قسّم المستندات الممسوحة تلقائيًا باستخدام أوراق فواصل فيزيائية مع رموز QR. مثالي لمعالجة عدة مستندات ممسوحة معًا.",
+        "title": "تقسيم بواسطة صفحة فاصل"
       }
     },
     "methodSelection": {
       "tooltip": {
-        "bullet1": "Click on a method card to select it",
-        "bullet2": "Hover over each card to see a quick description",
-        "bullet3": "The settings step will appear after you select a method",
-        "bullet4": "You can change methods at any time before processing",
+        "bullet1": "انقر بطاقة الطريقة لاختيارها",
+        "bullet2": "حرّك المؤشر فوق كل بطاقة لرؤية وصف سريع",
+        "bullet3": "ستظهر خطوة الإعدادات بعد اختيارك لطريقة",
+        "bullet4": "يمكنك تغيير الطريقة في أي وقت قبل المعالجة",
         "header": {
-          "text": "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
-          "title": "Split Method Selection"
+          "text": "اختر كيف تريد تقسيم مستند PDF. كل طريقة مُحسَّنة لحالات استخدام وأنواع مستندات مختلفة.",
+          "title": "اختيار طريقة التقسيم"
         },
-        "title": "Choose Your Split Method"
+        "title": "اختر طريقة التقسيم"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "اختر طريقة تقسيم",
+    "resultsTitle": "نتائج التقسيم"
   },
   "rotate": {
     "title": "تدوير PDF",
     "submit": "تدوير",
-    "selectRotation": "Select Rotation Angle (Clockwise)",
+    "selectRotation": "اختر زاوية الدوران (باتجاه عقارب الساعة)",
     "error": {
       "failed": "حدث خطأ أثناء تدوير PDF."
     },
@@ -1103,7 +1106,11 @@
     "markdown": "Markdown",
     "textRtf": "نص/RTF",
     "grayscale": "تدرج الرمادي",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "حدث خطأ أثناء تحويل الملف.",
+    "cbzOptions": "خيارات التحويل من CBZ إلى PDF",
+    "optimizeForEbook": "تحسين PDF لقارئات الكتب الإلكترونية (يستخدم Ghostscript)",
+    "cbzOutputOptions": "خيارات التحويل من PDF إلى CBZ",
+    "cbzDpi": "DPI لعرض الصور"
   },
   "imageToPdf": {
     "tags": "تحويل,صورة,jpg,صورة,صورة فوتوغرافية"
@@ -1143,17 +1150,17 @@
       "10": "دمج فردي-زوجي",
       "11": "تكرار كل الصفحات",
       "desc": {
-        "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
-        "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
-        "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
-        "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
-        "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
-        "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
-        "REMOVE_FIRST": "Remove the first page from the document.",
-        "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document.",
-        "REMOVE_LAST": "Remove the last page from the document.",
-        "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
-        "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+        "BOOKLET_SORT": "ترتيب الصفحات لطباعة الكتيّب (الأخيرة، الأولى، الثانية، قبل الأخيرة، …).",
+        "CUSTOM": "استخدم تسلسلًا مخصصًا لأرقام الصفحات أو التعابير لتعريف ترتيب جديد.",
+        "DUPLEX_SORT": "تشبيك الوجوه ثم الظهور كما لو أن ماسحًا مزدوج الوجه مسح كل الوجوه أولًا ثم كل الظهور (1، n، 2، n-1، …).",
+        "DUPLICATE": "كرّر كل صفحة وفقًا لعدد التكرارات في الترتيب المخصص (مثال: 4 تكرارات بحيث تتكرر كل صفحة 4×).",
+        "ODD_EVEN_MERGE": "ادمج ملفي PDF بالتناوب: الصفحات الفردية من الأول، والزوجية من الثاني.",
+        "ODD_EVEN_SPLIT": "قسّم المستند إلى مخرجين: كل الصفحات الفردية وكل الصفحات الزوجية.",
+        "REMOVE_FIRST": "إزالة الصفحة الأولى من المستند.",
+        "REMOVE_FIRST_AND_LAST": "إزالة الصفحة الأولى والأخيرة من المستند.",
+        "REMOVE_LAST": "إزالة الصفحة الأخيرة من المستند.",
+        "REVERSE_ORDER": "اقلب ترتيب المستند بحيث تصبح الأخيرة أولى وهكذا.",
+        "SIDE_STITCH_BOOKLET_SORT": "ترتيب الصفحات لطباعة كتيّب بالخياطة الجانبية (محسّن للتجليد الجانبي)."
       }
     },
     "desc": {
@@ -1193,7 +1200,7 @@
     "desc": "أضف علامات مائية نصية أو صورية إلى ملفات PDF",
     "completed": "تمت إضافة العلامة المائية",
     "submit": "إضافة علامة مائية",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "بعلامة_مائية",
     "error": {
       "failed": "حدث خطأ أثناء إضافة العلامة المائية إلى PDF."
     },
@@ -1221,8 +1228,8 @@
       "spacing": {
         "horizontal": "التباعد الأفقي",
         "vertical": "التباعد الرأسي",
-        "height": "Height Spacing",
-        "width": "Width Spacing"
+        "height": "تباعد الارتفاع",
+        "width": "تباعد العرض"
       },
       "convertToImage": "تسطيح صفحات PDF إلى صور"
     },
@@ -1367,8 +1374,8 @@
       }
     },
     "type": {
-      "1": "Text",
-      "2": "Image"
+      "1": "نص",
+      "2": "صورة"
     }
   },
   "permissions": {
@@ -1398,7 +1405,7 @@
       "placeholder": "مثال: 1,3,5-8,10",
       "error": "صيغة أرقام الصفحات غير صالحة. استخدم الأرقام أو النطاقات (1-5) أو التعابير الرياضية (2n+1)"
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "صفحات_محذوفة",
     "files": {
       "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -1443,24 +1450,24 @@
     "submit": "إزالة الصفحات"
   },
   "extractPages": {
-    "title": "Extract Pages",
+    "title": "استخراج صفحات",
     "pageNumbers": {
-      "label": "Pages to Extract",
-      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+      "label": "الصفحات المطلوب استخراجها",
+      "placeholder": "مثال: 1,3,5-8 أو odd & 1-10"
     },
     "settings": {
-      "title": "Settings"
+      "title": "الإعدادات"
     },
     "tooltip": {
-      "description": "Extracts the selected pages into a new PDF, preserving order."
+      "description": "يستخرج الصفحات المحددة إلى ملف PDF جديد مع الحفاظ على الترتيب."
     },
     "error": {
-      "failed": "Failed to extract pages"
+      "failed": "فشل استخراج الصفحات"
     },
     "results": {
-      "title": "Pages Extracted"
+      "title": "تم استخراج الصفحات"
     },
-    "submit": "Extract Pages"
+    "submit": "استخراج الصفحات"
   },
   "pageSelection": {
     "tooltip": {
@@ -1504,41 +1511,41 @@
         "title": "أمثلة"
       },
       "complex": {
-        "bullet1": "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
-        "bullet2": "<strong>10-,2n-1</strong> → from page 10 to end + odd pages",
-        "description": "Mix different types.",
-        "title": "Complex Combinations"
+        "bullet1": "<strong>1,3-5,8,2n</strong> → الصفحات 1 و3–5 و8 بالإضافة إلى الصفحات الزوجية",
+        "bullet2": "<strong>10-,2n-1</strong> → من الصفحة 10 حتى النهاية + الصفحات الفردية",
+        "description": "امزج أنواعًا مختلفة.",
+        "title": "توليفات معقّدة"
       },
-      "description": "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword.",
+      "description": "اختر الصفحات التي ستُستخدم في العملية. يدعم الصفحات المفردة، والنطاقات، والصيغ، وكلمة all.",
       "individual": {
-        "bullet1": "<strong>1,3,5</strong> → selects pages 1, 3, 5",
-        "bullet2": "<strong>2,7,12</strong> → selects pages 2, 7, 12",
-        "description": "Enter numbers separated by commas.",
-        "title": "Individual Pages"
+        "bullet1": "<strong>1,3,5</strong> → يحدد الصفحات 1 و3 و5",
+        "bullet2": "<strong>2,7,12</strong> → يحدد الصفحات 2 و7 و12",
+        "description": "أدخل أرقامًا مفصولة بفواصل.",
+        "title": "صفحات فردية"
       },
       "mathematical": {
-        "bullet1": "<strong>2n</strong> → all even pages (2, 4, 6…)",
-        "bullet2": "<strong>2n-1</strong> → all odd pages (1, 3, 5…)",
-        "bullet3": "<strong>3n</strong> → every 3rd page (3, 6, 9…)",
-        "bullet4": "<strong>4n-1</strong> → pages 3, 7, 11, 15…",
-        "description": "Use n in formulas for patterns.",
-        "title": "Mathematical Functions"
+        "bullet1": "<strong>2n</strong> → كل الصفحات الزوجية (2، 4، 6…)",
+        "bullet2": "<strong>2n-1</strong> → كل الصفحات الفردية (1، 3، 5…)",
+        "bullet3": "<strong>3n</strong> → كل صفحة ثالثة (3، 6، 9…)",
+        "bullet4": "<strong>4n-1</strong> → الصفحات 3 و7 و11 و15…",
+        "description": "استخدم n في الصيغ لأنماط التحديد.",
+        "title": "دوال رياضية"
       },
       "ranges": {
-        "bullet1": "<strong>3-6</strong> → selects pages 3–6",
-        "bullet2": "<strong>10-15</strong> → selects pages 10–15",
-        "bullet3": "<strong>5-</strong> → selects pages 5 to end",
-        "description": "Use - for consecutive pages.",
-        "title": "Page Ranges"
+        "bullet1": "<strong>3-6</strong> → يحدد الصفحات 3–6",
+        "bullet2": "<strong>10-15</strong> → يحدد الصفحات 10–15",
+        "bullet3": "<strong>5-</strong> → يحدد الصفحات من 5 حتى النهاية",
+        "description": "استخدم - للصفحات المتتالية.",
+        "title": "نطاقات الصفحات"
       },
       "special": {
-        "bullet1": "<strong>all</strong> → selects all pages",
-        "title": "Special Keywords"
+        "bullet1": "<strong>all</strong> → يحدد كل الصفحات",
+        "title": "كلمات مفتاحية خاصة"
       }
     }
   },
   "bulkSelection": {
-    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
+    "syntaxError": "هناك مشكلة في الصياغة. راجع نصائح اختيار الصفحات للمساعدة.",
     "header": {
       "title": "دليل اختيار الصفحات"
     },
@@ -1594,12 +1601,12 @@
     "tags": "ضغط,صغير,ضئيل"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "إزالة,حذف,نموذج,حقل,للقراءة_فقط",
     "title": "إزالة خاصية القراءة فقط من حقول النماذج",
     "header": "إلغاء قفل نماذج PDF",
     "submit": "Remove",
     "description": "ستزيل هذه الأداة قيود القراءة فقط من حقول نماذج PDF، لتصبح قابلة للتحرير والملء.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "نماذج_مفتوحة",
     "files": {
       "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -1846,7 +1853,7 @@
       }
     },
     "error": {
-      "failed": "OCR operation failed"
+      "failed": "فشلت عملية OCR"
     }
   },
   "extractImages": {
@@ -2010,15 +2017,15 @@
     },
     "instructions": {
       "title": "كيفية إضافة توقيع",
-      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
-      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "canvas": "بعد رسم توقيعك في لوحة الرسم، أغلق النافذة ثم انقر في أي مكان على ملف PDF لوضعه.",
+      "image": "بعد رفع صورة توقيعك أعلاه، انقر في أي مكان على ملف PDF لوضعه.",
+      "text": "بعد إدخال اسمك أعلاه، انقر في أي مكان على ملف PDF لوضع توقيعك."
     },
     "mode": {
-      "move": "Move Signature",
-      "place": "Place Signature"
+      "move": "تحريك التوقيع",
+      "place": "وضع التوقيع"
     },
-    "updateAndPlace": "Update and Place",
+    "updateAndPlace": "تحديث ووضع",
     "activate": "تفعيل وضع وضع التوقيع",
     "deactivate": "إيقاف وضع التوقيع",
     "results": {
@@ -2033,7 +2040,7 @@
     "header": "تسطيح ملفات PDF",
     "flattenOnlyForms": "تسطيح النماذج فقط",
     "submit": "تسطيح",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "مسطح",
     "files": {
       "placeholder": "حدد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -2044,7 +2051,7 @@
       "stepTitle": "خيارات التسطيح",
       "title": "خيارات التسطيح",
       "flattenOnlyForms": {
-        "label": "Flatten only forms",
+        "label": "تسطيح النماذج فقط",
         "desc": "تسطيح حقول النماذج فقط مع إبقاء العناصر التفاعلية الأخرى كما هي"
       },
       "note": "التسطيح يزيل العناصر التفاعلية من PDF ويجعله غير قابل للتحرير."
@@ -2083,7 +2090,7 @@
     "header": "إصلاح ملفات PDF",
     "submit": "إصلاح",
     "description": "ستحاول هذه الأداة إصلاح ملفات PDF التالفة أو المعطوبة. لا إعدادات إضافية مطلوبة.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "مصلح",
     "files": {
       "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -2138,10 +2145,10 @@
     },
     "submit": "إزالة الفراغات",
     "error": {
-      "failed": "Failed to remove blank pages"
+      "failed": "فشل حذف الصفحات الفارغة"
     },
     "results": {
-      "title": "Removed Blank Pages"
+      "title": "تم حذف الصفحات الفارغة"
     }
   },
   "removeAnnotations": {
@@ -2164,15 +2171,101 @@
     "tags": "تمييز الاختلافات,مقارنة,تغييرات,تحليل",
     "title": "مقارنة",
     "header": "مقارنة ملفات PDF",
-    "highlightColor": {
-      "1": "لون التظليل 1:",
-      "2": "لون التظليل 2:"
+    "clearSelected": "مسح المحدد",
+    "clear": {
+      "confirmTitle": "مسح ملفات PDF المحددة؟",
+      "confirmBody": "سيؤدي هذا إلى إغلاق المقارنة الحالية وإعادتك إلى الملفات النشطة.",
+      "confirm": "مسح والعودة"
     },
-    "document": {
-      "1": "المستند 1",
-      "2": "المستند 2"
+    "review": {
+      "title": "نتيجة المقارنة",
+      "actionsHint": "راجع المقارنة، غيّر أدوار المستندين، أو صدّر الملخص.",
+      "switchOrder": "تبديل الترتيب",
+      "exportSummary": "تصدير الملخص"
     },
-    "submit": "مقارنة",
+    "base": {
+      "label": "المستند الأصلي",
+      "placeholder": "حدد ملف PDF الأصلي"
+    },
+    "comparison": {
+      "label": "المستند المعدل",
+      "placeholder": "حدد ملف PDF المعدل"
+    },
+    "addFilesHint": "أضف ملفات PDF في خطوة الملفات لتمكين التحديد.",
+    "noFiles": "لا تتوفر ملفات PDF بعد",
+    "pages": "الصفحات",
+    "selection": {
+      "originalEditedTitle": "حدد ملفي PDF الأصلي والمعدل"
+    },
+    "original": {
+      "label": "ملف PDF الأصلي"
+    },
+    "edited": {
+      "label": "ملف PDF المعدل"
+    },
+    "swap": {
+      "confirmTitle": "إعادة تشغيل المقارنة؟",
+      "confirmBody": "سيُعاد تشغيل الأداة. هل أنت متأكد أنك تريد تبديل ترتيب الأصلي والمعدل؟",
+      "confirm": "تبديل وإعادة التشغيل"
+    },
+    "cta": "قارن",
+    "loading": "جارٍ المقارنة...",
+    "summary": {
+      "baseHeading": "المستند الأصلي",
+      "comparisonHeading": "المستند المعدل",
+      "pageLabel": "الصفحة"
+    },
+    "rendering": {
+      "pageNotReadyTitle": "لم يتم عرض الصفحة بعد",
+      "pageNotReadyBody": "بعض الصفحات ما زالت تُعرض. ستصبح الملاحة سلسة عند جاهزيتها.",
+      "rendering": "جارٍ العرض",
+      "inProgress": "أحد هذين الملفين أو كلاهما كبير جدًا، لن يكون التمرير سلسًا حتى يكتمل العرض",
+      "pagesRendered": "تم عرض الصفحات",
+      "complete": "اكتمل عرض الصفحات"
+    },
+    "dropdown": {
+      "deletionsLabel": "عمليات الحذف",
+      "additionsLabel": "الإضافات",
+      "deletions": "عمليات الحذف ({{count}})",
+      "additions": "الإضافات ({{count}})",
+      "searchPlaceholder": "ابحث في التغييرات...",
+      "noResults": "لا توجد تغييرات"
+    },
+    "actions": {
+      "stackVertically": "ترتيب رأسيًا",
+      "placeSideBySide": "وضع جنبًا إلى جنب",
+      "zoomOut": "تصغير",
+      "zoomIn": "تكبير",
+      "resetView": "إعادة ضبط العرض",
+      "unlinkScrollPan": "فصل التمرير والتحريك",
+      "linkScrollPan": "ربط التمرير والتحريك",
+      "unlinkScroll": "فصل التمرير",
+      "linkScroll": "ربط التمرير"
+    },
+    "toasts": {
+      "unlinkedTitle": "تم تفعيل التمرير والتحريك المستقلين",
+      "unlinkedBody": "تلميح: السهم للأعلى/للأسفل يمرّر كلا اللوحين؛ التحريك يحرك اللوح النشط فقط."
+    },
+    "error": {
+      "selectRequired": "حدد مستندًا أصليًا وآخر معدلًا.",
+      "filesMissing": "تعذّر العثور على الملفات المحددة. يرجى إعادة تحديدها.",
+      "generic": "تعذّرت مقارنة هذه الملفات."
+    },
+    "status": {
+      "extracting": "جارٍ استخراج النص...",
+      "processing": "جارٍ تحليل الفروقات...",
+      "complete": "المقارنة جاهزة"
+    },
+    "longJob": {
+      "title": "تجري مقارنة كبيرة",
+      "body": "يتجاوز مجموع صفحات ملفي PDF 2,000 صفحة. قد تستغرق المعالجة عدة دقائق."
+    },
+    "slowOperation": {
+      "title": "ما زلنا نعمل…",
+      "body": "تستغرق هذه المقارنة وقتًا أطول من المعتاد. يمكنك تركها لتستمر أو إلغاؤها.",
+      "cancel": "إلغاء المقارنة"
+    },
+    "newLine": "سطر جديد",
     "complex": {
       "message": "أو كلا المستندين المقدمين كبيران حجمًا، مما يؤدي إلى تقليل دقة المقارنة"
     },
@@ -2185,6 +2278,16 @@
       "text": {
         "message": "أحد أو كلي المستندات المرجوة للمقارنة لا يحتوي على محتوى نصي. يرجى اختيار مستندات تحتوي على نص لم يتم التعرف عليه."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "تبدو هذه المستندات مختلفة جدًا. أُوقفت المقارنة لتوفير الوقت."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "تبدو ملفات PDF هذه مختلفة جدًا",
+      "body": "نرى تشابهًا قليلًا جدًا حتى الآن. يمكنك إيقاف المقارنة إذا لم تكن هذه مستندات مرتبطة.",
+      "stopButton": "إيقاف المقارنة"
     }
   },
   "certSign": {
@@ -2245,11 +2348,11 @@
           "bullet4": "يمكن تضمين شعار اختياري"
         }
       },
-      "invisible": "Invisible",
+      "invisible": "غير مرئي",
       "options": {
-        "title": "Signature Details"
+        "title": "تفاصيل التوقيع"
       },
-      "visible": "Visible"
+      "visible": "مرئي"
     },
     "sign": {
       "submit": "توقيع PDF",
@@ -2311,21 +2414,21 @@
         }
       }
     },
-    "chooseCertificate": "Choose Certificate File",
-    "chooseJksFile": "Choose JKS File",
-    "chooseP12File": "Choose PKCS12 File",
-    "choosePfxFile": "Choose PFX File",
-    "choosePrivateKey": "Choose Private Key File",
-    "location": "Location",
-    "logoTitle": "Logo",
-    "name": "Name",
-    "noLogo": "No Logo",
-    "pageNumber": "Page Number",
-    "password": "Certificate Password",
-    "passwordOptional": "Leave empty if no password",
-    "reason": "Reason",
-    "serverCertMessage": "Using server certificate - no files or password required",
-    "showLogo": "Show Logo"
+    "chooseCertificate": "اختر ملف الشهادة",
+    "chooseJksFile": "اختر ملف JKS",
+    "chooseP12File": "اختر ملف PKCS12",
+    "choosePfxFile": "اختر ملف PFX",
+    "choosePrivateKey": "اختر ملف المفتاح الخاص",
+    "location": "الموقع",
+    "logoTitle": "الشعار",
+    "name": "الاسم",
+    "noLogo": "لا يوجد شعار",
+    "pageNumber": "رقم الصفحة",
+    "password": "كلمة مرور الشهادة",
+    "passwordOptional": "اتركه فارغًا إذا لم تكن هناك كلمة مرور",
+    "reason": "السبب",
+    "serverCertMessage": "باستخدام شهادة الخادم - لا حاجة إلى ملفات أو كلمة مرور",
+    "showLogo": "إظهار الشعار"
   },
   "removeCertSign": {
     "tags": "مصادقة,PEM,P12,رسمي,فك التشفير",
@@ -2334,7 +2437,7 @@
     "selectPDF": "حدد ملف PDF:",
     "submit": "إزالة التوقيع",
     "description": "ستزيل هذه الأداة توقيعات الشهادات الرقمية من مستند PDF.",
-    "filenamePrefix": "unsigned",
+    "filenamePrefix": "غير_موقع",
     "files": {
       "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -2353,14 +2456,14 @@
     "addBorder": "إضافة حدود",
     "submit": "إرسال",
     "desc": {
-      "2": "Place 2 pages side-by-side on a single sheet.",
-      "3": "Place 3 pages on a single sheet in a single row.",
-      "4": "Place 4 pages on a single sheet (2 × 2 grid).",
-      "9": "Place 9 pages on a single sheet (3 × 3 grid).",
-      "16": "Place 16 pages on a single sheet (4 × 4 grid)."
+      "2": "ضع صفحتين جنبًا إلى جنب في ورقة واحدة.",
+      "3": "ضع 3 صفحات في صف واحد على ورقة واحدة.",
+      "4": "ضع 4 صفحات في ورقة واحدة (شبكة 2 × 2).",
+      "9": "ضع 9 صفحات في ورقة واحدة (شبكة 3 × 3).",
+      "16": "ضع 16 صفحة في ورقة واحدة (شبكة 4 × 4)."
     },
     "error": {
-      "failed": "An error occurred while creating the multi-page layout."
+      "failed": "حدث خطأ أثناء إنشاء تخطيط الصفحات المتعددة."
     }
   },
   "bookletImposition": {
@@ -2548,20 +2651,20 @@
     "coordinates": {
       "title": "الموضع والحجم",
       "x": {
-        "label": "X Position",
-        "desc": "Left edge (points)"
+        "label": "إحداثي X",
+        "desc": "الحافة اليسرى (نقاط)"
       },
       "y": {
-        "label": "Y Position",
-        "desc": "Bottom edge (points)"
+        "label": "إحداثي Y",
+        "desc": "الحافة السفلية (نقاط)"
       },
       "width": {
-        "label": "Width",
-        "desc": "Crop width (points)"
+        "label": "العرض",
+        "desc": "عرض القص (نقاط)"
       },
       "height": {
-        "label": "Height",
-        "desc": "Crop height (points)"
+        "label": "الارتفاع",
+        "desc": "ارتفاع القص (نقاط)"
       }
     },
     "error": {
@@ -2582,8 +2685,8 @@
       "title": "نتائج القص"
     },
     "automation": {
-      "info": "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
-      "reference": "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
+      "info": "أدخل إحداثيات القص بوحدة نقاط PDF. نقطة الأصل (0,0) في أسفل اليسار. ستُطبق هذه القيم على كل ملفات PDF المعالجة في هذا التشغيل الآلي.",
+      "reference": "مرجع: صفحة A4 = ‏595.28 × 841.89 نقطة (‏210مم × 297مم). 1 بوصة = 72 نقطة."
     }
   },
   "autoSplitPDF": {
@@ -2665,7 +2768,14 @@
     "title": "إظهار جافا سكريبت",
     "header": "إظهار جافا سكريبت",
     "downloadJS": "تنزيل جافا سكريبت",
-    "submit": "إظهار"
+    "submit": "إظهار",
+    "results": "النتيجة",
+    "processing": "جارٍ استخراج JavaScript...",
+    "done": "تم استخراج JavaScript",
+    "singleFileWarning": "هذه الأداة تدعم ملفًا واحدًا في كل مرة. يرجى تحديد ملف واحد.",
+    "view": {
+      "title": "JavaScript المستخرج"
+    }
   },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
@@ -2794,15 +2904,15 @@
   "overlay-pdfs": {
     "tags": "تراكب",
     "header": "تراكب ملفات PDF",
-    "title": "Overlay PDFs",
-    "desc": "Overlay one PDF on top of another",
+    "title": "تراكب ملفات PDF",
+    "desc": "تراكب ملف PDF فوق آخر",
     "baseFile": {
       "label": "اختر ملف PDF الأساسي"
     },
     "overlayFiles": {
       "label": "اختر ملفات PDF للتراكب",
-      "placeholder": "Choose PDF(s)...",
-      "addMore": "Add more PDFs..."
+      "placeholder": "اختر ملفات PDF...",
+      "addMore": "إضافة المزيد من ملفات PDF..."
     },
     "mode": {
       "label": "اختر وضع التراكب",
@@ -2813,8 +2923,8 @@
     "counts": {
       "label": "عدد التراكبات (لوضع التكرار الثابت)",
       "placeholder": "أدخل الأعداد مفصولة بفواصل (مثل 2,3,1)",
-      "item": "Count for file",
-      "noFiles": "Add overlay files to configure counts"
+      "item": "العدد لهذا الملف",
+      "noFiles": "أضف ملفات تراكب لضبط الأعداد"
     },
     "position": {
       "label": "اختر موضع التراكب",
@@ -2823,41 +2933,41 @@
     },
     "submit": "إرسال",
     "settings": {
-      "title": "Settings"
+      "title": "الإعدادات"
     },
     "results": {
-      "title": "Overlay Results"
+      "title": "نتائج التراكب"
     },
     "tooltip": {
       "header": {
-        "title": "Overlay PDFs Overview"
+        "title": "نظرة عامة على تراكب ملفات PDF"
       },
       "description": {
-        "title": "Description",
-        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+        "title": "الوصف",
+        "text": "اجمع ملف PDF أساسيًا مع ملف أو أكثر للتراكب. يمكن تطبيق التراكبات صفحة بصفحة في أوضاع مختلفة ووضعها في المقدمة أو الخلفية."
       },
       "mode": {
-        "title": "Overlay Mode",
-        "text": "Choose how to distribute overlay pages across the base PDF pages.",
-        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
-        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
-        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+        "title": "وضع التراكب",
+        "text": "اختر كيفية توزيع صفحات التراكب عبر صفحات ملف الأساس.",
+        "sequential": "تراكب تسلسلي: استخدم صفحات من أول ملف تراكب حتى ينتهي، ثم انتقل إلى التالي.",
+        "interleaved": "تراكب متداخل: خذ صفحة واحدة من كل تراكب بالتتابع.",
+        "fixedRepeat": "تراكب بتكرار ثابت: خذ عددًا محددًا من الصفحات من كل تراكب قبل الانتقال إلى التالي. استخدم الأعداد لضبط الأرقام."
       },
       "position": {
-        "title": "Overlay Position",
-        "text": "Foreground places the overlay on top of the page. Background places it behind."
+        "title": "موضع التراكب",
+        "text": "المقدمة تضع التراكب فوق الصفحة. الخلفية تضعه خلفها."
       },
       "overlayFiles": {
-        "title": "Overlay Files",
-        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+        "title": "ملفات التراكب",
+        "text": "حدد ملف PDF واحدًا أو أكثر لعمل تراكب على الأساس. يؤثر ترتيب هذه الملفات على كيفية تطبيق الصفحات في وضعي التسلسل والتكرار الثابت."
       },
       "counts": {
-        "title": "Counts (Fixed Repeat only)",
-        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+        "title": "الأعداد (في وضع التكرار الثابت فقط)",
+        "text": "قدّم رقمًا موجبًا لكل ملف تراكب يوضح عدد الصفحات التي يجب أخذها قبل الانتقال إلى التالي. مطلوب عندما يكون الوضع تكرارًا ثابتًا."
       }
     },
     "error": {
-      "failed": "An error occurred while overlaying PDFs."
+      "failed": "حدث خطأ أثناء عمل تراكب لملفات PDF."
     }
   },
   "split-by-sections": {
@@ -2894,16 +3004,16 @@
     "customColor": "لون نص مخصص",
     "submit": "إرسال",
     "noStampSelected": "لم يتم اختيار ختم. ارجع إلى الخطوة 1.",
-    "customPosition": "Drag the stamp to the desired location in the preview window.",
+    "customPosition": "اسحب الختم إلى الموضع المطلوب في نافذة المعاينة.",
     "error": {
-      "failed": "An error occurred while adding stamp to the PDF."
+      "failed": "حدث خطأ أثناء إضافة الختم إلى ملف PDF."
     },
-    "imageSize": "Image Size",
-    "margin": "Margin",
-    "positionAndFormatting": "Position & Formatting",
-    "quickPosition": "Select a position on the page to place the stamp.",
+    "imageSize": "حجم الصورة",
+    "margin": "الهامش",
+    "positionAndFormatting": "الموضع والتنسيق",
+    "quickPosition": "اختر موضعًا على الصفحة لوضع الختم.",
     "results": {
-      "title": "Stamp Results"
+      "title": "نتائج إضافة الختم"
     }
   },
   "removeImagePdf": {
@@ -2923,7 +3033,7 @@
       "_value": "الحالة",
       "valid": "صالح",
       "invalid": "غير صالح",
-      "complete": "Validation complete"
+      "complete": "اكتمل التحقق"
     },
     "signer": "الموقّع",
     "date": "التاريخ",
@@ -2951,7 +3061,7 @@
       "keyUsage": "استخدام المفتاح",
       "selfSigned": "موقّعة ذاتيًا",
       "bits": "بت",
-      "details": "Certificate Details"
+      "details": "تفاصيل الشهادة"
     },
     "signature": {
       "info": "معلومات التوقيع",
@@ -2959,105 +3069,105 @@
       "mathValid": "التوقيع صالح رياضيًا لكن:"
     },
     "selectCustomCert": "ملف شهادة X.509 مخصص (اختياري)",
-    "downloadCsv": "Download CSV",
-    "downloadJson": "Download JSON",
-    "downloadPdf": "Download PDF Report",
+    "downloadCsv": "تنزيل CSV",
+    "downloadJson": "تنزيل JSON",
+    "downloadPdf": "تنزيل تقرير PDF",
     "downloadType": {
       "csv": "CSV",
       "json": "JSON",
       "pdf": "PDF"
     },
     "error": {
-      "allFailed": "Unable to validate the selected files.",
-      "partial": "Some files could not be validated.",
-      "reportGeneration": "Could not generate the PDF report. JSON and CSV are available.",
-      "unexpected": "Unexpected error during validation."
+      "allFailed": "تعذّر التحقق من الملفات المحددة.",
+      "partial": "تعذّر التحقق من بعض الملفات.",
+      "reportGeneration": "تعذّر إنشاء تقرير PDF. ملفات JSON وCSV متاحة.",
+      "unexpected": "خطأ غير متوقع أثناء التحقق."
     },
-    "finalizing": "Preparing downloads...",
+    "finalizing": "جارٍ تجهيز التنزيلات...",
     "issue": {
-      "certExpired": "Certificate expired",
-      "certRevocationUnknown": "Certificate revocation status unknown",
-      "certRevoked": "Certificate revoked",
-      "chainInvalid": "Certificate chain invalid",
-      "signatureInvalid": "Signature cryptographic check failed",
-      "trustInvalid": "Certificate not trusted"
+      "certExpired": "انتهت صلاحية الشهادة",
+      "certRevocationUnknown": "حالة إلغاء الشهادة غير معروفة",
+      "certRevoked": "تم إلغاء الشهادة",
+      "chainInvalid": "سلسلة الشهادة غير صالحة",
+      "signatureInvalid": "فشل الفحص التشفيري للتوقيع",
+      "trustInvalid": "الشهادة غير موثوقة"
     },
-    "noResults": "Run the validation to generate a report.",
-    "noSignaturesShort": "No signatures",
-    "processing": "Validating signatures...",
+    "noResults": "شغّل عملية التحقق لإنشاء تقرير.",
+    "noSignaturesShort": "لا توجد توقيعات",
+    "processing": "جارٍ التحقق من التوقيعات...",
     "report": {
-      "continued": "Continued",
-      "downloads": "Downloads",
-      "entryLabel": "Signature Summary",
+      "continued": "متابعة",
+      "downloads": "التنزيلات",
+      "entryLabel": "ملخص التوقيع",
       "fields": {
-        "created": "Created",
-        "fileSize": "File Size",
-        "signatureCount": "Total Signatures",
-        "signatureDate": "Signature Date"
+        "created": "تم الإنشاء",
+        "fileSize": "حجم الملف",
+        "signatureCount": "إجمالي التوقيعات",
+        "signatureDate": "تاريخ التوقيع"
       },
-      "filesEvaluated": "{{count}} files evaluated",
-      "footer": "Validated via Stirling PDF",
-      "generatedAt": "Generated",
-      "noPdf": "PDF report will be available after a successful validation.",
-      "page": "Page",
-      "shortTitle": "Signature Summary",
-      "signatureCountLabel": "{{count}} signatures",
-      "signaturesFound": "{{count}} signatures detected",
-      "signaturesValid": "{{count}} fully valid",
-      "title": "Signature Validation Report"
+      "filesEvaluated": "تم تقييم {{count}} ملفًا",
+      "footer": "تم التحقق عبر Stirling PDF",
+      "generatedAt": "تم الإنشاء",
+      "noPdf": "سيكون تقرير PDF متاحًا بعد تحقق ناجح.",
+      "page": "صفحة",
+      "shortTitle": "ملخص التوقيع",
+      "signatureCountLabel": "{{count}} توقيعات",
+      "signaturesFound": "تم اكتشاف {{count}} توقيعًا",
+      "signaturesValid": "{{count}} صالح تمامًا",
+      "title": "تقرير التحقق من التوقيع"
     },
     "settings": {
-      "certHint": "Upload a trusted X.509 certificate to validate against a custom trust source.",
-      "title": "Validation Settings"
+      "certHint": "ارفع شهادة X.509 موثوقة للتحقق مقابل مصدر ثقة مخصص.",
+      "title": "إعدادات التحقق"
     },
-    "signatureDate": "Signature Date",
-    "totalSignatures": "Total Signatures"
+    "signatureDate": "تاريخ التوقيع",
+    "totalSignatures": "إجمالي التوقيعات"
   },
   "replaceColor": {
     "tags": "استبدال اللون،عمليات الصفحة،الواجهة الخلفية،جهة الخادم",
     "labels": {
-      "settings": "Settings",
-      "colourOperation": "Colour operation"
+      "settings": "الإعدادات",
+      "colourOperation": "عملية الألوان"
     },
     "options": {
-      "highContrast": "High contrast",
-      "invertAll": "Invert all colours",
-      "custom": "Custom",
-      "cmyk": "Convert to CMYK"
+      "highContrast": "تباين عالٍ",
+      "invertAll": "عكس كل الألوان",
+      "custom": "مخصص",
+      "cmyk": "تحويل إلى CMYK"
     },
     "tooltip": {
       "header": {
-        "title": "Replace & Invert Colour Settings Overview"
+        "title": "نظرة عامة على إعدادات الاستبدال وعكس الألوان"
       },
       "description": {
-        "title": "Description",
-        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+        "title": "الوصف",
+        "text": "حوّل ألوان PDF لتحسين القابلية للقراءة وسهولة الوصول. اختر إعدادات تباين عالٍ مسبقة، أو اعكس كل الألوان، أو أنشئ مخططات ألوان مخصصة."
       },
       "highContrast": {
-        "title": "High Contrast",
-        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
-        "bullet1": "White text on black background - Classic dark mode",
-        "bullet2": "Black text on white background - Standard high contrast",
-        "bullet3": "Yellow text on black background - High visibility option",
-        "bullet4": "Green text on black background - Alternative high contrast"
+        "title": "تباين عالٍ",
+        "text": "تطبيق مجموعات ألوان عالية التباين معدّة مسبقًا لتحسين القراءة والامتثال لإتاحة الوصول.",
+        "bullet1": "نص أبيض على خلفية سوداء - الوضع الداكن الكلاسيكي",
+        "bullet2": "نص أسود على خلفية بيضاء - تباين عالٍ قياسي",
+        "bullet3": "نص أصفر على خلفية سوداء - خيار عالي الوضوح",
+        "bullet4": "نص أخضر على خلفية سوداء - تباين عالٍ بديل"
       },
       "invertAll": {
-        "title": "Invert All Colours",
-        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+        "title": "عكس كل الألوان",
+        "text": "اعكس كل الألوان في ملف PDF بالكامل، مما يخلق تأثيرًا مشابهًا للسالب. مفيد لإنشاء نسخ وضع داكن للمستندات أو تقليل إجهاد العين في الإضاءة المنخفضة."
       },
       "custom": {
-        "title": "Custom Colours",
-        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
-        "bullet1": "Text colour - Choose the colour for text elements",
-        "bullet2": "Background colour - Set the background colour for the document"
+        "title": "ألوان مخصصة",
+        "text": "حدّد ألوان النص والخلفية الخاصة بك باستخدام منتقي الألوان. مثالي لإنشاء مستندات بعلامة تجارية أو متطلبات إتاحة محددة.",
+        "bullet1": "لون النص - اختر لون عناصر النص",
+        "bullet2": "لون الخلفية - عين لون خلفية المستند"
       },
       "cmyk": {
-        "title": "Convert to CMYK",
-        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
+        "title": "التحويل إلى CMYK",
+        "text": "حوّل ملف PDF من فضاء ألوان RGB إلى فضاء ألوان CMYK، مُحسّن للطباعة الاحترافية. يحوّل هذا الإجراء الألوان إلى نموذج سماوي وأرجواني وأصفر وأسود المستخدم في الطابعات."
       }
     },
     "error": {
-      "failed": "An error occurred while processing the colour replacement."
+      "failed": "حدث خطأ أثناء معالجة استبدال الألوان."
     }
   },
   "login": {
@@ -3069,6 +3179,7 @@
     "rememberme": "تذكرني",
     "invalid": "اسم المستخدم أو كلمة المرور غير صالحة.",
     "locked": "تم قفل حسابك.",
+    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مجددًا.",
     "signinTitle": "الرجاء تسجيل الدخول",
     "ssoSignIn": "تسجيل الدخول عبر تسجيل الدخول الأحادي",
     "oAuth2AutoCreateDisabled": "تم تعطيل الإنشاء التلقائي لمستخدم OAuth2",
@@ -3091,11 +3202,11 @@
     "enterEmail": "أدخل بريدك الإلكتروني",
     "enterPassword": "أدخل كلمة المرور",
     "loggingIn": "جارٍ تسجيل الدخول...",
-    "username": "Username",
-    "enterUsername": "Enter username",
-    "useEmailInstead": "Login with email",
-    "forgotPassword": "Forgot your password?",
-    "logIn": "Log In",
+    "username": "اسم المستخدم",
+    "enterUsername": "أدخل اسم المستخدم",
+    "useEmailInstead": "تسجيل الدخول بالبريد الإلكتروني",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "logIn": "تسجيل الدخول",
     "signingIn": "جارٍ تسجيل الدخول...",
     "login": "تسجيل الدخول",
     "or": "أو",
@@ -3114,9 +3225,9 @@
     "passwordResetSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى {{email}}! تفقد بريدك واتبع التعليمات.",
     "failedToSignIn": "فشل تسجيل الدخول بواسطة {{provider}}: {{message}}",
     "unexpectedError": "خطأ غير متوقع: {{message}}",
-    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
-    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "accountCreatedSuccess": "تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.",
+    "passwordChangedSuccess": "تم تغيير كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.",
+    "credentialsUpdated": "تم تحديث بيانات الاعتماد الخاصة بك. يرجى تسجيل الدخول مجددًا."
   },
   "signup": {
     "title": "إنشاء حساب",
@@ -3140,18 +3251,18 @@
     "checkEmailConfirmation": "تحقّق من بريدك الإلكتروني للعثور على رابط التأكيد لإكمال التسجيل.",
     "accountCreatedSuccessfully": "تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.",
     "unexpectedError": "خطأ غير متوقع: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
+    "useEmailInstead": "استخدم البريد الإلكتروني بدلًا من ذلك",
+    "nameRequired": "الاسم مطلوب",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "confirmPasswordRequired": "يرجى تأكيد كلمة المرور"
   },
   "pdfToSinglePage": {
     "title": "PDF إلى صفحة واحدة",
     "header": "PDF إلى صفحة واحدة",
     "submit": "تحويل إلى صفحة واحدة",
     "description": "هذه الأداة ستدمج كل صفحات PDF في صفحة واحدة كبيرة. سيبقى العرض كما هو في الصفحات الأصلية، لكن الارتفاع سيكون مجموع ارتفاعات جميع الصفحات.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "صفحة_واحدة",
     "files": {
       "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
@@ -3184,22 +3295,22 @@
   "adjustContrast": {
     "title": "ضبط التباين",
     "header": "ضبط التباين",
-    "basic": "Basic Adjustments",
+    "basic": "تعديلات أساسية",
     "contrast": "التباين:",
     "brightness": "السطوع:",
     "saturation": "التشبع:",
     "download": "تنزيل",
-    "adjustColors": "Adjust Colors",
-    "blue": "Blue",
-    "confirm": "Confirm",
+    "adjustColors": "ضبط الألوان",
+    "blue": "أزرق",
+    "confirm": "تأكيد",
     "error": {
-      "failed": "Failed to adjust colors/contrast"
+      "failed": "فشل ضبط الألوان/التباين"
     },
-    "green": "Green",
-    "noPreview": "Select a PDF to preview",
-    "red": "Red",
+    "green": "أخضر",
+    "noPreview": "حدد ملف PDF للمعاينة",
+    "red": "أحمر",
     "results": {
-      "title": "Adjusted PDF"
+      "title": "PDF معدل"
     }
   },
   "compress": {
@@ -3349,10 +3460,10 @@
     "removeImage": "إزالة الصورة",
     "submit": "إزالة الصورة",
     "error": {
-      "failed": "Failed to remove images from the PDF."
+      "failed": "فشلت إزالة الصور من ملف PDF."
     },
     "results": {
-      "title": "Remove Images Results"
+      "title": "نتائج إزالة الصور"
     }
   },
   "splitByChapters": {
@@ -3494,17 +3605,18 @@
     "rotateLeft": "تدوير لليسار",
     "rotateRight": "تدوير لليمين",
     "toggleSidebar": "تبديل الشريط الجانبي",
-    "exportSelected": "Export Selected Pages",
-    "toggleAnnotations": "Toggle Annotations Visibility",
-    "annotationMode": "Toggle Annotation Mode",
-    "draw": "Draw",
-    "save": "Save"
+    "exportSelected": "تصدير الصفحات المحددة",
+    "toggleAnnotations": "تبديل ظهور التعليقات التوضيحية",
+    "annotationMode": "تبديل وضع التعليقات",
+    "draw": "رسم",
+    "save": "حفظ",
+    "saveChanges": "حفظ التغييرات"
   },
   "search": {
     "title": "بحث PDF",
     "placeholder": "أدخل مصطلح البحث...",
-    "noResults": "No results found",
-    "searching": "Searching..."
+    "noResults": "لا توجد نتائج",
+    "searching": "جارٍ البحث..."
   },
   "guestBanner": {
     "title": "أنت تستخدم Stirling PDF كضيف!",
@@ -3542,462 +3654,482 @@
     "automate": "أتمتة",
     "files": "الملفات",
     "activity": "النشاط",
-    "help": "Help",
-    "account": "Account",
+    "help": "مساعدة",
+    "account": "الحساب",
     "config": "الإعداد",
-    "adminSettings": "Admin Settings",
-    "allTools": "كل الأدوات"
+    "settings": "إعدادات",
+    "adminSettings": "إعدادات المشرف",
+    "allTools": "كل الأدوات",
+    "reader": "القارئ",
+    "helpMenu": {
+      "toolsTour": "جولة الأدوات",
+      "toolsTourDesc": "تعرّف على ما تستطيع الأدوات فعله",
+      "adminTour": "جولة المسؤول",
+      "adminTourDesc": "استكشف إعدادات وميزات المسؤول"
+    }
   },
   "admin": {
-    "error": "Error",
-    "success": "Success",
-    "expand": "Expand",
-    "close": "Close",
+    "error": "خطأ",
+    "success": "نجاح",
+    "expand": "توسيع",
+    "close": "إغلاق",
     "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "نشط",
+      "inactive": "غير نشط"
     },
     "settings": {
-      "title": "Admin Settings",
-      "workspace": "Workspace",
-      "fetchError": "Failed to load settings",
-      "saveError": "Failed to save settings",
-      "saved": "Settings saved successfully",
-      "saveSuccess": "Settings saved successfully",
-      "save": "Save Changes",
-      "restartRequired": "Restart Required",
-      "restart": {
-        "title": "Restart Required",
-        "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
-        "question": "Would you like to restart the server now or later?",
-        "now": "Restart Now",
-        "later": "Restart Later"
+      "title": "إعدادات المسؤول",
+      "workspace": "مساحة العمل",
+      "fetchError": "فشل تحميل الإعدادات",
+      "saveError": "فشل حفظ الإعدادات",
+      "saved": "تم حفظ الإعدادات بنجاح",
+      "saveSuccess": "تم حفظ الإعدادات بنجاح",
+      "save": "حفظ التغييرات",
+      "restartRequired": "مطلوب إعادة تشغيل",
+      "loginRequired": "يجب تمكين وضع تسجيل الدخول لتعديل إعدادات المسؤول",
+      "loginDisabled": {
+        "title": "مطلوب وضع تسجيل الدخول",
+        "message": "يجب تمكين وضع تسجيل الدخول لتعديل إعدادات المسؤول. يرجى ضبط SECURITY_ENABLELOGIN=true في بيئتك أو security.enableLogin: true في settings.yml، ثم أعد تشغيل الخادم.",
+        "readOnly": "تعرض الإعدادات أدناه قيمًا نموذجية للمرجع. فعّل وضع تسجيل الدخول لعرض التهيئة الفعلية وتحريرها."
       },
-      "restarting": "Restarting Server",
-      "restartingMessage": "The server is restarting. Please wait a moment...",
-      "restartError": "Failed to restart server. Please restart manually.",
+      "restart": {
+        "title": "مطلوب إعادة تشغيل",
+        "message": "تم حفظ الإعدادات بنجاح. يلزم إعادة تشغيل الخادم لتطبيق التغييرات.",
+        "question": "هل ترغب في إعادة تشغيل الخادم الآن أم لاحقًا؟",
+        "now": "أعد التشغيل الآن",
+        "later": "أعد التشغيل لاحقًا"
+      },
+      "restarting": "جارٍ إعادة تشغيل الخادم",
+      "restartingMessage": "الخادم يُعاد تشغيله. يرجى الانتظار لحظة...",
+      "restartError": "فشل إعادة تشغيل الخادم. يرجى إعادة التشغيل يدويًا.",
       "general": {
-        "title": "System Settings",
-        "description": "Configure system-wide application settings including branding and default behaviour.",
-        "ui": "User Interface",
-        "system": "System",
+        "title": "إعدادات النظام",
+        "description": "تهيئة إعدادات التطبيق على مستوى النظام بما في ذلك العلامة التجارية والسلوك الافتراضي.",
+        "ui": "واجهة المستخدم",
+        "system": "النظام",
         "appName": {
-          "label": "Application Name",
-          "description": "The name displayed in the browser tab and home page"
+          "label": "اسم التطبيق",
+          "description": "الاسم المعروض في تبويب المتصفح والصفحة الرئيسية"
         },
         "appNameNavbar": {
-          "label": "Navbar Brand",
-          "description": "The name displayed in the navigation bar"
+          "label": "علامة الشريط العلوي",
+          "description": "الاسم المعروض في شريط التنقل"
         },
         "homeDescription": {
-          "label": "Home Description",
-          "description": "The description text shown on the home page"
+          "label": "وصف الصفحة الرئيسية",
+          "description": "نص الوصف الظاهر في الصفحة الرئيسية"
         },
         "defaultLocale": {
-          "label": "Default Locale",
-          "description": "The default language for new users (e.g., en_US, es_ES)"
+          "label": "اللغة الافتراضية",
+          "description": "اللغة الافتراضية للمستخدمين الجدد (مثل: en_US, es_ES)"
         },
         "fileUploadLimit": {
-          "label": "File Upload Limit",
-          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+          "label": "حد رفع الملفات",
+          "description": "الحد الأقصى لحجم رفع الملف (مثل: 100MB، 1GB)"
         },
         "showUpdate": {
-          "label": "Show Update Notifications",
-          "description": "Display notifications when a new version is available"
+          "label": "إظهار إشعارات التحديث",
+          "description": "عرض إشعارات عند توفر إصدار جديد"
         },
         "showUpdateOnlyAdmin": {
-          "label": "Show Updates to Admins Only",
-          "description": "Restrict update notifications to admin users only"
+          "label": "عرض التحديثات للمسؤولين فقط",
+          "description": "قصر إشعارات التحديث على المستخدمين المسؤولين فقط"
         },
         "customHTMLFiles": {
-          "label": "Custom HTML Files",
-          "description": "Allow serving custom HTML files from the customFiles directory"
+          "label": "ملفات HTML مخصصة",
+          "description": "السماح بتقديم ملفات HTML مخصصة من مجلد customFiles"
         },
         "languages": {
-          "label": "Available Languages",
-          "description": "Languages that users can select from (leave empty to enable all languages)"
+          "label": "اللغات المتاحة",
+          "description": "اللغات التي يمكن للمستخدمين الاختيار منها (اتركه فارغًا لتمكين جميع اللغات)"
         },
         "customMetadata": {
-          "label": "Custom Metadata",
+          "label": "بيانات وصفية مخصصة",
           "autoUpdate": {
-            "label": "Auto Update Metadata",
-            "description": "Automatically update PDF metadata on all processed documents"
+            "label": "تحديث البيانات الوصفية تلقائيًا",
+            "description": "تحديث بيانات PDF الوصفية تلقائيًا على جميع المستندات المعالجة"
           },
           "author": {
-            "label": "Default Author",
-            "description": "Default author for PDF metadata (e.g., username)"
+            "label": "المؤلف الافتراضي",
+            "description": "المؤلف الافتراضي لبيانات PDF الوصفية (مثال: اسم المستخدم)"
           },
           "creator": {
-            "label": "Default Creator",
-            "description": "Default creator for PDF metadata"
+            "label": "المنشئ الافتراضي",
+            "description": "المنشئ الافتراضي لبيانات PDF الوصفية"
           },
           "producer": {
-            "label": "Default Producer",
-            "description": "Default producer for PDF metadata"
+            "label": "المنتِج الافتراضي",
+            "description": "المنتِج الافتراضي لبيانات PDF الوصفية"
           }
         },
+        "logoStyle": {
+          "label": "نمط الشعار",
+          "description": "اختر بين الشعار العصري البسيط أو أيقونة S الكلاسيكية",
+          "classic": "كلاسيكي",
+          "modern": "حديث"
+        },
         "customPaths": {
-          "label": "Custom Paths",
-          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "label": "مسارات مخصصة",
+          "description": "تهيئة مسارات مخصصة لنظام الملفات لمعالجة خط الأنابيب والأدوات الخارجية",
           "pipeline": {
-            "label": "Pipeline Directories",
+            "label": "دلائل خط الأنابيب",
             "watchedFoldersDir": {
-              "label": "Watched Folders Directory",
-              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+              "label": "دليل المجلدات المراقَبة",
+              "description": "الدليل الذي يراقب فيه خط الأنابيب ملفات PDF الواردة (اتركه فارغًا للإعداد الافتراضي: /pipeline/watchedFolders)"
             },
             "finishedFoldersDir": {
-              "label": "Finished Folders Directory",
-              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+              "label": "دليل المجلدات المنتهية",
+              "description": "الدليل الذي تُخرَج فيه ملفات PDF المعالجة (اتركه فارغًا للإعداد الافتراضي: /pipeline/finishedFolders)"
             }
           },
           "operations": {
-            "label": "External Tool Paths",
+            "label": "مسارات الأدوات الخارجية",
             "weasyprint": {
-              "label": "WeasyPrint Executable",
-              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+              "label": "ملف WeasyPrint التنفيذي",
+              "description": "المسار إلى ملف WeasyPrint التنفيذي لتحويل HTML إلى PDF (اتركه فارغًا للإعداد الافتراضي: /opt/venv/bin/weasyprint)"
             },
             "unoconvert": {
-              "label": "Unoconvert Executable",
-              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+              "label": "ملف unoconvert التنفيذي",
+              "description": "المسار إلى LibreOffice unoconvert لتحويل المستندات (اتركه فارغًا للإعداد الافتراضي: /opt/venv/bin/unoconvert)"
             }
           }
         }
       },
       "security": {
-        "title": "Security",
-        "description": "Configure authentication, login behaviour, and security policies.",
+        "title": "الأمان",
+        "description": "تهيئة المصادقة، وسلوك تسجيل الدخول، وسياسات الأمان.",
         "ssoNotice": {
-          "title": "Looking for SSO/SAML settings?",
-          "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+          "title": "هل تبحث عن إعدادات SSO/SAML؟",
+          "message": "تم نقل موفري مصادقة OAuth2 وSAML2 إلى قائمة الاتصالات لسهولة الإدارة."
         },
-        "authentication": "Authentication",
+        "authentication": "المصادقة",
         "enableLogin": {
-          "label": "Enable Login",
-          "description": "Require users to log in before accessing the application"
+          "label": "تمكين تسجيل الدخول",
+          "description": "إلزام المستخدمين بتسجيل الدخول قبل الوصول إلى التطبيق"
         },
         "loginMethod": {
-          "label": "Login Method",
-          "description": "The authentication method to use for user login",
-          "all": "All Methods",
-          "normal": "Username/Password Only",
-          "oauth2": "OAuth2 Only",
-          "saml2": "SAML2 Only"
+          "label": "طريقة تسجيل الدخول",
+          "description": "طريقة المصادقة المستخدمة لتسجيل دخول المستخدم",
+          "all": "جميع الطرق",
+          "normal": "اسم المستخدم/كلمة المرور فقط",
+          "oauth2": "OAuth2 فقط",
+          "saml2": "SAML2 فقط"
         },
         "loginAttemptCount": {
-          "label": "Login Attempt Limit",
-          "description": "Maximum number of failed login attempts before account lockout"
+          "label": "حدّ محاولات تسجيل الدخول",
+          "description": "الحد الأقصى لعدد محاولات تسجيل الدخول الفاشلة قبل قفل الحساب"
         },
         "loginResetTimeMinutes": {
-          "label": "Login Reset Time (minutes)",
-          "description": "Time before failed login attempts are reset"
+          "label": "وقت إعادة التعيين لتسجيل الدخول (بالدقائق)",
+          "description": "المدة قبل إعادة تعيين عدد المحاولات الفاشلة"
         },
         "csrfDisabled": {
-          "label": "Disable CSRF Protection",
-          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+          "label": "تعطيل حماية CSRF",
+          "description": "تعطيل حماية تزوير طلبات المواقع (غير مستحسن)"
         },
         "initialLogin": {
-          "label": "Initial Login",
+          "label": "تسجيل الدخول الأولي",
           "username": {
-            "label": "Initial Username",
-            "description": "The username for the initial admin account"
+            "label": "اسم المستخدم الأولي",
+            "description": "اسم المستخدم لحساب المسؤول الأولي"
           },
           "password": {
-            "label": "Initial Password",
-            "description": "The password for the initial admin account"
+            "label": "كلمة المرور الأولية",
+            "description": "كلمة المرور لحساب المسؤول الأولي"
           }
         },
         "jwt": {
-          "label": "JWT Configuration",
+          "label": "تهيئة JWT",
           "secureCookie": {
-            "label": "Secure Cookie",
-            "description": "Require HTTPS for JWT cookies (recommended for production)"
+            "label": "ملف تعريف ارتباط آمن",
+            "description": "طلب HTTPS لملفات تعريف الارتباط الخاصة بـ JWT (موصى به للإنتاج)"
           },
           "keyRetentionDays": {
-            "label": "Key Retention Days",
-            "description": "Number of days to retain old JWT keys for verification"
+            "label": "أيام الاحتفاظ بالمفاتيح",
+            "description": "عدد الأيام للاحتفاظ بمفاتيح JWT القديمة لأغراض التحقق"
           },
           "persistence": {
-            "label": "Enable Key Persistence",
-            "description": "Store JWT keys persistently to survive server restarts"
+            "label": "تمكين استمرارية المفاتيح",
+            "description": "تخزين مفاتيح JWT بشكل دائم لتجاوز عمليات إعادة تشغيل الخادم"
           },
           "enableKeyRotation": {
-            "label": "Enable Key Rotation",
-            "description": "Automatically rotate JWT signing keys periodically"
+            "label": "تمكين تدوير المفاتيح",
+            "description": "تدوير مفاتيح توقيع JWT تلقائيًا بشكل دوري"
           },
           "enableKeyCleanup": {
-            "label": "Enable Key Cleanup",
-            "description": "Automatically remove expired JWT keys"
+            "label": "تمكين تنظيف المفاتيح",
+            "description": "إزالة مفاتيح JWT المنتهية تلقائيًا"
           }
         },
         "audit": {
-          "label": "Audit Logging",
+          "label": "سجل التدقيق",
           "enabled": {
-            "label": "Enable Audit Logging",
-            "description": "Track user actions and system events for compliance and security monitoring"
+            "label": "تمكين سجل التدقيق",
+            "description": "تتبع إجراءات المستخدمين وأحداث النظام للامتثال ومراقبة الأمان"
           },
           "level": {
-            "label": "Audit Level",
-            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+            "label": "مستوى التدقيق",
+            "description": "0=إيقاف، 1=أساسي، 2=قياسي، 3=مفصل"
           },
           "retentionDays": {
-            "label": "Audit Retention (days)",
-            "description": "Number of days to retain audit logs"
+            "label": "الاحتفاظ بسجلات التدقيق (أيام)",
+            "description": "عدد الأيام للاحتفاظ بسجلات التدقيق"
           }
         },
         "htmlUrlSecurity": {
-          "label": "HTML URL Security",
-          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "label": "أمان عناوين URL لـ HTML",
+          "description": "تهيئة قيود الوصول إلى URL لمعالجة HTML لمنع هجمات SSRF",
           "enabled": {
-            "label": "Enable URL Security",
-            "description": "Enable URL security restrictions for HTML to PDF conversions"
+            "label": "تمكين أمان URL",
+            "description": "تمكين قيود أمان URL لتحويل HTML إلى PDF"
           },
           "level": {
-            "label": "Security Level",
-            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-            "max": "Maximum (Whitelist Only)",
-            "medium": "Medium (Block Internal)",
-            "off": "Off (No Restrictions)"
+            "label": "مستوى الأمان",
+            "description": "MAX: القائمة البيضاء فقط، MEDIUM: حظر الشبكات الداخلية، OFF: بدون قيود",
+            "max": "أقصى (القائمة البيضاء فقط)",
+            "medium": "متوسط (حظر الداخلي)",
+            "off": "إيقاف (بدون قيود)"
           },
-          "advanced": "Advanced Settings",
+          "advanced": "إعدادات متقدمة",
           "allowedDomains": {
-            "label": "Allowed Domains (Whitelist)",
-            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+            "label": "النطاقات المسموح بها (القائمة البيضاء)",
+            "description": "نطاق واحد في كل سطر (مثال: cdn.example.com). يُسمح بهذه النطاقات فقط عند ضبط المستوى على MAX"
           },
           "blockedDomains": {
-            "label": "Blocked Domains (Blacklist)",
-            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+            "label": "النطاقات المحظورة (القائمة السوداء)",
+            "description": "نطاق واحد في كل سطر (مثال: malicious.com). نطاقات إضافية للحظر"
           },
           "internalTlds": {
-            "label": "Internal TLDs",
-            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+            "label": "نطاقات المستوى الأعلى الداخلية (TLDs)",
+            "description": "اكتب TLD واحدًا في كل سطر (مثال: .local, .internal). حظر النطاقات التي تطابق هذه الأنماط من TLD"
           },
-          "networkBlocking": "Network Blocking",
+          "networkBlocking": "حظر الشبكة",
           "blockPrivateNetworks": {
-            "label": "Block Private Networks",
-            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+            "label": "حظر الشبكات الخاصة",
+            "description": "حظر شبكات RFC 1918 الخاصة (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
           },
           "blockLocalhost": {
-            "label": "Block Localhost",
-            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+            "label": "حظر Localhost",
+            "description": "حظر عناوين localhost وloopback ‏(127.x.x.x, ::1)"
           },
           "blockLinkLocal": {
-            "label": "Block Link-Local Addresses",
-            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+            "label": "حظر عناوين Link-Local",
+            "description": "حظر عناوين link-local ‏(169.254.x.x, fe80::/10)"
           },
           "blockCloudMetadata": {
-            "label": "Block Cloud Metadata Endpoints",
-            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+            "label": "حظر نقاط نهاية بيانات تعريف السحابة",
+            "description": "حظر نقاط نهاية بيانات تعريف مزودي السحابة (169.254.169.254)"
           }
         }
       },
       "connections": {
-        "title": "Connections",
-        "description": "Configure external authentication providers like OAuth2 and SAML.",
-        "linkedServices": "Linked Services",
-        "unlinkedServices": "Unlinked Services",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "disconnected": "Provider disconnected successfully",
-        "disconnectError": "Failed to disconnect provider",
+        "title": "الاتصالات",
+        "description": "تهيئة موفري المصادقة الخارجيين مثل OAuth2 وSAML.",
+        "linkedServices": "خدمات مرتبطة",
+        "unlinkedServices": "خدمات غير مرتبطة",
+        "connect": "ربط",
+        "disconnect": "قطع الاتصال",
+        "disconnected": "تم قطع اتصال المزوّد بنجاح",
+        "disconnectError": "فشل قطع اتصال المزوّد",
         "ssoAutoLogin": {
-          "label": "SSO Auto Login",
-          "enable": "Enable SSO Auto Login",
-          "description": "Automatically redirect to SSO login when authentication is required"
+          "label": "تسجيل دخول تلقائي عبر SSO",
+          "enable": "تمكين تسجيل الدخول التلقائي عبر SSO",
+          "description": "إعادة التوجيه تلقائيًا إلى تسجيل الدخول عبر SSO عند الحاجة إلى المصادقة"
         },
         "oauth2": {
           "label": "OAuth2",
           "enabled": {
-            "label": "Enable OAuth2",
-            "description": "Allow users to authenticate using OAuth2 providers"
+            "label": "تمكين OAuth2",
+            "description": "السماح للمستخدمين بالمصادقة عبر موفري OAuth2"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The OAuth2 provider to use for authentication"
+            "label": "المزوّد",
+            "description": "موفّر OAuth2 المستخدم للمصادقة"
           },
           "issuer": {
-            "label": "Issuer URL",
-            "description": "The OAuth2 provider issuer URL"
+            "label": "عنوان URL للمُصدِر",
+            "description": "عنوان URL للمُصدِر لدى موفّر OAuth2"
           },
           "clientId": {
-            "label": "Client ID",
-            "description": "The OAuth2 client ID from your provider"
+            "label": "معرّف العميل",
+            "description": "معرّف عميل OAuth2 من مزوّدك"
           },
           "clientSecret": {
-            "label": "Client Secret",
-            "description": "The OAuth2 client secret from your provider"
+            "label": "السرّ الخاص بالعميل",
+            "description": "سرّ عميل OAuth2 من مزوّدك"
           },
           "useAsUsername": {
-            "label": "Use as Username",
-            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+            "label": "الاستخدام كاسم مستخدم",
+            "description": "حقل مطالبة OAuth2 المستخدم كاسم المستخدم (مثال: email, sub)"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first OAuth2 login"
+            "label": "إنشاء المستخدمين تلقائيًا",
+            "description": "إنشاء حسابات المستخدمين تلقائيًا عند أول تسجيل دخول عبر OAuth2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via OAuth2"
+            "label": "حظر التسجيل",
+            "description": "منع تسجيل المستخدمين الجدد عبر OAuth2"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
-            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+            "label": "نطاقات OAuth2",
+            "description": "قائمة بنطاقات OAuth2 المطلوب طلبها مفصولة بفواصل (مثال: openid, profile, email)"
           }
         },
         "saml2": {
           "label": "SAML2",
           "enabled": {
-            "label": "Enable SAML2",
-            "description": "Allow users to authenticate using SAML2 providers"
+            "label": "تمكين SAML2",
+            "description": "السماح للمستخدمين بالمصادقة عبر موفري SAML2"
           },
           "provider": {
-            "label": "Provider",
-            "description": "The SAML2 provider name"
+            "label": "المزوّد",
+            "description": "اسم موفّر SAML2"
           },
           "registrationId": {
-            "label": "Registration ID",
-            "description": "The SAML2 registration identifier"
+            "label": "معرّف التسجيل",
+            "description": "مُعرِّف التسجيل لـ SAML2"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first SAML2 login"
+            "label": "إنشاء المستخدمين تلقائيًا",
+            "description": "إنشاء حسابات المستخدمين تلقائيًا عند أول تسجيل دخول عبر SAML2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via SAML2"
+            "label": "حظر التسجيل",
+            "description": "منع تسجيل المستخدمين الجدد عبر SAML2"
           }
         }
       },
       "database": {
-        "title": "Database",
-        "description": "Configure custom database connection settings for enterprise deployments.",
-        "configuration": "Database Configuration",
+        "title": "قاعدة البيانات",
+        "description": "تهيئة إعدادات اتصال قاعدة بيانات مخصصة لعمليات النشر المؤسسية.",
+        "configuration": "تهيئة قاعدة البيانات",
         "enableCustom": {
-          "label": "Enable Custom Database",
-          "description": "Use your own custom database configuration instead of the default embedded database"
+          "label": "تمكين قاعدة بيانات مخصصة",
+          "description": "استخدام تهيئة قاعدة بيانات مخصصة بدلاً من قاعدة البيانات المضمنة الافتراضية"
         },
         "customUrl": {
-          "label": "Custom Database URL",
-          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+          "label": "عنوان URL لقاعدة البيانات المخصصة",
+          "description": "سلسلة اتصال JDBC كاملة (مثال: jdbc:postgresql://localhost:5432/postgres). عند توفيرها، لن تُستخدم إعدادات الاتصال الفردية أدناه."
         },
         "type": {
-          "label": "Database Type",
-          "description": "Type of database (not used if custom URL is provided)"
+          "label": "نوع قاعدة البيانات",
+          "description": "نوع قاعدة البيانات (لا يُستخدم إذا تم توفير عنوان URL مخصص)"
         },
         "hostName": {
-          "label": "Host Name",
-          "description": "Database server hostname (not used if custom URL is provided)"
+          "label": "اسم المضيف",
+          "description": "اسم مضيف خادم قاعدة البيانات (لا يُستخدم إذا تم توفير عنوان URL مخصص)"
         },
         "port": {
-          "label": "Port",
-          "description": "Database server port (not used if custom URL is provided)"
+          "label": "المنفذ",
+          "description": "منفذ خادم قاعدة البيانات (لا يُستخدم إذا تم توفير عنوان URL مخصص)"
         },
         "name": {
-          "label": "Database Name",
-          "description": "Name of the database (not used if custom URL is provided)"
+          "label": "اسم قاعدة البيانات",
+          "description": "اسم قاعدة البيانات (لا يُستخدم إذا تم توفير عنوان URL مخصص)"
         },
         "username": {
-          "label": "Username",
-          "description": "Database authentication username"
+          "label": "اسم المستخدم",
+          "description": "اسم المستخدم لمصادقة قاعدة البيانات"
         },
         "password": {
-          "label": "Password",
-          "description": "Database authentication password"
+          "label": "كلمة المرور",
+          "description": "كلمة مرور مصادقة قاعدة البيانات"
         }
       },
       "privacy": {
-        "title": "Privacy",
-        "description": "Configure privacy and data collection settings.",
-        "analytics": "Analytics & Tracking",
+        "title": "الخصوصية",
+        "description": "تهيئة إعدادات الخصوصية وجمع البيانات.",
+        "analytics": "التحليلات والتتبّع",
         "enableAnalytics": {
-          "label": "Enable Analytics",
-          "description": "Collect anonymous usage analytics to help improve the application"
+          "label": "تمكين التحليلات",
+          "description": "جمع تحليلات استخدام مجهولة للمساعدة في تحسين التطبيق"
         },
         "metricsEnabled": {
-          "label": "Enable Metrics",
-          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+          "label": "تمكين المقاييس",
+          "description": "تمكين جمع مقاييس الأداء والاستخدام. يوفّر نقطة API لتمكين المسؤولين من الوصول إلى بيانات المقاييس"
         },
-        "searchEngine": "Search Engine Visibility",
+        "searchEngine": "قابلية الظهور في محركات البحث",
         "googleVisibility": {
-          "label": "Google Visibility",
-          "description": "Allow search engines to index this application"
+          "label": "قابلية الظهور في Google",
+          "description": "السماح لمحركات البحث بفهرسة هذا التطبيق"
         }
       },
       "advanced": {
-        "title": "Advanced",
-        "description": "Configure advanced features and experimental functionality.",
-        "features": "Feature Flags",
-        "processing": "Processing",
+        "title": "متقدم",
+        "description": "تهيئة الميزات المتقدمة والوظائف التجريبية.",
+        "features": "أعلام الميزات",
+        "processing": "المعالجة",
         "endpoints": {
-          "label": "Endpoints",
-          "manage": "Manage API Endpoints",
-          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+          "label": "نقاط النهاية",
+          "manage": "إدارة نقاط نهاية API",
+          "description": "تتم تهيئة إدارة نقاط النهاية عبر YAML. راجع الوثائق لمعرفة التفاصيل حول تمكين/تعطيل نقاط نهاية محددة."
         },
         "enableAlphaFunctionality": {
-          "label": "Enable Alpha Features",
-          "description": "Enable experimental and alpha-stage features (may be unstable)"
+          "label": "تمكين ميزات ألفا",
+          "description": "تمكين الميزات التجريبية وميزات مرحلة ألفا (قد تكون غير مستقرة)"
         },
         "enableUrlToPDF": {
-          "label": "Enable URL to PDF",
-          "description": "Allow conversion of web pages to PDF documents"
+          "label": "تمكين تحويل URL إلى PDF",
+          "description": "السماح بتحويل صفحات الويب إلى مستندات PDF"
         },
         "maxDPI": {
-          "label": "Maximum DPI",
-          "description": "Maximum DPI for image processing (0 = unlimited)"
+          "label": "الحد الأقصى لـ DPI",
+          "description": "الحد الأقصى لـ DPI لمعالجة الصور (0 = غير محدود)"
         },
         "tessdataDir": {
-          "label": "Tessdata Directory",
-          "description": "Path to the tessdata directory for OCR language files"
+          "label": "دليل tessdata",
+          "description": "المسار إلى دليل tessdata لملفات لغات OCR"
         },
         "disableSanitize": {
-          "label": "Disable HTML Sanitization",
-          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+          "label": "تعطيل تنقية HTML",
+          "description": "تحذير: خطر أمني - قد يؤدي تعطيل تنقية HTML إلى ثغرات XSS"
         },
         "tempFileManagement": {
-          "label": "Temp File Management",
-          "description": "Configure temporary file storage and cleanup behavior",
+          "label": "إدارة الملفات المؤقتة",
+          "description": "تهيئة تخزين الملفات المؤقتة وسلوك التنظيف",
           "baseTmpDir": {
-            "label": "Base Temp Directory",
-            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+            "label": "الدليل الأساسي للملفات المؤقتة",
+            "description": "الدليل الأساسي للملفات المؤقتة (اتركه فارغًا للإعداد الافتراضي: java.io.tmpdir/stirling-pdf)"
           },
           "libreofficeDir": {
-            "label": "LibreOffice Temp Directory",
-            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+            "label": "دليل LibreOffice للملفات المؤقتة",
+            "description": "دليل ملفات LibreOffice المؤقتة (اتركه فارغًا للإعداد الافتراضي: baseTmpDir/libreoffice)"
           },
           "systemTempDir": {
-            "label": "System Temp Directory",
-            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+            "label": "الدليل المؤقت للنظام",
+            "description": "الدليل المؤقت للنظام المراد تنظيفه (يُستخدم فقط إذا كان cleanupSystemTemp مُمكّنًا)"
           },
           "prefix": {
-            "label": "Temp File Prefix",
-            "description": "Prefix for temp file names"
+            "label": "بادئة اسم الملف المؤقت",
+            "description": "بادئة أسماء الملفات المؤقتة"
           },
           "maxAgeHours": {
-            "label": "Max Age (hours)",
-            "description": "Maximum age in hours before temp files are cleaned up"
+            "label": "الحد الأقصى للعمر (ساعات)",
+            "description": "الحد الأقصى للعمر بالساعات قبل تنظيف الملفات المؤقتة"
           },
           "cleanupIntervalMinutes": {
-            "label": "Cleanup Interval (minutes)",
-            "description": "How often to run cleanup (in minutes)"
+            "label": "فاصل التنظيف (دقائق)",
+            "description": "عدد مرات تنفيذ التنظيف (بالدقائق)"
           },
           "startupCleanup": {
-            "label": "Startup Cleanup",
-            "description": "Clean up old temp files on application startup"
+            "label": "تنظيف عند بدء التشغيل",
+            "description": "تنظيف الملفات المؤقتة القديمة عند بدء تشغيل التطبيق"
           },
           "cleanupSystemTemp": {
-            "label": "Cleanup System Temp",
-            "description": "Whether to clean broader system temp directory (use with caution)"
+            "label": "تنظيف ملفات النظام المؤقتة",
+            "description": "ما إذا كان سيتم تنظيف الدليل المؤقت الأوسع للنظام (يُستخدم بحذر)"
           }
         },
         "processExecutor": {
-          "label": "Process Executor Limits",
-          "description": "Configure session limits and timeouts for each process executor",
+          "label": "حدود منفّذ العمليات",
+          "description": "تهيئة حدود الجلسات والمهلات لكل منفّذ عمليات",
           "sessionLimit": {
-            "label": "Session Limit",
-            "description": "Maximum concurrent instances"
+            "label": "حدّ الجلسات",
+            "description": "الحد الأقصى لعدد المثيلات المتزامنة"
           },
           "timeout": {
-            "label": "Timeout (minutes)",
-            "description": "Maximum execution time"
+            "label": "المهلة (بالدقائق)",
+            "description": "الحد الأقصى لوقت التنفيذ"
           },
           "libreOffice": "LibreOffice",
           "pdfToHtml": "PDF to HTML",
@@ -4012,124 +4144,124 @@
         }
       },
       "mail": {
-        "title": "Mail Server",
-        "description": "Configure SMTP settings for sending email notifications.",
-        "smtp": "SMTP Configuration",
+        "title": "خادم البريد",
+        "description": "تهيئة إعدادات SMTP لإرسال إشعارات البريد الإلكتروني.",
+        "smtp": "تهيئة SMTP",
         "enabled": {
-          "label": "Enable Mail",
-          "description": "Enable email notifications and SMTP functionality"
+          "label": "تمكين البريد",
+          "description": "تمكين إشعارات البريد الإلكتروني ووظائف SMTP"
         },
         "host": {
-          "label": "SMTP Host",
-          "description": "The hostname or IP address of your SMTP server"
+          "label": "مضيف SMTP",
+          "description": "اسم المضيف أو عنوان IP لخادم SMTP الخاص بك"
         },
         "port": {
-          "label": "SMTP Port",
-          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+          "label": "منفذ SMTP",
+          "description": "رقم المنفذ لاتصال SMTP (عادةً 25 أو 465 أو 587)"
         },
         "username": {
-          "label": "SMTP Username",
-          "description": "Username for SMTP authentication"
+          "label": "اسم مستخدم SMTP",
+          "description": "اسم المستخدم لمصادقة SMTP"
         },
         "password": {
-          "label": "SMTP Password",
-          "description": "Password for SMTP authentication"
+          "label": "كلمة مرور SMTP",
+          "description": "كلمة المرور لمصادقة SMTP"
         },
         "from": {
-          "label": "From Address",
-          "description": "The email address to use as the sender"
+          "label": "عنوان المُرسِل",
+          "description": "عنوان البريد الإلكتروني المستخدم كمرسل"
         },
         "enableInvites": {
-          "label": "Enable Email Invites",
-          "description": "Allow admins to invite users via email with auto-generated passwords"
+          "label": "تمكين دعوات البريد الإلكتروني",
+          "description": "السماح للمسؤولين بدعوة المستخدمين عبر البريد الإلكتروني بكلمات مرور مُنشأة تلقائيًا"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
-          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+          "label": "عنوان URL للواجهة الأمامية",
+          "description": "عنوان URL الأساسي للواجهة الأمامية (مثال: https://pdf.example.com). يُستخدم لإنشاء روابط الدعوة في الرسائل. اتركه فارغًا لاستخدام عنوان URL للواجهة الخلفية."
         }
       },
       "legal": {
-        "title": "Legal Documents",
-        "description": "Configure links to legal documents and policies.",
+        "title": "الوثائق القانونية",
+        "description": "تهيئة روابط الوثائق والسياسات القانونية.",
         "disclaimer": {
-          "title": "Legal Responsibility Warning",
-          "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+          "title": "تحذير المسؤولية القانونية",
+          "message": "من خلال تخصيص هذه الوثائق القانونية، تتحمل المسؤولية الكاملة عن ضمان الامتثال لجميع القوانين واللوائح المعمول بها، بما في ذلك على سبيل المثال لا الحصر GDPR ومتطلبات حماية البيانات الأخرى في الاتحاد الأوروبي. لا تُعدّل هذه الإعدادات إلا إذا: (1) كنت تدير نسخة شخصية/خاصة، (2) كنت خارج ولاية الاتحاد الأوروبي القضائية وتفهم التزاماتك القانونية المحلية، أو (3) حصلت على استشارة قانونية مناسبة وتقبل تحمل المسؤولية الكاملة وحدك عن جميع بيانات المستخدم والامتثال القانوني. لا تتحمل Stirling-PDF ومطوروها أي مسؤولية عن التزاماتك القانونية."
         },
         "termsAndConditions": {
-          "label": "Terms and Conditions",
-          "description": "URL or filename to terms and conditions"
+          "label": "الشروط والأحكام",
+          "description": "عنوان URL أو اسم الملف الخاص بالشروط والأحكام"
         },
         "privacyPolicy": {
-          "label": "Privacy Policy",
-          "description": "URL or filename to privacy policy"
+          "label": "سياسة الخصوصية",
+          "description": "عنوان URL أو اسم الملف الخاص بسياسة الخصوصية"
         },
         "accessibilityStatement": {
-          "label": "Accessibility Statement",
-          "description": "URL or filename to accessibility statement"
+          "label": "بيان إمكانية الوصول",
+          "description": "عنوان URL أو اسم الملف الخاص ببيان إمكانية الوصول"
         },
         "cookiePolicy": {
-          "label": "Cookie Policy",
-          "description": "URL or filename to cookie policy"
+          "label": "سياسة ملفات تعريف الارتباط",
+          "description": "عنوان URL أو اسم الملف الخاص بسياسة ملفات تعريف الارتباط"
         },
         "impressum": {
           "label": "Impressum",
-          "description": "URL or filename to impressum (required in some jurisdictions)"
+          "description": "عنوان URL أو اسم الملف الخاص بـ Impressum (مطلوب في بعض السلطات القضائية)"
         }
       },
       "premium": {
-        "title": "Premium & Enterprise",
-        "description": "Configure your premium or enterprise license key.",
-        "license": "License Configuration",
+        "title": "الممتاز والمؤسسي",
+        "description": "تهيئة مفتاح الترخيص للمزايا الممتازة أو المؤسسية.",
+        "license": "تهيئة الترخيص",
         "key": {
-          "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "label": "مفتاح الترخيص",
+          "description": "أدخل مفتاح الترخيص للمزايا الممتازة أو المؤسسية"
         },
         "enabled": {
-          "label": "Enable Premium Features",
-          "description": "Enable license key checks for pro/enterprise features"
+          "label": "تمكين الميزات الممتازة",
+          "description": "تمكين التحقق من مفتاح الترخيص لميزات Pro/المؤسسة"
         },
         "movedFeatures": {
-          "title": "Premium Features Distributed",
-          "message": "Premium and Enterprise features are now organized in their respective sections:"
+          "title": "توزيع الميزات الممتازة",
+          "message": "تم تنظيم ميزات Premium وEnterprise الآن في أقسامها الخاصة:"
         }
       },
       "features": {
-        "title": "Features",
-        "description": "Configure optional features and functionality.",
+        "title": "الميزات",
+        "description": "تهيئة الميزات والوظائف الاختيارية.",
         "serverCertificate": {
-          "label": "Server Certificate",
-          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "label": "شهادة الخادم",
+          "description": "تهيئة إنشاء شهادة على جانب الخادم لوظيفة \"Sign with Stirling-PDF\"",
           "enabled": {
-            "label": "Enable Server Certificate",
-            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+            "label": "تمكين شهادة الخادم",
+            "description": "تمكين شهادة على جانب الخادم لخيار \"Sign with Stirling-PDF\""
           },
           "organizationName": {
-            "label": "Organization Name",
-            "description": "Organization name for generated certificates"
+            "label": "اسم المؤسسة",
+            "description": "اسم المؤسسة للشهادات المُنشأة"
           },
           "validity": {
-            "label": "Certificate Validity (days)",
-            "description": "Number of days the certificate will be valid"
+            "label": "صلاحية الشهادة (أيام)",
+            "description": "عدد الأيام التي ستكون فيها الشهادة صالحة"
           },
           "regenerateOnStartup": {
-            "label": "Regenerate on Startup",
-            "description": "Generate new certificate on each application startup"
+            "label": "إعادة الإنشاء عند بدء التشغيل",
+            "description": "إنشاء شهادة جديدة في كل مرة يبدأ فيها تشغيل التطبيق"
           }
         }
       },
       "endpoints": {
-        "title": "API Endpoints",
-        "description": "Control which API endpoints and endpoint groups are available.",
-        "management": "Endpoint Management",
+        "title": "نقاط نهاية API",
+        "description": "التحكم في نقاط نهاية API ومجموعات نقاط النهاية المتاحة.",
+        "management": "إدارة نقاط النهاية",
         "toRemove": {
-          "label": "Disabled Endpoints",
-          "description": "Select individual endpoints to disable"
+          "label": "نقاط النهاية المعطّلة",
+          "description": "اختر نقاط النهاية الفردية لتعطيلها"
         },
         "groupsToRemove": {
-          "label": "Disabled Endpoint Groups",
-          "description": "Select endpoint groups to disable"
+          "label": "مجموعات نقاط النهاية المعطّلة",
+          "description": "اختر مجموعات نقاط النهاية لتعطيلها"
         },
-        "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
+        "note": "ملاحظة: يؤدي تعطيل نقاط النهاية إلى تقييد الوصول إلى API لكنه لا يزيل مكونات واجهة المستخدم. يتطلب سريان التغييرات إعادة التشغيل."
       }
     }
   },
@@ -4158,7 +4290,7 @@
     "dragFilesInOrClick": "اسحب الملفات أو انقر \"إضافة ملفات\" للتصفّح"
   },
   "fileEditor": {
-    "addFiles": "Add Files"
+    "addFiles": "إضافة ملفات"
   },
   "fileManager": {
     "title": "تحميل ملفات PDF",
@@ -4188,7 +4320,7 @@
     "lastModified": "آخر تعديل",
     "toolChain": "الأدوات المطبّقة",
     "restore": "استعادة",
-    "unzip": "Unzip",
+    "unzip": "فك الضغط",
     "searchFiles": "ابحث في الملفات...",
     "recent": "الأخيرة",
     "localFiles": "الملفات المحلية",
@@ -4214,17 +4346,16 @@
     "download": "تنزيل",
     "delete": "حذف",
     "unsupported": "غير مدعوم",
-    "addToUpload": "Add to Upload",
-    "deleteAll": "Delete All",
-    "loadingFiles": "Loading files...",
-    "noFiles": "No files available",
-    "noFilesFound": "No files found matching your search",
-    "openInPageEditor": "Open in Page Editor",
-    "showAll": "Show All",
-    "sortByDate": "Sort by Date",
-    "sortByName": "Sort by Name",
-    "sortBySize": "Sort by Size",
-    "dropFilesHint": "أسقط الملفات هنا للتحميل"
+    "addToUpload": "إضافة إلى الرفع",
+    "deleteAll": "حذف الكل",
+    "loadingFiles": "جارٍ تحميل الملفات...",
+    "noFiles": "لا توجد ملفات متاحة",
+    "noFilesFound": "لم يتم العثور على ملفات تطابق بحثك",
+    "openInPageEditor": "فتح في محرّر الصفحات",
+    "showAll": "عرض الكل",
+    "sortByDate": "فرز حسب التاريخ",
+    "sortByName": "فرز حسب الاسم",
+    "sortBySize": "فرز حسب الحجم"
   },
   "storage": {
     "temporaryNotice": "تُخزَّن الملفات مؤقتًا في متصفحك وقد تُمسح تلقائيًا",
@@ -4244,7 +4375,7 @@
       "generic": "فشلت عملية التنقية",
       "failed": "حدث خطأ أثناء تنقية PDF."
     },
-    "filenamePrefix": "sanitised",
+    "filenamePrefix": "منقّى",
     "sanitizationResults": "نتائج التنقية",
     "steps": {
       "files": "الملفات",
@@ -4258,27 +4389,27 @@
       "title": "خيارات التنقية",
       "note": "اختر العناصر التي تريد إزالتها من PDF. يجب اختيار خيار واحد على الأقل.",
       "removeJavaScript": {
-        "label": "Remove JavaScript",
+        "label": "إزالة JavaScript",
         "desc": "إزالة إجراءات JavaScript والسكريبتات من PDF"
       },
       "removeEmbeddedFiles": {
-        "label": "Remove Embedded Files",
+        "label": "إزالة الملفات المضمّنة",
         "desc": "إزالة أي ملفات مضمّنة داخل PDF"
       },
       "removeXMPMetadata": {
-        "label": "Remove XMP Metadata",
+        "label": "إزالة بيانات XMP الوصفية",
         "desc": "إزالة بيانات XMP الوصفية من PDF"
       },
       "removeMetadata": {
-        "label": "Remove Document Metadata",
+        "label": "إزالة بيانات المستند الوصفية",
         "desc": "إزالة معلومات بيانات المستند (العنوان، المؤلف، إلخ)"
       },
       "removeLinks": {
-        "label": "Remove Links",
+        "label": "إزالة الروابط",
         "desc": "إزالة الروابط الخارجية وإجراءات التشغيل من PDF"
       },
       "removeFonts": {
-        "label": "Remove Fonts",
+        "label": "إزالة الخطوط",
         "desc": "إزالة الخطوط المضمّنة من PDF"
       }
     }
@@ -4494,6 +4625,12 @@
     }
   },
   "common": {
+    "previous": "السابق",
+    "next": "التالي",
+    "collapse": "طيّ",
+    "expand": "توسيع",
+    "collapsed": "مطويّ",
+    "lines": "أسطر",
     "copy": "نسخ",
     "copied": "تم النسخ!",
     "refresh": "تحديث",
@@ -4502,12 +4639,12 @@
     "used": "مستخدم",
     "available": "متاح",
     "cancel": "إلغاء",
-    "preview": "Preview"
+    "preview": "معاينة"
   },
   "config": {
     "overview": {
-      "title": "Application Configuration",
-      "description": "Current application settings and configuration details."
+      "title": "تهيئة التطبيق",
+      "description": "إعدادات التطبيق الحالية وتفاصيل التهيئة."
     },
     "account": {
       "overview": {
@@ -4530,6 +4667,12 @@
       }
     },
     "apiKeys": {
+      "intro": "استخدم مفتاح API للوصول برمجيًا إلى قدرات المعالجة في Stirling PDF.",
+      "docsTitle": "توثيق API",
+      "docsDescription": "معرفة المزيد حول التكامل مع Stirling PDF:",
+      "docsLink": "توثيق API",
+      "schemaLink": "مرجع مخطط API",
+      "usage": "ضمّن هذا المفتاح في ترويسة X-API-KEY مع جميع طلبات API.",
       "description": "مفتاح API للوصول إلى مجموعة أدوات Stirling الخاصة بـ PDF. انسخه إلى مشروعك أو حدّثه لإنشاء مفتاح جديد.",
       "publicKeyAriaLabel": "مفتاح API عام",
       "copyKeyAriaLabel": "نسخ مفتاح API",
@@ -4566,568 +4709,583 @@
       "title": "نتائج المرفقات"
     },
     "error": {
-      "failed": "Add attachments operation failed"
+      "failed": "فشلت عملية إضافة المرفقات"
     }
   },
   "termsAndConditions": "الشروط والأحكام",
   "logOut": "تسجيل الخروج",
   "addAttachments": {
     "error": {
-      "failed": "An error occurred while adding attachments to the PDF."
+      "failed": "حدث خطأ أثناء إضافة المرفقات إلى ملف PDF."
     }
   },
   "autoRename": {
-    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+    "description": "هذه الأداة ستعيد تسمية ملفات PDF تلقائيًا بناءً على محتواها. تقوم بتحليل المستند للعثور على العنوان الأنسب من النص."
   },
-  "customPosition": "Custom Position",
-  "details": "Details",
-  "downloadUnavailable": "Download unavailable for this item",
-  "invalidUndoData": "Cannot undo: invalid operation data",
+  "customPosition": "موضع مخصص",
+  "details": "التفاصيل",
+  "downloadUnavailable": "التنزيل غير متاح لهذا العنصر",
+  "invalidUndoData": "لا يمكن التراجع: بيانات العملية غير صالحة",
   "margin": {
-    "large": "Large",
-    "medium": "Medium",
-    "small": "Small",
-    "xLarge": "Extra Large"
+    "large": "كبير",
+    "medium": "متوسط",
+    "small": "صغير",
+    "xLarge": "كبير جدًا"
   },
-  "noFilesToUndo": "Cannot undo: no files were processed in the last operation",
-  "noOperationToUndo": "No operation to undo",
-  "noValidFiles": "No valid files to process",
-  "operationCancelled": "Operation cancelled",
+  "noFilesToUndo": "لا يمكن التراجع: لم تتم معالجة أي ملفات في العملية الأخيرة",
+  "noOperationToUndo": "لا توجد عملية للتراجع عنها",
+  "noValidFiles": "لا توجد ملفات صالحة للمعالجة",
+  "operationCancelled": "تم إلغاء العملية",
   "pageEdit": {
-    "deselectAll": "Select None",
-    "selectAll": "Select All"
+    "deselectAll": "إلغاء التحديد",
+    "selectAll": "تحديد الكل"
   },
-  "quickPosition": "Quick Position",
+  "quickPosition": "موضع سريع",
   "reorganizePages": {
     "error": {
-      "failed": "Failed to reorganize pages"
+      "failed": "فشل إعادة تنظيم الصفحات"
     },
     "results": {
-      "title": "Pages Reorganized"
+      "title": "تمت إعادة تنظيم الصفحات"
     },
     "settings": {
-      "title": "Settings"
+      "title": "الإعدادات"
     },
-    "submit": "Reorganize Pages"
+    "submit": "إعادة تنظيم الصفحات"
   },
   "replace-color": {
     "options": {
-      "fill": "Fill colour",
-      "gradient": "Gradient"
+      "fill": "لون التعبئة",
+      "gradient": "تدرّج"
     },
-    "previewOverlayOpacity": "Preview overlay opacity",
-    "previewOverlayTransparency": "Preview overlay transparency",
-    "previewOverlayVisibility": "Show preview overlay",
+    "previewOverlayOpacity": "عتامة تراكب المعاينة",
+    "previewOverlayTransparency": "شفافية تراكب المعاينة",
+    "previewOverlayVisibility": "إظهار تراكب المعاينة",
     "selectText": {
-      "1": "Replace or invert colour options",
-      "2": "Default (preset high contrast colours)",
-      "3": "Custom (choose your own colours)",
-      "4": "Full invert (invert all colours)",
-      "5": "High contrast color options",
-      "6": "White text on black background",
-      "7": "Black text on white background",
-      "8": "Yellow text on black background",
-      "9": "Green text on black background",
-      "10": "Choose text Color",
-      "11": "Choose background Color",
-      "12": "Choose start colour",
-      "13": "Choose end colour"
+      "1": "استبدال أو عكس خيارات الألوان",
+      "2": "افتراضي (ألوان عالية التباين مُعدة مسبقًا)",
+      "3": "مخصص (اختر ألوانك الخاصة)",
+      "4": "عكس كامل (عكس جميع الألوان)",
+      "5": "خيارات ألوان عالية التباين",
+      "6": "نص أبيض على خلفية سوداء",
+      "7": "نص أسود على خلفية بيضاء",
+      "8": "نص أصفر على خلفية سوداء",
+      "9": "نص أخضر على خلفية سوداء",
+      "10": "اختر لون النص",
+      "11": "اختر لون الخلفية",
+      "12": "اختر لون البداية",
+      "13": "اختر لون النهاية"
     },
-    "submit": "Replace",
-    "title": "Replace-Invert-Color"
+    "submit": "استبدال",
+    "title": "استبدال-عكس-الألوان"
   },
-  "size": "Size",
-  "submit": "Submit",
-  "success": "Success",
+  "size": "الحجم",
+  "submit": "إرسال",
+  "success": "نجاح",
   "tools": {
-    "noSearchResults": "No tools found",
-    "noTools": "No tools available"
+    "noSearchResults": "لم يتم العثور على أدوات",
+    "noTools": "لا توجد أدوات متاحة"
   },
-  "undoDataMismatch": "Cannot undo: operation data is corrupted",
-  "undoFailed": "Failed to undo operation",
-  "undoQuotaError": "Cannot undo: insufficient storage space",
-  "undoStorageError": "Undo completed but some files could not be saved to storage",
-  "undoSuccess": "Operation undone successfully",
-  "unsupported": "Unsupported",
+  "undoDataMismatch": "لا يمكن التراجع: بيانات العملية تالفة",
+  "undoFailed": "فشل التراجع عن العملية",
+  "undoQuotaError": "لا يمكن التراجع: مساحة التخزين غير كافية",
+  "undoStorageError": "اكتمل التراجع لكن تعذّر حفظ بعض الملفات إلى التخزين",
+  "undoSuccess": "تم التراجع عن العملية بنجاح",
+  "unsupported": "غير مدعوم",
   "onboarding": {
     "welcomeModal": {
-      "title": "Welcome to Stirling PDF!",
-      "description": "Would you like to take a quick 1-minute tour to learn the key features and how to get started?",
-      "helpHint": "You can always access this tour later from the <strong>Help</strong> button in the bottom left.",
-      "startTour": "Start Tour",
-      "maybeLater": "Maybe Later",
-      "dontShowAgain": "Don't Show Again"
+      "title": "مرحبًا بك في Stirling PDF!",
+      "description": "هل ترغب في جولة سريعة لمدة دقيقة للتعرّف على الميزات الرئيسية وكيفية البدء؟",
+      "helpHint": "يمكنك دائمًا الوصول إلى هذه الجولة لاحقًا من زر <strong>المساعدة</strong> في أسفل اليسار.",
+      "startTour": "بدء الجولة",
+      "maybeLater": "ربما لاحقًا",
+      "dontShowAgain": "عدم الإظهار مجددًا"
     },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
-    "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
-    "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
-    "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
-    "fileSources": "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
-    "workbench": "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
-    "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
-    "viewer": "The <strong>Viewer</strong> lets you read and annotate your PDFs.",
-    "pageEditor": "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting.",
-    "activeFiles": "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process.",
-    "fileCheckbox": "Clicking one of the files selects it for processing. You can select multiple files for batch operations.",
-    "selectControls": "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
-    "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
-    "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
-    "results": "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
-    "fileReplacement": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
-    "pinButton": "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them.",
-    "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again.",
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Finish",
-    "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "selectCropTool": "لنختر أداة <strong>القص</strong> لشرح كيفية استخدام إحدى الأدوات.",
+    "toolInterface": "هذه هي واجهة أداة <strong>القص</strong>. كما ترى، لا يوجد الكثير هنا لأننا لم نُضِف بعد أي ملفات PDF للعمل عليها.",
+    "filesButton": "يتيح زر <strong>الملفات</strong> في شريط الوصول السريع رفع ملفات PDF لاستخدام الأدوات عليها.",
+    "fileSources": "يمكنك رفع ملفات جديدة أو الوصول إلى الملفات الحديثة من هنا. في هذه الجولة سنستخدم ملفًا نموذجيًا فقط.",
+    "workbench": "هذه هي <strong>منضدة العمل</strong> — المنطقة الرئيسية لعرض ملفات PDF وتحريرها.",
+    "viewSwitcher": "استخدم هذه الضوابط لاختيار طريقة عرض ملفات PDF.",
+    "viewer": "يتيح لك <strong>المشاهد</strong> قراءة ملفات PDF وكتابة التعليقات عليها.",
+    "pageEditor": "<strong>محرّر الصفحات</strong> يتيح تنفيذ عمليات مختلفة على صفحات ملفات PDF مثل إعادة الترتيب والدوران والحذف.",
+    "activeFiles": "تعرض واجهة <strong>الملفات النشطة</strong> جميع ملفات PDF التي حمّلتها إلى الأداة، وتتيح لك اختيار ما تريد معالجته.",
+    "fileCheckbox": "يؤدي النقر على أحد الملفات إلى اختياره للمعالجة. يمكنك تحديد عدة ملفات لتنفيذ العمليات الدُفعية.",
+    "selectControls": "يحتوي <strong>الشريط الأيمن</strong> على أزرار لتحديد/إلغاء تحديد جميع ملفات PDF النشطة بسرعة، بالإضافة إلى أزرار لتغيير سمة التطبيق أو لغته.",
+    "cropSettings": "بعد أن اخترنا الملف الذي نريد قصّه، يمكننا تهيئة أداة القص لاختيار المنطقة التي سنقصّ إليها ملف PDF.",
+    "runButton": "بعد تهيئة الأداة، يتيح لك هذا الزر تشغيلها على جميع ملفات PDF المحددة.",
+    "results": "بعد انتهاء تشغيل الأداة، ستعرض خطوة <strong>المراجعة</strong> معاينة للنتائج في هذا اللوح، وتتيح لك التراجع عن العملية أو تنزيل الملف. ",
+    "fileReplacement": "سيحل الملف المعدّل محل الملف الأصلي في منضدة العمل تلقائيًا، مما يتيح لك تشغيله بسهولة عبر مزيد من الأدوات.",
+    "pinButton": "يمكنك استخدام زر <strong>التثبيت</strong> إذا رغبت في بقاء ملفاتك نشطة بعد تشغيل الأدوات عليها.",
+    "wrapUp": "أنت جاهز! تعرّفت على المناطق الرئيسية في التطبيق وكيفية استخدامها. انقر زر <strong>المساعدة</strong> متى شئت لعرض هذه الجولة مرة أخرى.",
+    "previous": "السابق",
+    "next": "التالي",
+    "finish": "إنهاء",
+    "startTour": "بدء الجولة",
+    "startTourDescription": "قم بجولة إرشادية للتعرّف على الميزات الرئيسية في Stirling PDF"
+  },
+  "adminOnboarding": {
+    "welcome": "مرحبًا بك في <strong>جولة المسؤول</strong>! فلنستكشف الميزات المؤسسية القوية والإعدادات المتاحة لمسؤولي النظام.",
+    "configButton": "انقر زر <strong>الإعدادات</strong> للوصول إلى جميع إعدادات النظام وعناصر التحكم الإدارية.",
+    "settingsOverview": "هذه هي <strong>لوحة الإعدادات</strong>. تم تنظيم إعدادات المسؤول حسب الفئات لتسهيل التنقّل.",
+    "teamsAndUsers": "إدارة <strong>الفرق</strong> والمستخدمين الأفراد هنا. يمكنك دعوة مستخدمين جدد عبر البريد الإلكتروني أو الروابط القابلة للمشاركة، أو إنشاء حسابات مخصصة لهم بنفسك.",
+    "systemCustomization": "لدينا طرق واسعة لتخصيص واجهة المستخدم: تتيح لك <strong>إعدادات النظام</strong> تغيير اسم التطبيق واللغات، وتتيح <strong>الميزات</strong> إدارة شهادة الخادم، وتتيح <strong>نقاط النهاية</strong> تمكين أو تعطيل أدوات محددة لمستخدميك.",
+    "databaseSection": "للبيئات الإنتاجية المتقدمة، لدينا إعدادات تسمح بـ<strong>الاتصال بقاعدة بيانات خارجية</strong> حتى تتمكّن من التكامل مع بُنيتك الحالية.",
+    "connectionsSection": "يدعم قسم <strong>الاتصالات</strong> أساليب تسجيل دخول متنوعة بما في ذلك موفرو SSO وSAML المخصصون مثل Google وGitHub، بالإضافة إلى تكاملات البريد الإلكتروني للإشعارات والاتصالات.",
+    "adminTools": "وأخيرًا، لدينا أدوات إدارة متقدمة مثل <strong>التدقيق</strong> لتتبع نشاط النظام و<strong>تحليلات الاستخدام</strong> لمراقبة كيفية تفاعل المستخدمين مع المنصّة.",
+    "wrapUp": "كانت هذه جولة المسؤول! لقد اطّلعت على الميزات المؤسسية التي تجعل Stirling PDF حلاً قويًا وقابلاً للتخصيص للمؤسسات. يمكنك الوصول إلى هذه الجولة في أي وقت من قائمة <strong>المساعدة</strong>."
   },
   "workspace": {
-    "title": "Workspace",
+    "title": "مساحة العمل",
     "people": {
-      "title": "People",
-      "description": "Manage workspace members and their permissions",
-      "loading": "Loading people...",
-      "searchMembers": "Search members...",
-      "addMembers": "Add Members",
+      "title": "الأشخاص",
+      "description": "إدارة أعضاء مساحة العمل وأذوناتهم",
+      "loading": "جارٍ تحميل الأشخاص...",
+      "searchMembers": "ابحث عن الأعضاء...",
+      "addMembers": "إضافة أعضاء",
       "inviteMembers": {
-        "label": "Invite Members",
-        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+        "label": "دعوة أعضاء",
+        "subtitle": "اكتب أو الصق عناوين البريد الإلكتروني أدناه مفصولة بفواصل. سيتم احتساب الفوترة لمساحة العمل حسب عدد الأعضاء."
       },
-      "user": "User",
-      "role": "Role",
-      "team": "Team",
-      "status": "Status",
-      "actions": "Actions",
-      "noMembersFound": "No members found",
-      "active": "Active",
-      "disabled": "Disabled",
-      "activeSession": "Active session",
-      "member": "Member",
-      "admin": "Admin",
+      "user": "مستخدم",
+      "role": "الدور",
+      "team": "الفريق",
+      "status": "الحالة",
+      "actions": "إجراءات",
+      "noMembersFound": "لم يتم العثور على أعضاء",
+      "active": "نشط",
+      "disabled": "معطّل",
+      "activeSession": "جلسة نشطة",
+      "member": "عضو",
+      "admin": "مسؤول",
       "roleDescriptions": {
-        "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "admin": "يمكنه إدارة الإعدادات ودعوة الأعضاء مع صلاحيات إدارية كاملة.",
+        "member": "يمكنه عرض الملفات المشتركة وتحريرها، لكنه لا يستطيع إدارة إعدادات مساحة العمل أو الأعضاء.",
+        "user": "مستخدم"
       },
-      "editRole": "Edit Role",
-      "enable": "Enable",
-      "disable": "Disable",
-      "deleteUser": "Delete User",
-      "deleteUserSuccess": "User deleted successfully",
-      "deleteUserError": "Failed to delete user",
-      "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+      "editRole": "تحرير الدور",
+      "enable": "تمكين",
+      "disable": "تعطيل",
+      "deleteUser": "حذف المستخدم",
+      "deleteUserSuccess": "تم حذف المستخدم بنجاح",
+      "deleteUserError": "فشل حذف المستخدم",
+      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.",
       "addMember": {
-        "title": "Add Member",
-        "username": "Username (Email)",
+        "title": "إضافة عضو",
+        "username": "اسم المستخدم (البريد الإلكتروني)",
         "usernamePlaceholder": "user@example.com",
-        "password": "Password",
-        "passwordPlaceholder": "Enter password",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "forcePasswordChange": "Force password change on first login",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "usernameRequired": "Username and password are required",
-        "passwordTooShort": "Password must be at least 6 characters",
-        "success": "User created successfully",
-        "error": "Failed to create user"
+        "password": "كلمة المرور",
+        "passwordPlaceholder": "أدخل كلمة المرور",
+        "role": "الدور",
+        "team": "الفريق (اختياري)",
+        "teamPlaceholder": "اختر فريقًا",
+        "forcePasswordChange": "فرض تغيير كلمة المرور عند أول تسجيل دخول",
+        "cancel": "إلغاء",
+        "submit": "إضافة عضو",
+        "usernameRequired": "اسم المستخدم وكلمة المرور مطلوبان",
+        "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+        "success": "تم إنشاء المستخدم بنجاح",
+        "error": "فشل إنشاء المستخدم"
       },
       "editMember": {
-        "title": "Edit Member",
-        "editing": "Editing:",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "cancel": "Cancel",
-        "submit": "Update Member",
-        "success": "User updated successfully",
-        "error": "Failed to update user"
+        "title": "تحرير العضو",
+        "editing": "تحرير:",
+        "role": "الدور",
+        "team": "الفريق (اختياري)",
+        "teamPlaceholder": "اختر فريقًا",
+        "cancel": "إلغاء",
+        "submit": "تحديث العضو",
+        "success": "تم تحديث المستخدم بنجاح",
+        "error": "فشل تحديث المستخدم"
       },
       "toggleEnabled": {
-        "success": "User status updated successfully",
-        "error": "Failed to update user status"
+        "success": "تم تحديث حالة المستخدم بنجاح",
+        "error": "فشل تحديث حالة المستخدم"
       },
       "delete": {
-        "success": "User deleted successfully",
-        "error": "Failed to delete user"
+        "success": "تم حذف المستخدم بنجاح",
+        "error": "فشل حذف المستخدم"
       },
       "emailInvite": {
-        "tab": "Email Invite",
-        "description": "Type or paste in emails below, separated by commas. Users will receive login credentials via email.",
-        "emails": "Email Addresses",
+        "tab": "دعوة عبر البريد الإلكتروني",
+        "description": "اكتب أو الصق عناوين البريد الإلكتروني أدناه مفصولة بفواصل. سيتلقى المستخدمون بيانات اعتماد تسجيل الدخول عبر البريد الإلكتروني.",
+        "emails": "عناوين البريد الإلكتروني",
         "emailsPlaceholder": "user1@example.com, user2@example.com",
-        "emailsRequired": "At least one email address is required",
-        "submit": "Send Invites",
-        "success": "user(s) invited successfully",
-        "partialSuccess": "Some invites failed",
-        "allFailed": "Failed to invite users",
-        "error": "Failed to send invites"
+        "emailsRequired": "مطلوب عنوان بريد إلكتروني واحد على الأقل",
+        "submit": "إرسال الدعوات",
+        "success": "تمت دعوة المستخدم/المستخدمين بنجاح",
+        "partialSuccess": "فشلت بعض الدعوات",
+        "allFailed": "فشلت دعوة المستخدمين",
+        "error": "فشل إرسال الدعوات"
       },
       "directInvite": {
-        "tab": "Direct Create"
+        "tab": "إنشاء مباشر"
       },
       "inviteLinkTab": {
-        "tab": "Invite Link"
+        "tab": "رابط دعوة"
       },
       "inviteLink": {
-        "description": "Generate a secure link that allows the user to set their own password",
-        "email": "Email Address",
+        "description": "إنشاء رابط آمن يتيح للمستخدم تعيين كلمة مروره بنفسه",
+        "email": "عنوان البريد الإلكتروني",
         "emailPlaceholder": "user@example.com (optional)",
-        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
-        "emailRequired": "Email address is required",
-        "emailOptional": "Optional - leave blank for a general invite link",
-        "emailRequiredForSend": "Email address is required to send email notification",
-        "expiryHours": "Expiry Hours",
-        "expiryDescription": "How many hours until the link expires",
-        "sendEmail": "Send invite link via email",
-        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
-        "smtpRequired": "SMTP not configured",
-        "generate": "Generate Link",
-        "generated": "Invite Link Generated",
-        "copied": "Link copied to clipboard",
-        "success": "Invite link generated successfully",
-        "successWithEmail": "Invite link generated and sent via email",
-        "emailFailed": "Invite link generated, but email failed",
-        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
-        "error": "Failed to generate invite link",
-        "submit": "Generate Invite Link"
+        "emailDescription": "اختياري — اتركه فارغًا للحصول على رابط دعوة عام يمكن لأي شخص استخدامه",
+        "emailRequired": "عنوان البريد الإلكتروني مطلوب",
+        "emailOptional": "اختياري — اتركه فارغًا للحصول على رابط دعوة عام",
+        "emailRequiredForSend": "عنوان البريد الإلكتروني مطلوب لإرسال إشعار عبر البريد الإلكتروني",
+        "expiryHours": "ساعات الانتهاء",
+        "expiryDescription": "عدد الساعات حتى انتهاء صلاحية الرابط",
+        "sendEmail": "إرسال رابط الدعوة عبر البريد الإلكتروني",
+        "sendEmailDescription": "إذا تم تمكينه، فسيُرسَل رابط الدعوة إلى عنوان البريد الإلكتروني المحدد",
+        "smtpRequired": "لم يتم تهيئة SMTP",
+        "generate": "إنشاء الرابط",
+        "generated": "تم إنشاء رابط الدعوة",
+        "copied": "تم نسخ الرابط إلى الحافظة",
+        "success": "تم إنشاء رابط الدعوة بنجاح",
+        "successWithEmail": "تم إنشاء رابط الدعوة وإرساله عبر البريد الإلكتروني",
+        "emailSent": "تم إنشاء رابط الدعوة وإرساله عبر البريد الإلكتروني",
+        "emailFailed": "تم إنشاء رابط الدعوة، لكن إرسال البريد الإلكتروني فشل",
+        "emailFailedDetails": "خطأ: {0}. يرجى مشاركة رابط الدعوة يدويًا.",
+        "error": "فشل إنشاء رابط الدعوة",
+        "submit": "إنشاء رابط دعوة"
       },
       "inviteMode": {
-        "username": "Username",
-        "email": "Email",
-        "link": "Link",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "username": "اسم المستخدم",
+        "email": "البريد الإلكتروني",
+        "link": "رابط",
+        "emailDisabled": "دعوات البريد الإلكتروني تتطلب تهيئة SMTP وضبط mail.enableInvites=true في الإعدادات"
       },
       "license": {
-        "users": "users",
-        "availableSlots": "Available Slots",
-        "grandfathered": "Grandfathered",
-        "grandfatheredShort": "{{count}} grandfathered",
-        "fromLicense": "from license",
-        "slotsAvailable": "{{count}} user slot(s) available",
-        "noSlotsAvailable": "No slots available",
-        "currentUsage": "Currently using {{current}} of {{max}} user licences"
+        "users": "المستخدمون",
+        "availableSlots": "المقاعد المتاحة",
+        "grandfathered": "موروث",
+        "grandfatheredShort": "{{count}} موروث",
+        "fromLicense": "من الترخيص",
+        "slotsAvailable": "متاح {{count}} مقعد مستخدم",
+        "noSlotsAvailable": "لا توجد مقاعد متاحة",
+        "currentUsage": "تستخدم حالياً {{current}} من {{max}} تراخيص المستخدمين"
       }
     },
     "teams": {
-      "title": "Teams",
-      "description": "Manage teams and organize workspace members",
-      "loading": "Loading teams...",
-      "loadingDetails": "Loading team details...",
-      "createNewTeam": "Create New Team",
-      "teamName": "Team Name",
-      "totalMembers": "Total Members",
-      "actions": "Actions",
-      "noTeamsFound": "No teams found",
-      "noMembers": "No members in this team",
-      "system": "System",
-      "addMember": "Add Member",
-      "viewTeam": "View Team",
-      "removeMember": "Remove from team",
-      "cannotRemoveFromSystemTeam": "Cannot remove from system team",
-      "renameTeamLabel": "Rename Team",
-      "deleteTeamLabel": "Delete Team",
-      "cannotDeleteInternal": "Cannot delete the Internal team",
-      "confirmDelete": "Are you sure you want to delete this team? This team must be empty to delete.",
-      "confirmRemove": "Remove user from this team?",
-      "cannotRenameInternal": "Cannot rename the Internal team",
-      "cannotAddToInternal": "Cannot add members to the Internal team",
-      "teamNotFound": "Team not found",
-      "backToTeams": "Back to Teams",
-      "memberCount": "{{count}} members",
-      "removeMemberSuccess": "User removed from team",
-      "removeMemberError": "Failed to remove user from team",
+      "title": "الفرق",
+      "description": "إدارة الفرق وتنظيم أعضاء مساحة العمل",
+      "loading": "جارٍ تحميل الفرق...",
+      "loadingDetails": "جارٍ تحميل تفاصيل الفريق...",
+      "createNewTeam": "إنشاء فريق جديد",
+      "teamName": "اسم الفريق",
+      "totalMembers": "إجمالي الأعضاء",
+      "actions": "إجراءات",
+      "noTeamsFound": "لم يتم العثور على فرق",
+      "noMembers": "لا يوجد أعضاء في هذا الفريق",
+      "system": "النظام",
+      "addMember": "إضافة عضو",
+      "viewTeam": "عرض الفريق",
+      "removeMember": "إزالة من الفريق",
+      "cannotRemoveFromSystemTeam": "لا يمكن الإزالة من فريق النظام",
+      "renameTeamLabel": "إعادة تسمية الفريق",
+      "deleteTeamLabel": "حذف الفريق",
+      "cannotDeleteInternal": "لا يمكن حذف الفريق الداخلي",
+      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذا الفريق؟ يجب أن يكون هذا الفريق فارغاً للحذف.",
+      "confirmRemove": "إزالة المستخدم من هذا الفريق؟",
+      "cannotRenameInternal": "لا يمكن إعادة تسمية الفريق الداخلي",
+      "cannotAddToInternal": "لا يمكن إضافة أعضاء إلى الفريق الداخلي",
+      "teamNotFound": "لم يتم العثور على الفريق",
+      "backToTeams": "العودة إلى الفرق",
+      "memberCount": "{{count}} أعضاء",
+      "removeMemberSuccess": "تمت إزالة المستخدم من الفريق",
+      "removeMemberError": "فشل إزالة المستخدم من الفريق",
       "createTeam": {
-        "title": "Create New Team",
-        "teamName": "Team Name",
-        "teamNamePlaceholder": "Enter team name",
-        "cancel": "Cancel",
-        "submit": "Create Team",
-        "nameRequired": "Team name is required",
-        "success": "Team created successfully",
-        "error": "Failed to create team"
+        "title": "إنشاء فريق جديد",
+        "teamName": "اسم الفريق",
+        "teamNamePlaceholder": "أدخل اسم الفريق",
+        "cancel": "إلغاء",
+        "submit": "إنشاء فريق",
+        "nameRequired": "اسم الفريق مطلوب",
+        "success": "تم إنشاء الفريق بنجاح",
+        "error": "فشل إنشاء الفريق"
       },
       "renameTeam": {
-        "title": "Rename Team",
-        "renaming": "Renaming:",
-        "newTeamName": "New Team Name",
-        "newTeamNamePlaceholder": "Enter new team name",
-        "cancel": "Cancel",
-        "submit": "Rename Team",
-        "nameRequired": "Team name is required",
-        "success": "Team renamed successfully",
-        "error": "Failed to rename team"
+        "title": "إعادة تسمية الفريق",
+        "renaming": "إعادة تسمية:",
+        "newTeamName": "اسم الفريق الجديد",
+        "newTeamNamePlaceholder": "أدخل اسم الفريق الجديد",
+        "cancel": "إلغاء",
+        "submit": "إعادة تسمية الفريق",
+        "nameRequired": "اسم الفريق مطلوب",
+        "success": "تمت إعادة تسمية الفريق بنجاح",
+        "error": "فشل إعادة تسمية الفريق"
       },
       "deleteTeam": {
-        "success": "Team deleted successfully",
-        "error": "Failed to delete team. Make sure the team is empty.",
-        "teamMustBeEmpty": "Team must be empty before deletion"
+        "success": "تم حذف الفريق بنجاح",
+        "error": "فشل حذف الفريق. تأكد من أن الفريق فارغ.",
+        "teamMustBeEmpty": "يجب أن يكون الفريق فارغًا قبل الحذف"
       },
       "addMemberToTeam": {
-        "title": "Add Member to Team",
-        "addingTo": "Adding to",
-        "selectUser": "Select User",
-        "selectUserPlaceholder": "Choose a user",
-        "selectUserRequired": "Please select a user",
-        "currentlyIn": "currently in",
-        "willBeMoved": "Note: This user will be moved from their current team to this team.",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "userRequired": "Please select a user",
-        "success": "Member added to team successfully",
-        "error": "Failed to add member to team"
+        "title": "إضافة عضو إلى الفريق",
+        "addingTo": "إضافة إلى",
+        "selectUser": "حدد مستخدمًا",
+        "selectUserPlaceholder": "اختر مستخدمًا",
+        "selectUserRequired": "يرجى تحديد مستخدم",
+        "currentlyIn": "حاليًا في",
+        "willBeMoved": "ملاحظة: سيتم نقل هذا المستخدم من فريقه الحالي إلى هذا الفريق.",
+        "cancel": "إلغاء",
+        "submit": "إضافة عضو",
+        "userRequired": "يرجى تحديد مستخدم",
+        "success": "تمت إضافة العضو إلى الفريق بنجاح",
+        "error": "فشل إضافة العضو إلى الفريق"
       },
       "changeTeam": {
-        "label": "Change Team",
-        "title": "Change Team",
-        "changing": "Moving",
-        "selectTeam": "Select Team",
-        "selectTeamPlaceholder": "Choose a team",
-        "selectTeamRequired": "Please select a team",
-        "success": "Team changed successfully",
-        "error": "Failed to change team",
-        "submit": "Change Team"
+        "label": "تغيير الفريق",
+        "title": "تغيير الفريق",
+        "changing": "نقل",
+        "selectTeam": "حدد فريقًا",
+        "selectTeamPlaceholder": "اختر فريقًا",
+        "selectTeamRequired": "يرجى تحديد فريق",
+        "success": "تم تغيير الفريق بنجاح",
+        "error": "فشل تغيير الفريق",
+        "submit": "تغيير الفريق"
       }
     }
   },
   "plan": {
-    "currency": "Currency",
-    "popular": "Popular",
-    "current": "Current Plan",
-    "upgrade": "Upgrade",
-    "contact": "Contact Us",
-    "customPricing": "Custom",
-    "showComparison": "Compare All Features",
-    "hideComparison": "Hide Feature Comparison",
-    "featureComparison": "Feature Comparison",
+    "currency": "العملة",
+    "popular": "شائع",
+    "current": "الخطة الحالية",
+    "upgrade": "ترقية",
+    "contact": "اتصل بنا",
+    "customPricing": "مخصص",
+    "showComparison": "قارن جميع الميزات",
+    "hideComparison": "إخفاء مقارنة الميزات",
+    "featureComparison": "مقارنة الميزات",
     "activePlan": {
-      "title": "Active Plan",
-      "subtitle": "Your current subscription details"
+      "title": "الخطة النشطة",
+      "subtitle": "تفاصيل اشتراكك الحالي"
     },
     "availablePlans": {
-      "title": "Available Plans",
-      "subtitle": "Choose the plan that fits your needs"
+      "title": "الخطط المتاحة",
+      "subtitle": "اختر الخطة التي تناسب احتياجاتك"
     },
     "static": {
-      "title": "Billing Information",
-      "message": "Online billing is not currently configured. To upgrade your plan or manage subscriptions, please contact us directly.",
-      "contactSales": "Contact Sales",
-      "contactToUpgrade": "Contact us to upgrade or customize your plan",
-      "maxUsers": "Max Users",
-      "upTo": "Up to"
+      "title": "معلومات الفوترة",
+      "message": "الفوترة عبر الإنترنت غير مهيأة حالياً. للترقية أو إدارة الاشتراكات، يرجى الاتصال بنا مباشرةً.",
+      "contactSales": "اتصل بالمبيعات",
+      "contactToUpgrade": "اتصل بنا للترقية أو تخصيص خطتك",
+      "maxUsers": "الحد الأقصى للمستخدمين",
+      "upTo": "حتى"
     },
     "period": {
-      "month": "month"
+      "month": "شهر"
     },
     "free": {
-      "name": "Free",
-      "highlight1": "Limited Tool Usage Per week",
-      "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "name": "مجانية",
+      "highlight1": "استخدام الأدوات محدود أسبوعيًا",
+      "highlight2": "الوصول إلى جميع الأدوات",
+      "highlight3": "دعم المجتمع"
     },
     "pro": {
-      "name": "Pro",
-      "highlight1": "Unlimited Tool Usage",
-      "highlight2": "Advanced PDF tools",
-      "highlight3": "No watermarks"
+      "name": "احترافية",
+      "highlight1": "استخدام غير محدود للأدوات",
+      "highlight2": "أدوات PDF متقدمة",
+      "highlight3": "بدون علامات مائية"
     },
     "enterprise": {
-      "name": "Enterprise",
-      "highlight1": "Custom pricing",
-      "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "name": "مؤسسات",
+      "highlight1": "تسعير مخصص",
+      "highlight2": "دعم مخصص",
+      "highlight3": "أحدث الميزات"
     },
     "feature": {
-      "title": "Feature",
-      "pdfTools": "Basic PDF Tools",
-      "fileSize": "File Size Limit",
-      "automation": "Automate tool workflows",
-      "api": "API Access",
-      "priority": "Priority Support",
-      "customPricing": "Custom Pricing"
+      "title": "الميزة",
+      "pdfTools": "أدوات PDF الأساسية",
+      "fileSize": "حد حجم الملف",
+      "automation": "أتمتة سير عمل الأدوات",
+      "api": "وصول API",
+      "priority": "دعم أولوية",
+      "customPricing": "تسعير مخصص"
     }
   },
   "subscription": {
     "status": {
-      "active": "Active",
-      "pastDue": "Past Due",
-      "canceled": "Canceled",
-      "incomplete": "Incomplete",
-      "trialing": "Trial",
-      "none": "No Subscription"
+      "active": "نشط",
+      "pastDue": "متأخر عن السداد",
+      "canceled": "ملغي",
+      "incomplete": "غير مكتمل",
+      "trialing": "تجريبي",
+      "none": "لا يوجد اشتراك"
     },
-    "renewsOn": "Renews on {{date}}",
-    "cancelsOn": "Cancels on {{date}}"
+    "renewsOn": "يتجدد في {{date}}",
+    "cancelsOn": "يلغى في {{date}}"
   },
   "billing": {
-    "manageBilling": "Manage Billing",
+    "manageBilling": "إدارة الفوترة",
     "portal": {
-      "error": "Failed to open billing portal"
+      "error": "فشل فتح بوابة الفوترة"
     }
   },
   "payment": {
-    "preparing": "Preparing your checkout...",
-    "upgradeTitle": "Upgrade to {{planName}}",
-    "success": "Payment Successful!",
-    "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
-    "autoClose": "This window will close automatically...",
-    "error": "Payment Error"
+    "preparing": "جارٍ تجهيز عملية الدفع...",
+    "upgradeTitle": "الترقية إلى {{planName}}",
+    "success": "تم الدفع بنجاح!",
+    "successMessage": "تم تفعيل اشتراكك بنجاح. ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريبًا.",
+    "autoClose": "سيتم إغلاق هذه النافذة تلقائيًا...",
+    "error": "خطأ في الدفع"
   },
   "firstLogin": {
-    "title": "First Time Login",
-    "welcomeTitle": "Welcome!",
-    "welcomeMessage": "For security reasons, you must change your password on your first login.",
-    "loggedInAs": "Logged in as",
-    "error": "Error",
-    "currentPassword": "Current Password",
-    "enterCurrentPassword": "Enter your current password",
-    "newPassword": "New Password",
-    "enterNewPassword": "Enter new password (min 8 characters)",
-    "confirmPassword": "Confirm New Password",
-    "reEnterNewPassword": "Re-enter new password",
-    "changePassword": "Change Password",
-    "allFieldsRequired": "All fields are required",
-    "passwordsDoNotMatch": "New passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMustBeDifferent": "New password must be different from current password",
-    "passwordChangedSuccess": "Password changed successfully! Please log in again.",
-    "passwordChangeFailed": "Failed to change password. Please check your current password."
+    "title": "تسجيل الدخول لأول مرة",
+    "welcomeTitle": "مرحبًا!",
+    "welcomeMessage": "لأسباب أمنية، يجب تغيير كلمة المرور عند تسجيل الدخول لأول مرة.",
+    "loggedInAs": "تم تسجيل الدخول باسم",
+    "error": "خطأ",
+    "currentPassword": "كلمة المرور الحالية",
+    "enterCurrentPassword": "أدخل كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "enterNewPassword": "أدخل كلمة مرور جديدة (بحد أدنى 8 أحرف)",
+    "confirmPassword": "تأكيد كلمة المرور الجديدة",
+    "reEnterNewPassword": "أعد إدخال كلمة المرور الجديدة",
+    "changePassword": "تغيير كلمة المرور",
+    "allFieldsRequired": "جميع الحقول مطلوبة",
+    "passwordsDoNotMatch": "كلمتا المرور الجديدتان غير متطابقتين",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+    "passwordMustBeDifferent": "يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية",
+    "passwordChangedSuccess": "تم تغيير كلمة المرور بنجاح! يرجى تسجيل الدخول مرة أخرى.",
+    "passwordChangeFailed": "فشل تغيير كلمة المرور. يرجى التحقق من كلمة المرور الحالية."
   },
   "invite": {
-    "welcome": "Welcome to Stirling PDF",
-    "invalidToken": "Invalid invitation link",
-    "validationError": "Failed to validate invitation link",
-    "passwordRequired": "Password is required",
-    "passwordTooShort": "Password must be at least 6 characters",
-    "passwordMismatch": "Passwords do not match",
-    "acceptError": "Failed to create account",
-    "validating": "Validating invitation...",
-    "invalidInvitation": "Invalid Invitation",
-    "goToLogin": "Go to Login",
-    "welcomeTitle": "You've been invited!",
-    "welcomeSubtitle": "Complete your account setup to get started",
-    "accountFor": "Creating account for",
-    "linkExpires": "Link expires",
-    "email": "Email address",
-    "emailPlaceholder": "Enter your email address",
-    "emailRequired": "Email address is required",
-    "invalidEmail": "Invalid email address",
-    "choosePassword": "Choose a password",
-    "passwordPlaceholder": "Enter your password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Re-enter your password",
-    "createAccount": "Create Account",
-    "creating": "Creating Account...",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "welcome": "مرحبًا بك في Stirling PDF",
+    "invalidToken": "رابط دعوة غير صالح",
+    "validationError": "فشل التحقق من رابط الدعوة",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "acceptError": "فشل إنشاء الحساب",
+    "validating": "جارٍ التحقق من الدعوة...",
+    "invalidInvitation": "دعوة غير صالحة",
+    "goToLogin": "الانتقال إلى تسجيل الدخول",
+    "welcomeTitle": "لقد تمت دعوتك!",
+    "welcomeSubtitle": "أكمل إعداد حسابك للبدء",
+    "accountFor": "إنشاء حساب لـ",
+    "linkExpires": "ينتهي الرابط",
+    "email": "عنوان البريد الإلكتروني",
+    "emailPlaceholder": "أدخل عنوان بريدك الإلكتروني",
+    "emailRequired": "عنوان البريد الإلكتروني مطلوب",
+    "invalidEmail": "عنوان بريد إلكتروني غير صالح",
+    "choosePassword": "اختر كلمة مرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "confirmPasswordPlaceholder": "أعد إدخال كلمة المرور",
+    "createAccount": "إنشاء حساب",
+    "creating": "جارٍ إنشاء الحساب...",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول"
   },
   "audit": {
     "error": {
-      "title": "Error loading audit system"
+      "title": "خطأ في تحميل نظام التدقيق"
     },
-    "notAvailable": "Audit system not available",
-    "notAvailableMessage": "The audit system is not configured or not available.",
-    "disabled": "Audit logging is disabled",
-    "disabledMessage": "Enable audit logging in your application configuration to track system events.",
+    "notAvailable": "نظام التدقيق غير متاح",
+    "notAvailableMessage": "لم يتم تهيئة نظام التدقيق أو أنه غير متاح.",
+    "disabled": "تم تعطيل تسجيل التدقيق",
+    "disabledMessage": "قم بتمكين تسجيل التدقيق في إعدادات التطبيق لتتبع أحداث النظام.",
     "systemStatus": {
-      "title": "System Status",
-      "status": "Audit Logging",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "level": "Audit Level",
-      "retention": "Retention Period",
-      "days": "days",
-      "totalEvents": "Total Events"
+      "title": "حالة النظام",
+      "status": "تسجيل التدقيق",
+      "enabled": "مُمكّن",
+      "disabled": "معطّل",
+      "level": "مستوى التدقيق",
+      "retention": "فترة الاحتفاظ",
+      "days": "أيام",
+      "totalEvents": "إجمالي الأحداث"
     },
     "tabs": {
-      "dashboard": "Dashboard",
-      "events": "Audit Events",
-      "export": "Export"
+      "dashboard": "لوحة المعلومات",
+      "events": "أحداث التدقيق",
+      "export": "تصدير"
     },
     "charts": {
-      "title": "Audit Dashboard",
-      "error": "Error loading charts",
-      "day": "Day",
-      "week": "Week",
-      "month": "Month",
-      "byType": "Events by Type",
-      "byUser": "Events by User",
-      "overTime": "Events Over Time"
+      "title": "لوحة معلومات التدقيق",
+      "error": "خطأ في تحميل الرسوم البيانية",
+      "day": "اليوم",
+      "week": "الأسبوع",
+      "month": "الشهر",
+      "byType": "الأحداث حسب النوع",
+      "byUser": "الأحداث حسب المستخدم",
+      "overTime": "الأحداث مع مرور الوقت"
     },
     "events": {
-      "title": "Audit Events",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "error": "Error loading events",
-      "noEvents": "No events found",
-      "timestamp": "Timestamp",
-      "type": "Type",
-      "user": "User",
-      "ipAddress": "IP Address",
-      "actions": "Actions",
-      "viewDetails": "View Details",
-      "eventDetails": "Event Details",
-      "details": "Details"
+      "title": "أحداث التدقيق",
+      "filterByType": "تصفية حسب النوع",
+      "filterByUser": "تصفية حسب المستخدم",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "clearFilters": "مسح",
+      "error": "خطأ في تحميل الأحداث",
+      "noEvents": "لم يتم العثور على أحداث",
+      "timestamp": "الطابع الزمني",
+      "type": "النوع",
+      "user": "المستخدم",
+      "ipAddress": "عنوان IP",
+      "actions": "إجراءات",
+      "viewDetails": "عرض التفاصيل",
+      "eventDetails": "تفاصيل الحدث",
+      "details": "تفاصيل"
     },
     "export": {
-      "title": "Export Audit Data",
-      "description": "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
-      "format": "Export Format",
-      "filters": "Filters (Optional)",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "exportButton": "Export Data",
-      "error": "Failed to export data"
+      "title": "تصدير بيانات التدقيق",
+      "description": "تصدير أحداث التدقيق إلى تنسيق CSV أو JSON. استخدم عوامل التصفية لتقييد البيانات المصدّرة.",
+      "format": "صيغة التصدير",
+      "filters": "عوامل التصفية (اختياري)",
+      "filterByType": "تصفية حسب النوع",
+      "filterByUser": "تصفية حسب المستخدم",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "clearFilters": "مسح",
+      "exportButton": "تصدير البيانات",
+      "error": "فشل تصدير البيانات"
     }
   },
   "usage": {
-    "noData": "No data available",
-    "error": "Error loading usage statistics",
-    "noDataMessage": "No usage statistics are currently available.",
+    "noData": "لا توجد بيانات متاحة",
+    "error": "خطأ في تحميل إحصائيات الاستخدام",
+    "noDataMessage": "لا توجد إحصائيات استخدام متاحة حاليًا.",
     "controls": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All",
-      "refresh": "Refresh",
-      "dataTypeLabel": "Data Type:",
+      "top10": "أعلى 10",
+      "top20": "أعلى 20",
+      "all": "الكل",
+      "refresh": "تحديث",
+      "dataTypeLabel": "نوع البيانات:",
       "dataType": {
-        "all": "All",
+        "all": "الكل",
         "api": "API",
         "ui": "UI"
       }
     },
     "showing": {
-      "top10": "Top 10",
-      "top20": "Top 20",
-      "all": "All"
+      "top10": "أعلى 10",
+      "top20": "أعلى 20",
+      "all": "الكل"
     },
     "stats": {
-      "totalEndpoints": "Total Endpoints",
-      "totalVisits": "Total Visits",
-      "showing": "Showing",
-      "selectedVisits": "Selected Visits"
+      "totalEndpoints": "إجمالي نقاط النهاية",
+      "totalVisits": "إجمالي الزيارات",
+      "showing": "عرض",
+      "selectedVisits": "الزيارات المحددة"
     },
     "chart": {
-      "title": "Endpoint Usage Chart"
+      "title": "مخطط استخدام نقاط النهاية"
     },
     "table": {
-      "title": "Detailed Statistics",
-      "endpoint": "Endpoint",
-      "visits": "Visits",
-      "percentage": "Percentage",
-      "noData": "No data available"
+      "title": "إحصائيات مفصلة",
+      "endpoint": "نقطة النهاية",
+      "visits": "الزيارات",
+      "percentage": "النسبة المئوية",
+      "noData": "لا توجد بيانات متاحة"
     }
   },
   "backendHealth": {
-    "checking": "Checking backend status...",
-    "online": "Backend Online",
-    "offline": "Backend Offline"
+    "checking": "جارٍ التحقق من حالة الواجهة الخلفية...",
+    "online": "الواجهة الخلفية متصلة",
+    "offline": "الواجهة الخلفية غير متصلة",
+    "starting": "الواجهة الخلفية قيد التشغيل...",
+    "wait": "يرجى انتظار اكتمال تشغيل الواجهة الخلفية ثم المحاولة مرة أخرى."
   }
 }
