@@ -196,7 +196,15 @@ class TauriHttpClient {
       } else if (responseType === 'text') {
         data = (await response.text()) as T;
       } else if (responseType === 'blob') {
-        data = (await response.blob()) as T;
+        // Standard fetch doesn't set blob.type from Content-Type header (unlike axios)
+        // Set it manually to match axios behavior
+        const blob = await response.blob();
+        if (!blob.type) {
+          const contentType = response.headers.get('content-type') || 'application/octet-stream';
+          data = new Blob([blob], { type: contentType }) as T;
+        } else {
+          data = blob as T;
+        }
       } else if (responseType === 'arraybuffer') {
         data = (await response.arrayBuffer()) as T;
       } else {
