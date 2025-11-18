@@ -13,16 +13,25 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
   const { t } = useTranslation();
 
   return (
-    <Stack gap="md" mt="lg">
+    <Stack gap="md">
       <Button
-        size="lg"
-        variant="light"
+        size="xl"
+        variant="default"
         onClick={() => onSelect('offline')}
         disabled={loading}
         leftSection={<ComputerIcon />}
+        styles={{
+          root: {
+            height: 'auto',
+            padding: '1.25rem',
+          },
+          inner: {
+            justifyContent: 'flex-start',
+          },
+        }}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
-          <Text fw={600}>{t('setup.mode.offline.title', 'Use Offline')}</Text>
+          <Text fw={600} size="md">{t('setup.mode.offline.title', 'Use Offline')}</Text>
           <Text size="sm" c="dimmed" fw={400}>
             {t('setup.mode.offline.description', 'Run locally without an internet connection')}
           </Text>
@@ -30,14 +39,23 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
       </Button>
 
       <Button
-        size="lg"
-        variant="light"
+        size="xl"
+        variant="default"
         onClick={() => onSelect('server')}
         disabled={loading}
         leftSection={<CloudIcon />}
+        styles={{
+          root: {
+            height: 'auto',
+            padding: '1.25rem',
+          },
+          inner: {
+            justifyContent: 'flex-start',
+          },
+        }}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
-          <Text fw={600}>{t('setup.mode.server.title', 'Connect to Server')}</Text>
+          <Text fw={600} size="md">{t('setup.mode.server.title', 'Connect to Server')}</Text>
           <Text size="sm" c="dimmed" fw={400}>
             {t('setup.mode.server.description', 'Connect to a remote Stirling PDF server')}
           </Text>

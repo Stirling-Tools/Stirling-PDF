@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Paper, Stepper, Button, Group, Title, Text } from '@mantine/core';
+import { Container, Paper, Stack, Title, Text, Button, Image } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ModeSelection } from '@app/components/SetupWizard/ModeSelection';
 import { ServerSelection } from '@app/components/SetupWizard/ServerSelection';
@@ -7,6 +7,8 @@ import { LoginForm } from '@app/components/SetupWizard/LoginForm';
 import { connectionModeService, ServerConfig } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { BASE_PATH } from '@app/constants/app';
+import './SetupWizard.css';
 
 enum SetupStep {
   ModeSelection,
@@ -31,10 +33,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     setError(null);
 
     if (mode === 'offline') {
-      // Skip directly to completion for offline mode
       handleOfflineSetup();
     } else {
-      // Go to server selection
       setActiveStep(SetupStep.ServerSelection);
     }
   };
@@ -44,13 +44,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      // Set connection mode to offline
       await connectionModeService.switchToOffline();
-
-      // Start the local backend
       await tauriBackendService.startBackend();
-
-      // Complete setup
       onComplete();
     } catch (err) {
       console.error('Failed to set up offline mode:', err);
@@ -75,16 +70,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      // Attempt login
       await authService.login(serverConfig.url, username, password);
-
-      // Set connection mode to server
       await connectionModeService.switchToServer(serverConfig);
-
-      // Initialize health monitoring for external server
       await tauriBackendService.initializeExternalBackend();
-
-      // Complete setup
       onComplete();
     } catch (err) {
       console.error('Login failed:', err);
@@ -96,68 +84,101 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleBack = () => {
     setError(null);
     if (activeStep === SetupStep.Login) {
-      // From login back to server selection
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
-      // From server selection back to mode selection
       setActiveStep(SetupStep.ModeSelection);
       setSelectedMode(null);
       setServerConfig(null);
     }
   };
 
+  const getStepTitle = () => {
+    switch (activeStep) {
+      case SetupStep.ModeSelection:
+        return t('setup.welcome', 'Welcome to Stirling PDF');
+      case SetupStep.ServerSelection:
+        return t('setup.server.title', 'Connect to Server');
+      case SetupStep.Login:
+        return t('setup.login.title', 'Sign In');
+      default:
+        return '';
+    }
+  };
+
+  const getStepSubtitle = () => {
+    switch (activeStep) {
+      case SetupStep.ModeSelection:
+        return t('setup.description', 'Get started by choosing how you want to use Stirling PDF');
+      case SetupStep.ServerSelection:
+        return t('setup.server.subtitle', 'Enter your self-hosted server URL');
+      case SetupStep.Login:
+        return t('setup.login.subtitle', 'Enter your credentials to continue');
+      default:
+        return '';
+    }
+  };
+
   return (
-    <Container size="sm" style={{ marginTop: '4rem' }}>
-      <Paper shadow="md" p="xl" radius="md">
-        <Title order={1} mb="md">
-          {t('setup.welcome', 'Welcome to Stirling PDF')}
-        </Title>
+    <div className="setup-container">
+      <Container size="sm" className="setup-wrapper">
+        <Paper shadow="xl" p="xl" radius="lg" className="setup-card">
+          <Stack gap="lg">
+            {/* Logo Header */}
+            <Stack gap="xs" align="center">
+              <Image
+                src={`${BASE_PATH}/branding/StirlingPDFLogoBlackText.svg`}
+                alt="Stirling PDF"
+                h={32}
+                fit="contain"
+              />
+              <Title order={1} ta="center" style={{ fontSize: '2rem', fontWeight: 800 }}>
+                {getStepTitle()}
+              </Title>
+              <Text size="sm" c="dimmed" ta="center">
+                {getStepSubtitle()}
+              </Text>
+            </Stack>
 
-        <Text size="sm" c="dimmed" mb="xl">
-          {t('setup.description', 'Get started by choosing how you want to use Stirling PDF')}
-        </Text>
+            {/* Error Message */}
+            {error && (
+              <Paper p="md" bg="red.0" style={{ border: '1px solid var(--mantine-color-red-3)' }}>
+                <Text size="sm" c="red.7" ta="center">
+                  {error}
+                </Text>
+              </Paper>
+            )}
 
-        <Stepper active={activeStep}>
-          <Stepper.Step
-            label={t('setup.step1.label', 'Choose Mode')}
-            description={t('setup.step1.description', 'Offline or Server')}
-          >
-            <ModeSelection onSelect={handleModeSelection} loading={loading} />
-          </Stepper.Step>
+            {/* Step Content */}
+            {activeStep === SetupStep.ModeSelection && (
+              <ModeSelection onSelect={handleModeSelection} loading={loading} />
+            )}
 
-          <Stepper.Step
-            label={t('setup.step2.label', 'Select Server')}
-            description={t('setup.step2.description', 'Self-hosted server')}
-          >
-            <ServerSelection onSelect={handleServerSelection} loading={loading} />
-          </Stepper.Step>
+            {activeStep === SetupStep.ServerSelection && (
+              <ServerSelection onSelect={handleServerSelection} loading={loading} />
+            )}
 
-          <Stepper.Step
-            label={t('setup.step3.label', 'Login')}
-            description={t('setup.step3.description', 'Enter credentials')}
-          >
-            <LoginForm
-              serverUrl={serverConfig?.url || ''}
-              onLogin={handleLogin}
-              loading={loading}
-            />
-          </Stepper.Step>
-        </Stepper>
+            {activeStep === SetupStep.Login && (
+              <LoginForm
+                serverUrl={serverConfig?.url || ''}
+                onLogin={handleLogin}
+                loading={loading}
+              />
+            )}
 
-        {error && (
-          <Text c="red" size="sm" mt="md">
-            {error}
-          </Text>
-        )}
-
-        {activeStep > SetupStep.ModeSelection && (
-          <Group justify="center" mt="xl">
-            <Button variant="default" onClick={handleBack} disabled={loading}>
-              {t('common.back', 'Back')}
-            </Button>
-          </Group>
-        )}
-      </Paper>
-    </Container>
+            {/* Back Button */}
+            {activeStep > SetupStep.ModeSelection && !loading && (
+              <Button
+                variant="subtle"
+                onClick={handleBack}
+                fullWidth
+                mt="md"
+              >
+                {t('common.back', 'Back')}
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+      </Container>
+    </div>
   );
 };

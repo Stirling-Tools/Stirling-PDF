@@ -34,7 +34,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, onLogin, loadin
 
   return (
     <form onSubmit={handleSubmit}>
-      <Stack gap="md" mt="lg">
+      <Stack gap="md">
         <Text size="sm" c="dimmed">
           {t('setup.login.connectingTo', 'Connecting to:')} <strong>{serverUrl}</strong>
         </Text>
@@ -69,7 +69,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, onLogin, loadin
           </Text>
         )}
 
-        <Button type="submit" loading={loading} disabled={loading} mt="md">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={loading}
+          mt="md"
+          fullWidth
+          color="#AF3434"
+        >
           {t('setup.login.submit', 'Login')}
         </Button>
       </Stack>

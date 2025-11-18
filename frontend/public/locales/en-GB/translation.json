@@ -5342,6 +5342,8 @@
       }
     },
     "server": {
+      "title": "Connect to Server",
+      "subtitle": "Enter your self-hosted server URL",
       "type": {
         "selfhosted": "Self-hosted server"
       },
@@ -5357,6 +5359,8 @@
       "testing": "Testing connection..."
     },
     "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to continue",
       "connectingTo": "Connecting to:",
       "username": {
         "label": "Username",

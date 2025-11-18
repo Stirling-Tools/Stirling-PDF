@@ -54,7 +54,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
   };
 
   return (
-    <Stack gap="md" mt="lg">
+    <Stack gap="md">
       <TextInput
         label={t('setup.server.url.label', 'Server URL')}
         placeholder="https://your-server.com"
@@ -77,7 +77,14 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         </Text>
       )}
 
-      <Button onClick={handleContinue} loading={testing || loading} disabled={loading} mt="md">
+      <Button
+        onClick={handleContinue}
+        loading={testing || loading}
+        disabled={loading}
+        mt="md"
+        fullWidth
+        color="#AF3434"
+      >
         {testing
           ? t('setup.server.testing', 'Testing connection...')
           : t('common.continue', 'Continue')}
