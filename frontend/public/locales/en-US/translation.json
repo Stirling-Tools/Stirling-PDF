@@ -1397,6 +1397,76 @@
     },
     "submit": "Change"
   },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bookmarks & outline",
+      "replaceExisting": "Replace existing bookmarks (uncheck to append)",
+      "replaceExistingHint": "When disabled, the new outline is appended after the current bookmarks."
+    },
+    "actions": {
+      "source": "Load bookmarks",
+      "selectedFile": "Loaded from {{file}}",
+      "noFile": "Select a PDF to extract existing bookmarks.",
+      "loadFromPdf": "Load from selected PDF",
+      "importJson": "Import JSON",
+      "importClipboard": "Paste JSON from clipboard",
+      "export": "Export bookmarks",
+      "exportJson": "Download JSON",
+      "exportClipboard": "Copy JSON to clipboard",
+      "clipboardUnavailable": "Clipboard access is not available in this browser."
+    },
+    "info": {
+      "line1": "Each bookmark needs a descriptive title and the page it should open.",
+      "line2": "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+      "line3": "Import bookmarks from the selected PDF or from a JSON file to save time."
+    },
+    "editor": {
+      "heading": "Bookmark editor",
+      "description": "Add, nest, and reorder bookmarks to craft your PDF outline.",
+      "addTopLevel": "Add top-level bookmark",
+      "empty": {
+        "title": "No bookmarks yet",
+        "description": "Import existing bookmarks or start by adding your first entry.",
+        "action": "Add first bookmark"
+      },
+      "defaultTitle": "New bookmark",
+      "defaultChildTitle": "Child bookmark",
+      "defaultSiblingTitle": "New bookmark",
+      "untitled": "Untitled bookmark",
+      "childBadge": "Child",
+      "pagePreview": "Page {{page}}",
+      "field": {
+        "title": "Bookmark title",
+        "page": "Target page number"
+      },
+      "actions": {
+        "toggle": "Toggle children",
+        "addChild": "Add child bookmark",
+        "addSibling": "Add sibling bookmark",
+        "remove": "Remove bookmark"
+      },
+      "confirmRemove": "Remove this bookmark and all of its children?"
+    },
+    "messages": {
+      "loadedTitle": "Bookmarks extracted",
+      "loadedBody": "Existing bookmarks from the PDF were loaded into the editor.",
+      "noBookmarks": "No bookmarks were found in the selected PDF.",
+      "loadFailed": "Unable to extract bookmarks from the selected PDF.",
+      "imported": "Bookmarks imported",
+      "importedBody": "Your JSON outline replaced the current editor contents.",
+      "importedClipboard": "Clipboard data replaced the current bookmark list.",
+      "invalidJson": "Invalid JSON structure",
+      "invalidJsonBody": "Please provide a valid bookmark JSON file and try again.",
+      "exported": "JSON download ready",
+      "copied": "Copied to clipboard",
+      "copiedBody": "Bookmark JSON copied successfully.",
+      "copyFailed": "Copy failed"
+    },
+    "submit": "Apply table of contents",
+    "results": {
+      "title": "Updated PDF with bookmarks"
+    }
+  },
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
