@@ -1,4 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
+import { fetch } from '@tauri-apps/plugin-http';
+import { connectionModeService } from '@app/services/connectionModeService';
 
 export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
 
@@ -138,12 +140,46 @@ export class TauriBackendService {
       this.setStatus('stopped');
       return false;
     }
+
     try {
-      const isHealthy = await invoke<boolean>('check_backend_health');
+      // Determine health check URL based on connection mode
+      const mode = await connectionModeService.getCurrentMode();
+      let healthUrl: string;
+
+      if (mode === 'offline') {
+        // Use dynamically assigned port for bundled backend
+        if (!this.backendPort) {
+          console.debug('[TauriBackendService] Backend port not available yet');
+          return false;
+        }
+        healthUrl = `http://localhost:${this.backendPort}/api/v1/info/status`;
+      } else {
+        // Use configured server URL
+        const serverConfig = await connectionModeService.getServerConfig();
+        if (!serverConfig) {
+          console.error('[TauriBackendService] Server mode but no server URL configured');
+          this.setStatus('unhealthy');
+          return false;
+        }
+        const baseUrl = serverConfig.url.replace(/\/$/, '');
+        healthUrl = `${baseUrl}/api/v1/info/status`;
+      }
+
+      // Make health check request using Tauri's native HTTP client (bypasses CORS)
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        connectTimeout: 5000,
+      });
+
+      const isHealthy = response.ok;
       this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
       return isHealthy;
     } catch (error) {
-      console.error('Health check failed:', error);
+      // Don't log common startup errors
+      const errorStr = String(error);
+      if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
+        console.error('[TauriBackendService] Health check failed:', error);
+      }
       this.setStatus('unhealthy');
       return false;
     }

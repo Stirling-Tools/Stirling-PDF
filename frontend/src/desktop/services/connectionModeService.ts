@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { fetch } from '@tauri-apps/plugin-http';
 
 export type ConnectionMode = 'offline' | 'server';
 export type ServerType = 'saas' | 'selfhosted';
@@ -98,11 +99,20 @@ export class ConnectionModeService {
   }
 
   async testConnection(url: string): Promise<boolean> {
+    console.log(`[ConnectionModeService] Testing connection to: ${url}`);
     try {
-      const result = await invoke<boolean>('test_server_connection', { url });
-      return result;
+      // Test connection by hitting the health/status endpoint
+      const healthUrl = `${url.replace(/\/$/, '')}/api/v1/info/status`;
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        connectTimeout: 10000,
+      });
+
+      const isOk = response.ok;
+      console.log(`[ConnectionModeService] Server connection test result: ${isOk}`);
+      return isOk;
     } catch (error) {
-      console.error('Connection test failed:', error);
+      console.warn('[ConnectionModeService] Server connection test failed:', error);
       return false;
     }
   }

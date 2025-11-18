@@ -1,4 +1,4 @@
-import { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { alert } from '@app/components/toast';
 import { setupApiInterceptors as coreSetup } from '@core/services/apiClientSetup';
 import { tauriBackendService } from '@app/services/tauriBackendService';
@@ -11,8 +11,8 @@ import i18n from '@app/i18n';
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
 
-// Extend Axios config to include our custom properties
-interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+// Extended config for custom properties
+interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
   skipBackendReadyCheck?: boolean;
   _retry?: boolean;
@@ -32,7 +32,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   // Request interceptor: Set base URL and auth headers dynamically
   client.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-      const extendedConfig = config as ExtendedAxiosRequestConfig;
+      const extendedConfig = config as ExtendedRequestConfig;
 
       // Get the operation name from config if provided
       const operation = extendedConfig.operationName;
@@ -84,7 +84,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   client.interceptors.response.use(
     (response) => response,
     async (error) => {
-      const originalRequest = error.config as ExtendedAxiosRequestConfig;
+      const originalRequest = error.config as ExtendedRequestConfig;
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {

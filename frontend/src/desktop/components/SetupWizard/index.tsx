@@ -8,7 +8,7 @@ import { connectionModeService, ServerConfig } from '@app/services/connectionMod
 import { authService } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { BASE_PATH } from '@app/constants/app';
-import './SetupWizard.css';
+import '@app/components/SetupWizard/SetupWizard.css';
 
 enum SetupStep {
   ModeSelection,

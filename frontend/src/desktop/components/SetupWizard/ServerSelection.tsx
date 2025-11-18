@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stack, Button, TextInput, Text } from '@mantine/core';
+import { Stack, Button, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ServerConfig } from '@app/services/connectionModeService';
 import { connectionModeService } from '@app/services/connectionModeService';

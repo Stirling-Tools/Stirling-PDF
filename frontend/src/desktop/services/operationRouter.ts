@@ -50,7 +50,8 @@ export class OperationRouter {
       if (!backendUrl) {
         throw new Error('Backend URL not available - backend may still be starting');
       }
-      return backendUrl;
+      // Strip trailing slash to avoid double slashes in URLs
+      return backendUrl.replace(/\/$/, '');
     }
 
     // Remote: get from server config
@@ -60,7 +61,8 @@ export class OperationRouter {
       throw new Error('Server configuration not found');
     }
 
-    return serverConfig.url;
+    // Strip trailing slash to avoid double slashes in URLs
+    return serverConfig.url.replace(/\/$/, '');
   }
 
   /**

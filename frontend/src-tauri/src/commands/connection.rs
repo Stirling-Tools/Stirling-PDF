@@ -4,7 +4,6 @@ use crate::state::connection_state::{
     ServerConfig,
 };
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use tauri::{AppHandle, State};
 use tauri_plugin_store::StoreExt;
 
@@ -96,30 +95,6 @@ pub async fn set_connection_mode(
     Ok(())
 }
 
-#[tauri::command]
-pub async fn test_server_connection(url: String) -> Result<bool, String> {
-    log::info!("Testing connection to: {}", url);
-
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
-
-    // Try to hit the health/status endpoint
-    let health_url = format!("{}/api/v1/info/status", url.trim_end_matches('/'));
-
-    match client.get(&health_url).send().await {
-        Ok(response) => {
-            let is_ok = response.status().is_success();
-            log::info!("Server connection test result: {}", is_ok);
-            Ok(is_ok)
-        }
-        Err(e) => {
-            log::warn!("Server connection test failed: {}", e);
-            Err(format!("Connection failed: {}", e))
-        }
-    }
-}
 
 #[tauri::command]
 pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {

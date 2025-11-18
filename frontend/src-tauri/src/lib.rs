@@ -6,7 +6,6 @@ mod state;
 
 use commands::{
     add_opened_file,
-    check_backend_health,
     cleanup_backend,
     clear_auth_token,
     clear_opened_files,
@@ -24,7 +23,6 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     start_backend,
-    test_server_connection,
 };
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
@@ -34,6 +32,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_store::Builder::new().build())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -77,13 +76,11 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       start_backend,
       get_backend_port,
-      check_backend_health,
       get_opened_files,
       clear_opened_files,
       get_tauri_logs,
       get_connection_config,
       set_connection_mode,
-      test_server_connection,
       is_default_pdf_handler,
       set_as_default_pdf_handler,
       is_first_launch,
