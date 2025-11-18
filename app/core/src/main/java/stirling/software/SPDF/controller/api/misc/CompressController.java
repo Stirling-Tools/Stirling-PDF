@@ -774,11 +774,11 @@ public class CompressController {
             this.streamLength = image.getCOSObject().getLength();
             this.imageType = getImageType(image);
             this.decodeParams = generateDecodeParamsHash(image);
-            this.metadataHash = this.generateMetadataHash(image);
+            this.metadataHash = ImageIdentity.generateMetadataHash(image);
         }
 
         // Generate hash of image metadata
-        private String generateMetadataHash(PDImageXObject image) {
+        private static String generateMetadataHash(PDImageXObject image) {
             try {
                 StringBuilder metadata = new StringBuilder();
 
