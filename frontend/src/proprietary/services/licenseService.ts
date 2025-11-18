@@ -73,6 +73,13 @@ export interface LicenseInfo {
   licenseKey?: string; // The actual license key (for upgrades)
 }
 
+export interface LicenseSaveResponse {
+  success: boolean;
+  licenseType?: string;
+  message?: string;
+  error?: string;
+}
+
 // Currency symbol mapping
 const getCurrencySymbol = (currency: string): string => {
   const currencySymbols: { [key: string]: string } = {
@@ -423,7 +430,7 @@ const licenseService = {
   /**
    * Save license key to backend
    */
-  async saveLicenseKey(licenseKey: string): Promise<{success: boolean; licenseType?: string; message?: string; error?: string}> {
+  async saveLicenseKey(licenseKey: string): Promise<LicenseSaveResponse> {
     try {
       const response = await apiClient.post('/api/v1/admin/license-key', {
         licenseKey: licenseKey,

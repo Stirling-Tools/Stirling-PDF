@@ -6,8 +6,25 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import licenseService, { PlanTierGroup } from '@app/services/licenseService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
-// Initialize Stripe - this should come from environment variables
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+// Validate Stripe key (static validation, no dynamic imports)
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+if (!STRIPE_KEY) {
+  console.error(
+    'VITE_STRIPE_PUBLISHABLE_KEY environment variable is required. ' +
+    'Please add it to your .env file. ' +
+    'Get your key from https://dashboard.stripe.com/apikeys'
+  );
+}
+
+if (STRIPE_KEY && !STRIPE_KEY.startsWith('pk_')) {
+  console.error(
+    `Invalid Stripe publishable key format. ` +
+    `Expected key starting with 'pk_', got: ${STRIPE_KEY.substring(0, 10)}...`
+  );
+}
+
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 interface StripeCheckoutProps {
   opened: boolean;
@@ -44,6 +61,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   const [installationId, setInstallationId] = useState<string | null>(null);
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<'idle' | 'polling' | 'ready' | 'timeout'>('idle');
+
+  // Refs for polling cleanup
+  const isMountedRef = React.useRef(true);
+  const pollingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Get the selected plan based on period
   const selectedPlan = selectedPeriod === 'yearly' ? planGroup.yearly : planGroup.monthly;
@@ -84,7 +105,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         installation_id: fetchedInstallationId,
         current_license_key: currentLicenseKey,
         requires_seats: selectedPlan.requiresSeats,
-        seat_count: minimumSeats,
+        seat_count: Math.max(1, Math.min(minimumSeats || 1, 10000)),
         successUrl: `${window.location.origin}/settings/adminPlan?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/settings/adminPlan`,
       });
@@ -106,28 +127,46 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const pollForLicenseKey = useCallback(async (installId: string) => {
-    const maxAttempts = 15; // 30 seconds (15 × 2s)
-    let attempts = 0;
+    // Exponential backoff: 1s → 2s → 4s → 8s → 16s (31 seconds total, 5 requests)
+    const BACKOFF_MS = [1000, 2000, 4000, 8000, 16000];
+    let attemptIndex = 0;
 
     setPollingStatus('polling');
+    console.log(`Starting license key polling for installation: ${installId}`);
 
     const poll = async (): Promise<void> => {
+      // Check if component is still mounted
+      if (!isMountedRef.current) {
+        console.log('Polling cancelled: component unmounted');
+        return;
+      }
+
+      const attemptNumber = attemptIndex + 1;
+      console.log(`Polling attempt ${attemptNumber}/${BACKOFF_MS.length}`);
+
       try {
         const response = await licenseService.checkLicenseKey(installId);
 
+        // Check mounted after async operation
+        if (!isMountedRef.current) return;
+
         if (response.status === 'ready' && response.license_key) {
+          console.log('✅ License key ready!');
           setLicenseKey(response.license_key);
           setPollingStatus('ready');
 
           // Save license key to backend
           try {
             const saveResponse = await licenseService.saveLicenseKey(response.license_key);
+            if (!isMountedRef.current) return;
+
             if (saveResponse.success) {
               console.log(`License key activated on backend: ${saveResponse.licenseType}`);
 
               // Fetch and pass license info to parent
               try {
                 const licenseInfo = await licenseService.getLicenseInfo();
+                if (!isMountedRef.current) return;
                 onLicenseActivated?.(licenseInfo);
               } catch (infoError) {
                 console.error('Error fetching license info:', infoError);
@@ -142,30 +181,49 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           return;
         }
 
-        attempts++;
-        if (attempts >= maxAttempts) {
+        // License not ready yet, continue polling
+        attemptIndex++;
+
+        if (attemptIndex >= BACKOFF_MS.length) {
+          console.warn('⏱️ License polling timeout after all attempts');
+          if (!isMountedRef.current) return;
           setPollingStatus('timeout');
           return;
         }
 
-        // Continue polling
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return poll();
+        // Schedule next poll with exponential backoff
+        const nextDelay = BACKOFF_MS[attemptIndex];
+        console.log(`Retrying in ${nextDelay}ms...`);
+
+        pollingTimeoutRef.current = setTimeout(() => {
+          poll();
+        }, nextDelay);
 
       } catch (error) {
-        console.error('License polling error:', error);
-        attempts++;
-        if (attempts >= maxAttempts) {
+        console.error(`Polling attempt ${attemptNumber} failed:`, error);
+
+        if (!isMountedRef.current) return;
+
+        attemptIndex++;
+
+        if (attemptIndex >= BACKOFF_MS.length) {
+          console.error('Polling failed after all attempts');
           setPollingStatus('timeout');
           return;
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return poll();
+
+        // Retry with exponential backoff even on error
+        const nextDelay = BACKOFF_MS[attemptIndex];
+        console.log(`Retrying after error in ${nextDelay}ms...`);
+
+        pollingTimeoutRef.current = setTimeout(() => {
+          poll();
+        }, nextDelay);
       }
     };
 
     await poll();
-  }, []);
+  }, [onLicenseActivated]);
 
   const handlePaymentComplete = () => {
     // Preserve state when changing status
@@ -184,7 +242,14 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const handleClose = () => {
+    // Clear any active polling
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = null;
+    }
+
     setState({ status: 'idle' });
+    setPollingStatus('idle');
     // Reset to default period on close
     setSelectedPeriod(planGroup.yearly ? 'yearly' : 'monthly');
     onClose();
@@ -195,6 +260,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     // Reset state to trigger checkout reload
     setState({ status: 'idle' });
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Initialize checkout when modal opens or period changes
   useEffect(() => {
@@ -211,6 +289,25 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   }, [opened, selectedPeriod, state.status]);
 
   const renderContent = () => {
+    // Check if Stripe is configured
+    if (!stripePromise) {
+      return (
+        <Alert color="red" title={t('payment.stripeNotConfigured', 'Stripe Not Configured')}>
+          <Stack gap="md">
+            <Text size="sm">
+              {t(
+                'payment.stripeNotConfiguredMessage',
+                'Stripe payment integration is not configured. Please contact your administrator.'
+              )}
+            </Text>
+            <Button variant="outline" onClick={handleClose}>
+              {t('common.close', 'Close')}
+            </Button>
+          </Stack>
+        </Alert>
+      );
+    }
+
     switch (state.status) {
       case 'loading':
         return (
