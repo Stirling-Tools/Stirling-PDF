@@ -1,0 +1,276 @@
+.heroWrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.heroLogo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: heroLogoEnter 0.25s ease forwards;
+  z-index: 20;
+}
+
+.heroLogoCircle {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+  animation: heroLogoScale 0.25s ease forwards;
+}
+
+.heroLogoCircle img {
+  width: 60px;
+  height: 60px;
+  animation: heroLogoRotate 0.25s ease forwards;
+  transform-origin: center;
+}
+
+.standaloneIcon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  animation: heroLogoScale 0.25s ease forwards;
+}
+
+.securitySlideContent {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.securityCard {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-surface, #ffffff);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.securityAlertRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--onboarding-body, #1f2937);
+}
+
+.heroIconsContainer {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: center;
+  animation: heroLogoEnter 0.25s ease forwards;
+  position: relative;
+  top: 1rem;
+}
+
+.iconWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 12px;
+  padding: 4px;
+  outline: none;
+}
+
+.iconButton:focus {
+  outline: none;
+}
+
+.iconButton:focus-visible {
+  outline: none;
+}
+
+.iconButton:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.iconButton:active {
+  transform: scale(0.95);
+}
+
+.iconButtonSelected {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
+.downloadIcon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  animation: heroLogoScale 0.25s ease forwards;
+}
+
+.iconLabel {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  animation: heroLogoEnter 0.25s ease forwards;
+}
+
+.title {
+  text-align: center;
+  opacity: 0;
+  transform: translateX(24px);
+  animation: bodySlideIn 0.25s ease forwards;
+}
+
+.bodyCopy {
+  opacity: 0;
+  transform: translateX(24px);
+  animation: bodySlideIn 0.25s ease forwards;
+}
+
+@keyframes heroLogoEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heroLogoScale {
+  from {
+    transform: scale(0.6);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes heroLogoRotate {
+  from {
+    transform: rotate(-90deg) scale(0.9);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes bodySlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Dev overlay styles */
+.devOverlay {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.devButton {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.8;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  box-shadow: none;
+}
+
+.devButtonActive {
+  opacity: 1;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1F2933;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+
+/* Modal content styles */
+.modalContent {
+  background: var(--bg-surface);
+  position: relative;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+/* Title styles */
+.titleText {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--onboarding-title);
+}
+
+/* Body text styles */
+.bodyText {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 16px;
+  color: var(--onboarding-body);
+  line-height: 1.5;
+}
+
+.bodyCopyInner {
+  color: inherit;
+}
+
+/* Button margin */
+.buttonContainer {
+  margin-top: 8px;
+}
+
+/* Welcome slide V2 badge */
+.welcomeTitleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.v2Badge {
+  background: #DBEFFF;
+  color: #2A4BFF;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Icon styles */
+.heroIcon {
+  color: #000000;
+}

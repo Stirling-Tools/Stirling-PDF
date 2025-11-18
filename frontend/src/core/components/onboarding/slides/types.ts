@@ -25,3 +25,9 @@ export interface SlideConfig {
   background: AnimatedSlideBackgroundProps;
   downloadUrl?: string;
 }
+
+export interface LicenseNotice {
+  totalUsers: number | null;
+  freeTierLimit: number;
+  isOverLimit: boolean;
+}

@@ -19,7 +19,7 @@ interface CookieConsentConfig {
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false
+  analyticsEnabled = false,
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -34,10 +34,6 @@ export const useCookieConsent = ({
     // Prevent double initialization
     if (window.CookieConsent) {
       setIsInitialized(true);
-      // Force show the modal if it exists but isn't visible
-      setTimeout(() => {
-        window.CookieConsent?.show();
-      }, 100);
       return;
     }
 
@@ -116,7 +112,7 @@ export const useCookieConsent = ({
         // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
-            autoShow: true,
+            autoShow: false,
             hideFromBots: false,
             guiOptions: {
               consentModal: {
@@ -205,11 +201,6 @@ export const useCookieConsent = ({
             }
           });
 
-          // Force show after initialization
-          setTimeout(() => {
-            window.CookieConsent?.show();
-          }, 200);
-
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
@@ -237,11 +228,17 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
-  const showCookiePreferences = () => {
+  const showCookieConsent = useCallback(() => {
+    if (isInitialized && window.CookieConsent) {
+      window.CookieConsent?.show();
+    }
+  }, [isInitialized]);
+
+  const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  };
+  }, [isInitialized]);
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -251,7 +248,9 @@ export const useCookieConsent = ({
   }, []);
 
   return {
+    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted
+    isServiceAccepted,
+    isInitialized
   };
 };

@@ -107,7 +107,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
             </div>
             <SegmentedControl
               value={preferences.defaultToolPanelMode}
-              onChange={(val: string) => updatePreference('defaultToolPanelMode', val as ToolPanelMode)}
+              onChange={(val: string) => {
+                updatePreference('defaultToolPanelMode', val as ToolPanelMode);
+                updatePreference('hasSelectedToolPanelMode', true);
+              }}
               data={[
                 { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
                 { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },

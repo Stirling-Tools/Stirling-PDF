@@ -145,6 +145,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setToolPanelMode = useCallback((mode: ToolPanelMode) => {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
     updatePreference('defaultToolPanelMode', mode);
+    updatePreference('hasSelectedToolPanelMode', true);
   }, [updatePreference]);
 
 

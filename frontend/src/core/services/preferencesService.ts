@@ -7,9 +7,11 @@ export interface UserPreferences {
   defaultToolPanelMode: ToolPanelMode;
   theme: ThemeMode;
   toolPanelModePromptSeen: boolean;
+  hasSelectedToolPanelMode: boolean;
   showLegacyToolDescriptions: boolean;
   hasCompletedOnboarding: boolean;
   hasSeenIntroOnboarding: boolean;
+  hasSeenCookieBanner: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -18,9 +20,11 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
   theme: getSystemTheme(),
   toolPanelModePromptSeen: false,
+  hasSelectedToolPanelMode: false,
   showLegacyToolDescriptions: false,
   hasCompletedOnboarding: false,
   hasSeenIntroOnboarding: false,
+  hasSeenCookieBanner: false,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';

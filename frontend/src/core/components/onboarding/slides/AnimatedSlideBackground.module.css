@@ -4,11 +4,37 @@
   height: 220px;
   overflow: hidden;
   border-radius: 0;
-  background-size: 180% 180%;
-  animation: gradientShift 18s ease-in-out infinite alternate;
 }
 
-.heroActive {}
+.gradientLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 180% 180%;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  z-index: 1;
+}
+
+.gradientLayerActive {
+  opacity: 1;
+  animation: gradientShift 18s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+.gradientLayerPrev {
+  opacity: 1;
+  z-index: 3;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.gradientLayerPrevFadeOut {
+  opacity: 0;
+  z-index: 3;
+  transition: opacity 0.8s ease-in-out;
+}
 
 .circle {
   position: absolute;
@@ -22,6 +48,7 @@
   animation-duration: var(--circle-duration, 15s);
   animation-delay: var(--circle-delay, 0s);
   will-change: transform;
+  z-index: 10;
 }
 
 @keyframes gradientShift {

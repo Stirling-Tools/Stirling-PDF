@@ -20,19 +20,59 @@ export default function AnimatedSlideBackground({
   isActive,
   slideKey,
 }: AnimatedSlideBackgroundComponentProps) {
-  const gradientStyle = React.useMemo(
+  const [prevGradient, setPrevGradient] = React.useState<[string, string] | null>(null);
+  const [currentGradient, setCurrentGradient] = React.useState<[string, string]>(gradientStops);
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
+  const isFirstMount = React.useRef(true);
+
+  React.useEffect(() => {
+    // Skip transition on first mount
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      setCurrentGradient(gradientStops);
+      return;
+    }
+    
+    // Only transition if gradient actually changed
+    if (currentGradient[0] !== gradientStops[0] || currentGradient[1] !== gradientStops[1]) {
+      // Store previous gradient and start transition
+      setPrevGradient(currentGradient);
+      setIsTransitioning(true);
+      
+      // Update to new gradient (will fade in)
+      setCurrentGradient(gradientStops);
+    }
+  }, [gradientStops]);
+
+  const currentGradientStyle = React.useMemo(
     () => ({
-      backgroundImage: `linear-gradient(135deg, ${gradientStops[0]}, ${gradientStops[1]})`,
+      backgroundImage: `linear-gradient(135deg, ${currentGradient[0]}, ${currentGradient[1]})`,
     }),
-    [gradientStops],
+    [currentGradient],
   );
 
+  const prevGradientStyle = prevGradient
+    ? {
+        backgroundImage: `linear-gradient(135deg, ${prevGradient[0]}, ${prevGradient[1]})`,
+      }
+    : null;
+
   return (
-    <div
-      className={`${styles.hero} ${isActive ? styles.heroActive : ''}`.trim()}
-      style={gradientStyle}
-      key={slideKey}
-    >
+    <div className={styles.hero} key="animated-background">
+      {prevGradientStyle && isTransitioning && (
+        <div 
+          className={`${styles.gradientLayer} ${styles.gradientLayerPrevFadeOut}`} 
+          style={prevGradientStyle}
+          onTransitionEnd={() => {
+            setPrevGradient(null);
+            setIsTransitioning(false);
+          }}
+        />
+      )}
+      <div
+        className={`${styles.gradientLayer} ${isActive ? styles.gradientLayerActive : ''}`.trim()}
+        style={currentGradientStyle}
+      />
       {circles.map((circle, index) => {
         const { position, size, color, opacity, blur, amplitude = 48, duration = 15, delay = 0 } = circle;
 
@@ -65,7 +105,7 @@ export default function AnimatedSlideBackground({
 
         return (
           <div
-            key={`${slideKey}-circle-${index}`}
+            key={`circle-${index}-${position}`}
             className={styles.circle}
             style={circleStyle}
           />
