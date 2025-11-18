@@ -31,3 +31,7 @@ tauri-plugin-fs = "2.4.4"
 tauri-plugin-single-instance = "2.0.1"
 tokio = { version = "1.0", features = ["time"] }
 reqwest = { version = "0.11", features = ["json"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-services = "1.0"

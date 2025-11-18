@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.annotations.api.UserApi;
+import stirling.software.common.annotations.api.InviteApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
@@ -26,11 +26,9 @@ import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 
-@UserApi
+@InviteApi
 @Slf4j
 @RequiredArgsConstructor
-@RestController
-@RequestMapping("/api/v1/invite")
 public class InviteLinkController {
 
     private final InviteTokenRepository inviteTokenRepository;

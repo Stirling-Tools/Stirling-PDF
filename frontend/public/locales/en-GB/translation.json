@@ -41,6 +41,30 @@
     "cancel": "Cancel",
     "confirm": "Extract"
   },
+  "defaultApp": {
+    "title": "Set as Default PDF App",
+    "message": "Would you like to set Stirling PDF as your default PDF editor?",
+    "description": "You can change this later in your system settings.",
+    "notNow": "Not Now",
+    "setDefault": "Set Default",
+    "dismiss": "Dismiss",
+    "prompt": {
+      "title": "Set as Default PDF Editor",
+      "message": "Make Stirling PDF your default application for opening PDF files."
+    },
+    "success": {
+      "title": "Default App Set",
+      "message": "Stirling PDF is now your default PDF editor"
+    },
+    "settingsOpened": {
+      "title": "Settings Opened",
+      "message": "Please select Stirling PDF in your system settings"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Failed to set default PDF handler"
+    }
+  },
   "language": {
     "direction": "ltr"
   },
@@ -332,7 +356,13 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
-      }
+      },
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default"
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -3679,8 +3709,10 @@
     "help": "Help",
     "account": "Account",
     "config": "Config",
+    "settings": "Settings",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools",
+    "allTools": "Tools",
+    "reader": "Reader",
     "helpMenu": {
       "toolsTour": "Tools Tour",
       "toolsTourDesc": "Learn what the tools can do",
@@ -4825,7 +4857,7 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
-    "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
+    "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
     "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
@@ -4885,7 +4917,8 @@
       "admin": "Admin",
       "roleDescriptions": {
         "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "member": "Can view and edit shared files, but cannot manage workspace settings or members.",
+        "user": "User"
       },
       "editRole": "Edit Role",
       "enable": "Enable",
@@ -4966,6 +4999,7 @@
         "copied": "Link copied to clipboard",
         "success": "Invite link generated successfully",
         "successWithEmail": "Invite link generated and sent via email",
+        "emailSent": "Invite link generated and sent via email",
         "emailFailed": "Invite link generated, but email failed",
         "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
         "error": "Failed to generate invite link",
