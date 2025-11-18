@@ -207,4 +207,11 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "pdf-to-video");
         return "convert/pdf-to-video";
     }
+
+    @GetMapping("/pdf-to-json")
+    @Hidden
+    public String pdftojson(Model model) {
+        model.addAttribute("currentPage", "pdf-to-json");
+        return "convert/pdf-to-json";
+    }
 }

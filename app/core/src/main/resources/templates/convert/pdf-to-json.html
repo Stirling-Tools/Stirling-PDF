@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfTojson.title}, header=#{pdfTojson.header})}"></th:block>
+  <script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+      const maxDPI = 500; // Maximum DPI for PDF to image conversion
+      const maxDPILabelRaw = /*[[#{pdfTojson.dpi}]]*/ "DPI (The server limit is {0} dpi)";
+      const maxDPILabel = maxDPILabelRaw.replace("{0}", maxDPI); // Replace with actual value from properties
+      const dpilabel = document.querySelector('label[for="dpi"]');
+      if (dpilabel) {
+        dpilabel.textContent = maxDPILabel;
+      }
+      const maxDPIInput = document.getElementById("dpi");
+      if (maxDPIInput) {
+        maxDPIInput.setAttribute("max", maxDPI); // Set the maximum value for DPI input
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convert">data_object</span>
+              <span class="tool-header-text" th:text="#{pdfTojson.header}"></span>
+            </div>
+            <p th:text="#{processTimeWarning}"></p>
+            </p>
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/img'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+
+  
+              
+              
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfTojson.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+
+</body>
+
+</html>
