@@ -15,7 +15,9 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
-  const handleContinue = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     const url = customUrl.trim();
 
     if (!url) {
@@ -54,41 +56,37 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
   };
 
   return (
-    <Stack gap="md">
-      <TextInput
-        label={t('setup.server.url.label', 'Server URL')}
-        placeholder="https://your-server.com"
-        value={customUrl}
-        onChange={(e) => {
-          setCustomUrl(e.target.value);
-          setTestError(null);
-        }}
-        disabled={loading || testing}
-        error={testError}
-        description={t(
-          'setup.server.url.description',
-          'Enter the full URL of your self-hosted Stirling PDF server'
-        )}
-      />
+    <form onSubmit={handleSubmit}>
+      <Stack gap="md">
+        <TextInput
+          label={t('setup.server.url.label', 'Server URL')}
+          placeholder="https://your-server.com"
+          value={customUrl}
+          onChange={(e) => {
+            setCustomUrl(e.target.value);
+            setTestError(null);
+          }}
+          disabled={loading || testing}
+          error={testError}
+          description={t(
+            'setup.server.url.description',
+            'Enter the full URL of your self-hosted Stirling PDF server'
+          )}
+        />
 
-      {testError && (
-        <Text c="red" size="sm">
-          {testError}
-        </Text>
-      )}
-
-      <Button
-        onClick={handleContinue}
-        loading={testing || loading}
-        disabled={loading}
-        mt="md"
-        fullWidth
-        color="#AF3434"
-      >
-        {testing
-          ? t('setup.server.testing', 'Testing connection...')
-          : t('common.continue', 'Continue')}
-      </Button>
-    </Stack>
+        <Button
+          type="submit"
+          loading={testing || loading}
+          disabled={loading}
+          mt="md"
+          fullWidth
+          color="#AF3434"
+        >
+          {testing
+            ? t('setup.server.testing', 'Testing connection...')
+            : t('common.continue', 'Continue')}
+        </Button>
+      </Stack>
+    </form>
   );
 };

@@ -130,6 +130,17 @@ export class TauriBackendService {
     this.setStatus('unhealthy');
     throw new Error('Backend failed to become healthy after 60 seconds');
   }
+
+  /**
+   * Reset backend state (used when switching from external to local backend)
+   */
+  reset(): void {
+    console.log('[TauriBackendService] Resetting backend state');
+    this.backendStarted = false;
+    this.setStatus('stopped');
+    this.healthMonitor = null;
+    this.startPromise = null;
+  }
 }
 
 export const tauriBackendService = TauriBackendService.getInstance();

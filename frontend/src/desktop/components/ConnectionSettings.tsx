@@ -100,6 +100,9 @@ export const ConnectionSettings: React.FC = () => {
       const newConfig = await connectionModeService.getCurrentConfig();
       setConfig(newConfig);
       setUserInfo(null);
+
+      // Reload the page to clear all state and reconnect to local backend
+      window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
