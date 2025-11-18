@@ -46,8 +46,24 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "tauri://localhost",
                             "http://tauri.localhost",
                             "https://tauri.localhost")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                    .allowedHeaders("*")
+                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                    .allowedHeaders(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN",
+                            "X-XSRF-TOKEN",
+                            "X-Browser-Id")
+                    .exposedHeaders(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type")
                     .allowCredentials(true)
                     .maxAge(3600);
         } else if (hasConfiguredOrigins) {
@@ -63,9 +79,51 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             .toArray(new String[0]);
 
             registry.addMapping("/**")
-                    .allowedOrigins(allowedOrigins)
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                    .allowedHeaders("*")
+                    .allowedOriginPatterns(allowedOrigins)
+                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                    .allowedHeaders(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN",
+                            "X-XSRF-TOKEN",
+                            "X-Browser-Id")
+                    .exposedHeaders(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type")
+                    .allowCredentials(true)
+                    .maxAge(3600);
+        } else {
+            // Default to allowing all origins when nothing is configured
+            logger.info(
+                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
+            registry.addMapping("/**")
+                    .allowedOriginPatterns("*")
+                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                    .allowedHeaders(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN",
+                            "X-XSRF-TOKEN",
+                            "X-Browser-Id")
+                    .exposedHeaders(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type")
                     .allowCredentials(true)
                     .maxAge(3600);
         }
