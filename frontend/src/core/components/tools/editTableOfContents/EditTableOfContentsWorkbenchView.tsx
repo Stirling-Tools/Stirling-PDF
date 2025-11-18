@@ -95,7 +95,7 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
         width: '100%',
         height: '100%',
         overflowY: 'auto',
-        background: 'var(--bg-surface)',
+        background: 'var(--bg-raised)',
       }}
     >
       <Stack gap="xl" maw={1200} mx="auto">
@@ -108,7 +108,16 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
           </Text>
         </Stack>
 
-        <Card withBorder radius="md" p="lg">
+        <Card
+          withBorder
+          radius="md"
+          p="xl"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border-default)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
           <Stack gap="md">
             <Stack gap={2}>
               <Text fw={600}>{t('editTableOfContents.editor.heading', 'Bookmark editor')}</Text>
@@ -135,7 +144,16 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
         </Card>
 
         {showResults && (
-          <Card withBorder radius="md" p="lg">
+          <Card
+            withBorder
+            radius="md"
+            p="xl"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-default)',
+              boxShadow: 'var(--shadow-md)',
+            }}
+          >
             <Stack gap="md">
               <Stack gap={4}>
                 <Text fw={600}>{t('editTableOfContents.results.title', 'Updated PDF with bookmarks')}</Text>

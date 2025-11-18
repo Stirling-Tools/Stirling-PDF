@@ -14,6 +14,7 @@ import { BookmarkPayload, BookmarkNode, hydrateBookmarkPayload, serializeBookmar
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import { useFileSelection } from '@app/contexts/FileContext';
 
 const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();
@@ -52,6 +53,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
   const { openFilesModal } = useFilesModalContext();
+  const { clearSelections } = useFileSelection();
   const navigationState = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
 
@@ -272,6 +274,8 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const handleFileClick = useStableCallback(fileClickCallback);
 
   const selectFilesCallback = () => {
+    // Clear existing selection first so the new file replaces instead of adds
+    clearSelections();
     openFilesModal();
   };
   const handleSelectFiles = useStableCallback(selectFilesCallback);

@@ -58,109 +58,112 @@ export default function EditTableOfContentsSettings({
   ]), [t]);
 
   return (
-    <Stack gap="lg">
+    <Stack gap="md">
       <Stack gap="xs">
-        <Group justify="space-between" align="center">
-          <Text fw={600}>{t('editTableOfContents.actions.source', 'Load bookmarks')}</Text>
-          <Button
-            variant="subtle"
-            color="blue"
-            leftSection={<LocalIcon icon="folder-rounded" />}
-            onClick={onSelectFiles}
-          >
-            {selectedFileName
-              ? t('editTableOfContents.workbench.changeFile', 'Change PDF')
-              : t('editTableOfContents.workbench.selectFile', 'Select PDF')}
-          </Button>
-        </Group>
-        <Group gap="xs" align="center">
-          <Text size="sm" c="dimmed">
-            {selectedFileName
-              ? t('editTableOfContents.actions.selectedFile', { file: selectedFileName })
-              : t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.')}
-          </Text>
-        </Group>
-        <Group gap="sm" wrap="wrap">
-          <Tooltip label={!selectedFileName ? t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.') : ''} disabled={Boolean(selectedFileName)}>
-            <Button
-              variant="default"
-              color="blue"
-              leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
-              onClick={onLoadFromPdf}
-              loading={isLoading}
-              disabled={disabled || !selectedFileName}
-            >
-              {t('editTableOfContents.actions.loadFromPdf', 'Load from selected PDF')}
-            </Button>
-          </Tooltip>
-          <FileButton
-            onChange={file => file && onImportJson(file)}
-            accept="application/json"
-            disabled={disabled}
-          >
-            {(props) => (
-              <Button
-                {...props}
-                variant="outline"
-                color="gray"
-                leftSection={<LocalIcon icon="upload-rounded" />}
-                disabled={disabled}
-              >
-                {t('editTableOfContents.actions.importJson', 'Import JSON')}
-              </Button>
-            )}
-          </FileButton>
-          <Tooltip
-            label={canReadClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
-            disabled={canReadClipboard}
-          >
-            <Button
-              variant="outline"
-              color="gray"
-              leftSection={<LocalIcon icon="content-paste-rounded" />}
-              onClick={onImportClipboard}
-              disabled={disabled || !canReadClipboard}
-            >
-              {t('editTableOfContents.actions.importClipboard', 'Paste JSON from clipboard')}
-            </Button>
-          </Tooltip>
-        </Group>
-        {loadError && (
-          <Alert color="red" radius="md" icon={<LocalIcon icon="error-outline-rounded" />}>
-            {loadError}
-          </Alert>
-        )}
+        <Text size="sm" fw={500}>{t('editTableOfContents.actions.source', 'Load bookmarks')}</Text>
+        <Text size="xs" c="dimmed">
+          {selectedFileName
+            ? t('editTableOfContents.actions.selectedFile', { file: selectedFileName })
+            : t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.')}
+        </Text>
       </Stack>
+
+      <Stack gap="sm">
+        <Button
+          variant="light"
+          leftSection={<LocalIcon icon="folder-rounded" />}
+          onClick={onSelectFiles}
+          fullWidth
+        >
+          {selectedFileName
+            ? t('editTableOfContents.workbench.changeFile', 'Change PDF')
+            : t('editTableOfContents.workbench.selectFile', 'Select PDF')}
+        </Button>
+
+        <Tooltip label={!selectedFileName ? t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.') : ''} disabled={Boolean(selectedFileName)}>
+          <Button
+            variant="default"
+            leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
+            onClick={onLoadFromPdf}
+            loading={isLoading}
+            disabled={disabled || !selectedFileName}
+            fullWidth
+          >
+            {t('editTableOfContents.actions.loadFromPdf', 'Load from PDF')}
+          </Button>
+        </Tooltip>
+
+        <FileButton
+          onChange={file => file && onImportJson(file)}
+          accept="application/json"
+          disabled={disabled}
+        >
+          {(props) => (
+            <Button
+              {...props}
+              variant="default"
+              leftSection={<LocalIcon icon="upload-rounded" />}
+              disabled={disabled}
+              fullWidth
+            >
+              {t('editTableOfContents.actions.importJson', 'Import JSON')}
+            </Button>
+          )}
+        </FileButton>
+
+        <Tooltip
+          label={canReadClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
+          disabled={canReadClipboard}
+        >
+          <Button
+            variant="default"
+            leftSection={<LocalIcon icon="content-paste-rounded" />}
+            onClick={onImportClipboard}
+            disabled={disabled || !canReadClipboard}
+            fullWidth
+          >
+            {t('editTableOfContents.actions.importClipboard', 'Paste from clipboard')}
+          </Button>
+        </Tooltip>
+      </Stack>
+
+      {loadError && (
+        <Alert color="red" radius="md" icon={<LocalIcon icon="error-outline-rounded" />}>
+          {loadError}
+        </Alert>
+      )}
 
       <Divider />
 
       <Stack gap="xs">
-        <Text fw={600}>{t('editTableOfContents.actions.export', 'Export bookmarks')}</Text>
-        <Group gap="sm" wrap="wrap">
+        <Text size="sm" fw={500}>{t('editTableOfContents.actions.export', 'Export bookmarks')}</Text>
+      </Stack>
+
+      <Stack gap="sm">
+        <Button
+          variant="default"
+          leftSection={<LocalIcon icon="download-rounded" />}
+          onClick={onExportJson}
+          disabled={disabled || bookmarks.length === 0}
+          fullWidth
+        >
+          {t('editTableOfContents.actions.exportJson', 'Download JSON')}
+        </Button>
+
+        <Tooltip
+          label={canWriteClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
+          disabled={canWriteClipboard}
+        >
           <Button
-            variant="outline"
-            color="gray"
-            leftSection={<LocalIcon icon="download-rounded" />}
-            onClick={onExportJson}
-            disabled={disabled || bookmarks.length === 0}
+            variant="default"
+            leftSection={<LocalIcon icon="content-copy-rounded" />}
+            onClick={onExportClipboard}
+            disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
+            fullWidth
           >
-            {t('editTableOfContents.actions.exportJson', 'Download JSON')}
+            {t('editTableOfContents.actions.exportClipboard', 'Copy to clipboard')}
           </Button>
-          <Tooltip
-            label={canWriteClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
-            disabled={canWriteClipboard}
-          >
-            <Button
-              variant="outline"
-              color="gray"
-              leftSection={<LocalIcon icon="content-copy-rounded" />}
-              onClick={onExportClipboard}
-              disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
-            >
-              {t('editTableOfContents.actions.exportClipboard', 'Copy JSON to clipboard')}
-            </Button>
-          </Tooltip>
-        </Group>
+        </Tooltip>
       </Stack>
 
       <Divider />
@@ -168,7 +171,7 @@ export default function EditTableOfContentsSettings({
       <Switch
         checked={replaceExisting}
         onChange={(event) => onReplaceExistingChange(event.currentTarget.checked)}
-        label={t('editTableOfContents.settings.replaceExisting', 'Replace existing bookmarks (uncheck to append)')}
+        label={t('editTableOfContents.settings.replaceExisting', 'Replace existing bookmarks')}
         description={t('editTableOfContents.settings.replaceExistingHint', 'When disabled, the new outline is appended after the current bookmarks.')}
         disabled={disabled}
       />
@@ -180,7 +183,6 @@ export default function EditTableOfContentsSettings({
           </Text>
         ))}
       </Stack>
-
     </Stack>
   );
 }

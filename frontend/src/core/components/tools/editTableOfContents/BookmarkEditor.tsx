@@ -167,7 +167,7 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
         p="md"
         style={{
           borderColor: 'var(--border-default)',
-          background: level === 0 ? 'var(--bg-elevated)' : 'rgba(255,255,255,0.55)',
+          background: level === 0 ? 'var(--bg-surface)' : 'var(--bg-muted)',
         }}
       >
         <Stack gap="sm">
