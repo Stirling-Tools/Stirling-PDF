@@ -16,6 +16,7 @@ import { createUserStepsConfig } from './userStepsConfig';
 import { createAdminStepsConfig } from './adminStepsConfig';
 import { removeAllGlows } from './tourGlow';
 import TourContent from './TourContent';
+import i18n from "@app/i18n";
 
 export default function OnboardingTour() {
   const { t } = useTranslation();
@@ -146,7 +147,7 @@ export default function OnboardingTour() {
       <InitialOnboardingModal {...flow.initialModalProps} />
       <ToolPanelModePrompt onComplete={flow.handleToolPromptComplete} />
       <TourProvider
-        key={flow.tourType}
+        key={`${flow.tourType}-${i18n.language}`}
         steps={steps}
         maskClassName={flow.maskClassName}
         onClickClose={handleCloseTour}
