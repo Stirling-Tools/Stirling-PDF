@@ -127,7 +127,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
           <Stepper.Step
             label={t('setup.step2.label', 'Select Server')}
-            description={t('setup.step2.description', 'SaaS or Self-hosted')}
+            description={t('setup.step2.description', 'Self-hosted server')}
           >
             <ServerSelection onSelect={handleServerSelection} loading={loading} />
           </Stepper.Step>

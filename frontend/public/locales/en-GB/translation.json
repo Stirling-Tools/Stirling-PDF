@@ -5325,7 +5325,7 @@
     },
     "step2": {
       "label": "Select Server",
-      "description": "SaaS or Self-hosted"
+      "description": "Self-hosted server"
     },
     "step3": {
       "label": "Login",
@@ -5343,7 +5343,6 @@
     },
     "server": {
       "type": {
-        "saas": "Stirling PDF SaaS (stirling.com/app)",
         "selfhosted": "Self-hosted server"
       },
       "url": {

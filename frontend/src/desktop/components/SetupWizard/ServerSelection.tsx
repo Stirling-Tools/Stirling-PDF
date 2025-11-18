@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Stack, Button, TextInput, Radio, Text } from '@mantine/core';
+import { Stack, Button, TextInput, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ServerConfig } from '@app/services/connectionModeService';
 import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
 
 interface ServerSelectionProps {
   onSelect: (config: ServerConfig) => void;
@@ -12,13 +11,12 @@ interface ServerSelectionProps {
 
 export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, loading }) => {
   const { t } = useTranslation();
-  const [serverType, setServerType] = useState<'saas' | 'selfhosted'>('saas');
   const [customUrl, setCustomUrl] = useState('');
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
   const handleContinue = async () => {
-    const url = serverType === 'saas' ? STIRLING_SAAS_URL : customUrl.trim();
+    const url = customUrl.trim();
 
     if (!url) {
       setTestError(t('setup.server.error.emptyUrl', 'Please enter a server URL'));
@@ -41,7 +39,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       // Connection successful
       onSelect({
         url,
-        server_type: serverType,
+        server_type: 'selfhosted',
       });
     } catch (error) {
       console.error('Connection test failed:', error);
@@ -57,30 +55,21 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
   return (
     <Stack gap="md" mt="lg">
-      <Radio.Group value={serverType} onChange={(value) => setServerType(value as 'saas' | 'selfhosted')}>
-        <Stack gap="xs">
-          <Radio value="saas" label={t('setup.server.type.saas', 'Stirling PDF SaaS (stirling.com/app)')} />
-          <Radio value="selfhosted" label={t('setup.server.type.selfhosted', 'Self-hosted server')} />
-        </Stack>
-      </Radio.Group>
-
-      {serverType === 'selfhosted' && (
-        <TextInput
-          label={t('setup.server.url.label', 'Server URL')}
-          placeholder="https://your-server.com"
-          value={customUrl}
-          onChange={(e) => {
-            setCustomUrl(e.target.value);
-            setTestError(null);
-          }}
-          disabled={loading || testing}
-          error={testError}
-          description={t(
-            'setup.server.url.description',
-            'Enter the full URL of your self-hosted Stirling PDF server'
-          )}
-        />
-      )}
+      <TextInput
+        label={t('setup.server.url.label', 'Server URL')}
+        placeholder="https://your-server.com"
+        value={customUrl}
+        onChange={(e) => {
+          setCustomUrl(e.target.value);
+          setTestError(null);
+        }}
+        disabled={loading || testing}
+        error={testError}
+        description={t(
+          'setup.server.url.description',
+          'Enter the full URL of your self-hosted Stirling PDF server'
+        )}
+      />
 
       {testError && (
         <Text c="red" size="sm">
