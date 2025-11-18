@@ -135,7 +135,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.0")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.1")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -560,7 +560,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.0")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.1")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
