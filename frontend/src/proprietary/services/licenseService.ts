@@ -284,22 +284,12 @@ const licenseService = {
       const allPlans = [freePlan, ...validPlans];
 
       return {
-        plans: allPlans,
-        currentSubscription: null  // Will be implemented later
+        plans: allPlans
       };
     } catch (error) {
       console.error('Error fetching plans:', error);
       throw error;
     }
-  },
-
-  /**
-   * Get current subscription details
-   * TODO: Implement with Supabase edge function when available
-   */
-  async getCurrentSubscription(): Promise<SubscriptionInfo | null> {
-    // Placeholder - will be implemented later
-    return null;
   },
 
   /**

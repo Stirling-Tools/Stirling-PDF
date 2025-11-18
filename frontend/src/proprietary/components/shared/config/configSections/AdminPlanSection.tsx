@@ -5,8 +5,7 @@ import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
-import ActivePlanSection from '@app/components/shared/config/configSections/plan//ActivePlanSection';
-import StaticPlanSection from '@app/components/shared/config/configSections/plan//StaticPlanSection';
+import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -98,6 +97,11 @@ const AdminPlanSection: React.FC = () => {
 
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
+      // Only allow upgrades for server and enterprise tiers
+      if (planGroup.tier === 'free') {
+        return;
+      }
+
       // Use checkout context to open checkout modal
       openCheckout(planGroup.tier, {
         currency,
@@ -121,7 +125,7 @@ const AdminPlanSection: React.FC = () => {
 
   // Show static version if Stripe is not configured or there's an error
   if (useStaticVersion) {
-    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo} />;
+    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo ?? undefined} />;
   }
 
   // Early returns after all hooks are called
@@ -135,7 +139,7 @@ const AdminPlanSection: React.FC = () => {
 
   if (error) {
     // Fallback to static version on error
-    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo} />;
+    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo ?? undefined} />;
   }
 
   if (!plans || plans.length === 0) {

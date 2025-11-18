@@ -7,6 +7,7 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { alert } from '@app/components/toast';
+import { LicenseInfo } from '@app/services/licenseService';
 
 interface PremiumSettingsData {
   key?: string;
@@ -14,11 +15,7 @@ interface PremiumSettingsData {
 }
 
 interface StaticPlanSectionProps {
-  currentLicenseInfo?: {
-    planName: string;
-    maxUsers: number;
-    grandfathered: boolean;
-  };
+  currentLicenseInfo?: LicenseInfo;
 }
 
 const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInfo }) => {
@@ -122,7 +119,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
 
   const getCurrentPlan = () => {
     if (!currentLicenseInfo) return staticPlans[0];
-    if (currentLicenseInfo.planName === 'Enterprise') return staticPlans[2];
+    if (currentLicenseInfo.licenseType === 'ENTERPRISE') return staticPlans[2];
     if (currentLicenseInfo.maxUsers > 5) return staticPlans[1];
     return staticPlans[0];
   };
@@ -160,8 +157,6 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
               {currentLicenseInfo && (
                 <Text size="sm" c="dimmed">
                   {t('plan.static.maxUsers', 'Max Users')}: {currentLicenseInfo.maxUsers}
-                  {currentLicenseInfo.grandfathered &&
-                    ` (${t('workspace.people.license.grandfathered', 'Grandfathered')})`}
                 </Text>
               )}
             </Stack>
