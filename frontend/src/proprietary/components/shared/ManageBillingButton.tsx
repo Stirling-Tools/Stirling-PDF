@@ -17,13 +17,29 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
   const handleClick = async () => {
     try {
       setLoading(true);
-      const response = await licenseService.createBillingPortalSession(returnUrl);
-      window.location.href = response.url;
-    } catch (error) {
+
+      // Get current license key for authentication
+      const licenseInfo = await licenseService.getLicenseInfo();
+
+      if (!licenseInfo.licenseKey) {
+        throw new Error('No license key found. Please activate a license first.');
+      }
+
+      // Create billing portal session with license key
+      const response = await licenseService.createBillingPortalSession(
+        returnUrl,
+        licenseInfo.licenseKey
+      );
+
+      // Open billing portal in new tab
+      window.open(response.url, '_blank');
+      setLoading(false);
+    } catch (error: any) {
       console.error('Failed to open billing portal:', error);
       alert({
         alertType: 'error',
         title: t('billing.portal.error', 'Failed to open billing portal'),
+        body: error.message || 'Please try again or contact support.',
       });
       setLoading(false);
     }

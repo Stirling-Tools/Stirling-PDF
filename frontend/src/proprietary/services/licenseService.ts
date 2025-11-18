@@ -1,5 +1,5 @@
-import apiClient from './apiClient';
-import { supabase } from './supabaseClient';
+import apiClient from '@app/services/apiClient';
+import { supabase } from '@app/services/supabaseClient';
 
 export interface PlanFeature {
   name: string;
@@ -31,18 +31,8 @@ export interface PlanTierGroup {
   popular?: boolean;
 }
 
-export interface SubscriptionInfo {
-  plan: PlanTier;
-  status: 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing' | 'none';
-  currentPeriodEnd?: string;
-  cancelAtPeriodEnd?: boolean;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
-}
-
 export interface PlansResponse {
   plans: PlanTier[];
-  currentSubscription: SubscriptionInfo | null;
 }
 
 export interface CheckoutSessionRequest {
@@ -390,12 +380,14 @@ const licenseService = {
 
   /**
    * Create a Stripe billing portal session for managing subscription
+   * Uses license key for self-hosted authentication
    */
-  async createBillingPortalSession(email: string, returnUrl: string): Promise<BillingPortalResponse> {
+  async createBillingPortalSession(returnUrl: string, licenseKey: string): Promise<BillingPortalResponse> {
     const { data, error} = await supabase.functions.invoke('manage-billing', {
       body: {
-        email,
-        returnUrl
+        return_url: returnUrl,
+        license_key: licenseKey,
+        self_hosted: true  // Explicitly indicate self-hosted mode
       },
     });
 

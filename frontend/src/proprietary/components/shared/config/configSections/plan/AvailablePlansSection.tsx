@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Button, Card, Badge, Text, Collapse } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
-import PlanCard from './PlanCard';
+import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
@@ -13,7 +13,6 @@ interface AvailablePlansSectionProps {
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   plans,
-  currentPlanId,
   currentLicenseInfo,
   onUpgradeClick,
 }) => {
@@ -32,13 +31,6 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
   // Determine if the current tier matches (checks both Stripe subscription and license)
   const isCurrentTier = (tierGroup: PlanTierGroup): boolean => {
-    // Check Stripe subscription match
-    if (currentPlanId && (
-      tierGroup.monthly?.id === currentPlanId ||
-      tierGroup.yearly?.id === currentPlanId
-    )) {
-      return true;
-    }
     // Check license tier match
     if (currentTier && tierGroup.tier === currentTier) {
       return true;

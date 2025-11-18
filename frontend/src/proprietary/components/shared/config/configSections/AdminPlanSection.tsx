@@ -15,6 +15,7 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 
 interface PremiumSettingsData {
   key?: string;
@@ -29,7 +30,7 @@ const AdminPlanSection: React.FC = () => {
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [currentLicenseInfo, setCurrentLicenseInfo] = useState<LicenseInfo | null>(null);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
-  const { plans, currentSubscription, loading, error, refetch } = usePlans(currency);
+  const { plans, loading, error, refetch } = usePlans(currency);
 
   // Premium/License key management
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
@@ -147,34 +148,38 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Currency Selection */}
+      {/* Currency Selection & Manage Subscription */}
       <Paper withBorder p="md" radius="md">
-        <Group justify="space-between" align="center">
-          <Text size="lg" fw={600}>
-            {t('plan.currency', 'Currency')}
-          </Text>
-          <Select
-            value={currency}
-            onChange={(value) => setCurrency(value || 'gbp')}
-            data={currencyOptions}
-            searchable
-            clearable={false}
-            w={300}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-          />
-        </Group>
-      </Paper>
+        <Stack gap="md">
+          <Group justify="space-between" align="center">
+            <Text size="lg" fw={600}>
+              {t('plan.currency', 'Currency')}
+            </Text>
+            <Select
+              value={currency}
+              onChange={(value) => setCurrency(value || 'gbp')}
+              data={currencyOptions}
+              searchable
+              clearable={false}
+              w={300}
+              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+            />
+          </Group>
 
-      {currentSubscription && (
-        <>
-          <ActivePlanSection subscription={currentSubscription} />
-          <Divider />
-        </>
-      )}
+          {/* Manage Subscription Button - Only show if user has active license */}
+          {currentLicenseInfo?.licenseKey && (
+            <Group justify="space-between" align="center">
+              <Text size="sm" c="dimmed">
+                {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
+              </Text>
+              <ManageBillingButton />
+            </Group>
+          )}
+        </Stack>
+      </Paper>
 
       <AvailablePlansSection
         plans={plans}
-        currentPlanId={currentSubscription?.plan.id}
         currentLicenseInfo={currentLicenseInfo}
         onUpgradeClick={handleUpgradeClick}
       />
