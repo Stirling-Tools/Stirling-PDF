@@ -191,7 +191,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           height: '100%',
           width: '100%',
           position: 'relative',
-          overflow: 'hidden',
           flex: 1,
           minHeight: 0,
           minWidth: 0,
@@ -287,8 +286,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               minHeight: 0,
               minWidth: 0,
               contain: 'strict',
-              display: 'flex',
-              justifyContent: 'center',
             }}
           >
           <Scroller
