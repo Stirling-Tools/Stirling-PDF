@@ -167,6 +167,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
         "-Dserver.port=0",  // Let OS assign an available port
+        "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
+        "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
         "-jar",
         jar_path.to_str().unwrap(),
     ];

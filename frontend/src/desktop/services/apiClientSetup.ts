@@ -45,6 +45,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
       }
 
+      // Debug logging
+      console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
+
       // Add auth token for remote requests
       const isRemote = await operationRouter.isRemoteMode();
       if (isRemote) {
