@@ -81,13 +81,11 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   let displayPrice = monthly?.price || 0;
   let displaySeatPrice = monthly?.seatPrice;
   let displayCurrency = monthly?.currency || '£';
-  let isYearlyPrice = false;
 
   if (yearly) {
     displayPrice = Math.round(yearly.price / 12);
     displaySeatPrice = yearly.seatPrice ? Math.round(yearly.seatPrice / 12) : undefined;
     displayCurrency = yearly.currency;
-    isYearlyPrice = true;
   }
 
   return (
