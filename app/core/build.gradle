@@ -53,6 +53,7 @@ dependencies {
     }
 
     implementation project(':common')
+    implementation("com.google.code.gson:gson:2.13.2")
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'commons-io:commons-io:2.21.0'

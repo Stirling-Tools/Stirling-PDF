@@ -1,24 +1,9 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
   xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{pdfTojson.title}, header=#{pdfTojson.header})}"></th:block>
-  <script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", function () {
-      const maxDPI = 500; // Maximum DPI for PDF to image conversion
-      const maxDPILabelRaw = /*[[#{pdfTojson.dpi}]]*/ "DPI (The server limit is {0} dpi)";
-      const maxDPILabel = maxDPILabelRaw.replace("{0}", maxDPI); // Replace with actual value from properties
-      const dpilabel = document.querySelector('label[for="dpi"]');
-      if (dpilabel) {
-        dpilabel.textContent = maxDPILabel;
-      }
-      const maxDPIInput = document.getElementById("dpi");
-      if (maxDPIInput) {
-        maxDPIInput.setAttribute("max", maxDPI); // Set the maximum value for DPI input
-      }
-    });
-  </script>
+  <th:block th:insert="~{fragments/common :: head(title=#{PDFToJSON.title}, header=#{PDFToJSON.header})}"></th:block>
 </head>
 
 <body>
@@ -31,20 +16,27 @@
         <div class="row justify-content-center">
           <div class="col-md-6 bg-card">
             <div class="tool-header">
-              <span class="material-symbols-rounded tool-header-icon convert">data_object</span>
-              <span class="tool-header-text" th:text="#{pdfTojson.header}"></span>
+              <span class="material-symbols-rounded tool-header-icon convert">code</span>
+              <span class="tool-header-text" th:text="#{PDFToJSON.header}">PDF to JSON</span>
             </div>
-            <p th:text="#{processTimeWarning}"></p>
-            </p>
-            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/img'}">
+
+            <form enctype="multipart/form-data" id="pdfToJSONForm" method="post"
+              th:action="@{'/api/v1/convert/pdf/json'}">
+              
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.pdf', inputText=#{PDFToJSON.selectText})}">
               </div>
 
-  
-              
-              
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfTojson.submit}"></button>
+              <!-- (Facultatif) Options supplémentaires -->
+              <!--
+              <div class="mb-3">
+                <label class="form-label" for="option" th:text="#{PDFToJSON.optionLabel}">Option:</label>
+                <input class="form-control" id="option" name="option" type="text">
+              </div>
+              -->
+
+              <br>
+              <button class="btn btn-primary" id="submitBtn" th:text="#{PDFToJSON.submit}" type="submit">Convert to JSON</button>
             </form>
           </div>
         </div>
@@ -52,7 +44,6 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-
 </body>
 
 </html>

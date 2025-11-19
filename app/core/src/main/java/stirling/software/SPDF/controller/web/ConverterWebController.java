@@ -65,6 +65,13 @@ public class ConverterWebController {
         return "convert/pdf-to-cbr";
     }
 
+    @GetMapping("/pdf-to-json")
+    @Hidden
+    public String pdfToJsonForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-json");
+        return "convert/pdf-to-json";
+    }
+
     @GetMapping("/html-to-pdf")
     @Hidden
     public String convertHTMLToPdfForm(Model model) {
@@ -206,12 +213,5 @@ public class ConverterWebController {
         }
         model.addAttribute("currentPage", "pdf-to-video");
         return "convert/pdf-to-video";
-    }
-
-    @GetMapping("/pdf-to-json")
-    @Hidden
-    public String pdftojson(Model model) {
-        model.addAttribute("currentPage", "pdf-to-json");
-        return "convert/pdf-to-json";
     }
 }
