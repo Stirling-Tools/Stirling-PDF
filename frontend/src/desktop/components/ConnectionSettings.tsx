@@ -9,6 +9,7 @@ import {
 import { authService, UserInfo } from '@app/services/authService';
 import { LoginForm } from '@app/components/SetupWizard/LoginForm';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -176,6 +177,7 @@ export const ConnectionSettings: React.FC = () => {
         opened={showServerModal}
         onClose={() => setShowServerModal(false)}
         title={t('settings.connection.selectServer', 'Select Server')}
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       >
         <ServerSelectionInSettings onSubmit={handleServerConfigSubmit} />
       </Modal>
@@ -188,6 +190,7 @@ export const ConnectionSettings: React.FC = () => {
           setNewServerConfig(null);
         }}
         title={t('settings.connection.login', 'Login')}
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       >
         {newServerConfig && (
           <LoginForm
