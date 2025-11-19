@@ -72,6 +72,13 @@ public class ConverterWebController {
         return "convert/html-to-pdf";
     }
 
+    @GetMapping("/html-to-pdf/chromium")
+    @Hidden
+    public String convertHTMLToPdfWebBasedForm(Model model) {
+        model.addAttribute("currentPage", "html-to-pdf");
+        return "convert/html-to-pdf-chromium";
+    }
+
     @GetMapping("/markdown-to-pdf")
     @Hidden
     public String convertMarkdownToPdfForm(Model model) {
