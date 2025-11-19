@@ -39,6 +39,9 @@ export interface AppConfig {
   license?: string;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
+  appVersion?: string;
+  machineType?: string;
+  activeSecurity?: boolean;
   error?: string;
 }
 
