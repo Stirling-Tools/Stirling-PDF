@@ -59,6 +59,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     planGroup.yearly ? 'yearly' : 'monthly'
   );
   const [installationId, setInstallationId] = useState<string | null>(null);
+  const [currentLicenseKey, setCurrentLicenseKey] = useState<string | null>(null);
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<'idle' | 'polling' | 'ready' | 'timeout'>('idle');
 
@@ -89,11 +90,12 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       }
 
       // Fetch current license key for upgrades
-      let currentLicenseKey: string | undefined;
+      let existingLicenseKey: string | undefined;
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
         if (licenseInfo && licenseInfo.licenseKey) {
-          currentLicenseKey = licenseInfo.licenseKey;
+          existingLicenseKey = licenseInfo.licenseKey;
+          setCurrentLicenseKey(existingLicenseKey);
           console.log('Found existing license for upgrade');
         }
       } catch (error) {
@@ -103,7 +105,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       const response = await licenseService.createCheckoutSession({
         lookup_key: selectedPlan.lookupKey,
         installation_id: fetchedInstallationId,
-        current_license_key: currentLicenseKey,
+        current_license_key: existingLicenseKey,
         requires_seats: selectedPlan.requiresSeats,
         seat_count: Math.max(1, Math.min(minimumSeats || 1, 10000)),
         successUrl: `${window.location.origin}/settings/adminPlan?session_id={CHECKOUT_SESSION_ID}`,
@@ -225,19 +227,54 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     await poll();
   }, [onLicenseActivated]);
 
-  const handlePaymentComplete = () => {
+  const handlePaymentComplete = async () => {
     // Preserve state when changing status
     setState(prev => ({ ...prev, status: 'success' }));
 
-    // Start polling BEFORE notifying parent (so modal stays open)
-    if (installationId) {
-      pollForLicenseKey(installationId).finally(() => {
-        // Only notify parent after polling completes or times out
-        onSuccess?.(state.sessionId || '');
-      });
-    } else {
-      // No installation ID, notify immediately
+    // Check if this is an upgrade (existing license key) or new plan
+    if (currentLicenseKey) {
+      // UPGRADE FLOW: Force license re-verification by saving existing key
+      console.log('Upgrade detected - syncing existing license key');
+      setPollingStatus('polling');
+
+      try {
+        const saveResponse = await licenseService.saveLicenseKey(currentLicenseKey);
+
+        if (saveResponse.success) {
+          console.log(`License upgraded successfully: ${saveResponse.licenseType}`);
+          setPollingStatus('ready');
+
+          // Fetch and pass updated license info to parent
+          try {
+            const licenseInfo = await licenseService.getLicenseInfo();
+            onLicenseActivated?.(licenseInfo);
+          } catch (infoError) {
+            console.error('Error fetching updated license info:', infoError);
+          }
+        } else {
+          console.error('Failed to sync upgraded license:', saveResponse.error);
+          setPollingStatus('timeout');
+        }
+      } catch (error) {
+        console.error('Error syncing upgraded license:', error);
+        setPollingStatus('timeout');
+      }
+
+      // Notify parent (don't wait - upgrade is complete)
       onSuccess?.(state.sessionId || '');
+    } else {
+      // NEW PLAN FLOW: Poll for new license key
+      console.log('New subscription - polling for license key');
+
+      if (installationId) {
+        pollForLicenseKey(installationId).finally(() => {
+          // Only notify parent after polling completes or times out
+          onSuccess?.(state.sessionId || '');
+        });
+      } else {
+        // No installation ID, notify immediately
+        onSuccess?.(state.sessionId || '');
+      }
     }
   };
 
@@ -250,6 +287,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
     setState({ status: 'idle' });
     setPollingStatus('idle');
+    setCurrentLicenseKey(null);
+    setLicenseKey(null);
     // Reset to default period on close
     setSelectedPeriod(planGroup.yearly ? 'yearly' : 'monthly');
     onClose();
@@ -398,29 +437,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
                 )}
               </Text>
 
-              {/* Installation ID Display */}
-              {installationId && (
-                <Paper withBorder p="sm" radius="md">
-                  <Stack gap="xs">
-                    <Text size="xs" fw={600}>
-                      {t('payment.installationId', 'Installation ID')}
-                    </Text>
-                    <Code block>{installationId}</Code>
-                  </Stack>
-                </Paper>
-              )}
-
               {/* License Key Polling Status */}
               {pollingStatus === 'polling' && (
                 <Group gap="xs">
                   <Loader size="sm" />
                   <Text size="sm" c="dimmed">
-                    {t('payment.generatingLicense', 'Generating your license key...')}
+                    {currentLicenseKey
+                      ? t('payment.syncingLicense', 'Syncing your upgraded license...')
+                      : t('payment.generatingLicense', 'Generating your license key...')}
                   </Text>
                 </Group>
               )}
 
-              {pollingStatus === 'ready' && licenseKey && (
+              {pollingStatus === 'ready' && !currentLicenseKey && licenseKey && (
                 <Paper withBorder p="md" radius="md" bg="gray.1">
                   <Stack gap="sm">
                     <Text size="sm" fw={600}>
@@ -442,6 +471,17 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
                     </Text>
                   </Stack>
                 </Paper>
+              )}
+
+              {pollingStatus === 'ready' && currentLicenseKey && (
+                <Alert color="green" title={t('payment.upgradeComplete', 'Upgrade Complete')}>
+                  <Text size="sm">
+                    {t(
+                      'payment.upgradeCompleteMessage',
+                      'Your subscription has been upgraded successfully. Your existing license key has been updated.'
+                    )}
+                  </Text>
+                </Alert>
               )}
 
               {pollingStatus === 'timeout' && (
