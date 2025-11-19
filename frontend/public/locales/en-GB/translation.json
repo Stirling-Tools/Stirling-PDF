@@ -3229,6 +3229,12 @@
     "backendLoadingTitle": "Backend starting up",
     "backendLoadingMessage": "Backend is currently loading and/or not started. Please wait a few moments and try again."
   },
+  "backendStartup": {
+    "title": "Backend Starting",
+    "loadingTitle": "Backend starting up",
+    "loadingMessage": "The backend is currently starting up. This usually takes a few moments.",
+    "takingLonger": "This is taking longer than expected. The backend should be ready soon."
+  },
   "signup": {
     "title": "Create an account",
     "subtitle": "Join Stirling PDF to get started",

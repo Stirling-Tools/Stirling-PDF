@@ -76,8 +76,13 @@ export default function Landing() {
   }
 
   // If login is disabled, show app directly (anonymous mode)
-  if (config?.enableLogin === false) {
-    console.debug('[Landing] Login disabled - showing app in anonymous mode');
+  // Check both the config AND sessionStorage flag (in case config is wrong)
+  const loginActuallyDisabled = sessionStorage.getItem('loginActuallyDisabled') === 'true';
+  if (config?.enableLogin === false || loginActuallyDisabled) {
+    console.debug('[Landing] Login disabled - showing app in anonymous mode', {
+      configSays: config?.enableLogin,
+      actuallyDisabled: loginActuallyDisabled
+    });
     return <HomePage />;
   }
 
