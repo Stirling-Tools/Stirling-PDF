@@ -29,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -49,13 +48,12 @@ public class EditTableOfContentsController {
     @AutoJobPostMapping(
             value = "/extract-bookmarks",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @JsonDataResponse
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
     @ResponseBody
-    public List<Map<String, Object>> extractBookmarks(@RequestParam("file") MultipartFile file)
-            throws Exception {
+    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
+            @RequestParam("file") MultipartFile file) throws Exception {
         PDDocument document = null;
         try {
             document = pdfDocumentFactory.load(file);
@@ -63,10 +61,10 @@ public class EditTableOfContentsController {
 
             if (outline == null) {
                 log.info("No outline/bookmarks found in PDF");
-                return new ArrayList<>();
+                return ResponseEntity.ok(new ArrayList<>());
             }
 
-            return extractBookmarkItems(document, outline);
+            return ResponseEntity.ok(extractBookmarkItems(document, outline));
         } finally {
             if (document != null) {
                 document.close();
