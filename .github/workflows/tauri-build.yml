@@ -188,6 +188,7 @@ jobs:
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
+        id: digicert-setup
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         uses: digicert/ssm-code-signing@v1.1.0
         env:
@@ -199,15 +200,37 @@ jobs:
 
       - name: Setup DigiCert KeyLocker Certificate
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
-        shell: bash
+        shell: pwsh
         run: |
-          echo "Setting up DigiCert KeyLocker environment..."
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
-          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> "$GITHUB_ENV"
+          Write-Host "Setting up DigiCert KeyLocker environment..."
+
+          # Decode client certificate
+          $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
+          $certPath = "D:\Certificate_pkcs12.p12"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+          # Set environment variables
+          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
+          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> $env:GITHUB_ENV
+
+          # Get PKCS11 config path from DigiCert action
+          $pkcs11Config = $env:PKCS11_CONFIG
+          if ($pkcs11Config) {
+            Write-Host "Found PKCS11_CONFIG: $pkcs11Config"
+            echo "PKCS11_CONFIG=$pkcs11Config" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "PKCS11_CONFIG not set by DigiCert action, using default path"
+            $defaultPath = "C:\Users\RUNNER~1\AppData\Local\Temp\smtools-windows-x64\pkcs11properties.cfg"
+            if (Test-Path $defaultPath) {
+              Write-Host "Found config at default path: $defaultPath"
+              echo "PKCS11_CONFIG=$defaultPath" >> $env:GITHUB_ENV
+            } else {
+              Write-Host "Warning: Could not find PKCS11 config file"
+            }
+          }
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
