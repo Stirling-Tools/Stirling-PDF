@@ -2134,9 +2134,23 @@
       "title": "Draw your signature",
       "clear": "Clear"
     },
+    "canvas": {
+      "heading": "Draw your signature",
+      "clickToOpen": "Click to open the drawing canvas",
+      "modalTitle": "Draw your signature",
+      "colorLabel": "Colour",
+      "penSizeLabel": "Pen size",
+      "penSizePlaceholder": "Size",
+      "clear": "Clear canvas",
+      "colorPickerTitle": "Choose stroke colour"
+    },
     "text": {
       "name": "Signer Name",
-      "placeholder": "Enter your full name"
+      "placeholder": "Enter your full name",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
     },
     "clear": "Clear",
     "add": "Add",
@@ -2159,6 +2173,11 @@
     "steps": {
       "configure": "Configure Signature"
     },
+    "step": {
+      "createDesc": "Choose how you want to create the signature",
+      "place": "Place & save",
+      "placeDesc": "Position the signature on your PDF"
+    },
     "type": {
       "title": "Signature Type",
       "draw": "Draw",
@@ -2175,11 +2194,16 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "text": "After entering your name above, click anywhere on the PDF to place your signature.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your signature.",
+      "noSignature": "Create a signature above to enable placement tools."
     },
     "mode": {
       "move": "Move Signature",
-      "place": "Place Signature"
+      "place": "Place Signature",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
     },
     "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
@@ -4778,6 +4802,9 @@
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   },
+  "colorPicker": {
+    "title": "Choose colour"
+  },
   "common": {
     "previous": "Previous",
     "next": "Next",
@@ -4793,7 +4820,8 @@
     "used": "used",
     "available": "available",
     "cancel": "Cancel",
-    "preview": "Preview"
+    "preview": "Preview",
+    "done": "Done"
   },
   "config": {
     "overview": {
