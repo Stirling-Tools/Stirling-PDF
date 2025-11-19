@@ -29,12 +29,6 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
-      STIRLING_PDF_JSON_FONT_NORMALIZATION_ENABLED: "false"
-      STIRLING_PDF_JSON_CFF_CONVERTER_ENABLED: "true"
-      STIRLING_PDF_JSON_CFF_CONVERTER_METHOD: python
-      STIRLING_PDF_JSON_CFF_CONVERTER_PYTHON_COMMAND: /opt/venv/bin/python3
-      STIRLING_PDF_JSON_CFF_CONVERTER_PYTHON_SCRIPT: /scripts/convert_cff_to_ttf.py
-      LOGGING_LEVEL_stirling.software.SPDF.service.PdfJsonConversionService: TRACE
     networks:
       - stirling-network
 

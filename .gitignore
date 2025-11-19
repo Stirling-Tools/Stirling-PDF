@@ -33,6 +33,7 @@ SwaggerDoc.json
 
 # Gradle
 .gradle
+.gradle-home
 .lock
 
 # External tool builders
