@@ -362,7 +362,15 @@
       "defaultPdfEditorInactive": "Another application is set as default",
       "defaultPdfEditorChecking": "Checking...",
       "defaultPdfEditorSet": "Already Default",
-      "setAsDefault": "Set as Default"
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -382,6 +390,37 @@
       "noShortcut": "No shortcut set",
       "searchPlaceholder": "Search tools..."
     }
+  },
+  "update": {
+    "modalTitle": "Update Available",
+    "current": "Current Version",
+    "latest": "Latest Version",
+    "latestStable": "Latest Stable",
+    "priorityLabel": "Priority",
+    "recommendedAction": "Recommended Action",
+    "breakingChangesDetected": "Breaking Changes Detected",
+    "breakingChangesMessage": "Some versions contain breaking changes. Please review the migration guides below before updating.",
+    "migrationGuides": "Migration Guides",
+    "viewGuide": "View Guide",
+    "loadingDetailedInfo": "Loading detailed information...",
+    "close": "Close",
+    "viewAllReleases": "View All Releases",
+    "downloadLatest": "Download Latest",
+    "availableUpdates": "Available Updates",
+    "unableToLoadDetails": "Unable to load detailed information.",
+    "version": "Version",
+    "urgentUpdateAvailable": "Urgent Update",
+    "updateAvailable": "Update Available",
+    "releaseNotes": "Release Notes",
+    "priority": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "minor": "Minor",
+      "low": "Low"
+    },
+    "breakingChanges": "Breaking Changes",
+    "breakingChangesDefault": "This version contains breaking changes.",
+    "migrationGuide": "Migration Guide"
   },
   "changeCreds": {
     "title": "Change Credentials",
