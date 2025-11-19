@@ -59,6 +59,9 @@ export default function Login() {
     }
 
     const fetchProviders = async () => {
+      // Skip backend startup redirect in Tauri - it has its own health monitoring
+      const isTauriEnv = typeof window !== 'undefined' && '__TAURI__' in window;
+
       try {
         const response = await fetch(`${BASE_PATH}/api/v1/proprietary/ui-data/login`, {
           cache: 'no-cache'
@@ -92,30 +95,38 @@ export default function Login() {
               console.debug('[Login] Status check failed, backend may be starting up');
             }
 
-            // Backend is not responding properly - redirect to startup page
-            console.debug('[Login] Backend starting up - redirecting to backend startup page');
-            setBackendCheckFailed(true);
-            sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
+            // Backend is not responding properly - redirect to startup page (web only)
+            if (!isTauriEnv) {
+              console.debug('[Login] Backend starting up - redirecting to backend startup page');
+              setBackendCheckFailed(true);
+              sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
 
-            setTimeout(() => {
-              if (isMounted) {
-                navigate('/backend-startup', { replace: true });
-              }
-            }, 300);
+              setTimeout(() => {
+                if (isMounted) {
+                  navigate('/backend-startup', { replace: true });
+                }
+              }, 300);
+            } else {
+              console.debug('[Login] Backend starting up in Tauri - relying on backend health monitor');
+            }
             return;
           }
 
           // 503 means backend is starting up
           if (response.status === 503) {
-            console.warn('[Login] Backend unavailable (503) - redirecting to backend startup');
-            setBackendCheckFailed(true);
-            sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
+            if (!isTauriEnv) {
+              console.warn('[Login] Backend unavailable (503) - redirecting to backend startup');
+              setBackendCheckFailed(true);
+              sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
 
-            setTimeout(() => {
-              if (isMounted) {
-                navigate('/backend-startup', { replace: true });
-              }
-            }, 300);
+              setTimeout(() => {
+                if (isMounted) {
+                  navigate('/backend-startup', { replace: true });
+                }
+              }, 300);
+            } else {
+              console.debug('[Login] Backend unavailable (503) in Tauri - relying on backend health monitor');
+            }
             return;
           }
 
@@ -146,14 +157,19 @@ export default function Login() {
             console.debug('[Login] Status check failed');
           }
 
-          setBackendCheckFailed(true);
-          sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
+          // Backend is not responding - redirect to startup page (web only)
+          if (!isTauriEnv) {
+            setBackendCheckFailed(true);
+            sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
 
-          setTimeout(() => {
-            if (isMounted) {
-              navigate('/backend-startup', { replace: true });
-            }
-          }, 300);
+            setTimeout(() => {
+              if (isMounted) {
+                navigate('/backend-startup', { replace: true });
+              }
+            }, 300);
+          } else {
+            console.debug('[Login] Backend returning invalid data in Tauri - relying on backend health monitor');
+          }
           return;
         }
 
@@ -176,14 +192,20 @@ export default function Login() {
         if (!isMounted) return;
 
         console.error('[Login] Failed to fetch enabled providers:', err);
-        setBackendCheckFailed(true);
-        sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
 
-        setTimeout(() => {
-          if (isMounted) {
-            navigate('/backend-startup', { replace: true });
-          }
-        }, 300);
+        // Redirect to startup page (web only)
+        if (!isTauriEnv) {
+          setBackendCheckFailed(true);
+          sessionStorage.setItem('backendStartupRedirect', window.location.pathname + window.location.search);
+
+          setTimeout(() => {
+            if (isMounted) {
+              navigate('/backend-startup', { replace: true });
+            }
+          }, 300);
+        } else {
+          console.debug('[Login] Provider fetch failed in Tauri - relying on backend health monitor');
+        }
       }
     };
 

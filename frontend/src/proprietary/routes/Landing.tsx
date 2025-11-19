@@ -56,7 +56,7 @@ export default function Landing() {
     // The auth system will automatically redirect to login when session is null
   }
 
-  // If AppConfig failed to load, check if backend is down
+  // If AppConfig failed to load, check if backend is down (web only - Tauri has its own backend health monitoring)
   useEffect(() => {
     let isMounted = true;
 
@@ -65,6 +65,13 @@ export default function Landing() {
       console.debug('[Landing] Config error detected, checking backend status');
 
       const checkBackend = async () => {
+        // Skip backend startup redirect in Tauri - it has its own health monitoring
+        const isTauriEnv = typeof window !== 'undefined' && '__TAURI__' in window;
+        if (isTauriEnv) {
+          console.debug('[Landing] Running in Tauri, skipping backend startup redirect');
+          return;
+        }
+
         try {
           const response = await fetch(`${BASE_PATH}/api/v1/info/status`, {
             cache: 'no-cache'
