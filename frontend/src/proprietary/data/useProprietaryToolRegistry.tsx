@@ -20,7 +20,7 @@ export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
 
   return useMemo<ProprietaryToolRegistry>(() => ({
     pdfTextEditor: {
-      icon: <LocalIcon icon="code-rounded" width="1.5rem" height="1.5rem" />,
+      icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
       name: t("home.pdfTextEditor.title", "PDF Text Editor"),
       component: PdfTextEditor,
       description: t(
@@ -34,6 +34,8 @@ export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
       synonyms: getSynonyms(t, "pdfTextEditor"),
       supportsAutomate: false,
       automationSettings: null,
+      versionStatus: "alpha",
+      requiresPremium: true,
     },
   }), [t]);
 }

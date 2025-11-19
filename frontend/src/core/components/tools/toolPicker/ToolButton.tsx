@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@mantine/core";
+import { Button, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
@@ -12,6 +12,7 @@ import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -26,8 +27,15 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false }) => {
   const { t } = useTranslation();
-  // Special case: read and multiTool are navigational tools that are always available
+  const { config } = useAppConfig();
+  const premiumEnabled = config?.premiumEnabled;
+  
+  // Check if disabled due to premium requirement
+  const requiresPremiumButNotEnabled = tool.requiresPremium === true && premiumEnabled !== true;
+  // Check if tool is unavailable (no component, no link, except read/multiTool)
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+  const isDisabled = isUnavailable || requiresPremiumButNotEnabled;
+  
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
@@ -35,7 +43,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const fav = isFavorite(id as ToolId);
 
   const handleClick = (id: ToolId) => {
-    if (isUnavailable) return;
+    if (isDisabled) return;
     if (tool.link) {
       // Open external link in new tab
       window.open(tool.link, '_blank', 'noopener,noreferrer');
@@ -46,11 +54,24 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   };
 
   // Get navigation props for URL support (only if navigation is not disabled)
-  const navProps = !isUnavailable && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
+  const navProps = !isDisabled && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
 
-  const tooltipContent = isUnavailable
-    ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
-    : (
+  // Determine tooltip content based on disabled reason
+  let tooltipContent: React.ReactNode;
+  if (requiresPremiumButNotEnabled) {
+    tooltipContent = (
+      <span>
+        <strong>{t('toolPanel.premiumFeature', 'Premium feature:')}</strong> {tool.description}
+      </span>
+    );
+  } else if (isDisabled) {
+    tooltipContent = (
+      <span>
+        <strong>{t('toolPanel.comingSoon', 'Coming soon:')}</strong> {tool.description}
+      </span>
+    );
+  } else {
+    tooltipContent = (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <span>{tool.description}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
@@ -65,26 +86,39 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
         </div>
       </div>
     );
+  }
 
   const buttonContent = (
     <>
       <ToolIcon
         icon={tool.icon}
-        opacity={isUnavailable ? 0.25 : 1}
+        opacity={isDisabled ? 0.25 : 1}
       />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
-        <FitText
-          text={tool.name}
-          lines={1}
-          minimumFontScale={0.8}
-          as="span"
-          style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+          <FitText
+            text={tool.name}
+            lines={1}
+            minimumFontScale={0.8}
+            as="span"
+            style={{ display: 'inline-block', maxWidth: '100%', opacity: isDisabled ? 0.25 : 1 }}
+          />
+          {tool.versionStatus === 'alpha' && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="orange"
+              style={{ flexShrink: 0, opacity: isDisabled ? 0.25 : 1 }}
+            >
+              {t('toolPanel.alpha', 'Alpha')}
+            </Badge>
+          )}
+        </div>
         {matchedSynonym && (
           <span style={{
             fontSize: '0.75rem',
             color: 'var(--mantine-color-dimmed)',
-            opacity: isUnavailable ? 0.25 : 1,
+            opacity: isDisabled ? 0.25 : 1,
             marginTop: '1px',
             overflow: 'visible',
             whiteSpace: 'nowrap'
@@ -124,7 +158,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     >
       {buttonContent}
     </Button>
-  ) : tool.link && !isUnavailable ? (
+  ) : tool.link && !isDisabled ? (
     // For external links, render Button as an anchor with proper href
     <Button
       component="a"
@@ -151,7 +185,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       {buttonContent}
     </Button>
   ) : (
-    // For unavailable tools, use regular button
+    // For unavailable/premium tools, use regular button
     <Button
       variant={isSelected ? "filled" : "subtle"}
       onClick={() => handleClick(id)}
@@ -160,13 +194,13 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       fullWidth
       justify="flex-start"
       className="tool-button"
-      aria-disabled={isUnavailable}
+      aria-disabled={isDisabled}
       data-tour={`tool-button-${id}`}
       styles={{
         root: {
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
-          cursor: isUnavailable ? 'not-allowed' : undefined,
+          cursor: isDisabled ? 'not-allowed' : undefined,
           overflow: 'visible'
         },
         label: { overflow: 'visible' }
@@ -176,7 +210,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     </Button>
   );
 
-  const star = hasStars && !isUnavailable ? (
+  const star = hasStars && !isDisabled ? (
     <FavoriteStar
       isFavorite={fav}
       onToggle={() => toggleFavorite(id as ToolId)}

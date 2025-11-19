@@ -126,4 +126,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/overlay-pdf': 'overlayPdfs',
   '/split-pdf-by-sections': 'split',
   '/split-pdf-by-chapters': 'split',
+  
+  // Premium tools
+  '/pdf-text-editor': 'pdfTextEditor',
 };

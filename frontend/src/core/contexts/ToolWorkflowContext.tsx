@@ -21,6 +21,7 @@ import {
 import type { ToolPanelMode } from '@app/constants/toolPanel';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -114,6 +115,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Tool management hook
   const { toolRegistry, getSelectedTool } = useToolManagement();
   const { allTools } = useToolRegistry();
+  const { config } = useAppConfig();
+  const premiumEnabled = config?.premiumEnabled;
 
   // Tool history hook
   const {
@@ -268,6 +271,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: ToolId) => {
+    // Check if tool requires premium and premium is not enabled
+    const selectedTool = allTools[toolId];
+    if (selectedTool?.requiresPremium === true && premiumEnabled !== true) {
+      // Premium tool selected without premium - do nothing (should be disabled in UI)
+      return;
+    }
+
     // If we're currently on a custom workbench (e.g., Validate Signature report),
     // selecting any tool should take the user back to the default file manager view.
     const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -309,7 +319,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery]);
+  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery, allTools, premiumEnabled]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');

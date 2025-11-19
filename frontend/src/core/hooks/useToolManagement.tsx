@@ -4,6 +4,7 @@ import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "@app
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { FileId } from '@app/types/file';
 import { ToolId } from "@app/types/toolId";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
@@ -15,6 +16,7 @@ interface ToolManagementResult {
 
 export const useToolManagement = (): ToolManagementResult => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
+  const { config } = useAppConfig();
 
   // Build endpoints list from registry entries with fallback to legacy mapping
   const { allTools } = useToolRegistry();
@@ -39,11 +41,18 @@ export const useToolManagement = (): ToolManagementResult => {
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
+    // Include tools that either:
+    // 1. Have enabled endpoints (normal filtering), OR
+    // 2. Are premium tools (so they show up even if premium is not enabled, but will be disabled)
     const availableToolRegistry: Partial<ToolRegistry> = {};
     (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
-      if (isToolAvailable(toolKey)) {
-        const baseTool = baseRegistry[toolKey];
-        if (baseTool) {
+      const baseTool = baseRegistry[toolKey];
+      if (baseTool) {
+        const hasEnabledEndpoints = isToolAvailable(toolKey);
+        const isPremiumTool = baseTool.requiresPremium === true;
+        
+        // Include if endpoints are enabled OR if it's a premium tool (to show it disabled)
+        if (hasEnabledEndpoints || isPremiumTool) {
           availableToolRegistry[toolKey] = {
             ...baseTool,
             name: baseTool.name,
