@@ -33,9 +33,9 @@ export const accountService = {
   },
 
   /**
-   * Change user password on first login (clears the changeCredsFlag)
+   * Change user password on first login (resets firstLogin flag)
    */
-  async changePasswordOnFirstLogin(currentPassword: string, newPassword: string): Promise<void> {
+  async changePasswordOnLogin(currentPassword: string, newPassword: string): Promise<void> {
     const formData = new FormData();
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);

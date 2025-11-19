@@ -14,23 +14,11 @@ pub fn add_opened_file(file_path: String) {
 // Command to get opened file paths (if app was launched with files)
 #[tauri::command]
 pub async fn get_opened_files() -> Result<Vec<String>, String> {
-    let mut all_files: Vec<String> = Vec::new();
-
-    // Get files from command line arguments (Windows/Linux 'Open With Stirling' behaviour)
-    let args: Vec<String> = std::env::args().collect();
-    let pdf_files: Vec<String> = args.iter()
-        .skip(1)
-        .filter(|arg| std::path::Path::new(arg).exists())
-        .cloned()
-        .collect();
-
-    all_files.extend(pdf_files);
-
-    // Add any files sent via events or other instances (macOS 'Open With Stirling' behaviour, also Windows/Linux extra files)
-    {
-        let opened_files = OPENED_FILES.lock().unwrap();
-        all_files.extend(opened_files.clone());
-    }
+    // Get all files from the OPENED_FILES store
+    // Command line args are processed in setup() callback and added to this store
+    // Additional files from second instances or events are also added here
+    let opened_files = OPENED_FILES.lock().unwrap();
+    let all_files = opened_files.clone();
 
     add_log(format!("📂 Returning {} opened file(s)", all_files.len()));
     Ok(all_files)

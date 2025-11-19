@@ -1,26 +1,27 @@
 import { useState, useCallback } from 'react';
+import React from 'react';
 
 export interface PageEditorState {
   // Selection state
   selectionMode: boolean;
   selectedPageIds: string[];
-  
-  // Animation state  
+
+  // Animation state
   movingPage: number | null;
   isAnimating: boolean;
-  
+
   // Split state
   splitPositions: Set<number>;
-  
+
   // Export state
   exportLoading: boolean;
-  
+
   // Actions
   setSelectionMode: (mode: boolean) => void;
   setSelectedPageIds: (pages: string[]) => void;
   setMovingPage: (pageNumber: number | null) => void;
   setIsAnimating: (animating: boolean) => void;
-  setSplitPositions: (positions: Set<number>) => void;
+  setSplitPositions: React.Dispatch<React.SetStateAction<Set<number>>>;
   setExportLoading: (loading: boolean) => void;
   
   // Helper functions

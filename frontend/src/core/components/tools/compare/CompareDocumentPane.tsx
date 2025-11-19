@@ -1,5 +1,5 @@
 import { Group, Loader, Stack, Text } from '@mantine/core';
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
 import { mergeConnectedRects, normalizeRotation, groupWordRects, computePageLayoutMetrics } from '@app/components/tools/compare/compare';
@@ -53,6 +53,8 @@ const CompareDocumentPane = ({
 
   // Track which page images have finished loading to avoid flashing between states
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
+  // Force a re-render when an image load state changes (refs don't trigger renders)
+  const [, setImageLoadedTick] = useState(0);
   const visiblePageRafRef = useRef<number | null>(null);
   const lastReportedVisiblePageRef = useRef<number | null>(null);
   const pageNodesRef = useRef<HTMLElement[] | null>(null);
@@ -252,6 +254,7 @@ const CompareDocumentPane = ({
                         onLoad={() => {
                           if (!imageLoadedRef.current.get(page.pageNumber)) {
                             imageLoadedRef.current.set(page.pageNumber, true);
+                            setImageLoadedTick((v) => v + 1); // refs don't trigger renders
                           }
                         }}
                       />

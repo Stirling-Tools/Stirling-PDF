@@ -8,6 +8,7 @@ import { BASE_PATH } from "@app/constants/app";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useLogoPath } from "@app/hooks/useLogoPath";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -60,9 +61,7 @@ export default function HomePage() {
   }, [config]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
-    colorScheme === "dark" ? "Dark" : "Light"
-  }.svg`;
+  const brandIconSrc = useLogoPath();
   const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
     colorScheme === "dark" ? "White" : "Black"
   }Text.svg`;
@@ -219,7 +218,7 @@ export default function HomePage() {
           <div className="mobile-bottom-bar">
             <button
               className="mobile-bottom-button"
-              aria-label={t('quickAccess.allTools', 'All Tools')}
+              aria-label={t('quickAccess.allTools', 'Tools')}
               onClick={() => {
                 handleBackToTools();
                 if (isMobile) {
@@ -228,7 +227,7 @@ export default function HomePage() {
               }}
             >
               <AppsIcon sx={{ fontSize: '1.5rem' }} />
-              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'All Tools')}</span>
+              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'Tools')}</span>
             </button>
             <button
               className="mobile-bottom-button"

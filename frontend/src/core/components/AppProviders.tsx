@@ -15,6 +15,8 @@ import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
+import { PageEditorProvider } from "@app/contexts/PageEditorContext";
+import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -49,40 +51,44 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
     <PreferencesProvider>
       <RainbowThemeProvider>
         <ErrorBoundary>
-          <OnboardingProvider>
-            <AppConfigProvider
-              retryOptions={appConfigRetryOptions}
-              {...appConfigProviderProps}
-            >
-              <ScarfTrackingInitializer />
-              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                <AppInitializer />
-                <ToolRegistryProvider>
-                  <NavigationProvider>
-                    <FilesModalProvider>
-                      <ToolWorkflowProvider>
-                        <HotkeyProvider>
-                          <SidebarProvider>
-                            <ViewerProvider>
-                              <SignatureProvider>
-                                <RightRailProvider>
-                                  <TourOrchestrationProvider>
-                                    <AdminTourOrchestrationProvider>
-                                      {children}
-                                    </AdminTourOrchestrationProvider>
-                                  </TourOrchestrationProvider>
-                                </RightRailProvider>
-                              </SignatureProvider>
-                            </ViewerProvider>
-                          </SidebarProvider>
-                        </HotkeyProvider>
-                      </ToolWorkflowProvider>
-                    </FilesModalProvider>
-                  </NavigationProvider>
-                </ToolRegistryProvider>
-              </FileContextProvider>
-            </AppConfigProvider>
-          </OnboardingProvider>
+          <BannerProvider>
+            <OnboardingProvider>
+              <AppConfigProvider
+                retryOptions={appConfigRetryOptions}
+                {...appConfigProviderProps}
+              >
+                <ScarfTrackingInitializer />
+                <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                  <AppInitializer />
+                  <ToolRegistryProvider>
+                    <NavigationProvider>
+                      <FilesModalProvider>
+                        <ToolWorkflowProvider>
+                          <HotkeyProvider>
+                            <SidebarProvider>
+                              <ViewerProvider>
+                                <PageEditorProvider>
+                                <SignatureProvider>
+                                  <RightRailProvider>
+                                      <TourOrchestrationProvider>
+                                        <AdminTourOrchestrationProvider>
+                                          {children}
+                                        </AdminTourOrchestrationProvider>
+                                      </TourOrchestrationProvider>
+                                  </RightRailProvider>
+                                </SignatureProvider>
+                              </PageEditorProvider>
+                              </ViewerProvider>
+                            </SidebarProvider>
+                          </HotkeyProvider>
+                        </ToolWorkflowProvider>
+                      </FilesModalProvider>
+                    </NavigationProvider>
+                  </ToolRegistryProvider>
+                </FileContextProvider>
+              </AppConfigProvider>
+            </OnboardingProvider>
+          </BannerProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>
     </PreferencesProvider>

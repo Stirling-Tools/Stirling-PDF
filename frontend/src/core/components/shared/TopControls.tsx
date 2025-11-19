@@ -1,47 +1,49 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import rainbowStyles from '@app/styles/rainbow.module.css';
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditNoteIcon from "@mui/icons-material/EditNote";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
+import { PageEditorFileDropdown } from '@app/components/shared/PageEditorFileDropdown';
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { usePageEditorDropdownState, PageEditorDropdownState } from '@app/components/pageEditor/hooks/usePageEditorDropdownState';
 
 
 const viewOptionStyle: React.CSSProperties = {
   display: 'inline-flex',
   flexDirection: 'row',
   alignItems: 'center',
-  gap: 6,
-  whiteSpace: 'nowrap',
-  paddingTop: '0.3rem',
+  gap: '0.5rem',
+  justifyContent: 'center',
+  padding: '2px 1rem',
 };
 
-
-// Build view options showing text always
+// Helper function to create view options for SegmentedControl
 const createViewOptions = (
   currentView: WorkbenchType,
   switchingTo: WorkbenchType | null,
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
+  pageEditorState?: PageEditorDropdownState,
   customViews?: CustomWorkbenchViewInstance[]
 ) => {
+  // Viewer dropdown logic
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
   const fileName = currentFile?.name || '';
-  const displayName = isInViewer && fileName ? fileName : 'Viewer';
+  const viewerDisplayName = isInViewer && fileName ? fileName : 'Viewer';
   const hasMultipleFiles = activeFiles.length > 1;
-  const showDropdown = isInViewer && hasMultipleFiles;
+  const showViewerDropdown = isInViewer && hasMultipleFiles;
 
   const viewerOption = {
-    label: showDropdown ? (
+    label: showViewerDropdown ? (
       <FileDropdownMenu
-        displayName={displayName}
+        displayName={viewerDisplayName}
         activeFiles={activeFiles}
         currentFileIndex={currentFileIndex}
         onFileSelect={onFileSelect}
@@ -51,29 +53,38 @@ const createViewOptions = (
     ) : (
       <div style={viewOptionStyle}>
         {switchingTo === "viewer" ? (
-          <Loader size="xs" />
+          <Loader size="sm" />
         ) : (
-          <VisibilityIcon fontSize="small" />
+          <InsertDriveFileIcon fontSize="medium" />
         )}
-        <PrivateContent>{displayName}</PrivateContent>
       </div>
     ),
     value: "viewer",
   };
 
+  // Page Editor dropdown logic
+  const isInPageEditor = currentView === 'pageEditor';
+  const hasPageEditorFiles = pageEditorState && pageEditorState.totalCount > 0;
+  const showPageEditorDropdown = isInPageEditor && hasPageEditorFiles;
+
   const pageEditorOption = {
-    label: (
+    label: showPageEditorDropdown ? (
+      <PageEditorFileDropdown
+        files={pageEditorState!.files}
+        onToggleSelection={pageEditorState!.onToggleSelection}
+        onReorder={pageEditorState!.onReorder}
+        switchingTo={switchingTo}
+        viewOptionStyle={viewOptionStyle}
+        fileColorMap={pageEditorState!.fileColorMap}
+        selectedCount={pageEditorState!.selectedCount}
+        totalCount={pageEditorState!.totalCount}
+      />
+    ) : (
       <div style={viewOptionStyle}>
-        {currentView === "pageEditor" ? (
-          <>
-            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
-          </>
+        {switchingTo === "pageEditor" ? (
+          <Loader size="sm" />
         ) : (
-          <>
-            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
-          </>
+          <GridViewIcon fontSize="medium" />
         )}
       </div>
     ),
@@ -83,17 +94,7 @@ const createViewOptions = (
   const fileEditorOption = {
     label: (
       <div style={viewOptionStyle}>
-        {currentView === "fileEditor" ? (
-          <>
-            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
-          </>
-        ) : (
-          <>
-            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
-          </>
-        )}
+        {switchingTo === "fileEditor" ? <Loader size="sm" /> : <FolderIcon fontSize="medium" />}
       </div>
     ),
     value: "fileEditor",
@@ -111,9 +112,9 @@ const createViewOptions = (
       label: (
         <div style={viewOptionStyle as React.CSSProperties}>
           {switchingTo === view.workbenchId ? (
-            <Loader size="xs" />
+            <Loader size="sm" />
           ) : (
-            view.icon || <PictureAsPdfIcon fontSize="small" />
+            view.icon || <PictureAsPdfIcon fontSize="medium" />
           )}
           <span>{view.label}</span>
         </div>
@@ -144,6 +145,8 @@ const TopControls = ({
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
+  const pageEditorState = usePageEditorDropdownState();
+
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
       return;
@@ -166,13 +169,25 @@ const TopControls = ({
     });
   }, [setCurrentView]);
 
+  // Memoize view options to prevent SegmentedControl re-renders
+  const viewOptions = useMemo(() => createViewOptions(
+    currentView,
+    switchingTo,
+    activeFiles,
+    currentFileIndex,
+    onFileSelect,
+    pageEditorState,
+    customViews
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews]);
+
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className="flex justify-center mt-[0.5rem]" style={{ pointerEvents: 'auto' }}>
+      <div className="flex justify-center">
 
         <SegmentedControl
           data-tour="view-switcher"
-          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
+          data={viewOptions}
+
           value={currentView}
           onChange={handleViewChange}
           color="blue"
@@ -185,18 +200,32 @@ const TopControls = ({
           }}
           styles={{
             root: {
-              borderRadius: 9999,
-              maxHeight: '2.6rem',
+              borderRadius: '0 0 16px 16px',
+              height: '1.8rem',
+              backgroundColor: 'var(--bg-toolbar)',
+              border: '1px solid var(--border-default)',
+              borderTop: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              outline: '1px solid rgba(0, 0, 0, 0.1)',
+              outlineOffset: '-1px',
+              padding: '0 0',
+              gap: '0',
             },
             control: {
-              borderRadius: 9999,
+              borderRadius: '0 0 16px 16px',
+              padding: '0',
+              border: 'none',
             },
             indicator: {
-              borderRadius: 9999,
-              maxHeight: '2rem',
+              borderRadius: '0 0 16px 16px',
+              height: '100%',
+              top: '0rem',
+              margin: '0',
+              border: 'none',
             },
             label: {
-              paddingTop: '0rem',
+              paddingTop: '0',
+              paddingBottom: '0',
             }
           }}
         />

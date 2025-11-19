@@ -10,7 +10,7 @@ import AuthLayout from '@app/routes/authShared/AuthLayout';
 import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
-import OAuthButtons from '@app/routes/login/OAuthButtons';
+import OAuthButtons, { DEBUG_SHOW_ALL_PROVIDERS, oauthProviderConfig } from '@app/routes/login/OAuthButtons';
 import DividerWithText from '@app/components/shared/DividerWithText';
 import LoggedInState from '@app/routes/login/LoggedInState';
 import { BASE_PATH } from '@app/constants/app';
@@ -26,13 +26,66 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [hasSSOProviders, setHasSSOProviders] = useState(false);
+  const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
 
-  // Handle query params (email prefill and success messages)
+  // Fetch enabled SSO providers and login config from backend
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch(`${BASE_PATH}/api/v1/proprietary/ui-data/login`);
+        if (response.ok) {
+          const data = await response.json();
+
+          // Check if login is disabled - if so, redirect to home
+          if (data.enableLogin === false) {
+            console.debug('[Login] Login disabled, redirecting to home');
+            navigate('/');
+            return;
+          }
+
+          setEnableLogin(data.enableLogin ?? true);
+
+          // Extract provider IDs from the providerList map
+          // The keys are like "/oauth2/authorization/google" - extract the last part
+          const providerIds = Object.keys(data.providerList || {})
+            .map(key => key.split('/').pop())
+            .filter((id): id is string => id !== undefined);
+          setEnabledProviders(providerIds);
+        }
+      } catch (err) {
+        console.error('[Login] Failed to fetch enabled providers:', err);
+      }
+    };
+    fetchProviders();
+  }, [navigate]);
+
+  // Update hasSSOProviders and showEmailForm when enabledProviders changes
+  useEffect(() => {
+    // In debug mode, check if any providers exist in the config
+    const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
+      ? Object.keys(oauthProviderConfig).length > 0
+      : enabledProviders.length > 0;
+    setHasSSOProviders(hasProviders);
+    // If no SSO providers, show email form by default
+    if (!hasProviders) {
+      setShowEmailForm(true);
+    }
+  }, [enabledProviders]);
+
+  // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
     try {
       const emailFromQuery = searchParams.get('email');
       if (emailFromQuery) {
         setEmail(emailFromQuery);
+      }
+
+      // Check if session expired (401 redirect)
+      const expired = searchParams.get('expired');
+      if (expired === 'true') {
+        setError(t('login.sessionExpired', 'Your session has expired. Please sign in again.'));
       }
 
       const messageType = searchParams.get('messageType')
@@ -71,7 +124,7 @@ export default function Login() {
     return <LoggedInState />;
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure') => {
+  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
     try {
       setIsSigningIn(true);
       setError(null);
@@ -129,9 +182,10 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = () => {
-    navigate('/auth/reset');
-  };
+  // Forgot password handler (currently unused, reserved for future implementation)
+  // const handleForgotPassword = () => {
+  //   navigate('/auth/reset');
+  // };
 
   return (
     <AuthLayout>
@@ -160,25 +214,31 @@ export default function Login() {
         onProviderClick={signInWithProvider}
         isSubmitting={isSigningIn}
         layout="vertical"
+        enabledProviders={enabledProviders}
       />
 
-      {/* Divider between OAuth and Email */}
-      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+      {/* Divider between OAuth and Email - only show if SSO is available */}
+      {hasSSOProviders && (
+        <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+      )}
 
-      {/* Sign in with email button (primary color to match signup CTA) */}
-      <div className="auth-section">
-        <button
-          type="button"
-          onClick={() => setShowEmailForm(true)}
-          disabled={isSigningIn}
-          className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-        >
-          {t('login.useEmailInstead', 'Login with email')}
-        </button>
-      </div>
+      {/* Sign in with email button - only show if SSO providers exist */}
+      {hasSSOProviders && !showEmailForm && (
+        <div className="auth-section">
+          <button
+            type="button"
+            onClick={() => setShowEmailForm(true)}
+            disabled={isSigningIn}
+            className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
+          >
+            {t('login.useEmailInstead', 'Login with email')}
+          </button>
+        </div>
+      )}
 
+      {/* Email form - show by default if no SSO, or when button clicked */}
       {showEmailForm && (
-        <div style={{ marginTop: '1rem' }}>
+        <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
           <EmailPasswordForm
             email={email}
             password={password}
@@ -190,31 +250,6 @@ export default function Login() {
           />
         </div>
       )}
-
-      {showEmailForm && (
-        <div className="auth-section-sm">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="auth-link-black"
-          >
-            {t('login.forgotPassword', 'Forgot your password?')}
-          </button>
-        </div>
-      )}
-
-      {/* Divider then signup link */}
-      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
-
-      <div style={{ textAlign: 'center', margin: '0.5rem 0 0.25rem' }}>
-        <button
-          type="button"
-          onClick={() => navigate('/signup')}
-          className="auth-link-black"
-        >
-          {t('signup.signUp', 'Sign up')}
-        </button>
-      </div>
 
     </AuthLayout>
   );

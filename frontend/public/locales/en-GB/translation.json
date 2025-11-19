@@ -35,6 +35,36 @@
   "discardChanges": "Discard & Leave",
   "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
+  "zipWarning": {
+    "title": "Large ZIP File",
+    "message": "This ZIP contains {{count}} files. Extract anyway?",
+    "cancel": "Cancel",
+    "confirm": "Extract"
+  },
+  "defaultApp": {
+    "title": "Set as Default PDF App",
+    "message": "Would you like to set Stirling PDF as your default PDF editor?",
+    "description": "You can change this later in your system settings.",
+    "notNow": "Not Now",
+    "setDefault": "Set Default",
+    "dismiss": "Dismiss",
+    "prompt": {
+      "title": "Set as Default PDF Editor",
+      "message": "Make Stirling PDF your default application for opening PDF files."
+    },
+    "success": {
+      "title": "Default App Set",
+      "message": "Stirling PDF is now your default PDF editor"
+    },
+    "settingsOpened": {
+      "title": "Settings Opened",
+      "message": "Please select Stirling PDF in your system settings"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Failed to set default PDF handler"
+    }
+  },
   "language": {
     "direction": "ltr"
   },
@@ -323,7 +353,13 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
-      }
+      },
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default"
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -1006,7 +1042,8 @@
         "title": "Choose Your Split Method"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "Select a split method",
+    "resultsTitle": "Split Results"
   },
   "rotate": {
     "title": "Rotate PDF",
@@ -1386,6 +1423,93 @@
       "10": "Prevent printing different formats"
     },
     "submit": "Change"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bookmarks & outline",
+      "replaceExisting": "Replace existing bookmarks (uncheck to append)",
+      "replaceExistingHint": "When disabled, the new outline is appended after the current bookmarks."
+    },
+    "actions": {
+      "source": "Load bookmarks",
+      "selectedFile": "Loaded from {{file}}",
+      "noFile": "Select a PDF to extract existing bookmarks.",
+      "loadFromPdf": "Load from selected PDF",
+      "importJson": "Import JSON",
+      "importClipboard": "Paste JSON from clipboard",
+      "export": "Export bookmarks",
+      "exportJson": "Download JSON",
+      "exportClipboard": "Copy JSON to clipboard",
+      "clipboardUnavailable": "Clipboard access is not available in this browser."
+    },
+    "info": {
+      "line1": "Each bookmark needs a descriptive title and the page it should open.",
+      "line2": "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+      "line3": "Import bookmarks from the selected PDF or from a JSON file to save time."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Open the tool to start editing",
+        "description": "Select the Edit Table of Contents tool to load its workspace."
+      },
+      "tabTitle": "Outline workspace",
+      "subtitle": "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+      "noFile": "No PDF selected",
+      "fileLabel": "Changes will be applied to the currently selected PDF.",
+      "filePrompt": "Select a PDF from your library or upload a new one to begin.",
+      "changeFile": "Change PDF",
+      "selectFile": "Select PDF"
+    },
+    "editor": {
+      "heading": "Bookmark editor",
+      "description": "Add, nest, and reorder bookmarks to craft your PDF outline.",
+      "addTopLevel": "Add top-level bookmark",
+      "empty": {
+        "title": "No bookmarks yet",
+        "description": "Import existing bookmarks or start by adding your first entry.",
+        "action": "Add first bookmark"
+      },
+      "defaultTitle": "New bookmark",
+      "defaultChildTitle": "Child bookmark",
+      "defaultSiblingTitle": "New bookmark",
+      "untitled": "Untitled bookmark",
+      "childBadge": "Child",
+      "pagePreview": "Page {{page}}",
+      "field": {
+        "title": "Bookmark title",
+        "page": "Target page number"
+      },
+      "actions": {
+        "toggle": "Toggle children",
+        "addChild": "Add child bookmark",
+        "addSibling": "Add sibling bookmark",
+        "remove": "Remove bookmark"
+      },
+      "confirmRemove": "Remove this bookmark and all of its children?"
+    },
+    "messages": {
+      "loadedTitle": "Bookmarks extracted",
+      "loadedBody": "Existing bookmarks from the PDF were loaded into the editor.",
+      "noBookmarks": "No bookmarks were found in the selected PDF.",
+      "loadFailed": "Unable to extract bookmarks from the selected PDF.",
+      "imported": "Bookmarks imported",
+      "importedBody": "Your JSON outline replaced the current editor contents.",
+      "importedClipboard": "Clipboard data replaced the current bookmark list.",
+      "invalidJson": "Invalid JSON structure",
+      "invalidJsonBody": "Please provide a valid bookmark JSON file and try again.",
+      "exported": "JSON download ready",
+      "copied": "Copied to clipboard",
+      "copiedBody": "Bookmark JSON copied successfully.",
+      "copyFailed": "Copy failed"
+    },
+    "error": {
+      "failed": "Failed to update the table of contents"
+    },
+    "submit": "Apply table of contents",
+    "results": {
+      "title": "Updated PDF with bookmarks",
+      "subtitle": "Download the processed file or undo the operation below."
+    }
   },
   "removePages": {
     "tags": "Remove pages,delete pages",
@@ -3064,6 +3188,7 @@
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
     "signinTitle": "Please sign in",
     "ssoSignIn": "Login via Single Sign-on",
     "oAuth2AutoCreateDisabled": "OAUTH2 Auto-Create User Disabled",
@@ -3492,7 +3617,8 @@
     "toggleAnnotations": "Toggle Annotations Visibility",
     "annotationMode": "Toggle Annotation Mode",
     "draw": "Draw",
-    "save": "Save"
+    "save": "Save",
+    "saveChanges": "Save Changes"
   },
   "search": {
     "title": "Search PDF",
@@ -3539,8 +3665,16 @@
     "help": "Help",
     "account": "Account",
     "config": "Config",
+    "settings": "Settings",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools"
+    "allTools": "Tools",
+    "reader": "Reader",
+    "helpMenu": {
+      "toolsTour": "Tools Tour",
+      "toolsTourDesc": "Learn what the tools can do",
+      "adminTour": "Admin Tour",
+      "adminTourDesc": "Explore admin settings & features"
+    }
   },
   "admin": {
     "error": "Error",
@@ -3560,6 +3694,12 @@
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Restart Required",
+      "loginRequired": "Login mode must be enabled to modify admin settings",
+      "loginDisabled": {
+        "title": "Login Mode Required",
+        "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
+        "readOnly": "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+      },
       "restart": {
         "title": "Restart Required",
         "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
@@ -3575,45 +3715,93 @@
         "description": "Configure system-wide application settings including branding and default behaviour.",
         "ui": "User Interface",
         "system": "System",
-        "appName": "Application Name",
-        "appName.description": "The name displayed in the browser tab and home page",
-        "appNameNavbar": "Navbar Brand",
-        "appNameNavbar.description": "The name displayed in the navigation bar",
-        "homeDescription": "Home Description",
-        "homeDescription.description": "The description text shown on the home page",
-        "defaultLocale": "Default Locale",
-        "defaultLocale.description": "The default language for new users (e.g., en_US, es_ES)",
-        "fileUploadLimit": "File Upload Limit",
-        "fileUploadLimit.description": "Maximum file upload size (e.g., 100MB, 1GB)",
-        "showUpdate": "Show Update Notifications",
-        "showUpdate.description": "Display notifications when a new version is available",
-        "showUpdateOnlyAdmin": "Show Updates to Admins Only",
-        "showUpdateOnlyAdmin.description": "Restrict update notifications to admin users only",
-        "customHTMLFiles": "Custom HTML Files",
-        "customHTMLFiles.description": "Allow serving custom HTML files from the customFiles directory",
-        "languages": "Available Languages",
-        "languages.description": "Languages that users can select from (leave empty to enable all languages)",
-        "customMetadata": "Custom Metadata",
-        "customMetadata.autoUpdate": "Auto Update Metadata",
-        "customMetadata.autoUpdate.description": "Automatically update PDF metadata on all processed documents",
-        "customMetadata.author": "Default Author",
-        "customMetadata.author.description": "Default author for PDF metadata (e.g., username)",
-        "customMetadata.creator": "Default Creator",
-        "customMetadata.creator.description": "Default creator for PDF metadata",
-        "customMetadata.producer": "Default Producer",
-        "customMetadata.producer.description": "Default producer for PDF metadata",
-        "customPaths": "Custom Paths",
-        "customPaths.description": "Configure custom file system paths for pipeline processing and external tools",
-        "customPaths.pipeline": "Pipeline Directories",
-        "customPaths.pipeline.watchedFoldersDir": "Watched Folders Directory",
-        "customPaths.pipeline.watchedFoldersDir.description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)",
-        "customPaths.pipeline.finishedFoldersDir": "Finished Folders Directory",
-        "customPaths.pipeline.finishedFoldersDir.description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
-        "customPaths.operations": "External Tool Paths",
-        "customPaths.operations.weasyprint": "WeasyPrint Executable",
-        "customPaths.operations.weasyprint.description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)",
-        "customPaths.operations.unoconvert": "Unoconvert Executable",
-        "customPaths.operations.unoconvert.description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+        "appName": {
+          "label": "Application Name",
+          "description": "The name displayed in the browser tab and home page"
+        },
+        "appNameNavbar": {
+          "label": "Navbar Brand",
+          "description": "The name displayed in the navigation bar"
+        },
+        "homeDescription": {
+          "label": "Home Description",
+          "description": "The description text shown on the home page"
+        },
+        "defaultLocale": {
+          "label": "Default Locale",
+          "description": "The default language for new users (e.g., en_US, es_ES)"
+        },
+        "fileUploadLimit": {
+          "label": "File Upload Limit",
+          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+        },
+        "showUpdate": {
+          "label": "Show Update Notifications",
+          "description": "Display notifications when a new version is available"
+        },
+        "showUpdateOnlyAdmin": {
+          "label": "Show Updates to Admins Only",
+          "description": "Restrict update notifications to admin users only"
+        },
+        "customHTMLFiles": {
+          "label": "Custom HTML Files",
+          "description": "Allow serving custom HTML files from the customFiles directory"
+        },
+        "languages": {
+          "label": "Available Languages",
+          "description": "Languages that users can select from (leave empty to enable all languages)"
+        },
+        "customMetadata": {
+          "label": "Custom Metadata",
+          "autoUpdate": {
+            "label": "Auto Update Metadata",
+            "description": "Automatically update PDF metadata on all processed documents"
+          },
+          "author": {
+            "label": "Default Author",
+            "description": "Default author for PDF metadata (e.g., username)"
+          },
+          "creator": {
+            "label": "Default Creator",
+            "description": "Default creator for PDF metadata"
+          },
+          "producer": {
+            "label": "Default Producer",
+            "description": "Default producer for PDF metadata"
+          }
+        },
+        "logoStyle": {
+          "label": "Logo Style",
+          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "classic": "Classic",
+          "modern": "Modern"
+        },
+        "customPaths": {
+          "label": "Custom Paths",
+          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "pipeline": {
+            "label": "Pipeline Directories",
+            "watchedFoldersDir": {
+              "label": "Watched Folders Directory",
+              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+            },
+            "finishedFoldersDir": {
+              "label": "Finished Folders Directory",
+              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+            }
+          },
+          "operations": {
+            "label": "External Tool Paths",
+            "weasyprint": {
+              "label": "WeasyPrint Executable",
+              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+            },
+            "unoconvert": {
+              "label": "Unoconvert Executable",
+              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+            }
+          }
+        }
       },
       "security": {
         "title": "Security",
@@ -4275,6 +4463,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Use your API key to programmatically access Stirling PDF's processing capabilities.",
+      "docsTitle": "API Documentation",
+      "docsDescription": "Learn more about integrating with Stirling PDF:",
+      "docsLink": "API Documentation",
+      "schemaLink": "API Schema Reference",
+      "usage": "Include this key in the X-API-KEY header with all API requests.",
       "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
       "publicKeyAriaLabel": "Public API key",
       "copyKeyAriaLabel": "Copy API key",
@@ -4431,7 +4625,7 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
-    "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
+    "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
     "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
@@ -4645,7 +4839,8 @@
       "admin": "Admin",
       "roleDescriptions": {
         "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "member": "Can view and edit shared files, but cannot manage workspace settings or members.",
+        "user": "User"
       },
       "editRole": "Edit Role",
       "enable": "Enable",
@@ -4726,6 +4921,7 @@
         "copied": "Link copied to clipboard",
         "success": "Invite link generated successfully",
         "successWithEmail": "Invite link generated and sent via email",
+        "emailSent": "Invite link generated and sent via email",
         "emailFailed": "Invite link generated, but email failed",
         "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
         "error": "Failed to generate invite link",
