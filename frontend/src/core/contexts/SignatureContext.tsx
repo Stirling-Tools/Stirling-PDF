@@ -10,6 +10,8 @@ interface SignatureState {
   isPlacementMode: boolean;
   // Whether signatures have been applied (allows export)
   signaturesApplied: boolean;
+  // Size (in screen units) we want newly placed signatures to use
+  placementPreviewSize: { width: number; height: number } | null;
 }
 
 // Signature actions interface
@@ -26,6 +28,7 @@ interface SignatureActions {
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
   setSignaturesApplied: (applied: boolean) => void;
+  setPlacementPreviewSize: (size: { width: number; height: number } | null) => void;
 }
 
 // Combined context interface
@@ -42,6 +45,7 @@ const initialState: SignatureState = {
   signatureConfig: null,
   isPlacementMode: false,
   signaturesApplied: true, // Start as true (no signatures placed yet)
+  placementPreviewSize: null,
 };
 
 // Provider component
@@ -131,6 +135,27 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
+  const setPlacementPreviewSize = useCallback((size: { width: number; height: number } | null) => {
+    setState(prev => {
+      const prevSize = prev.placementPreviewSize;
+      const same =
+        (prevSize === null && size === null) ||
+        (prevSize !== null &&
+          size !== null &&
+          Math.abs(prevSize.width - size.width) < 0.5 &&
+          Math.abs(prevSize.height - size.height) < 0.5);
+
+      if (same) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        placementPreviewSize: size,
+      };
+    });
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -149,6 +174,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     storeImageData,
     getImageData,
     setSignaturesApplied,
+    setPlacementPreviewSize,
   };
 
   return (

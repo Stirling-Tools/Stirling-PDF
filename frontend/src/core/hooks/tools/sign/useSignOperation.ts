@@ -23,7 +23,7 @@ export const buildSignFormData = (params: SignParameters, file: File): FormData 
   }
 
   // Add signature type
-  formData.append('signatureType', params.signatureType || 'draw');
+  formData.append('signatureType', params.signatureType || 'canvas');
 
   // Add other parameters
   if (params.reason) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Stack, ColorPicker as MantineColorPicker, Group, Button, ColorSwatch } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 interface ColorPickerProps {
   isOpen: boolean;
@@ -14,13 +15,16 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   onClose,
   selectedColor,
   onColorChange,
-  title = "Choose Color"
+  title
 }) => {
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t('colorPicker.title', 'Choose colour');
+
   return (
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={title}
+      title={resolvedTitle}
       size="sm"
       centered
     >
@@ -36,7 +40,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         />
         <Group justify="flex-end">
           <Button onClick={onClose}>
-            Done
+            {t('common.done', 'Done')}
           </Button>
         </Group>
       </Stack>
