@@ -345,16 +345,61 @@ jobs:
           }
           Write-Host ""
 
-          # List available certificates (count only, don't show details)
+          # Try to sync certificates first
+          Write-Host "Syncing certificates from DigiCert ONE..."
+          $syncOutput = & smctl keypair sync 2>&1
+          Write-Host "Sync result: $syncOutput"
+          Write-Host ""
+
+          # List available certificates and check if they have certificates attached
           Write-Host "Checking for available certificates..."
           $certList = & smctl keypair ls 2>&1
-          if ($certList -match "key_") {
-            Write-Host "[SUCCESS] Found certificates in KeyLocker"
-          } else {
-            Write-Host "[ERROR] No certificates found in KeyLocker"
-            Write-Host "Please verify certificate is issued and synced"
+          Write-Host "Keypair list output:"
+          Write-Host $certList
+          Write-Host ""
+
+          # Parse the output to check certificate status
+          $lines = $certList -split "`n"
+          $foundKeypair = $false
+          $hasCertificate = $false
+
+          foreach ($line in $lines) {
+            if ($line -match "${{ secrets.SM_KEYPAIR_ALIAS }}") {
+              $foundKeypair = $true
+              Write-Host "[SUCCESS] Found keypair in list"
+
+              # Check if this line has certificate info (not just empty spaces after alias)
+              $parts = $line -split "\s+"
+              if ($parts.Count -gt 2 -and $parts[1] -ne "" -and $parts[1] -ne "CERTIFICATE") {
+                $hasCertificate = $true
+                Write-Host "[SUCCESS] Certificate is associated with keypair"
+              }
+            }
+          }
+
+          if (-not $foundKeypair) {
+            Write-Host "[ERROR] Keypair not found: ${{ secrets.SM_KEYPAIR_ALIAS }}"
+            Write-Host "Available keypairs are listed above"
+            Write-Host ""
+            Write-Host "Please verify:"
+            Write-Host "  1. Keypair alias is correct in GitHub secret"
+            Write-Host "  2. API key has access to this keypair"
             exit 1
           }
+
+          if (-not $hasCertificate) {
+            Write-Host "[ERROR] No certificate associated with keypair"
+            Write-Host "This usually means:"
+            Write-Host "  1. Certificate not yet synced to KeyLocker (run sync manually)"
+            Write-Host "  2. Certificate is pending approval"
+            Write-Host "  3. Certificate needs to be attached to the keypair"
+            Write-Host ""
+            Write-Host "Try running in DigiCert ONE portal:"
+            Write-Host "  smctl keypair sync"
+            exit 1
+          }
+
+          Write-Host "[SUCCESS] Certificate check passed"
           Write-Host ""
 
           # Find only the files we need to sign (not build scripts)
@@ -391,9 +436,18 @@ jobs:
 
             Write-Host "Using PKCS11 config: $pkcs11Config"
 
-            # Use smctl to sign with keypair alias
-            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-            $exitCode = $LASTEXITCODE
+            # Try signing with certificate fingerprint first (if available)
+            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
+            if ($fingerprint -and $fingerprint -ne "") {
+              Write-Host "Attempting to sign with certificate fingerprint..."
+              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            } else {
+              Write-Host "No fingerprint provided, using keypair alias..."
+              # Use smctl to sign with keypair alias
+              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            }
 
             Write-Host "Exit code: $exitCode"
             Write-Host "Output: $output"
