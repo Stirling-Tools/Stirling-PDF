@@ -6,6 +6,7 @@ import HomePage from '@app/pages/HomePage'
 // Login component is used via routing, not directly imported
 import FirstLoginModal from '@app/components/shared/FirstLoginModal'
 import { accountService } from '@app/services/accountService'
+import { BASE_PATH } from '@app/constants/app'
 
 /**
  * Landing component - Smart router based on authentication status
@@ -16,11 +17,12 @@ import { accountService } from '@app/services/accountService'
  */
 export default function Landing() {
   const { session, loading: authLoading, refreshSession } = useAuth();
-  const { config, loading: configLoading } = useAppConfig();
+  const { config, loading: configLoading, error: configError } = useAppConfig();
   const location = useLocation();
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [checkingFirstLogin, setCheckingFirstLogin] = useState(false);
   const [username, setUsername] = useState('');
+  const [backendCheckFailed, setBackendCheckFailed] = useState(false);
 
   const loading = authLoading || configLoading;
 
@@ -54,12 +56,63 @@ export default function Landing() {
     // The auth system will automatically redirect to login when session is null
   }
 
+  // If AppConfig failed to load, check if backend is down
+  useEffect(() => {
+    let isMounted = true;
+
+    // Only check if config has an error and we haven't already redirected
+    if (configError && !backendCheckFailed && !configLoading) {
+      console.debug('[Landing] Config error detected, checking backend status');
+
+      const checkBackend = async () => {
+        try {
+          const response = await fetch(`${BASE_PATH}/api/v1/info/status`, {
+            cache: 'no-cache'
+          });
+
+          if (!isMounted) return;
+
+          // If backend responds, it's up - continue normally
+          if (response.ok) {
+            console.debug('[Landing] Backend is up despite config error');
+            return;
+          }
+
+          // Backend returned error - redirect to startup page
+          console.debug('[Landing] Backend not ready, redirecting to startup page');
+          setBackendCheckFailed(true);
+          sessionStorage.setItem('backendStartupRedirect', location.pathname + location.search);
+        } catch (err) {
+          // Network error - backend is down
+          if (!isMounted) return;
+
+          console.debug('[Landing] Backend unavailable (network error), redirecting to startup page');
+          setBackendCheckFailed(true);
+          sessionStorage.setItem('backendStartupRedirect', location.pathname + location.search);
+        }
+      };
+
+      checkBackend();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [configError, configLoading, location, backendCheckFailed]);
+
   console.log('[Landing] State:', {
     pathname: location.pathname,
     loading,
     hasSession: !!session,
     loginEnabled: config?.enableLogin,
+    configError,
+    backendCheckFailed,
   });
+
+  // Redirect to backend startup if backend check failed
+  if (backendCheckFailed) {
+    return <Navigate to="/backend-startup" replace />;
+  }
 
   // Show loading while checking auth and config
   if (loading || checkingFirstLogin) {
