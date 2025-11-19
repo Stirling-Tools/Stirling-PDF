@@ -345,10 +345,10 @@ jobs:
           }
           Write-Host ""
 
-          # Try to sync certificates first
-          Write-Host "Syncing certificates from DigiCert ONE..."
-          $syncOutput = & smctl keypair sync 2>&1
-          Write-Host "Sync result: $syncOutput"
+          # Sync certificates to Windows certificate store
+          Write-Host "Syncing certificates to Windows certificate store..."
+          $syncOutput = & smctl windows certsync 2>&1
+          Write-Host "Cert sync result: $syncOutput"
           Write-Host ""
 
           # List available certificates and check if they have certificates attached
