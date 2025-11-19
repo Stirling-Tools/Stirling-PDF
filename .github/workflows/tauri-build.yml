@@ -358,8 +358,18 @@ jobs:
           foreach ($file in $filesToSign) {
             Write-Host "Signing: $($file.Name)"
 
-            # Use smctl to sign with keypair alias (verbose mode)
-            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --verbose 2>&1
+            # Get PKCS11 config file path (set by DigiCert action)
+            $pkcs11Config = $env:PKCS11_CONFIG
+            if (-not $pkcs11Config) {
+              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
+              Write-Host "DigiCert KeyLocker action may not have run correctly"
+              exit 1
+            }
+
+            Write-Host "Using PKCS11 config: $pkcs11Config"
+
+            # Use smctl to sign with keypair alias
+            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
             $exitCode = $LASTEXITCODE
 
             Write-Host "Exit code: $exitCode"
