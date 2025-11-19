@@ -1,5 +1,6 @@
 import apiClient from '@app/services/apiClient';
 import { supabase } from '@app/services/supabaseClient';
+import { getCheckoutMode } from '@app/utils/protocolDetection';
 
 export interface PlanFeature {
   name: string;
@@ -48,6 +49,7 @@ export interface CheckoutSessionRequest {
 export interface CheckoutSessionResponse {
   clientSecret: string;
   sessionId: string;
+  url?: string;  // URL for hosted checkout (when not using HTTPS)
 }
 
 export interface BillingPortalResponse {
@@ -356,6 +358,11 @@ const licenseService = {
    * Create a Stripe checkout session for upgrading
    */
   async createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResponse> {
+    // Detect if HTTPS is available to determine checkout mode
+    const checkoutMode = getCheckoutMode();
+    const baseUrl = window.location.origin;
+    const settingsUrl = `${baseUrl}/settings/adminPlan`;
+
     const { data, error } = await supabase.functions.invoke('create-checkout', {
       body: {
         self_hosted: true,
@@ -364,7 +371,15 @@ const licenseService = {
         current_license_key: request.current_license_key,
         requires_seats: request.requires_seats,
         seat_count: request.seat_count || 1,
-        callback_base_url: window.location.origin,
+        callback_base_url: baseUrl,
+        ui_mode: checkoutMode,
+        // For hosted checkout, provide success/cancel URLs
+        success_url: checkoutMode === 'hosted'
+          ? `${settingsUrl}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
+          : undefined,
+        cancel_url: checkoutMode === 'hosted'
+          ? `${settingsUrl}?payment_status=canceled`
+          : undefined,
       },
     });
 

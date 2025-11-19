@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import licenseService, { PlanTierGroup } from '@app/services/licenseService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { pollLicenseKeyWithBackoff, activateLicenseKey } from '@app/utils/licenseCheckoutUtils';
 
 // Validate Stripe key (static validation, no dynamic imports)
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -108,10 +109,17 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         current_license_key: existingLicenseKey,
         requires_seats: selectedPlan.requiresSeats,
         seat_count: Math.max(1, Math.min(minimumSeats || 1, 10000)),
-        successUrl: `${window.location.origin}/settings/adminPlan?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${window.location.origin}/settings/adminPlan`,
       });
 
+      // Check if we got a redirect URL (hosted checkout for HTTP)
+      if (response.url) {
+        console.log('Redirecting to Stripe hosted checkout:', response.url);
+        // Redirect to Stripe's hosted checkout page
+        window.location.href = response.url;
+        return;
+      }
+
+      // Otherwise, use embedded checkout (HTTPS)
       setState({
         status: 'ready',
         clientSecret: response.clientSecret,
@@ -129,102 +137,29 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const pollForLicenseKey = useCallback(async (installId: string) => {
-    // Exponential backoff: 1s → 2s → 4s → 8s → 16s (31 seconds total, 5 requests)
-    const BACKOFF_MS = [1000, 2000, 4000, 8000, 16000];
-    let attemptIndex = 0;
+    // Use shared polling utility
+    const result = await pollLicenseKeyWithBackoff(installId, {
+      isMounted: () => isMountedRef.current,
+      onStatusChange: setPollingStatus,
+    });
 
-    setPollingStatus('polling');
-    console.log(`Starting license key polling for installation: ${installId}`);
+    if (result.success && result.licenseKey) {
+      setLicenseKey(result.licenseKey);
 
-    const poll = async (): Promise<void> => {
-      // Check if component is still mounted
-      if (!isMountedRef.current) {
-        console.log('Polling cancelled: component unmounted');
-        return;
+      // Activate the license key
+      const activation = await activateLicenseKey(result.licenseKey, {
+        isMounted: () => isMountedRef.current,
+        onActivated: onLicenseActivated,
+      });
+
+      if (!activation.success) {
+        console.error('Failed to activate license key:', activation.error);
       }
-
-      const attemptNumber = attemptIndex + 1;
-      console.log(`Polling attempt ${attemptNumber}/${BACKOFF_MS.length}`);
-
-      try {
-        const response = await licenseService.checkLicenseKey(installId);
-
-        // Check mounted after async operation
-        if (!isMountedRef.current) return;
-
-        if (response.status === 'ready' && response.license_key) {
-          console.log('✅ License key ready!');
-          setLicenseKey(response.license_key);
-          setPollingStatus('ready');
-
-          // Save license key to backend
-          try {
-            const saveResponse = await licenseService.saveLicenseKey(response.license_key);
-            if (!isMountedRef.current) return;
-
-            if (saveResponse.success) {
-              console.log(`License key activated on backend: ${saveResponse.licenseType}`);
-
-              // Fetch and pass license info to parent
-              try {
-                const licenseInfo = await licenseService.getLicenseInfo();
-                if (!isMountedRef.current) return;
-                onLicenseActivated?.(licenseInfo);
-              } catch (infoError) {
-                console.error('Error fetching license info:', infoError);
-              }
-            } else {
-              console.error('Failed to save license key to backend:', saveResponse.error);
-            }
-          } catch (error) {
-            console.error('Error saving license key to backend:', error);
-          }
-
-          return;
-        }
-
-        // License not ready yet, continue polling
-        attemptIndex++;
-
-        if (attemptIndex >= BACKOFF_MS.length) {
-          console.warn('⏱️ License polling timeout after all attempts');
-          if (!isMountedRef.current) return;
-          setPollingStatus('timeout');
-          return;
-        }
-
-        // Schedule next poll with exponential backoff
-        const nextDelay = BACKOFF_MS[attemptIndex];
-        console.log(`Retrying in ${nextDelay}ms...`);
-
-        pollingTimeoutRef.current = setTimeout(() => {
-          poll();
-        }, nextDelay);
-
-      } catch (error) {
-        console.error(`Polling attempt ${attemptNumber} failed:`, error);
-
-        if (!isMountedRef.current) return;
-
-        attemptIndex++;
-
-        if (attemptIndex >= BACKOFF_MS.length) {
-          console.error('Polling failed after all attempts');
-          setPollingStatus('timeout');
-          return;
-        }
-
-        // Retry with exponential backoff even on error
-        const nextDelay = BACKOFF_MS[attemptIndex];
-        console.log(`Retrying after error in ${nextDelay}ms...`);
-
-        pollingTimeoutRef.current = setTimeout(() => {
-          poll();
-        }, nextDelay);
-      }
-    };
-
-    await poll();
+    } else if (result.timedOut) {
+      console.warn('License key polling timed out');
+    } else if (result.error) {
+      console.error('License key polling failed:', result.error);
+    }
   }, [onLicenseActivated]);
 
   const handlePaymentComplete = async () => {
@@ -237,26 +172,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       console.log('Upgrade detected - syncing existing license key');
       setPollingStatus('polling');
 
-      try {
-        const saveResponse = await licenseService.saveLicenseKey(currentLicenseKey);
+      const activation = await activateLicenseKey(currentLicenseKey, {
+        isMounted: () => true, // Modal is open, no need to check
+        onActivated: onLicenseActivated,
+      });
 
-        if (saveResponse.success) {
-          console.log(`License upgraded successfully: ${saveResponse.licenseType}`);
-          setPollingStatus('ready');
-
-          // Fetch and pass updated license info to parent
-          try {
-            const licenseInfo = await licenseService.getLicenseInfo();
-            onLicenseActivated?.(licenseInfo);
-          } catch (infoError) {
-            console.error('Error fetching updated license info:', infoError);
-          }
-        } else {
-          console.error('Failed to sync upgraded license:', saveResponse.error);
-          setPollingStatus('timeout');
-        }
-      } catch (error) {
-        console.error('Error syncing upgraded license:', error);
+      if (activation.success) {
+        console.log(`License upgraded successfully: ${activation.licenseType}`);
+        setPollingStatus('ready');
+      } else {
+        console.error('Failed to sync upgraded license:', activation.error);
         setPollingStatus('timeout');
       }
 
