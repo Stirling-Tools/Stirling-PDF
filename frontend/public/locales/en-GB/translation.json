@@ -362,7 +362,15 @@
       "defaultPdfEditorInactive": "Another application is set as default",
       "defaultPdfEditorChecking": "Checking...",
       "defaultPdfEditorSet": "Already Default",
-      "setAsDefault": "Set as Default"
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -382,6 +390,37 @@
       "noShortcut": "No shortcut set",
       "searchPlaceholder": "Search tools..."
     }
+  },
+  "update": {
+    "modalTitle": "Update Available",
+    "current": "Current Version",
+    "latest": "Latest Version",
+    "latestStable": "Latest Stable",
+    "priorityLabel": "Priority",
+    "recommendedAction": "Recommended Action",
+    "breakingChangesDetected": "Breaking Changes Detected",
+    "breakingChangesMessage": "Some versions contain breaking changes. Please review the migration guides below before updating.",
+    "migrationGuides": "Migration Guides",
+    "viewGuide": "View Guide",
+    "loadingDetailedInfo": "Loading detailed information...",
+    "close": "Close",
+    "viewAllReleases": "View All Releases",
+    "downloadLatest": "Download Latest",
+    "availableUpdates": "Available Updates",
+    "unableToLoadDetails": "Unable to load detailed information.",
+    "version": "Version",
+    "urgentUpdateAvailable": "Urgent Update",
+    "updateAvailable": "Update Available",
+    "releaseNotes": "Release Notes",
+    "priority": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "minor": "Minor",
+      "low": "Low"
+    },
+    "breakingChanges": "Breaking Changes",
+    "breakingChangesDefault": "This version contains breaking changes.",
+    "migrationGuide": "Migration Guide"
   },
   "changeCreds": {
     "title": "Change Credentials",
@@ -1427,6 +1466,93 @@
     },
     "submit": "Change"
   },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bookmarks & outline",
+      "replaceExisting": "Replace existing bookmarks (uncheck to append)",
+      "replaceExistingHint": "When disabled, the new outline is appended after the current bookmarks."
+    },
+    "actions": {
+      "source": "Load bookmarks",
+      "selectedFile": "Loaded from {{file}}",
+      "noFile": "Select a PDF to extract existing bookmarks.",
+      "loadFromPdf": "Load from selected PDF",
+      "importJson": "Import JSON",
+      "importClipboard": "Paste JSON from clipboard",
+      "export": "Export bookmarks",
+      "exportJson": "Download JSON",
+      "exportClipboard": "Copy JSON to clipboard",
+      "clipboardUnavailable": "Clipboard access is not available in this browser."
+    },
+    "info": {
+      "line1": "Each bookmark needs a descriptive title and the page it should open.",
+      "line2": "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+      "line3": "Import bookmarks from the selected PDF or from a JSON file to save time."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Open the tool to start editing",
+        "description": "Select the Edit Table of Contents tool to load its workspace."
+      },
+      "tabTitle": "Outline workspace",
+      "subtitle": "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+      "noFile": "No PDF selected",
+      "fileLabel": "Changes will be applied to the currently selected PDF.",
+      "filePrompt": "Select a PDF from your library or upload a new one to begin.",
+      "changeFile": "Change PDF",
+      "selectFile": "Select PDF"
+    },
+    "editor": {
+      "heading": "Bookmark editor",
+      "description": "Add, nest, and reorder bookmarks to craft your PDF outline.",
+      "addTopLevel": "Add top-level bookmark",
+      "empty": {
+        "title": "No bookmarks yet",
+        "description": "Import existing bookmarks or start by adding your first entry.",
+        "action": "Add first bookmark"
+      },
+      "defaultTitle": "New bookmark",
+      "defaultChildTitle": "Child bookmark",
+      "defaultSiblingTitle": "New bookmark",
+      "untitled": "Untitled bookmark",
+      "childBadge": "Child",
+      "pagePreview": "Page {{page}}",
+      "field": {
+        "title": "Bookmark title",
+        "page": "Target page number"
+      },
+      "actions": {
+        "toggle": "Toggle children",
+        "addChild": "Add child bookmark",
+        "addSibling": "Add sibling bookmark",
+        "remove": "Remove bookmark"
+      },
+      "confirmRemove": "Remove this bookmark and all of its children?"
+    },
+    "messages": {
+      "loadedTitle": "Bookmarks extracted",
+      "loadedBody": "Existing bookmarks from the PDF were loaded into the editor.",
+      "noBookmarks": "No bookmarks were found in the selected PDF.",
+      "loadFailed": "Unable to extract bookmarks from the selected PDF.",
+      "imported": "Bookmarks imported",
+      "importedBody": "Your JSON outline replaced the current editor contents.",
+      "importedClipboard": "Clipboard data replaced the current bookmark list.",
+      "invalidJson": "Invalid JSON structure",
+      "invalidJsonBody": "Please provide a valid bookmark JSON file and try again.",
+      "exported": "JSON download ready",
+      "copied": "Copied to clipboard",
+      "copiedBody": "Bookmark JSON copied successfully.",
+      "copyFailed": "Copy failed"
+    },
+    "error": {
+      "failed": "Failed to update the table of contents"
+    },
+    "submit": "Apply table of contents",
+    "results": {
+      "title": "Updated PDF with bookmarks",
+      "subtitle": "Download the processed file or undo the operation below."
+    }
+  },
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
@@ -2008,9 +2134,23 @@
       "title": "Draw your signature",
       "clear": "Clear"
     },
+    "canvas": {
+      "heading": "Draw your signature",
+      "clickToOpen": "Click to open the drawing canvas",
+      "modalTitle": "Draw your signature",
+      "colorLabel": "Colour",
+      "penSizeLabel": "Pen size",
+      "penSizePlaceholder": "Size",
+      "clear": "Clear canvas",
+      "colorPickerTitle": "Choose stroke colour"
+    },
     "text": {
       "name": "Signer Name",
-      "placeholder": "Enter your full name"
+      "placeholder": "Enter your full name",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
     },
     "clear": "Clear",
     "add": "Add",
@@ -2033,6 +2173,11 @@
     "steps": {
       "configure": "Configure Signature"
     },
+    "step": {
+      "createDesc": "Choose how you want to create the signature",
+      "place": "Place & save",
+      "placeDesc": "Position the signature on your PDF"
+    },
     "type": {
       "title": "Signature Type",
       "draw": "Draw",
@@ -2049,11 +2194,16 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "text": "After entering your name above, click anywhere on the PDF to place your signature.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your signature.",
+      "noSignature": "Create a signature above to enable placement tools."
     },
     "mode": {
       "move": "Move Signature",
-      "place": "Place Signature"
+      "place": "Place Signature",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
     },
     "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
@@ -2236,7 +2386,7 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-    
+
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2292,7 +2442,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    
+
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -4664,6 +4814,9 @@
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   },
+  "colorPicker": {
+    "title": "Choose colour"
+  },
   "common": {
     "previous": "Previous",
     "next": "Next",
@@ -4680,7 +4833,8 @@
     "available": "available",
     "cancel": "Cancel",
     "preview": "Preview",
-    "close": "Close"
+    "close": "Close",
+    "done": "Done"
   },
   "config": {
     "overview": {

@@ -21,4 +21,5 @@ export interface HistoryAPI {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+  subscribe?: (listener: () => void) => () => void;
 }
