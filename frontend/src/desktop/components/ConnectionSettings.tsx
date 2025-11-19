@@ -44,6 +44,9 @@ export const ConnectionSettings: React.FC = () => {
       const newConfig = await connectionModeService.getCurrentConfig();
       setConfig(newConfig);
       setUserInfo(null);
+
+      // Reload the page to start the local backend
+      window.location.reload();
     } catch (error) {
       console.error('Failed to switch to offline:', error);
     } finally {
@@ -81,6 +84,9 @@ export const ConnectionSettings: React.FC = () => {
 
       setShowLoginModal(false);
       setNewServerConfig(null);
+
+      // Reload the page to stop local backend and initialize external backend monitoring
+      window.location.reload();
     } catch (error) {
       console.error('Login failed:', error);
       throw error; // Let LoginForm handle the error
