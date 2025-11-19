@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
@@ -14,6 +14,8 @@ import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
+import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
 
 type SignatureDrafts = {
   canvas?: string;
@@ -38,6 +40,8 @@ interface SignSettingsProps {
   onRedo?: () => void;
   onSave?: () => void;
 }
+
+type SignatureSource = 'canvas' | 'image' | 'text' | 'saved';
 
 const SignSettings = ({
   parameters,
@@ -70,12 +74,263 @@ const SignSettings = ({
   const lastSyncedTextDraft = useRef<SignatureDrafts['text'] | null>(null);
   const lastAppliedPlacementKey = useRef<string | null>(null);
   const previousFileIndexRef = useRef(activeFileIndex);
+  const {
+    savedSignatures,
+    isAtCapacity: isSavedSignatureLimitReached,
+    addSignature,
+    removeSignature,
+    updateSignatureLabel,
+    byTypeCounts,
+  } = useSavedSignatures();
+  const [signatureSource, setSignatureSource] = useState<SignatureSource>(parameters.signatureType);
+  const [lastSavedSignatureKeys, setLastSavedSignatureKeys] = useState<Record<SavedSignatureType, string | null>>({
+    canvas: null,
+    image: null,
+    text: null,
+  });
+
+  const buildTextSignatureKey = useCallback(
+    (signerName: string, fontSize: number, fontFamily: string, textColor: string) =>
+      JSON.stringify({
+        signerName: signerName.trim(),
+        fontSize,
+        fontFamily,
+        textColor,
+      }),
+    []
+  );
+
+  const getDefaultSavedLabel = useCallback(
+    (type: SavedSignatureType) => {
+      const nextIndex = (byTypeCounts[type] ?? 0) + 1;
+      let baseLabel = t('sign.saved.defaultLabel', 'Signature');
+      if (type === 'canvas') {
+        baseLabel = t('sign.saved.defaultCanvasLabel', 'Drawing signature');
+      } else if (type === 'image') {
+        baseLabel = t('sign.saved.defaultImageLabel', 'Uploaded signature');
+      } else if (type === 'text') {
+        baseLabel = t('sign.saved.defaultTextLabel', 'Typed signature');
+      }
+      return `${baseLabel} ${nextIndex}`;
+    },
+    [byTypeCounts, t]
+  );
+
+  const signatureKeysByType = useMemo(() => {
+    const canvasKey = canvasSignatureData ?? null;
+    const imageKey = imageSignatureData ?? null;
+    const textKey = buildTextSignatureKey(
+      parameters.signerName ?? '',
+      parameters.fontSize ?? 16,
+      parameters.fontFamily ?? 'Helvetica',
+      parameters.textColor ?? '#000000'
+    );
+    return {
+      canvas: canvasKey,
+      image: imageKey,
+      text: textKey,
+    };
+  }, [canvasSignatureData, imageSignatureData, buildTextSignatureKey, parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
+
+  const saveSignatureToLibrary = useCallback(
+    (payload: SavedSignaturePayload, type: SavedSignatureType): AddSignatureResult => {
+      if (isSavedSignatureLimitReached) {
+        return { success: false, reason: 'limit' };
+      }
+      return addSignature(payload, getDefaultSavedLabel(type));
+    },
+    [addSignature, getDefaultSavedLabel, isSavedSignatureLimitReached]
+  );
+
+  const setLastSavedKeyForType = useCallback(
+    (type: SavedSignatureType, explicitKey?: string | null) => {
+      setLastSavedSignatureKeys(prev => ({
+        ...prev,
+        [type]: explicitKey !== undefined ? explicitKey : signatureKeysByType[type] ?? null,
+      }));
+    },
+    [signatureKeysByType]
+  );
+
+  const handleSaveCanvasSignature = useCallback(() => {
+    if (!canvasSignatureData) {
+      return;
+    }
+    const result = saveSignatureToLibrary({ type: 'canvas', dataUrl: canvasSignatureData }, 'canvas');
+    if (result.success) {
+      setLastSavedKeyForType('canvas');
+    }
+  }, [canvasSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
+
+  const handleSaveImageSignature = useCallback(() => {
+    if (!imageSignatureData) {
+      return;
+    }
+    const result = saveSignatureToLibrary({ type: 'image', dataUrl: imageSignatureData }, 'image');
+    if (result.success) {
+      setLastSavedKeyForType('image');
+    }
+  }, [imageSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
+
+  const handleSaveTextSignature = useCallback(() => {
+    const signerName = (parameters.signerName ?? '').trim();
+    if (!signerName) {
+      return;
+    }
+    const result = saveSignatureToLibrary(
+      {
+        type: 'text',
+        signerName,
+        fontFamily: parameters.fontFamily ?? 'Helvetica',
+        fontSize: parameters.fontSize ?? 16,
+        textColor: parameters.textColor ?? '#000000',
+      },
+      'text'
+    );
+    if (result.success) {
+      setLastSavedKeyForType('text');
+    }
+  }, [
+    parameters.fontFamily,
+    parameters.fontSize,
+    parameters.signerName,
+    parameters.textColor,
+    saveSignatureToLibrary,
+    setLastSavedKeyForType,
+  ]);
+
+  const handleUseSavedSignature = useCallback(
+    (signature: SavedSignature) => {
+      setPlacementManuallyPaused(false);
+
+      if (signature.type === 'canvas') {
+        if (parameters.signatureType !== 'canvas') {
+          onParameterChange('signatureType', 'canvas');
+        }
+        setCanvasSignatureData(signature.dataUrl);
+      } else if (signature.type === 'image') {
+        if (parameters.signatureType !== 'image') {
+          onParameterChange('signatureType', 'image');
+        }
+        setImageSignatureData(signature.dataUrl);
+      } else if (signature.type === 'text') {
+        if (parameters.signatureType !== 'text') {
+          onParameterChange('signatureType', 'text');
+        }
+        onParameterChange('signerName', signature.signerName);
+        onParameterChange('fontFamily', signature.fontFamily);
+        onParameterChange('fontSize', signature.fontSize);
+        onParameterChange('textColor', signature.textColor);
+      }
+
+      const savedKey =
+        signature.type === 'text'
+          ? buildTextSignatureKey(signature.signerName, signature.fontSize, signature.fontFamily, signature.textColor)
+          : signature.dataUrl;
+      setLastSavedKeyForType(signature.type, savedKey);
+
+      const activate = () => onActivateSignaturePlacement?.();
+      if (typeof window !== 'undefined') {
+        window.setTimeout(activate, PLACEMENT_ACTIVATION_DELAY);
+      } else {
+        activate();
+      }
+    },
+    [
+      buildTextSignatureKey,
+      onActivateSignaturePlacement,
+      onParameterChange,
+      parameters.signatureType,
+      setCanvasSignatureData,
+      setImageSignatureData,
+      setPlacementManuallyPaused,
+      setLastSavedKeyForType,
+    ]
+  );
+
+  const handleDeleteSavedSignature = useCallback(
+    (signature: SavedSignature) => {
+      removeSignature(signature.id);
+    },
+    [removeSignature]
+  );
+
+  const handleRenameSavedSignature = useCallback(
+    (id: string, label: string) => {
+      updateSignatureLabel(id, label);
+    },
+    [updateSignatureLabel]
+  );
+
+  const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
+    const label = t('sign.saved.saveButton', 'Save signature');
+    const currentKey = signatureKeysByType[type];
+    const lastSavedKey = lastSavedSignatureKeys[type];
+    const hasChanges = Boolean(currentKey && currentKey !== lastSavedKey);
+    const isSaved = isReady && !hasChanges;
+
+    let tooltipMessage: string | undefined;
+    if (!isReady) {
+      tooltipMessage = t('sign.saved.saveUnavailable', 'Create a signature first to save it.');
+    } else if (isSaved) {
+      tooltipMessage = t('sign.saved.noChanges', 'Current signature is already saved.');
+    } else if (isSavedSignatureLimitReached) {
+      tooltipMessage = t('sign.saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
+        max: MAX_SAVED_SIGNATURES,
+      });
+    }
+
+    const button = (
+      <Button
+        size="xs"
+        variant="outline"
+        color={isSaved ? 'green' : undefined}
+        onClick={onClick}
+        disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
+        leftSection={<LocalIcon icon="material-symbols:save-rounded" width={16} height={16} />}
+      >
+        {isSaved ? t('sign.saved.status.saved', 'Saved') : label}
+      </Button>
+    );
+
+    if (tooltipMessage) {
+      return (
+        <Tooltip label={tooltipMessage}>
+          <span style={{ display: 'inline-block' }}>{button}</span>
+        </Tooltip>
+      );
+    }
+
+    return button;
+  };
+
+  useEffect(() => {
+    if (signatureSource === 'saved') {
+      return;
+    }
+    if (signatureSource !== parameters.signatureType) {
+      setSignatureSource(parameters.signatureType);
+    }
+  }, [parameters.signatureType, signatureSource]);
 
   useEffect(() => {
     if (!disabled) {
       onUpdateDrawSettings?.(selectedColor, penSize);
     }
   }, [selectedColor, penSize, disabled, onUpdateDrawSettings]);
+
+  const handleSignatureSourceChange = useCallback(
+    (value: SignatureSource) => {
+      setSignatureSource(value);
+      if (value === 'saved') {
+        return;
+      }
+      if (parameters.signatureType !== value) {
+        onParameterChange('signatureType', value);
+      }
+    },
+    [onParameterChange, parameters.signatureType]
+  );
 
   useEffect(() => {
     if (signaturesApplied) {
@@ -168,32 +423,8 @@ const SignSettings = ({
     if (!isCurrentTypeReady) {
       return null;
     }
-
-    switch (parameters.signatureType) {
-      case 'canvas':
-        return canvasSignatureData ?? null;
-      case 'image':
-        return imageSignatureData ?? null;
-      case 'text':
-        return JSON.stringify({
-          signerName: (parameters.signerName ?? '').trim(),
-          fontSize: parameters.fontSize ?? 16,
-          fontFamily: parameters.fontFamily ?? 'Helvetica',
-          textColor: parameters.textColor ?? '#000000',
-        });
-      default:
-        return null;
-    }
-  }, [
-    isCurrentTypeReady,
-    parameters.signatureType,
-    canvasSignatureData,
-    imageSignatureData,
-    parameters.signerName,
-    parameters.fontSize,
-    parameters.fontFamily,
-    parameters.textColor,
-  ]);
+    return signatureKeysByType[parameters.signatureType] ?? null;
+  }, [isCurrentTypeReady, parameters.signatureType, signatureKeysByType]);
 
   const shouldEnablePlacement = useMemo(() => {
     if (disabled) return false;
@@ -357,7 +588,9 @@ const SignSettings = ({
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
       }, PLACEMENT_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     onActivateSignaturePlacement?.();
@@ -394,7 +627,9 @@ const SignSettings = ({
 
     if (typeof window !== 'undefined') {
       const timer = window.setTimeout(trigger, PLACEMENT_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     trigger();
@@ -417,64 +652,109 @@ const SignSettings = ({
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
       }, FILE_SWITCH_ACTIVATION_DELAY);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
 
     onActivateSignaturePlacement?.();
   }, [activeFileIndex, shouldEnablePlacement, signaturesApplied, onActivateSignaturePlacement]);
 
   const renderSignatureBuilder = () => {
-    if (parameters.signatureType === 'canvas') {
+    if (signatureSource === 'saved') {
       return (
-        <DrawingCanvas
-          selectedColor={selectedColor}
-          penSize={penSize}
-          penSizeInput={penSizeInput}
-          onColorSwatchClick={() => setIsColorPickerOpen(true)}
-          onPenSizeChange={setPenSize}
-          onPenSizeInputChange={setPenSizeInput}
-          onSignatureDataChange={handleCanvasSignatureChange}
-          onDrawingComplete={() => {
-            onActivateSignaturePlacement?.();
-          }}
+        <SavedSignaturesSection
+          signatures={savedSignatures}
           disabled={disabled}
-          initialSignatureData={canvasSignatureData}
+          isAtCapacity={isSavedSignatureLimitReached}
+          onUseSignature={handleUseSavedSignature}
+          onDeleteSignature={handleDeleteSavedSignature}
+          onRenameSignature={handleRenameSavedSignature}
         />
       );
     }
 
-    if (parameters.signatureType === 'image') {
+    if (signatureSource === 'canvas') {
       return (
-        <ImageUploader
-          onImageChange={handleImageChange}
-          disabled={disabled}
-        />
+        <Stack gap="xs">
+          <DrawingCanvas
+            selectedColor={selectedColor}
+            penSize={penSize}
+            penSizeInput={penSizeInput}
+            onColorSwatchClick={() => setIsColorPickerOpen(true)}
+            onPenSizeChange={setPenSize}
+            onPenSizeInputChange={setPenSizeInput}
+            onSignatureDataChange={handleCanvasSignatureChange}
+            onDrawingComplete={() => {
+              onActivateSignaturePlacement?.();
+            }}
+            disabled={disabled}
+            initialSignatureData={canvasSignatureData}
+          />
+          <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+            {renderSaveButton('canvas', hasCanvasSignature, handleSaveCanvasSignature)}
+          </Box>
+        </Stack>
+      );
+    }
+
+    if (signatureSource === 'image') {
+      return (
+        <Stack gap="xs">
+          <ImageUploader
+            onImageChange={handleImageChange}
+            disabled={disabled}
+          />
+          <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+            {renderSaveButton('image', hasImageSignature, handleSaveImageSignature)}
+          </Box>
+        </Stack>
       );
     }
 
     return (
-      <TextInputWithFont
-        text={parameters.signerName || ''}
-        onTextChange={(text) => onParameterChange('signerName', text)}
-        fontSize={parameters.fontSize || 16}
-        onFontSizeChange={(size) => onParameterChange('fontSize', size)}
-        fontFamily={parameters.fontFamily || 'Helvetica'}
-        onFontFamilyChange={(family) => onParameterChange('fontFamily', family)}
-        textColor={parameters.textColor || '#000000'}
-        onTextColorChange={(color) => onParameterChange('textColor', color)}
-        disabled={disabled}
-      />
+      <Stack gap="xs">
+        <TextInputWithFont
+          text={parameters.signerName || ''}
+          onTextChange={(text) => onParameterChange('signerName', text)}
+          fontSize={parameters.fontSize || 16}
+          onFontSizeChange={(size) => onParameterChange('fontSize', size)}
+          fontFamily={parameters.fontFamily || 'Helvetica'}
+          onFontFamilyChange={(family) => onParameterChange('fontFamily', family)}
+          textColor={parameters.textColor || '#000000'}
+          onTextColorChange={(color) => onParameterChange('textColor', color)}
+          disabled={disabled}
+        />
+        <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+          {renderSaveButton('text', hasTextSignature, handleSaveTextSignature)}
+        </Box>
+      </Stack>
     );
   };
 
   const placementInstructions = () => {
+    if (signatureSource === 'saved') {
+      return t(
+        'sign.instructions.saved',
+        'Select a saved signature above, then click anywhere on the PDF to place it.'
+      );
+    }
     if (parameters.signatureType === 'canvas') {
-      return t('sign.instructions.canvas', 'After drawing your signature and closing the canvas, click anywhere on the PDF to place it.');
+      return t(
+        'sign.instructions.canvas',
+        'After drawing your signature and closing the canvas, click anywhere on the PDF to place it.'
+      );
     }
     if (parameters.signatureType === 'image') {
-      return t('sign.instructions.image', 'After uploading your signature image, click anywhere on the PDF to place it.');
+      return t(
+        'sign.instructions.image',
+        'After uploading your signature image, click anywhere on the PDF to place it.'
+      );
     }
-    return t('sign.instructions.text', 'After entering your name above, click anywhere on the PDF to place your signature.');
+    return t(
+      'sign.instructions.text',
+      'After entering your name above, click anywhere on the PDF to place your signature.'
+    );
   };
 
   const placementAlert = isCurrentTypeReady
@@ -580,13 +860,14 @@ const SignSettings = ({
           {t('sign.step.createDesc', 'Choose how you want to create the signature')}
         </Text>
         <SegmentedControl
-          value={parameters.signatureType}
+          value={signatureSource}
           fullWidth
-          onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'canvas')}
+          onChange={(value) => handleSignatureSourceChange(value as SignatureSource)}
           data={[
             { label: t('sign.type.canvas', 'Draw'), value: 'canvas' },
             { label: t('sign.type.image', 'Upload'), value: 'image' },
             { label: t('sign.type.text', 'Type'), value: 'text' },
+            { label: t('sign.type.saved', 'Saved'), value: 'saved' },
           ]}
         />
         {renderSignatureBuilder()}
