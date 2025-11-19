@@ -8,6 +8,7 @@ import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { useFocusTrap } from '@app/hooks/useFocusTrap';
 import { BASE_PATH } from '@app/constants/app';
+import { useLogoPath } from '@app/hooks/useLogoPath';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
 import { ToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
@@ -51,9 +52,7 @@ const FullscreenToolSurface = ({
   useFocusTrap(surfaceRef, !isExiting);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
-    colorScheme === "dark" ? "Dark" : "Light"
-  }.svg`;
+  const brandIconSrc = useLogoPath();
   const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
     colorScheme === "dark" ? "White" : "Black"
   }Text.svg`;
