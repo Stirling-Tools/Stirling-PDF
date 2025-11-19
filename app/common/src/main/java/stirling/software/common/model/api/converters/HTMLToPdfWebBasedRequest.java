@@ -7,4 +7,4 @@ import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class HTMLToPdfRequestWebBased extends PDFFile {}
+public class HTMLToPdfWebBasedRequest extends PDFFile {}
