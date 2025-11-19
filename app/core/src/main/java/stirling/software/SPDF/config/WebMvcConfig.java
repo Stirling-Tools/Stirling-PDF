@@ -127,7 +127,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .allowCredentials(true)
                     .maxAge(3600);
         }
-        // If no origins are configured and not in Tauri mode, CORS is not enabled (secure by
-        // default)
     }
 }
