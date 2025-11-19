@@ -189,7 +189,7 @@ jobs:
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         uses: digicert/ssm-code-signing@v1.1.0
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -199,7 +199,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -328,7 +328,7 @@ jobs:
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: |
           Write-Host "=== DigiCert KeyLocker Signing ==="
@@ -500,8 +500,10 @@ jobs:
           #   find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
           #   find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
-            find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
-            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+            mkdir -p "../../../dist/linux"
+            find . -name "*.deb" -exec cp {} "../../../dist/linux/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/linux/Stirling-PDF-${{ matrix.name }}.rpm" \;
+            find . -name "*.AppImage" -exec cp {} "../../../dist/linux/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
       - name: Verify Windows Code Signature
@@ -564,6 +566,19 @@ jobs:
             Write-Host "[SUCCESS] Code signature verification completed"
           }
 
+      - name: List files to upload
+        shell: bash
+        run: |
+          echo "=== Files in dist directory ==="
+          ls -lh ./dist/ || echo "dist directory not found"
+          echo ""
+          echo "=== File count by type ==="
+          find ./dist -type f -name "*.exe" 2>/dev/null | wc -l | xargs echo "EXE files:"
+          find ./dist -type f -name "*.msi" 2>/dev/null | wc -l | xargs echo "MSI files:"
+          find ./dist -type f -name "*.deb" 2>/dev/null | wc -l | xargs echo "DEB files:"
+          find ./dist -type f -name "*.rpm" 2>/dev/null | wc -l | xargs echo "RPM files:"
+          find ./dist -type f -name "*.AppImage" 2>/dev/null | wc -l | xargs echo "AppImage files:"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -594,8 +609,8 @@ jobs:
           #   fi
           else
             echo "Checking for Linux artifacts..."
-            find . -name "*.deb" -o -name "*.AppImage" | head -5
-            if [ $(find . -name "*.deb" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
+            find . -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" | head -10
+            if [ $(find . -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
               echo "❌ No Linux artifacts found"
               exit 1
             fi
