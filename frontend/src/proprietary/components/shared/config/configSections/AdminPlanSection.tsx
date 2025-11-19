@@ -217,7 +217,7 @@ const AdminPlanSection: React.FC = () => {
                   description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.')}
                   value={licenseKeyInput}
                   onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder="00000000-0000-0000-0000-000000000000"
+                  placeholder={licenseInfo?.licenseKey || '00000000-0000-0000-0000-000000000000'}
                   type="password"
                   disabled={savingLicense}
                 />
