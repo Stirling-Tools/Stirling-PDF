@@ -14,7 +14,7 @@ on:
           - macos
           - linux
   pull_request:
-    branches: [main, V2, V2-tauri-windows]
+    branches: [main, V2, V2-tauri-windows, v2-tauri-unix2]
     paths:
       - 'frontend/src-tauri/**'
       - 'frontend/src/**'
@@ -22,7 +22,7 @@ on:
       - 'frontend/package-lock.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, V2, V2-tauri-windows]
+    branches: [main, V2, V2-tauri-windows, v2-tauri-unix2]
     paths:
       - 'frontend/src-tauri/**'
       - 'frontend/src/**'
