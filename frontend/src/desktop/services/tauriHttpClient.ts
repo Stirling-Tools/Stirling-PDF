@@ -5,7 +5,6 @@ import { fetch } from '@tauri-apps/plugin-http';
  * Provides axios-compatible API while bypassing CORS restrictions
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
 export interface TauriHttpResponse<T = any> {
   data: T;
   status: number;
@@ -19,9 +18,7 @@ export interface TauriHttpRequestConfig {
   method?: string;
   baseURL?: string;
   headers?: Record<string, string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   params?: Record<string, string | number | boolean> | any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   data?: any;
   timeout?: number;
   responseType?: 'json' | 'text' | 'blob' | 'arraybuffer';
@@ -31,7 +28,6 @@ export interface TauriHttpRequestConfig {
   skipBackendReadyCheck?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   cancelToken?: any;
 }
 
@@ -45,9 +41,7 @@ export interface TauriHttpError extends Error {
 }
 
 type RequestInterceptor = (config: TauriHttpRequestConfig) => Promise<TauriHttpRequestConfig> | TauriHttpRequestConfig;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
 type ResponseInterceptor<T = any> = (response: TauriHttpResponse<T>) => Promise<TauriHttpResponse<T>> | TauriHttpResponse<T>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
 type ErrorInterceptor = (error: any) => Promise<any>;
 
 interface Interceptors {
@@ -139,7 +133,6 @@ class TauriHttpClient {
     return url;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   private async executeRequest<T = any>(config: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     // Merge with defaults
     const mergedConfig: TauriHttpRequestConfig = {
@@ -287,42 +280,34 @@ class TauriHttpClient {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async request<T = any>(config: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>(config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async get<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'GET', url });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async delete<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'DELETE', url });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async head<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'HEAD', url });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async options<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'OPTIONS', url });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async post<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'POST', url, data });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async put<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'PUT', url, data });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async patch<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     return this.executeRequest<T>({ ...config, method: 'PATCH', url, data });
   }
@@ -336,7 +321,6 @@ class TauriHttpClient {
     return this.buildUrl({ ...this.defaults, ...config });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async postForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
     if (!(data instanceof FormData) && data && typeof data === 'object') {
@@ -347,7 +331,6 @@ class TauriHttpClient {
     return this.post<T>(url, formData, config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async putForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
     if (!(data instanceof FormData) && data && typeof data === 'object') {
@@ -358,7 +341,6 @@ class TauriHttpClient {
     return this.put<T>(url, formData, config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Match axios API for drop-in compatibility
   async patchForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
     if (!(data instanceof FormData) && data && typeof data === 'object') {
