@@ -1,43 +1,50 @@
 {
   "toolPanel": {
     "modePrompt": {
-      "title": "Choose how you browse tools",
-      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
-      "sidebarTitle": "Sidebar mode",
-      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
-      "recommended": "Recommended",
-      "chooseSidebar": "Use sidebar mode",
-      "fullscreenTitle": "Fullscreen mode - (legacy)",
-      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
-      "chooseFullscreen": "Use fullscreen mode",
-      "dismiss": "Maybe later"
+      "title": "Scegli come navigare tra gli strumenti",
+      "description": "Visualizza in anteprima entrambi i layout e decidi come esplorare gli strumenti di Stirling PDF.",
+      "sidebarTitle": "Modalità barra laterale",
+      "sidebarDescription": "Mantieni gli strumenti accanto all'area di lavoro per passare rapidamente.",
+      "recommended": "Consigliato",
+      "chooseSidebar": "Usa modalità barra laterale",
+      "fullscreenTitle": "Modalità a schermo intero - (legacy)",
+      "fullscreenDescription": "Sfoglia ogni strumento in un catalogo che copre l'area di lavoro finché non ne scegli uno.",
+      "chooseFullscreen": "Usa modalità a schermo intero",
+      "dismiss": "Magari dopo"
     },
     "fullscreen": {
-      "showDetails": "Show Details",
-      "comingSoon": "Coming soon:",
-      "favorite": "Add to favourites",
-      "favorites": "Favourites",
-      "heading": "All tools (fullscreen view)",
-      "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
-      "recommended": "Recommended",
-      "unfavorite": "Remove from favourites"
+      "showDetails": "Mostra dettagli",
+      "comingSoon": "In arrivo:",
+      "favorite": "Aggiungi ai preferiti",
+      "favorites": "Preferiti",
+      "heading": "Tutti gli strumenti (vista a schermo intero)",
+      "noResults": "Prova a modificare la ricerca o attiva/disattiva le descrizioni per trovare ciò che ti serve.",
+      "recommended": "Consigliato",
+      "unfavorite": "Rimuovi dai preferiti"
     },
-    "placeholder": "Choose a tool to get started",
+    "placeholder": "Scegli uno strumento per iniziare",
     "toggle": {
-      "fullscreen": "Switch to fullscreen mode",
-      "sidebar": "Switch to sidebar mode"
+      "fullscreen": "Passa alla modalità a schermo intero",
+      "sidebar": "Passa alla modalità barra laterale"
     }
   },
   "unsavedChanges": "Hai modifiche non salvate al tuo PDF. Cosa vuoi fare?",
-  "areYouSure": "Are you sure you want to leave?",
+  "areYouSure": "Sei sicuro di voler uscire?",
   "unsavedChangesTitle": "Modifiche non salvate",
   "keepWorking": "Continua a lavorare",
   "discardChanges": "Scarta modifiche",
   "applyAndContinue": "Applica e continua",
   "exportAndContinue": "Esporta e continua",
+  "zipWarning": {
+    "title": "File ZIP di grandi dimensioni",
+    "message": "Questo ZIP contiene {{count}} file. Estrarre comunque?",
+    "cancel": "Annulla",
+    "confirm": "Estrai"
+  },
   "language": {
     "direction": "ltr"
   },
+  "cancel": "Annulla",
   "addPageNumbers": {
     "fontSize": "Dimensione del font",
     "fontName": "Nome del font",
@@ -55,25 +62,25 @@
     "numberPagesDesc": "Quali pagine numerare, impostazione predefinita \"tutte\", accetta anche 1-5 o 2,5,9 ecc",
     "customNumberDesc": "Il valore predefinito è {n}, accetta anche 'Pagina {n} di {total}', 'Testo-{n}', '{filename}-{n}",
     "submit": "Aggiungi numeri di pagina",
-    "configuration": "Configuration",
-    "customize": "Customize Appearance",
-    "pagesAndStarting": "Pages & Starting Number",
-    "positionAndPages": "Position & Pages",
+    "configuration": "Configurazione",
+    "customize": "Personalizza aspetto",
+    "pagesAndStarting": "Pagine e numero iniziale",
+    "positionAndPages": "Posizione e pagine",
     "error": {
-      "failed": "Add page numbers operation failed"
+      "failed": "Operazione di aggiunta dei numeri di pagina non riuscita"
     },
     "results": {
-      "title": "Page Number Results"
+      "title": "Risultati numerazione pagine"
     },
-    "preview": "Position Selection",
-    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
+    "preview": "Selezione posizione",
+    "previewDisclaimer": "L'anteprima è approssimativa. Il risultato finale può variare a causa delle metriche dei font PDF."
   },
   "pageSelectionPrompt": "Selezione pagina personalizzata (inserisci un elenco separato da virgole di numeri di pagina 1,5,6 o funzioni come 2n+1) :",
-  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
-  "marginTooltip": "Distance between the page number and the edge of the page.",
-  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
-  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
-  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
+  "startingNumberTooltip": "Il primo numero da mostrare. Le pagine successive incrementano da questo numero.",
+  "marginTooltip": "Distanza tra il numero di pagina e il bordo della pagina.",
+  "fontSizeTooltip": "Dimensione del testo del numero di pagina in punti. Numeri maggiori creano testo più grande.",
+  "fontTypeTooltip": "Famiglia di font per i numeri di pagina. Scegli in base allo stile del documento.",
+  "customTextTooltip": "Formato personalizzato opzionale per i numeri di pagina. Usa {n} come segnaposto per il numero. Esempio: \"Pagina {n}\" mostrerà \"Pagina 1\", \"Pagina 2\", ecc.",
   "pdfPrompt": "Scegli PDF",
   "multiPdfPrompt": "Scegli 2 o più PDF",
   "multiPdfDropPrompt": "Scegli (o trascina e rilascia) uno o più PDF",
@@ -94,18 +101,20 @@
   "save": "Salva",
   "saveToBrowser": "Salva nel browser",
   "download": "Salva",
-  "pin": "Pin File (keep active after tool run)",
-  "unpin": "Unpin File (replace after tool run)",
+  "pin": "Blocca file (mantieni attivo dopo l'esecuzione dello strumento)",
+  "unpin": "Sblocca file (sostituisci dopo l'esecuzione dello strumento)",
   "undoOperationTooltip": "Clicca per annullare l’ultima operazione e ripristinare i file originali",
   "undo": "Annulla",
+  "back": "Indietro",
+  "nothingToUndo": "Niente da annullare",
   "moreOptions": "Altre opzioni",
   "editYourNewFiles": "Modifica il/i nuovo/i file",
   "close": "Chiudi",
-  "openInViewer": "Open in Viewer",
-  "confirmClose": "Confirm Close",
-  "confirmCloseMessage": "Are you sure you want to close this file?",
-  "confirmCloseCancel": "Cancel",
-  "confirmCloseConfirm": "Close File",
+  "openInViewer": "Apri nel visualizzatore",
+  "confirmClose": "Conferma chiusura",
+  "confirmCloseMessage": "Sei sicuro di voler chiudere questo file?",
+  "confirmCloseCancel": "Annulla",
+  "confirmCloseConfirm": "Chiudi file",
   "fileSelected": "Selezionato: {{filename}}",
   "chooseFile": "Scegli file",
   "filesSelected": "file selezionati",
@@ -116,8 +125,8 @@
     "addFiles": "Aggiungi file",
     "selectFromWorkbench": "Seleziona file dal banco di lavoro oppure ",
     "selectMultipleFromWorkbench": "Seleziona almeno {{count}} file dal banco di lavoro oppure ",
-    "created": "Created",
-    "size": "File Size"
+    "created": "Creato",
+    "size": "Dimensione file"
   },
   "noFavourites": "Nessun preferito",
   "downloadComplete": "Download completo",
@@ -250,7 +259,7 @@
     "title": "Vuoi migliorare Stirling PDF?",
     "paragraph1": "Stirling PDF ha opt-in analytics per aiutarci a migliorare il prodotto. Non tracciamo alcuna informazione personale o contenuto di file.",
     "paragraph2": "Si prega di prendere in considerazione l'attivazione dell'analytics per aiutare Stirling-PDF a crescere e consentirci di comprendere meglio i nostri utenti.",
-    "learnMore": "Learn more",
+    "learnMore": "Scopri di più",
     "enable": "Abilita analytics",
     "disable": "Disabilita analytics",
     "settings": "È possibile modificare le impostazioni per analitycs nel file config/settings.yml"
@@ -296,52 +305,52 @@
       "help": "Abilitare per memorizzare gli input utilizzati in precedenza per esecuzioni future"
     },
     "general": {
-      "title": "General",
-      "description": "Configure general application preferences.",
+      "title": "Generale",
+      "description": "Configura le preferenze generali dell'applicazione.",
       "account": "Account",
-      "accountDescription": "Manage your account settings",
-      "user": "User",
-      "signedInAs": "Signed in as",
-      "logout": "Log out",
+      "accountDescription": "Gestisci le impostazioni del tuo account",
+      "user": "Utente",
+      "signedInAs": "Accesso effettuato come",
+      "logout": "Esci",
       "enableFeatures": {
-        "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organization.",
-        "action": "Configure",
-        "and": "and",
-        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation",
-        "dismiss": "Dismiss"
+        "title": "Per gli amministratori di sistema",
+        "intro": "Abilita autenticazione utente, gestione dei team e funzionalità dell'area di lavoro per la tua organizzazione.",
+        "action": "Configura",
+        "and": "e",
+        "benefit": "Abilita ruoli utente, collaborazione in team, controlli admin e funzionalità enterprise.",
+        "learnMore": "Scopri di più nella documentazione",
+        "dismiss": "Ignora"
       },
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "defaultToolPickerMode": "Default tool picker mode",
-      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "autoUnzip": "Decompressione automatica delle risposte API",
+      "autoUnzipDescription": "Estrai automaticamente i file dalle risposte ZIP",
+      "autoUnzipTooltip": "Estrae automaticamente i file ZIP restituiti dalle operazioni API. Disabilita per mantenere intatti i file ZIP. Questo non influisce sui flussi di automazione.",
+      "autoUnzipFileLimit": "Limite di decompressione automatica",
+      "autoUnzipFileLimitDescription": "Numero massimo di file da estrarre dallo ZIP",
+      "autoUnzipFileLimitTooltip": "Decomprimi solo se lo ZIP contiene questo numero di file o meno. Imposta un valore più alto per estrarre ZIP più grandi.",
+      "defaultToolPickerMode": "Modalità predefinita selettore strumenti",
+      "defaultToolPickerModeDescription": "Scegli se il selettore strumenti si apre di default a schermo intero o nella barra laterale",
       "mode": {
-        "fullscreen": "Fullscreen",
-        "sidebar": "Sidebar"
+        "fullscreen": "Schermo intero",
+        "sidebar": "Barra laterale"
       }
     },
     "hotkeys": {
-      "title": "Keyboard Shortcuts",
-      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "title": "Scorciatoie da tastiera",
+      "description": "Passa il mouse su uno strumento per vedere la sua scorciatoia o personalizzala qui sotto. Clicca \"Modifica scorciatoia\" e premi una nuova combinazione di tasti. Premi Esc per annullare.",
       "errorModifier": {
-        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
-        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+        "mac": "Includi ⌘ (Command), ⌥ (Option) o un altro modificatore nella tua scorciatoia.",
+        "windows": "Includi Ctrl, Alt o un altro modificatore nella tua scorciatoia."
       },
-      "errorConflict": "Shortcut already used by {{tool}}.",
-      "none": "Not assigned",
-      "customBadge": "Custom",
-      "defaultLabel": "Default: {{shortcut}}",
-      "capturing": "Press keys… (Esc to cancel)",
-      "change": "Change shortcut",
-      "reset": "Reset",
-      "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set",
-      "searchPlaceholder": "Search tools..."
+      "errorConflict": "Scorciatoia già usata da {{tool}}.",
+      "none": "Non assegnata",
+      "customBadge": "Personalizzata",
+      "defaultLabel": "Predefinito: {{shortcut}}",
+      "capturing": "Premi i tasti… (Esc per annullare)",
+      "change": "Modifica scorciatoia",
+      "reset": "Reimposta",
+      "shortcut": "Scorciatoia",
+      "noShortcut": "Nessuna scorciatoia impostata",
+      "searchPlaceholder": "Cerca strumenti..."
     }
   },
   "changeCreds": {
@@ -413,8 +422,8 @@
     "top20": "I migliori 20",
     "all": "Tutto",
     "refresh": "Aggiorna",
-    "dataTypeLabel": "Data Type:",
-    "dataTypeAll": "All",
+    "dataTypeLabel": "Tipo di dati:",
+    "dataTypeAll": "Tutti",
     "dataTypeApi": "API",
     "dataTypeUi": "UI",
     "totalEndpoints": "Endpoint totali",
@@ -431,9 +440,7 @@
     "top": "Migliore",
     "numberOfVisits": "Numero di visite",
     "visitsTooltip": "Visite: {0} ({1}% del totale)",
-    "retry": "Riprovare",
-    "includeHomepage": "Includi homepage ('/')",
-    "includeLoginPage": "Includi pagina di login ('/login')"
+    "retry": "Riprovare"
   },
   "database": {
     "title": "Importazione/Esportazione database",
@@ -475,14 +482,14 @@
     "globalPopularity": "Popolarità",
     "sortBy": "Ordinamento:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
+      "brandAlt": "Logo Stirling PDF",
+      "openFiles": "Apri file",
+      "swipeHint": "Scorri a sinistra o a destra per cambiare vista",
+      "tools": "Strumenti",
+      "toolsSlide": "Pannello di selezione strumenti",
+      "viewSwitcher": "Cambia vista dell'area di lavoro",
+      "workbenchSlide": "Pannello area di lavoro",
+      "workspace": "Area di lavoro"
     },
     "multiTool": {
       "tags": "multipli,strumenti",
@@ -521,7 +528,7 @@
     },
     "addAttachments": {
       "tags": "incorpora,allega,includi",
-      "title": "Aggiungi allegati",
+      "title": "Allega file",
       "desc": "Aggiungi o rimuovi file incorporati (allegati) da/verso un PDF"
     },
     "watermark": {
@@ -561,7 +568,7 @@
     },
     "scannerImageSplit": {
       "tags": "rileva,dividi,foto",
-      "title": "Rileva/Dividi foto scansionate",
+      "title": "Rileva e dividi foto scannate",
       "desc": "Divide più foto all’interno di una foto/PDF"
     },
     "sign": {
@@ -601,7 +608,7 @@
     },
     "removeCertSign": {
       "tags": "rimuovi,elimina,sblocca",
-      "title": "Rimuovere firma dal certificato",
+      "title": "Rimuovi firma digitale",
       "desc": "Rimuovi la firma del certificato dal PDF"
     },
     "pageLayout": {
@@ -616,7 +623,7 @@
     },
     "scalePages": {
       "tags": "ridimensiona,adatta,scala",
-      "title": "Regola le dimensioni/scala della pagina",
+      "title": "Ridimensiona pagine",
       "desc": "Modificare le dimensioni/scala della pagina e/o dei suoi contenuti."
     },
     "addPageNumbers": {
@@ -651,12 +658,12 @@
     },
     "getPdfInfo": {
       "tags": "info,metadati,dettagli",
-      "title": "Ottieni TUTTE le informazioni in PDF",
+      "title": "Info complete sul PDF",
       "desc": "Raccogli tutte le informazioni possibili sui PDF"
     },
     "pdfToSinglePage": {
       "tags": "combina,unisci,singola",
-      "title": "PDF in un'unica pagina di grandi dimensioni",
+      "title": "PDF in unica pagina grande",
       "desc": "Unisce tutte le pagine PDF in un'unica grande pagina"
     },
     "showJS": {
@@ -736,7 +743,7 @@
     },
     "autoSizeSplitPDF": {
       "tags": "auto,dividi,dimensione",
-      "title": "Divisione automatica per dimensione/numero",
+      "title": "Dividi auto per peso/pagine",
       "desc": "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti"
     },
     "replaceColor": {
@@ -750,7 +757,7 @@
     },
     "devFolderScanning": {
       "tags": "automazione,cartella,scansione",
-      "title": "Scansione cartelle automatizzata",
+      "title": "Scansione automatica cartelle",
       "desc": "Link alla guida per scansione cartelle automatizzata"
     },
     "devSsoGuide": {
@@ -775,21 +782,8 @@
       "desc": "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività ricorrenti."
     },
     "overlay-pdfs": {
-      "desc": "Overlay one PDF on top of another",
-      "title": "Overlay PDFs"
-    },
-    "overlayPdfs": {
-      "title": "Sovrapponi PDF",
-      "desc": "Sovrapponi PDF sopra un altro PDF",
-      "tags": "sovrapponi,combina,impila"
-    },
-    "fakeScan": {
-      "title": "Finta scansione",
-      "desc": "Crea un PDF che sembri scansionato"
-    },
-    "replaceColorPdf": {
-      "title": "Sostituisci e inverti il colore",
-      "desc": "Sostituisci il colore del testo e dello sfondo nel PDF e inverti il ​​colore completo del PDF per ridurre le dimensioni del file"
+      "desc": "Sovrapponi un PDF sopra un altro",
+      "title": "Sovrapponi PDF"
     }
   },
   "landing": {
@@ -981,49 +975,49 @@
         "bullet3": "Consenti duplicati: gestisce nomi segnalibro ripetuti"
       },
       "byDocCount": {
-        "bullet1": "Enter the number of output files you want",
-        "bullet2": "Pages are distributed as evenly as possible",
-        "bullet3": "Useful when you need a specific number of files",
-        "text": "Create a specific number of output files by evenly distributing pages across them.",
-        "title": "Split by Document Count"
+        "bullet1": "Inserisci il numero di file di output desiderati",
+        "bullet2": "Le pagine sono distribuite nel modo più uniforme possibile",
+        "bullet3": "Utile quando ti serve un numero specifico di file",
+        "text": "Crea un numero specifico di file di output distribuendo uniformemente le pagine.",
+        "title": "Dividi per numero di documenti"
       },
       "byPageCount": {
-        "bullet1": "Enter the number of pages per output file",
-        "bullet2": "Last file may have fewer pages if not evenly divisible",
-        "bullet3": "Useful for batch processing workflows",
-        "text": "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
-        "title": "Split by Page Count"
+        "bullet1": "Inserisci il numero di pagine per ogni file di output",
+        "bullet2": "L'ultimo file potrebbe avere meno pagine se non divisibile esattamente",
+        "bullet3": "Utile per flussi di elaborazione in batch",
+        "text": "Crea più PDF con un numero specifico di pagine ciascuno. Perfetto per creare blocchi di documento uniformi.",
+        "title": "Dividi per numero di pagine"
       },
       "byPageDivider": {
-        "bullet1": "Print divider sheets from the download link",
-        "bullet2": "Insert divider sheets between your documents",
-        "bullet3": "Scan all documents together as one PDF",
-        "bullet4": "Upload - divider pages are automatically detected and removed",
-        "bullet5": "Enable Duplex Mode if scanning both sides of divider sheets",
-        "text": "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
-        "title": "Split by Page Divider"
+        "bullet1": "Stampa i fogli separatori dal link di download",
+        "bullet2": "Inserisci fogli separatori tra i documenti",
+        "bullet3": "Scansiona tutti i documenti insieme come un unico PDF",
+        "bullet4": "Carica - le pagine separatrici sono rilevate e rimosse automaticamente",
+        "bullet5": "Abilita la modalità duplex se scansionando entrambi i lati dei fogli separatori",
+        "text": "Dividi automaticamente i documenti scansionati usando fogli separatori fisici con codici QR. Perfetto per elaborare più documenti scansionati insieme.",
+        "title": "Dividi per separatore di pagina"
       }
     },
     "methodSelection": {
       "tooltip": {
-        "bullet1": "Click on a method card to select it",
-        "bullet2": "Hover over each card to see a quick description",
-        "bullet3": "The settings step will appear after you select a method",
-        "bullet4": "You can change methods at any time before processing",
+        "bullet1": "Clicca su una scheda metodo per selezionarla",
+        "bullet2": "Passa il mouse su ogni scheda per vedere una breve descrizione",
+        "bullet3": "Il passaggio delle impostazioni apparirà dopo aver selezionato un metodo",
+        "bullet4": "Puoi cambiare metodo in qualsiasi momento prima dell'elaborazione",
         "header": {
-          "text": "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
-          "title": "Split Method Selection"
+          "text": "Scegli come vuoi dividere il tuo documento PDF. Ogni metodo è ottimizzato per casi d'uso e tipi di documento differenti.",
+          "title": "Selezione metodo di divisione"
         },
-        "title": "Choose Your Split Method"
+        "title": "Scegli il tuo metodo di divisione"
       }
     },
-    "selectMethod": "Select a split method",
-    "tags": "Operazioni sulla pagina,divisione,multi pagina,taglio,lato server"
+    "selectMethod": "Seleziona un metodo di divisione",
+    "resultsTitle": "Risultati divisione"
   },
   "rotate": {
     "title": "Ruota PDF",
     "submit": "Ruota",
-    "selectRotation": "Select Rotation Angle (Clockwise)",
+    "selectRotation": "Seleziona angolo di rotazione (in senso orario)",
     "error": {
       "failed": "Si è verificato un errore durante la rotazione del PDF."
     },
@@ -1043,8 +1037,7 @@
         "title": "Controlli",
         "text": "Usa i pulsanti di rotazione per regolare l’orientamento. Il pulsante sinistro ruota in senso antiorario, quello destro in senso orario. Ogni clic ruota di 90 gradi."
       }
-    },
-    "tags": "lato server"
+    }
   },
   "convert": {
     "title": "Converti",
@@ -1113,7 +1106,11 @@
     "markdown": "Markdown",
     "textRtf": "Testo/RTF",
     "grayscale": "Scala di grigi",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "Si è verificato un errore durante la conversione del file.",
+    "cbzOptions": "Opzioni CBZ in PDF",
+    "optimizeForEbook": "Ottimizza il PDF per i lettori ebook (usa Ghostscript)",
+    "cbzOutputOptions": "Opzioni PDF in CBZ",
+    "cbzDpi": "DPI per il rendering delle immagini"
   },
   "imageToPdf": {
     "tags": "conversione,img,jpg,immagine,foto"
@@ -1153,17 +1150,17 @@
       "10": "Unione pari-dispari",
       "11": "Duplica tutte le pagine",
       "desc": {
-        "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
-        "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
-        "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
-        "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
-        "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
-        "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
-        "REMOVE_FIRST": "Remove the first page from the document.",
-        "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document.",
-        "REMOVE_LAST": "Remove the last page from the document.",
-        "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
-        "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+        "BOOKLET_SORT": "Disponi le pagine per la stampa a opuscolo (ultima, prima, seconda, penultima, …).",
+        "CUSTOM": "Usa una sequenza personalizzata di numeri di pagina o espressioni per definire un nuovo ordine.",
+        "DUPLEX_SORT": "Intercala fronte poi retro come se uno scanner duplex avesse acquisito prima tutti i fronti, poi tutti i retro (1, n, 2, n-1, …).",
+        "DUPLICATE": "Duplica ogni pagina in base al conteggio dell'ordine personalizzato (es., 4 duplicati: ogni pagina 4×).",
+        "ODD_EVEN_MERGE": "Unisci due PDF alternando le pagine: dispari dal primo, pari dal secondo.",
+        "ODD_EVEN_SPLIT": "Dividi il documento in due output: tutte le pagine dispari e tutte le pagine pari.",
+        "REMOVE_FIRST": "Rimuovi la prima pagina dal documento.",
+        "REMOVE_FIRST_AND_LAST": "Rimuovi sia la prima sia l'ultima pagina dal documento.",
+        "REMOVE_LAST": "Rimuovi l'ultima pagina dal documento.",
+        "REVERSE_ORDER": "Inverti il documento così che l'ultima pagina diventi la prima e così via.",
+        "SIDE_STITCH_BOOKLET_SORT": "Disponi le pagine per la stampa a opuscolo con cucitura laterale (ottimizzato per rilegatura sul lato)."
       }
     },
     "desc": {
@@ -1231,8 +1228,8 @@
       "spacing": {
         "horizontal": "Spaziatura orizzontale",
         "vertical": "Spaziatura verticale",
-        "height": "Height Spacing",
-        "width": "Width Spacing"
+        "height": "Spaziatura verticale",
+        "width": "Spaziatura orizzontale"
       },
       "convertToImage": "Appiattisci pagine PDF in immagini"
     },
@@ -1377,8 +1374,8 @@
       }
     },
     "type": {
-      "1": "Text",
-      "2": "Image"
+      "1": "Testo",
+      "2": "Immagine"
     }
   },
   "permissions": {
@@ -1453,24 +1450,24 @@
     "submit": "Rimuovi"
   },
   "extractPages": {
-    "title": "Extract Pages",
+    "title": "Estrai pagine",
     "pageNumbers": {
-      "label": "Pages to Extract",
-      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+      "label": "Pagine da estrarre",
+      "placeholder": "es., 1,3,5-8 o odd & 1-10"
     },
     "settings": {
-      "title": "Settings"
+      "title": "Impostazioni"
     },
     "tooltip": {
-      "description": "Extracts the selected pages into a new PDF, preserving order."
+      "description": "Estrae le pagine selezionate in un nuovo PDF, mantenendo l'ordine."
     },
     "error": {
-      "failed": "Failed to extract pages"
+      "failed": "Impossibile estrarre le pagine"
     },
     "results": {
-      "title": "Pages Extracted"
+      "title": "Pagine estratte"
     },
-    "submit": "Extract Pages"
+    "submit": "Estrai pagine"
   },
   "pageSelection": {
     "tooltip": {
@@ -1514,41 +1511,41 @@
         "title": "Esempi"
       },
       "complex": {
-        "bullet1": "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
-        "bullet2": "<strong>10-,2n-1</strong> → from page 10 to end + odd pages",
-        "description": "Mix different types.",
-        "title": "Complex Combinations"
+        "bullet1": "<strong>1,3-5,8,2n</strong> → pagine 1, 3–5, 8, più le pari",
+        "bullet2": "<strong>10-,2n-1</strong> → dalla pagina 10 alla fine + pagine dispari",
+        "description": "Combina tipi diversi.",
+        "title": "Combinazioni complesse"
       },
-      "description": "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword.",
+      "description": "Scegli quali pagine usare per l'operazione. Supporta pagine singole, intervalli, formule e la parola chiave \"all\".",
       "individual": {
-        "bullet1": "<strong>1,3,5</strong> → selects pages 1, 3, 5",
-        "bullet2": "<strong>2,7,12</strong> → selects pages 2, 7, 12",
-        "description": "Enter numbers separated by commas.",
-        "title": "Individual Pages"
+        "bullet1": "<strong>1,3,5</strong> → seleziona le pagine 1, 3, 5",
+        "bullet2": "<strong>2,7,12</strong> → seleziona le pagine 2, 7, 12",
+        "description": "Inserisci numeri separati da virgole.",
+        "title": "Pagine singole"
       },
       "mathematical": {
-        "bullet1": "<strong>2n</strong> → all even pages (2, 4, 6…)",
-        "bullet2": "<strong>2n-1</strong> → all odd pages (1, 3, 5…)",
-        "bullet3": "<strong>3n</strong> → every 3rd page (3, 6, 9…)",
-        "bullet4": "<strong>4n-1</strong> → pages 3, 7, 11, 15…",
-        "description": "Use n in formulas for patterns.",
-        "title": "Mathematical Functions"
+        "bullet1": "<strong>2n</strong> → tutte le pagine pari (2, 4, 6…)",
+        "bullet2": "<strong>2n-1</strong> → tutte le pagine dispari (1, 3, 5…)",
+        "bullet3": "<strong>3n</strong> → ogni 3ª pagina (3, 6, 9…)",
+        "bullet4": "<strong>4n-1</strong> → pagine 3, 7, 11, 15…",
+        "description": "Usa n nelle formule per gli schemi.",
+        "title": "Funzioni matematiche"
       },
       "ranges": {
-        "bullet1": "<strong>3-6</strong> → selects pages 3–6",
-        "bullet2": "<strong>10-15</strong> → selects pages 10–15",
-        "bullet3": "<strong>5-</strong> → selects pages 5 to end",
-        "description": "Use - for consecutive pages.",
-        "title": "Page Ranges"
+        "bullet1": "<strong>3-6</strong> → seleziona le pagine 3–6",
+        "bullet2": "<strong>10-15</strong> → seleziona le pagine 10–15",
+        "bullet3": "<strong>5-</strong> → seleziona da pagina 5 alla fine",
+        "description": "Usa - per pagine consecutive.",
+        "title": "Intervalli di pagine"
       },
       "special": {
-        "bullet1": "<strong>all</strong> → selects all pages",
-        "title": "Special Keywords"
+        "bullet1": "<strong>all</strong> → seleziona tutte le pagine",
+        "title": "Parole chiave speciali"
       }
     }
   },
   "bulkSelection": {
-    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
+    "syntaxError": "C'è un problema di sintassi. Vedi i suggerimenti sulla Selezione pagine per aiuto.",
     "header": {
       "title": "Guida Selezione Pagine"
     },
@@ -1672,8 +1669,8 @@
     "trapped": {
       "label": "Stato Trapped",
       "unknown": "Sconosciuto",
-      "true": "True",
-      "false": "False"
+      "true": "Vero",
+      "false": "Falso"
     },
     "advanced": {
       "title": "Opzioni avanzate"
@@ -1741,8 +1738,7 @@
           "bullet3": "Unknown: Stato di trapping non specificato"
         }
       }
-    },
-    "tags": "Titolo,autore,data,creazione,ora,editore,produttore,statistiche"
+    }
   },
   "fileToPDF": {
     "tags": "trasformazione,formato,documento,immagine,diapositiva,testo,conversione,ufficio,documenti,parola,excel,powerpoint",
@@ -1857,7 +1853,7 @@
       }
     },
     "error": {
-      "failed": "OCR operation failed"
+      "failed": "Operazione OCR non riuscita"
     }
   },
   "extractImages": {
@@ -2021,15 +2017,15 @@
     },
     "instructions": {
       "title": "Come aggiungere la firma",
-      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
-      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "canvas": "Dopo aver disegnato la tua firma nel canvas, chiudi la finestra quindi clicca in un punto del PDF per posizionarla.",
+      "image": "Dopo aver caricato l'immagine della firma sopra, clicca in un punto del PDF per posizionarla.",
+      "text": "Dopo aver inserito il tuo nome sopra, clicca in un punto del PDF per inserire la tua firma."
     },
     "mode": {
-      "move": "Move Signature",
-      "place": "Place Signature"
+      "move": "Sposta firma",
+      "place": "Posiziona firma"
     },
-    "updateAndPlace": "Update and Place",
+    "updateAndPlace": "Aggiorna e posiziona",
     "activate": "Attiva posizionamento firma",
     "deactivate": "Interrompi posizionamento firme",
     "results": {
@@ -2037,8 +2033,7 @@
     },
     "error": {
       "failed": "Si è verificato un errore durante la firma del PDF."
-    },
-    "tags": "autorizza,iniziali,firma-tracciata,firma-testo,firma-immagine"
+    }
   },
   "flatten": {
     "title": "Appiattire",
@@ -2087,8 +2082,7 @@
         "bullet3": "Commenti e note restano visibili",
         "bullet4": "I segnalibri aiutano ancora la navigazione"
       }
-    },
-    "tags": "statico,disattivato,non interattivo,ottimizzato"
+    }
   },
   "repair": {
     "tags": "aggiustare,ripristinare,correggere,recuperare",
@@ -2151,12 +2145,11 @@
     },
     "submit": "Rimuovi",
     "error": {
-      "failed": "Failed to remove blank pages"
+      "failed": "Impossibile rimuovere le pagine vuote"
     },
     "results": {
-      "title": "Removed Blank Pages"
-    },
-    "tags": "pulire,semplificare,non contenere contenuti,organizzare"
+      "title": "Pagine vuote rimosse"
+    }
   },
   "removeAnnotations": {
     "tags": "commenti,evidenziazioni,note,markup,rimozione",
@@ -2178,15 +2171,101 @@
     "tags": "differenziare,contrastare,cambiare,analisi",
     "title": "Compara",
     "header": "Compara PDF",
-    "highlightColor": {
-      "1": "Evidenzia colore 1:",
-      "2": "Evidenzia colore 2:"
+    "clearSelected": "Cancella selezionati",
+    "clear": {
+      "confirmTitle": "Cancellare i PDF selezionati?",
+      "confirmBody": "Questo chiuderà il confronto corrente e ti riporterà a File attivi.",
+      "confirm": "Cancella e torna"
     },
-    "document": {
-      "1": "Documento 1",
-      "2": "Documento 2"
+    "review": {
+      "title": "Risultato del confronto",
+      "actionsHint": "Rivedi il confronto, scambia i ruoli dei documenti o esporta il riepilogo.",
+      "switchOrder": "Inverti ordine",
+      "exportSummary": "Esporta riepilogo"
     },
-    "submit": "Compara",
+    "base": {
+      "label": "Documento originale",
+      "placeholder": "Seleziona il PDF originale"
+    },
+    "comparison": {
+      "label": "Documento modificato",
+      "placeholder": "Seleziona il PDF modificato"
+    },
+    "addFilesHint": "Aggiungi PDF nel passaggio File per abilitarne la selezione.",
+    "noFiles": "Nessun PDF disponibile yet",
+    "pages": "Pagine",
+    "selection": {
+      "originalEditedTitle": "Seleziona PDF originale e modificato"
+    },
+    "original": {
+      "label": "PDF originale"
+    },
+    "edited": {
+      "label": "PDF modificato"
+    },
+    "swap": {
+      "confirmTitle": "Eseguire di nuovo il confronto?",
+      "confirmBody": "Questo rieseguirà lo strumento. Sei sicuro di voler invertire l'ordine di Originale e Modificato?",
+      "confirm": "Inverti e riesegui"
+    },
+    "cta": "Confronta",
+    "loading": "Confronto in corso...",
+    "summary": {
+      "baseHeading": "Documento originale",
+      "comparisonHeading": "Documento modificato",
+      "pageLabel": "Pagina"
+    },
+    "rendering": {
+      "pageNotReadyTitle": "Pagina non ancora renderizzata",
+      "pageNotReadyBody": "Alcune pagine sono ancora in renderizzazione. La navigazione si stabilizzerà appena saranno pronte.",
+      "rendering": "renderizzazione",
+      "inProgress": "Almeno uno di questi PDF è molto grande; lo scorrimento non sarà fluido finché la renderizzazione non sarà completa",
+      "pagesRendered": "pagine renderizzate",
+      "complete": "Renderizzazione pagine completata"
+    },
+    "dropdown": {
+      "deletionsLabel": "Eliminazioni",
+      "additionsLabel": "Aggiunte",
+      "deletions": "Eliminazioni ({{count}})",
+      "additions": "Aggiunte ({{count}})",
+      "searchPlaceholder": "Cerca modifiche...",
+      "noResults": "Nessuna modifica trovata"
+    },
+    "actions": {
+      "stackVertically": "Impila verticalmente",
+      "placeSideBySide": "Affianca",
+      "zoomOut": "Riduci zoom",
+      "zoomIn": "Aumenta zoom",
+      "resetView": "Reimposta vista",
+      "unlinkScrollPan": "Scollega scorrimento e panoramica",
+      "linkScrollPan": "Collega scorrimento e panoramica",
+      "unlinkScroll": "Scollega scorrimento",
+      "linkScroll": "Collega scorrimento"
+    },
+    "toasts": {
+      "unlinkedTitle": "Scorrimento e panoramica indipendenti abilitati",
+      "unlinkedBody": "Suggerimento: Freccia Su/Giù scorrono entrambi i pannelli; la panoramica muove solo il pannello attivo."
+    },
+    "error": {
+      "selectRequired": "Seleziona un documento originale e uno modificato.",
+      "filesMissing": "Impossibile trovare i file selezionati. Selezionali di nuovo.",
+      "generic": "Impossibile confrontare questi file."
+    },
+    "status": {
+      "extracting": "Estrazione del testo...",
+      "processing": "Analisi delle differenze...",
+      "complete": "Confronto pronto"
+    },
+    "longJob": {
+      "title": "Confronto di grandi dimensioni in corso",
+      "body": "Questi PDF superano insieme 2.000 pagine. L'elaborazione può richiedere diversi minuti."
+    },
+    "slowOperation": {
+      "title": "Stiamo ancora lavorando…",
+      "body": "Questo confronto sta impiegando più del solito. Puoi lasciarlo continuare o annullarlo.",
+      "cancel": "Annulla confronto"
+    },
+    "newLine": "nuova riga",
     "complex": {
       "message": "Uno o entrambi i documenti forniti sono file di grandi dimensioni, l'accuratezza del confronto potrebbe risultare ridotta"
     },
@@ -2199,6 +2278,16 @@
       "text": {
         "message": "Uno o entrambi i PDF selezionati non hanno contenuto di testo. Si prega di scegliere PDF con testo per il confronto."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "Questi documenti sembrano molto dissimili. Il confronto è stato interrotto per risparmiare tempo."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "Questi PDF sembrano molto diversi",
+      "body": "Finora vediamo pochissime somiglianze. Puoi interrompere il confronto se non sono documenti correlati.",
+      "stopButton": "Interrompi confronto"
     }
   },
   "certSign": {
@@ -2259,11 +2348,11 @@
           "bullet4": "Logo opzionale includibile"
         }
       },
-      "invisible": "Invisible",
+      "invisible": "Invisibile",
       "options": {
-        "title": "Signature Details"
+        "title": "Dettagli firma"
       },
-      "visible": "Visible"
+      "visible": "Visibile"
     },
     "sign": {
       "submit": "Firma PDF",
@@ -2325,21 +2414,21 @@
         }
       }
     },
-    "chooseCertificate": "Choose Certificate File",
-    "chooseJksFile": "Choose JKS File",
-    "chooseP12File": "Choose PKCS12 File",
-    "choosePfxFile": "Choose PFX File",
-    "choosePrivateKey": "Choose Private Key File",
-    "location": "Location",
+    "chooseCertificate": "Scegli il file del certificato",
+    "chooseJksFile": "Scegli il file JKS",
+    "chooseP12File": "Scegli il file PKCS12",
+    "choosePfxFile": "Scegli il file PFX",
+    "choosePrivateKey": "Scegli il file della chiave privata",
+    "location": "Località",
     "logoTitle": "Logo",
-    "name": "Name",
-    "noLogo": "No Logo",
-    "pageNumber": "Page Number",
-    "password": "Certificate Password",
-    "passwordOptional": "Leave empty if no password",
-    "reason": "Reason",
-    "serverCertMessage": "Using server certificate - no files or password required",
-    "showLogo": "Show Logo"
+    "name": "Nome",
+    "noLogo": "Nessun logo",
+    "pageNumber": "Numero di pagina",
+    "password": "Password del certificato",
+    "passwordOptional": "Lascia vuoto se non c'è password",
+    "reason": "Motivo",
+    "serverCertMessage": "Uso del certificato del server - non sono richiesti file o password",
+    "showLogo": "Mostra logo"
   },
   "removeCertSign": {
     "tags": "autenticare,PEM,P12,ufficiale,decifrare",
@@ -2367,14 +2456,14 @@
     "addBorder": "Aggiungi bordi",
     "submit": "Invia",
     "desc": {
-      "2": "Place 2 pages side-by-side on a single sheet.",
-      "3": "Place 3 pages on a single sheet in a single row.",
-      "4": "Place 4 pages on a single sheet (2 × 2 grid).",
-      "9": "Place 9 pages on a single sheet (3 × 3 grid).",
-      "16": "Place 16 pages on a single sheet (4 × 4 grid)."
+      "2": "Posiziona 2 pagine affiancate su un unico foglio.",
+      "3": "Posiziona 3 pagine su un unico foglio in una singola riga.",
+      "4": "Posiziona 4 pagine su un unico foglio (griglia 2 × 2).",
+      "9": "Posiziona 9 pagine su un unico foglio (griglia 3 × 3).",
+      "16": "Posiziona 16 pagine su un unico foglio (griglia 4 × 4)."
     },
     "error": {
-      "failed": "An error occurred while creating the multi-page layout."
+      "failed": "Si è verificato un errore durante la creazione del layout multipagina."
     }
   },
   "bookletImposition": {
@@ -2562,20 +2651,20 @@
     "coordinates": {
       "title": "Posizione e dimensioni",
       "x": {
-        "label": "X Position",
-        "desc": "Left edge (points)"
+        "label": "Posizione X",
+        "desc": "Bordo sinistro (punti)"
       },
       "y": {
-        "label": "Y Position",
-        "desc": "Bottom edge (points)"
+        "label": "Posizione Y",
+        "desc": "Bordo inferiore (punti)"
       },
       "width": {
-        "label": "Width",
-        "desc": "Crop width (points)"
+        "label": "Larghezza",
+        "desc": "Larghezza di ritaglio (punti)"
       },
       "height": {
-        "label": "Height",
-        "desc": "Crop height (points)"
+        "label": "Altezza",
+        "desc": "Altezza di ritaglio (punti)"
       }
     },
     "error": {
@@ -2596,10 +2685,9 @@
       "title": "Risultati ritaglio"
     },
     "automation": {
-      "info": "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
-      "reference": "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
-    },
-    "tags": "tagliare,ridurre,modificare,modellare"
+      "info": "Inserisci le coordinate di ritaglio in punti PDF. L'origine (0,0) è in basso a sinistra. Questi valori verranno applicati a tutti i PDF elaborati in questa automazione.",
+      "reference": "Riferimento: una pagina A4 è 595.28 × 841.89 punti (210mm × 297mm). 1 pollice = 72 punti."
+    }
   },
   "autoSplitPDF": {
     "tags": "Basato su QR,separato,scansiona segmenti,organizza",
@@ -2680,7 +2768,14 @@
     "title": "Mostra Javascript",
     "header": "Mostra Javascript",
     "downloadJS": "Scarica Javascript",
-    "submit": "Mostra"
+    "submit": "Mostra",
+    "results": "Risultato",
+    "processing": "Estrazione JavaScript...",
+    "done": "JavaScript estratto",
+    "singleFileWarning": "Questo strumento supporta solo un file alla volta. Seleziona un singolo file.",
+    "view": {
+      "title": "JavaScript estratto"
+    }
   },
   "redact": {
     "tags": "Redigere,nascondere,oscurare,nero,pennarello,nascosto,manuale",
@@ -2809,15 +2904,15 @@
   "overlay-pdfs": {
     "tags": "Sovrapponi",
     "header": "Invia file PDF in sovrapposizione",
-    "title": "Overlay PDFs",
-    "desc": "Overlay one PDF on top of another",
+    "title": "Sovrapponi PDF",
+    "desc": "Sovrapponi un PDF sopra un altro",
     "baseFile": {
       "label": "Seleziona File PDF di base"
     },
     "overlayFiles": {
       "label": "Seleziona sovrapposizione file PDF",
-      "placeholder": "Choose PDF(s)...",
-      "addMore": "Add more PDFs..."
+      "placeholder": "Scegli PDF...",
+      "addMore": "Aggiungi altri PDF..."
     },
     "mode": {
       "label": "Seleziona la modalità di sovrapposizione",
@@ -2828,8 +2923,8 @@
     "counts": {
       "label": "Numeri sovrapposti (per la modalità di ripetizione fissa)",
       "placeholder": "Inserisci i numeri separati da virgole (ad esempio, 2,3,1)",
-      "item": "Count for file",
-      "noFiles": "Add overlay files to configure counts"
+      "item": "Conteggio per file",
+      "noFiles": "Aggiungi file di sovrapposizione per configurare i conteggi"
     },
     "position": {
       "label": "Seleziona posizione di sovrapposizione",
@@ -2838,41 +2933,41 @@
     },
     "submit": "Sovrapponi",
     "settings": {
-      "title": "Settings"
+      "title": "Impostazioni"
     },
     "results": {
-      "title": "Overlay Results"
+      "title": "Risultati sovrapposizione"
     },
     "tooltip": {
       "header": {
-        "title": "Overlay PDFs Overview"
+        "title": "Panoramica sovrapposizione PDF"
       },
       "description": {
-        "title": "Description",
-        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+        "title": "Descrizione",
+        "text": "Combina un PDF base con uno o più PDF di sovrapposizione. Le sovrapposizioni possono essere applicate pagina per pagina in modalità diverse e posizionate in primo piano o sullo sfondo."
       },
       "mode": {
-        "title": "Overlay Mode",
-        "text": "Choose how to distribute overlay pages across the base PDF pages.",
-        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
-        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
-        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+        "title": "Modalità di sovrapposizione",
+        "text": "Scegli come distribuire le pagine di sovrapposizione tra le pagine del PDF base.",
+        "sequential": "Sovrapposizione sequenziale: usa le pagine dal primo PDF di sovrapposizione finché non termina, poi passa al successivo.",
+        "interleaved": "Sovrapposizione intercalata: prendi una pagina da ciascuna sovrapposizione a turno.",
+        "fixedRepeat": "Sovrapposizione a ripetizione fissa: prendi un numero fisso di pagine da ogni sovrapposizione prima di passare alla successiva. Usa Conteggi per impostare i numeri."
       },
       "position": {
-        "title": "Overlay Position",
-        "text": "Foreground places the overlay on top of the page. Background places it behind."
+        "title": "Posizione della sovrapposizione",
+        "text": "In primo piano posiziona la sovrapposizione sopra la pagina. Sullo sfondo la posiziona dietro."
       },
       "overlayFiles": {
-        "title": "Overlay Files",
-        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+        "title": "File di sovrapposizione",
+        "text": "Seleziona uno o più PDF da sovrapporre alla base. L'ordine di questi file influisce su come le pagine vengono applicate nelle modalità Sequenziale e Ripetizione fissa."
       },
       "counts": {
-        "title": "Counts (Fixed Repeat only)",
-        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+        "title": "Conteggi (solo Ripetizione fissa)",
+        "text": "Fornisci un numero positivo per ciascun file di sovrapposizione che indichi quante pagine prendere prima di passare al successivo. Obbligatorio quando la modalità è Ripetizione fissa."
       }
     },
     "error": {
-      "failed": "An error occurred while overlaying PDFs."
+      "failed": "Si è verificato un errore durante la sovrapposizione dei PDF."
     }
   },
   "split-by-sections": {
@@ -2909,16 +3004,16 @@
     "customColor": "Colore testo personalizzato",
     "submit": "Invia",
     "noStampSelected": "Nessun timbro selezionato. Torna al Passo 1.",
-    "customPosition": "Drag the stamp to the desired location in the preview window.",
+    "customPosition": "Trascina il timbro nella posizione desiderata nella finestra di anteprima.",
     "error": {
-      "failed": "An error occurred while adding stamp to the PDF."
+      "failed": "Si è verificato un errore durante l'aggiunta del timbro al PDF."
     },
-    "imageSize": "Image Size",
-    "margin": "Margin",
-    "positionAndFormatting": "Position & Formatting",
-    "quickPosition": "Select a position on the page to place the stamp.",
+    "imageSize": "Dimensione immagine",
+    "margin": "Margine",
+    "positionAndFormatting": "Posizione e formattazione",
+    "quickPosition": "Seleziona una posizione sulla pagina in cui posizionare il timbro.",
     "results": {
-      "title": "Stamp Results"
+      "title": "Risultati timbro"
     }
   },
   "removeImagePdf": {
@@ -2938,7 +3033,7 @@
       "_value": "Stato",
       "valid": "Valida",
       "invalid": "Invalida",
-      "complete": "Validation complete"
+      "complete": "Validazione completata"
     },
     "signer": "Firmatario",
     "date": "Data",
@@ -2966,7 +3061,7 @@
       "keyUsage": "Utilizzo della chiave",
       "selfSigned": "Autofirmato",
       "bits": "bit",
-      "details": "Certificate Details"
+      "details": "Dettagli certificato"
     },
     "signature": {
       "info": "Informazioni sulla firma",
@@ -2974,105 +3069,105 @@
       "mathValid": "La firma è matematicamente valida MA:"
     },
     "selectCustomCert": "File di certificato personalizzato X.509 (opzionale)",
-    "downloadCsv": "Download CSV",
-    "downloadJson": "Download JSON",
-    "downloadPdf": "Download PDF Report",
+    "downloadCsv": "Scarica CSV",
+    "downloadJson": "Scarica JSON",
+    "downloadPdf": "Scarica report PDF",
     "downloadType": {
       "csv": "CSV",
       "json": "JSON",
       "pdf": "PDF"
     },
     "error": {
-      "allFailed": "Unable to validate the selected files.",
-      "partial": "Some files could not be validated.",
-      "reportGeneration": "Could not generate the PDF report. JSON and CSV are available.",
-      "unexpected": "Unexpected error during validation."
+      "allFailed": "Impossibile validare i file selezionati.",
+      "partial": "Alcuni file non è stato possibile validarli.",
+      "reportGeneration": "Impossibile generare il report PDF. JSON e CSV sono disponibili.",
+      "unexpected": "Errore imprevisto durante la validazione."
     },
-    "finalizing": "Preparing downloads...",
+    "finalizing": "Preparazione download...",
     "issue": {
-      "certExpired": "Certificate expired",
-      "certRevocationUnknown": "Certificate revocation status unknown",
-      "certRevoked": "Certificate revoked",
-      "chainInvalid": "Certificate chain invalid",
-      "signatureInvalid": "Signature cryptographic check failed",
-      "trustInvalid": "Certificate not trusted"
+      "certExpired": "Certificato scaduto",
+      "certRevocationUnknown": "Stato di revoca del certificato sconosciuto",
+      "certRevoked": "Certificato revocato",
+      "chainInvalid": "Catena di certificazione non valida",
+      "signatureInvalid": "Verifica crittografica della firma non riuscita",
+      "trustInvalid": "Certificato non attendibile"
     },
-    "noResults": "Run the validation to generate a report.",
-    "noSignaturesShort": "No signatures",
-    "processing": "Validating signatures...",
+    "noResults": "Esegui la validazione per generare un report.",
+    "noSignaturesShort": "Nessuna firma",
+    "processing": "Validazione delle firme...",
     "report": {
-      "continued": "Continued",
-      "downloads": "Downloads",
-      "entryLabel": "Signature Summary",
+      "continued": "Continua",
+      "downloads": "Download",
+      "entryLabel": "Riepilogo firma",
       "fields": {
-        "created": "Created",
-        "fileSize": "File Size",
-        "signatureCount": "Total Signatures",
-        "signatureDate": "Signature Date"
+        "created": "Creato",
+        "fileSize": "Dimensione file",
+        "signatureCount": "Firme totali",
+        "signatureDate": "Data firma"
       },
-      "filesEvaluated": "{{count}} files evaluated",
-      "footer": "Validated via Stirling PDF",
-      "generatedAt": "Generated",
-      "noPdf": "PDF report will be available after a successful validation.",
-      "page": "Page",
-      "shortTitle": "Signature Summary",
-      "signatureCountLabel": "{{count}} signatures",
-      "signaturesFound": "{{count}} signatures detected",
-      "signaturesValid": "{{count}} fully valid",
-      "title": "Signature Validation Report"
+      "filesEvaluated": "{{count}} file valutati",
+      "footer": "Validato tramite Stirling PDF",
+      "generatedAt": "Generato",
+      "noPdf": "Il report PDF sarà disponibile dopo una validazione riuscita.",
+      "page": "Pagina",
+      "shortTitle": "Riepilogo firma",
+      "signatureCountLabel": "{{count}} firme",
+      "signaturesFound": "{{count}} firme rilevate",
+      "signaturesValid": "{{count}} completamente valide",
+      "title": "Report di validazione firme"
     },
     "settings": {
-      "certHint": "Upload a trusted X.509 certificate to validate against a custom trust source.",
-      "title": "Validation Settings"
+      "certHint": "Carica un certificato X.509 attendibile per validare rispetto a una fonte di fiducia personalizzata.",
+      "title": "Impostazioni di validazione"
     },
-    "signatureDate": "Signature Date",
-    "totalSignatures": "Total Signatures"
+    "signatureDate": "Data firma",
+    "totalSignatures": "Firme totali"
   },
   "replaceColor": {
     "tags": "Sostituisci colore,Operazioni pagina,Back end,lato server",
     "labels": {
-      "settings": "Settings",
-      "colourOperation": "Colour operation"
+      "settings": "Impostazioni",
+      "colourOperation": "Operazione colore"
     },
     "options": {
-      "highContrast": "High contrast",
-      "invertAll": "Invert all colours",
-      "custom": "Custom",
-      "cmyk": "Convert to CMYK"
+      "highContrast": "Alto contrasto",
+      "invertAll": "Inverti tutti i colori",
+      "custom": "Personalizzato",
+      "cmyk": "Converti in CMYK"
     },
     "tooltip": {
       "header": {
-        "title": "Replace & Invert Colour Settings Overview"
+        "title": "Panoramica impostazioni sostituzione e inversione colori"
       },
       "description": {
-        "title": "Description",
-        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+        "title": "Descrizione",
+        "text": "Trasforma i colori del PDF per migliorare leggibilità e accessibilità. Scegli tra preset ad alto contrasto, inverte tutti i colori o crea schemi di colori personalizzati."
       },
       "highContrast": {
-        "title": "High Contrast",
-        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
-        "bullet1": "White text on black background - Classic dark mode",
-        "bullet2": "Black text on white background - Standard high contrast",
-        "bullet3": "Yellow text on black background - High visibility option",
-        "bullet4": "Green text on black background - Alternative high contrast"
+        "title": "Alto contrasto",
+        "text": "Applica combinazioni di colori ad alto contrasto predefinite, progettate per una migliore leggibilità e conformità all'accessibilità.",
+        "bullet1": "Testo bianco su sfondo nero - Modalità scura classica",
+        "bullet2": "Testo nero su sfondo bianco - Alto contrasto standard",
+        "bullet3": "Testo giallo su sfondo nero - Opzione ad alta visibilità",
+        "bullet4": "Testo verde su sfondo nero - Alternativa ad alto contrasto"
       },
       "invertAll": {
-        "title": "Invert All Colours",
-        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+        "title": "Inverti tutti i colori",
+        "text": "Inverti completamente tutti i colori nel PDF, creando un effetto simile a un negativo. Utile per creare versioni in modalità scura dei documenti o ridurre l'affaticamento visivo in condizioni di scarsa illuminazione."
       },
       "custom": {
-        "title": "Custom Colours",
-        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
-        "bullet1": "Text colour - Choose the colour for text elements",
-        "bullet2": "Background colour - Set the background colour for the document"
+        "title": "Colori personalizzati",
+        "text": "Definisci i tuoi colori di testo e di sfondo usando i selettori di colore. Perfetto per creare documenti con brand o per specifici requisiti di accessibilità.",
+        "bullet1": "Colore del testo - scegli il colore per gli elementi di testo",
+        "bullet2": "Colore dello sfondo - imposta il colore di sfondo del documento"
       },
       "cmyk": {
-        "title": "Convert to CMYK",
-        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
+        "title": "Converti in CMYK",
+        "text": "Converte il PDF dallo spazio colore RGB allo spazio colore CMYK, ottimizzato per la stampa professionale. Questo processo converte i colori nel modello Ciano, Magenta, Giallo, Nero usato dalle stampanti."
       }
     },
     "error": {
-      "failed": "An error occurred while processing the colour replacement."
+      "failed": "Si è verificato un errore durante l'elaborazione della sostituzione colori."
     }
   },
   "login": {
@@ -3084,6 +3179,7 @@
     "rememberme": "Ricordami",
     "invalid": "Nome utente o password errati.",
     "locked": "Il tuo account è stato bloccato.",
+    "sessionExpired": "La sessione è scaduta. Accedi di nuovo.",
     "signinTitle": "Per favore accedi",
     "ssoSignIn": "Accedi tramite Single Sign-on",
     "oAuth2AutoCreateDisabled": "Creazione automatica utente OAUTH2 DISABILITATA",
@@ -3106,11 +3202,11 @@
     "enterEmail": "Inserisci la tua email",
     "enterPassword": "Inserisci la tua password",
     "loggingIn": "Accesso in corso...",
-    "username": "Username",
-    "enterUsername": "Enter username",
-    "useEmailInstead": "Login with email",
-    "forgotPassword": "Forgot your password?",
-    "logIn": "Log In",
+    "username": "Nome utente",
+    "enterUsername": "Inserisci nome utente",
+    "useEmailInstead": "Accedi con email",
+    "forgotPassword": "Hai dimenticato la password?",
+    "logIn": "Accedi",
     "signingIn": "Accesso in corso...",
     "login": "Accedi",
     "or": "Oppure",
@@ -3129,9 +3225,9 @@
     "passwordResetSent": "Link di reimpostazione password inviato a {{email}}! Segui le istruzioni nell’email.",
     "failedToSignIn": "Accesso con {{provider}} non riuscito: {{message}}",
     "unexpectedError": "Errore imprevisto: {{message}}",
-    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
-    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "accountCreatedSuccess": "Account creato con successo! Ora puoi accedere.",
+    "passwordChangedSuccess": "Password modificata con successo! Accedi con la nuova password.",
+    "credentialsUpdated": "Le tue credenziali sono state aggiornate. Accedi di nuovo."
   },
   "signup": {
     "title": "Crea un account",
@@ -3155,11 +3251,11 @@
     "checkEmailConfirmation": "Controlla la tua email per il link di conferma per completare la registrazione.",
     "accountCreatedSuccessfully": "Account creato con successo! Ora puoi accedere.",
     "unexpectedError": "Errore imprevisto: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
+    "useEmailInstead": "Usa l'email",
+    "nameRequired": "Il nome è obbligatorio",
+    "emailRequired": "L'email è obbligatoria",
+    "passwordRequired": "La password è obbligatoria",
+    "confirmPasswordRequired": "Conferma la password"
   },
   "pdfToSinglePage": {
     "title": "PDF a pagina singola",
@@ -3199,22 +3295,22 @@
   "adjustContrast": {
     "title": "Regola il contrasto",
     "header": "Regola il contrasto",
-    "basic": "Basic Adjustments",
+    "basic": "Regolazioni di base",
     "contrast": "Contrasto:",
     "brightness": "Luminosità:",
     "saturation": "Saturazione:",
     "download": "Salva",
-    "adjustColors": "Adjust Colors",
-    "blue": "Blue",
-    "confirm": "Confirm",
+    "adjustColors": "Regola colori",
+    "blue": "Blu",
+    "confirm": "Conferma",
     "error": {
-      "failed": "Failed to adjust colors/contrast"
+      "failed": "Impossibile regolare colori/contrasto"
     },
-    "green": "Green",
-    "noPreview": "Select a PDF to preview",
-    "red": "Red",
+    "green": "Verde",
+    "noPreview": "Seleziona un PDF per l'anteprima",
+    "red": "Rosso",
     "results": {
-      "title": "Adjusted PDF"
+      "title": "PDF regolato"
     }
   },
   "compress": {
@@ -3364,10 +3460,10 @@
     "removeImage": "Rimuovi immagine",
     "submit": "Rimuovi immagine",
     "error": {
-      "failed": "Failed to remove images from the PDF."
+      "failed": "Impossibile rimuovere le immagini dal PDF."
     },
     "results": {
-      "title": "Remove Images Results"
+      "title": "Risultati rimozione immagini"
     }
   },
   "splitByChapters": {
@@ -3509,17 +3605,18 @@
     "rotateLeft": "Ruota a sinistra",
     "rotateRight": "Ruota a destra",
     "toggleSidebar": "Mostra/Nascondi barra laterale",
-    "exportSelected": "Export Selected Pages",
-    "toggleAnnotations": "Toggle Annotations Visibility",
-    "annotationMode": "Toggle Annotation Mode",
-    "draw": "Draw",
-    "save": "Save"
+    "exportSelected": "Esporta pagine selezionate",
+    "toggleAnnotations": "Attiva/disattiva visibilità annotazioni",
+    "annotationMode": "Attiva/disattiva modalità annotazione",
+    "draw": "Disegna",
+    "save": "Salva",
+    "saveChanges": "Salva modifiche"
   },
   "search": {
     "title": "Cerca nel PDF",
     "placeholder": "Inserisci termine di ricerca...",
-    "noResults": "No results found",
-    "searching": "Searching..."
+    "noResults": "Nessun risultato trovato",
+    "searching": "Ricerca in corso..."
   },
   "guestBanner": {
     "title": "Stai usando Stirling PDF come ospite!",
@@ -3554,465 +3651,485 @@
   "quickAccess": {
     "read": "Leggi",
     "sign": "Firma",
-    "automate": "Automatizza",
+    "automate": "Automaz.",
     "files": "File",
     "activity": "Attività",
-    "help": "Help",
+    "help": "Guida",
     "account": "Account",
     "config": "Config",
-    "adminSettings": "Admin Settings",
-    "allTools": "Tutti gli strumenti"
+    "settings": "Opzioni",
+    "adminSettings": "Opzioni Admin",
+    "allTools": "Funzioni",
+    "reader": "Lettore",
+    "helpMenu": {
+      "toolsTour": "Tour strumenti",
+      "toolsTourDesc": "Scopri cosa possono fare gli strumenti",
+      "adminTour": "Tour amministratore",
+      "adminTourDesc": "Esplora impostazioni e funzionalità di amministrazione"
+    }
   },
   "admin": {
-    "error": "Error",
-    "success": "Success",
-    "expand": "Expand",
-    "close": "Close",
+    "error": "Errore",
+    "success": "Successo",
+    "expand": "Espandi",
+    "close": "Chiudi",
     "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "Attivo",
+      "inactive": "Inattivo"
     },
     "settings": {
-      "title": "Admin Settings",
-      "workspace": "Workspace",
-      "fetchError": "Failed to load settings",
-      "saveError": "Failed to save settings",
-      "saved": "Settings saved successfully",
-      "saveSuccess": "Settings saved successfully",
-      "save": "Save Changes",
-      "restartRequired": "Restart Required",
-      "restart": {
-        "title": "Restart Required",
-        "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
-        "question": "Would you like to restart the server now or later?",
-        "now": "Restart Now",
-        "later": "Restart Later"
+      "title": "Impostazioni amministratore",
+      "workspace": "Area di lavoro",
+      "fetchError": "Impossibile caricare le impostazioni",
+      "saveError": "Impossibile salvare le impostazioni",
+      "saved": "Impostazioni salvate con successo",
+      "saveSuccess": "Impostazioni salvate con successo",
+      "save": "Salva modifiche",
+      "restartRequired": "Riavvio richiesto",
+      "loginRequired": "La modalità di accesso deve essere abilitata per modificare le impostazioni di amministrazione",
+      "loginDisabled": {
+        "title": "Modalità di accesso richiesta",
+        "message": "La modalità di accesso deve essere abilitata per modificare le impostazioni di amministrazione. Imposta SECURITY_ENABLELOGIN=true nel tuo ambiente o security.enableLogin: true in settings.yml, quindi riavvia il server.",
+        "readOnly": "Le impostazioni seguenti mostrano valori di esempio a titolo di riferimento. Abilita la modalità di accesso per visualizzare e modificare la configurazione reale."
       },
-      "restarting": "Restarting Server",
-      "restartingMessage": "The server is restarting. Please wait a moment...",
-      "restartError": "Failed to restart server. Please restart manually.",
+      "restart": {
+        "title": "Riavvio richiesto",
+        "message": "Le impostazioni sono state salvate correttamente. È necessario un riavvio del server perché le modifiche abbiano effetto.",
+        "question": "Vuoi riavviare il server ora o più tardi?",
+        "now": "Riavvia ora",
+        "later": "Riavvia più tardi"
+      },
+      "restarting": "Riavvio del server in corso",
+      "restartingMessage": "Il server si sta riavviando. Attendi un momento...",
+      "restartError": "Impossibile riavviare il server. Riavvia manualmente.",
       "general": {
-        "title": "System Settings",
-        "description": "Configure system-wide application settings including branding and default behaviour.",
-        "ui": "User Interface",
-        "system": "System",
+        "title": "Impostazioni di sistema",
+        "description": "Configura le impostazioni applicative a livello di sistema, incluse personalizzazione e comportamento predefinito.",
+        "ui": "Interfaccia utente",
+        "system": "Sistema",
         "appName": {
-          "label": "Application Name",
-          "description": "The name displayed in the browser tab and home page"
+          "label": "Nome applicazione",
+          "description": "Il nome visualizzato nella scheda del browser e nella home page"
         },
         "appNameNavbar": {
-          "label": "Navbar Brand",
-          "description": "The name displayed in the navigation bar"
+          "label": "Marchio barra di navigazione",
+          "description": "Il nome visualizzato nella barra di navigazione"
         },
         "homeDescription": {
-          "label": "Home Description",
-          "description": "The description text shown on the home page"
+          "label": "Descrizione home",
+          "description": "Il testo descrittivo mostrato nella home page"
         },
         "defaultLocale": {
-          "label": "Default Locale",
-          "description": "The default language for new users (e.g., en_US, es_ES)"
+          "label": "Locale predefinito",
+          "description": "La lingua predefinita per i nuovi utenti (es. en_US, es_ES)"
         },
         "fileUploadLimit": {
-          "label": "File Upload Limit",
-          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+          "label": "Limite caricamento file",
+          "description": "Dimensione massima di upload (es. 100MB, 1GB)"
         },
         "showUpdate": {
-          "label": "Show Update Notifications",
-          "description": "Display notifications when a new version is available"
+          "label": "Mostra notifiche di aggiornamento",
+          "description": "Mostra notifiche quando è disponibile una nuova versione"
         },
         "showUpdateOnlyAdmin": {
-          "label": "Show Updates to Admins Only",
-          "description": "Restrict update notifications to admin users only"
+          "label": "Mostra aggiornamenti solo agli amministratori",
+          "description": "Limita le notifiche di aggiornamento solo agli utenti admin"
         },
         "customHTMLFiles": {
-          "label": "Custom HTML Files",
-          "description": "Allow serving custom HTML files from the customFiles directory"
+          "label": "File HTML personalizzati",
+          "description": "Consenti di servire file HTML personalizzati dalla directory customFiles"
         },
         "languages": {
-          "label": "Available Languages",
-          "description": "Languages that users can select from (leave empty to enable all languages)"
+          "label": "Lingue disponibili",
+          "description": "Lingue selezionabili dagli utenti (lascia vuoto per abilitare tutte le lingue)"
         },
         "customMetadata": {
-          "label": "Custom Metadata",
+          "label": "Metadati personalizzati",
           "autoUpdate": {
-            "label": "Auto Update Metadata",
-            "description": "Automatically update PDF metadata on all processed documents"
+            "label": "Aggiornamento automatico metadati",
+            "description": "Aggiorna automaticamente i metadati PDF su tutti i documenti elaborati"
           },
           "author": {
-            "label": "Default Author",
-            "description": "Default author for PDF metadata (e.g., username)"
+            "label": "Autore predefinito",
+            "description": "Autore predefinito per i metadati PDF (es. nome utente)"
           },
           "creator": {
-            "label": "Default Creator",
-            "description": "Default creator for PDF metadata"
+            "label": "Creatore predefinito",
+            "description": "Creatore predefinito per i metadati PDF"
           },
           "producer": {
-            "label": "Default Producer",
-            "description": "Default producer for PDF metadata"
+            "label": "Produttore predefinito",
+            "description": "Produttore predefinito per i metadati PDF"
           }
         },
+        "logoStyle": {
+          "label": "Stile logo",
+          "description": "Scegli tra il logo moderno minimalista o l'icona classica S",
+          "classic": "Classico",
+          "modern": "Moderno"
+        },
         "customPaths": {
-          "label": "Custom Paths",
-          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "label": "Percorsi personalizzati",
+          "description": "Configura percorsi personalizzati del file system per l'elaborazione pipeline e strumenti esterni",
           "pipeline": {
-            "label": "Pipeline Directories",
+            "label": "Directory pipeline",
             "watchedFoldersDir": {
-              "label": "Watched Folders Directory",
-              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+              "label": "Directory cartelle monitorate",
+              "description": "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per default: /pipeline/watchedFolders)"
             },
             "finishedFoldersDir": {
-              "label": "Finished Folders Directory",
-              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+              "label": "Directory cartelle completate",
+              "description": "Directory di output dei PDF elaborati (lascia vuoto per default: /pipeline/finishedFolders)"
             }
           },
           "operations": {
-            "label": "External Tool Paths",
+            "label": "Percorsi strumenti esterni",
             "weasyprint": {
-              "label": "WeasyPrint Executable",
-              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+              "label": "Eseguibile WeasyPrint",
+              "description": "Percorso dell'eseguibile WeasyPrint per conversione da HTML a PDF (lascia vuoto per default: /opt/venv/bin/weasyprint)"
             },
             "unoconvert": {
-              "label": "Unoconvert Executable",
-              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+              "label": "Eseguibile Unoconvert",
+              "description": "Percorso di LibreOffice unoconvert per conversioni di documenti (lascia vuoto per default: /opt/venv/bin/unoconvert)"
             }
           }
         }
       },
       "security": {
-        "title": "Security",
-        "description": "Configure authentication, login behaviour, and security policies.",
+        "title": "Sicurezza",
+        "description": "Configura autenticazione, comportamento di accesso e politiche di sicurezza.",
         "ssoNotice": {
-          "title": "Looking for SSO/SAML settings?",
-          "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+          "title": "Cerchi le impostazioni SSO/SAML?",
+          "message": "I provider di autenticazione OAuth2 e SAML2 sono stati spostati nel menu Connessioni per una gestione più semplice."
         },
-        "authentication": "Authentication",
+        "authentication": "Autenticazione",
         "enableLogin": {
-          "label": "Enable Login",
-          "description": "Require users to log in before accessing the application"
+          "label": "Abilita accesso",
+          "description": "Richiedi agli utenti di effettuare l'accesso prima di usare l'applicazione"
         },
         "loginMethod": {
-          "label": "Login Method",
-          "description": "The authentication method to use for user login",
-          "all": "All Methods",
-          "normal": "Username/Password Only",
-          "oauth2": "OAuth2 Only",
-          "saml2": "SAML2 Only"
+          "label": "Metodo di accesso",
+          "description": "Il metodo di autenticazione da usare per l'accesso utente",
+          "all": "Tutti i metodi",
+          "normal": "Solo nome utente/password",
+          "oauth2": "Solo OAuth2",
+          "saml2": "Solo SAML2"
         },
         "loginAttemptCount": {
-          "label": "Login Attempt Limit",
-          "description": "Maximum number of failed login attempts before account lockout"
+          "label": "Limite tentativi di accesso",
+          "description": "Numero massimo di tentativi di accesso falliti prima del blocco dell'account"
         },
         "loginResetTimeMinutes": {
-          "label": "Login Reset Time (minutes)",
-          "description": "Time before failed login attempts are reset"
+          "label": "Tempo di reset accessi (minuti)",
+          "description": "Tempo prima che i tentativi di accesso falliti vengano azzerati"
         },
         "csrfDisabled": {
-          "label": "Disable CSRF Protection",
-          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+          "label": "Disabilita protezione CSRF",
+          "description": "Disabilita la protezione Cross-Site Request Forgery (non raccomandato)"
         },
         "initialLogin": {
-          "label": "Initial Login",
+          "label": "Accesso iniziale",
           "username": {
-            "label": "Initial Username",
-            "description": "The username for the initial admin account"
+            "label": "Nome utente iniziale",
+            "description": "Il nome utente per l'account admin iniziale"
           },
           "password": {
-            "label": "Initial Password",
-            "description": "The password for the initial admin account"
+            "label": "Password iniziale",
+            "description": "La password per l'account admin iniziale"
           }
         },
         "jwt": {
-          "label": "JWT Configuration",
+          "label": "Configurazione JWT",
           "secureCookie": {
-            "label": "Secure Cookie",
-            "description": "Require HTTPS for JWT cookies (recommended for production)"
+            "label": "Cookie sicuro",
+            "description": "Richiedi HTTPS per i cookie JWT (consigliato in produzione)"
           },
           "keyRetentionDays": {
-            "label": "Key Retention Days",
-            "description": "Number of days to retain old JWT keys for verification"
+            "label": "Giorni di conservazione chiavi",
+            "description": "Numero di giorni per conservare le vecchie chiavi JWT per la verifica"
           },
           "persistence": {
-            "label": "Enable Key Persistence",
-            "description": "Store JWT keys persistently to survive server restarts"
+            "label": "Abilita persistenza chiavi",
+            "description": "Archivia le chiavi JWT in modo persistente per sopravvivere ai riavvii del server"
           },
           "enableKeyRotation": {
-            "label": "Enable Key Rotation",
-            "description": "Automatically rotate JWT signing keys periodically"
+            "label": "Abilita rotazione chiavi",
+            "description": "Ruota automaticamente periodicamente le chiavi di firma JWT"
           },
           "enableKeyCleanup": {
-            "label": "Enable Key Cleanup",
-            "description": "Automatically remove expired JWT keys"
+            "label": "Abilita pulizia chiavi",
+            "description": "Rimuovi automaticamente le chiavi JWT scadute"
           }
         },
         "audit": {
-          "label": "Audit Logging",
+          "label": "Registrazione di audit",
           "enabled": {
-            "label": "Enable Audit Logging",
-            "description": "Track user actions and system events for compliance and security monitoring"
+            "label": "Abilita registrazione di audit",
+            "description": "Traccia azioni degli utenti ed eventi di sistema per conformità e monitoraggio della sicurezza"
           },
           "level": {
-            "label": "Audit Level",
+            "label": "Livello audit",
             "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
           },
           "retentionDays": {
-            "label": "Audit Retention (days)",
-            "description": "Number of days to retain audit logs"
+            "label": "Conservazione audit (giorni)",
+            "description": "Numero di giorni per conservare i log di audit"
           }
         },
         "htmlUrlSecurity": {
-          "label": "HTML URL Security",
-          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "label": "Sicurezza URL HTML",
+          "description": "Configura restrizioni di accesso URL per l'elaborazione HTML per prevenire attacchi SSRF",
           "enabled": {
-            "label": "Enable URL Security",
-            "description": "Enable URL security restrictions for HTML to PDF conversions"
+            "label": "Abilita sicurezza URL",
+            "description": "Abilita restrizioni di sicurezza URL per conversioni da HTML a PDF"
           },
           "level": {
-            "label": "Security Level",
-            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-            "max": "Maximum (Whitelist Only)",
-            "medium": "Medium (Block Internal)",
-            "off": "Off (No Restrictions)"
+            "label": "Livello di sicurezza",
+            "description": "MAX: solo whitelist, MEDIUM: blocca reti interne, OFF: nessuna restrizione",
+            "max": "Massimo (solo Whitelist)",
+            "medium": "Medio (blocca interni)",
+            "off": "Disattivato (nessuna restrizione)"
           },
-          "advanced": "Advanced Settings",
+          "advanced": "Impostazioni avanzate",
           "allowedDomains": {
-            "label": "Allowed Domains (Whitelist)",
-            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+            "label": "Domini consentiti (Whitelist)",
+            "description": "Un dominio per riga (es. cdn.example.com). Solo questi domini sono consentiti quando il livello è MAX"
           },
           "blockedDomains": {
-            "label": "Blocked Domains (Blacklist)",
-            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+            "label": "Domini bloccati (Blacklist)",
+            "description": "Un dominio per riga (es. malicious.com). Domini aggiuntivi da bloccare"
           },
           "internalTlds": {
-            "label": "Internal TLDs",
-            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+            "label": "TLD interni",
+            "description": "Un TLD per riga (es. .local, .internal). Blocca domini con questi pattern di TLD"
           },
-          "networkBlocking": "Network Blocking",
+          "networkBlocking": "Blocco di rete",
           "blockPrivateNetworks": {
-            "label": "Block Private Networks",
-            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+            "label": "Blocca reti private",
+            "description": "Blocca le reti private RFC 1918 (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
           },
           "blockLocalhost": {
-            "label": "Block Localhost",
-            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+            "label": "Blocca localhost",
+            "description": "Blocca localhost e indirizzi loopback (127.x.x.x, ::1)"
           },
           "blockLinkLocal": {
-            "label": "Block Link-Local Addresses",
-            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+            "label": "Blocca indirizzi link-local",
+            "description": "Blocca indirizzi link-local (169.254.x.x, fe80::/10)"
           },
           "blockCloudMetadata": {
-            "label": "Block Cloud Metadata Endpoints",
-            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+            "label": "Blocca endpoint dei metadata cloud",
+            "description": "Blocca gli endpoint dei metadata dei provider cloud (169.254.169.254)"
           }
         }
       },
       "connections": {
-        "title": "Connections",
-        "description": "Configure external authentication providers like OAuth2 and SAML.",
-        "linkedServices": "Linked Services",
-        "unlinkedServices": "Unlinked Services",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "disconnected": "Provider disconnected successfully",
-        "disconnectError": "Failed to disconnect provider",
+        "title": "Connessioni",
+        "description": "Configura provider di autenticazione esterni come OAuth2 e SAML.",
+        "linkedServices": "Servizi collegati",
+        "unlinkedServices": "Servizi non collegati",
+        "connect": "Connetti",
+        "disconnect": "Disconnetti",
+        "disconnected": "Provider disconnesso con successo",
+        "disconnectError": "Impossibile disconnettere il provider",
         "ssoAutoLogin": {
-          "label": "SSO Auto Login",
-          "enable": "Enable SSO Auto Login",
-          "description": "Automatically redirect to SSO login when authentication is required"
+          "label": "Accesso automatico SSO",
+          "enable": "Abilita accesso automatico SSO",
+          "description": "Reindirizza automaticamente al login SSO quando è richiesta l'autenticazione"
         },
         "oauth2": {
           "label": "OAuth2",
           "enabled": {
-            "label": "Enable OAuth2",
-            "description": "Allow users to authenticate using OAuth2 providers"
+            "label": "Abilita OAuth2",
+            "description": "Consenti agli utenti di autenticarsi usando provider OAuth2"
           },
           "provider": {
             "label": "Provider",
-            "description": "The OAuth2 provider to use for authentication"
+            "description": "Il provider OAuth2 da utilizzare per l'autenticazione"
           },
           "issuer": {
             "label": "Issuer URL",
-            "description": "The OAuth2 provider issuer URL"
+            "description": "L'URL emittente del provider OAuth2"
           },
           "clientId": {
             "label": "Client ID",
-            "description": "The OAuth2 client ID from your provider"
+            "description": "Il Client ID OAuth2 dal tuo provider"
           },
           "clientSecret": {
             "label": "Client Secret",
-            "description": "The OAuth2 client secret from your provider"
+            "description": "Il Client Secret OAuth2 dal tuo provider"
           },
           "useAsUsername": {
-            "label": "Use as Username",
-            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+            "label": "Usa come nome utente",
+            "description": "La claim OAuth2 da usare come nome utente (es. email, sub)"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first OAuth2 login"
+            "label": "Crea utenti automaticamente",
+            "description": "Crea automaticamente account utente al primo login OAuth2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via OAuth2"
+            "label": "Blocca registrazione",
+            "description": "Impedisci la registrazione di nuovi utenti tramite OAuth2"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
-            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+            "label": "Scope OAuth2",
+            "description": "Elenco separato da virgole di scope OAuth2 da richiedere (es. openid, profile, email)"
           }
         },
         "saml2": {
           "label": "SAML2",
           "enabled": {
-            "label": "Enable SAML2",
-            "description": "Allow users to authenticate using SAML2 providers"
+            "label": "Abilita SAML2",
+            "description": "Consenti agli utenti di autenticarsi usando provider SAML2"
           },
           "provider": {
             "label": "Provider",
-            "description": "The SAML2 provider name"
+            "description": "Il nome del provider SAML2"
           },
           "registrationId": {
             "label": "Registration ID",
-            "description": "The SAML2 registration identifier"
+            "description": "L'identificatore di registrazione SAML2"
           },
           "autoCreateUser": {
-            "label": "Auto Create Users",
-            "description": "Automatically create user accounts on first SAML2 login"
+            "label": "Crea utenti automaticamente",
+            "description": "Crea automaticamente account utente al primo login SAML2"
           },
           "blockRegistration": {
-            "label": "Block Registration",
-            "description": "Prevent new user registration via SAML2"
+            "label": "Blocca registrazione",
+            "description": "Impedisci la registrazione di nuovi utenti tramite SAML2"
           }
         }
       },
       "database": {
         "title": "Database",
-        "description": "Configure custom database connection settings for enterprise deployments.",
-        "configuration": "Database Configuration",
+        "description": "Configura impostazioni personalizzate di connessione al database per distribuzioni enterprise.",
+        "configuration": "Configurazione database",
         "enableCustom": {
-          "label": "Enable Custom Database",
-          "description": "Use your own custom database configuration instead of the default embedded database"
+          "label": "Abilita database personalizzato",
+          "description": "Usa una configurazione di database personalizzata al posto del database integrato predefinito"
         },
         "customUrl": {
-          "label": "Custom Database URL",
-          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+          "label": "URL database personalizzato",
+          "description": "Stringa di connessione JDBC completa (es. jdbc:postgresql://localhost:5432/postgres). Se fornita, le impostazioni di connessione individuali sotto non sono usate."
         },
         "type": {
-          "label": "Database Type",
-          "description": "Type of database (not used if custom URL is provided)"
+          "label": "Tipo di database",
+          "description": "Tipo di database (non usato se viene fornito l'URL personalizzato)"
         },
         "hostName": {
-          "label": "Host Name",
-          "description": "Database server hostname (not used if custom URL is provided)"
+          "label": "Nome host",
+          "description": "Hostname del server database (non usato se viene fornito l'URL personalizzato)"
         },
         "port": {
-          "label": "Port",
-          "description": "Database server port (not used if custom URL is provided)"
+          "label": "Porta",
+          "description": "Porta del server database (non usata se viene fornito l'URL personalizzato)"
         },
         "name": {
-          "label": "Database Name",
-          "description": "Name of the database (not used if custom URL is provided)"
+          "label": "Nome del database",
+          "description": "Nome del database (non usato se viene fornito l'URL personalizzato)"
         },
         "username": {
-          "label": "Username",
-          "description": "Database authentication username"
+          "label": "Nome utente",
+          "description": "Nome utente per l'autenticazione al database"
         },
         "password": {
           "label": "Password",
-          "description": "Database authentication password"
+          "description": "Password di autenticazione al database"
         }
       },
       "privacy": {
         "title": "Privacy",
-        "description": "Configure privacy and data collection settings.",
-        "analytics": "Analytics & Tracking",
+        "description": "Configura impostazioni di privacy e raccolta dati.",
+        "analytics": "Analisi e tracciamento",
         "enableAnalytics": {
-          "label": "Enable Analytics",
-          "description": "Collect anonymous usage analytics to help improve the application"
+          "label": "Abilita analisi",
+          "description": "Raccogli analisi d'uso anonime per migliorare l'applicazione"
         },
         "metricsEnabled": {
-          "label": "Enable Metrics",
-          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+          "label": "Abilita metriche",
+          "description": "Abilita la raccolta di metriche di prestazioni e utilizzo. Fornisce un endpoint API per consentire agli admin di accedere ai dati delle metriche"
         },
-        "searchEngine": "Search Engine Visibility",
+        "searchEngine": "Visibilità nei motori di ricerca",
         "googleVisibility": {
-          "label": "Google Visibility",
-          "description": "Allow search engines to index this application"
+          "label": "Visibilità su Google",
+          "description": "Consenti ai motori di ricerca di indicizzare questa applicazione"
         }
       },
       "advanced": {
-        "title": "Advanced",
-        "description": "Configure advanced features and experimental functionality.",
-        "features": "Feature Flags",
-        "processing": "Processing",
+        "title": "Avanzate",
+        "description": "Configura funzionalità avanzate e funzionalità sperimentali.",
+        "features": "Flag funzionalità",
+        "processing": "Elaborazione",
         "endpoints": {
-          "label": "Endpoints",
-          "manage": "Manage API Endpoints",
-          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+          "label": "Endpoint",
+          "manage": "Gestisci endpoint API",
+          "description": "La gestione degli endpoint è configurata tramite YAML. Vedi la documentazione per i dettagli su come abilitare/disabilitare specifici endpoint."
         },
         "enableAlphaFunctionality": {
-          "label": "Enable Alpha Features",
-          "description": "Enable experimental and alpha-stage features (may be unstable)"
+          "label": "Abilita funzionalità Alpha",
+          "description": "Abilita funzionalità sperimentali e in fase alpha (potrebbero essere instabili)"
         },
         "enableUrlToPDF": {
-          "label": "Enable URL to PDF",
-          "description": "Allow conversion of web pages to PDF documents"
+          "label": "Abilita URL in PDF",
+          "description": "Consenti la conversione di pagine web in documenti PDF"
         },
         "maxDPI": {
-          "label": "Maximum DPI",
-          "description": "Maximum DPI for image processing (0 = unlimited)"
+          "label": "DPI massimo",
+          "description": "DPI massimi per l'elaborazione delle immagini (0 = illimitato)"
         },
         "tessdataDir": {
-          "label": "Tessdata Directory",
-          "description": "Path to the tessdata directory for OCR language files"
+          "label": "Directory tessdata",
+          "description": "Percorso della directory tessdata per i file lingua OCR"
         },
         "disableSanitize": {
-          "label": "Disable HTML Sanitization",
-          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+          "label": "Disabilita sanitizzazione HTML",
+          "description": "ATTENZIONE: Rischio di sicurezza - disabilitare la sanitizzazione HTML può comportare vulnerabilità XSS"
         },
         "tempFileManagement": {
-          "label": "Temp File Management",
-          "description": "Configure temporary file storage and cleanup behavior",
+          "label": "Gestione file temporanei",
+          "description": "Configura l'archiviazione e la pulizia dei file temporanei",
           "baseTmpDir": {
-            "label": "Base Temp Directory",
-            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+            "label": "Directory temporanea base",
+            "description": "Directory base per i file temporanei (lascia vuoto per default: java.io.tmpdir/stirling-pdf)"
           },
           "libreofficeDir": {
-            "label": "LibreOffice Temp Directory",
-            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+            "label": "Directory temporanea LibreOffice",
+            "description": "Directory per i file temporanei di LibreOffice (lascia vuoto per default: baseTmpDir/libreoffice)"
           },
           "systemTempDir": {
-            "label": "System Temp Directory",
-            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+            "label": "Directory temporanea di sistema",
+            "description": "Directory temporanea di sistema da pulire (usata solo se cleanupSystemTemp è abilitato)"
           },
           "prefix": {
-            "label": "Temp File Prefix",
-            "description": "Prefix for temp file names"
+            "label": "Prefisso file temporanei",
+            "description": "Prefisso per i nomi dei file temporanei"
           },
           "maxAgeHours": {
-            "label": "Max Age (hours)",
-            "description": "Maximum age in hours before temp files are cleaned up"
+            "label": "Età massima (ore)",
+            "description": "Età massima in ore prima della pulizia dei file temporanei"
           },
           "cleanupIntervalMinutes": {
-            "label": "Cleanup Interval (minutes)",
-            "description": "How often to run cleanup (in minutes)"
+            "label": "Intervallo di pulizia (minuti)",
+            "description": "Frequenza di esecuzione della pulizia (in minuti)"
           },
           "startupCleanup": {
-            "label": "Startup Cleanup",
-            "description": "Clean up old temp files on application startup"
+            "label": "Pulizia all'avvio",
+            "description": "Pulisci i vecchi file temporanei all'avvio dell'applicazione"
           },
           "cleanupSystemTemp": {
-            "label": "Cleanup System Temp",
-            "description": "Whether to clean broader system temp directory (use with caution)"
+            "label": "Pulisci temp di sistema",
+            "description": "Se pulire la più ampia directory temporanea di sistema (usare con cautela)"
           }
         },
         "processExecutor": {
-          "label": "Process Executor Limits",
-          "description": "Configure session limits and timeouts for each process executor",
+          "label": "Limiti esecutore processi",
+          "description": "Configura limiti di sessione e timeout per ciascun esecutore di processi",
           "sessionLimit": {
-            "label": "Session Limit",
-            "description": "Maximum concurrent instances"
+            "label": "Limite sessioni",
+            "description": "Istanze concorrenti massime"
           },
           "timeout": {
-            "label": "Timeout (minutes)",
-            "description": "Maximum execution time"
+            "label": "Timeout (minuti)",
+            "description": "Tempo massimo di esecuzione"
           },
           "libreOffice": "LibreOffice",
           "pdfToHtml": "PDF to HTML",
@@ -4027,124 +4144,124 @@
         }
       },
       "mail": {
-        "title": "Mail Server",
-        "description": "Configure SMTP settings for sending email notifications.",
-        "smtp": "SMTP Configuration",
+        "title": "Server di posta",
+        "description": "Configura le impostazioni SMTP per l'invio di notifiche email.",
+        "smtp": "Configurazione SMTP",
         "enabled": {
-          "label": "Enable Mail",
-          "description": "Enable email notifications and SMTP functionality"
+          "label": "Abilita posta",
+          "description": "Abilita le notifiche email e la funzionalità SMTP"
         },
         "host": {
-          "label": "SMTP Host",
-          "description": "The hostname or IP address of your SMTP server"
+          "label": "Host SMTP",
+          "description": "L'hostname o l'indirizzo IP del tuo server SMTP"
         },
         "port": {
-          "label": "SMTP Port",
-          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+          "label": "Porta SMTP",
+          "description": "Il numero di porta per la connessione SMTP (tipicamente 25, 465 o 587)"
         },
         "username": {
-          "label": "SMTP Username",
-          "description": "Username for SMTP authentication"
+          "label": "Nome utente SMTP",
+          "description": "Nome utente per l'autenticazione SMTP"
         },
         "password": {
-          "label": "SMTP Password",
-          "description": "Password for SMTP authentication"
+          "label": "Password SMTP",
+          "description": "Password per l'autenticazione SMTP"
         },
         "from": {
-          "label": "From Address",
-          "description": "The email address to use as the sender"
+          "label": "Indirizzo mittente",
+          "description": "L'indirizzo email da usare come mittente"
         },
         "enableInvites": {
-          "label": "Enable Email Invites",
-          "description": "Allow admins to invite users via email with auto-generated passwords"
+          "label": "Abilita inviti via email",
+          "description": "Consenti agli admin di invitare utenti via email con password generate automaticamente"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
-          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+          "label": "URL frontend",
+          "description": "URL di base del frontend (es. https://pdf.example.com). Usato per generare i link di invito nelle email. Lascia vuoto per usare l'URL del backend."
         }
       },
       "legal": {
-        "title": "Legal Documents",
-        "description": "Configure links to legal documents and policies.",
+        "title": "Documenti legali",
+        "description": "Configura i link a documenti e policy legali.",
         "disclaimer": {
-          "title": "Legal Responsibility Warning",
-          "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+          "title": "Avviso di responsabilità legale",
+          "message": "Personalizzando questi documenti legali, ti assumi la piena responsabilità di garantire la conformità a tutte le leggi e normative applicabili, incluse ma non limitate al GDPR e ad altri requisiti di protezione dei dati dell'UE. Modifica queste impostazioni solo se: (1) gestisci un'istanza personale/privata, (2) sei al di fuori della giurisdizione UE e comprendi i tuoi obblighi legali locali, oppure (3) hai ottenuto un'adeguata consulenza legale e accetti la piena responsabilità per tutti i dati utente e la conformità legale. Stirling-PDF e i suoi sviluppatori non assumono alcuna responsabilità per i tuoi obblighi legali."
         },
         "termsAndConditions": {
-          "label": "Terms and Conditions",
-          "description": "URL or filename to terms and conditions"
+          "label": "Termini e condizioni",
+          "description": "URL o nome file dei termini e condizioni"
         },
         "privacyPolicy": {
           "label": "Privacy Policy",
-          "description": "URL or filename to privacy policy"
+          "description": "URL o nome file della privacy policy"
         },
         "accessibilityStatement": {
-          "label": "Accessibility Statement",
-          "description": "URL or filename to accessibility statement"
+          "label": "Dichiarazione di accessibilità",
+          "description": "URL o nome file della dichiarazione di accessibilità"
         },
         "cookiePolicy": {
           "label": "Cookie Policy",
-          "description": "URL or filename to cookie policy"
+          "description": "URL o nome file della cookie policy"
         },
         "impressum": {
           "label": "Impressum",
-          "description": "URL or filename to impressum (required in some jurisdictions)"
+          "description": "URL o nome file dell'Impressum (richiesto in alcune giurisdizioni)"
         }
       },
       "premium": {
-        "title": "Premium & Enterprise",
-        "description": "Configure your premium or enterprise license key.",
-        "license": "License Configuration",
+        "title": "Premium e Enterprise",
+        "description": "Configura la tua chiave di licenza premium o enterprise.",
+        "license": "Configurazione licenza",
         "key": {
-          "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "label": "Chiave di licenza",
+          "description": "Inserisci la tua chiave di licenza premium o enterprise"
         },
         "enabled": {
-          "label": "Enable Premium Features",
-          "description": "Enable license key checks for pro/enterprise features"
+          "label": "Abilita funzionalità Premium",
+          "description": "Abilita i controlli della chiave di licenza per funzionalità pro/enterprise"
         },
         "movedFeatures": {
-          "title": "Premium Features Distributed",
-          "message": "Premium and Enterprise features are now organized in their respective sections:"
+          "title": "Funzionalità Premium distribuite",
+          "message": "Le funzionalità Premium ed Enterprise sono ora organizzate nelle rispettive sezioni:"
         }
       },
       "features": {
-        "title": "Features",
-        "description": "Configure optional features and functionality.",
+        "title": "Funzionalità",
+        "description": "Configura funzionalità opzionali.",
         "serverCertificate": {
-          "label": "Server Certificate",
-          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "label": "Certificato server",
+          "description": "Configura la generazione del certificato lato server per la funzionalità \"Sign with Stirling-PDF\"",
           "enabled": {
-            "label": "Enable Server Certificate",
-            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+            "label": "Abilita certificato server",
+            "description": "Abilita il certificato lato server per l'opzione \"Sign with Stirling-PDF\""
           },
           "organizationName": {
-            "label": "Organization Name",
-            "description": "Organization name for generated certificates"
+            "label": "Nome organizzazione",
+            "description": "Nome dell'organizzazione per i certificati generati"
           },
           "validity": {
-            "label": "Certificate Validity (days)",
-            "description": "Number of days the certificate will be valid"
+            "label": "Validità certificato (giorni)",
+            "description": "Numero di giorni di validità del certificato"
           },
           "regenerateOnStartup": {
-            "label": "Regenerate on Startup",
-            "description": "Generate new certificate on each application startup"
+            "label": "Rigenera all'avvio",
+            "description": "Genera un nuovo certificato a ogni avvio dell'applicazione"
           }
         }
       },
       "endpoints": {
-        "title": "API Endpoints",
-        "description": "Control which API endpoints and endpoint groups are available.",
-        "management": "Endpoint Management",
+        "title": "Endpoint API",
+        "description": "Controlla quali endpoint API e gruppi di endpoint sono disponibili.",
+        "management": "Gestione endpoint",
         "toRemove": {
-          "label": "Disabled Endpoints",
-          "description": "Select individual endpoints to disable"
+          "label": "Endpoint disabilitati",
+          "description": "Seleziona endpoint individuali da disabilitare"
         },
         "groupsToRemove": {
-          "label": "Disabled Endpoint Groups",
-          "description": "Select endpoint groups to disable"
+          "label": "Gruppi di endpoint disabilitati",
+          "description": "Seleziona gruppi di endpoint da disabilitare"
         },
-        "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
+        "note": "Nota: La disabilitazione degli endpoint limita l'accesso API ma non rimuove i componenti UI. Riavvio richiesto perché le modifiche abbiano effetto."
       }
     }
   },
@@ -4173,7 +4290,7 @@
     "dragFilesInOrClick": "Trascina i file o clicca \"Aggiungi file\" per sfogliare"
   },
   "fileEditor": {
-    "addFiles": "Add Files"
+    "addFiles": "Aggiungi file"
   },
   "fileManager": {
     "title": "Carica file PDF",
@@ -4203,7 +4320,7 @@
     "lastModified": "Ultima modifica",
     "toolChain": "Strumenti applicati",
     "restore": "Ripristina",
-    "unzip": "Unzip",
+    "unzip": "Estrai",
     "searchFiles": "Cerca file...",
     "recent": "Recenti",
     "localFiles": "File locali",
@@ -4229,17 +4346,16 @@
     "download": "Salva",
     "delete": "Elimina",
     "unsupported": "Non supportato",
-    "addToUpload": "Add to Upload",
-    "deleteAll": "Delete All",
-    "loadingFiles": "Loading files...",
-    "noFiles": "No files available",
-    "noFilesFound": "No files found matching your search",
-    "openInPageEditor": "Open in Page Editor",
-    "showAll": "Show All",
-    "sortByDate": "Sort by Date",
-    "sortByName": "Sort by Name",
-    "sortBySize": "Sort by Size",
-    "dropFilesHint": "Rilascia qui per caricare"
+    "addToUpload": "Aggiungi al caricamento",
+    "deleteAll": "Elimina tutto",
+    "loadingFiles": "Caricamento file...",
+    "noFiles": "Nessun file disponibile",
+    "noFilesFound": "Nessun file trovato per la tua ricerca",
+    "openInPageEditor": "Apri nell'Editor di pagine",
+    "showAll": "Mostra tutto",
+    "sortByDate": "Ordina per data",
+    "sortByName": "Ordina per nome",
+    "sortBySize": "Ordina per dimensione"
   },
   "storage": {
     "temporaryNotice": "I file sono archiviati temporaneamente nel tuo browser e potrebbero essere eliminati automaticamente",
@@ -4323,7 +4439,7 @@
       "keyLength": {
         "label": "Lunghezza Chiave di Cifratura",
         "40bit": "40-bit (Bassa)",
-        "128bit": "128-bit (Standard)",
+        "128bit": "128 bit (Standard)",
         "256bit": "256-bit (Alta)"
       }
     },
@@ -4509,6 +4625,12 @@
     }
   },
   "common": {
+    "previous": "Precedente",
+    "next": "Successivo",
+    "collapse": "Comprimi",
+    "expand": "Espandi",
+    "collapsed": "compresso",
+    "lines": "righe",
     "copy": "Copia",
     "copied": "Copiato!",
     "refresh": "Aggiorna",
@@ -4517,12 +4639,12 @@
     "used": "usati",
     "available": "disponibili",
     "cancel": "Annulla",
-    "preview": "Preview"
+    "preview": "Anteprima"
   },
   "config": {
     "overview": {
-      "title": "Application Configuration",
-      "description": "Current application settings and configuration details."
+      "title": "Configurazione applicazione",
+      "description": "Impostazioni correnti dell'applicazione e dettagli di configurazione."
     },
     "account": {
       "overview": {
@@ -4545,6 +4667,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Usa la tua chiave API per accedere programmaticamente alle capacità di elaborazione di Stirling PDF.",
+      "docsTitle": "Documentazione API",
+      "docsDescription": "Scopri di più su come integrare con Stirling PDF:",
+      "docsLink": "Documentazione API",
+      "schemaLink": "Riferimento schema API",
+      "usage": "Includi questa chiave nell'intestazione X-API-KEY in tutte le richieste API.",
       "description": "La tua chiave API per accedere alla suite di strumenti PDF di Stirling. Copiala nel tuo progetto o aggiorna per generarne una nuova.",
       "publicKeyAriaLabel": "Chiave API pubblica",
       "copyKeyAriaLabel": "Copia chiave API",
@@ -4581,58 +4709,58 @@
       "title": "Risultati allegati"
     },
     "error": {
-      "failed": "Add attachments operation failed"
+      "failed": "Operazione di aggiunta allegati non riuscita"
     }
   },
   "termsAndConditions": "Termini e condizioni",
   "logOut": "Esci",
   "addAttachments": {
     "error": {
-      "failed": "An error occurred while adding attachments to the PDF."
+      "failed": "Si è verificato un errore durante l'aggiunta di allegati al PDF."
     }
   },
   "autoRename": {
-    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+    "description": "Questo strumento rinomina automaticamente i file PDF in base al loro contenuto. Analizza il documento per trovare il titolo più adatto dal testo."
   },
-  "customPosition": "Custom Position",
-  "details": "Details",
-  "downloadUnavailable": "Download unavailable for this item",
-  "invalidUndoData": "Cannot undo: invalid operation data",
+  "customPosition": "Posizione personalizzata",
+  "details": "Dettagli",
+  "downloadUnavailable": "Download non disponibile per questo elemento",
+  "invalidUndoData": "Impossibile annullare: dati operazione non validi",
   "margin": {
-    "large": "Large",
-    "medium": "Medium",
-    "small": "Small",
-    "xLarge": "Extra Large"
+    "large": "Grande",
+    "medium": "Medio",
+    "small": "Piccolo",
+    "xLarge": "Extra grande"
   },
-  "noFilesToUndo": "Cannot undo: no files were processed in the last operation",
-  "noOperationToUndo": "No operation to undo",
-  "noValidFiles": "No valid files to process",
-  "operationCancelled": "Operation cancelled",
+  "noFilesToUndo": "Impossibile annullare: nessun file è stato elaborato nell'ultima operazione",
+  "noOperationToUndo": "Nessuna operazione da annullare",
+  "noValidFiles": "Nessun file valido da elaborare",
+  "operationCancelled": "Operazione annullata",
   "pageEdit": {
-    "deselectAll": "Select None",
-    "selectAll": "Select All"
+    "deselectAll": "Deseleziona tutto",
+    "selectAll": "Seleziona tutto"
   },
-  "quickPosition": "Quick Position",
+  "quickPosition": "Posizione rapida",
   "reorganizePages": {
     "error": {
-      "failed": "Failed to reorganize pages"
+      "failed": "Impossibile riorganizzare le pagine"
     },
     "results": {
-      "title": "Pages Reorganized"
+      "title": "Pagine riorganizzate"
     },
     "settings": {
-      "title": "Settings"
+      "title": "Impostazioni"
     },
-    "submit": "Reorganize Pages"
+    "submit": "Riorganizza pagine"
   },
   "replace-color": {
     "options": {
-      "fill": "Fill colour",
-      "gradient": "Gradient"
+      "fill": "Colore di riempimento",
+      "gradient": "Gradiente"
     },
-    "previewOverlayOpacity": "Preview overlay opacity",
-    "previewOverlayTransparency": "Preview overlay transparency",
-    "previewOverlayVisibility": "Show preview overlay",
+    "previewOverlayOpacity": "Opacità sovrapposizione anteprima",
+    "previewOverlayTransparency": "Trasparenza sovrapposizione anteprima",
+    "previewOverlayVisibility": "Mostra sovrapposizione anteprima",
     "selectText": {
       "1": "Sostituisci o inverti le opzioni del colore",
       "2": "Predefinito (colori ad alto contrasto predefiniti)",
@@ -4645,476 +4773,488 @@
       "9": "Testo verde su sfondo nero",
       "10": "Scegli il colore del testo",
       "11": "Scegli il colore di sfondo",
-      "12": "Choose start colour",
-      "13": "Choose end colour"
+      "12": "Scegli colore iniziale",
+      "13": "Scegli colore finale"
     },
     "submit": "Sostituisci",
-    "title": "Sostituisci-Inverti-Colore",
-    "header": "Sostituisci-Inverti colore PDF"
+    "title": "Sostituisci-Inverti-Colore"
   },
-  "size": "Size",
-  "submit": "Submit",
-  "success": "Success",
+  "size": "Dimensione",
+  "submit": "Invia",
+  "success": "Successo",
   "tools": {
-    "noSearchResults": "No tools found",
-    "noTools": "No tools available"
+    "noSearchResults": "Nessuno strumento trovato",
+    "noTools": "Nessuno strumento disponibile"
   },
-  "undoDataMismatch": "Cannot undo: operation data is corrupted",
-  "undoFailed": "Failed to undo operation",
-  "undoQuotaError": "Cannot undo: insufficient storage space",
-  "undoStorageError": "Undo completed but some files could not be saved to storage",
-  "undoSuccess": "Operation undone successfully",
-  "unsupported": "Unsupported",
+  "undoDataMismatch": "Impossibile annullare: i dati dell'operazione sono danneggiati",
+  "undoFailed": "Impossibile annullare l'operazione",
+  "undoQuotaError": "Impossibile annullare: spazio di archiviazione insufficiente",
+  "undoStorageError": "Annullamento completato ma alcuni file non sono stati salvati nell'archiviazione",
+  "undoSuccess": "Operazione annullata con successo",
+  "unsupported": "Non supportato",
   "onboarding": {
     "welcomeModal": {
-      "title": "Welcome to Stirling PDF!",
-      "description": "Would you like to take a quick 1-minute tour to learn the key features and how to get started?",
-      "helpHint": "You can always access this tour later from the <strong>Help</strong> button in the bottom left.",
-      "startTour": "Start Tour",
-      "maybeLater": "Maybe Later",
-      "dontShowAgain": "Don't Show Again"
+      "title": "Benvenuto in Stirling PDF!",
+      "description": "Vuoi fare un tour rapido di 1 minuto per imparare le funzioni chiave e come iniziare?",
+      "helpHint": "Puoi sempre accedere a questo tour in seguito dal pulsante <strong>Guida</strong> in basso a sinistra.",
+      "startTour": "Avvia tour",
+      "maybeLater": "Magari più tardi",
+      "dontShowAgain": "Non mostrare più"
     },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
-    "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
-    "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
-    "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
-    "fileSources": "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
-    "workbench": "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
-    "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
-    "viewer": "The <strong>Viewer</strong> lets you read and annotate your PDFs.",
-    "pageEditor": "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting.",
-    "activeFiles": "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process.",
-    "fileCheckbox": "Clicking one of the files selects it for processing. You can select multiple files for batch operations.",
-    "selectControls": "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
-    "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
-    "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
-    "results": "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
-    "fileReplacement": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
-    "pinButton": "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them.",
-    "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again.",
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Finish",
-    "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "selectCropTool": "Selezioniamo lo strumento <strong>Ritaglia</strong> per mostrare come usarne uno.",
+    "toolInterface": "Questa è l'interfaccia dello strumento <strong>Ritaglia</strong>. Come vedi, non c'è molto perché non abbiamo ancora aggiunto file PDF su cui lavorare.",
+    "filesButton": "Il pulsante <strong>File</strong> sulla barra di accesso rapido consente di caricare PDF su cui usare gli strumenti.",
+    "fileSources": "Puoi caricare nuovi file o accedere ai file recenti da qui. Per il tour, useremo un file di esempio.",
+    "workbench": "Questo è il <strong>Banco di lavoro</strong> - l'area principale in cui visualizzare e modificare i PDF.",
+    "viewSwitcher": "Usa questi controlli per scegliere come vuoi visualizzare i PDF.",
+    "viewer": "Il <strong>Visualizzatore</strong> ti consente di leggere e annotare i PDF.",
+    "pageEditor": "L'<strong>Editor di pagine</strong> consente varie operazioni sulle pagine dei PDF, come riordinare, ruotare ed eliminare.",
+    "activeFiles": "La vista <strong>File attivi</strong> mostra tutti i PDF caricati nello strumento e consente di selezionare quali elaborare.",
+    "fileCheckbox": "Facendo clic su uno dei file lo selezioni per l'elaborazione. Puoi selezionare più file per operazioni in blocco.",
+    "selectControls": "La <strong>barra destra</strong> contiene pulsanti per selezionare/deselezionare rapidamente tutti i PDF attivi, insieme ai pulsanti per cambiare il tema o la lingua dell'app.",
+    "cropSettings": "Ora che abbiamo selezionato il file che vogliamo ritagliare, possiamo configurare lo strumento Ritaglia per scegliere l'area a cui ritagliare il PDF.",
+    "runButton": "Una volta configurato lo strumento, questo pulsante consente di eseguirlo su tutti i PDF selezionati.",
+    "results": "Dopo che lo strumento ha terminato l'esecuzione, la fase di <strong>Revisione</strong> mostrerà un'anteprima dei risultati in questo pannello e ti permetterà di annullare l'operazione o scaricare il file. ",
+    "fileReplacement": "Il file modificato sostituirà automaticamente l'originale nel Banco di lavoro, consentendoti di farlo passare facilmente attraverso altri strumenti.",
+    "pinButton": "Puoi usare il pulsante <strong>Blocca</strong> se preferisci che i file restino attivi dopo l'esecuzione degli strumenti.",
+    "wrapUp": "Tutto pronto! Hai imparato le aree principali dell'app e come usarle. Fai clic sul pulsante <strong>Guida</strong> quando vuoi per rivedere questo tour.",
+    "previous": "Precedente",
+    "next": "Successivo",
+    "finish": "Fine",
+    "startTour": "Avvia tour",
+    "startTourDescription": "Fai un tour guidato delle funzioni chiave di Stirling PDF"
+  },
+  "adminOnboarding": {
+    "welcome": "Benvenuto nel <strong>Tour Admin</strong>! Esploriamo le potenti funzionalità enterprise e le impostazioni disponibili per gli amministratori di sistema.",
+    "configButton": "Fai clic sul pulsante <strong>Config</strong> per accedere a tutte le impostazioni di sistema e ai controlli amministrativi.",
+    "settingsOverview": "Questo è il <strong>Pannello impostazioni</strong>. Le impostazioni amministrative sono organizzate per categoria per una facile navigazione.",
+    "teamsAndUsers": "Gestisci qui <strong>Team</strong> e singoli utenti. Puoi invitare nuovi utenti via email, link condivisibili o creare tu stesso account personalizzati per loro.",
+    "systemCustomization": "Abbiamo ampie modalità per personalizzare l'interfaccia: le <strong>Impostazioni di sistema</strong> consentono di cambiare il nome dell'app e le lingue, <strong>Funzionalità</strong> consente la gestione del certificato server e <strong>Endpoint</strong> permette di abilitare o disabilitare strumenti specifici per i tuoi utenti.",
+    "databaseSection": "Per ambienti di produzione avanzati, abbiamo impostazioni per consentire <strong>collegamenti a database esterni</strong> così da integrarti con la tua infrastruttura esistente.",
+    "connectionsSection": "La sezione <strong>Connessioni</strong> supporta vari metodi di accesso tra cui SSO personalizzato e provider SAML come Google e GitHub, oltre a integrazioni email per notifiche e comunicazioni.",
+    "adminTools": "Infine, disponiamo di strumenti di amministrazione avanzati come l'<strong>Auditing</strong> per tracciare l'attività di sistema e le <strong>Analisi d'uso</strong> per monitorare come gli utenti interagiscono con la piattaforma.",
+    "wrapUp": "Questo è il tour admin! Hai visto le funzionalità enterprise che rendono Stirling PDF una soluzione potente e personalizzabile per le organizzazioni. Accedi a questo tour in qualsiasi momento dal menu <strong>Guida</strong>."
   },
   "workspace": {
-    "title": "Workspace",
+    "title": "Area di lavoro",
     "people": {
-      "title": "People",
-      "description": "Manage workspace members and their permissions",
-      "loading": "Loading people...",
-      "searchMembers": "Search members...",
-      "addMembers": "Add Members",
+      "title": "Persone",
+      "description": "Gestisci i membri dell'area di lavoro e i loro permessi",
+      "loading": "Caricamento persone...",
+      "searchMembers": "Cerca membri...",
+      "addMembers": "Aggiungi membri",
       "inviteMembers": {
-        "label": "Invite Members",
-        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+        "label": "Invita membri",
+        "subtitle": "Digita o incolla le email qui sotto, separate da virgole. La tua area di lavoro sarà fatturata in base ai membri."
       },
-      "user": "User",
-      "role": "Role",
+      "user": "Utente",
+      "role": "Ruolo",
       "team": "Team",
-      "status": "Status",
-      "actions": "Actions",
-      "noMembersFound": "No members found",
-      "active": "Active",
-      "disabled": "Disabled",
-      "activeSession": "Active session",
-      "member": "Member",
-      "admin": "Admin",
+      "status": "Stato",
+      "actions": "Azioni",
+      "noMembersFound": "Nessun membro trovato",
+      "active": "Attivo",
+      "disabled": "Disabilitato",
+      "activeSession": "Sessione attiva",
+      "member": "Membro",
+      "admin": "Amministratore",
       "roleDescriptions": {
-        "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "admin": "Può gestire impostazioni e invitare membri, con pieno accesso amministrativo.",
+        "member": "Può visualizzare e modificare i file condivisi, ma non può gestire impostazioni o membri dell'area di lavoro.",
+        "user": "Utente"
       },
-      "editRole": "Edit Role",
-      "enable": "Enable",
-      "disable": "Disable",
-      "deleteUser": "Delete User",
-      "deleteUserSuccess": "User deleted successfully",
-      "deleteUserError": "Failed to delete user",
-      "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+      "editRole": "Modifica ruolo",
+      "enable": "Abilita",
+      "disable": "Disabilita",
+      "deleteUser": "Elimina utente",
+      "deleteUserSuccess": "Utente eliminato con successo",
+      "deleteUserError": "Impossibile eliminare l'utente",
+      "confirmDelete": "Sei sicuro di voler eliminare questo utente? Questa azione non può essere annullata.",
       "addMember": {
-        "title": "Add Member",
-        "username": "Username (Email)",
-        "usernamePlaceholder": "user@example.com",
+        "title": "Aggiungi membro",
+        "username": "Nome utente (Email)",
+        "usernamePlaceholder": "utente@example.com",
         "password": "Password",
-        "passwordPlaceholder": "Enter password",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "forcePasswordChange": "Force password change on first login",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "usernameRequired": "Username and password are required",
-        "passwordTooShort": "Password must be at least 6 characters",
-        "success": "User created successfully",
-        "error": "Failed to create user"
+        "passwordPlaceholder": "Inserisci password",
+        "role": "Ruolo",
+        "team": "Team (Opzionale)",
+        "teamPlaceholder": "Seleziona un team",
+        "forcePasswordChange": "Forza cambio password al primo accesso",
+        "cancel": "Annulla",
+        "submit": "Aggiungi membro",
+        "usernameRequired": "Nome utente e password sono obbligatori",
+        "passwordTooShort": "La password deve contenere almeno 6 caratteri",
+        "success": "Utente creato con successo",
+        "error": "Impossibile creare l'utente"
       },
       "editMember": {
-        "title": "Edit Member",
-        "editing": "Editing:",
-        "role": "Role",
-        "team": "Team (Optional)",
-        "teamPlaceholder": "Select a team",
-        "cancel": "Cancel",
-        "submit": "Update Member",
-        "success": "User updated successfully",
-        "error": "Failed to update user"
+        "title": "Modifica membro",
+        "editing": "Modifica:",
+        "role": "Ruolo",
+        "team": "Team (Opzionale)",
+        "teamPlaceholder": "Seleziona un team",
+        "cancel": "Annulla",
+        "submit": "Aggiorna membro",
+        "success": "Utente aggiornato con successo",
+        "error": "Impossibile aggiornare l'utente"
       },
       "toggleEnabled": {
-        "success": "User status updated successfully",
-        "error": "Failed to update user status"
+        "success": "Stato utente aggiornato con successo",
+        "error": "Impossibile aggiornare lo stato utente"
       },
       "delete": {
-        "success": "User deleted successfully",
-        "error": "Failed to delete user"
+        "success": "Utente eliminato con successo",
+        "error": "Impossibile eliminare l'utente"
       },
       "emailInvite": {
-        "tab": "Email Invite",
-        "description": "Type or paste in emails below, separated by commas. Users will receive login credentials via email.",
-        "emails": "Email Addresses",
+        "tab": "Invito via email",
+        "description": "Digita o incolla le email qui sotto, separate da virgole. Gli utenti riceveranno le credenziali di accesso via email.",
+        "emails": "Indirizzi email",
         "emailsPlaceholder": "user1@example.com, user2@example.com",
-        "emailsRequired": "At least one email address is required",
-        "submit": "Send Invites",
-        "success": "user(s) invited successfully",
-        "partialSuccess": "Some invites failed",
-        "allFailed": "Failed to invite users",
-        "error": "Failed to send invites"
+        "emailsRequired": "È richiesto almeno un indirizzo email",
+        "submit": "Invia inviti",
+        "success": "utente/i invitato/i con successo",
+        "partialSuccess": "Alcuni inviti non sono riusciti",
+        "allFailed": "Impossibile invitare gli utenti",
+        "error": "Invio inviti non riuscito"
       },
       "directInvite": {
-        "tab": "Direct Create"
+        "tab": "Creazione diretta"
       },
       "inviteLinkTab": {
-        "tab": "Invite Link"
+        "tab": "Link di invito"
       },
       "inviteLink": {
-        "description": "Generate a secure link that allows the user to set their own password",
-        "email": "Email Address",
-        "emailPlaceholder": "user@example.com (optional)",
-        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
-        "emailRequired": "Email address is required",
-        "emailOptional": "Optional - leave blank for a general invite link",
-        "emailRequiredForSend": "Email address is required to send email notification",
-        "expiryHours": "Expiry Hours",
-        "expiryDescription": "How many hours until the link expires",
-        "sendEmail": "Send invite link via email",
-        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
-        "smtpRequired": "SMTP not configured",
-        "generate": "Generate Link",
-        "generated": "Invite Link Generated",
-        "copied": "Link copied to clipboard",
-        "success": "Invite link generated successfully",
-        "successWithEmail": "Invite link generated and sent via email",
-        "emailFailed": "Invite link generated, but email failed",
-        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
-        "error": "Failed to generate invite link",
-        "submit": "Generate Invite Link"
+        "description": "Genera un link sicuro che consente all'utente di impostare la propria password",
+        "email": "Indirizzo email",
+        "emailPlaceholder": "user@example.com (opzionale)",
+        "emailDescription": "Opzionale - lascia vuoto per un link di invito generale utilizzabile da chiunque",
+        "emailRequired": "L'indirizzo email è obbligatorio",
+        "emailOptional": "Opzionale - lascia vuoto per un link di invito generale",
+        "emailRequiredForSend": "L'indirizzo email è richiesto per inviare la notifica email",
+        "expiryHours": "Ore di scadenza",
+        "expiryDescription": "Quante ore prima che il link scada",
+        "sendEmail": "Invia link di invito via email",
+        "sendEmailDescription": "Se abilitato, il link di invito verrà inviato all'indirizzo email specificato",
+        "smtpRequired": "SMTP non configurato",
+        "generate": "Genera link",
+        "generated": "Link di invito generato",
+        "copied": "Link copiato negli appunti",
+        "success": "Link di invito generato con successo",
+        "successWithEmail": "Link di invito generato e inviato via email",
+        "emailSent": "Link di invito generato e inviato via email",
+        "emailFailed": "Link di invito generato, ma invio email non riuscito",
+        "emailFailedDetails": "Errore: {0}. Condividi il link di invito manualmente.",
+        "error": "Impossibile generare il link di invito",
+        "submit": "Genera link di invito"
       },
       "inviteMode": {
-        "username": "Username",
+        "username": "Nome utente",
         "email": "Email",
         "link": "Link",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "emailDisabled": "Gli inviti via email richiedono la configurazione di SMTP e mail.enableInvites=true nelle impostazioni"
       },
       "license": {
-        "users": "users",
-        "availableSlots": "Available Slots",
-        "grandfathered": "Grandfathered",
-        "grandfatheredShort": "{{count}} grandfathered",
-        "fromLicense": "from license",
-        "slotsAvailable": "{{count}} user slot(s) available",
-        "noSlotsAvailable": "No slots available",
-        "currentUsage": "Currently using {{current}} of {{max}} user licences"
+        "users": "utenti",
+        "availableSlots": "Slot disponibili",
+        "grandfathered": "Ereditati",
+        "grandfatheredShort": "{{count}} ereditati",
+        "fromLicense": "dalla licenza",
+        "slotsAvailable": "{{count}} slot utente disponibili",
+        "noSlotsAvailable": "Nessuno slot disponibile",
+        "currentUsage": "Attualmente in uso {{current}} su {{max}} licenze utente"
       }
     },
     "teams": {
-      "title": "Teams",
-      "description": "Manage teams and organize workspace members",
-      "loading": "Loading teams...",
-      "loadingDetails": "Loading team details...",
-      "createNewTeam": "Create New Team",
-      "teamName": "Team Name",
-      "totalMembers": "Total Members",
-      "actions": "Actions",
-      "noTeamsFound": "No teams found",
-      "noMembers": "No members in this team",
-      "system": "System",
-      "addMember": "Add Member",
-      "viewTeam": "View Team",
-      "removeMember": "Remove from team",
-      "cannotRemoveFromSystemTeam": "Cannot remove from system team",
-      "renameTeamLabel": "Rename Team",
-      "deleteTeamLabel": "Delete Team",
-      "cannotDeleteInternal": "Cannot delete the Internal team",
-      "confirmDelete": "Are you sure you want to delete this team? This team must be empty to delete.",
-      "confirmRemove": "Remove user from this team?",
-      "cannotRenameInternal": "Cannot rename the Internal team",
-      "cannotAddToInternal": "Cannot add members to the Internal team",
-      "teamNotFound": "Team not found",
-      "backToTeams": "Back to Teams",
-      "memberCount": "{{count}} members",
-      "removeMemberSuccess": "User removed from team",
-      "removeMemberError": "Failed to remove user from team",
+      "title": "Team",
+      "description": "Gestisci i team e organizza i membri dello spazio di lavoro",
+      "loading": "Caricamento dei team...",
+      "loadingDetails": "Caricamento dei dettagli del team...",
+      "createNewTeam": "Crea nuovo team",
+      "teamName": "Nome team",
+      "totalMembers": "Membri totali",
+      "actions": "Azioni",
+      "noTeamsFound": "Nessun team trovato",
+      "noMembers": "Nessun membro in questo team",
+      "system": "Sistema",
+      "addMember": "Aggiungi membro",
+      "viewTeam": "Visualizza team",
+      "removeMember": "Rimuovi dal team",
+      "cannotRemoveFromSystemTeam": "Impossibile rimuovere dal team di sistema",
+      "renameTeamLabel": "Rinomina team",
+      "deleteTeamLabel": "Elimina team",
+      "cannotDeleteInternal": "Impossibile eliminare il team Internal",
+      "confirmDelete": "Sei sicuro di voler eliminare questo team? Il team deve essere vuoto per poterlo eliminare.",
+      "confirmRemove": "Rimuovere l'utente da questo team?",
+      "cannotRenameInternal": "Impossibile rinominare il team Internal",
+      "cannotAddToInternal": "Impossibile aggiungere membri al team Internal",
+      "teamNotFound": "Team non trovato",
+      "backToTeams": "Torna ai team",
+      "memberCount": "{{count}} membri",
+      "removeMemberSuccess": "Utente rimosso dal team",
+      "removeMemberError": "Impossibile rimuovere l'utente dal team",
       "createTeam": {
-        "title": "Create New Team",
-        "teamName": "Team Name",
-        "teamNamePlaceholder": "Enter team name",
-        "cancel": "Cancel",
-        "submit": "Create Team",
-        "nameRequired": "Team name is required",
-        "success": "Team created successfully",
-        "error": "Failed to create team"
+        "title": "Crea nuovo team",
+        "teamName": "Nome team",
+        "teamNamePlaceholder": "Inserisci il nome del team",
+        "cancel": "Annulla",
+        "submit": "Crea team",
+        "nameRequired": "Il nome del team è obbligatorio",
+        "success": "Team creato con successo",
+        "error": "Impossibile creare il team"
       },
       "renameTeam": {
-        "title": "Rename Team",
-        "renaming": "Renaming:",
-        "newTeamName": "New Team Name",
-        "newTeamNamePlaceholder": "Enter new team name",
-        "cancel": "Cancel",
-        "submit": "Rename Team",
-        "nameRequired": "Team name is required",
-        "success": "Team renamed successfully",
-        "error": "Failed to rename team"
+        "title": "Rinomina team",
+        "renaming": "Rinominazione:",
+        "newTeamName": "Nuovo nome del team",
+        "newTeamNamePlaceholder": "Inserisci il nuovo nome del team",
+        "cancel": "Annulla",
+        "submit": "Rinomina team",
+        "nameRequired": "Il nome del team è obbligatorio",
+        "success": "Team rinominato con successo",
+        "error": "Impossibile rinominare il team"
       },
       "deleteTeam": {
-        "success": "Team deleted successfully",
-        "error": "Failed to delete team. Make sure the team is empty.",
-        "teamMustBeEmpty": "Team must be empty before deletion"
+        "success": "Team eliminato con successo",
+        "error": "Impossibile eliminare il team. Assicurati che il team sia vuoto.",
+        "teamMustBeEmpty": "Il team deve essere vuoto prima dell'eliminazione"
       },
       "addMemberToTeam": {
-        "title": "Add Member to Team",
-        "addingTo": "Adding to",
-        "selectUser": "Select User",
-        "selectUserPlaceholder": "Choose a user",
-        "selectUserRequired": "Please select a user",
-        "currentlyIn": "currently in",
-        "willBeMoved": "Note: This user will be moved from their current team to this team.",
-        "cancel": "Cancel",
-        "submit": "Add Member",
-        "userRequired": "Please select a user",
-        "success": "Member added to team successfully",
-        "error": "Failed to add member to team"
+        "title": "Aggiungi membro al team",
+        "addingTo": "Aggiunta a",
+        "selectUser": "Seleziona utente",
+        "selectUserPlaceholder": "Scegli un utente",
+        "selectUserRequired": "Seleziona un utente",
+        "currentlyIn": "attualmente in",
+        "willBeMoved": "Nota: Questo utente verrà spostato dal suo team attuale a questo team.",
+        "cancel": "Annulla",
+        "submit": "Aggiungi membro",
+        "userRequired": "Seleziona un utente",
+        "success": "Membro aggiunto al team con successo",
+        "error": "Impossibile aggiungere il membro al team"
       },
       "changeTeam": {
-        "label": "Change Team",
-        "title": "Change Team",
-        "changing": "Moving",
-        "selectTeam": "Select Team",
-        "selectTeamPlaceholder": "Choose a team",
-        "selectTeamRequired": "Please select a team",
-        "success": "Team changed successfully",
-        "error": "Failed to change team",
-        "submit": "Change Team"
+        "label": "Cambia team",
+        "title": "Cambia team",
+        "changing": "Spostamento",
+        "selectTeam": "Seleziona team",
+        "selectTeamPlaceholder": "Scegli un team",
+        "selectTeamRequired": "Seleziona un team",
+        "success": "Team cambiato con successo",
+        "error": "Impossibile cambiare team",
+        "submit": "Cambia team"
       }
     }
   },
   "plan": {
-    "currency": "Currency",
-    "popular": "Popular",
-    "current": "Current Plan",
-    "upgrade": "Upgrade",
-    "contact": "Contact Us",
-    "customPricing": "Custom",
-    "showComparison": "Compare All Features",
-    "hideComparison": "Hide Feature Comparison",
-    "featureComparison": "Feature Comparison",
+    "currency": "Valuta",
+    "popular": "Popolare",
+    "current": "Piano attuale",
+    "upgrade": "Aggiorna",
+    "contact": "Contattaci",
+    "customPricing": "Personalizzato",
+    "showComparison": "Confronta tutte le funzionalità",
+    "hideComparison": "Nascondi confronto funzionalità",
+    "featureComparison": "Confronto funzionalità",
     "activePlan": {
-      "title": "Active Plan",
-      "subtitle": "Your current subscription details"
+      "title": "Piano attivo",
+      "subtitle": "Dettagli del tuo abbonamento attuale"
     },
     "availablePlans": {
-      "title": "Available Plans",
-      "subtitle": "Choose the plan that fits your needs"
+      "title": "Piani disponibili",
+      "subtitle": "Scegli il piano adatto alle tue esigenze"
     },
     "static": {
-      "title": "Billing Information",
-      "message": "Online billing is not currently configured. To upgrade your plan or manage subscriptions, please contact us directly.",
-      "contactSales": "Contact Sales",
-      "contactToUpgrade": "Contact us to upgrade or customize your plan",
-      "maxUsers": "Max Users",
-      "upTo": "Up to"
+      "title": "Informazioni di fatturazione",
+      "message": "La fatturazione online non è attualmente configurata. Per aggiornare il piano o gestire gli abbonamenti, contattaci direttamente.",
+      "contactSales": "Contatta il reparto vendite",
+      "contactToUpgrade": "Contattaci per aggiornare o personalizzare il tuo piano",
+      "maxUsers": "Utenti massimi",
+      "upTo": "Fino a"
     },
     "period": {
-      "month": "month"
+      "month": "mese"
     },
     "free": {
-      "name": "Free",
-      "highlight1": "Limited Tool Usage Per week",
-      "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "name": "Gratis",
+      "highlight1": "Uso limitato degli strumenti a settimana",
+      "highlight2": "Accesso a tutti gli strumenti",
+      "highlight3": "Supporto della community"
     },
     "pro": {
       "name": "Pro",
-      "highlight1": "Unlimited Tool Usage",
-      "highlight2": "Advanced PDF tools",
-      "highlight3": "No watermarks"
+      "highlight1": "Uso illimitato degli strumenti",
+      "highlight2": "Strumenti PDF avanzati",
+      "highlight3": "Nessuna filigrana"
     },
     "enterprise": {
       "name": "Enterprise",
-      "highlight1": "Custom pricing",
-      "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "highlight1": "Prezzi personalizzati",
+      "highlight2": "Supporto dedicato",
+      "highlight3": "Funzionalità più recenti"
     },
     "feature": {
-      "title": "Feature",
-      "pdfTools": "Basic PDF Tools",
-      "fileSize": "File Size Limit",
-      "automation": "Automate tool workflows",
-      "api": "API Access",
-      "priority": "Priority Support",
-      "customPricing": "Custom Pricing"
+      "title": "Funzionalità",
+      "pdfTools": "Strumenti PDF di base",
+      "fileSize": "Limite dimensione file",
+      "automation": "Automatizza i flussi di lavoro degli strumenti",
+      "api": "Accesso API",
+      "priority": "Supporto prioritario",
+      "customPricing": "Prezzi personalizzati"
     }
   },
   "subscription": {
     "status": {
-      "active": "Active",
-      "pastDue": "Past Due",
-      "canceled": "Canceled",
-      "incomplete": "Incomplete",
-      "trialing": "Trial",
-      "none": "No Subscription"
+      "active": "Attivo",
+      "pastDue": "In ritardo",
+      "canceled": "Annullato",
+      "incomplete": "Incompleto",
+      "trialing": "Prova",
+      "none": "Nessun abbonamento"
     },
-    "renewsOn": "Renews on {{date}}",
-    "cancelsOn": "Cancels on {{date}}"
+    "renewsOn": "Si rinnova il {{date}}",
+    "cancelsOn": "Si annulla il {{date}}"
   },
   "billing": {
-    "manageBilling": "Manage Billing",
+    "manageBilling": "Gestisci fatturazione",
     "portal": {
-      "error": "Failed to open billing portal"
+      "error": "Impossibile aprire il portale di fatturazione"
     }
   },
   "payment": {
-    "preparing": "Preparing your checkout...",
-    "upgradeTitle": "Upgrade to {{planName}}",
-    "success": "Payment Successful!",
-    "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
-    "autoClose": "This window will close automatically...",
-    "error": "Payment Error"
+    "preparing": "Preparazione del checkout...",
+    "upgradeTitle": "Aggiorna a {{planName}}",
+    "success": "Pagamento riuscito!",
+    "successMessage": "Il tuo abbonamento è stato attivato con successo. Riceverai a breve un'email di conferma.",
+    "autoClose": "Questa finestra si chiuderà automaticamente...",
+    "error": "Errore di pagamento"
   },
   "firstLogin": {
-    "title": "First Time Login",
-    "welcomeTitle": "Welcome!",
-    "welcomeMessage": "For security reasons, you must change your password on your first login.",
-    "loggedInAs": "Logged in as",
-    "error": "Error",
-    "currentPassword": "Current Password",
-    "enterCurrentPassword": "Enter your current password",
-    "newPassword": "New Password",
-    "enterNewPassword": "Enter new password (min 8 characters)",
-    "confirmPassword": "Confirm New Password",
-    "reEnterNewPassword": "Re-enter new password",
-    "changePassword": "Change Password",
-    "allFieldsRequired": "All fields are required",
-    "passwordsDoNotMatch": "New passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters",
-    "passwordMustBeDifferent": "New password must be different from current password",
-    "passwordChangedSuccess": "Password changed successfully! Please log in again.",
-    "passwordChangeFailed": "Failed to change password. Please check your current password."
+    "title": "Primo accesso",
+    "welcomeTitle": "Benvenuto!",
+    "welcomeMessage": "Per motivi di sicurezza, devi cambiare la password al primo accesso.",
+    "loggedInAs": "Accesso effettuato come",
+    "error": "Errore",
+    "currentPassword": "Password attuale",
+    "enterCurrentPassword": "Inserisci la password attuale",
+    "newPassword": "Nuova password",
+    "enterNewPassword": "Inserisci la nuova password (min 8 caratteri)",
+    "confirmPassword": "Conferma nuova password",
+    "reEnterNewPassword": "Reinserisci la nuova password",
+    "changePassword": "Cambia password",
+    "allFieldsRequired": "Tutti i campi sono obbligatori",
+    "passwordsDoNotMatch": "Le nuove password non coincidono",
+    "passwordTooShort": "La password deve essere di almeno 8 caratteri",
+    "passwordMustBeDifferent": "La nuova password deve essere diversa da quella attuale",
+    "passwordChangedSuccess": "Password cambiata con successo! Effettua di nuovo l'accesso.",
+    "passwordChangeFailed": "Impossibile cambiare la password. Controlla la password attuale."
   },
   "invite": {
-    "welcome": "Welcome to Stirling PDF",
-    "invalidToken": "Invalid invitation link",
-    "validationError": "Failed to validate invitation link",
-    "passwordRequired": "Password is required",
-    "passwordTooShort": "Password must be at least 6 characters",
-    "passwordMismatch": "Passwords do not match",
-    "acceptError": "Failed to create account",
-    "validating": "Validating invitation...",
-    "invalidInvitation": "Invalid Invitation",
-    "goToLogin": "Go to Login",
-    "welcomeTitle": "You've been invited!",
-    "welcomeSubtitle": "Complete your account setup to get started",
-    "accountFor": "Creating account for",
-    "linkExpires": "Link expires",
-    "email": "Email address",
-    "emailPlaceholder": "Enter your email address",
-    "emailRequired": "Email address is required",
-    "invalidEmail": "Invalid email address",
-    "choosePassword": "Choose a password",
-    "passwordPlaceholder": "Enter your password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Re-enter your password",
-    "createAccount": "Create Account",
-    "creating": "Creating Account...",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "welcome": "Benvenuto in Stirling PDF",
+    "invalidToken": "Link di invito non valido",
+    "validationError": "Impossibile convalidare il link di invito",
+    "passwordRequired": "La password è obbligatoria",
+    "passwordTooShort": "La password deve essere di almeno 6 caratteri",
+    "passwordMismatch": "Le password non coincidono",
+    "acceptError": "Impossibile creare l'account",
+    "validating": "Convalida dell'invito...",
+    "invalidInvitation": "Invito non valido",
+    "goToLogin": "Vai al login",
+    "welcomeTitle": "Sei stato invitato!",
+    "welcomeSubtitle": "Completa la configurazione dell'account per iniziare",
+    "accountFor": "Creazione account per",
+    "linkExpires": "Il link scade",
+    "email": "Indirizzo email",
+    "emailPlaceholder": "Inserisci il tuo indirizzo email",
+    "emailRequired": "L'indirizzo email è obbligatorio",
+    "invalidEmail": "Indirizzo email non valido",
+    "choosePassword": "Scegli una password",
+    "passwordPlaceholder": "Inserisci la tua password",
+    "confirmPassword": "Conferma password",
+    "confirmPasswordPlaceholder": "Reinserisci la tua password",
+    "createAccount": "Crea account",
+    "creating": "Creazione dell'account...",
+    "alreadyHaveAccount": "Hai già un account?",
+    "signIn": "Accedi"
   },
   "audit": {
     "error": {
-      "title": "Error loading audit system"
+      "title": "Errore nel caricamento del sistema di audit"
     },
-    "notAvailable": "Audit system not available",
-    "notAvailableMessage": "The audit system is not configured or not available.",
-    "disabled": "Audit logging is disabled",
-    "disabledMessage": "Enable audit logging in your application configuration to track system events.",
+    "notAvailable": "Sistema di audit non disponibile",
+    "notAvailableMessage": "Il sistema di audit non è configurato o non è disponibile.",
+    "disabled": "La registrazione dell'audit è disattivata",
+    "disabledMessage": "Abilita la registrazione dell'audit nella configurazione dell'applicazione per tracciare gli eventi di sistema.",
     "systemStatus": {
-      "title": "System Status",
-      "status": "Audit Logging",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "level": "Audit Level",
-      "retention": "Retention Period",
-      "days": "days",
-      "totalEvents": "Total Events"
+      "title": "Stato del sistema",
+      "status": "Registrazione dell'audit",
+      "enabled": "Abilitato",
+      "disabled": "Disabilitato",
+      "level": "Livello di audit",
+      "retention": "Periodo di conservazione",
+      "days": "giorni",
+      "totalEvents": "Eventi totali"
     },
     "tabs": {
       "dashboard": "Dashboard",
-      "events": "Audit Events",
-      "export": "Export"
+      "events": "Eventi di audit",
+      "export": "Esporta"
     },
     "charts": {
-      "title": "Audit Dashboard",
-      "error": "Error loading charts",
-      "day": "Day",
-      "week": "Week",
-      "month": "Month",
-      "byType": "Events by Type",
-      "byUser": "Events by User",
-      "overTime": "Events Over Time"
+      "title": "Dashboard di audit",
+      "error": "Errore nel caricamento dei grafici",
+      "day": "Giorno",
+      "week": "Settimana",
+      "month": "Mese",
+      "byType": "Eventi per tipo",
+      "byUser": "Eventi per utente",
+      "overTime": "Eventi nel tempo"
     },
     "events": {
-      "title": "Audit Events",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "error": "Error loading events",
-      "noEvents": "No events found",
+      "title": "Eventi di audit",
+      "filterByType": "Filtra per tipo",
+      "filterByUser": "Filtra per utente",
+      "startDate": "Data di inizio",
+      "endDate": "Data di fine",
+      "clearFilters": "Azzera",
+      "error": "Errore nel caricamento degli eventi",
+      "noEvents": "Nessun evento trovato",
       "timestamp": "Timestamp",
-      "type": "Type",
-      "user": "User",
-      "ipAddress": "IP Address",
-      "actions": "Actions",
-      "viewDetails": "View Details",
-      "eventDetails": "Event Details",
-      "details": "Details"
+      "type": "Tipo",
+      "user": "Utente",
+      "ipAddress": "Indirizzo IP",
+      "actions": "Azioni",
+      "viewDetails": "Visualizza dettagli",
+      "eventDetails": "Dettagli evento",
+      "details": "Dettagli"
     },
     "export": {
-      "title": "Export Audit Data",
-      "description": "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
-      "format": "Export Format",
-      "filters": "Filters (Optional)",
-      "filterByType": "Filter by type",
-      "filterByUser": "Filter by user",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "clearFilters": "Clear",
-      "exportButton": "Export Data",
-      "error": "Failed to export data"
+      "title": "Esporta dati di audit",
+      "description": "Esporta gli eventi di audit in formato CSV o JSON. Usa i filtri per limitare i dati esportati.",
+      "format": "Formato di esportazione",
+      "filters": "Filtri (opzionale)",
+      "filterByType": "Filtra per tipo",
+      "filterByUser": "Filtra per utente",
+      "startDate": "Data di inizio",
+      "endDate": "Data di fine",
+      "clearFilters": "Azzera",
+      "exportButton": "Esporta dati",
+      "error": "Impossibile esportare i dati"
     }
   },
   "usage": {
-    "noData": "No data available",
-    "error": "Error loading usage statistics",
-    "noDataMessage": "No usage statistics are currently available.",
+    "noData": "Nessun dato disponibile",
+    "error": "Errore nel caricamento delle statistiche di utilizzo",
+    "noDataMessage": "Nessuna statistica di utilizzo attualmente disponibile.",
     "controls": {
       "top10": "Top 10",
       "top20": "Top 20",
-      "all": "All",
-      "refresh": "Refresh",
-      "dataTypeLabel": "Data Type:",
+      "all": "Tutti",
+      "refresh": "Aggiorna",
+      "dataTypeLabel": "Tipo di dati:",
       "dataType": {
-        "all": "All",
+        "all": "Tutti",
         "api": "API",
         "ui": "UI"
       }
@@ -5122,31 +5262,30 @@
     "showing": {
       "top10": "Top 10",
       "top20": "Top 20",
-      "all": "All"
+      "all": "Tutti"
     },
     "stats": {
-      "totalEndpoints": "Total Endpoints",
-      "totalVisits": "Total Visits",
-      "showing": "Showing",
-      "selectedVisits": "Selected Visits"
+      "totalEndpoints": "Endpoint totali",
+      "totalVisits": "Visite totali",
+      "showing": "Mostrando",
+      "selectedVisits": "Visite selezionate"
     },
     "chart": {
-      "title": "Endpoint Usage Chart"
+      "title": "Grafico utilizzo endpoint"
     },
     "table": {
-      "title": "Detailed Statistics",
+      "title": "Statistiche dettagliate",
       "endpoint": "Endpoint",
-      "visits": "Visits",
-      "percentage": "Percentage",
-      "noData": "No data available"
+      "visits": "Visite",
+      "percentage": "Percentuale",
+      "noData": "Nessun dato disponibile"
     }
   },
   "backendHealth": {
-    "checking": "Checking backend status...",
-    "online": "Backend Online",
-    "offline": "Backend Offline"
-  },
-  "replaceColorPdf": {
-    "tags": "Sostituisci colore, Operazioni di pagina, Back-end, lato server"
+    "checking": "Verifica dello stato del backend...",
+    "online": "Backend online",
+    "offline": "Backend offline",
+    "starting": "Backend in avvio...",
+    "wait": "Attendi che il backend completi l'avvio e riprova."
   }
 }

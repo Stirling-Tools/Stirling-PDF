@@ -1,45 +1,46 @@
 import { useState, useEffect } from 'react';
 import { fileOpenService } from '@app/services/fileOpenService';
+import { listen } from '@tauri-apps/api/event';
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkForOpenedFile = async () => {
-      console.log('🔍 Checking for opened file(s)...');
+    // Function to read and process files from storage
+    const readFilesFromStorage = async () => {
+      console.log('🔍 Reading files from storage...');
       try {
         const filePaths = await fileOpenService.getOpenedFiles();
         console.log('🔍 fileOpenService.getOpenedFiles() returned:', filePaths);
 
         if (filePaths.length > 0) {
-          console.log(`✅ App opened with ${filePaths.length} file(s):`, filePaths);
+          console.log(`✅ Found ${filePaths.length} file(s) in storage:`, filePaths);
           setOpenedFilePaths(filePaths);
-
-          // Clear the files from service state after consuming them
           await fileOpenService.clearOpenedFiles();
-        } else {
-          console.log('ℹ️ No files were opened with the app');
         }
-
       } catch (error) {
-        console.error('❌ Failed to check for opened files:', error);
+        console.error('❌ Failed to read files from storage:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkForOpenedFile();
+    // Read files on mount
+    readFilesFromStorage();
 
-    // Listen for runtime file open events (abstracted through service)
-    const unlistenRuntimeEvents = fileOpenService.onFileOpened((filePath: string) => {
-      console.log('📂 Runtime file open event:', filePath);
-      setOpenedFilePaths(prev => [...prev, filePath]);
+    // Listen for files-changed events (when new files are added to storage)
+    let unlisten: (() => void) | undefined;
+    listen('files-changed', async () => {
+      console.log('📂 files-changed event received, re-reading storage...');
+      await readFilesFromStorage();
+    }).then(unlistenFn => {
+      unlisten = unlistenFn;
     });
 
     // Cleanup function
     return () => {
-      unlistenRuntimeEvents();
+      if (unlisten) unlisten();
     };
   }, []);
 

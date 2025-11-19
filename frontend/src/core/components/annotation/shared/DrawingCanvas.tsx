@@ -206,6 +206,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (!initialSignatureData) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setSavedSignatureData(null);
+
       return;
     }
 

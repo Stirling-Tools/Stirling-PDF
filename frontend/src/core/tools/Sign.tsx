@@ -130,6 +130,9 @@ const Sign = (props: BaseToolProps) => {
 
         if (hasSignatureReady) {
           if (typeof window !== 'undefined') {
+            // TODO: Ideally, we should trigger handleActivateSignaturePlacement when the viewer is ready.
+            // However, due to current architectural constraints, we use a 150ms delay to allow the viewer to reload.
+            // This value was empirically determined to be sufficient for most environments, but should be revisited.
             window.setTimeout(() => {
               handleActivateSignaturePlacement();
             }, 150);

@@ -35,20 +35,20 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
 
   const iconNode = (
     <span className="iconContainer">
-      <AppsIcon sx={{ fontSize: '2rem' }} />
+      <AppsIcon sx={{ fontSize: isActive ? '1.875rem' : '1.5rem' }} />
     </span>
   );
 
   return (
-    <Tooltip content={t("quickAccess.allTools", "All Tools")} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
+    <Tooltip content={t("quickAccess.allTools", "Tools")} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
       <div className="flex flex-col items-center gap-1 mt-4 mb-2">
         <ActionIcon
           component="a"
           href={navProps.href}
           onClick={handleNavClick}
-          size={'lg'}
+          size={isActive ? 'lg' : 'md'}
           variant="subtle"
-          aria-label={t("quickAccess.allTools", "All Tools")}
+          aria-label={t("quickAccess.allTools", "Tools")}
           style={{
             backgroundColor: isActive ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
             color: isActive ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',
@@ -61,7 +61,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
           {iconNode}
         </ActionIcon>
         <span className={`all-tools-text ${isActive ? 'active' : 'inactive'}`}>
-          {t("quickAccess.allTools", "All Tools")}
+          {t("quickAccess.allTools", "Tools")}
         </span>
       </div>
     </Tooltip>
