@@ -358,13 +358,30 @@ jobs:
           foreach ($file in $filesToSign) {
             Write-Host "Signing: $($file.Name)"
 
-            # Use smctl to sign with keypair alias
-            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" 2>&1
+            # Use smctl to sign with keypair alias (verbose mode)
+            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --verbose 2>&1
             $exitCode = $LASTEXITCODE
 
             Write-Host "Exit code: $exitCode"
             Write-Host "Output: $output"
-            Write-Host ""
+
+            # Check if output contains "FAILED" even with exit code 0
+            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
+              Write-Host ""
+              Write-Host "[ERROR] Signing failed for $($file.Name)"
+              Write-Host "[ERROR] smctl returned success but output indicates failure"
+              Write-Host ""
+              Write-Host "Possible issues:"
+              Write-Host "  1. Certificate not fully synced to KeyLocker (wait a few minutes)"
+              Write-Host "  2. Incorrect keypair alias"
+              Write-Host "  3. API key lacks signing permissions"
+              Write-Host ""
+              Write-Host "Please verify in DigiCert ONE portal:"
+              Write-Host "  - Certificate status is 'Issued' (not Pending)"
+              Write-Host "  - Keypair status is 'Online'"
+              Write-Host "  - 'Can sign' is set to 'Yes'"
+              exit 1
+            }
 
             if ($exitCode -ne 0) {
               Write-Host "[ERROR] Failed to sign $($file.Name)"
@@ -375,6 +392,7 @@ jobs:
 
             $signedCount++
             Write-Host "[SUCCESS] Signed: $($file.Name)"
+            Write-Host ""
           }
 
           Write-Host "=== Summary ==="
