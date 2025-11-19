@@ -83,7 +83,8 @@ public class AdminLicenseController {
             @RequestBody Map<String, String> request) {
         String licenseKey = request.get("licenseKey");
 
-        if (licenseKey == null || licenseKey.trim().isEmpty()) {
+        // Reject null but allow empty string to clear license
+        if (licenseKey == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "error", "License key is required"));
         }
@@ -97,6 +98,7 @@ public class AdminLicenseController {
             applicationProperties.getPremium().setEnabled(true);
 
             // Use existing LicenseKeyChecker to update and validate license
+            // Empty string will be evaluated as NORMAL license (free tier)
             licenseKeyChecker.updateLicenseKey(licenseKey.trim());
 
             // Get current license status
@@ -106,6 +108,12 @@ public class AdminLicenseController {
             if (license != License.NORMAL) {
                 GeneralUtils.saveKeyToSettings("premium.enabled", true);
                 // Enable premium features
+
+                // Save maxUsers from license metadata
+                Integer maxUsers = applicationProperties.getPremium().getMaxUsers();
+                if (maxUsers != null) {
+                    GeneralUtils.saveKeyToSettings("premium.maxUsers", maxUsers);
+                }
             } else {
                 GeneralUtils.saveKeyToSettings("premium.enabled", false);
                 log.info("License key is not valid for premium features: type={}", license.name());
