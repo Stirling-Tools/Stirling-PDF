@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { Paper, Button, Modal, Stack, Text, Popover, ColorPicker as MantineColorPicker } from '@mantine/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { Paper, Button, Modal, Stack, Text, Group } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
 import PenSizeSelector from '@app/components/tools/sign/PenSizeSelector';
 import SignaturePad from 'signature_pad';
@@ -20,6 +21,7 @@ interface DrawingCanvasProps {
   modalWidth?: number;
   modalHeight?: number;
   additionalButtons?: React.ReactNode;
+  initialSignatureData?: string;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
@@ -34,12 +36,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   disabled = false,
   width = 400,
   height = 150,
+  initialSignatureData,
 }) => {
+  const { t } = useTranslation();
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePad | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(null);
 
   const initPad = (canvas: HTMLCanvasElement) => {
     if (!padRef.current) {
@@ -55,6 +59,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         minDistance: 5,
         velocityFilterWeight: 0.7,
       });
+
+      // Restore saved signature data if it exists
+      if (savedSignatureData) {
+        const img = new Image();
+        img.onload = () => {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+        };
+        img.src = savedSignatureData;
+      }
     }
   };
 
@@ -104,36 +120,35 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     return trimmedCanvas.toDataURL('image/png');
   };
 
+  const renderPreview = (dataUrl: string) => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
+
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    };
+    img.src = dataUrl;
+  };
+
   const closeModal = () => {
     if (padRef.current && !padRef.current.isEmpty()) {
       const canvas = modalCanvasRef.current;
       if (canvas) {
         const trimmedPng = trimCanvas(canvas);
+        const untrimmedPng = canvas.toDataURL('image/png');
+        setSavedSignatureData(untrimmedPng); // Save untrimmed for restoration
         onSignatureDataChange(trimmedPng);
-
-        // Update preview canvas with proper aspect ratio
-        const img = new Image();
-        img.onload = () => {
-          if (previewCanvasRef.current) {
-            const ctx = previewCanvasRef.current.getContext('2d');
-            if (ctx) {
-              ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
-
-              // Calculate scaling to fit within preview canvas while maintaining aspect ratio
-              const scale = Math.min(
-                previewCanvasRef.current.width / img.width,
-                previewCanvasRef.current.height / img.height
-              );
-              const scaledWidth = img.width * scale;
-              const scaledHeight = img.height * scale;
-              const x = (previewCanvasRef.current.width - scaledWidth) / 2;
-              const y = (previewCanvasRef.current.height - scaledHeight) / 2;
-
-              ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-            }
-          }
-        };
-        img.src = trimmedPng;
+        renderPreview(trimmedPng);
 
         if (onDrawingComplete) {
           onDrawingComplete();
@@ -157,6 +172,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
       }
     }
+    setSavedSignatureData(null); // Clear saved signature
     onSignatureDataChange(null);
   };
 
@@ -173,67 +189,70 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     }
   };
 
+  useEffect(() => {
+    updatePenColor(selectedColor);
+  }, [selectedColor]);
+
+  useEffect(() => {
+    updatePenSize(penSize);
+  }, [penSize]);
+
+  useEffect(() => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (!initialSignatureData) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    renderPreview(initialSignatureData);
+  }, [initialSignatureData]);
+
   return (
     <>
       <Paper withBorder p="md">
         <Stack gap="sm">
-          <Text fw={500}>Draw your signature</Text>
           <PrivateContent>
-            <canvas
-              ref={previewCanvasRef}
-              width={width}
-              height={height}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                cursor: disabled ? 'default' : 'pointer',
-                backgroundColor: '#ffffff',
-                width: '100%',
-              }}
-              onClick={disabled ? undefined : openModal}
-            />
+          <Text fw={500}>{t('sign.canvas.heading', 'Draw your signature')}</Text>
+          <canvas
+            ref={previewCanvasRef}
+            width={width}
+            height={height}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              cursor: disabled ? 'default' : 'pointer',
+              backgroundColor: '#ffffff',
+              width: '100%',
+            }}
+            onClick={disabled ? undefined : openModal}
+          />
           </PrivateContent>
           <Text size="sm" c="dimmed" ta="center">
-            Click to open drawing canvas
+            {t('sign.canvas.clickToOpen', 'Click to open the drawing canvas')}
           </Text>
         </Stack>
       </Paper>
 
-      <Modal opened={modalOpen} onClose={closeModal} title="Draw Your Signature" size="auto" centered>
+      <Modal opened={modalOpen} onClose={closeModal} title={t('sign.canvas.modalTitle', 'Draw your signature')} size="auto" centered>
         <Stack gap="md">
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
-            <div>
-              <Text size="sm" fw={500} mb="xs">Color</Text>
-              <Popover
-                opened={colorPickerOpen}
-                onChange={setColorPickerOpen}
-                position="bottom-start"
-                withArrow
-                withinPortal={false}
-              >
-                <Popover.Target>
-                  <div>
-                    <ColorSwatchButton
-                      color={selectedColor}
-                      onClick={() => setColorPickerOpen(!colorPickerOpen)}
-                    />
-                  </div>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <MantineColorPicker
-                    format="hex"
-                    value={selectedColor}
-                    onChange={(color) => {
-                      onColorSwatchClick();
-                      updatePenColor(color);
-                    }}
-                    swatches={['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc']}
-                  />
-                </Popover.Dropdown>
-              </Popover>
-            </div>
-            <div>
-              <Text size="sm" fw={500} mb="xs">Pen Size</Text>
+          <Group gap="lg" align="flex-end" wrap="wrap">
+            <Stack gap={4} style={{ minWidth: 120 }}>
+              <Text size="sm" fw={500}>
+                {t('sign.canvas.colorLabel', 'Colour')}
+              </Text>
+              <ColorSwatchButton
+                color={selectedColor}
+                onClick={onColorSwatchClick}
+              />
+            </Stack>
+            <Stack gap={4} style={{ minWidth: 120 }}>
+              <Text size="sm" fw={500}>
+                {t('sign.canvas.penSizeLabel', 'Pen size')}
+              </Text>
               <PenSizeSelector
                 value={penSize}
                 inputValue={penSizeInput}
@@ -242,12 +261,12 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                   updatePenSize(size);
                 }}
                 onInputChange={onPenSizeInputChange}
-                placeholder="Size"
+                placeholder={t('sign.canvas.penSizePlaceholder', 'Size')}
                 size="compact-sm"
-                style={{ width: '60px' }}
+                style={{ width: '80px' }}
               />
-            </div>
-          </div>
+            </Stack>
+          </Group>
 
           <PrivateContent>
             <canvas
@@ -263,7 +282,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 backgroundColor: 'white',
                 width: '100%',
                 maxWidth: '800px',
-                height: '400px',
+                height: '25rem',
                 cursor: 'crosshair',
               }}
             />
@@ -271,10 +290,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button variant="subtle" color="red" onClick={clear}>
-              Clear Canvas
+              {t('sign.canvas.clear', 'Clear canvas')}
             </Button>
             <Button onClick={closeModal}>
-              Done
+              {t('common.done', 'Done')}
             </Button>
           </div>
         </Stack>
