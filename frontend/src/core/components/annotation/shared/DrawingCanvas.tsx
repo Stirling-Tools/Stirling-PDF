@@ -205,10 +205,13 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     if (!initialSignatureData) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setSavedSignatureData(null);
+
       return;
     }
 
     renderPreview(initialSignatureData);
+    setSavedSignatureData(initialSignatureData);
   }, [initialSignatureData]);
 
   return (
@@ -281,7 +284,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 touchAction: 'none',
                 backgroundColor: 'white',
                 width: '100%',
-                maxWidth: '800px',
+                maxWidth: '50rem',
                 height: '25rem',
                 cursor: 'crosshair',
               }}
