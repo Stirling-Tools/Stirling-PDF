@@ -4240,9 +4240,21 @@
         "title": "Premium & Enterprise",
         "description": "Configure your premium or enterprise license key.",
         "license": "License Configuration",
+        "licenseKey": {
+          "toggle": "Got a license key or certificate file?",
+          "info": "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
+        },
         "key": {
           "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "description": "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
+          "success": "License Key Saved",
+          "successMessage": "Your license key has been activated successfully. No restart required.",
+          "overwriteWarning": {
+            "title": "⚠️ Warning: Existing License Detected",
+            "line1": "Overwriting your current license key cannot be undone.",
+            "line2": "Your previous license will be permanently lost unless you have backed it up elsewhere.",
+            "line3": "Important: Keep license keys private and secure. Never share them publicly."
+          }
         },
         "enabled": {
           "label": "Enable Premium Features",
@@ -4667,7 +4679,8 @@
     "used": "used",
     "available": "available",
     "cancel": "Cancel",
-    "preview": "Preview"
+    "preview": "Preview",
+    "close": "Close"
   },
   "config": {
     "overview": {
@@ -5085,6 +5098,14 @@
     "showComparison": "Compare All Features",
     "hideComparison": "Hide Feature Comparison",
     "featureComparison": "Feature Comparison",
+    "from": "From",
+    "perMonth": "/month",
+    "licensedSeats": "Licensed: {{count}} seats",
+    "includedInCurrent": "Included in Your Plan",
+    "selectPlan": "Select Plan",
+    "manageSubscription": {
+      "description": "Manage your subscription, billing, and payment methods"
+    },
     "activePlan": {
       "title": "Active Plan",
       "subtitle": "Your current subscription details"
@@ -5102,13 +5123,16 @@
       "upTo": "Up to"
     },
     "period": {
-      "month": "month"
+      "month": "month",
+      "perUserPerMonth": "/user/month"
     },
     "free": {
       "name": "Free",
       "highlight1": "Limited Tool Usage Per week",
       "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "highlight3": "Community support",
+      "forever": "Forever free",
+      "included": "Included"
     },
     "pro": {
       "name": "Pro",
@@ -5149,6 +5173,12 @@
     "portal": {
       "error": "Failed to open billing portal"
     }
+  },
+  "upgradeBanner": {
+    "title": "Upgrade to Server Plan",
+    "message": "Get the most out of Stirling PDF with unlimited users and advanced features",
+    "upgradeButton": "Upgrade Now",
+    "dismiss": "Dismiss banner"
   },
   "payment": {
     "preparing": "Preparing your checkout...",
