@@ -67,6 +67,9 @@ dependencies {
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
+    // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
+    implementation 'com.microsoft.playwright:playwright:1.56.0'
+
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
@@ -158,5 +161,15 @@ springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
 }
 
+tasks.register('playwright', JavaExec) {
+    group = 'build'
+    description = 'Installs Playwright Chrome-headless-shell'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.microsoft.playwright.CLI'
+    args = ['install', 'chromium', '--only-shell']
+}
+
+
 bootJar.dependsOn ':common:jar'
 bootJar.dependsOn ':proprietary:jar'
+bootJar.dependsOn 'playwright'
