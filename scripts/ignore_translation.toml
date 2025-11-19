@@ -50,7 +50,6 @@ ignore = [
 
 [ca_CA]
 ignore = [
-    'adminUserSettings.admin',
     'lang.amh',
     'lang.ceb',
     'lang.chr',
@@ -408,8 +407,6 @@ ignore = [
     'endpointStatistics.top20',
     'home.pipeline.title',
     'language.direction',
-    'pipeline.title',
-    'pipelineOptions.pipelineHeader',
     'pro',
     'showJS.tags',
 ]
@@ -612,7 +609,6 @@ ignore = [
     'lang.urd',
     'lang.yor',
     'language.direction',
-    'oops',
     'sponsor',
 ]
 
@@ -788,7 +784,6 @@ ignore = [
     'lang.urd',
     'lang.uzb',
     'language.direction',
-    'navbar.sections.security',
     'text',
     'watermark.type.1',
 ]
@@ -838,7 +833,6 @@ ignore = [
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'font',
-    'info',
     'lang.div',
     'lang.epo',
     'lang.hin',
@@ -896,7 +890,6 @@ ignore = [
     'lang.tir',
     'lang.uzb_cyrl',
     'language.direction',
-    'pipelineOptions.pipelineHeader',
     'showJS.tags',
 ]
 
@@ -987,6 +980,5 @@ ignore = [
 [zh_TW]
 ignore = [
     'language.direction',
-    'poweredBy',
     'showJS.tags',
 ]
