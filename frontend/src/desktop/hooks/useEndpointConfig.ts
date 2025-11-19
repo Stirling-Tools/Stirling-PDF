@@ -244,8 +244,8 @@ const DEFAULT_BACKEND_URL =
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
- * - Offline mode: Uses local bundled backend (from env vars)
- * - Server mode: Uses configured server URL from connection config
+ * - SaaS mode: Uses local bundled backend (from env vars)
+ * - Self-hosted mode: Uses configured server URL from connection config
  */
 export function useEndpointConfig(): EndpointConfig {
   const [backendUrl, setBackendUrl] = useState<string>(DEFAULT_BACKEND_URL);
@@ -253,10 +253,10 @@ export function useEndpointConfig(): EndpointConfig {
   useEffect(() => {
     connectionModeService.getCurrentConfig()
       .then((config) => {
-        if (config.mode === 'server' && config.server_config?.url) {
+        if (config.mode === 'selfhosted' && config.server_config?.url) {
           setBackendUrl(config.server_config.url);
         } else {
-          // Offline mode - use default from env vars
+          // SaaS mode - use default from env vars (local backend)
           setBackendUrl(DEFAULT_BACKEND_URL);
         }
       })

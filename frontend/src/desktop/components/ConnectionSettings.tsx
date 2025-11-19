@@ -26,7 +26,7 @@ export const ConnectionSettings: React.FC = () => {
       const currentConfig = await connectionModeService.getCurrentConfig();
       setConfig(currentConfig);
 
-      if (currentConfig.mode === 'server') {
+      if (currentConfig.mode === 'saas' || currentConfig.mode === 'selfhosted') {
         const user = await authService.getUserInfo();
         setUserInfo(user);
       }
@@ -35,10 +35,10 @@ export const ConnectionSettings: React.FC = () => {
     loadConfig();
   }, []);
 
-  const handleSwitchToOffline = async () => {
+  const handleSwitchToSaaS = async () => {
     try {
       setLoading(true);
-      await connectionModeService.switchToOffline();
+      await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();
@@ -48,7 +48,7 @@ export const ConnectionSettings: React.FC = () => {
       // Reload the page to start the local backend
       window.location.reload();
     } catch (error) {
-      console.error('Failed to switch to offline:', error);
+      console.error('Failed to switch to SaaS:', error);
     } finally {
       setLoading(false);
     }
@@ -73,8 +73,8 @@ export const ConnectionSettings: React.FC = () => {
       // Login
       await authService.login(newServerConfig.url, username, password);
 
-      // Switch to server mode
-      await connectionModeService.switchToServer(newServerConfig);
+      // Switch to self-hosted mode
+      await connectionModeService.switchToSelfHosted(newServerConfig);
 
       // Reload config and user info
       const newConfig = await connectionModeService.getCurrentConfig();
@@ -100,8 +100,8 @@ export const ConnectionSettings: React.FC = () => {
       setLoading(true);
       await authService.logout();
 
-      // Switch to offline mode
-      await connectionModeService.switchToOffline();
+      // Switch to SaaS mode
+      await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();
@@ -127,14 +127,14 @@ export const ConnectionSettings: React.FC = () => {
         <Stack gap="md">
           <Group justify="space-between">
             <Text fw={600}>{t('settings.connection.title', 'Connection Mode')}</Text>
-            <Badge color={config.mode === 'offline' ? 'blue' : 'green'} variant="light">
-              {config.mode === 'offline'
-                ? t('settings.connection.mode.offline', 'Offline')
-                : t('settings.connection.mode.server', 'Server')}
+            <Badge color={config.mode === 'saas' ? 'blue' : 'green'} variant="light">
+              {config.mode === 'saas'
+                ? t('settings.connection.mode.saas', 'SaaS')
+                : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
             </Badge>
           </Group>
 
-          {config.mode === 'server' && config.server_config && (
+          {(config.mode === 'saas' || config.mode === 'selfhosted') && config.server_config && (
             <>
               <div>
                 <Text size="sm" fw={500}>
@@ -160,14 +160,14 @@ export const ConnectionSettings: React.FC = () => {
           )}
 
           <Group mt="md">
-            {config.mode === 'offline' ? (
+            {config.mode === 'saas' ? (
               <Button onClick={handleSwitchToServer} disabled={loading}>
-                {t('settings.connection.switchToServer', 'Connect to Server')}
+                {t('settings.connection.switchToSelfHosted', 'Switch to Self-Hosted')}
               </Button>
             ) : (
               <>
-                <Button onClick={handleSwitchToOffline} variant="default" disabled={loading}>
-                  {t('settings.connection.switchToOffline', 'Switch to Offline')}
+                <Button onClick={handleSwitchToSaaS} variant="default" disabled={loading}>
+                  {t('settings.connection.switchToSaaS', 'Switch to SaaS')}
                 </Button>
                 <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
                   {t('settings.connection.logout', 'Logout')}

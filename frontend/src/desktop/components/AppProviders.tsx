@@ -32,8 +32,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
-  // Only start bundled backend if in offline mode and setup is complete
-  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'offline';
+  // Only start bundled backend if in SaaS mode (local backend) and setup is complete
+  // Self-hosted mode connects to remote server so doesn't need local backend
+  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
   useBackendInitializer(shouldStartBackend);
 
   // Show setup wizard on first launch
@@ -51,8 +52,27 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <SetupWizard
-          onComplete={() => {
-            // Reload the page to reinitialize with new connection config
+          onComplete={async () => {
+            console.log('[AppProviders] Setup complete, waiting for backend to be healthy...');
+
+            // Wait for backend to become healthy before reloading
+            // This prevents reloading mid-startup which would interrupt the backend
+            const maxWaitTime = 60000; // 60 seconds max
+            const checkInterval = 1000; // Check every second
+            const startTime = Date.now();
+
+            while (Date.now() - startTime < maxWaitTime) {
+              if (tauriBackendService.isBackendHealthy()) {
+                console.log('[AppProviders] Backend is healthy, reloading page...');
+                window.location.reload();
+                return;
+              }
+              console.log('[AppProviders] Waiting for backend... status:', tauriBackendService.getBackendStatus());
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+            }
+
+            // If we timeout, reload anyway
+            console.warn('[AppProviders] Backend health check timeout, reloading anyway...');
             window.location.reload();
           }}
         />
