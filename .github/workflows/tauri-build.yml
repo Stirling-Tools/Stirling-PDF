@@ -308,34 +308,77 @@ jobs:
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         shell: pwsh
         run: |
-          Write-Host "🔏 Signing Windows binaries with DigiCert KeyLocker..."
+          Write-Host "=== DigiCert KeyLocker Signing ==="
 
-          # Find all EXE and MSI files
-          $exeFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.exe" -Recurse -File
+          # Test smctl connectivity first
+          Write-Host "Testing smctl connection..."
+          $healthCheck = & smctl healthcheck 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
+          } else {
+            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
+            Write-Host $healthCheck
+            exit 1
+          }
+          Write-Host ""
+
+          # List available certificates (count only, don't show details)
+          Write-Host "Checking for available certificates..."
+          $certList = & smctl keypair ls 2>&1
+          if ($certList -match "key_") {
+            Write-Host "[SUCCESS] Found certificates in KeyLocker"
+          } else {
+            Write-Host "[ERROR] No certificates found in KeyLocker"
+            Write-Host "Please verify certificate is issued and synced"
+            exit 1
+          }
+          Write-Host ""
+
+          # Find only the files we need to sign (not build scripts)
+          $filesToSign = @()
+
+          # Main application executable
+          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
+          if ($mainExe) { $filesToSign += $mainExe }
+
+          # MSI installer
           $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
-
-          $filesToSign = $exeFiles + $msiFiles
+          $filesToSign += $msiFiles
 
           if ($filesToSign.Count -eq 0) {
-            Write-Host "⚠️ No files found to sign"
+            Write-Host "[ERROR] No files found to sign"
             exit 1
           }
 
+          Write-Host "Found $($filesToSign.Count) files to sign:"
+          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
+          Write-Host ""
+
+          $signedCount = 0
           foreach ($file in $filesToSign) {
-            Write-Host "Signing: $($file.FullName)"
+            Write-Host "Signing: $($file.Name)"
 
             # Use smctl to sign with keypair alias
-            & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)"
+            $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" 2>&1
+            $exitCode = $LASTEXITCODE
 
-            if ($LASTEXITCODE -ne 0) {
-              Write-Host "❌ Failed to sign $($file.Name)"
+            Write-Host "Exit code: $exitCode"
+            Write-Host "Output: $output"
+            Write-Host ""
+
+            if ($exitCode -ne 0) {
+              Write-Host "[ERROR] Failed to sign $($file.Name)"
+              Write-Host "Full error output:"
+              Write-Host $output
               exit 1
             }
 
-            Write-Host "✅ Successfully signed: $($file.Name)"
+            $signedCount++
+            Write-Host "[SUCCESS] Signed: $($file.Name)"
           }
 
-          Write-Host "✅ All files signed successfully with DigiCert KeyLocker"
+          Write-Host "=== Summary ==="
+          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
 
       - name: Rename artifacts
         shell: bash
@@ -358,16 +401,16 @@ jobs:
 
       - name: Verify Windows Code Signature
         if: matrix.platform == 'windows-latest'
-        shell: powershell
+        shell: pwsh
         run: |
-          Write-Host "🔍 Verifying Windows code signatures..."
+          Write-Host "Verifying Windows code signatures..."
 
           $exePath = "./dist/Stirling-PDF-${{ matrix.name }}.exe"
           $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
 
           $allSigned = $true
-          $usingKeyLocker = "${{ secrets.SM_API_KEY }}" -ne ""
-          $usingPfx = "${{ secrets.WINDOWS_CERTIFICATE }}" -ne ""
+          $usingKeyLocker = "${{ env.SM_API_KEY }}" -ne ""
+          $usingPfx = "${{ env.WINDOWS_CERTIFICATE }}" -ne ""
 
           # Check EXE signature
           if (Test-Path $exePath) {
@@ -377,15 +420,15 @@ jobs:
             Write-Host "EXE Timestamp: $($exeSig.TimeStamperCertificate.NotAfter)"
 
             if ($exeSig.Status -ne "Valid") {
-              Write-Host "⚠️ EXE is not properly signed (Status: $($exeSig.Status))"
+              Write-Host "[WARNING] EXE is not properly signed (Status: $($exeSig.Status))"
               if ($usingKeyLocker -or $usingPfx) {
-                Write-Host "❌ Certificate was provided but signing failed"
+                Write-Host "[ERROR] Certificate was provided but signing failed"
                 $allSigned = $false
               } else {
-                Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
+                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
               }
             } else {
-              Write-Host "✅ EXE is properly signed"
+              Write-Host "[SUCCESS] EXE is properly signed"
             }
           }
 
@@ -397,23 +440,23 @@ jobs:
             Write-Host "MSI Timestamp: $($msiSig.TimeStamperCertificate.NotAfter)"
 
             if ($msiSig.Status -ne "Valid") {
-              Write-Host "⚠️ MSI is not properly signed (Status: $($msiSig.Status))"
+              Write-Host "[WARNING] MSI is not properly signed (Status: $($msiSig.Status))"
               if ($usingKeyLocker -or $usingPfx) {
-                Write-Host "❌ Certificate was provided but signing failed"
+                Write-Host "[ERROR] Certificate was provided but signing failed"
                 $allSigned = $false
               } else {
-                Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
+                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
               }
             } else {
-              Write-Host "✅ MSI is properly signed"
+              Write-Host "[SUCCESS] MSI is properly signed"
             }
           }
 
           if (($usingKeyLocker -or $usingPfx) -and -not $allSigned) {
-            Write-Host "❌ Code signing verification failed"
+            Write-Host "[ERROR] Code signing verification failed"
             exit 1
           } else {
-            Write-Host "✅ Code signature verification completed"
+            Write-Host "[SUCCESS] Code signature verification completed"
           }
 
       - name: Upload artifacts
