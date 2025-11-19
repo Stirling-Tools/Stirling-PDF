@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
   xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{PDFToJSON.title}, header=#{PDFToJSON.header})}"></th:block>
-</head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfTojson.title}, header=#{pdfTojson.header})}"></th:block>
+  </head>
 
 <body>
   <th:block th:insert="~{fragments/common :: game}"></th:block>
@@ -16,27 +16,16 @@
         <div class="row justify-content-center">
           <div class="col-md-6 bg-card">
             <div class="tool-header">
-              <span class="material-symbols-rounded tool-header-icon convert">code</span>
-              <span class="tool-header-text" th:text="#{PDFToJSON.header}">PDF to JSON</span>
+              <span class="material-symbols-rounded tool-header-icon convert">data_object</span>
+              <span class="tool-header-text" th:text="#{pdfTojson.header}"></span>
             </div>
-
-            <form enctype="multipart/form-data" id="pdfToJSONForm" method="post"
-              th:action="@{'/api/v1/convert/pdf/json'}">
-              
+            <p th:text="#{processTimeWarning}"></p>
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/json'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.pdf', inputText=#{PDFToJSON.selectText})}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
 
-              <!-- (Facultatif) Options supplémentaires -->
-              <!--
-              <div class="mb-3">
-                <label class="form-label" for="option" th:text="#{PDFToJSON.optionLabel}">Option:</label>
-                <input class="form-control" id="option" name="option" type="text">
-              </div>
-              -->
-
-              <br>
-              <button class="btn btn-primary" id="submitBtn" th:text="#{PDFToJSON.submit}" type="submit">Convert to JSON</button>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfTojson.submit}"></button>
             </form>
           </div>
         </div>
@@ -44,6 +33,7 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
+
 </body>
 
 </html>

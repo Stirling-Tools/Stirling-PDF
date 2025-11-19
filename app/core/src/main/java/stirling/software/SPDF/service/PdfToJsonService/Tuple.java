@@ -1,6 +1,6 @@
 package stirling.software.SPDF.service.PdfToJsonService;
 
-public  class Tuple<A, B> {
+public class Tuple<A, B> {
     public final A first;
     public final B second;
 

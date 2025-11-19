@@ -1,12 +1,13 @@
 package stirling.software.SPDF.service.PdfToJsonService;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.pdfbox.text.TextPosition;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 
 public class PDFProcessor {
 
@@ -29,37 +30,51 @@ public class PDFProcessor {
         return new Tuple<>("", element);
     }
 
-    public static Map<String, Object> fonts(PDDocument doc, boolean granularity) throws IOException {
+    public static Map<String, Object> fonts(PDDocument doc, boolean granularity)
+            throws IOException {
         Map<String, FontStyle> styles = new HashMap<>();
         Map<String, Integer> fontCounts = new HashMap<>();
 
-        PDFTextStripper stripper = new PDFTextStripper() {
-            @Override
-            protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
-                for (TextPosition position : textPositions) {
-                    String fontName = position.getFont().getName();
-                    float fontSize = position.getFontSizeInPt();
+        PDFTextStripper stripper =
+                new PDFTextStripper() {
+                    @Override
+                    protected void writeString(String text, List<TextPosition> textPositions)
+                            throws IOException {
+                        for (TextPosition position : textPositions) {
+                            String fontName = position.getFont().getName();
+                            float fontSize = position.getFontSizeInPt();
 
-                    // Extract style information from font name
-                    String fontNameLower = fontName.toLowerCase();
-                    boolean isBold = fontNameLower.contains("bold") || fontNameLower.contains("black") || fontNameLower.contains("heavy");
-                    boolean isItalic = fontNameLower.contains("italic") || fontNameLower.contains("oblique");
+                            // Extract style information from font name
+                            String fontNameLower = fontName.toLowerCase();
+                            boolean isBold =
+                                    fontNameLower.contains("bold")
+                                            || fontNameLower.contains("black")
+                                            || fontNameLower.contains("heavy");
+                            boolean isItalic =
+                                    fontNameLower.contains("italic")
+                                            || fontNameLower.contains("oblique");
 
-                    String identifier;
-                    if (granularity) {
-                        identifier = String.format("%.2f_%s_%s%s", fontSize, fontName,
-                                isBold ? "bold" : "normal",
-                                isItalic ? "italic" : "");
-                        styles.put(identifier, new FontStyle(fontSize, fontName, isBold, isItalic));
-                    } else {
-                        identifier = String.format("%.2f", fontSize);
-                        styles.put(identifier, new FontStyle(fontSize, fontName));
+                            String identifier;
+                            if (granularity) {
+                                identifier =
+                                        String.format(
+                                                "%.2f_%s_%s%s",
+                                                fontSize,
+                                                fontName,
+                                                isBold ? "bold" : "normal",
+                                                isItalic ? "italic" : "");
+                                styles.put(
+                                        identifier,
+                                        new FontStyle(fontSize, fontName, isBold, isItalic));
+                            } else {
+                                identifier = String.format("%.2f", fontSize);
+                                styles.put(identifier, new FontStyle(fontSize, fontName));
+                            }
+
+                            fontCounts.put(identifier, fontCounts.getOrDefault(identifier, 0) + 1);
+                        }
                     }
-
-                    fontCounts.put(identifier, fontCounts.getOrDefault(identifier, 0) + 1);
-                }
-            }
-        };
+                };
 
         stripper.getText(doc);
 
@@ -68,10 +83,10 @@ public class PDFProcessor {
         }
 
         // Sort by count
-        List<Map.Entry<String, Integer>> sortedCounts = fontCounts.entrySet()
-                .stream()
-                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-                .collect(Collectors.toList());
+        List<Map.Entry<String, Integer>> sortedCounts =
+                fontCounts.entrySet().stream()
+                        .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                        .collect(Collectors.toList());
 
         Map<String, Object> result = new HashMap<>();
         result.put("fontCounts", sortedCounts);
@@ -79,16 +94,22 @@ public class PDFProcessor {
         return result;
     }
 
-    public static Map<String, String> fontTags(List<Map.Entry<String, Integer>> fontCounts,
-                                               Map<String, FontStyle> styles) {
+    public static Map<String, String> fontTags(
+            List<Map.Entry<String, Integer>> fontCounts, Map<String, FontStyle> styles) {
         FontStyle pStyle = styles.get(fontCounts.get(0).getKey());
         float pSize = pStyle.size;
 
-        List<Float> fontSizes = fontCounts.stream()
-                .map(entry -> Float.parseFloat(entry.getKey().split("_")[0])) // Extract just the size part
-                .distinct()
-                .sorted(Comparator.reverseOrder())
-                .collect(Collectors.toList());
+        List<Float> fontSizes =
+                fontCounts.stream()
+                        .map(
+                                entry ->
+                                        Float.parseFloat(
+                                                entry.getKey()
+                                                        .split("_")[
+                                                        0])) // Extract just the size part
+                        .distinct()
+                        .sorted(Comparator.reverseOrder())
+                        .collect(Collectors.toList());
 
         Map<String, String> sizeTag = new HashMap<>();
         int idx = 0;
@@ -108,54 +129,60 @@ public class PDFProcessor {
         return sizeTag;
     }
 
-    public static List<String> headersPara(PDDocument doc, Map<String, String> sizeTag) throws IOException {
+    public static List<String> headersPara(PDDocument doc, Map<String, String> sizeTag)
+            throws IOException {
         List<String> headerPara = new ArrayList<>();
         final boolean[] first = {true};
         final TextPosition[] previousS = {null};
 
-        PDFTextStripper stripper = new PDFTextStripper() {
-            @Override
-            protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
-                StringBuilder blockString = new StringBuilder();
+        PDFTextStripper stripper =
+                new PDFTextStripper() {
+                    @Override
+                    protected void writeString(String text, List<TextPosition> textPositions)
+                            throws IOException {
+                        StringBuilder blockString = new StringBuilder();
 
-                for (TextPosition position : textPositions) {
-                    String textContent = position.getUnicode();
-                    if (textContent.trim().isEmpty()) continue;
+                        for (TextPosition position : textPositions) {
+                            String textContent = position.getUnicode();
+                            if (textContent.trim().isEmpty()) continue;
 
-                    String sizeKey = String.format("%.2f", position.getFontSizeInPt());
-                    String currentTag = sizeTag.getOrDefault(sizeKey, "<p>");
+                            String sizeKey = String.format("%.2f", position.getFontSizeInPt());
+                            String currentTag = sizeTag.getOrDefault(sizeKey, "<p>");
 
-                    if (first[0]) {
-                        previousS[0] = position;
-                        first[0] = false;
-                        blockString.append(currentTag).append(textContent);
-                    } else {
-                        if (previousS[0] != null &&
-                                Math.abs(position.getFontSizeInPt() - previousS[0].getFontSizeInPt()) < 0.01) {
-                            if (blockString.length() == 0 ||
-                                    blockString.chars().allMatch(c -> c == '|')) {
-                                blockString.setLength(0);
+                            if (first[0]) {
+                                previousS[0] = position;
+                                first[0] = false;
                                 blockString.append(currentTag).append(textContent);
                             } else {
-                                blockString.append(" ").append(textContent);
+                                if (previousS[0] != null
+                                        && Math.abs(
+                                                        position.getFontSizeInPt()
+                                                                - previousS[0].getFontSizeInPt())
+                                                < 0.01) {
+                                    if (blockString.length() == 0
+                                            || blockString.chars().allMatch(c -> c == '|')) {
+                                        blockString.setLength(0);
+                                        blockString.append(currentTag).append(textContent);
+                                    } else {
+                                        blockString.append(" ").append(textContent);
+                                    }
+                                } else {
+                                    if (blockString.length() > 0) {
+                                        headerPara.add(blockString.toString());
+                                    }
+                                    blockString.setLength(0);
+                                    blockString.append(currentTag).append(textContent);
+                                }
+                                previousS[0] = position;
                             }
-                        } else {
-                            if (blockString.length() > 0) {
-                                headerPara.add(blockString.toString());
-                            }
-                            blockString.setLength(0);
-                            blockString.append(currentTag).append(textContent);
                         }
-                        previousS[0] = position;
-                    }
-                }
 
-                if (blockString.length() > 0) {
-                    String finalString = blockString.toString().replace("  ", " ");
-                    headerPara.add(finalString);
-                }
-            }
-        };
+                        if (blockString.length() > 0) {
+                            String finalString = blockString.toString().replace("  ", " ");
+                            headerPara.add(finalString);
+                        }
+                    }
+                };
 
         stripper.getText(doc);
         return headerPara;
@@ -196,7 +223,8 @@ public class PDFProcessor {
         return new Tuple<>(jsonArrays, elementList);
     }
 
-    private static Element getNextToInclude(List<String> elements, int maxHeader, String rootHeader) {
+    private static Element getNextToInclude(
+            List<String> elements, int maxHeader, String rootHeader) {
         if (elements.isEmpty()) return null;
 
         Element scan = new Element(elements.remove(0), maxHeader, rootHeader);

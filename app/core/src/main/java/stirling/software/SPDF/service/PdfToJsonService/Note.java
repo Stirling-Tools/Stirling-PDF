@@ -1,7 +1,7 @@
 package stirling.software.SPDF.service.PdfToJsonService;
 
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 public class Note {
     @SerializedName("tag")
