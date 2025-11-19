@@ -35,6 +35,7 @@ const EmbedPdfViewerContent = ({
   setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
   const viewerRef = React.useRef<HTMLDivElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   const {
@@ -308,11 +309,6 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
-            />
-            <SignaturePlacementOverlay
-              containerRef={pdfContainerRef}
-              isActive={isPlacementOverlayActive}
-              signatureConfig={signatureConfig}
             />
           </Box>
         </>

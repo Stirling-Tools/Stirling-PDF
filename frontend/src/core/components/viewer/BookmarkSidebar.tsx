@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Box, ScrollArea, Group, Text, ActionIcon, Loader, Stack, TextInput, Tooltip } from '@mantine/core';
+import { Box, ScrollArea, Group, Text, ActionIcon, Loader, Stack, TextInput } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { PdfBookmarkObject, PdfActionType } from '@embedpdf/models';
@@ -41,7 +41,6 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
   const { getBookmarkState, bookmarkActions, scrollActions, hasBookmarkSupport } = useViewer();
   const bookmarkState = getBookmarkState();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [bookmarkCache, setBookmarkCache] = useState<Record<string, PdfBookmarkObject[] | null>>({});
   const [errorCache, setErrorCache] = useState<Record<string, string | null>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,6 +75,12 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
   }, [bookmarkActions, documentCacheKey, bookmarkCache, errorCache]);
 
   useEffect(() => {
+    if (!documentCacheKey) return;
+    if (!hasBookmarkSupport()) return;
+    bookmarkActions.fetchBookmarks().catch(() => {});
+  }, [documentCacheKey, bookmarkActions, hasBookmarkSupport]);
+
+  useEffect(() => {
     if (!visible) return;
     if (!hasBookmarkSupport()) return;
     if (!documentCacheKey) return;
@@ -85,11 +90,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
     if (hasBookmarkEntry || hasErrorEntry) return;
     if (bookmarkState.isLoading) return;
 
-    setIsRefreshing(true);
-    bookmarkActions
-      .fetchBookmarks()
-      .catch(() => {})
-      .finally(() => setIsRefreshing(false));
+    bookmarkActions.fetchBookmarks().catch(() => {});
   }, [
     visible,
     documentCacheKey,
@@ -131,22 +132,6 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
       ...prev,
       [nodeId]: prev[nodeId] === undefined ? false : !prev[nodeId],
     }));
-  };
-
-  const handleRefresh = async () => {
-    if (!hasBookmarkSupport()) {
-      setIsRefreshing(false);
-      return;
-    }
-
-    setIsRefreshing(true);
-    try {
-      await bookmarkActions.fetchBookmarks();
-    } catch {
-      // errors handled via bridge state
-    } finally {
-      setIsRefreshing(false);
-    }
   };
 
   const handleBookmarkClick = (bookmark: PdfBookmarkObject, event: React.MouseEvent) => {
@@ -196,20 +181,6 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
   );
 
   const filteredBookmarks = useMemo(() => filterBookmarks(bookmarksWithIds), [bookmarksWithIds, filterBookmarks]);
-
-  const handleExpandCollapseAll = (expand: boolean) => {
-    const next: Record<string, boolean> = {};
-    const setStateRecursively = (nodes: BookmarkNode[], state: boolean) => {
-      nodes.forEach(node => {
-        if (node.children && node.children.length > 0) {
-          next[node.id] = state;
-          setStateRecursively(node.children as BookmarkNode[], state);
-        }
-      });
-    };
-    setStateRecursively(filteredBookmarks, expand);
-    setExpanded(next);
-  };
 
   const renderBookmarks = (nodes: BookmarkNode[], depth = 0) => {
     return nodes.map(node => {
@@ -292,45 +263,10 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey }:
         boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <Group justify="space-between" px="sm" py="xs">
+      <Group px="sm" py="xs">
         <Text fw={600} size="sm">
           Bookmarks
         </Text>
-        <Group gap="xs">
-          <Tooltip label="Collapse all">
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              onClick={() => handleExpandCollapseAll(false)}
-              aria-label="Collapse all bookmarks"
-            >
-              <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Expand all">
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              onClick={() => handleExpandCollapseAll(true)}
-              aria-label="Expand all bookmarks"
-            >
-              <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
-            </ActionIcon>
-          </Tooltip>
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={bookmarkState.isLoading || isRefreshing}
-            title="Refresh bookmarks"
-          >
-            {bookmarkState.isLoading || isRefreshing ? (
-              <Loader size="xs" />
-            ) : (
-              <LocalIcon icon="refresh" width="1rem" height="1rem" />
-            )}
-          </ActionIcon>
-        </Group>
       </Group>
 
       <Box px="sm" pb="sm">
