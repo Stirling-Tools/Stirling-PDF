@@ -3,7 +3,8 @@ import { Group, Text, Button, ActionIcon, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@app/auth/UseSession';
 import { useCheckout } from '@app/contexts/CheckoutContext';
-import licenseService, { mapLicenseToTier } from '@app/services/licenseService';
+import { useLicense } from '@app/contexts/LicenseContext';
+import { mapLicenseToTier } from '@app/services/licenseService';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
 /**
@@ -23,48 +24,40 @@ const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { openCheckout } = useCheckout();
+  const { licenseInfo, loading: licenseLoading } = useLicense();
   const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Check if user should see the banner
   useEffect(() => {
-    const checkVisibility = async () => {
-      try {
-        // Don't show if not logged in
-        if (!user) {
-          setIsVisible(false);
-          setIsLoading(false);
-          return;
-        }
+    // Don't show if not logged in
+    if (!user) {
+      setIsVisible(false);
+      return;
+    }
 
-        // Check if banner was dismissed
-        const dismissed = localStorage.getItem('upgradeBannerDismissed');
-        if (dismissed === 'true') {
-          setIsVisible(false);
-          setIsLoading(false);
-          return;
-        }
+    // Don't show while license is loading
+    if (licenseLoading) {
+      return;
+    }
 
-        // Check license status
-        const licenseInfo = await licenseService.getLicenseInfo();
-        const tier = mapLicenseToTier(licenseInfo);
+    // Check if banner was dismissed
+    const dismissed = localStorage.getItem('upgradeBannerDismissed');
+    if (dismissed === 'true') {
+      setIsVisible(false);
+      return;
+    }
 
-        // Show banner only for free tier users
-        if (tier === 'free' || tier === null) {
-          setIsVisible(true);
-        } else {
-          setIsVisible(false);
-        }
-      } catch (error) {
-        console.error('Error checking upgrade banner visibility:', error);
-        setIsVisible(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Check license status from global context
+    const tier = mapLicenseToTier(licenseInfo);
 
-    checkVisibility();
-  }, [user]);
+    // Show banner only for free tier users
+    if (tier === 'free' || tier === null) {
+      setIsVisible(true);
+    } else {
+      // Auto-hide banner if user upgrades
+      setIsVisible(false);
+    }
+  }, [user, licenseInfo, licenseLoading]);
 
   // Handle dismiss
   const handleDismiss = () => {
@@ -85,7 +78,7 @@ const UpgradeBanner: React.FC = () => {
   };
 
   // Don't render anything if loading or not visible
-  if (isLoading || !isVisible) {
+  if (licenseLoading || !isVisible) {
     return null;
   }
 

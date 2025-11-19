@@ -6,6 +6,7 @@ import StripeCheckout from '@app/components/shared/StripeCheckout';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
 import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
+import { useLicense } from '@app/contexts/LicenseContext';
 
 export interface CheckoutOptions {
   minimumSeats?: number;      // Override calculated seats for enterprise
@@ -36,12 +37,17 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   defaultCurrency = 'gbp'
 }) => {
   const { t } = useTranslation();
+  const { refetchLicense } = useLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
   const [currentCurrency, setCurrentCurrency] = useState(defaultCurrency);
   const [currentOptions, setCurrentOptions] = useState<CheckoutOptions>({});
+  const [hostedCheckoutSuccess, setHostedCheckoutSuccess] = useState<{
+    isUpgrade: boolean;
+    licenseKey?: string;
+  } | null>(null);
 
   // Load plans with current currency
   const { plans, refetch: refetchPlans } = usePlans(currentCurrency);
@@ -75,11 +81,29 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           const activation = await resyncExistingLicense();
 
           if (activation.success) {
-            alert({
-              alertType: 'success',
-              title: t('payment.upgradeSuccess'),
-            });
-            refetchPlans(); // Refresh plans to show updated subscription
+            console.log('License synced successfully, refreshing license context');
+
+            // Refresh global license context
+            await refetchLicense();
+            await refetchPlans();
+
+            // Determine tier from license type
+            const tier = activation.licenseType === 'ENTERPRISE' ? 'enterprise' : 'server';
+            const planGroups = licenseService.groupPlansByTier(plans);
+            const planGroup = planGroups.find(pg => pg.tier === tier);
+
+            if (planGroup) {
+              // Reopen modal to show success
+              setSelectedPlanGroup(planGroup);
+              setHostedCheckoutSuccess({ isUpgrade: true });
+              setIsOpen(true);
+            } else {
+              // Fallback to toast if plan group not found
+              alert({
+                alertType: 'success',
+                title: t('payment.upgradeSuccess'),
+              });
+            }
           } else {
             console.error('Failed to sync license after upgrade:', activation.error);
             alert({
@@ -90,10 +114,6 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         } else {
           // NEW SUBSCRIPTION: Poll for license key
           console.log('New subscription - polling for license key');
-          alert({
-            alertType: 'success',
-            title: t('payment.paymentSuccess'),
-          });
 
           try {
             const installationId = await licenseService.getInstallationId();
@@ -108,11 +128,31 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
               if (activation.success) {
                 console.log(`License key activated: ${activation.licenseType}`);
-                alert({
-                  alertType: 'success',
-                  title: t('payment.licenseActivated'),
-                });
-                refetchPlans(); // Refresh plans to show updated subscription
+
+                // Refresh global license context
+                await refetchLicense();
+                await refetchPlans();
+
+                // Determine tier from license type
+                const tier = activation.licenseType === 'ENTERPRISE' ? 'enterprise' : 'server';
+                const planGroups = licenseService.groupPlansByTier(plans);
+                const planGroup = planGroups.find(pg => pg.tier === tier);
+
+                if (planGroup) {
+                  // Reopen modal to show success with license key
+                  setSelectedPlanGroup(planGroup);
+                  setHostedCheckoutSuccess({
+                    isUpgrade: false,
+                    licenseKey: result.licenseKey
+                  });
+                  setIsOpen(true);
+                } else {
+                  // Fallback to toast if plan group not found
+                  alert({
+                    alertType: 'success',
+                    title: t('payment.licenseActivated'),
+                  });
+                }
               } else {
                 console.error('Failed to save license key:', activation.error);
                 alert({
@@ -155,7 +195,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     };
 
     handleCheckoutReturn();
-  }, [t, refetchPlans]);
+  }, [t, refetchPlans, refetchLicense, plans]);
 
   const openCheckout = useCallback(
     async (tier: 'server' | 'enterprise', options: CheckoutOptions = {}) => {
@@ -233,10 +273,12 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     setIsOpen(false);
     setSelectedPlanGroup(null);
     setCurrentOptions({});
+    setHostedCheckoutSuccess(null);
 
-    // Refetch plans after modal closes to update subscription display
+    // Refetch plans and license after modal closes to update subscription display
     refetchPlans();
-  }, [refetchPlans]);
+    refetchLicense();
+  }, [refetchPlans, refetchLicense]);
 
   const handlePaymentSuccess = useCallback(
     (sessionId: string) => {
@@ -286,6 +328,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
           onLicenseActivated={handleLicenseActivated}
+          hostedCheckoutSuccess={hostedCheckoutSuccess}
         />
       )}
     </CheckoutContext.Provider>

@@ -106,15 +106,6 @@ public class AdminLicenseController {
             if (license != License.NORMAL) {
                 GeneralUtils.saveKeyToSettings("premium.enabled", true);
                 // Enable premium features
-
-                // Save maxUsers from license metadata
-                Integer maxUsers = applicationProperties.getPremium().getMaxUsers();
-                if (maxUsers != null) {
-                    GeneralUtils.saveKeyToSettings("premium.maxUsers", maxUsers);
-                }
-
-                log.info(
-                        "Premium features enabled: type={}, maxUsers={}", license.name(), maxUsers);
             } else {
                 GeneralUtils.saveKeyToSettings("premium.enabled", false);
                 log.info("License key is not valid for premium features: type={}", license.name());

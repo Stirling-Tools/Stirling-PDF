@@ -35,6 +35,10 @@ interface StripeCheckoutProps {
   onSuccess?: (sessionId: string) => void;
   onError?: (error: string) => void;
   onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void;
+  hostedCheckoutSuccess?: {
+    isUpgrade: boolean;
+    licenseKey?: string;
+  } | null;
 }
 
 type CheckoutState = {
@@ -52,6 +56,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   onSuccess,
   onError,
   onLicenseActivated,
+  hostedCheckoutSuccess,
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<CheckoutState>({ status: 'idle' });
@@ -238,10 +243,34 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     };
   }, []);
 
+  // Handle hosted checkout success - open directly to success state
+  useEffect(() => {
+    if (opened && hostedCheckoutSuccess) {
+      console.log('Opening modal to success state for hosted checkout return');
+
+      // Set appropriate state based on upgrade vs new subscription
+      if (hostedCheckoutSuccess.isUpgrade) {
+        setCurrentLicenseKey('existing'); // Flag to indicate upgrade
+        setPollingStatus('ready');
+      } else if (hostedCheckoutSuccess.licenseKey) {
+        setLicenseKey(hostedCheckoutSuccess.licenseKey);
+        setPollingStatus('ready');
+      }
+
+      // Set to success state to show success UI
+      setState({ status: 'success' });
+    }
+  }, [opened, hostedCheckoutSuccess]);
+
   // Initialize checkout when modal opens or period changes
   useEffect(() => {
     // Don't reset if we're showing success state (license key)
     if (state.status === 'success') {
+      return;
+    }
+
+    // Skip initialization if opening for hosted checkout success
+    if (hostedCheckoutSuccess) {
       return;
     }
 
@@ -250,7 +279,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     } else if (!opened) {
       setState({ status: 'idle' });
     }
-  }, [opened, selectedPeriod, state.status]);
+  }, [opened, selectedPeriod, state.status, hostedCheckoutSuccess]);
 
   const renderContent = () => {
     // Check if Stripe is configured

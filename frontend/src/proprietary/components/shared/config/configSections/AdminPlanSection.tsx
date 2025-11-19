@@ -2,8 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
+import { PlanTierGroup } from '@app/services/licenseService';
 import { useCheckout } from '@app/contexts/CheckoutContext';
+import { useLicense } from '@app/contexts/LicenseContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -25,9 +26,9 @@ const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { openCheckout } = useCheckout();
+  const { licenseInfo } = useLicense();
   const [currency, setCurrency] = useState<string>('gbp');
   const [useStaticVersion, setUseStaticVersion] = useState(false);
-  const [currentLicenseInfo, setCurrentLicenseInfo] = useState<LicenseInfo | null>(null);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
   const { plans, loading, error, refetch } = usePlans(currency);
 
@@ -45,32 +46,17 @@ const AdminPlanSection: React.FC = () => {
     sectionName: 'premium',
   });
 
-  // Check if we should use static version and fetch license info
+  // Check if we should use static version
   useEffect(() => {
-    const fetchLicenseInfo = async () => {
-      try {
-        // Fetch license info from backend endpoint
-        try {
-          const backendLicenseInfo = await licenseService.getLicenseInfo();
-          setCurrentLicenseInfo(backendLicenseInfo);
-        } catch (licenseErr: any) {
-          console.error('Failed to fetch backend license info:', licenseErr);
-        }
-      } catch (err) {
-        console.error('Failed to fetch license info:', err);
-      }
-    };
-
     // Check if Stripe is configured
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if (!stripeKey || error) {
       setUseStaticVersion(true);
     }
-    fetchLicenseInfo();
 
     // Fetch premium settings
     fetchPremiumSettings();
-  }, [error, config]);
+  }, [error, config, fetchPremiumSettings]);
 
   const handleSaveLicense = async () => {
     try {
@@ -106,17 +92,9 @@ const AdminPlanSection: React.FC = () => {
       openCheckout(planGroup.tier, {
         currency,
         onSuccess: () => {
-          // Refetch plans and license info after successful payment
+          // Refetch plans after successful payment
+          // License context will auto-update
           refetch();
-          const fetchLicenseInfo = async () => {
-            try {
-              const backendLicenseInfo = await licenseService.getLicenseInfo();
-              setCurrentLicenseInfo(backendLicenseInfo);
-            } catch (err) {
-              console.error('Failed to refetch license info:', err);
-            }
-          };
-          fetchLicenseInfo();
         },
       });
     },
@@ -125,7 +103,7 @@ const AdminPlanSection: React.FC = () => {
 
   // Show static version if Stripe is not configured or there's an error
   if (useStaticVersion) {
-    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo ?? undefined} />;
+    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
   }
 
   // Early returns after all hooks are called
@@ -139,7 +117,7 @@ const AdminPlanSection: React.FC = () => {
 
   if (error) {
     // Fallback to static version on error
-    return <StaticPlanSection currentLicenseInfo={currentLicenseInfo ?? undefined} />;
+    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
   }
 
   if (!plans || plans.length === 0) {
@@ -171,7 +149,7 @@ const AdminPlanSection: React.FC = () => {
           </Group>
 
           {/* Manage Subscription Button - Only show if user has active license */}
-          {currentLicenseInfo?.licenseKey && (
+          {licenseInfo?.licenseKey && (
             <Group justify="space-between" align="center">
               <Text size="sm" c="dimmed">
                 {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
@@ -184,7 +162,7 @@ const AdminPlanSection: React.FC = () => {
 
       <AvailablePlansSection
         plans={plans}
-        currentLicenseInfo={currentLicenseInfo}
+        currentLicenseInfo={licenseInfo}
         onUpgradeClick={handleUpgradeClick}
       />
 
