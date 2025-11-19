@@ -22,7 +22,6 @@ import stirling.software.common.model.api.PDFFile;
 @RequiredArgsConstructor
 public class ConvertPdfToJson {
 
-    // 1. Injection du service via le constructeur (@RequiredArgsConstructor)
     private final PDFParser pdfToJsonService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/json")
@@ -33,7 +32,6 @@ public class ConvertPdfToJson {
 
         MultipartFile inputFile = file.getFileInput();
 
-        // 2. Appel de la méthode sans les paramètres rootHeader et maxHeader
         return pdfToJsonService.processPdfToJson(inputFile);
     }
 }
