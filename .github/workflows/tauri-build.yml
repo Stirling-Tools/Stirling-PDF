@@ -183,8 +183,32 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      # DigiCert KeyLocker Setup (Cloud HSM)
+      - name: Setup DigiCert KeyLocker
+        if: matrix.platform == 'windows-latest' && secrets.SM_API_KEY != ''
+        uses: digicert/ssm-code-signing@v1.1.0
+        env:
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+          SM_HOST: ${{ secrets.SM_HOST }}
+
+      - name: Setup DigiCert KeyLocker Certificate
+        if: matrix.platform == 'windows-latest' && secrets.SM_API_KEY != ''
+        shell: bash
+        run: |
+          echo "Setting up DigiCert KeyLocker environment..."
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> "$GITHUB_ENV"
+
+      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && secrets.SM_API_KEY == ''
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -269,13 +293,47 @@ jobs:
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          SIGN: 1
+          SIGN: ${{ secrets.SM_API_KEY == '' && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
-          
+
+      # Sign with DigiCert KeyLocker (post-build)
+      - name: Sign Windows binaries with DigiCert KeyLocker
+        if: matrix.platform == 'windows-latest' && secrets.SM_API_KEY != ''
+        shell: pwsh
+        run: |
+          Write-Host "🔏 Signing Windows binaries with DigiCert KeyLocker..."
+
+          # Find all EXE and MSI files
+          $exeFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.exe" -Recurse -File
+          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+
+          $filesToSign = $exeFiles + $msiFiles
+
+          if ($filesToSign.Count -eq 0) {
+            Write-Host "⚠️ No files found to sign"
+            exit 1
+          }
+
+          foreach ($file in $filesToSign) {
+            Write-Host "Signing: $($file.FullName)"
+
+            # Use smctl to sign with keypair alias
+            & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)"
+
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "❌ Failed to sign $($file.Name)"
+              exit 1
+            }
+
+            Write-Host "✅ Successfully signed: $($file.Name)"
+          }
+
+          Write-Host "✅ All files signed successfully with DigiCert KeyLocker"
+
       - name: Rename artifacts
         shell: bash
         run: |
@@ -305,6 +363,8 @@ jobs:
           $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
 
           $allSigned = $true
+          $usingKeyLocker = "${{ secrets.SM_API_KEY }}" -ne ""
+          $usingPfx = "${{ secrets.WINDOWS_CERTIFICATE }}" -ne ""
 
           # Check EXE signature
           if (Test-Path $exePath) {
@@ -315,8 +375,8 @@ jobs:
 
             if ($exeSig.Status -ne "Valid") {
               Write-Host "⚠️ EXE is not properly signed (Status: $($exeSig.Status))"
-              if ($env:WINDOWS_CERTIFICATE) {
-                Write-Host "❌ Windows certificate was provided but signing failed"
+              if ($usingKeyLocker -or $usingPfx) {
+                Write-Host "❌ Certificate was provided but signing failed"
                 $allSigned = $false
               } else {
                 Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
@@ -335,8 +395,8 @@ jobs:
 
             if ($msiSig.Status -ne "Valid") {
               Write-Host "⚠️ MSI is not properly signed (Status: $($msiSig.Status))"
-              if ($env:WINDOWS_CERTIFICATE) {
-                Write-Host "❌ Windows certificate was provided but signing failed"
+              if ($usingKeyLocker -or $usingPfx) {
+                Write-Host "❌ Certificate was provided but signing failed"
                 $allSigned = $false
               } else {
                 Write-Host "ℹ️ Building unsigned binary (no certificate provided)"
@@ -346,14 +406,12 @@ jobs:
             }
           }
 
-          if ($env:WINDOWS_CERTIFICATE -and -not $allSigned) {
+          if (($usingKeyLocker -or $usingPfx) -and -not $allSigned) {
             Write-Host "❌ Code signing verification failed"
             exit 1
           } else {
             Write-Host "✅ Code signature verification completed"
           }
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
