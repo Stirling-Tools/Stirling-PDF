@@ -5499,6 +5499,7 @@
       "title": "Connect to Server",
       "subtitle": "Enter your self-hosted server URL",
       "type": {
+        "saas": "Stirling PDF SaaS",
         "selfhosted": "Self-hosted server"
       },
       "url": {
@@ -5577,7 +5578,15 @@
       "defaultPdfEditorInactive": "Another application is set as default",
       "defaultPdfEditorChecking": "Checking...",
       "defaultPdfEditorSet": "Already Default",
-      "setAsDefault": "Set as Default"
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
     },
     "hotkeys": {
       "errorConflict": "Shortcut already used by {{tool}}.",
@@ -5611,6 +5620,7 @@
     "collapse": "Collapse",
     "retry": "Retry",
     "refresh": "Refresh",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "done": "Done"
   }
 }
