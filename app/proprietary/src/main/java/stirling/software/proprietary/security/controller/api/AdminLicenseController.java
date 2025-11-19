@@ -144,6 +144,66 @@ public class AdminLicenseController {
     }
 
     /**
+     * Resync the current license with Keygen. This endpoint re-validates the existing license key
+     * and updates the max users setting. Used after subscription upgrades to sync the new license
+     * limits.
+     *
+     * @return Response with updated license information
+     */
+    @PostMapping("/license/resync")
+    @Operation(
+            summary = "Resync license with Keygen",
+            description =
+                    "Re-validates the existing license key with Keygen and updates local settings."
+                            + " Used after subscription upgrades.")
+    public ResponseEntity<Map<String, Object>> resyncLicense() {
+        try {
+            if (licenseKeyChecker == null) {
+                return ResponseEntity.internalServerError()
+                        .body(Map.of("success", false, "error", "License checker not available"));
+            }
+
+            String currentKey = applicationProperties.getPremium().getKey();
+            if (currentKey == null || currentKey.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "error", "No license key configured"));
+            }
+
+            log.info("Resyncing license with Keygen");
+
+            // Re-validate license and sync settings
+            licenseKeyChecker.resyncLicense();
+
+            // Get updated license status
+            License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+            ApplicationProperties.Premium premium = applicationProperties.getPremium();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("licenseType", license.name());
+            response.put("enabled", premium.isEnabled());
+            response.put("maxUsers", premium.getMaxUsers());
+            response.put("message", "License resynced successfully");
+
+            log.info(
+                    "License resynced: type={}, maxUsers={}",
+                    license.name(),
+                    premium.getMaxUsers());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to resync license", e);
+            return ResponseEntity.internalServerError()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Failed to resync license: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Get information about the current license key status, including license type, enabled status,
      * and max users.
      *

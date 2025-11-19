@@ -118,6 +118,11 @@ public class LicenseKeyChecker {
         synchronizeLicenseSettings();
     }
 
+    public void resyncLicense() {
+        evaluateLicense();
+        synchronizeLicenseSettings();
+    }
+
     public License getPremiumLicenseEnabledResult() {
         return premiumEnabledResult;
     }

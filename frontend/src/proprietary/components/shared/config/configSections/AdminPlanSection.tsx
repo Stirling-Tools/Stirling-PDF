@@ -15,7 +15,6 @@ import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
-import { pollLicenseKeyWithBackoff, activateLicenseKey } from '@app/utils/licenseCheckoutUtils';
 
 interface PremiumSettingsData {
   key?: string;
@@ -62,116 +61,12 @@ const AdminPlanSection: React.FC = () => {
       }
     };
 
-    // Handle return from hosted Stripe checkout
-    const handleCheckoutReturn = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentStatus = urlParams.get('payment_status');
-      const sessionId = urlParams.get('session_id');
-
-      if (paymentStatus === 'success' && sessionId) {
-        console.log('Payment successful via hosted checkout:', sessionId);
-
-        // Clear URL parameters
-        window.history.replaceState({}, '', window.location.pathname);
-
-        // Check if this is an upgrade or new subscription
-        if (currentLicenseInfo?.licenseKey) {
-          // UPGRADE: Sync existing license key
-          console.log('Upgrade detected - syncing existing license');
-
-          const activation = await activateLicenseKey(currentLicenseInfo.licenseKey, {
-            onActivated: fetchLicenseInfo,
-          });
-
-          if (activation.success) {
-            alert({
-              message: t('payment.upgradeSuccess', 'Your subscription has been upgraded successfully!'),
-              color: 'green',
-            });
-          } else {
-            console.error('Failed to sync license after upgrade:', activation.error);
-            alert({
-              message: t('payment.syncError', 'Payment successful but license sync failed. Please contact support.'),
-              color: 'red',
-            });
-          }
-        } else {
-          // NEW SUBSCRIPTION: Poll for license key
-          console.log('New subscription - polling for license key');
-          alert({
-            message: t('payment.paymentSuccess', 'Payment successful! Retrieving your license key...'),
-            color: 'green',
-          });
-
-          try {
-            const installationId = await licenseService.getInstallationId();
-            console.log('Polling for license key with installation ID:', installationId);
-
-            // Use shared polling utility
-            const result = await pollLicenseKeyWithBackoff(installationId);
-
-            if (result.success && result.licenseKey) {
-              // Activate the license key
-              const activation = await activateLicenseKey(result.licenseKey, {
-                onActivated: fetchLicenseInfo,
-              });
-
-              if (activation.success) {
-                console.log(`License key activated: ${activation.licenseType}`);
-                alert({
-                  message: t('payment.licenseActivated', 'License key activated successfully!'),
-                  color: 'green',
-                });
-              } else {
-                console.error('Failed to save license key:', activation.error);
-                alert({
-                  message: t('payment.licenseSaveError', 'Failed to save license key. Please contact support.'),
-                  color: 'red',
-                });
-              }
-            } else if (result.timedOut) {
-              console.warn('License key polling timed out');
-              alert({
-                message: t('payment.licenseDelayed', 'License key is being generated. Please check back shortly or contact support.'),
-                color: 'yellow',
-              });
-            } else {
-              console.error('License key polling failed:', result.error);
-              alert({
-                message: t('payment.licensePollingError', 'Failed to retrieve license key. Please check your email or contact support.'),
-                color: 'red',
-              });
-            }
-          } catch (error) {
-            console.error('Failed to poll for license key:', error);
-            alert({
-              message: t('payment.licenseRetrievalError', 'Failed to retrieve license key. Please check your email or contact support.'),
-              color: 'red',
-            });
-          }
-        }
-      } else if (paymentStatus === 'canceled') {
-        console.log('Payment canceled by user');
-
-        // Clear URL parameters
-        window.history.replaceState({}, '', window.location.pathname);
-
-        alert({
-          message: t('payment.paymentCanceled', 'Payment was canceled.'),
-          color: 'yellow',
-        });
-      }
-    };
-
     // Check if Stripe is configured
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if (!stripeKey || error) {
       setUseStaticVersion(true);
     }
     fetchLicenseInfo();
-
-    // Handle checkout return after license info is loaded
-    handleCheckoutReturn();
 
     // Fetch premium settings
     fetchPremiumSettings();

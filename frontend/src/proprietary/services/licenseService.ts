@@ -470,6 +470,20 @@ const licenseService = {
       throw error;
     }
   },
+
+  /**
+   * Resync the current license with Keygen
+   * Re-validates the existing license key and updates local settings
+   */
+  async resyncLicense(): Promise<LicenseSaveResponse> {
+    try {
+      const response = await apiClient.post('/api/v1/admin/license/resync');
+      return response.data;
+    } catch (error) {
+      console.error('Error resyncing license:', error);
+      throw error;
+    }
+  },
 };
 
 /**

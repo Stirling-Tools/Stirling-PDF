@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import StripeCheckout from '@app/components/shared/StripeCheckout';
 import { userManagementService } from '@app/services/userManagementService';
+import { alert } from '@app/components/toast';
+import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 
 export interface CheckoutOptions {
   minimumSeats?: number;      // Override calculated seats for enterprise
@@ -32,6 +35,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
   defaultCurrency = 'gbp'
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
@@ -41,6 +45,117 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
   // Load plans with current currency
   const { plans, refetch: refetchPlans } = usePlans(currentCurrency);
+
+  // Handle return from hosted Stripe checkout
+  useEffect(() => {
+    const handleCheckoutReturn = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      const sessionId = urlParams.get('session_id');
+
+      if (paymentStatus === 'success' && sessionId) {
+        console.log('Payment successful via hosted checkout:', sessionId);
+
+        // Clear URL parameters
+        window.history.replaceState({}, '', window.location.pathname);
+
+        // Fetch current license info to determine upgrade vs new
+        let licenseInfo: LicenseInfo | null = null;
+        try {
+          licenseInfo = await licenseService.getLicenseInfo();
+        } catch (err) {
+          console.warn('Could not fetch license info:', err);
+        }
+
+        // Check if this is an upgrade or new subscription
+        if (licenseInfo?.licenseKey) {
+          // UPGRADE: Resync existing license with Keygen
+          console.log('Upgrade detected - resyncing existing license');
+
+          const activation = await resyncExistingLicense();
+
+          if (activation.success) {
+            alert({
+              alertType: 'success',
+              title: t('payment.upgradeSuccess'),
+            });
+            refetchPlans(); // Refresh plans to show updated subscription
+          } else {
+            console.error('Failed to sync license after upgrade:', activation.error);
+            alert({
+              alertType: 'error',
+              title: t('payment.syncError'),
+            });
+          }
+        } else {
+          // NEW SUBSCRIPTION: Poll for license key
+          console.log('New subscription - polling for license key');
+          alert({
+            alertType: 'success',
+            title: t('payment.paymentSuccess'),
+          });
+
+          try {
+            const installationId = await licenseService.getInstallationId();
+            console.log('Polling for license key with installation ID:', installationId);
+
+            // Use shared polling utility
+            const result = await pollLicenseKeyWithBackoff(installationId);
+
+            if (result.success && result.licenseKey) {
+              // Activate the license key
+              const activation = await activateLicenseKey(result.licenseKey);
+
+              if (activation.success) {
+                console.log(`License key activated: ${activation.licenseType}`);
+                alert({
+                  alertType: 'success',
+                  title: t('payment.licenseActivated'),
+                });
+                refetchPlans(); // Refresh plans to show updated subscription
+              } else {
+                console.error('Failed to save license key:', activation.error);
+                alert({
+                  alertType: 'error',
+                  title: t('payment.licenseSaveError'),
+                });
+              }
+            } else if (result.timedOut) {
+              console.warn('License key polling timed out');
+              alert({
+                alertType: 'warning',
+                title: t('payment.licenseDelayed'),
+              });
+            } else {
+              console.error('License key polling failed:', result.error);
+              alert({
+                alertType: 'error',
+                title: t('payment.licensePollingError'),
+              });
+            }
+          } catch (error) {
+            console.error('Failed to poll for license key:', error);
+            alert({
+              alertType: 'error',
+              title: t('payment.licenseRetrievalError'),
+            });
+          }
+        }
+      } else if (paymentStatus === 'canceled') {
+        console.log('Payment canceled by user');
+
+        // Clear URL parameters
+        window.history.replaceState({}, '', window.location.pathname);
+
+        alert({
+          alertType: 'warning',
+          title: t('payment.paymentCanceled'),
+        });
+      }
+    };
+
+    handleCheckoutReturn();
+  }, [t, refetchPlans]);
 
   const openCheckout = useCallback(
     async (tier: 'server' | 'enterprise', options: CheckoutOptions = {}) => {

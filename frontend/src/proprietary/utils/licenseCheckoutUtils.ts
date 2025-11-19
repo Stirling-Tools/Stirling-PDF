@@ -134,7 +134,7 @@ export interface LicenseActivationResult {
 
 /**
  * Activate a license key by saving it to the backend and fetching updated info
- * Consolidates activation logic used by both embedded and hosted checkout
+ * Used for NEW subscriptions where we have a new license key to save
  */
 export async function activateLicenseKey(
   licenseKey: string,
@@ -194,6 +194,72 @@ export async function activateLicenseKey(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Activation failed',
+    };
+  }
+}
+
+/**
+ * Resync existing license with Keygen
+ * Used for UPGRADES where we already have a license key configured
+ * Calls the dedicated resync endpoint instead of re-saving the same key
+ */
+export async function resyncExistingLicense(
+  options: {
+    /** Check if component is still mounted */
+    isMounted?: () => boolean;
+    /** Callback when license is resynced with updated info */
+    onActivated?: (licenseInfo: LicenseInfo) => void;
+  } = {}
+): Promise<LicenseActivationResult> {
+  const { isMounted = () => true, onActivated } = options;
+
+  try {
+    console.log('Resyncing existing license with Keygen...');
+    const resyncResponse = await licenseService.resyncLicense();
+
+    if (!isMounted()) {
+      return { success: false, error: 'Component unmounted' };
+    }
+
+    if (resyncResponse.success) {
+      console.log(`License resynced: ${resyncResponse.licenseType}`);
+
+      // Fetch updated license info
+      try {
+        const licenseInfo = await licenseService.getLicenseInfo();
+
+        if (!isMounted()) {
+          return { success: false, error: 'Component unmounted' };
+        }
+
+        onActivated?.(licenseInfo);
+
+        return {
+          success: true,
+          licenseType: resyncResponse.licenseType,
+          licenseInfo,
+        };
+      } catch (infoError) {
+        console.error('Error fetching license info after resync:', infoError);
+        // Still return success since resync succeeded
+        return {
+          success: true,
+          licenseType: resyncResponse.licenseType,
+          error: 'Failed to fetch updated license info',
+        };
+      }
+    } else {
+      console.error('Failed to resync license:', resyncResponse.error);
+      return {
+        success: false,
+        error: resyncResponse.error || 'Failed to resync license',
+      };
+    }
+  } catch (error) {
+    console.error('Error resyncing license:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Resync failed',
     };
   }
 }

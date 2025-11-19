@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import licenseService, { PlanTierGroup } from '@app/services/licenseService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { pollLicenseKeyWithBackoff, activateLicenseKey } from '@app/utils/licenseCheckoutUtils';
+import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 
 // Validate Stripe key (static validation, no dynamic imports)
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -168,11 +168,11 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
     // Check if this is an upgrade (existing license key) or new plan
     if (currentLicenseKey) {
-      // UPGRADE FLOW: Force license re-verification by saving existing key
-      console.log('Upgrade detected - syncing existing license key');
+      // UPGRADE FLOW: Resync existing license with Keygen
+      console.log('Upgrade detected - resyncing existing license with Keygen');
       setPollingStatus('polling');
 
-      const activation = await activateLicenseKey(currentLicenseKey, {
+      const activation = await resyncExistingLicense({
         isMounted: () => true, // Modal is open, no need to check
         onActivated: onLicenseActivated,
       });
