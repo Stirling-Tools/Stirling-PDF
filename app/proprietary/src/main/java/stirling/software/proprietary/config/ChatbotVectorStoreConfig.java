@@ -4,7 +4,8 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.redis.RedisVectorStore;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -14,9 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.JedisPooled;
 
 @Configuration
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
-        value = "premium.proFeatures.chatbot.enabled",
-        havingValue = "true")
+@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 @Slf4j
 public class ChatbotVectorStoreConfig {
 
@@ -26,15 +25,11 @@ public class ChatbotVectorStoreConfig {
     @Bean
     @Primary
     public VectorStore chatbotVectorStore(
-            ObjectProvider<JedisPooled> jedisProvider, EmbeddingModel embeddingModel) {
-        JedisPooled jedis = jedisProvider.getIfAvailable();
-
-        if (jedis != null) {
+            @Autowired(required = false) JedisPooled jedisPooled, EmbeddingModel embeddingModel) {
+        if (jedisPooled != null) {
             try {
-                jedis.ping();
                 log.info("Initialising Redis vector store for chatbot usage");
-
-                return RedisVectorStore.builder(jedis, embeddingModel)
+                return RedisVectorStore.builder(jedisPooled, embeddingModel)
                         .indexName(DEFAULT_INDEX)
                         .prefix(DEFAULT_PREFIX)
                         .initializeSchema(true)

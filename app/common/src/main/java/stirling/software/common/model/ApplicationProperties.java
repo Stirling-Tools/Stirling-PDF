@@ -636,7 +636,6 @@ public class ApplicationProperties {
                     private String primary = "gpt-5-nano";
                     private String fallback = "gpt-5-mini";
                     private String embedding = "text-embedding-3-small";
-                    private double temperature = 0.2;
                     private double topP = 0.95;
                     private long connectTimeoutMillis = 10000;
                     private long readTimeoutMillis = 60000;

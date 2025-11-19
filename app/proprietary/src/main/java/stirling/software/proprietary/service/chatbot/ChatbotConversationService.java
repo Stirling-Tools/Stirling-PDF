@@ -1,7 +1,5 @@
 package stirling.software.proprietary.service.chatbot;
 
-import static stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings.ModelProvider.OLLAMA;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -138,7 +137,7 @@ public class ChatbotConversationService {
         memoryService.recordTurn(session, request.getPrompt(), finalReply.answer());
         recordHistoryTurn(session, "user", request.getPrompt());
         recordHistoryTurn(session, "assistant", finalReply.answer());
-        maybeSummarizeConversation(settings, session);
+        summarizeConversation(settings, session);
         enforceHistoryRetention(session);
 
         return ChatbotResponse.builder()
@@ -163,14 +162,14 @@ public class ChatbotConversationService {
     private List<String> buildWarnings(ChatbotSettings settings, ChatbotSession session) {
         List<String> warnings = new ArrayList<>();
         warnings.add("Chatbot is in alpha – behaviour may change.");
-        warnings.add("Image content is not yet supported in answers.");
+
         if (session.isImageContentDetected()) {
-            warnings.add(
-                    "Detected document images will be ignored until image support is available.");
+            warnings.add("Image content is not yet supported.");
         }
         if (session.isOcrRequested()) {
             warnings.add("OCR costs may apply for this session.");
         }
+
         return warnings;
     }
 
@@ -191,11 +190,13 @@ public class ChatbotConversationService {
         metadata.put("promptTokens", reply.promptTokens());
         metadata.put("completionTokens", reply.completionTokens());
         metadata.put("totalTokens", reply.totalTokens());
+
         return metadata;
     }
 
     private void ensureModelSwitchCapability(ChatbotSettings settings) {
         ChatbotSettings.ModelProvider provider = settings.models().provider();
+
         switch (provider) {
             case OPENAI -> {
                 if (!(chatModel instanceof OpenAiChatModel)) {
@@ -210,6 +211,7 @@ public class ChatbotConversationService {
                 }
             }
         }
+
         if (modelSwitchVerified.compareAndSet(false, true)) {
             log.info(
                     "Verified runtime model override support for provider {} ({} -> {})",
@@ -241,6 +243,7 @@ public class ChatbotConversationService {
                         history,
                         conversationSummary);
         ChatResponse response;
+
         try {
             response = chatModel.call(requestPrompt);
         } catch (org.eclipse.jetty.client.HttpResponseException ex) {
@@ -256,8 +259,10 @@ public class ChatbotConversationService {
         long promptTokens = 0L;
         long completionTokens = 0L;
         long totalTokens = 0L;
+
         if (response != null && response.getMetadata() != null) {
-            org.springframework.ai.chat.metadata.Usage usage = response.getMetadata().getUsage();
+            Usage usage = response.getMetadata().getUsage();
+
             if (usage != null) {
                 promptTokens = toLong(usage.getPromptTokens());
                 completionTokens = toLong(usage.getCompletionTokens());
@@ -287,6 +292,7 @@ public class ChatbotConversationService {
             List<ChatbotHistoryEntry> history,
             String conversationSummary) {
         String chunkOutline = buildChunkOutline(context);
+        String chunkExcerpts = buildChunkExcerpts(context);
         String metadataSummary =
                 metadata.entrySet().stream()
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
@@ -321,6 +327,8 @@ public class ChatbotConversationService {
                         + contextSummary
                         + "\nContext outline:\n"
                         + chunkOutline
+                        + "\nSelected excerpts:\n"
+                        + chunkExcerpts
                         + "Question: "
                         + question;
 
@@ -335,7 +343,7 @@ public class ChatbotConversationService {
         String normalizedModel = model == null ? "" : model.toLowerCase();
         boolean reasoningModel = normalizedModel.startsWith("gpt-5-");
         if (!reasoningModel) {
-            builder.temperature(settings.models().temperature()).topP(settings.models().topP());
+            builder.topP(settings.models().topP());
         }
         return builder.build();
     }
@@ -359,6 +367,30 @@ public class ChatbotConversationService {
             outline.append("- Chunk ").append(order).append(": ").append(snippet).append("\n");
         }
         return outline.toString();
+    }
+
+    private String buildChunkExcerpts(List<Document> context) {
+        if (context == null || context.isEmpty()) {
+            return "No excerpts available.";
+        }
+        StringBuilder excerpts = new StringBuilder();
+        for (Document chunk : context) {
+            String order = chunk.getMetadata().getOrDefault("chunkOrder", "?").toString();
+            String snippet = chunk.getText();
+            if (!StringUtils.hasText(snippet)) {
+                continue;
+            }
+            String normalized = snippet.replaceAll("\\s+", " ").trim();
+            int maxExcerpt = 400;
+            if (normalized.length() > maxExcerpt) {
+                normalized = normalized.substring(0, maxExcerpt - 3) + "...";
+            }
+            excerpts.append("[Chunk ").append(order).append("] ").append(normalized).append("\n");
+        }
+        if (!StringUtils.hasText(excerpts)) {
+            return "Chunks retrieved but no text excerpts available.";
+        }
+        return excerpts.toString();
     }
 
     private String buildConversationOutline(List<ChatbotHistoryEntry> history) {
@@ -488,28 +520,30 @@ public class ChatbotConversationService {
         }
     }
 
-    private void maybeSummarizeConversation(ChatbotSettings settings, ChatbotSession session) {
+    private void summarizeConversation(ChatbotSettings settings, ChatbotSession session) {
         if (conversationStore == null
                 || session == null
                 || !StringUtils.hasText(session.getSessionId())) {
             return;
         }
+
         int window = conversationStore.defaultWindow();
         long historySize = conversationStore.historyLength(session.getSessionId());
         if (historySize < Math.max(window * SUMMARY_TRIGGER_MULTIPLIER, window + 1)) {
             return;
         }
+
         List<ChatbotHistoryEntry> entries =
                 conversationStore.getRecentTurns(
                         session.getSessionId(), conversationStore.retentionWindow());
         if (entries.isEmpty() || entries.size() <= window) {
             return;
         }
+
         int cutoff = entries.size() - window;
         List<ChatbotHistoryEntry> summarizable = entries.subList(0, cutoff);
         String existingSummary = loadConversationSummary(session.getSessionId());
-        String updatedSummary =
-                summarizeHistory(settings, session, summarizable, existingSummary);
+        String updatedSummary = summarizeHistory(settings, session, summarizable, existingSummary);
         if (StringUtils.hasText(updatedSummary)) {
             try {
                 conversationStore.storeSummary(session.getSessionId(), updatedSummary);

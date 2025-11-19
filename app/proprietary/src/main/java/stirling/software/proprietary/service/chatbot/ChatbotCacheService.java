@@ -38,22 +38,45 @@ public class ChatbotCacheService {
         this.maxDocumentCharacters = cacheSettings.getMaxDocumentCharacters();
         long ttlMinutes = Math.max(cacheSettings.getTtlMinutes(), 1);
         long maxEntries = Math.max(cacheSettings.getMaxEntries(), 1);
+        long maxTotalCharacters =
+                Math.max(cacheSettings.getMaxDocumentCharacters() * maxEntries, 1);
 
         this.documentCache =
                 Caffeine.newBuilder()
-                        .maximumSize(maxEntries)
+                        .maximumWeight(maxTotalCharacters)
+                        .weigher(
+                                (String key, ChatbotDocumentCacheEntry entry) ->
+                                        (int)
+                                                Math.min(
+                                                        entry.getTextCharacters()
+                                                                + estimateMetadataWeight(entry),
+                                                        Integer.MAX_VALUE))
                         .expireAfterWrite(Duration.ofMinutes(ttlMinutes))
                         .recordStats()
                         .build();
         log.info(
-                "Initialised chatbot document cache with maxEntries={} ttlMinutes={} maxChars={}",
+                "Initialised chatbot document cache with maxEntries={} ttlMinutes={} maxChars={} maxWeight={} characters",
                 maxEntries,
                 ttlMinutes,
-                maxDocumentCharacters);
+                maxDocumentCharacters,
+                maxTotalCharacters);
     }
 
     public long getMaxDocumentCharacters() {
         return maxDocumentCharacters;
+    }
+
+    private long estimateMetadataWeight(ChatbotDocumentCacheEntry entry) {
+        if (entry == null || entry.getMetadata() == null) {
+            return 0L;
+        }
+        return entry.getMetadata().entrySet().stream()
+                .mapToLong(e -> safeLength(e.getKey()) + safeLength(e.getValue()))
+                .sum();
+    }
+
+    private long safeLength(String value) {
+        return value == null ? 0L : value.length();
     }
 
     public String register(

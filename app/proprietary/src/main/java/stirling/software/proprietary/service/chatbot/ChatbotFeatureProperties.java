@@ -27,7 +27,6 @@ public class ChatbotFeatureProperties {
                         chatbot.getModels().getPrimary(),
                         chatbot.getModels().getFallback(),
                         chatbot.getModels().getEmbedding(),
-                        chatbot.getModels().getTemperature(),
                         chatbot.getModels().getTopP());
         return new ChatbotSettings(
                 chatbot.isEnabled(),
@@ -90,7 +89,6 @@ public class ChatbotFeatureProperties {
                 String primary,
                 String fallback,
                 String embedding,
-                double temperature,
                 double topP) {}
 
         public record RagSettings(int chunkSizeTokens, int chunkOverlapTokens, int topK) {}

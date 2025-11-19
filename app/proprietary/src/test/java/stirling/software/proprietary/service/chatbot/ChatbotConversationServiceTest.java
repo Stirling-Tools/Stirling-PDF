@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,13 +23,13 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.proprietary.model.chatbot.ChatbotHistoryEntry;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
-import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 
 @ExtendWith(MockitoExtension.class)
 class ChatbotConversationServiceTest {
@@ -72,7 +73,6 @@ class ChatbotConversationServiceTest {
                                 "gpt-5-nano",
                                 "gpt-5-mini",
                                 "embed",
-                                0.2D,
                                 0.95D),
                         new ChatbotSettings.RagSettings(512, 128, 4),
                         new ChatbotSettings.CacheSettings(60, 10, 1000),
@@ -96,15 +96,15 @@ class ChatbotConversationServiceTest {
         when(conversationStore.getRecentTurns("session-1", 10))
                 .thenReturn(historyEntries(6, "doc-123", "Quarterly Report"));
         when(conversationStore.loadSummary("session-1")).thenReturn("previous summary");
-        when(chatModel.call(any()))
+        when(chatModel.call(any(Prompt.class)))
                 .thenReturn(
                         new ChatResponse(
                                 List.of(new Generation(new AssistantMessage("updated summary")))));
 
         ReflectionTestUtils.invokeMethod(
-                conversationService, "maybeSummarizeConversation", defaultSettings, session);
+                conversationService, "summarizeConversation", defaultSettings, session);
 
-        verify(chatModel, times(1)).call(any());
+        verify(chatModel, times(1)).call(any(Prompt.class));
         verify(conversationStore).storeSummary("session-1", "updated summary");
         verify(conversationStore).trimHistory("session-1", 2);
     }
@@ -118,9 +118,9 @@ class ChatbotConversationServiceTest {
         when(conversationStore.historyLength("session-2")).thenReturn(5L);
 
         ReflectionTestUtils.invokeMethod(
-                conversationService, "maybeSummarizeConversation", defaultSettings, session);
+                conversationService, "summarizeConversation", defaultSettings, session);
 
-        verify(chatModel, never()).call(any());
+        verify(chatModel, never()).call(any(org.springframework.ai.chat.prompt.Prompt.class));
         verify(conversationStore, never()).storeSummary(anyString(), anyString());
         verify(conversationStore, never()).trimHistory(anyString(), anyInt());
     }
