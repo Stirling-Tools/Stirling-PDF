@@ -6,6 +6,7 @@ import { useCheckout } from '@app/contexts/CheckoutContext';
 import { useLicense } from '@app/contexts/LicenseContext';
 import { mapLicenseToTier } from '@app/services/licenseService';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 /**
  * UpgradeBanner - Dismissable top banner encouraging users to upgrade
@@ -31,6 +32,12 @@ const UpgradeBanner: React.FC = () => {
   useEffect(() => {
     // Don't show if not logged in
     if (!user) {
+      setIsVisible(false);
+      return;
+    }
+
+    // Don't show if Supabase is not configured (no checkout available)
+    if (!isSupabaseConfigured) {
       setIsVisible(false);
       return;
     }

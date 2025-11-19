@@ -11,6 +11,7 @@ import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
+import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
@@ -25,9 +26,9 @@ const AdminPlanSection: React.FC = () => {
 
   // Check if we should use static version
   useEffect(() => {
-    // Check if Stripe is configured
+    // Check if Stripe and Supabase are configured
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!stripeKey || error) {
+    if (!stripeKey || !isSupabaseConfigured || error) {
       setUseStaticVersion(true);
     }
   }, [error]);
@@ -146,8 +147,8 @@ const AdminPlanSection: React.FC = () => {
             />
           </Group>
 
-          {/* Manage Subscription Button - Only show if user has active license */}
-          {licenseInfo?.licenseKey && (
+          {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
+          {licenseInfo?.licenseKey && isSupabaseConfigured && (
             <Group justify="space-between" align="center">
               <Text size="sm" c="dimmed">
                 {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}

@@ -1,5 +1,5 @@
 import apiClient from '@app/services/apiClient';
-import { supabase } from '@app/services/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getCheckoutMode } from '@app/utils/protocolDetection';
 
 export interface PlanFeature {
@@ -110,6 +110,11 @@ const licenseService = {
    */
   async getPlans(currency: string = 'gbp'): Promise<PlansResponse> {
     try {
+      // Check if Supabase is configured
+      if (!isSupabaseConfigured || !supabase) {
+        throw new Error('Supabase is not configured. Please use static plans instead.');
+      }
+
       // Fetch all self-hosted prices from Stripe
       const { data, error } = await supabase.functions.invoke<{
         prices: Record<string, {
@@ -358,6 +363,11 @@ const licenseService = {
    * Create a Stripe checkout session for upgrading
    */
   async createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResponse> {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. Checkout is not available.');
+    }
+
     // Detect if HTTPS is available to determine checkout mode
     const checkoutMode = getCheckoutMode();
     const baseUrl = window.location.origin;
@@ -395,6 +405,11 @@ const licenseService = {
    * Uses license key for self-hosted authentication
    */
   async createBillingPortalSession(returnUrl: string, licenseKey: string): Promise<BillingPortalResponse> {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. Billing portal is not available.');
+    }
+
     const { data, error} = await supabase.functions.invoke('manage-billing', {
       body: {
         return_url: returnUrl,
@@ -429,6 +444,11 @@ const licenseService = {
    * Check if license key is ready for the given installation ID
    */
   async checkLicenseKey(installationId: string): Promise<LicenseKeyResponse> {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. License key lookup is not available.');
+    }
+
     const { data, error } = await supabase.functions.invoke('get-license-key', {
       body: {
         installation_id: installationId,
