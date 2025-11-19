@@ -13,5 +13,7 @@ export function getApiBaseUrl(): string {
     return '/';
   }
 
-  return import.meta.env.VITE_DESKTOP_BACKEND_URL || 'http://localhost:8080';
+  // In production builds the backend selects a free port dynamically.
+  // Requests will be rewritten to the discovered port by the desktop interceptors.
+  return '';
 }

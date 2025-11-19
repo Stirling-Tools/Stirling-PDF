@@ -12,6 +12,8 @@ import java.util.Properties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -51,6 +53,14 @@ public class SPDFApplication {
         this.appConfig = appConfig;
         this.env = env;
         this.applicationProperties = applicationProperties;
+    }
+
+    @EventListener
+    public void onWebServerInitialized(WebServerInitializedEvent event) {
+        int actualPort = event.getWebServer().getPort();
+        serverPortStatic = String.valueOf(actualPort);
+        // Log the actual runtime port so Tauri can parse it when port is chosen dynamically
+        log.info("Stirling-PDF running on port: {}", actualPort);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

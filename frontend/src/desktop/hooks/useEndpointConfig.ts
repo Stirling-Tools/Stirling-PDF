@@ -245,7 +245,7 @@ export function useEndpointConfig(): EndpointConfig {
     return runtimeEnv?.STIRLING_BACKEND_URL
       || import.meta.env.VITE_DESKTOP_BACKEND_URL
       || import.meta.env.VITE_API_BASE_URL
-      || 'http://localhost:8080';
+      || '';
   }, []);
 
   return { backendUrl };

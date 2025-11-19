@@ -12,6 +12,7 @@ use commands::{
     add_opened_file,
     is_default_pdf_handler,
     set_as_default_pdf_handler,
+    get_backend_port,
 };
 use utils::{add_log, get_tauri_logs};
 
@@ -61,6 +62,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       start_backend,
       check_backend_health,
+      get_backend_port,
       get_opened_files,
       clear_opened_files,
       get_tauri_logs,
