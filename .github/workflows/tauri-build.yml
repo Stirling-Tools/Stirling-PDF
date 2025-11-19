@@ -70,6 +70,9 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
+    env:
+      SM_API_KEY: ${{ secrets.SM_API_KEY }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
@@ -185,7 +188,7 @@ jobs:
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && secrets.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         uses: digicert/ssm-code-signing@v1.1.0
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -195,7 +198,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && secrets.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         shell: bash
         run: |
           echo "Setting up DigiCert KeyLocker environment..."
@@ -208,7 +211,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && secrets.SM_API_KEY == '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -293,7 +296,7 @@ jobs:
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          SIGN: ${{ (secrets.SM_API_KEY == '' && secrets.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          SIGN: ${{ (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
@@ -302,7 +305,7 @@ jobs:
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && secrets.SM_API_KEY != '' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         shell: pwsh
         run: |
           Write-Host "🔏 Signing Windows binaries with DigiCert KeyLocker..."
