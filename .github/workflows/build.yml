@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
       - name: Check for file changes
-        uses: Ludy87/paths-filter@60749e7204a97015125792f44771f16fef911572 # v3.1.2
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         with:
           base: docker_test
@@ -413,13 +413,6 @@ jobs:
       #     docker run --rm ${{ steps.testtag.outputs.tag }} \
       #     sh -lc 'ls -la /usr/share/'
 
-      - name: Test tessdata dir (amd64)
-        if: matrix.docker-rev != 'Dockerfile.ultra-lite'
-        timeout-minutes: 5
-        run: |
-          docker run --rm  ${{ steps.testtag.outputs.tag }} \
-          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'
-
       - name: Prune amd64 image and cache
         if: always()
         run: |
@@ -460,13 +453,6 @@ jobs:
       #   run: |
       #     docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
       #     sh -lc 'ls -la /usr/share/'
-
-      - name: Test tessdata dir (arm64)
-        if: matrix.docker-rev != 'Dockerfile.ultra-lite'
-        timeout-minutes: 5
-        run: |
-          docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
-          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'
 
       # - name: Test app.jar exists (arm64)
       #   timeout-minutes: 2
@@ -521,3 +507,17 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+      - name: Test tessdata dir (arm64)
+        if: matrix.docker-rev != 'Dockerfile.ultra-lite'
+        timeout-minutes: 5
+        run: |
+          docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
+          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'
+
+      - name: Test tessdata dir (amd64)
+        if: always() &&  matrix.docker-rev != 'Dockerfile.ultra-lite'
+        timeout-minutes: 5
+        run: |
+          docker run --rm  ${{ steps.testtag.outputs.tag }} \
+          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'
