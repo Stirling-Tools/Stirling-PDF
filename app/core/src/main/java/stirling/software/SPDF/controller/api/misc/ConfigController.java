@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
@@ -20,6 +22,7 @@ import stirling.software.common.service.UserServiceInterface;
 
 @ConfigApi
 @Hidden
+@Slf4j
 public class ConfigController {
 
     private final ApplicationProperties applicationProperties;
@@ -59,9 +62,15 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
+            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
 
             // Security settings
-            configData.put("enableLogin", applicationProperties.getSecurity().getEnableLogin());
+            // enableLogin requires both the config flag AND proprietary features to be loaded
+            // If userService is null, proprietary module isn't loaded
+            // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
+            boolean enableLogin =
+                    applicationProperties.getSecurity().getEnableLogin() && userService != null;
+            configData.put("enableLogin", enableLogin);
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();
@@ -143,6 +152,25 @@ public class ConfigController {
                 }
             } catch (Exception e) {
                 // EE features not available, continue without them
+            }
+
+            // Add version and machine info for update checking
+            try {
+                if (applicationContext.containsBean("appVersion")) {
+                    configData.put(
+                            "appVersion", applicationContext.getBean("appVersion", String.class));
+                }
+                if (applicationContext.containsBean("machineType")) {
+                    configData.put(
+                            "machineType", applicationContext.getBean("machineType", String.class));
+                }
+                if (applicationContext.containsBean("activeSecurity")) {
+                    configData.put(
+                            "activeSecurity",
+                            applicationContext.getBean("activeSecurity", Boolean.class));
+                }
+            } catch (Exception e) {
+                // Version/machine info not available
             }
 
             return ResponseEntity.ok(configData);

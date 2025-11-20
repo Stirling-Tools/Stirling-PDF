@@ -17,18 +17,11 @@ on:
     branches: [main, V2, V2-tauri-windows]
     paths:
       - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
+      - 'frontend/src/desktop/**'
+      - 'frontend/tsconfig.desktop.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, V2, V2-tauri-windows]
-    paths:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
-      - '.github/workflows/tauri-build.yml'
+    branches: [main, V2]
 
 permissions:
   contents: read
@@ -47,21 +40,19 @@ jobs:
               "windows")
                 echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
-              # "macos")
-              #   echo 'matrix={"include":[{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-13","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
-              #   ;;
+              "macos")
+                echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
               "linux")
                 echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
-                # Disabled Mac builds: {"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-13","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
-            # Disabled Mac builds: {"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-13","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -99,7 +90,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
 
 
@@ -264,46 +255,49 @@ jobs:
             Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
           }
 
-      # Disabled Mac builds - Import Apple Developer Certificate
-      # - name: Import Apple Developer Certificate
-      #   if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
-      #   env:
-      #     APPLE_ID: ${{ secrets.APPLE_ID }}
-      #     APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-      #     APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-      #     APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      #     KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      #   run: |
-      #     echo "Importing Apple Developer Certificate..."
-      #     echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
-      #     security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-      #     security set-keychain-settings -t 3600 -u build.keychain
-      #     security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-      #     security find-identity -v -p codesigning build.keychain
-      # - name: Verify Certificate
-      #   if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
-      #   run: |
-      #     echo "Verifying Apple Developer Certificate..."
-      #     CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
-      #     echo "Certificate Info: $CERT_INFO"
-      #     CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
-      #     echo "Certificate ID: $CERT_ID"
-      #     echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
-      #     echo "Certificate imported."
+      - name: Import Apple Developer Certificate
+        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "Importing Apple Developer Certificate..."
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          # Import certificate
+          security import certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          # Clean up
+          rm certificate.p12
 
-      # - name: Check DMG creation dependencies (macOS only)
-      #   if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
-      #   run: |
-      #     echo "🔍 Checking DMG creation dependencies on ${{ matrix.platform }}..."
-      #     echo "hdiutil version: $(hdiutil --version || echo 'NOT FOUND')"
-      #     echo "create-dmg availability: $(which create-dmg || echo 'NOT FOUND')"
-      #     echo "Available disk space: $(df -h /tmp | tail -1)"
-      #     echo "macOS version: $(sw_vers -productVersion)"
-      #     echo "Available tools:"
-      #     ls -la /usr/bin/hd* || echo "No hd* tools found"
+      - name: Verify Certificate
+        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        run: |
+          echo "Verifying Apple Developer Certificate..."
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          CERT_INFO=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | grep "Developer ID Application")
+          echo "Certificate Info: $CERT_INFO"
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "Certificate ID: $CERT_ID"
+          echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
+          echo "Certificate imported successfully."
+
+      - name: Check DMG creation dependencies (macOS only)
+        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        run: |
+          echo "🔍 Checking DMG creation dependencies on ${{ matrix.platform }}..."
+          echo "hdiutil version: $(hdiutil --version || echo 'NOT FOUND')"
+          echo "create-dmg availability: $(which create-dmg || echo 'NOT FOUND')"
+          echo "Available disk space: $(df -h /tmp | tail -1)"
+          echo "macOS version: $(sw_vers -productVersion)"
+          echo "Available tools:"
+          ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -311,9 +305,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
@@ -485,6 +478,21 @@ jobs:
           Write-Host "=== Summary ==="
           Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
 
+      - name: Verify notarization (macOS only)
+        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        run: |
+          echo "🔍 Verifying notarization status..."
+          cd ./frontend/src-tauri/target
+          DMG_FILE=$(find . -name "*.dmg" | head -1)
+          if [ -n "$DMG_FILE" ]; then
+            echo "Found DMG: $DMG_FILE"
+            echo "Checking notarization ticket..."
+            spctl -a -vvv -t install "$DMG_FILE" || echo "⚠️ Notarization check failed or not yet complete"
+            stapler validate "$DMG_FILE" || echo "⚠️ No notarization ticket attached"
+          else
+            echo "⚠️ No DMG file found to verify"
+          fi
+
       - name: Rename artifacts
         shell: bash
         run: |
@@ -495,10 +503,9 @@ jobs:
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
-          # Disabled Mac builds
-          # elif [ "${{ matrix.platform }}" = "macos-latest" ] || [ "${{ matrix.platform }}" = "macos-13" ]; then
-          #   find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
-          #   find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
+          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+            find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
@@ -575,7 +582,7 @@ jobs:
         shell: bash
         run: |
           cd ./frontend/src-tauri/target
-          
+
           # Check for expected artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             echo "Checking for Windows artifacts..."
@@ -584,14 +591,13 @@ jobs:
               echo "❌ No Windows executable found"
               exit 1
             fi
-          # Disabled Mac builds
-          # elif [ "${{ matrix.platform }}" = "macos-latest" ] || [ "${{ matrix.platform }}" = "macos-13" ]; then
-          #   echo "Checking for macOS artifacts..."
-          #   find . -name "*.dmg" -o -name "*.app" | head -5
-          #   if [ $(find . -name "*.dmg" -o -name "*.app" | wc -l) -eq 0 ]; then
-          #     echo "❌ No macOS artifacts found"
-          #     exit 1
-          #   fi
+          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+            echo "Checking for macOS artifacts..."
+            find . -name "*.dmg" -o -name "*.app" | head -5
+            if [ $(find . -name "*.dmg" -o -name "*.app" | wc -l) -eq 0 ]; then
+              echo "❌ No macOS artifacts found"
+              exit 1
+            fi
           else
             echo "Checking for Linux artifacts..."
             find . -name "*.deb" -o -name "*.AppImage" | head -5
@@ -600,7 +606,7 @@ jobs:
               exit 1
             fi
           fi
-          
+
           echo "✅ Build artifacts found for ${{ matrix.name }}"
 
       - name: Test artifact sizes

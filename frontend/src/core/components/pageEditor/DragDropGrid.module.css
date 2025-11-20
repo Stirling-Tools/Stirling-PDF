@@ -1,0 +1,72 @@
+.gridContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.virtualRows {
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+}
+
+.virtualRow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.rowContent {
+  display: flex;
+  justify-content: flex-start;
+  height: 100%;
+  align-items: center;
+  position: relative;
+}
+
+.selectionBox {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+}
+
+.dropIndicator {
+  position: absolute;
+  width: 4px;
+  background-color: rgba(96, 165, 250, 0.8);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.dragOverlay {
+  position: relative;
+  cursor: grabbing;
+}
+
+.dragOverlayBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dragOverlayPreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  opacity: 0.5;
+}

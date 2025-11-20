@@ -41,6 +41,30 @@
     "cancel": "Cancel",
     "confirm": "Extract"
   },
+  "defaultApp": {
+    "title": "Set as Default PDF App",
+    "message": "Would you like to set Stirling PDF as your default PDF editor?",
+    "description": "You can change this later in your system settings.",
+    "notNow": "Not Now",
+    "setDefault": "Set Default",
+    "dismiss": "Dismiss",
+    "prompt": {
+      "title": "Set as Default PDF Editor",
+      "message": "Make Stirling PDF your default application for opening PDF files."
+    },
+    "success": {
+      "title": "Default App Set",
+      "message": "Stirling PDF is now your default PDF editor"
+    },
+    "settingsOpened": {
+      "title": "Settings Opened",
+      "message": "Please select Stirling PDF in your system settings"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Failed to set default PDF handler"
+    }
+  },
   "language": {
     "direction": "ltr"
   },
@@ -332,6 +356,20 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
+      },
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
       }
     },
     "hotkeys": {
@@ -352,6 +390,37 @@
       "noShortcut": "No shortcut set",
       "searchPlaceholder": "Search tools..."
     }
+  },
+  "update": {
+    "modalTitle": "Update Available",
+    "current": "Current Version",
+    "latest": "Latest Version",
+    "latestStable": "Latest Stable",
+    "priorityLabel": "Priority",
+    "recommendedAction": "Recommended Action",
+    "breakingChangesDetected": "Breaking Changes Detected",
+    "breakingChangesMessage": "Some versions contain breaking changes. Please review the migration guides below before updating.",
+    "migrationGuides": "Migration Guides",
+    "viewGuide": "View Guide",
+    "loadingDetailedInfo": "Loading detailed information...",
+    "close": "Close",
+    "viewAllReleases": "View All Releases",
+    "downloadLatest": "Download Latest",
+    "availableUpdates": "Available Updates",
+    "unableToLoadDetails": "Unable to load detailed information.",
+    "version": "Version",
+    "urgentUpdateAvailable": "Urgent Update",
+    "updateAvailable": "Update Available",
+    "releaseNotes": "Release Notes",
+    "priority": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "minor": "Minor",
+      "low": "Low"
+    },
+    "breakingChanges": "Breaking Changes",
+    "breakingChangesDefault": "This version contains breaking changes.",
+    "migrationGuide": "Migration Guide"
   },
   "changeCreds": {
     "title": "Change Credentials",
@@ -1011,7 +1080,8 @@
         "title": "Choose Your Split Method"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "Select a split method",
+    "resultsTitle": "Split Results"
   },
   "rotate": {
     "title": "Rotate PDF",
@@ -1395,6 +1465,93 @@
       "10": "Prevent printing different formats"
     },
     "submit": "Change"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bookmarks & outline",
+      "replaceExisting": "Replace existing bookmarks (uncheck to append)",
+      "replaceExistingHint": "When disabled, the new outline is appended after the current bookmarks."
+    },
+    "actions": {
+      "source": "Load bookmarks",
+      "selectedFile": "Loaded from {{file}}",
+      "noFile": "Select a PDF to extract existing bookmarks.",
+      "loadFromPdf": "Load from selected PDF",
+      "importJson": "Import JSON",
+      "importClipboard": "Paste JSON from clipboard",
+      "export": "Export bookmarks",
+      "exportJson": "Download JSON",
+      "exportClipboard": "Copy JSON to clipboard",
+      "clipboardUnavailable": "Clipboard access is not available in this browser."
+    },
+    "info": {
+      "line1": "Each bookmark needs a descriptive title and the page it should open.",
+      "line2": "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+      "line3": "Import bookmarks from the selected PDF or from a JSON file to save time."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Open the tool to start editing",
+        "description": "Select the Edit Table of Contents tool to load its workspace."
+      },
+      "tabTitle": "Outline workspace",
+      "subtitle": "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+      "noFile": "No PDF selected",
+      "fileLabel": "Changes will be applied to the currently selected PDF.",
+      "filePrompt": "Select a PDF from your library or upload a new one to begin.",
+      "changeFile": "Change PDF",
+      "selectFile": "Select PDF"
+    },
+    "editor": {
+      "heading": "Bookmark editor",
+      "description": "Add, nest, and reorder bookmarks to craft your PDF outline.",
+      "addTopLevel": "Add top-level bookmark",
+      "empty": {
+        "title": "No bookmarks yet",
+        "description": "Import existing bookmarks or start by adding your first entry.",
+        "action": "Add first bookmark"
+      },
+      "defaultTitle": "New bookmark",
+      "defaultChildTitle": "Child bookmark",
+      "defaultSiblingTitle": "New bookmark",
+      "untitled": "Untitled bookmark",
+      "childBadge": "Child",
+      "pagePreview": "Page {{page}}",
+      "field": {
+        "title": "Bookmark title",
+        "page": "Target page number"
+      },
+      "actions": {
+        "toggle": "Toggle children",
+        "addChild": "Add child bookmark",
+        "addSibling": "Add sibling bookmark",
+        "remove": "Remove bookmark"
+      },
+      "confirmRemove": "Remove this bookmark and all of its children?"
+    },
+    "messages": {
+      "loadedTitle": "Bookmarks extracted",
+      "loadedBody": "Existing bookmarks from the PDF were loaded into the editor.",
+      "noBookmarks": "No bookmarks were found in the selected PDF.",
+      "loadFailed": "Unable to extract bookmarks from the selected PDF.",
+      "imported": "Bookmarks imported",
+      "importedBody": "Your JSON outline replaced the current editor contents.",
+      "importedClipboard": "Clipboard data replaced the current bookmark list.",
+      "invalidJson": "Invalid JSON structure",
+      "invalidJsonBody": "Please provide a valid bookmark JSON file and try again.",
+      "exported": "JSON download ready",
+      "copied": "Copied to clipboard",
+      "copiedBody": "Bookmark JSON copied successfully.",
+      "copyFailed": "Copy failed"
+    },
+    "error": {
+      "failed": "Failed to update the table of contents"
+    },
+    "submit": "Apply table of contents",
+    "results": {
+      "title": "Updated PDF with bookmarks",
+      "subtitle": "Download the processed file or undo the operation below."
+    }
   },
   "removePages": {
     "tags": "Remove pages,delete pages",
@@ -1977,13 +2134,54 @@
       "title": "Draw your signature",
       "clear": "Clear"
     },
+    "canvas": {
+      "heading": "Draw your signature",
+      "clickToOpen": "Click to open the drawing canvas",
+      "modalTitle": "Draw your signature",
+      "colorLabel": "Colour",
+      "penSizeLabel": "Pen size",
+      "penSizePlaceholder": "Size",
+      "clear": "Clear canvas",
+      "colorPickerTitle": "Choose stroke colour"
+    },
     "text": {
       "name": "Signer Name",
-      "placeholder": "Enter your full name"
+      "placeholder": "Enter your full name",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
     },
     "clear": "Clear",
     "add": "Add",
-    "saved": "Saved Signatures",
+    "saved": {
+      "heading": "Saved signatures",
+      "description": "Reuse saved signatures at any time.",
+      "emptyTitle": "No saved signatures yet",
+      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
+      "type": {
+        "canvas": "Drawing",
+        "image": "Upload",
+        "text": "Text"
+      },
+      "limitTitle": "Limit reached",
+      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
+      "carouselPosition": "{{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "delete": "Remove",
+      "label": "Label",
+      "defaultLabel": "Signature",
+      "defaultCanvasLabel": "Drawing signature",
+      "defaultImageLabel": "Uploaded signature",
+      "defaultTextLabel": "Typed signature",
+      "saveButton": "Save signature",
+      "saveUnavailable": "Create a signature first to save it.",
+      "noChanges": "Current signature is already saved.",
+      "status": {
+        "saved": "Saved"
+      }
+    },
     "save": "Save Signature",
     "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
@@ -2002,12 +2200,18 @@
     "steps": {
       "configure": "Configure Signature"
     },
+    "step": {
+      "createDesc": "Choose how you want to create the signature",
+      "place": "Place & save",
+      "placeDesc": "Position the signature on your PDF"
+    },
     "type": {
       "title": "Signature Type",
       "draw": "Draw",
       "canvas": "Canvas",
       "image": "Image",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Saved"
     },
     "image": {
       "label": "Upload signature image",
@@ -2018,11 +2222,17 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "saved": "Select a saved signature above, then click anywhere on the PDF to place it.",
+      "text": "After entering your name above, click anywhere on the PDF to place your signature.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your signature.",
+      "noSignature": "Create a signature above to enable placement tools."
     },
     "mode": {
       "move": "Move Signature",
-      "place": "Place Signature"
+      "place": "Place Signature",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
     },
     "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
@@ -3176,6 +3386,7 @@
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
     "signinTitle": "Please sign in",
     "ssoSignIn": "Login via Single Sign-on",
     "oAuth2AutoCreateDisabled": "OAUTH2 Auto-Create User Disabled",
@@ -3605,7 +3816,8 @@
     "toggleAnnotations": "Toggle Annotations Visibility",
     "annotationMode": "Toggle Annotation Mode",
     "draw": "Draw",
-    "save": "Save"
+    "save": "Save",
+    "saveChanges": "Save Changes"
   },
   "search": {
     "title": "Search PDF",
@@ -3652,8 +3864,10 @@
     "help": "Help",
     "account": "Account",
     "config": "Config",
+    "settings": "Settings",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools",
+    "allTools": "Tools",
+    "reader": "Reader",
     "helpMenu": {
       "toolsTour": "Tools Tour",
       "toolsTourDesc": "Learn what the tools can do",
@@ -3679,6 +3893,12 @@
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Restart Required",
+      "loginRequired": "Login mode must be enabled to modify admin settings",
+      "loginDisabled": {
+        "title": "Login Mode Required",
+        "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
+        "readOnly": "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+      },
       "restart": {
         "title": "Restart Required",
         "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
@@ -3748,6 +3968,12 @@
             "label": "Default Producer",
             "description": "Default producer for PDF metadata"
           }
+        },
+        "logoStyle": {
+          "label": "Logo Style",
+          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "classic": "Classic",
+          "modern": "Modern"
         },
         "customPaths": {
           "label": "Custom Paths",
@@ -4605,6 +4831,9 @@
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   },
+  "colorPicker": {
+    "title": "Choose colour"
+  },
   "common": {
     "previous": "Previous",
     "next": "Next",
@@ -4620,7 +4849,8 @@
     "used": "used",
     "available": "available",
     "cancel": "Cancel",
-    "preview": "Preview"
+    "preview": "Preview",
+    "done": "Done"
   },
   "config": {
     "overview": {
@@ -4648,6 +4878,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Use your API key to programmatically access Stirling PDF's processing capabilities.",
+      "docsTitle": "API Documentation",
+      "docsDescription": "Learn more about integrating with Stirling PDF:",
+      "docsLink": "API Documentation",
+      "schemaLink": "API Schema Reference",
+      "usage": "Include this key in the X-API-KEY header with all API requests.",
       "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
       "publicKeyAriaLabel": "Public API key",
       "copyKeyAriaLabel": "Copy API key",
@@ -4776,7 +5012,7 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
-    "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
+    "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
     "filesButton": "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
@@ -4836,7 +5072,8 @@
       "admin": "Admin",
       "roleDescriptions": {
         "admin": "Can manage settings and invite members, with full administrative access.",
-        "member": "Can view and edit shared files, but cannot manage workspace settings or members."
+        "member": "Can view and edit shared files, but cannot manage workspace settings or members.",
+        "user": "User"
       },
       "editRole": "Edit Role",
       "enable": "Enable",
@@ -4917,6 +5154,7 @@
         "copied": "Link copied to clipboard",
         "success": "Invite link generated successfully",
         "successWithEmail": "Invite link generated and sent via email",
+        "emailSent": "Invite link generated and sent via email",
         "emailFailed": "Invite link generated, but email failed",
         "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
         "error": "Failed to generate invite link",

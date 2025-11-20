@@ -19,6 +19,7 @@ export interface AppConfig {
   serverPort?: number;
   appNameNavbar?: string;
   languages?: string[];
+  logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
   enableEmailInvites?: boolean;
   isAdmin?: boolean;
@@ -38,6 +39,9 @@ export interface AppConfig {
   license?: string;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
+  appVersion?: string;
+  machineType?: string;
+  activeSecurity?: boolean;
   error?: string;
 }
 

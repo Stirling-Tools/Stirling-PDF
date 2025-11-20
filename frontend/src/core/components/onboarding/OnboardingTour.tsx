@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import TourWelcomeModal from '@app/components/onboarding/TourWelcomeModal';
 import '@app/components/onboarding/OnboardingTour.css';
+import i18n from "@app/i18n";
 
 // Enum case order defines order steps will appear
 enum TourStep {
@@ -120,10 +121,10 @@ export default function OnboardingTour() {
   } = useAdminTourOrchestration();
 
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
-  const stepsConfig: Record<TourStep, StepType> = {
+  const stepsConfig: Record<TourStep, StepType> = useMemo(() => ({
     [TourStep.ALL_TOOLS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.allTools', 'This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.'),
+      content: t('onboarding.allTools', 'This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.'),
       position: 'center',
       padding: 0,
       action: () => {
@@ -248,10 +249,10 @@ export default function OnboardingTour() {
       position: 'right',
       padding: 10,
     },
-  };
+  }), [t]);
 
   // Define admin tour steps
-  const adminStepsConfig: Record<AdminTourStep, StepType> = {
+  const adminStepsConfig: Record<AdminTourStep, StepType> = useMemo(() => ({
     [AdminTourStep.WELCOME]: {
       selector: '[data-tour="config-button"]',
       content: t('adminOnboarding.welcome', "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."),
@@ -363,7 +364,7 @@ export default function OnboardingTour() {
         removeAllGlows();
       },
     },
-  };
+  }), [t]);
 
   // Select steps based on tour type
   const steps = tourType === 'admin'
@@ -416,7 +417,7 @@ export default function OnboardingTour() {
         }}
       />
       <TourProvider
-        key={tourType}
+        key={`${tourType}-${i18n.language}`}
         steps={steps}
         maskClassName={tourType === 'admin' ? 'admin-tour-mask' : undefined}
         onClickClose={handleCloseTour}

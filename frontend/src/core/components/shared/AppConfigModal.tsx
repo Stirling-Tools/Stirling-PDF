@@ -64,19 +64,19 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     headerBorder: 'var(--modal-header-border)',
   }), []);
 
-  // Get isAdmin and runningEE from app config
+  // Get isAdmin, runningEE, and loginEnabled from app config
   const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
-
-  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, fullConfig: config });
+  const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
       isAdmin,
-      runningEE
+      runningEE,
+      loginEnabled
     ),
-    [isAdmin, runningEE]
+    [isAdmin, runningEE, loginEnabled]
   );
 
   const activeLabel = useMemo(() => {
@@ -143,16 +143,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                       <div
                         key={item.key}
                         onClick={() => {
-                          if (!isDisabled) {
-                            setActive(item.key);
-                            navigate(`/settings/${item.key}`);
-                          }
+                          // Allow navigation even when disabled - the content inside will be disabled
+                          setActive(item.key);
+                          navigate(`/settings/${item.key}`);
                         }}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
-                          opacity: isDisabled ? 0.5 : 1,
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          opacity: isDisabled ? 0.6 : 1,
+                          cursor: 'pointer',
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
