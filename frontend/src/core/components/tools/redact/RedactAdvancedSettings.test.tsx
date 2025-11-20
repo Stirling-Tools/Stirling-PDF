@@ -147,8 +147,8 @@ describe('RedactAdvancedSettings', () => {
     {
       paramName: 'convertPDFToImage' as const,
       label: 'Convert PDF to PDF-Image (Used to remove text behind the box)',
-      initialValue: true,
-      expectedValue: false,
+      initialValue: false,
+      expectedValue: true,
     },
   ])('should call onParameterChange when $paramName checkbox is toggled', ({ paramName, label, initialValue, expectedValue }) => {
     const customParameters = {

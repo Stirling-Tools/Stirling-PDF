@@ -12,8 +12,10 @@ import stirling.software.common.model.api.PDFFile;
 public class RedactPdfRequest extends PDFFile {
 
     @Schema(
-            description = "List of text to redact from the PDF",
-            defaultValue = "text,text2",
+            description =
+                    "List of text to redact from the PDF. Supply one entry per line (Swagger users can"
+                            + " also separate values with commas).",
+            defaultValue = "text\ntext2",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String listOfText;
 

@@ -113,7 +113,7 @@ describe('useRedactParameters', () => {
     expect(result.current.parameters.mode).toBe('automatic');
     expect(result.current.parameters.useRegex).toBe(false);
     expect(result.current.parameters.wholeWordSearch).toBe(false);
-    expect(result.current.parameters.convertPDFToImage).toBe(true);
+    expect(result.current.parameters.convertPDFToImage).toBe(false);
   });
 
   test('should handle array parameter updates correctly', () => {

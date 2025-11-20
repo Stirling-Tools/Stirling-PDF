@@ -73,27 +73,19 @@ public class TextFinder extends PDFTextStripper {
             super.endPage(page);
             return;
         }
-        String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
-        if (this.wholeWordSearch) {
-            if (processedSearchTerm.length() == 1
-                    && Character.isDigit(processedSearchTerm.charAt(0))) {
-                regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
-            } else if (processedSearchTerm.length() == 1) {
-                regex = "(?<![\\w])" + regex + "(?![\\w])";
-            } else {
-                regex = "\\b" + regex + "\\b";
-            }
+        PatternContext patternContext = buildSearchPattern(processedSearchTerm);
+        if (patternContext == null) {
+            super.endPage(page);
+            return;
         }
 
-        // Use cached pattern compilation for better performance
-        Pattern pattern = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
-        Matcher matcher = pattern.matcher(text);
+        Matcher matcher = patternContext.pattern.matcher(text);
 
         log.debug(
                 "Searching for '{}' in page {} with regex '{}' (wholeWord: {}, useRegex: {})",
                 processedSearchTerm,
                 getCurrentPageNo(),
-                regex,
+                patternContext.regex,
                 wholeWordSearch,
                 useRegex);
 
@@ -110,68 +102,9 @@ public class TextFinder extends PDFTextStripper {
                     matchEnd,
                     matcher.group());
 
-            float minX = Float.MAX_VALUE;
-            float minY = Float.MAX_VALUE;
-            float maxX = Float.MIN_VALUE;
-            float maxY = Float.MIN_VALUE;
-            boolean foundPosition = false;
-
-            for (int i = matchStart; i < matchEnd; i++) {
-                if (i >= pageTextPositions.size()) {
-                    log.debug(
-                            "Position index {} exceeds available positions ({})",
-                            i,
-                            pageTextPositions.size());
-                    continue;
-                }
-                TextPosition pos = pageTextPositions.get(i);
-                if (pos != null) {
-                    foundPosition = true;
-                    minX = Math.min(minX, pos.getX());
-                    maxX = Math.max(maxX, pos.getX() + pos.getWidth());
-                    minY = Math.min(minY, pos.getY() - pos.getHeight());
-                    maxY = Math.max(maxY, pos.getY());
-                }
-            }
-
-            if (!foundPosition && matchStart < pageTextPositions.size()) {
-                log.debug(
-                        "Attempting to find nearby positions for match at {}-{}",
-                        matchStart,
-                        matchEnd);
-
-                for (int i = Math.max(0, matchStart - 5);
-                        i < Math.min(pageTextPositions.size(), matchEnd + 5);
-                        i++) {
-                    TextPosition pos = pageTextPositions.get(i);
-                    if (pos != null) {
-                        foundPosition = true;
-                        minX = Math.min(minX, pos.getX());
-                        maxX = Math.max(maxX, pos.getX() + pos.getWidth());
-                        minY = Math.min(minY, pos.getY() - pos.getHeight());
-                        maxY = Math.max(maxY, pos.getY());
-                        break;
-                    }
-                }
-            }
-
-            if (foundPosition) {
-                foundTexts.add(
-                        new PDFText(
-                                this.getCurrentPageNo() - 1,
-                                minX,
-                                minY,
-                                maxX,
-                                maxY,
-                                matcher.group()));
-                log.debug(
-                        "Added PDFText for match: page={}, bounds=({},{},{},{}), text='{}'",
-                        getCurrentPageNo() - 1,
-                        minX,
-                        minY,
-                        maxX,
-                        maxY,
-                        matcher.group());
+            Bounds bounds = computeBounds(matchStart, matchEnd);
+            if (bounds != null) {
+                addFoundText(bounds, matcher.group());
             } else {
                 log.warn(
                         "Found text match '{}' but no valid position data at {}-{}",
@@ -190,29 +123,104 @@ public class TextFinder extends PDFTextStripper {
         super.endPage(page);
     }
 
-    public String getDebugInfo() {
-        StringBuilder debug = new StringBuilder();
-        debug.append("Extracted text length: ").append(pageTextBuilder.length()).append("\n");
-        debug.append("Position count: ").append(pageTextPositions.size()).append("\n");
-        debug.append("Text content: '")
-                .append(pageTextBuilder.toString().replace("\n", "\\n").replace("\r", "\\r"))
-                .append("'\n");
-
-        String text = pageTextBuilder.toString();
-        for (int i = 0; i < Math.min(text.length(), 50); i++) {
-            char c = text.charAt(i);
-            TextPosition pos = i < pageTextPositions.size() ? pageTextPositions.get(i) : null;
-            debug.append(
-                    String.format(
-                            "  [%d] '%c' (0x%02X) -> %s\n",
-                            i,
-                            c,
-                            (int) c,
-                            pos != null
-                                    ? String.format("(%.1f,%.1f)", pos.getX(), pos.getY())
-                                    : "null"));
+    private PatternContext buildSearchPattern(String processedSearchTerm) {
+        if (processedSearchTerm == null || processedSearchTerm.isEmpty()) {
+            return null;
         }
 
-        return debug.toString();
+        String regex = useRegex ? processedSearchTerm : Pattern.quote(processedSearchTerm);
+        if (wholeWordSearch) {
+            regex = applyWordBoundaries(processedSearchTerm, regex);
+        }
+
+        Pattern pattern = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
+        return new PatternContext(pattern, regex);
+    }
+
+    private String applyWordBoundaries(String term, String regex) {
+        if (term.length() == 1 && Character.isDigit(term.charAt(0))) {
+            return "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
+        } else if (term.length() == 1) {
+            return "(?<![\\w])" + regex + "(?![\\w])";
+        }
+        return "\\b" + regex + "\\b";
+    }
+
+    private Bounds computeBounds(int matchStart, int matchEnd) {
+        BoundsAccumulator accumulator = new BoundsAccumulator();
+        collectBounds(matchStart, matchEnd, accumulator);
+
+        if (!accumulator.hasData()) {
+            log.debug(
+                    "Attempting to find nearby positions for match at {}-{}", matchStart, matchEnd);
+            int fallbackStart = Math.max(0, matchStart - 5);
+            int fallbackEnd = Math.min(pageTextPositions.size(), matchEnd + 5);
+            collectBounds(fallbackStart, fallbackEnd, accumulator);
+        }
+
+        return accumulator.hasData() ? accumulator.toBounds() : null;
+    }
+
+    private void collectBounds(int start, int end, BoundsAccumulator accumulator) {
+        int safeEnd = Math.min(end, pageTextPositions.size());
+        for (int i = Math.max(0, start); i < safeEnd; i++) {
+            TextPosition pos = pageTextPositions.get(i);
+            if (pos != null) {
+                accumulator.include(pos);
+            }
+        }
+    }
+
+    private void addFoundText(Bounds bounds, String text) {
+        int pageIndex = this.getCurrentPageNo() - 1;
+        foundTexts.add(
+                new PDFText(pageIndex, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY, text));
+
+        log.debug(
+                "Added PDFText for match: page={}, bounds=({},{},{},{}), text='{}'",
+                pageIndex,
+                bounds.minX,
+                bounds.minY,
+                bounds.maxX,
+                bounds.maxY,
+                text);
+    }
+
+    private record PatternContext(Pattern pattern, String regex) {}
+
+    private static final class Bounds {
+        private final float minX;
+        private final float minY;
+        private final float maxX;
+        private final float maxY;
+
+        private Bounds(float minX, float minY, float maxX, float maxY) {
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+        }
+    }
+
+    private static final class BoundsAccumulator {
+        private float minX = Float.POSITIVE_INFINITY;
+        private float minY = Float.POSITIVE_INFINITY;
+        private float maxX = Float.NEGATIVE_INFINITY;
+        private float maxY = Float.NEGATIVE_INFINITY;
+
+        void include(TextPosition pos) {
+            minX = Math.min(minX, pos.getX());
+            maxX = Math.max(maxX, pos.getX() + pos.getWidth());
+            minY = Math.min(minY, pos.getY() - pos.getHeight());
+            maxY = Math.max(maxY, pos.getY());
+        }
+
+        boolean hasData() {
+            return minX != Float.POSITIVE_INFINITY;
+        }
+
+        Bounds toBounds() {
+            return new Bounds(minX, minY, maxX, maxY);
+        }
     }
 }
