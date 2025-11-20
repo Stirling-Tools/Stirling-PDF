@@ -5358,7 +5358,24 @@
     "manageBilling": "Manage Billing",
     "portal": {
       "error": "Failed to open billing portal"
-    }
+    },
+    "updateSeats": "Update Seats",
+    "updateEnterpriseSeats": "Update Enterprise Seats",
+    "currentSeats": "Current Seats",
+    "minimumSeats": "Minimum Seats",
+    "basedOnUsers": "(current users)",
+    "newSeatCount": "New Seat Count",
+    "newSeatCountDescription": "Select the number of seats for your enterprise licence",
+    "whatHappensNext": "What happens next?",
+    "stripePortalRedirect": "You will be redirected to Stripe's billing portal to review and confirm the seat change. The prorated amount will be calculated automatically.",
+    "preparingUpdate": "Preparing seat update...",
+    "seatCountTooLow": "Seat count must be at least {{minimum}} (current number of users)",
+    "seatCountUnchanged": "Please select a different seat count",
+    "seatsUpdated": "Seats Updated",
+    "seatsUpdatedMessage": "Your enterprise seats have been updated to {{seats}}",
+    "updateProcessing": "Update Processing",
+    "updateProcessingMessage": "Your seat update is being processed. Please refresh in a few moments.",
+    "notEnterprise": "Seat management is only available for enterprise licences"
   },
   "upgradeBanner": {
     "title": "Upgrade to Server Plan",

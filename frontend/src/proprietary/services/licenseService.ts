@@ -443,6 +443,42 @@ const licenseService = {
       throw error;
     }
   },
+
+  /**
+   * Update enterprise seat count
+   * Creates a Stripe billing portal session for confirming seat changes
+   * @param newSeatCount - New number of seats
+   * @param licenseKey - Current license key for authentication
+   * @returns Billing portal URL for confirming the change
+   */
+  async updateEnterpriseSeats(newSeatCount: number, licenseKey: string): Promise<string> {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. Seat updates are not available.');
+    }
+
+    const baseUrl = window.location.origin;
+    const returnUrl = `${baseUrl}/settings/adminPlan?seats_updated=true`;
+
+    const { data, error } = await supabase.functions.invoke('manage-billing', {
+      body: {
+        return_url: returnUrl,
+        license_key: licenseKey,
+        self_hosted: true,
+        new_seat_count: newSeatCount,
+      },
+    });
+
+    if (error) {
+      throw new Error(`Failed to update seat count: ${error.message}`);
+    }
+
+    if (!data || !data.url) {
+      throw new Error('No billing portal URL returned');
+    }
+
+    return data.url;
+  },
 };
 
 /**
