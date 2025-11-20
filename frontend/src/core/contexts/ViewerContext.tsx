@@ -39,14 +39,23 @@ import {
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 function useImmediateNotifier<Args extends unknown[]>() {
-  const callbackRef = useRef<((...args: Args) => void) | null>(null);
+  const callbacksRef = useRef(new Set<(...args: Args) => void>());
 
   const register = useCallback((callback: (...args: Args) => void) => {
-    callbackRef.current = callback;
+    callbacksRef.current.add(callback);
+    return () => {
+      callbacksRef.current.delete(callback);
+    };
   }, []);
 
   const trigger = useCallback((...args: Args) => {
-    callbackRef.current?.(...args);
+    callbacksRef.current.forEach(cb => {
+      try {
+        cb(...args);
+      } catch (error) {
+        console.error('Immediate callback error:', error);
+      }
+    });
   }, []);
 
   return { register, trigger };
@@ -91,9 +100,9 @@ interface ViewerContextType {
   getExportState: () => ExportState;
 
   // Immediate update callbacks
-  registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
-  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => void;
-  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => void;
+  registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
+  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => () => void;
+  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => () => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
