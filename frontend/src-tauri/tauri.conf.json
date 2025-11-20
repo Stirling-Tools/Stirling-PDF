@@ -49,6 +49,9 @@
     "linux": {
       "deb": {
         "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
       }
     },
     "windows": {

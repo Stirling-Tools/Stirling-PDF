@@ -86,7 +86,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libfuse2 file
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf file libfuse2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -185,6 +185,40 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
+
+      # Fix for AppImage bundling in CI environment
+      - name: Configure AppImage build environment (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          echo "Setting up AppImage build environment..."
+          # Ensure APPIMAGE_EXTRACT_AND_RUN is set
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> $GITHUB_ENV
+          echo "NO_STRIP=true" >> $GITHUB_ENV
+          echo "LINUXDEPLOY_OUTPUT_VERSION=continuous" >> $GITHUB_ENV
+
+          # Create directories for linuxdeploy if needed
+          mkdir -p ~/.local/bin
+
+          # Verify FUSE2 is available
+          if ! command -v fusermount &> /dev/null; then
+            echo "Warning: fusermount not found, AppImage may fail"
+          else
+            echo "FUSE2 available: $(fusermount -V)"
+          fi
+
+          # Verify desktop file exists
+          if [ -f "./frontend/src-tauri/stirling-pdf.desktop" ]; then
+            echo "Desktop file found"
+            cat "./frontend/src-tauri/stirling-pdf.desktop"
+          else
+            echo "ERROR: Desktop file not found"
+            exit 1
+          fi
+
+          # Check available tools
+          echo "Checking build tools..."
+          which patchelf || echo "patchelf not found"
+          which file || echo "file not found"
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -306,7 +340,7 @@ jobs:
       #     ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -322,6 +356,9 @@ jobs:
           SIGN: ${{ (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
           APPIMAGE_EXTRACT_AND_RUN: 1
+          # Additional AppImage configuration
+          LINUXDEPLOY_OUTPUT_VERSION: continuous
+          NO_STRIP: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
