@@ -171,6 +171,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             {activeStep === SetupStep.SaaSLogin && (
               <LoginForm
                 serverUrl={serverConfig?.url || ''}
+                isSaaS={true}
                 onLogin={handleSaaSLogin}
                 loading={loading}
               />
@@ -183,6 +184,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             {activeStep === SetupStep.SelfHostedLogin && (
               <LoginForm
                 serverUrl={serverConfig?.url || ''}
+                isSaaS={false}
                 onLogin={handleSelfHostedLogin}
                 loading={loading}
               />

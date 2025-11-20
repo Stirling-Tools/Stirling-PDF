@@ -5516,8 +5516,8 @@
     },
     "mode": {
       "saas": {
-        "title": "Use SaaS",
-        "description": "Sign in to Stirling PDF cloud service"
+        "title": "Stirling Cloud",
+        "description": "Sign in with your Stirling account"
       },
       "selfhosted": {
         "title": "Self-Hosted Server",
@@ -5525,11 +5525,11 @@
       }
     },
     "saas": {
-      "title": "Sign In to SaaS",
-      "subtitle": "Enter your Stirling PDF account credentials"
+      "title": "Sign in to Stirling",
+      "subtitle": "Sign in with your Stirling account"
     },
     "selfhosted": {
-      "title": "Sign In to Server",
+      "title": "Sign in to Server",
       "subtitle": "Enter your server credentials"
     },
     "server": {
@@ -5573,7 +5573,7 @@
     "connection": {
       "title": "Connection Mode",
       "mode": {
-        "saas": "SaaS",
+        "saas": "Stirling Cloud",
         "selfhosted": "Self-Hosted"
       },
       "server": "Server",
