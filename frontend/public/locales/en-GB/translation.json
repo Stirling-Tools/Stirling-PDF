@@ -26,7 +26,10 @@
     "toggle": {
       "fullscreen": "Switch to fullscreen mode",
       "sidebar": "Switch to sidebar mode"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Premium feature:",
+    "comingSoon": "Coming soon:"
   },
   "unsavedChanges": "You have unsaved changes to your PDF.",
   "areYouSure": "Are you sure you want to leave?",
@@ -68,6 +71,7 @@
   "language": {
     "direction": "ltr"
   },
+  "cancel": "Cancel",
   "addPageNumbers": {
     "fontSize": "Font Size",
     "fontName": "Font Name",
@@ -128,6 +132,8 @@
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
+  "back": "Back",
+  "nothingToUndo": "Nothing to undo",
   "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
@@ -165,6 +171,11 @@
     "x-large": "X-Large"
   },
   "error": {
+    "404": {
+      "1": "We can't seem to find the page you're looking for.",
+      "2": "Something went wrong",
+      "head": "404 - Page Not Found | Oops, we tripped in the code!"
+    },
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
     "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
     "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
@@ -173,11 +184,6 @@
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
     "contactTip": "If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:",
-    "404": {
-      "head": "404 - Page Not Found | Oops, we tripped in the code!",
-      "1": "We can't seem to find the page you're looking for.",
-      "2": "Something went wrong"
-    },
     "github": "Submit a ticket on GitHub",
     "showStack": "Show Stack Trace",
     "copyStack": "Copy Stack Trace",
@@ -305,55 +311,46 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "update": "Update available",
-    "updateAvailable": "{0} is the current installed version. A new version ({1}) is available.",
-    "appVersion": "App Version:",
-    "downloadOption": {
-      "title": "Choose download option (For single file non zip downloads):",
-      "1": "Open in same window",
-      "2": "Open in new window",
-      "3": "Download file"
-    },
-    "zipThreshold": "Zip files when the number of downloaded files exceeds",
-    "signOut": "Sign Out",
-    "accountSettings": "Account Settings",
-    "bored": {
-      "help": "Enables easter egg game"
-    },
-    "cacheInputs": {
-      "name": "Save form inputs",
-      "help": "Enable to store previously used inputs for future runs"
+    "connection": {
+      "title": "Connection Mode",
+      "mode": {
+        "offline": "Offline",
+        "server": "Server"
+      },
+      "server": "Server",
+      "user": "Logged in as",
+      "switchToServer": "Connect to Server",
+      "switchToOffline": "Switch to Offline",
+      "logout": "Logout",
+      "selectServer": "Select Server",
+      "login": "Login"
     },
     "general": {
       "title": "General",
       "description": "Configure general application preferences.",
-      "account": "Account",
-      "accountDescription": "Manage your account settings",
       "user": "User",
-      "signedInAs": "Signed in as",
       "logout": "Log out",
       "enableFeatures": {
+        "dismiss": "Dismiss",
         "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organization.",
+        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
         "action": "Configure",
         "and": "and",
         "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation",
-        "dismiss": "Dismiss"
+        "learnMore": "Learn more in documentation"
       },
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
       "defaultToolPickerMode": "Default tool picker mode",
       "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
       "mode": {
-        "fullscreen": "Fullscreen",
-        "sidebar": "Sidebar"
+        "sidebar": "Sidebar",
+        "fullscreen": "Fullscreen"
       },
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
       "defaultPdfEditor": "Default PDF editor",
       "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
       "defaultPdfEditorInactive": "Another application is set as default",
@@ -370,13 +367,8 @@
       }
     },
     "hotkeys": {
-      "title": "Keyboard Shortcuts",
-      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
-      "errorModifier": {
-        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
-        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
-      },
       "errorConflict": "Shortcut already used by {{tool}}.",
+      "searchPlaceholder": "Search tools...",
       "none": "Not assigned",
       "customBadge": "Custom",
       "defaultLabel": "Default: {{shortcut}}",
@@ -384,8 +376,7 @@
       "change": "Change shortcut",
       "reset": "Reset",
       "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set",
-      "searchPlaceholder": "Search tools..."
+      "noShortcut": "No shortcut set"
     }
   },
   "update": {
@@ -548,7 +539,14 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo"
+      "brandAlt": "Stirling PDF logo",
+      "openFiles": "Open files",
+      "swipeHint": "Swipe left or right to switch views",
+      "tools": "Tools",
+      "toolsSlide": "Tool selection panel",
+      "viewSwitcher": "Switch workspace view",
+      "workbenchSlide": "Workspace panel",
+      "workspace": "Workspace"
     },
     "multiTool": {
       "tags": "multiple,tools",
@@ -840,24 +838,13 @@
       "title": "Automate",
       "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
-    "pdfTextEditor": {
-      "tags": "edit,text,modify",
-      "title": "PDF Text Editor",
-      "desc": "Edit text content in PDF documents"
-    },
-    "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
-    },
     "overlay-pdfs": {
       "desc": "Overlay one PDF on top of another",
       "title": "Overlay PDFs"
+    },
+    "pdfTextEditor": {
+      "title": "PDF Text Editor",
+      "desc": "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
     }
   },
   "landing": {
@@ -897,15 +884,19 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "Merge",
-    "removeDigitalSignature": "Remove digital signature in the merged file?",
-    "generateTableOfContents": "Generate table of contents in the merged file?",
-    "removeDigitalSignature.tooltip": {
-      "title": "Remove Digital Signature",
-      "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
+    "removeDigitalSignature": {
+      "label": "Remove digital signature in the merged file?",
+      "tooltip": {
+        "title": "Remove Digital Signature",
+        "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
+      }
     },
-    "generateTableOfContents.tooltip": {
-      "title": "Generate Table of Contents",
-      "description": "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
+    "generateTableOfContents": {
+      "label": "Generate table of contents in the merged file?",
+      "tooltip": {
+        "title": "Generate Table of Contents",
+        "description": "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
+      }
     },
     "submit": "Merge",
     "sortBy": {
@@ -1176,7 +1167,11 @@
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
     "grayscale": "Greyscale",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "An error occurred while converting the file.",
+    "cbzOptions": "CBZ to PDF Options",
+    "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+    "cbzOutputOptions": "PDF to CBZ Options",
+    "cbzDpi": "DPI for image rendering"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -1203,7 +1198,6 @@
     "header": "PDF Page Organiser",
     "submit": "Rearrange Pages",
     "mode": {
-      "_value": "Organisation mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -1215,6 +1209,7 @@
       "9": "Remove First and Last",
       "10": "Odd-Even Merge",
       "11": "Duplicate all pages",
+      "_value": "Organisation mode",
       "desc": {
         "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
         "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
@@ -2256,8 +2251,10 @@
     "options": {
       "stepTitle": "Flatten Options",
       "title": "Flatten Options",
-      "flattenOnlyForms": "Flatten only forms",
-      "flattenOnlyForms.desc": "Only flatten form fields, leaving other interactive elements intact",
+      "flattenOnlyForms": {
+        "label": "Flatten only forms",
+        "desc": "Only flatten form fields, leaving other interactive elements intact"
+      },
       "note": "Flattening removes interactive elements from the PDF, making them non-editable."
     },
     "results": {
@@ -2401,8 +2398,12 @@
     "selection": {
       "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "original": { "label": "Original PDF" },
-    "edited": { "label": "Edited PDF" },
+    "original": {
+      "label": "Original PDF"
+    },
+    "edited": {
+      "label": "Edited PDF"
+    },
     "swap": {
       "confirmTitle": "Re-run comparison?",
       "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
@@ -2410,7 +2411,6 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2432,9 +2432,30 @@
       "searchPlaceholder": "Search changes...",
       "noResults": "No changes found"
     },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
+    "actions": {
+      "stackVertically": "Stack vertically",
+      "placeSideBySide": "Place side by side",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view",
+      "unlinkScrollPan": "Unlink scroll and pan",
+      "linkScrollPan": "Link scroll and pan",
+      "unlinkScroll": "Unlink scroll",
+      "linkScroll": "Link scroll"
+    },
+    "toasts": {
+      "unlinkedTitle": "Independent scroll & pan enabled",
+      "unlinkedBody": "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
+    },
+    "error": {
+      "selectRequired": "Select a original and edited document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analysing differences...",
+      "complete": "Comparison ready"
     },
     "longJob": {
       "title": "Large comparison in progress",
@@ -2445,7 +2466,6 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -2459,6 +2479,16 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "These documents appear highly dissimilar. Comparison was stopped to save time."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "These PDFs look highly different",
+      "body": "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
+      "stopButton": "Stop comparison"
     }
   },
   "certSign": {
@@ -2939,7 +2969,14 @@
     "title": "Show Javascript",
     "header": "Show Javascript",
     "downloadJS": "Download Javascript",
-    "submit": "Show"
+    "submit": "Show",
+    "results": "Result",
+    "processing": "Extracting JavaScript...",
+    "done": "JavaScript extracted",
+    "singleFileWarning": "This tool only supports one file at a time. Please select a single file.",
+    "view": {
+      "title": "Extracted JavaScript"
+    }
   },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
@@ -3412,13 +3449,14 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters long",
     "invalidEmail": "Please enter a valid email address",
+    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
+    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
+    "unexpectedError": "Unexpected error: {{message}}",
+    "useEmailInstead": "Use Email Instead",
     "nameRequired": "Name is required",
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Confirm password is required",
-    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
-    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
-    "unexpectedError": "Unexpected error: {{message}}"
+    "confirmPasswordRequired": "Please confirm your password"
   },
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
@@ -3513,8 +3551,8 @@
     },
     "selectText": {
       "1": {
-        "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality",
+        "_value": "Compression Settings"
       },
       "2": "Optimisation level:",
       "4": "Auto mode - Auto adjusts quality to get PDF to exact size",
@@ -3966,68 +4004,124 @@
           "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
         },
         "authentication": "Authentication",
-        "enableLogin": "Enable Login",
-        "enableLogin.description": "Require users to log in before accessing the application",
-        "loginMethod": "Login Method",
-        "loginMethod.description": "The authentication method to use for user login",
-        "loginMethod.all": "All Methods",
-        "loginMethod.normal": "Username/Password Only",
-        "loginMethod.oauth2": "OAuth2 Only",
-        "loginMethod.saml2": "SAML2 Only",
-        "loginAttemptCount": "Login Attempt Limit",
-        "loginAttemptCount.description": "Maximum number of failed login attempts before account lockout",
-        "loginResetTimeMinutes": "Login Reset Time (minutes)",
-        "loginResetTimeMinutes.description": "Time before failed login attempts are reset",
-        "csrfDisabled": "Disable CSRF Protection",
-        "csrfDisabled.description": "Disable Cross-Site Request Forgery protection (not recommended)",
-        "initialLogin": "Initial Login",
-        "initialLogin.username": "Initial Username",
-        "initialLogin.username.description": "The username for the initial admin account",
-        "initialLogin.password": "Initial Password",
-        "initialLogin.password.description": "The password for the initial admin account",
-        "jwt": "JWT Configuration",
-        "jwt.secureCookie": "Secure Cookie",
-        "jwt.secureCookie.description": "Require HTTPS for JWT cookies (recommended for production)",
-        "jwt.keyRetentionDays": "Key Retention Days",
-        "jwt.keyRetentionDays.description": "Number of days to retain old JWT keys for verification",
-        "jwt.persistence": "Enable Key Persistence",
-        "jwt.persistence.description": "Store JWT keys persistently to survive server restarts",
-        "jwt.enableKeyRotation": "Enable Key Rotation",
-        "jwt.enableKeyRotation.description": "Automatically rotate JWT signing keys periodically",
-        "jwt.enableKeyCleanup": "Enable Key Cleanup",
-        "jwt.enableKeyCleanup.description": "Automatically remove expired JWT keys",
-        "audit": "Audit Logging",
-        "audit.enabled": "Enable Audit Logging",
-        "audit.enabled.description": "Track user actions and system events for compliance and security monitoring",
-        "audit.level": "Audit Level",
-        "audit.level.description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE",
-        "audit.retentionDays": "Audit Retention (days)",
-        "audit.retentionDays.description": "Number of days to retain audit logs",
-        "htmlUrlSecurity": "HTML URL Security",
-        "htmlUrlSecurity.description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
-        "htmlUrlSecurity.enabled": "Enable URL Security",
-        "htmlUrlSecurity.enabled.description": "Enable URL security restrictions for HTML to PDF conversions",
-        "htmlUrlSecurity.level": "Security Level",
-        "htmlUrlSecurity.level.description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-        "htmlUrlSecurity.level.max": "Maximum (Whitelist Only)",
-        "htmlUrlSecurity.level.medium": "Medium (Block Internal)",
-        "htmlUrlSecurity.level.off": "Off (No Restrictions)",
-        "htmlUrlSecurity.advanced": "Advanced Settings",
-        "htmlUrlSecurity.allowedDomains": "Allowed Domains (Whitelist)",
-        "htmlUrlSecurity.allowedDomains.description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
-        "htmlUrlSecurity.blockedDomains": "Blocked Domains (Blacklist)",
-        "htmlUrlSecurity.blockedDomains.description": "One domain per line (e.g., malicious.com). Additional domains to block",
-        "htmlUrlSecurity.internalTlds": "Internal TLDs",
-        "htmlUrlSecurity.internalTlds.description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
-        "htmlUrlSecurity.networkBlocking": "Network Blocking",
-        "htmlUrlSecurity.blockPrivateNetworks": "Block Private Networks",
-        "htmlUrlSecurity.blockPrivateNetworks.description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
-        "htmlUrlSecurity.blockLocalhost": "Block Localhost",
-        "htmlUrlSecurity.blockLocalhost.description": "Block localhost and loopback addresses (127.x.x.x, ::1)",
-        "htmlUrlSecurity.blockLinkLocal": "Block Link-Local Addresses",
-        "htmlUrlSecurity.blockLinkLocal.description": "Block link-local addresses (169.254.x.x, fe80::/10)",
-        "htmlUrlSecurity.blockCloudMetadata": "Block Cloud Metadata Endpoints",
-        "htmlUrlSecurity.blockCloudMetadata.description": "Block cloud provider metadata endpoints (169.254.169.254)"
+        "enableLogin": {
+          "label": "Enable Login",
+          "description": "Require users to log in before accessing the application"
+        },
+        "loginMethod": {
+          "label": "Login Method",
+          "description": "The authentication method to use for user login",
+          "all": "All Methods",
+          "normal": "Username/Password Only",
+          "oauth2": "OAuth2 Only",
+          "saml2": "SAML2 Only"
+        },
+        "loginAttemptCount": {
+          "label": "Login Attempt Limit",
+          "description": "Maximum number of failed login attempts before account lockout"
+        },
+        "loginResetTimeMinutes": {
+          "label": "Login Reset Time (minutes)",
+          "description": "Time before failed login attempts are reset"
+        },
+        "csrfDisabled": {
+          "label": "Disable CSRF Protection",
+          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+        },
+        "initialLogin": {
+          "label": "Initial Login",
+          "username": {
+            "label": "Initial Username",
+            "description": "The username for the initial admin account"
+          },
+          "password": {
+            "label": "Initial Password",
+            "description": "The password for the initial admin account"
+          }
+        },
+        "jwt": {
+          "label": "JWT Configuration",
+          "secureCookie": {
+            "label": "Secure Cookie",
+            "description": "Require HTTPS for JWT cookies (recommended for production)"
+          },
+          "keyRetentionDays": {
+            "label": "Key Retention Days",
+            "description": "Number of days to retain old JWT keys for verification"
+          },
+          "persistence": {
+            "label": "Enable Key Persistence",
+            "description": "Store JWT keys persistently to survive server restarts"
+          },
+          "enableKeyRotation": {
+            "label": "Enable Key Rotation",
+            "description": "Automatically rotate JWT signing keys periodically"
+          },
+          "enableKeyCleanup": {
+            "label": "Enable Key Cleanup",
+            "description": "Automatically remove expired JWT keys"
+          }
+        },
+        "audit": {
+          "label": "Audit Logging",
+          "enabled": {
+            "label": "Enable Audit Logging",
+            "description": "Track user actions and system events for compliance and security monitoring"
+          },
+          "level": {
+            "label": "Audit Level",
+            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+          },
+          "retentionDays": {
+            "label": "Audit Retention (days)",
+            "description": "Number of days to retain audit logs"
+          }
+        },
+        "htmlUrlSecurity": {
+          "label": "HTML URL Security",
+          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "enabled": {
+            "label": "Enable URL Security",
+            "description": "Enable URL security restrictions for HTML to PDF conversions"
+          },
+          "level": {
+            "label": "Security Level",
+            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
+            "max": "Maximum (Whitelist Only)",
+            "medium": "Medium (Block Internal)",
+            "off": "Off (No Restrictions)"
+          },
+          "advanced": "Advanced Settings",
+          "allowedDomains": {
+            "label": "Allowed Domains (Whitelist)",
+            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+          },
+          "blockedDomains": {
+            "label": "Blocked Domains (Blacklist)",
+            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+          },
+          "internalTlds": {
+            "label": "Internal TLDs",
+            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+          },
+          "networkBlocking": "Network Blocking",
+          "blockPrivateNetworks": {
+            "label": "Block Private Networks",
+            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+          },
+          "blockLocalhost": {
+            "label": "Block Localhost",
+            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+          },
+          "blockLinkLocal": {
+            "label": "Block Link-Local Addresses",
+            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+          },
+          "blockCloudMetadata": {
+            "label": "Block Cloud Metadata Endpoints",
+            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+          }
+        }
       },
       "connections": {
         "title": "Connections",
@@ -4038,146 +4132,254 @@
         "disconnect": "Disconnect",
         "disconnected": "Provider disconnected successfully",
         "disconnectError": "Failed to disconnect provider",
-        "ssoAutoLogin": "SSO Auto Login",
-        "ssoAutoLogin.enable": "Enable SSO Auto Login",
-        "ssoAutoLogin.description": "Automatically redirect to SSO login when authentication is required",
-        "oauth2": "OAuth2",
-        "oauth2.enabled": "Enable OAuth2",
-        "oauth2.enabled.description": "Allow users to authenticate using OAuth2 providers",
-        "oauth2.provider": "Provider",
-        "oauth2.provider.description": "The OAuth2 provider to use for authentication",
-        "oauth2.issuer": "Issuer URL",
-        "oauth2.issuer.description": "The OAuth2 provider issuer URL",
-        "oauth2.clientId": "Client ID",
-        "oauth2.clientId.description": "The OAuth2 client ID from your provider",
-        "oauth2.clientSecret": "Client Secret",
-        "oauth2.clientSecret.description": "The OAuth2 client secret from your provider",
-        "oauth2.useAsUsername": "Use as Username",
-        "oauth2.useAsUsername.description": "The OAuth2 claim to use as the username (e.g., email, sub)",
-        "oauth2.autoCreateUser": "Auto Create Users",
-        "oauth2.autoCreateUser.description": "Automatically create user accounts on first OAuth2 login",
-        "oauth2.blockRegistration": "Block Registration",
-        "oauth2.blockRegistration.description": "Prevent new user registration via OAuth2",
-        "oauth2.scopes": "OAuth2 Scopes",
-        "oauth2.scopes.description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)",
-        "saml2": "SAML2",
-        "saml2.enabled": "Enable SAML2",
-        "saml2.enabled.description": "Allow users to authenticate using SAML2 providers",
-        "saml2.provider": "Provider",
-        "saml2.provider.description": "The SAML2 provider name",
-        "saml2.registrationId": "Registration ID",
-        "saml2.registrationId.description": "The SAML2 registration identifier",
-        "saml2.autoCreateUser": "Auto Create Users",
-        "saml2.autoCreateUser.description": "Automatically create user accounts on first SAML2 login",
-        "saml2.blockRegistration": "Block Registration",
-        "saml2.blockRegistration.description": "Prevent new user registration via SAML2"
+        "ssoAutoLogin": {
+          "label": "SSO Auto Login",
+          "enable": "Enable SSO Auto Login",
+          "description": "Automatically redirect to SSO login when authentication is required"
+        },
+        "oauth2": {
+          "label": "OAuth2",
+          "enabled": {
+            "label": "Enable OAuth2",
+            "description": "Allow users to authenticate using OAuth2 providers"
+          },
+          "provider": {
+            "label": "Provider",
+            "description": "The OAuth2 provider to use for authentication"
+          },
+          "issuer": {
+            "label": "Issuer URL",
+            "description": "The OAuth2 provider issuer URL"
+          },
+          "clientId": {
+            "label": "Client ID",
+            "description": "The OAuth2 client ID from your provider"
+          },
+          "clientSecret": {
+            "label": "Client Secret",
+            "description": "The OAuth2 client secret from your provider"
+          },
+          "useAsUsername": {
+            "label": "Use as Username",
+            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+          },
+          "autoCreateUser": {
+            "label": "Auto Create Users",
+            "description": "Automatically create user accounts on first OAuth2 login"
+          },
+          "blockRegistration": {
+            "label": "Block Registration",
+            "description": "Prevent new user registration via OAuth2"
+          },
+          "scopes": {
+            "label": "OAuth2 Scopes",
+            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+          }
+        },
+        "saml2": {
+          "label": "SAML2",
+          "enabled": {
+            "label": "Enable SAML2",
+            "description": "Allow users to authenticate using SAML2 providers"
+          },
+          "provider": {
+            "label": "Provider",
+            "description": "The SAML2 provider name"
+          },
+          "registrationId": {
+            "label": "Registration ID",
+            "description": "The SAML2 registration identifier"
+          },
+          "autoCreateUser": {
+            "label": "Auto Create Users",
+            "description": "Automatically create user accounts on first SAML2 login"
+          },
+          "blockRegistration": {
+            "label": "Block Registration",
+            "description": "Prevent new user registration via SAML2"
+          }
+        }
       },
       "database": {
         "title": "Database",
         "description": "Configure custom database connection settings for enterprise deployments.",
         "configuration": "Database Configuration",
-        "enableCustom": "Enable Custom Database",
-        "enableCustom.description": "Use your own custom database configuration instead of the default embedded database",
-        "customUrl": "Custom Database URL",
-        "customUrl.description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.",
-        "type": "Database Type",
-        "type.description": "Type of database (not used if custom URL is provided)",
-        "hostName": "Host Name",
-        "hostName.description": "Database server hostname (not used if custom URL is provided)",
-        "port": "Port",
-        "port.description": "Database server port (not used if custom URL is provided)",
-        "name": "Database Name",
-        "name.description": "Name of the database (not used if custom URL is provided)",
-        "username": "Username",
-        "username.description": "Database authentication username",
-        "password": "Password",
-        "password.description": "Database authentication password"
+        "enableCustom": {
+          "label": "Enable Custom Database",
+          "description": "Use your own custom database configuration instead of the default embedded database"
+        },
+        "customUrl": {
+          "label": "Custom Database URL",
+          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+        },
+        "type": {
+          "label": "Database Type",
+          "description": "Type of database (not used if custom URL is provided)"
+        },
+        "hostName": {
+          "label": "Host Name",
+          "description": "Database server hostname (not used if custom URL is provided)"
+        },
+        "port": {
+          "label": "Port",
+          "description": "Database server port (not used if custom URL is provided)"
+        },
+        "name": {
+          "label": "Database Name",
+          "description": "Name of the database (not used if custom URL is provided)"
+        },
+        "username": {
+          "label": "Username",
+          "description": "Database authentication username"
+        },
+        "password": {
+          "label": "Password",
+          "description": "Database authentication password"
+        }
       },
       "privacy": {
         "title": "Privacy",
         "description": "Configure privacy and data collection settings.",
         "analytics": "Analytics & Tracking",
-        "enableAnalytics": "Enable Analytics",
-        "enableAnalytics.description": "Collect anonymous usage analytics to help improve the application",
-        "metricsEnabled": "Enable Metrics",
-        "metricsEnabled.description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data",
+        "enableAnalytics": {
+          "label": "Enable Analytics",
+          "description": "Collect anonymous usage analytics to help improve the application"
+        },
+        "metricsEnabled": {
+          "label": "Enable Metrics",
+          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+        },
         "searchEngine": "Search Engine Visibility",
-        "googleVisibility": "Google Visibility",
-        "googleVisibility.description": "Allow search engines to index this application"
+        "googleVisibility": {
+          "label": "Google Visibility",
+          "description": "Allow search engines to index this application"
+        }
       },
       "advanced": {
         "title": "Advanced",
         "description": "Configure advanced features and experimental functionality.",
         "features": "Feature Flags",
         "processing": "Processing",
-        "endpoints": "Endpoints",
-        "endpoints.manage": "Manage API Endpoints",
-        "endpoints.description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints.",
-        "enableAlphaFunctionality": "Enable Alpha Features",
-        "enableAlphaFunctionality.description": "Enable experimental and alpha-stage features (may be unstable)",
-        "enableUrlToPDF": "Enable URL to PDF",
-        "enableUrlToPDF.description": "Allow conversion of web pages to PDF documents",
-        "maxDPI": "Maximum DPI",
-        "maxDPI.description": "Maximum DPI for image processing (0 = unlimited)",
-        "tessdataDir": "Tessdata Directory",
-        "tessdataDir.description": "Path to the tessdata directory for OCR language files",
-        "disableSanitize": "Disable HTML Sanitization",
-        "disableSanitize.description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities",
-        "tempFileManagement": "Temp File Management",
-        "tempFileManagement.description": "Configure temporary file storage and cleanup behavior",
-        "tempFileManagement.baseTmpDir": "Base Temp Directory",
-        "tempFileManagement.baseTmpDir.description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)",
-        "tempFileManagement.libreofficeDir": "LibreOffice Temp Directory",
-        "tempFileManagement.libreofficeDir.description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)",
-        "tempFileManagement.systemTempDir": "System Temp Directory",
-        "tempFileManagement.systemTempDir.description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)",
-        "tempFileManagement.prefix": "Temp File Prefix",
-        "tempFileManagement.prefix.description": "Prefix for temp file names",
-        "tempFileManagement.maxAgeHours": "Max Age (hours)",
-        "tempFileManagement.maxAgeHours.description": "Maximum age in hours before temp files are cleaned up",
-        "tempFileManagement.cleanupIntervalMinutes": "Cleanup Interval (minutes)",
-        "tempFileManagement.cleanupIntervalMinutes.description": "How often to run cleanup (in minutes)",
-        "tempFileManagement.startupCleanup": "Startup Cleanup",
-        "tempFileManagement.startupCleanup.description": "Clean up old temp files on application startup",
-        "tempFileManagement.cleanupSystemTemp": "Cleanup System Temp",
-        "tempFileManagement.cleanupSystemTemp.description": "Whether to clean broader system temp directory (use with caution)",
-        "processExecutor": "Process Executor Limits",
-        "processExecutor.description": "Configure session limits and timeouts for each process executor",
-        "processExecutor.sessionLimit": "Session Limit",
-        "processExecutor.sessionLimit.description": "Maximum concurrent instances",
-        "processExecutor.timeout": "Timeout (minutes)",
-        "processExecutor.timeout.description": "Maximum execution time",
-        "processExecutor.libreOffice": "LibreOffice",
-        "processExecutor.pdfToHtml": "PDF to HTML",
-        "processExecutor.qpdf": "QPDF",
-        "processExecutor.tesseract": "Tesseract OCR",
-        "processExecutor.pythonOpenCv": "Python OpenCV",
-        "processExecutor.weasyPrint": "WeasyPrint",
-        "processExecutor.installApp": "Install App",
-        "processExecutor.calibre": "Calibre",
-        "processExecutor.ghostscript": "Ghostscript",
-        "processExecutor.ocrMyPdf": "OCRmyPDF"
+        "endpoints": {
+          "label": "Endpoints",
+          "manage": "Manage API Endpoints",
+          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+        },
+        "enableAlphaFunctionality": {
+          "label": "Enable Alpha Features",
+          "description": "Enable experimental and alpha-stage features (may be unstable)"
+        },
+        "enableUrlToPDF": {
+          "label": "Enable URL to PDF",
+          "description": "Allow conversion of web pages to PDF documents"
+        },
+        "maxDPI": {
+          "label": "Maximum DPI",
+          "description": "Maximum DPI for image processing (0 = unlimited)"
+        },
+        "tessdataDir": {
+          "label": "Tessdata Directory",
+          "description": "Path to the tessdata directory for OCR language files"
+        },
+        "disableSanitize": {
+          "label": "Disable HTML Sanitization",
+          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+        },
+        "tempFileManagement": {
+          "label": "Temp File Management",
+          "description": "Configure temporary file storage and cleanup behavior",
+          "baseTmpDir": {
+            "label": "Base Temp Directory",
+            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+          },
+          "libreofficeDir": {
+            "label": "LibreOffice Temp Directory",
+            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+          },
+          "systemTempDir": {
+            "label": "System Temp Directory",
+            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+          },
+          "prefix": {
+            "label": "Temp File Prefix",
+            "description": "Prefix for temp file names"
+          },
+          "maxAgeHours": {
+            "label": "Max Age (hours)",
+            "description": "Maximum age in hours before temp files are cleaned up"
+          },
+          "cleanupIntervalMinutes": {
+            "label": "Cleanup Interval (minutes)",
+            "description": "How often to run cleanup (in minutes)"
+          },
+          "startupCleanup": {
+            "label": "Startup Cleanup",
+            "description": "Clean up old temp files on application startup"
+          },
+          "cleanupSystemTemp": {
+            "label": "Cleanup System Temp",
+            "description": "Whether to clean broader system temp directory (use with caution)"
+          }
+        },
+        "processExecutor": {
+          "label": "Process Executor Limits",
+          "description": "Configure session limits and timeouts for each process executor",
+          "sessionLimit": {
+            "label": "Session Limit",
+            "description": "Maximum concurrent instances"
+          },
+          "timeout": {
+            "label": "Timeout (minutes)",
+            "description": "Maximum execution time"
+          },
+          "libreOffice": "LibreOffice",
+          "pdfToHtml": "PDF to HTML",
+          "qpdf": "QPDF",
+          "tesseract": "Tesseract OCR",
+          "pythonOpenCv": "Python OpenCV",
+          "weasyPrint": "WeasyPrint",
+          "installApp": "Install App",
+          "calibre": "Calibre",
+          "ghostscript": "Ghostscript",
+          "ocrMyPdf": "OCRmyPDF"
+        }
       },
       "mail": {
         "title": "Mail Server",
         "description": "Configure SMTP settings for sending email notifications.",
         "smtp": "SMTP Configuration",
-        "enabled": "Enable Mail",
-        "enabled.description": "Enable email notifications and SMTP functionality",
-        "host": "SMTP Host",
-        "host.description": "The hostname or IP address of your SMTP server",
-        "port": "SMTP Port",
-        "port.description": "The port number for SMTP connection (typically 25, 465, or 587)",
-        "username": "SMTP Username",
-        "username.description": "Username for SMTP authentication",
-        "password": "SMTP Password",
-        "password.description": "Password for SMTP authentication",
-        "from": "From Address",
-        "from.description": "The email address to use as the sender",
-        "enableInvites": "Enable Email Invites",
-        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords",
-        "frontendUrl": "Frontend URL",
-        "frontendUrl.description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+        "enabled": {
+          "label": "Enable Mail",
+          "description": "Enable email notifications and SMTP functionality"
+        },
+        "host": {
+          "label": "SMTP Host",
+          "description": "The hostname or IP address of your SMTP server"
+        },
+        "port": {
+          "label": "SMTP Port",
+          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+        },
+        "username": {
+          "label": "SMTP Username",
+          "description": "Username for SMTP authentication"
+        },
+        "password": {
+          "label": "SMTP Password",
+          "description": "Password for SMTP authentication"
+        },
+        "from": {
+          "label": "From Address",
+          "description": "The email address to use as the sender"
+        },
+        "enableInvites": {
+          "label": "Enable Email Invites",
+          "description": "Allow admins to invite users via email with auto-generated passwords"
+        },
+        "frontendUrl": {
+          "label": "Frontend URL",
+          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+        }
       },
       "legal": {
         "title": "Legal Documents",
@@ -4186,16 +4388,26 @@
           "title": "Legal Responsibility Warning",
           "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
         },
-        "termsAndConditions": "Terms and Conditions",
-        "termsAndConditions.description": "URL or filename to terms and conditions",
-        "privacyPolicy": "Privacy Policy",
-        "privacyPolicy.description": "URL or filename to privacy policy",
-        "accessibilityStatement": "Accessibility Statement",
-        "accessibilityStatement.description": "URL or filename to accessibility statement",
-        "cookiePolicy": "Cookie Policy",
-        "cookiePolicy.description": "URL or filename to cookie policy",
-        "impressum": "Impressum",
-        "impressum.description": "URL or filename to impressum (required in some jurisdictions)"
+        "termsAndConditions": {
+          "label": "Terms and Conditions",
+          "description": "URL or filename to terms and conditions"
+        },
+        "privacyPolicy": {
+          "label": "Privacy Policy",
+          "description": "URL or filename to privacy policy"
+        },
+        "accessibilityStatement": {
+          "label": "Accessibility Statement",
+          "description": "URL or filename to accessibility statement"
+        },
+        "cookiePolicy": {
+          "label": "Cookie Policy",
+          "description": "URL or filename to cookie policy"
+        },
+        "impressum": {
+          "label": "Impressum",
+          "description": "URL or filename to impressum (required in some jurisdictions)"
+        }
       },
       "premium": {
         "title": "Premium & Enterprise",
@@ -4229,25 +4441,39 @@
       "features": {
         "title": "Features",
         "description": "Configure optional features and functionality.",
-        "serverCertificate": "Server Certificate",
-        "serverCertificate.description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
-        "serverCertificate.enabled": "Enable Server Certificate",
-        "serverCertificate.enabled.description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option",
-        "serverCertificate.organizationName": "Organization Name",
-        "serverCertificate.organizationName.description": "Organization name for generated certificates",
-        "serverCertificate.validity": "Certificate Validity (days)",
-        "serverCertificate.validity.description": "Number of days the certificate will be valid",
-        "serverCertificate.regenerateOnStartup": "Regenerate on Startup",
-        "serverCertificate.regenerateOnStartup.description": "Generate new certificate on each application startup"
+        "serverCertificate": {
+          "label": "Server Certificate",
+          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "enabled": {
+            "label": "Enable Server Certificate",
+            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+          },
+          "organizationName": {
+            "label": "Organization Name",
+            "description": "Organization name for generated certificates"
+          },
+          "validity": {
+            "label": "Certificate Validity (days)",
+            "description": "Number of days the certificate will be valid"
+          },
+          "regenerateOnStartup": {
+            "label": "Regenerate on Startup",
+            "description": "Generate new certificate on each application startup"
+          }
+        }
       },
       "endpoints": {
         "title": "API Endpoints",
         "description": "Control which API endpoints and endpoint groups are available.",
         "management": "Endpoint Management",
-        "toRemove": "Disabled Endpoints",
-        "toRemove.description": "Select individual endpoints to disable",
-        "groupsToRemove": "Disabled Endpoint Groups",
-        "groupsToRemove.description": "Select endpoint groups to disable",
+        "toRemove": {
+          "label": "Disabled Endpoints",
+          "description": "Select individual endpoints to disable"
+        },
+        "groupsToRemove": {
+          "label": "Disabled Endpoint Groups",
+          "description": "Select endpoint groups to disable"
+        },
         "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
       }
     }
@@ -4358,8 +4584,10 @@
     "desc": "Remove potentially harmful elements from PDF files.",
     "submit": "Sanitise PDF",
     "completed": "Sanitisation completed successfully",
-    "error.generic": "Sanitisation failed",
-    "error.failed": "An error occurred while sanitising the PDF.",
+    "error": {
+      "generic": "Sanitisation failed",
+      "failed": "An error occurred while sanitising the PDF."
+    },
     "filenamePrefix": "sanitised",
     "sanitizationResults": "Sanitisation Results",
     "steps": {
@@ -4373,18 +4601,30 @@
     "options": {
       "title": "Sanitisation Options",
       "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
-      "removeJavaScript": "Remove JavaScript",
-      "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
-      "removeEmbeddedFiles": "Remove Embedded Files",
-      "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
-      "removeXMPMetadata": "Remove XMP Metadata",
-      "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
-      "removeMetadata": "Remove Document Metadata",
-      "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
-      "removeLinks": "Remove Links",
-      "removeLinks.desc": "Remove external links and launch actions from the PDF",
-      "removeFonts": "Remove Fonts",
-      "removeFonts.desc": "Remove embedded fonts from the PDF"
+      "removeJavaScript": {
+        "label": "Remove JavaScript",
+        "desc": "Remove JavaScript actions and scripts from the PDF"
+      },
+      "removeEmbeddedFiles": {
+        "label": "Remove Embedded Files",
+        "desc": "Remove any files embedded within the PDF"
+      },
+      "removeXMPMetadata": {
+        "label": "Remove XMP Metadata",
+        "desc": "Remove XMP metadata from the PDF"
+      },
+      "removeMetadata": {
+        "label": "Remove Document Metadata",
+        "desc": "Remove document information metadata (title, author, etc.)"
+      },
+      "removeLinks": {
+        "label": "Remove Links",
+        "desc": "Remove external links and launch actions from the PDF"
+      },
+      "removeFonts": {
+        "label": "Remove Fonts",
+        "desc": "Remove embedded fonts from the PDF"
+      }
     }
   },
   "addPassword": {
@@ -4601,6 +4841,12 @@
     "title": "Choose colour"
   },
   "common": {
+    "previous": "Previous",
+    "next": "Next",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapsed": "collapsed",
+    "lines": "lines",
     "copy": "Copy",
     "copied": "Copied!",
     "refresh": "Refresh",
@@ -4767,34 +5013,6 @@
   "undoStorageError": "Undo completed but some files could not be saved to storage",
   "undoSuccess": "Operation undone successfully",
   "unsupported": "Unsupported",
-  "signup": {
-    "title": "Create an account",
-    "subtitle": "Join Stirling PDF to get started",
-    "name": "Name",
-    "email": "Email",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "enterName": "Enter your name",
-    "enterEmail": "Enter your email",
-    "enterPassword": "Enter your password",
-    "confirmPasswordPlaceholder": "Confirm password",
-    "or": "or",
-    "creatingAccount": "Creating Account...",
-    "signUp": "Sign Up",
-    "alreadyHaveAccount": "Already have an account? Sign in",
-    "pleaseFillAllFields": "Please fill in all fields",
-    "passwordsDoNotMatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters long",
-    "invalidEmail": "Please enter a valid email address",
-    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
-    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
-    "unexpectedError": "Unexpected error: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
-  },
   "onboarding": {
     "welcomeModal": {
       "title": "Welcome to Stirling PDF!",
@@ -4839,162 +5057,6 @@
     "adminTools": "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
     "wrapUp": "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
   },
-  "pdfTextEditor": {
-    "viewLabel": "PDF Text Editor",
-    "title": "PDF Editor",
-    "badges": {
-      "unsaved": "Unsaved changes",
-      "modified": "Edited",
-      "earlyAccess": "Early Access - Pre-Alpha"
-    },
-    "controls": {
-      "title": "Document Controls"
-    },
-    "actions": {
-      "load": "Load File",
-      "reset": "Reset Changes",
-      "downloadJson": "Download JSON",
-      "generatePdf": "Generate PDF"
-    },
-    "currentFile": "Current file: {{name}}",
-    "pageSummary": "Page {{number}} of {{total}}",
-    "groupList": "Detected Text Groups",
-    "fontSizeValue": "{{size}}pt",
-    "noTextOnPage": "No editable text was detected on this page.",
-    "emptyGroup": "[Empty Group]",
-    "imageLabel": "Placed image",
-    "pagePreviewAlt": "Page preview",
-    "empty": {
-      "title": "No document loaded",
-      "subtitle": "Load a PDF or JSON file to begin editing text content."
-    },
-    "converting": "Converting PDF to editable format...",
-    "conversionFailed": "Failed to convert PDF. Please try again.",
-    "errors": {
-      "invalidJson": "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool.",
-      "pdfConversion": "Unable to convert the edited JSON back into a PDF."
-    },
-    "options": {
-      "title": "Viewing options",
-      "autoScaleText": {
-        "title": "Auto-scale text to fit boxes",
-        "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
-      },
-      "groupingMode": {
-        "title": "Text Grouping Mode",
-        "autoDescription": "Automatically detects page type and groups text appropriately.",
-        "paragraphDescription": "Groups aligned lines into multi-line paragraph text boxes.",
-        "singleLineDescription": "Keeps each PDF text line as a separate text box."
-      },
-      "forceSingleElement": {
-        "title": "Lock edited text to a single PDF element",
-        "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
-      }
-    },
-    "pageType": {
-      "paragraph": "Paragraph page",
-      "sparse": "Sparse text"
-    },
-    "groupingMode": {
-      "auto": "Auto",
-      "paragraph": "Paragraph",
-      "singleLine": "Single Line"
-    },
-    "modeChange": {
-      "title": "Confirm Mode Change",
-      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
-      "cancel": "Cancel",
-      "confirm": "Reset and Change Mode"
-    },
-    "welcomeBanner": {
-      "title": "Welcome to PDF Text Editor (Early Access)",
-      "experimental": "This is an experimental feature in active development. Expect some instability and issues during use.",
-      "howItWorks": "This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.",
-      "bestFor": "Works Best With:",
-      "bestFor1": "Simple PDFs containing primarily text and images",
-      "bestFor2": "Documents with standard paragraph formatting",
-      "bestFor3": "Letters, essays, reports, and basic documents",
-      "notIdealFor": "Not Ideal For:",
-      "notIdealFor1": "PDFs with special formatting like bullet points, tables, or multi-column layouts",
-      "notIdealFor2": "Magazines, brochures, or heavily designed documents",
-      "notIdealFor3": "Instruction manuals with complex layouts",
-      "limitations": "Current Limitations:",
-      "limitation1": "Font rendering may differ slightly from the original PDF",
-      "limitation2": "Complex graphics, form fields, and annotations are preserved but not editable",
-      "limitation3": "Large files may take time to convert and process",
-      "knownIssues": "Known Issues (Being Fixed):",
-      "issue1": "Text colour is not currently preserved (will be added soon)",
-      "issue2": "Paragraph mode has more alignment and spacing issues - Single Line mode recommended",
-      "issue3": "The preview display differs from the exported PDF - exported PDFs are closer to the original",
-      "issue4": "Rotated text alignment may need manual adjustment",
-      "issue5": "Transparency and layering effects may vary from original",
-      "feedback": "This is an early access feature. Please report any issues you encounter to help us improve!",
-      "gotIt": "Got it",
-      "dontShowAgain": "Don't show again"
-    },
-    "disclaimer": {
-      "heading": "Preview limitations",
-      "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
-      "previewVariance": "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",
-      "alpha": "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-    },
-    "stages": {
-      "uploading": "Uploading",
-      "initializing": "Initializing",
-      "loading": "Loading",
-      "normalizing": "Normalizing",
-      "parsing": "Parsing",
-      "processing": "Processing",
-      "fonts": "Fonts",
-      "text": "Text Extraction",
-      "images": "Images",
-      "annotations": "Annotations",
-      "metadata": "Metadata",
-      "serializing": "Finalizing",
-      "complete": "Complete"
-    },
-    "fontAnalysis": {
-      "currentPageFonts": "Fonts on this page",
-      "allFonts": "All fonts",
-      "perfectTitle": "All Fonts Available",
-      "perfectMessage": "All fonts are fully available. You can edit and add text without issues in exported PDFs.",
-      "warningTitle": "Font Limitations",
-      "warningMessage": "Some fonts have limitations. Existing text will export correctly, but adding new text may cause issues.",
-      "infoTitle": "Font Information",
-      "infoMessage": "Font reproduction information available.",
-      "summary": "Font Summary",
-      "font": "font",
-      "fonts": "fonts",
-      "perfect": "perfect",
-      "subset": "subset",
-      "fallback": "fallback",
-      "missing": "missing",
-      "fontDetails": "Font Details",
-      "details": "Font Details",
-      "embedded": "Embedded",
-      "type": "Type",
-      "encoding": "Encoding",
-      "webFormat": "Web Format",
-      "standard14": "Standard PDF Font",
-      "warnings": "Warnings",
-      "suggestions": "Notes"
-    },
-    "manual": {
-      "mergeTooltip": "Merge selected boxes into a single paragraph",
-      "merge": "Merge selection",
-      "ungroupTooltip": "Split paragraph back into separate lines",
-      "ungroup": "Ungroup selection",
-      "widthMenu": "Width options",
-      "expandWidth": "Expand to page edge",
-      "resetWidth": "Reset width",
-      "resizeHandle": "Adjust text width"
-    },
-    "options": {
-      "manualGrouping": {
-        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
-      }
-    }
-  },
   "workspace": {
     "title": "Workspace",
     "people": {
@@ -5003,8 +5065,10 @@
       "loading": "Loading people...",
       "searchMembers": "Search members...",
       "addMembers": "Add Members",
-      "inviteMembers": "Invite Members",
-      "inviteMembers.subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members.",
+      "inviteMembers": {
+        "label": "Invite Members",
+        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+      },
       "user": "User",
       "role": "Role",
       "team": "Team",
@@ -5549,79 +5613,163 @@
       "submit": "Login"
     }
   },
-  "settings": {
-    "connection": {
-      "title": "Connection Mode",
-      "mode": {
-        "offline": "Offline",
-        "server": "Server"
-      },
-      "server": "Server",
-      "user": "Logged in as",
-      "switchToServer": "Connect to Server",
-      "switchToOffline": "Switch to Offline",
-      "logout": "Logout",
-      "selectServer": "Select Server",
-      "login": "Login"
-    },
-    "general": {
-      "title": "General",
-      "description": "Configure general application preferences.",
-      "user": "User",
-      "logout": "Log out",
-      "enableFeatures": {
-        "dismiss": "Dismiss",
-        "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
-        "action": "Configure",
-        "and": "and",
-        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation"
-      },
-      "defaultToolPickerMode": "Default tool picker mode",
-      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
-      "mode": {
-        "sidebar": "Sidebar",
-        "fullscreen": "Fullscreen"
-      },
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "defaultPdfEditor": "Default PDF editor",
-      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
-      "defaultPdfEditorInactive": "Another application is set as default",
-      "defaultPdfEditorChecking": "Checking...",
-      "defaultPdfEditorSet": "Already Default",
-      "setAsDefault": "Set as Default",
-      "updates": {
-        "title": "Software Updates",
-        "description": "Check for updates and view version information",
-        "currentVersion": "Current Version",
-        "latestVersion": "Latest Version",
-        "checkForUpdates": "Check for Updates",
-        "viewDetails": "View Details"
-      }
-    },
-    "hotkeys": {
-      "errorConflict": "Shortcut already used by {{tool}}.",
-      "searchPlaceholder": "Search tools...",
-      "none": "Not assigned",
-      "customBadge": "Custom",
-      "defaultLabel": "Default: {{shortcut}}",
-      "capturing": "Press keys… (Esc to cancel)",
-      "change": "Change shortcut",
-      "reset": "Reset",
-      "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set"
-    }
-  },
   "auth": {
     "sessionExpired": "Session Expired",
     "pleaseLoginAgain": "Please login again.",
     "accessDenied": "Access Denied",
     "insufficientPermissions": "You do not have permission to perform this action."
+  },
+  "pdfTextEditor": {
+    "viewLabel": "PDF Text Editor",
+    "title": "PDF Editor",
+    "badges": {
+      "unsaved": "Unsaved changes",
+      "modified": "Edited",
+      "earlyAccess": "Early Access - Pre-Alpha"
+    },
+    "controls": {
+      "title": "Document Controls"
+    },
+    "actions": {
+      "load": "Load File",
+      "reset": "Reset Changes",
+      "downloadJson": "Download JSON",
+      "generatePdf": "Generate PDF"
+    },
+    "currentFile": "Current file: {{name}}",
+    "pageSummary": "Page {{number}} of {{total}}",
+    "groupList": "Detected Text Groups",
+    "fontSizeValue": "{{size}}pt",
+    "noTextOnPage": "No editable text was detected on this page.",
+    "emptyGroup": "[Empty Group]",
+    "imageLabel": "Placed image",
+    "pagePreviewAlt": "Page preview",
+    "empty": {
+      "title": "No document loaded",
+      "subtitle": "Load a PDF or JSON file to begin editing text content."
+    },
+    "converting": "Converting PDF to editable format...",
+    "conversionFailed": "Failed to convert PDF. Please try again.",
+    "errors": {
+      "invalidJson": "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool.",
+      "pdfConversion": "Unable to convert the edited JSON back into a PDF."
+    },
+    "options": {
+      "manualGrouping": {
+        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
+      },
+      "autoScaleText": {
+        "title": "Auto-scale text to fit boxes",
+        "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
+      },
+      "groupingMode": {
+        "title": "Text Grouping Mode",
+        "autoDescription": "Automatically detects page type and groups text appropriately.",
+        "paragraphDescription": "Groups aligned lines into multi-line paragraph text boxes.",
+        "singleLineDescription": "Keeps each PDF text line as a separate text box."
+      },
+      "forceSingleElement": {
+        "title": "Lock edited text to a single PDF element",
+        "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+      }
+    },
+    "pageType": {
+      "paragraph": "Paragraph page",
+      "sparse": "Sparse text"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Paragraph",
+      "singleLine": "Single Line"
+    },
+    "modeChange": {
+      "title": "Confirm Mode Change",
+      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
+      "cancel": "Cancel",
+      "confirm": "Reset and Change Mode"
+    },
+    "welcomeBanner": {
+      "title": "Welcome to PDF Text Editor (Early Access)",
+      "experimental": "This is an experimental feature in active development. Expect some instability and issues during use.",
+      "howItWorks": "This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.",
+      "bestFor": "Works Best With:",
+      "bestFor1": "Simple PDFs containing primarily text and images",
+      "bestFor2": "Documents with standard paragraph formatting",
+      "bestFor3": "Letters, essays, reports, and basic documents",
+      "notIdealFor": "Not Ideal For:",
+      "notIdealFor1": "PDFs with special formatting like bullet points, tables, or multi-column layouts",
+      "notIdealFor2": "Magazines, brochures, or heavily designed documents",
+      "notIdealFor3": "Instruction manuals with complex layouts",
+      "limitations": "Current Limitations:",
+      "limitation1": "Font rendering may differ slightly from the original PDF",
+      "limitation2": "Complex graphics, form fields, and annotations are preserved but not editable",
+      "limitation3": "Large files may take time to convert and process",
+      "knownIssues": "Known Issues (Being Fixed):",
+      "issue1": "Text colour is not currently preserved (will be added soon)",
+      "issue2": "Paragraph mode has more alignment and spacing issues - Single Line mode recommended",
+      "issue3": "The preview display differs from the exported PDF - exported PDFs are closer to the original",
+      "issue4": "Rotated text alignment may need manual adjustment",
+      "issue5": "Transparency and layering effects may vary from original",
+      "feedback": "This is an early access feature. Please report any issues you encounter to help us improve!",
+      "gotIt": "Got it",
+      "dontShowAgain": "Don't show again"
+    },
+    "disclaimer": {
+      "heading": "Preview limitations",
+      "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
+      "previewVariance": "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",
+      "alpha": "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+    },
+    "stages": {
+      "uploading": "Uploading",
+      "initializing": "Initializing",
+      "loading": "Loading",
+      "normalizing": "Normalizing",
+      "parsing": "Parsing",
+      "processing": "Processing",
+      "fonts": "Fonts",
+      "text": "Text Extraction",
+      "images": "Images",
+      "annotations": "Annotations",
+      "metadata": "Metadata",
+      "serializing": "Finalizing",
+      "complete": "Complete"
+    },
+    "fontAnalysis": {
+      "currentPageFonts": "Fonts on this page",
+      "allFonts": "All fonts",
+      "perfectTitle": "All Fonts Available",
+      "perfectMessage": "All fonts are fully available. You can edit and add text without issues in exported PDFs.",
+      "warningTitle": "Font Limitations",
+      "warningMessage": "Some fonts have limitations. Existing text will export correctly, but adding new text may cause issues.",
+      "infoTitle": "Font Information",
+      "infoMessage": "Font reproduction information available.",
+      "summary": "Font Summary",
+      "font": "font",
+      "fonts": "fonts",
+      "perfect": "perfect",
+      "subset": "subset",
+      "fallback": "fallback",
+      "missing": "missing",
+      "fontDetails": "Font Details",
+      "details": "Font Details",
+      "embedded": "Embedded",
+      "type": "Type",
+      "encoding": "Encoding",
+      "webFormat": "Web Format",
+      "standard14": "Standard PDF Font",
+      "warnings": "Warnings",
+      "suggestions": "Notes"
+    },
+    "manual": {
+      "mergeTooltip": "Merge selected boxes into a single paragraph",
+      "merge": "Merge selection",
+      "ungroupTooltip": "Split paragraph back into separate lines",
+      "ungroup": "Ungroup selection",
+      "widthMenu": "Width options",
+      "expandWidth": "Expand to page edge",
+      "resetWidth": "Reset width",
+      "resizeHandle": "Adjust text width"
+    }
   }
 }
