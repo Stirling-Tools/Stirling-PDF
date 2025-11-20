@@ -250,7 +250,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
   const toggleNode = (nodeId: string) => {
     setExpanded(prev => ({
       ...prev,
-      [nodeId]: prev[nodeId] === undefined ? false : !prev[nodeId],
+      [nodeId]: !(prev[nodeId] ?? true),
     }));
   };
 
