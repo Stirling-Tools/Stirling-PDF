@@ -5557,6 +5557,24 @@
     "starting": "Backend starting up...",
     "wait": "Please wait for the backend to finish launching and try again."
   },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Unlock PDF to continue",
+    "title": "Remove password to continue",
+    "description": "This PDF is password protected. Enter the password so you can continue working with it.",
+    "password": {
+      "label": "PDF password",
+      "placeholder": "Enter the PDF password"
+    },
+    "skip": "Skip for now",
+    "unlock": "Unlock & Continue",
+    "incorrectPassword": "Incorrect password",
+    "missingFile": "The selected file is no longer available.",
+    "emptyResponse": "Password removal did not produce a file.",
+    "required": "Enter the password to continue.",
+    "successTitle": "Password removed",
+    "successBodyWithName": "Password removed from {{fileName}}",
+    "successBody": "Password removed successfully."
+  },
   "setup": {
     "welcome": "Welcome to Stirling PDF",
     "description": "Get started by choosing how you want to use Stirling PDF",

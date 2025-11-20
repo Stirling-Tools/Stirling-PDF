@@ -12,7 +12,7 @@
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
 
-import { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import {
   FileContextProviderProps,
   FileContextSelectors,
@@ -22,17 +22,27 @@ import {
   FileId,
   StirlingFileStub,
   StirlingFile,
+  createStirlingFile,
 } from '@app/types/fileContext';
 
 // Import modular components
 import { fileContextReducer, initialFileContextState } from '@app/contexts/file/FileReducer';
 import { createFileSelectors } from '@app/contexts/file/fileSelectors';
-import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from '@app/contexts/file/fileActions';
+import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions, createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
 import { FileStateContext, FileActionsContext } from '@app/contexts/file/contexts';
 import { IndexedDBProvider, useIndexedDB } from '@app/contexts/IndexedDBContext';
 import { useZipConfirmation } from '@app/hooks/useZipConfirmation';
 import ZipWarningModal from '@app/components/shared/ZipWarningModal';
+import EncryptedPdfUnlockModal from '@app/components/shared/EncryptedPdfUnlockModal';
+import { useTranslation } from 'react-i18next';
+import { alert } from '@app/components/toast';
+import { buildRemovePasswordFormData } from '@app/hooks/tools/removePassword/buildRemovePasswordFormData';
+import type { RemovePasswordParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
+import apiClient from '@app/services/apiClient';
+import { processResponse } from '@app/utils/toolResponseProcessor';
+import { ToolOperation } from '@app/types/file';
+import { handlePasswordError } from '@app/utils/toolErrorHandler';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -63,6 +73,98 @@ function FileContextInner({
     lifecycleManagerRef.current = new FileLifecycleManager(filesRef, dispatch);
   }
   const lifecycleManager = lifecycleManagerRef.current;
+  const { t } = useTranslation();
+
+  const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
+  const [activeEncryptedFileId, setActiveEncryptedFileId] = useState<FileId | null>(null);
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
+  const observedFileIdsRef = useRef<Set<FileId>>(new Set());
+
+  const enqueueEncryptedFiles = useCallback((fileIds: FileId[]) => {
+    if (fileIds.length === 0) return;
+    setEncryptedQueue(prevQueue => {
+      const existing = new Set(prevQueue);
+      const next = [...prevQueue];
+      for (const id of fileIds) {
+        if (dismissedEncryptedFilesRef.current.has(id)) continue;
+        if (id === activeEncryptedFileId) continue;
+        if (existing.has(id)) continue;
+        existing.add(id);
+        next.push(id);
+      }
+      return next;
+    });
+  }, [activeEncryptedFileId]);
+
+  useEffect(() => {
+    const previousIds = observedFileIdsRef.current;
+    const nextIds = new Set(state.files.ids);
+    const newEncryptedIds: FileId[] = [];
+
+    for (const id of state.files.ids) {
+      if (!previousIds.has(id)) {
+        const stub = state.files.byId[id];
+        if ((stub?.versionNumber ?? 1) <= 1 && stub?.processedFile?.isEncrypted) {
+          newEncryptedIds.push(id);
+        }
+      }
+    }
+
+    if (newEncryptedIds.length > 0) {
+      enqueueEncryptedFiles(newEncryptedIds);
+    }
+
+    observedFileIdsRef.current = nextIds;
+  }, [state.files.ids, state.files.byId, enqueueEncryptedFiles]);
+
+  useEffect(() => {
+    if (!activeEncryptedFileId && encryptedQueue.length > 0) {
+      setActiveEncryptedFileId(encryptedQueue[0]);
+      setEncryptedQueue(prev => prev.slice(1));
+    }
+  }, [activeEncryptedFileId, encryptedQueue]);
+
+  useEffect(() => {
+    if (activeEncryptedFileId && !state.files.ids.includes(activeEncryptedFileId)) {
+      setActiveEncryptedFileId(null);
+    }
+  }, [activeEncryptedFileId, state.files.ids]);
+
+  useEffect(() => {
+    setUnlockPassword('');
+    setUnlockError(null);
+  }, [activeEncryptedFileId]);
+
+  const handleUnlockSkip = useCallback(() => {
+    if (activeEncryptedFileId) {
+      dismissedEncryptedFilesRef.current.add(activeEncryptedFileId);
+    }
+    setActiveEncryptedFileId(null);
+  }, [activeEncryptedFileId]);
+
+  const promptEncryptedUnlock = useCallback((fileId: FileId) => {
+    const stub = stateRef.current.files.byId[fileId];
+    if (!stub?.processedFile?.isEncrypted) {
+      return;
+    }
+
+    dismissedEncryptedFilesRef.current.delete(fileId);
+
+    setEncryptedQueue(prevQueue => prevQueue.filter(id => id !== fileId));
+
+    setActiveEncryptedFileId(currentActiveId => {
+      if (currentActiveId && currentActiveId !== fileId) {
+        setEncryptedQueue(prevQueue => {
+          const withoutDuplicates = prevQueue.filter(id => id !== currentActiveId && id !== fileId);
+          return [currentActiveId, ...withoutDuplicates];
+        });
+      }
+      return fileId;
+    });
+  }, []);
 
   // Create stable selectors (memoized once to avoid re-renders)
   const selectors = useMemo<FileContextSelectors>(() =>
@@ -130,6 +232,80 @@ function FileContextInner({
   const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]): Promise<FileId[]> => {
     return consumeFiles(inputFileIds, outputStirlingFiles, outputStirlingFileStubs, filesRef, dispatch);
   }, []);
+
+  const runAutomaticPasswordRemoval = useCallback(async (fileId: FileId, password: string): Promise<void> => {
+    const file = filesRef.current.get(fileId);
+    const parentStub = stateRef.current.files.byId[fileId];
+
+    if (!file || !parentStub) {
+      throw new Error(t('encryptedPdfUnlock.missingFile', 'The selected file is no longer available.'));
+    }
+
+    const params: RemovePasswordParameters = { password };
+    const formData = buildRemovePasswordFormData(params, file);
+
+    const response = await apiClient.post('/api/v1/security/remove-password', formData, {
+      responseType: 'blob',
+      suppressErrorToast: true  // Handle errors in modal UI instead of toast
+    });
+    const responseFiles = await processResponse(response.data, [file]);
+
+    const unlockedFile = responseFiles[0];
+    if (!unlockedFile) {
+      throw new Error(t('encryptedPdfUnlock.emptyResponse', 'Password removal did not produce a file.'));
+    }
+
+    const processedMetadata = await generateProcessedFileMetadata(unlockedFile);
+    const thumbnail = processedMetadata?.thumbnailUrl;
+
+    const operation: ToolOperation = {
+      toolId: 'removePassword',
+      timestamp: Date.now()
+    };
+
+    const childStub = createChildStub(parentStub, operation, unlockedFile, thumbnail, processedMetadata);
+    const stirlingUnlockedFile = createStirlingFile(unlockedFile, childStub.id);
+
+    await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+  }, [consumeFilesWrapper, t]);
+
+  const handleUnlockSubmit = useCallback(async () => {
+    if (!activeEncryptedFileId) return;
+    if (!unlockPassword.trim()) {
+      setUnlockError(t('encryptedPdfUnlock.required', 'Enter the password to continue.'));
+      return;
+    }
+
+    setIsUnlocking(true);
+    setUnlockError(null);
+    try {
+      await runAutomaticPasswordRemoval(activeEncryptedFileId, unlockPassword.trim());
+      const fileName = stateRef.current.files.byId[activeEncryptedFileId]?.name;
+      alert({
+        alertType: 'success',
+        title: t('encryptedPdfUnlock.successTitle', 'Password removed'),
+        body: fileName
+          ? t('encryptedPdfUnlock.successBodyWithName', {
+              defaultValue: 'Removed password from {{fileName}}',
+              fileName,
+            })
+          : t('encryptedPdfUnlock.successBody', 'Password removed successfully.'),
+        expandable: false,
+        isPersistentPopup: false,
+      });
+      dismissedEncryptedFilesRef.current.delete(activeEncryptedFileId);
+      setActiveEncryptedFileId(null);
+    } catch (error) {
+      const errorMessage = await handlePasswordError(
+        error,
+        t('encryptedPdfUnlock.incorrectPassword', 'Incorrect password'),
+        t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.')
+      );
+      setUnlockError(errorMessage);
+    } finally {
+      setIsUnlocking(false);
+    }
+  }, [activeEncryptedFileId, unlockPassword, runAutomaticPasswordRemoval, t]);
 
   const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
     return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
@@ -199,7 +375,8 @@ function FileContextInner({
     trackBlobUrl: lifecycleManager.trackBlobUrl,
     cleanupFile: (fileId: FileId) => lifecycleManager.cleanupFile(fileId, stateRef),
     scheduleCleanup: (fileId: FileId, delay?: number) =>
-      lifecycleManager.scheduleCleanup(fileId, delay, stateRef)
+      lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
+    openEncryptedUnlockPrompt: promptEncryptedUnlock
   }), [
     baseActions,
     addRawFiles,
@@ -211,7 +388,8 @@ function FileContextInner({
     pinFileWrapper,
     unpinFileWrapper,
     indexedDB,
-    enablePersistence
+    enablePersistence,
+    promptEncryptedUnlock
   ]);
 
   // Split context values to minimize re-renders
@@ -224,6 +402,9 @@ function FileContextInner({
     actions,
     dispatch
   }), [actions]);
+
+  const activeEncryptedStub = activeEncryptedFileId ? state.files.byId[activeEncryptedFileId] : undefined;
+  const isUnlockModalOpen = Boolean(activeEncryptedFileId && activeEncryptedStub);
 
   // Persistence loading disabled - files only loaded on explicit user action
   // useEffect(() => {
@@ -250,6 +431,16 @@ function FileContextInner({
           onCancel={handleCancel}
           fileCount={confirmationState.fileCount}
           zipFileName={confirmationState.fileName}
+        />
+        <EncryptedPdfUnlockModal
+          opened={isUnlockModalOpen}
+          fileName={activeEncryptedStub?.name}
+          password={unlockPassword}
+          errorMessage={unlockError}
+          isProcessing={isUnlocking}
+          onPasswordChange={setUnlockPassword}
+          onUnlock={handleUnlockSubmit}
+          onSkip={handleUnlockSkip}
         />
       </FileActionsContext.Provider>
     </FileStateContext.Provider>

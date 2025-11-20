@@ -188,6 +188,7 @@ export function useFileContext() {
 
     // Active files
     activeFiles: selectors.getFiles(),
+    openEncryptedUnlockPrompt: actions.openEncryptedUnlockPrompt,
 
     // Direct access to actions and selectors (for advanced use cases)
     actions,
