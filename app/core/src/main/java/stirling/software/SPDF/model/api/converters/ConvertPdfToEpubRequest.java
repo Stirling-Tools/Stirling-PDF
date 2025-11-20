@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 import lombok.Getter;
+
 import stirling.software.common.model.api.PDFFile;
 
 @Data
@@ -34,6 +34,5 @@ public class ConvertPdfToEpubRequest extends PDFFile {
         TargetDevice(String calibreProfile) {
             this.calibreProfile = calibreProfile;
         }
-
     }
 }

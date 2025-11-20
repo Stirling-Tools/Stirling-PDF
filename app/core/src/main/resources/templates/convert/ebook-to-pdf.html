@@ -39,30 +39,30 @@
                 </div>
 
                 <div class="form-check mb-3">
-                  <input class="form-check-input" id="embedAllFonts" name="embedAllFonts" type="checkbox" value="true">
-                  <label class="form-check-label" for="embedAllFonts" th:text="#{ebookToPDF.embedAllFonts}"></label>
+                  <input id="embedAllFonts" name="embedAllFonts" type="checkbox" value="true">
+                  <label for="embedAllFonts" th:text="#{ebookToPDF.embedAllFonts}"></label>
                 </div>
 
                 <div class="form-check mb-3">
-                  <input class="form-check-input" id="includeTableOfContents"
+                  <input id="includeTableOfContents"
                     name="includeTableOfContents"
                     type="checkbox"
                     value="true">
-                  <label class="form-check-label" for="includeTableOfContents" th:text="#{ebookToPDF.includeTableOfContents}"></label>
+                  <label for="includeTableOfContents" th:text="#{ebookToPDF.includeTableOfContents}"></label>
                 </div>
 
                 <div class="form-check mb-3">
-                  <input class="form-check-input" id="includePageNumbers" name="includePageNumbers" type="checkbox" value="true">
-                  <label class="form-check-label" for="includePageNumbers" th:text="#{ebookToPDF.includePageNumbers}"></label>
+                  <input id="includePageNumbers" name="includePageNumbers" type="checkbox" value="true">
+                  <label for="includePageNumbers" th:text="#{ebookToPDF.includePageNumbers}"></label>
                 </div>
 
                 <div class="form-check mb-3"
                   th:if="${@endpointConfiguration.isGroupEnabled('Ghostscript')}">
-                  <input class="form-check-input" id="optimizeForEbook"
+                  <input id="optimizeForEbook"
                     name="optimizeForEbook"
                     type="checkbox"
                     value="true">
-                  <label class="form-check-label" for="optimizeForEbook" th:text="#{ebookToPDF.optimizeForEbook}"></label>
+                  <label for="optimizeForEbook" th:text="#{ebookToPDF.optimizeForEbook}"></label>
                 </div>
 
                 <button class="btn btn-primary"
