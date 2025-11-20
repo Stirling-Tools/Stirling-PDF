@@ -1,4 +1,4 @@
-import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef } from 'react';
+import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -13,6 +13,14 @@ const MIN_SIGNATURE_DIMENSION = 12;
 // Use 2x oversampling to improve text rendering quality (anti-aliasing) when generating signature images.
 // This provides a good balance between visual fidelity and performance/memory usage.
 const TEXT_OVERSAMPLE_FACTOR = 2;
+
+type TextStampImageResult = {
+  dataUrl: string;
+  pixelWidth: number;
+  pixelHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+};
 
 const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
   if (!value || depth > 6) return undefined;
@@ -48,7 +56,7 @@ const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new S
 const createTextStampImage = (
   config: SignParameters,
   displaySize?: { width: number; height: number } | null
-): { dataUrl: string; pixelWidth: number; pixelHeight: number; displayWidth: number; displayHeight: number } | null => {
+): TextStampImageResult | null => {
   const text = (config.signerName ?? '').trim();
   if (!text) {
     return null;
@@ -123,9 +131,19 @@ const createTextStampImage = (
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
-  const { getZoomState } = useViewer();
-  const currentZoom = getZoomState()?.currentZoom ?? 1;
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate(percent => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => {
+      unregister?.();
+    };
+  }, [getZoomState, registerImmediateZoomUpdate]);
 
   const cssToPdfSize = useCallback(
     (size: { width: number; height: number }) => {
@@ -328,7 +346,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (pageAnnotationsTask) {
         pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
           const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+          if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
             // Store image data before deletion
             storeImageData(annotationId, annotation.imageSrc);
           }

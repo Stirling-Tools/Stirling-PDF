@@ -2154,7 +2154,34 @@
     },
     "clear": "Clear",
     "add": "Add",
-    "saved": "Saved Signatures",
+    "saved": {
+      "heading": "Saved signatures",
+      "description": "Reuse saved signatures at any time.",
+      "emptyTitle": "No saved signatures yet",
+      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
+      "type": {
+        "canvas": "Drawing",
+        "image": "Upload",
+        "text": "Text"
+      },
+      "limitTitle": "Limit reached",
+      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
+      "carouselPosition": "{{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "delete": "Remove",
+      "label": "Label",
+      "defaultLabel": "Signature",
+      "defaultCanvasLabel": "Drawing signature",
+      "defaultImageLabel": "Uploaded signature",
+      "defaultTextLabel": "Typed signature",
+      "saveButton": "Save signature",
+      "saveUnavailable": "Create a signature first to save it.",
+      "noChanges": "Current signature is already saved.",
+      "status": {
+        "saved": "Saved"
+      }
+    },
     "save": "Save Signature",
     "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
@@ -2183,7 +2210,8 @@
       "draw": "Draw",
       "canvas": "Canvas",
       "image": "Image",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Saved"
     },
     "image": {
       "label": "Upload signature image",
@@ -2194,6 +2222,7 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
+      "saved": "Select a saved signature above, then click anywhere on the PDF to place it.",
       "text": "After entering your name above, click anywhere on the PDF to place your signature.",
       "paused": "Placement paused",
       "resumeHint": "Resume placement to click and add your signature.",
@@ -5524,5 +5553,158 @@
     "offline": "Backend Offline",
     "starting": "Backend starting up...",
     "wait": "Please wait for the backend to finish launching and try again."
+  },
+  "setup": {
+    "welcome": "Welcome to Stirling PDF",
+    "description": "Get started by choosing how you want to use Stirling PDF",
+    "step1": {
+      "label": "Choose Mode",
+      "description": "Offline or Server"
+    },
+    "step2": {
+      "label": "Select Server",
+      "description": "Self-hosted server"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Enter credentials"
+    },
+    "mode": {
+      "offline": {
+        "title": "Use Offline",
+        "description": "Run locally without an internet connection"
+      },
+      "server": {
+        "title": "Connect to Server",
+        "description": "Connect to a remote Stirling PDF server"
+      }
+    },
+    "server": {
+      "title": "Connect to Server",
+      "subtitle": "Enter your self-hosted server URL",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Self-hosted server"
+      },
+      "url": {
+        "label": "Server URL",
+        "description": "Enter the full URL of your self-hosted Stirling PDF server"
+      },
+      "error": {
+        "emptyUrl": "Please enter a server URL",
+        "unreachable": "Could not connect to server",
+        "testFailed": "Connection test failed"
+      },
+      "testing": "Testing connection..."
+    },
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to continue",
+      "connectingTo": "Connecting to:",
+      "username": {
+        "label": "Username",
+        "placeholder": "Enter your username"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password"
+      },
+      "error": {
+        "emptyUsername": "Please enter your username",
+        "emptyPassword": "Please enter your password"
+      },
+      "submit": "Login"
+    }
+  },
+  "settings": {
+    "connection": {
+      "title": "Connection Mode",
+      "mode": {
+        "offline": "Offline",
+        "server": "Server"
+      },
+      "server": "Server",
+      "user": "Logged in as",
+      "switchToServer": "Connect to Server",
+      "switchToOffline": "Switch to Offline",
+      "logout": "Logout",
+      "selectServer": "Select Server",
+      "login": "Login"
+    },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "user": "User",
+      "logout": "Log out",
+      "enableFeatures": {
+        "dismiss": "Dismiss",
+        "title": "For System Administrators",
+        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
+        "action": "Configure",
+        "and": "and",
+        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
+        "learnMore": "Learn more in documentation"
+      },
+      "defaultToolPickerMode": "Default tool picker mode",
+      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "mode": {
+        "sidebar": "Sidebar",
+        "fullscreen": "Fullscreen"
+      },
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
+    },
+    "hotkeys": {
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "searchPlaceholder": "Search tools...",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut",
+      "noShortcut": "No shortcut set"
+    }
+  },
+  "auth": {
+    "sessionExpired": "Session Expired",
+    "pleaseLoginAgain": "Please login again.",
+    "accessDenied": "Access Denied",
+    "insufficientPermissions": "You do not have permission to perform this action."
+  },
+  "common": {
+    "loading": "Loading...",
+    "back": "Back",
+    "continue": "Continue",
+    "preview": "Preview",
+    "previous": "Previous",
+    "next": "Next",
+    "copied": "Copied!",
+    "copy": "Copy",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "done": "Done"
   }
 }
