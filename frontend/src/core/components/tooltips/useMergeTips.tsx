@@ -5,6 +5,9 @@ export const useMergeTips = (): TooltipContent => {
   const { t } = useTranslation();
 
   return {
+    header: {
+      title: t('merge.tooltip.header.title', 'Merge Settings Overview')
+    },
     tips: [
       {
         title: t('merge.removeDigitalSignature.tooltip.title', 'Remove Digital Signature'),
