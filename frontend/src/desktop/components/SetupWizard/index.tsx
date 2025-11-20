@@ -7,7 +7,7 @@ import { LoginForm } from '@app/components/SetupWizard/LoginForm';
 import { connectionModeService, ServerConfig } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoPath } from '@app/hooks/useLogoPath';
 import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
 import '@app/components/SetupWizard/SetupWizard.css';
 
@@ -24,6 +24,7 @@ interface SetupWizardProps {
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const { t } = useTranslation();
+  const logoPath = useLogoPath();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.ModeSelection);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>(null);
   const [loading, setLoading] = useState(false);
@@ -141,9 +142,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             {/* Logo Header */}
             <Stack gap="xs" align="center">
               <Image
-                src={`${BASE_PATH}/branding/StirlingPDFLogoBlackText.svg`}
+                src={logoPath}
                 alt="Stirling PDF"
-                h={32}
+                h={64}
                 fit="contain"
               />
               <Title order={1} ta="center" style={{ fontSize: '2rem', fontWeight: 800 }}>
