@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for tracking Weekly Active Users (WAU) in no-login mode.
- * Uses in-memory storage with automatic cleanup of old entries.
+ * Service for tracking Weekly Active Users (WAU) in no-login mode. Uses in-memory storage with
+ * automatic cleanup of old entries.
  */
 @Service
 @Slf4j
@@ -28,6 +28,7 @@ public class WeeklyActiveUsersService {
 
     /**
      * Records a browser access with the current timestamp
+     *
      * @param browserId Unique browser identifier from X-Browser-Id header
      */
     public void recordBrowserAccess(String browserId) {
@@ -46,6 +47,7 @@ public class WeeklyActiveUsersService {
 
     /**
      * Gets the count of unique browsers seen in the last 7 days
+     *
      * @return Weekly Active Users count
      */
     public long getWeeklyActiveUsers() {
@@ -55,6 +57,7 @@ public class WeeklyActiveUsersService {
 
     /**
      * Gets the total count of unique browsers ever seen
+     *
      * @return Total unique browsers count
      */
     public long getTotalUniqueBrowsers() {
@@ -63,6 +66,7 @@ public class WeeklyActiveUsersService {
 
     /**
      * Gets the number of days the service has been running
+     *
      * @return Days online
      */
     public long getDaysOnline() {
@@ -71,23 +75,20 @@ public class WeeklyActiveUsersService {
 
     /**
      * Gets the timestamp when tracking started
+     *
      * @return Start time
      */
     public Instant getStartTime() {
         return startTime;
     }
 
-    /**
-     * Removes entries older than 7 days
-     */
+    /** Removes entries older than 7 days */
     private void cleanupOldEntries() {
         Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
         activeBrowsers.entrySet().removeIf(entry -> entry.getValue().isBefore(sevenDaysAgo));
     }
 
-    /**
-     * Manual cleanup trigger (can be called by scheduled task if needed)
-     */
+    /** Manual cleanup trigger (can be called by scheduled task if needed) */
     public void performCleanup() {
         int sizeBefore = activeBrowsers.size();
         cleanupOldEntries();
