@@ -126,6 +126,16 @@ export class ConnectionModeService {
       return false;
     }
   }
+
+  async resetSetupCompletion(): Promise<void> {
+    try {
+      await invoke('reset_setup_completion');
+      console.log('Setup completion flag reset successfully');
+    } catch (error) {
+      console.error('Failed to reset setup completion:', error);
+      throw error;
+    }
+  }
 }
 
 export const connectionModeService = ConnectionModeService.getInstance();
