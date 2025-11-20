@@ -31,6 +31,7 @@ import AddWatermark from "@app/tools/AddWatermark";
 import AddStamp from "@app/tools/AddStamp";
 import AddAttachments from "@app/tools/AddAttachments";
 import Merge from '@app/tools/Merge';
+import EditTableOfContents from '@app/tools/EditTableOfContents';
 import Repair from "@app/tools/Repair";
 import AutoRename from "@app/tools/AutoRename";
 import SingleLargePage from "@app/tools/SingleLargePage";
@@ -63,6 +64,7 @@ import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermiss
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '@app/hooks/tools/merge/useMergeOperation';
+import { editTableOfContentsOperationConfig } from '@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation';
 import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
@@ -345,6 +347,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: changeMetadataOperationConfig,
         automationSettings: ChangeMetadataSingleStep,
         synonyms: getSynonyms(t, "changeMetadata")
+      },
+      editTableOfContents: {
+        icon: <LocalIcon icon="toc-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.editTableOfContents.title", "Edit Table of Contents"),
+        component: EditTableOfContents,
+        description: t(
+          "home.editTableOfContents.desc",
+          "Add or edit bookmarks and table of contents in PDF documents"
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        maxFiles: 1,
+        endpoints: ["edit-table-of-contents"],
+        operationConfig: editTableOfContentsOperationConfig,
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: getSynonyms(t, "editTableOfContents"),
       },
       // Page Formatting
 
@@ -690,16 +709,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         synonyms: getSynonyms(t, "addImage"),
-        automationSettings: null
-      },
-      editTableOfContents: {
-        icon: <LocalIcon icon="bookmark-add-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.editTableOfContents.title", "Edit Table of Contents"),
-        component: null,
-        description: t("home.editTableOfContents.desc", "Add or edit bookmarks and table of contents in PDF documents"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "editTableOfContents"),
         automationSettings: null
       },
       scannerEffect: {

@@ -1,10 +1,12 @@
-import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
 import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
+import { connectionModeService } from '@desktop/services/connectionModeService';
+
 
 interface EndpointConfig {
   backendUrl: string;
@@ -257,17 +259,34 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   };
 }
 
+// Default backend URL from environment variables
+const DEFAULT_BACKEND_URL =
+  import.meta.env.VITE_DESKTOP_BACKEND_URL
+  || import.meta.env.VITE_API_BASE_URL
+  || '';
+
 /**
- * Desktop override exposing the backend URL used by the embedded server.
+ * Desktop override exposing the backend URL based on connection mode.
+ * - Offline mode: Uses local bundled backend (from env vars)
+ * - Server mode: Uses configured server URL from connection config
  */
 export function useEndpointConfig(): EndpointConfig {
-  const backendUrl = useMemo(() => {
-    const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
+  const [backendUrl, setBackendUrl] = useState<string>(DEFAULT_BACKEND_URL);
 
-    return runtimeEnv?.STIRLING_BACKEND_URL
-      || import.meta.env.VITE_DESKTOP_BACKEND_URL
-      || import.meta.env.VITE_API_BASE_URL
-      || 'http://localhost:8080';
+  useEffect(() => {
+    connectionModeService.getCurrentConfig()
+      .then((config) => {
+        if (config.mode === 'server' && config.server_config?.url) {
+          setBackendUrl(config.server_config.url);
+        } else {
+          // Offline mode - use default from env vars
+          setBackendUrl(DEFAULT_BACKEND_URL);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to get connection config:', err);
+        // Keep current URL on error
+      });
   }, []);
 
   return { backendUrl };

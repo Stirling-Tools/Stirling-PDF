@@ -155,6 +155,25 @@ public class ConfigController {
                 // EE features not available, continue without them
             }
 
+            // Add version and machine info for update checking
+            try {
+                if (applicationContext.containsBean("appVersion")) {
+                    configData.put(
+                            "appVersion", applicationContext.getBean("appVersion", String.class));
+                }
+                if (applicationContext.containsBean("machineType")) {
+                    configData.put(
+                            "machineType", applicationContext.getBean("machineType", String.class));
+                }
+                if (applicationContext.containsBean("activeSecurity")) {
+                    configData.put(
+                            "activeSecurity",
+                            applicationContext.getBean("activeSecurity", Boolean.class));
+                }
+            } catch (Exception e) {
+                // Version/machine info not available
+            }
+
             return ResponseEntity.ok(configData);
 
         } catch (Exception e) {
