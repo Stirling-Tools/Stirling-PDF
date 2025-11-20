@@ -2154,7 +2154,34 @@
     },
     "clear": "Clear",
     "add": "Add",
-    "saved": "Saved Signatures",
+    "saved": {
+      "heading": "Saved signatures",
+      "description": "Reuse saved signatures at any time.",
+      "emptyTitle": "No saved signatures yet",
+      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
+      "type": {
+        "canvas": "Drawing",
+        "image": "Upload",
+        "text": "Text"
+      },
+      "limitTitle": "Limit reached",
+      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
+      "carouselPosition": "{{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "delete": "Remove",
+      "label": "Label",
+      "defaultLabel": "Signature",
+      "defaultCanvasLabel": "Drawing signature",
+      "defaultImageLabel": "Uploaded signature",
+      "defaultTextLabel": "Typed signature",
+      "saveButton": "Save signature",
+      "saveUnavailable": "Create a signature first to save it.",
+      "noChanges": "Current signature is already saved.",
+      "status": {
+        "saved": "Saved"
+      }
+    },
     "save": "Save Signature",
     "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
@@ -2183,7 +2210,8 @@
       "draw": "Draw",
       "canvas": "Canvas",
       "image": "Image",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Saved"
     },
     "image": {
       "label": "Upload signature image",
@@ -2194,6 +2222,7 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
+      "saved": "Select a saved signature above, then click anywhere on the PDF to place it.",
       "text": "After entering your name above, click anywhere on the PDF to place your signature.",
       "paused": "Placement paused",
       "resumeHint": "Resume placement to click and add your signature.",
