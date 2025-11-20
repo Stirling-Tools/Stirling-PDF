@@ -3368,11 +3368,6 @@
         "bullet1": "Lower values preserve quality",
         "bullet2": "Higher values reduce file size"
       },
-      "compressionLevel": {
-        "range1to3": "Lower values preserve quality but result in larger files",
-        "range4to6": "Medium compression with moderate quality reduction",
-        "range7to9": "Higher values reduce file size significantly but may reduce image clarity"
-      },
       "grayscale": {
         "title": "Grayscale",
         "text": "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
