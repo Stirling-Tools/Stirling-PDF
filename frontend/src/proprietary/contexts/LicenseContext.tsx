@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import licenseService, { LicenseInfo } from '@app/services/licenseService';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 interface LicenseContextValue {
   licenseInfo: LicenseInfo | null;
@@ -15,11 +16,19 @@ interface LicenseProviderProps {
 }
 
 export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) => {
+  const { config } = useAppConfig();
   const [licenseInfo, setLicenseInfo] = useState<LicenseInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const refetchLicense = useCallback(async () => {
+    // Only fetch license info if user is an admin
+    if (!config?.isAdmin) {
+      console.debug('[LicenseContext] User is not an admin, skipping license fetch');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -33,12 +42,14 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [config?.isAdmin]);
 
-  // Fetch license info on mount
+  // Fetch license info when config changes (only if user is admin)
   useEffect(() => {
-    refetchLicense();
-  }, [refetchLicense]);
+    if (config) {
+      refetchLicense();
+    }
+  }, [config, refetchLicense]);
 
   const contextValue: LicenseContextValue = {
     licenseInfo,
