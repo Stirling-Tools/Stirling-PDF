@@ -159,6 +159,20 @@ const EmbedPdfViewerContent = ({
     return undefined;
   }, [currentFile, effectiveFile, previewFile]);
 
+  // Generate cache keys for all active files to enable preloading
+  const allBookmarkCacheKeys = React.useMemo(() => {
+    if (previewFile) {
+      return [bookmarkCacheKey].filter(Boolean) as string[];
+    }
+
+    return activeFiles.map(file => {
+      if (isStirlingFile(file)) {
+        return file.fileId;
+      }
+      return undefined;
+    }).filter(Boolean) as string[];
+  }, [activeFiles, previewFile, bookmarkCacheKey]);
+
   useWheelZoom({
     ref: viewerRef,
     onZoomIn: zoomActions.zoomIn,
@@ -349,6 +363,7 @@ const EmbedPdfViewerContent = ({
         visible={isBookmarkSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
       />
 
       {/* Navigation Warning Modal */}
