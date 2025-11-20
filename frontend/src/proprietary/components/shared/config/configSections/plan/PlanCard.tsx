@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, Badge, Text, Group, Stack, Divider } from '@mantine/core';
+import { Button, Card, Badge, Text, Stack, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
 
@@ -45,6 +45,9 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             <Text size="xl" fw={700} mb="xs">
               {planGroup.name}
             </Text>
+            <Text size="xs" c="dimmed" mb="xs" style={{ opacity: 0 }}>
+              {t('plan.from', 'From')}
+            </Text>
             <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
               £0
             </Text>
@@ -53,7 +56,9 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             </Text>
           </div>
 
-          <Stack gap="xs" mt="md">
+          <Divider />
+
+          <Stack gap="xs">
             {planGroup.highlights.map((highlight, index) => (
               <Text key={index} size="sm" c="dimmed">
                 • {highlight}
@@ -124,40 +129,33 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
       <Stack gap="md" style={{ height: '100%' }}>
         {/* Tier Name */}
         <div>
-          <Text size="xl" fw={700}>
+          <Text size="xl" fw={700} mb="xs">
             {planGroup.name}
           </Text>
-        </div>
 
-        {/* "From" Pricing */}
-        <div>
           <Text size="xs" c="dimmed" mb="xs">
             {t('plan.from', 'From')}
           </Text>
 
+          {/* Price */}
           {isEnterprise && displaySeatPrice !== undefined ? (
-            <div>
-              <Group gap="xs" align="baseline">
-                <Text size="xl" fw={700}>
-                  {displayCurrency}{displayPrice}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {t('plan.perMonth', '/month')}
-                </Text>
-              </Group>
-              <Text size="sm" c="dimmed">
-                + {displayCurrency}{displaySeatPrice}/seat/month
-              </Text>
-            </div>
-          ) : (
-            <Group gap="xs" align="baseline">
-              <Text size="xl" fw={700}>
+            <>
+              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
                 {displayCurrency}{displayPrice}
               </Text>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c="dimmed" mt="xs">
+                + {displayCurrency}{displaySeatPrice}/seat {t('plan.perMonth', '/month')}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
+                {displayCurrency}{displayPrice}
+              </Text>
+              <Text size="sm" c="dimmed" mt="xs">
                 {t('plan.perMonth', '/month')}
               </Text>
-            </Group>
+            </>
           )}
 
           {/* Show seat count for enterprise plans when current */}

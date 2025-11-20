@@ -7,7 +7,9 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { alert } from '@app/components/toast';
-import { LicenseInfo } from '@app/services/licenseService';
+import { LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
+import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from '@app/constants/planConstants';
+import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
 
 interface PremiumSettingsData {
   key?: string;
@@ -21,6 +23,7 @@ interface StaticPlanSectionProps {
 const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInfo }) => {
   const { t } = useTranslation();
   const [showLicenseKey, setShowLicenseKey] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
 
   // Premium/License key management
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
@@ -59,40 +62,20 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
       name: t('plan.free.name', 'Free'),
       price: 0,
       currency: '£',
-      period: t('plan.period.month', '/month'),
-      highlights: [
-        t('plan.free.highlight1', 'Limited Tool Usage Per week'),
-        t('plan.free.highlight2', 'Access to all tools'),
-        t('plan.free.highlight3', 'Community support'),
-      ],
-      features: [
-        { name: t('plan.feature.pdfTools', 'Basic PDF Tools'), included: true },
-        { name: t('plan.feature.fileSize', 'File Size Limit'), included: false },
-        { name: t('plan.feature.automation', 'Automate tool workflows'), included: false },
-        { name: t('plan.feature.api', 'API Access'), included: false },
-        { name: t('plan.feature.priority', 'Priority Support'), included: false },
-      ],
+      period: '',
+      highlights: PLAN_HIGHLIGHTS.FREE,
+      features: PLAN_FEATURES.FREE,
       maxUsers: 5,
     },
     {
-      id: 'pro',
-      name: t('plan.pro.name', 'Pro'),
-      price: 8,
-      currency: '£',
-      period: t('plan.period.perUserPerMonth', '/user/month'),
-      popular: true,
-      highlights: [
-        t('plan.pro.highlight1', 'Unlimited Tool Usage per user'),
-        t('plan.pro.highlight2', 'Advanced PDF tools'),
-        t('plan.pro.highlight3', 'No watermarks'),
-      ],
-      features: [
-        { name: t('plan.feature.pdfTools', 'Basic PDF Tools'), included: true },
-        { name: t('plan.feature.fileSize', 'File Size Limit'), included: true },
-        { name: t('plan.feature.automation', 'Automate tool workflows'), included: true },
-        { name: t('plan.feature.api', 'Weekly API Credits'), included: true },
-        { name: t('plan.feature.priority', 'Priority Support'), included: false },
-      ],
+      id: 'server',
+      name: 'Server',
+      price: 0,
+      currency: '',
+      period: '',
+      popular: false,
+      highlights: PLAN_HIGHLIGHTS.SERVER_MONTHLY,
+      features: PLAN_FEATURES.SERVER,
       maxUsers: 'Unlimited users',
     },
     {
@@ -101,27 +84,17 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
       price: 0,
       currency: '',
       period: '',
-      highlights: [
-        t('plan.enterprise.highlight1', 'Custom pricing'),
-        t('plan.enterprise.highlight2', 'Dedicated support'),
-        t('plan.enterprise.highlight3', 'Latest features'),
-      ],
-      features: [
-        { name: t('plan.feature.pdfTools', 'Basic PDF Tools'), included: true },
-        { name: t('plan.feature.fileSize', 'File Size Limit'), included: true },
-        { name: t('plan.feature.automation', 'Automate tool workflows'), included: true },
-        { name: t('plan.feature.api', 'Weekly API Credits'), included: true },
-        { name: t('plan.feature.priority', 'Priority Support'), included: true },
-      ],
+      highlights: PLAN_HIGHLIGHTS.ENTERPRISE_MONTHLY,
+      features: PLAN_FEATURES.ENTERPRISE,
       maxUsers: 'Custom',
     },
   ];
 
   const getCurrentPlan = () => {
-    if (!currentLicenseInfo) return staticPlans[0];
-    if (currentLicenseInfo.licenseType === 'ENTERPRISE') return staticPlans[2];
-    if (currentLicenseInfo.maxUsers > 5) return staticPlans[1];
-    return staticPlans[0];
+    const tier = mapLicenseToTier(currentLicenseInfo || null);
+    if (tier === 'enterprise') return staticPlans[2];
+    if (tier === 'server') return staticPlans[1];
+    return staticPlans[0]; // free
   };
 
   const currentPlan = getCurrentPlan();
@@ -202,9 +175,21 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
+                borderColor: plan.id === currentPlan.id ? 'var(--mantine-color-green-6)' : undefined,
+                borderWidth: plan.id === currentPlan.id ? '2px' : undefined,
               }}
             >
-              {plan.popular && (
+              {plan.id === currentPlan.id && (
+                <Badge
+                  color="green"
+                  variant="filled"
+                  size="sm"
+                  style={{ position: 'absolute', top: '1rem', right: '1rem' }}
+                >
+                  {t('plan.current', 'Current Plan')}
+                </Badge>
+              )}
+              {plan.popular && plan.id !== currentPlan.id && (
                 <Badge
                   variant="filled"
                   size="xs"
@@ -251,7 +236,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
                 <div style={{ flexGrow: 1 }} />
 
                 <Button
-                  variant={plan.id === currentPlan.id ? 'filled' : 'outline'}
+                  variant={plan.id === currentPlan.id ? 'light' : 'filled'}
                   disabled={plan.id === currentPlan.id}
                   fullWidth
                   onClick={() =>
@@ -266,6 +251,20 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
             </Card>
           ))}
         </div>
+
+        {/* Feature Comparison Toggle */}
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <Button variant="subtle" onClick={() => setShowComparison(!showComparison)}>
+            {showComparison
+              ? t('plan.hideComparison', 'Hide Feature Comparison')
+              : t('plan.showComparison', 'Compare All Features')}
+          </Button>
+        </div>
+
+        {/* Feature Comparison Table */}
+        <Collapse in={showComparison}>
+          <FeatureComparisonTable plans={staticPlans} />
+        </Collapse>
       </div>
 
       <Divider />

@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Card, Badge, Text, Collapse } from '@mantine/core';
+import { Button, Collapse } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
+import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
@@ -99,75 +100,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
       </div>
 
       <Collapse in={showComparison}>
-        <Card padding="lg" radius="md" withBorder style={{ marginTop: '1rem' }}>
-          <Text size="lg" fw={600} mb="md">
-            {t('plan.featureComparison', 'Feature Comparison')}
-          </Text>
-
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--mantine-color-gray-3)' }}>
-                  <th style={{ textAlign: 'left', padding: '0.75rem' }}>
-                    {t('plan.feature.title', 'Feature')}
-                  </th>
-                  {groupedPlans.map((group) => (
-                    <th
-                      key={group.tier}
-                      style={{
-                        textAlign: 'center',
-                        padding: '0.75rem',
-                        minWidth: '8rem',
-                        position: 'relative'
-                      }}
-                    >
-                      {group.name}
-                      {group.popular && (
-                        <Badge
-                          color="blue"
-                          variant="filled"
-                          size="xs"
-                          style={{
-                            position: 'absolute',
-                            top: '0.5rem',
-                            right: '0.5rem',
-                          }}
-                        >
-                          {t('plan.popular', 'Popular')}
-                        </Badge>
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {groupedPlans[0]?.features.map((_, featureIndex) => (
-                  <tr
-                    key={featureIndex}
-                    style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
-                  >
-                    <td style={{ padding: '0.75rem' }}>
-                      {groupedPlans[0].features[featureIndex].name}
-                    </td>
-                    {groupedPlans.map((group) => (
-                      <td key={group.tier} style={{ textAlign: 'center', padding: '0.75rem' }}>
-                        {group.features[featureIndex]?.included ? (
-                          <Text c="green" fw={600} size="lg">
-                            ✓
-                          </Text>
-                        ) : (
-                          <Text c="gray" size="sm">
-                            −
-                          </Text>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <FeatureComparisonTable plans={groupedPlans} />
       </Collapse>
     </div>
   );

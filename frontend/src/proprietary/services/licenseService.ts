@@ -1,6 +1,7 @@
 import apiClient from '@app/services/apiClient';
 import { supabase, isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getCheckoutMode } from '@app/utils/protocolDetection';
+import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from '@app/constants/planConstants';
 
 export interface PlanFeature {
   name: string;
@@ -15,7 +16,7 @@ export interface PlanTier {
   period: string;
   popular?: boolean;
   features: PlanFeature[];
-  highlights: string[];
+  highlights: readonly string[];
   isContactOnly?: boolean;
   seatPrice?: number;        // Per-seat price for enterprise plans
   requiresSeats?: boolean;   // Flag indicating seat selection is needed
@@ -28,7 +29,7 @@ export interface PlanTierGroup {
   monthly: PlanTier | null;
   yearly: PlanTier | null;
   features: PlanFeature[];
-  highlights: string[];
+  highlights: readonly string[];
   popular?: boolean;
 }
 
@@ -170,20 +171,8 @@ const licenseService = {
           currency: currencySymbol,
           period: '/month',
           popular: false,
-          features: [
-            { name: 'Self-hosted deployment', included: true },
-            { name: 'All PDF operations', included: true },
-            { name: 'Unlimited users', included: true },
-            { name: 'Community support', included: true },
-            { name: 'Regular updates', included: true },
-            { name: 'Priority support', included: false },
-            { name: 'Custom integrations', included: false },
-          ],
-          highlights: [
-            'Self-hosted on your infrastructure',
-            'All features included',
-            'Cancel anytime'
-          ]
+          features: PLAN_FEATURES.SERVER,
+          highlights: PLAN_HIGHLIGHTS.SERVER_MONTHLY
         },
         {
           id: 'selfhosted:server:yearly',
@@ -193,20 +182,8 @@ const licenseService = {
           currency: currencySymbol,
           period: '/year',
           popular: true,
-          features: [
-            { name: 'Self-hosted deployment', included: true },
-            { name: 'All PDF operations', included: true },
-            { name: 'Unlimited users', included: true },
-            { name: 'Community support', included: true },
-            { name: 'Regular updates', included: true },
-            { name: 'Priority support', included: false },
-            { name: 'Custom integrations', included: false },
-          ],
-          highlights: [
-            'Self-hosted on your infrastructure',
-            'All features included',
-            'Save with annual billing'
-          ]
+          features: PLAN_FEATURES.SERVER,
+          highlights: PLAN_HIGHLIGHTS.SERVER_YEARLY
         },
         {
           id: 'selfhosted:enterprise:monthly',
@@ -218,20 +195,8 @@ const licenseService = {
           period: '/month',
           popular: false,
           requiresSeats: true,
-          features: [
-            { name: 'Self-hosted deployment', included: true },
-            { name: 'All PDF operations', included: true },
-            { name: 'Per-seat licensing', included: true },
-            { name: 'Priority support', included: true },
-            { name: 'SLA guarantee', included: true },
-            { name: 'Custom integrations', included: true },
-            { name: 'Dedicated account manager', included: true },
-          ],
-          highlights: [
-            'Enterprise-grade support',
-            'Custom integrations available',
-            'SLA guarantee included'
-          ]
+          features: PLAN_FEATURES.ENTERPRISE,
+          highlights: PLAN_HIGHLIGHTS.ENTERPRISE_MONTHLY
         },
         {
           id: 'selfhosted:enterprise:yearly',
@@ -243,20 +208,8 @@ const licenseService = {
           period: '/year',
           popular: false,
           requiresSeats: true,
-          features: [
-            { name: 'Self-hosted deployment', included: true },
-            { name: 'All PDF operations', included: true },
-            { name: 'Per-seat licensing', included: true },
-            { name: 'Priority support', included: true },
-            { name: 'SLA guarantee', included: true },
-            { name: 'Custom integrations', included: true },
-            { name: 'Dedicated account manager', included: true },
-          ],
-          highlights: [
-            'Enterprise-grade support',
-            'Custom integrations available',
-            'Save with annual billing'
-          ]
+          features: PLAN_FEATURES.ENTERPRISE,
+          highlights: PLAN_HIGHLIGHTS.ENTERPRISE_YEARLY
         },
       ];
 
@@ -277,22 +230,8 @@ const licenseService = {
         currency: currencySymbol,
         period: '',
         popular: false,
-        features: [
-          { name: 'Self-hosted deployment', included: true },
-          { name: 'All PDF operations', included: true },
-          { name: 'Up to 5 users', included: true },
-          { name: 'Community support', included: true },
-          { name: 'Regular updates', included: true },
-          { name: 'Priority support', included: false },
-          { name: 'SLA guarantee', included: false },
-          { name: 'Custom integrations', included: false },
-          { name: 'Dedicated account manager', included: false },
-        ],
-        highlights: [
-          'Up to 5 users',
-          'Self-hosted',
-          'All basic features'
-        ]
+        features: PLAN_FEATURES.FREE,
+        highlights: PLAN_HIGHLIGHTS.FREE
       };
 
       const allPlans = [freePlan, ...validPlans];
