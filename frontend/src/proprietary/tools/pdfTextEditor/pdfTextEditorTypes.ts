@@ -99,6 +99,8 @@ export interface PdfJsonPage {
   width?: number | null;
   height?: number | null;
   rotation?: number | null;
+  mediaBox?: number[] | null;
+  cropBox?: number[] | null;
   textElements?: PdfJsonTextElement[] | null;
   imageElements?: PdfJsonImageElement[] | null;
   resources?: unknown;

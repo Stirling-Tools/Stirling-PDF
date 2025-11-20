@@ -2240,7 +2240,7 @@ const selectionToolbarPosition = useMemo(() => {
                                   if (primaryFont && typeof document !== 'undefined') {
                                     try {
                                       if (document.queryCommandSupported?.('styleWithCSS')) {
-                                        document.execCommand('styleWithCSS', false, true);
+                                        document.execCommand('styleWithCSS', false, 'true');
                                       }
                                       if (document.queryCommandSupported?.('fontName')) {
                                         document.execCommand('fontName', false, primaryFont);

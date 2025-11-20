@@ -19,6 +19,7 @@ import {
   TextGroup,
   PdfTextEditorViewData,
   BoundingBox,
+  ConversionProgress,
 } from './pdfTextEditorTypes';
 import {
   deepCloneDocument,
@@ -217,11 +218,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
-  const [conversionProgress, setConversionProgress] = useState<{
-    percent: number;
-    stage: string;
-    message: string;
-  } | null>(null);
+  const [conversionProgress, setConversionProgress] = useState<ConversionProgress | null>(null);
   const [forceSingleTextElement, setForceSingleTextElement] = useState(true);
   const [groupingMode, setGroupingMode] = useState<'auto' | 'paragraph' | 'singleLine'>('auto');
   const [hasVectorPreview, setHasVectorPreview] = useState(false);
@@ -1154,7 +1151,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           page.cleanup();
           return;
         }
-        await page.render({ canvasContext: context, viewport }).promise;
+        await page.render({ canvas, canvasContext: context, viewport }).promise;
 
         try {
           const textContent = await page.getTextContent();
@@ -1165,6 +1162,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           context.globalCompositeOperation = 'destination-out';
           context.fillStyle = '#000000';
           for (const item of textContent.items) {
+            // Skip TextMarkedContent items, only process TextItem
+            if (!('transform' in item)) continue;
+
             const transform = Util.transform(viewport.transform, item.transform);
             const a = transform[0];
             const b = transform[1];
