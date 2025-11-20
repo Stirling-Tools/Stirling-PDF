@@ -39,10 +39,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         if (isTauriMode) {
             // Automatically enable CORS for Tauri desktop app
-            // Use wildcard pattern since Tauri's HTTP plugin may not send standard Origin headers
-            logger.info("Tauri mode detected - enabling CORS for all origins (desktop app)");
+            // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
+            logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
             registry.addMapping("/**")
-                    .allowedOriginPatterns("*")
+                    .allowedOrigins(
+                            "tauri://localhost",
+                            "http://tauri.localhost",
+                            "https://tauri.localhost")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                     .allowedHeaders(
                             "Authorization",
