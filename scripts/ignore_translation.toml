@@ -37,10 +37,7 @@ ignore = [
 
 [bg_BG]
 ignore = [
-    'lang.div',
-    'lang.dzo',
     'lang.iku',
-    'lang.que',
     'language.direction',
 ]
 
@@ -357,7 +354,6 @@ ignore = [
     'lang.chr',
     'lang.div',
     'lang.dzo',
-    'lang.equ',
     'lang.eus',
     'lang.guj',
     'lang.hin',
@@ -380,7 +376,6 @@ ignore = [
     'lang.swa',
     'lang.tam',
     'lang.tat',
-    'lang.tel',
     'lang.tgl',
     'lang.yid',
     'lang.yor',
@@ -455,7 +450,6 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
     'endpointStatistics.top10',
@@ -608,7 +602,6 @@ ignore = [
     'lang.urd',
     'lang.yor',
     'language.direction',
-    'navbar.allTools',
     'sponsor',
 ]
 
