@@ -256,7 +256,6 @@ const buildFontLookupKeys = (
 const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean => {
   if (groups.length === 0) return false;
 
-  const _multiLineGroups = 0;
   let totalWords = 0;
   let longTextGroups = 0;
   let totalGroups = 0;
@@ -269,17 +268,10 @@ const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean
     if (text.length === 0) return;
 
     totalGroups++;
-    const lines = text.split('\n');
-    const lineCount = lines.length;
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
     totalWords += wordCount;
     wordCounts.push(wordCount);
-
-    // Count multi-line paragraphs
-    if (lineCount > 1) {
-      multiLineGroups++;
-    }
 
     // Count text groups with substantial content (≥10 words or ≥50 chars)
     if (wordCount >= 10 || text.length >= 50) {

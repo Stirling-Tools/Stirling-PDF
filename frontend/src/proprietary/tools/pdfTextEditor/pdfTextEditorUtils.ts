@@ -7,7 +7,7 @@ import {
   TextGroup,
   DEFAULT_PAGE_HEIGHT,
   DEFAULT_PAGE_WIDTH,
-} from '@proprietary/tools/pdfTextEditor/pdfTextEditorTypes';
+} from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;

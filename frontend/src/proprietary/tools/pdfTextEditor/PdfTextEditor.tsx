@@ -20,7 +20,7 @@ import {
   PdfTextEditorViewData,
   BoundingBox,
   ConversionProgress,
-} from '@proprietary/tools/pdfTextEditor/pdfTextEditorTypes';
+} from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import {
   deepCloneDocument,
   getDirtyPages,
@@ -30,7 +30,7 @@ import {
   cloneImageElement,
   cloneTextElement,
   valueOr,
-} from '@proprietary/tools/pdfTextEditor/pdfTextEditorUtils';
+} from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
 import PdfTextEditorView from '@app/components/tools/pdfTextEditor/PdfTextEditorView';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
