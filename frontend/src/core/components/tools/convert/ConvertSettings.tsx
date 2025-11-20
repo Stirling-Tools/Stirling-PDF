@@ -8,6 +8,7 @@ import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/FileContext";
 import { detectFileExtension } from "@app/utils/fileUtils";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
@@ -47,16 +48,36 @@ const ConvertSettings = ({
   const { setSelectedFiles } = useFileSelection();
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
+  const { preferences } = usePreferences();
 
-  const allEndpoints = useMemo(() => getConversionEndpoints(EXTENSION_TO_ENDPOINT), []);
+  const allEndpoints = useMemo(() => {
+    const endpoints = getConversionEndpoints(EXTENSION_TO_ENDPOINT);
+    console.log('[Convert] Checking availability for endpoints:', endpoints);
+    return endpoints;
+  }, []);
 
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
+
+  // Debug: Log endpoint status when it changes
+  useMemo(() => {
+    const disabledEndpoints = Object.entries(endpointStatus).filter(([_, status]) => status === false);
+    if (disabledEndpoints.length > 0) {
+      console.log('[Convert] Disabled endpoints:', Object.fromEntries(disabledEndpoints));
+    }
+  }, [endpointStatus]);
 
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
 
-    return endpointStatus[endpointKey] === true;
+    const isAvailable = endpointStatus[endpointKey] === true;
+
+    // Debug logging
+    if (endpointStatus[endpointKey] === false) {
+      console.log(`[Convert] Conversion ${fromExt} → ${toExt} using endpoint '${endpointKey}' is DISABLED`);
+    }
+
+    return isAvailable;
   };
 
   // Enhanced FROM options with endpoint availability
@@ -74,6 +95,12 @@ const ConvertSettings = ({
       };
     });
 
+    // Filter out unavailable source formats if preference is enabled
+    let filteredOptions = baseOptions;
+    if (preferences.hideUnavailableConversions) {
+      filteredOptions = baseOptions.filter(opt => opt.enabled !== false);
+    }
+
     // Add dynamic format option if current selection is a file-<extension> format
     if (parameters.fromExtension && parameters.fromExtension.startsWith('file-')) {
       const extension = parameters.fromExtension.replace('file-', '');
@@ -85,22 +112,41 @@ const ConvertSettings = ({
       };
 
       // Add the dynamic option at the beginning
-      return [dynamicOption, ...baseOptions];
+      return [dynamicOption, ...filteredOptions];
     }
 
-    return baseOptions;
-  }, [parameters.fromExtension, endpointStatus]);
+    return filteredOptions;
+  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions]);
 
   // Enhanced TO options with endpoint availability
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
 
     const availableOptions = getAvailableToExtensions(parameters.fromExtension) || [];
-    return availableOptions.map(option => ({
-      ...option,
-      enabled: isConversionAvailable(parameters.fromExtension, option.value)
-    }));
-  }, [parameters.fromExtension, endpointStatus]);
+    const enhanced = availableOptions.map(option => {
+      const enabled = isConversionAvailable(parameters.fromExtension, option.value);
+      return {
+        ...option,
+        enabled
+      };
+    });
+
+    // Debug: Log TO options
+    const disabledOptions = enhanced.filter(opt => opt.enabled === false);
+    if (disabledOptions.length > 0) {
+      console.log(`[Convert] TO options for '${parameters.fromExtension}':`, {
+        total: enhanced.length,
+        disabled: disabledOptions.map(o => o.value)
+      });
+    }
+
+    // Filter out unavailable conversions if preference is enabled
+    if (preferences.hideUnavailableConversions) {
+      return enhanced.filter(opt => opt.enabled !== false);
+    }
+
+    return enhanced;
+  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions]);
 
   const resetParametersToDefaults = () => {
     onParameterChange('imageOptions', {

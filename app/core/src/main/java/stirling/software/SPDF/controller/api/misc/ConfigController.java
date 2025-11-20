@@ -209,7 +209,9 @@ public class ConfigController {
         String[] endpointArray = endpoints.split(",");
         for (String endpoint : endpointArray) {
             String trimmedEndpoint = endpoint.trim();
-            result.put(trimmedEndpoint, endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
+            result.put(
+                    trimmedEndpoint,
+                    endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
     }

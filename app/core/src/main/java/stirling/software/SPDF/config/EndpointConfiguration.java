@@ -334,6 +334,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "cbz-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-cbz");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -467,6 +469,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("Java", "cbz-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-cbz");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
@@ -527,14 +531,19 @@ public class EndpointConfiguration {
             List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
             List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
+            log.info("DEBUG: endpointsToRemove from config: {}", endpointsToRemove);
+            log.info("DEBUG: groupsToRemove from config: {}", groupsToRemove);
+
             if (endpointsToRemove != null) {
                 for (String endpoint : endpointsToRemove) {
+                    log.info("DEBUG: Disabling endpoint '{}' from config", endpoint.trim());
                     disableEndpoint(endpoint.trim());
                 }
             }
 
             if (groupsToRemove != null) {
                 for (String group : groupsToRemove) {
+                    log.info("DEBUG: Disabling group '{}' from config", group.trim());
                     disableGroup(group.trim());
                 }
             }

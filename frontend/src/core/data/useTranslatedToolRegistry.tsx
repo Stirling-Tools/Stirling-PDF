@@ -301,6 +301,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
+        endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
         automationSettings: null
@@ -562,6 +563,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
+        endpoints: ["remove-annotations"],
         operationConfig: removeAnnotationsOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, "removeAnnotations")
@@ -684,6 +686,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["overlay-pdf"],
         operationConfig: overlayPdfsOperationConfig,
         synonyms: getSynonyms(t, "overlay-pdfs"),
         automationSettings: OverlayPdfsSettings
@@ -708,6 +711,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.addImage.desc", "Add images to PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["add-image"],
         synonyms: getSynonyms(t, "addImage"),
         automationSettings: null
       },
@@ -718,6 +722,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["scanner-effect"],
         synonyms: getSynonyms(t, "scannerEffect"),
         automationSettings: null
       },
@@ -808,6 +813,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["compress-pdf"],
         operationConfig: compressOperationConfig,
         automationSettings: CompressSettings,
         synonyms: getSynonyms(t, "compress")
@@ -851,6 +857,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["ocr-pdf"],
         operationConfig: ocrOperationConfig,
         automationSettings: OCRSettings,
         synonyms: getSynonyms(t, "ocr")

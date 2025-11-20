@@ -94,7 +94,11 @@ export const useToolManagement = (): ToolManagementResult => {
       if (!baseTool) return;
       const availabilityInfo = toolAvailability[toolKey];
       const isAvailable = availabilityInfo ? availabilityInfo.available !== false : true;
-      if (preferences.hideUnavailableTools && !isAvailable) {
+
+      // Check if tool is "coming soon" (has no component and no link)
+      const isComingSoon = !baseTool.component && !baseTool.link && toolKey !== 'read' && toolKey !== 'multiTool';
+
+      if (preferences.hideUnavailableTools && (!isAvailable || isComingSoon)) {
         return;
       }
       availableToolRegistry[toolKey] = {

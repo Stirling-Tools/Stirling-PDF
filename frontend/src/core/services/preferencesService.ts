@@ -10,6 +10,7 @@ export interface UserPreferences {
   showLegacyToolDescriptions: boolean;
   hasCompletedOnboarding: boolean;
   hideUnavailableTools: boolean;
+  hideUnavailableConversions: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -21,6 +22,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   showLegacyToolDescriptions: false,
   hasCompletedOnboarding: false,
   hideUnavailableTools: false,
+  hideUnavailableConversions: false,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';
