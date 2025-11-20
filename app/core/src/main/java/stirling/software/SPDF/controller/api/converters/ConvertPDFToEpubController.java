@@ -109,7 +109,7 @@ public class ConvertPDFToEpubController {
         }
 
         String extension = FilenameUtils.getExtension(originalFilename);
-        if (extension == null || extension.isBlank()) {
+        if (extension.isBlank()) {
             throw new IllegalArgumentException("Unable to determine file type");
         }
 

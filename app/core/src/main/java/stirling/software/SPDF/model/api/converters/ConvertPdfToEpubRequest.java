@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import lombok.Getter;
 import stirling.software.common.model.api.PDFFile;
 
 @Data
@@ -23,6 +24,7 @@ public class ConvertPdfToEpubRequest extends PDFFile {
             defaultValue = "TABLET_PHONE_IMAGES")
     private TargetDevice targetDevice = TargetDevice.TABLET_PHONE_IMAGES;
 
+    @Getter
     public enum TargetDevice {
         TABLET_PHONE_IMAGES("tablet"),
         KINDLE_EINK_TEXT("kindle");
@@ -33,8 +35,5 @@ public class ConvertPdfToEpubRequest extends PDFFile {
             this.calibreProfile = calibreProfile;
         }
 
-        public String getCalibreProfile() {
-            return calibreProfile;
-        }
     }
 }
