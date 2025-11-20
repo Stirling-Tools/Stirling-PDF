@@ -507,7 +507,7 @@ jobs:
           fi
 
       - name: Verify Windows Code Signature
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
           Write-Host "Verifying Windows code signatures..."
