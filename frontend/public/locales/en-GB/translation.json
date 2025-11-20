@@ -362,7 +362,15 @@
       "defaultPdfEditorInactive": "Another application is set as default",
       "defaultPdfEditorChecking": "Checking...",
       "defaultPdfEditorSet": "Already Default",
-      "setAsDefault": "Set as Default"
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -382,6 +390,37 @@
       "noShortcut": "No shortcut set",
       "searchPlaceholder": "Search tools..."
     }
+  },
+  "update": {
+    "modalTitle": "Update Available",
+    "current": "Current Version",
+    "latest": "Latest Version",
+    "latestStable": "Latest Stable",
+    "priorityLabel": "Priority",
+    "recommendedAction": "Recommended Action",
+    "breakingChangesDetected": "Breaking Changes Detected",
+    "breakingChangesMessage": "Some versions contain breaking changes. Please review the migration guides below before updating.",
+    "migrationGuides": "Migration Guides",
+    "viewGuide": "View Guide",
+    "loadingDetailedInfo": "Loading detailed information...",
+    "close": "Close",
+    "viewAllReleases": "View All Releases",
+    "downloadLatest": "Download Latest",
+    "availableUpdates": "Available Updates",
+    "unableToLoadDetails": "Unable to load detailed information.",
+    "version": "Version",
+    "urgentUpdateAvailable": "Urgent Update",
+    "updateAvailable": "Update Available",
+    "releaseNotes": "Release Notes",
+    "priority": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "minor": "Minor",
+      "low": "Low"
+    },
+    "breakingChanges": "Breaking Changes",
+    "breakingChangesDefault": "This version contains breaking changes.",
+    "migrationGuide": "Migration Guide"
   },
   "changeCreds": {
     "title": "Change Credentials",
@@ -2095,13 +2134,54 @@
       "title": "Draw your signature",
       "clear": "Clear"
     },
+    "canvas": {
+      "heading": "Draw your signature",
+      "clickToOpen": "Click to open the drawing canvas",
+      "modalTitle": "Draw your signature",
+      "colorLabel": "Colour",
+      "penSizeLabel": "Pen size",
+      "penSizePlaceholder": "Size",
+      "clear": "Clear canvas",
+      "colorPickerTitle": "Choose stroke colour"
+    },
     "text": {
       "name": "Signer Name",
-      "placeholder": "Enter your full name"
+      "placeholder": "Enter your full name",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
     },
     "clear": "Clear",
     "add": "Add",
-    "saved": "Saved Signatures",
+    "saved": {
+      "heading": "Saved signatures",
+      "description": "Reuse saved signatures at any time.",
+      "emptyTitle": "No saved signatures yet",
+      "emptyDescription": "Draw, upload, or type a signature above, then use \"Save to library\" to keep up to {{max}} favourites ready to use.",
+      "type": {
+        "canvas": "Drawing",
+        "image": "Upload",
+        "text": "Text"
+      },
+      "limitTitle": "Limit reached",
+      "limitDescription": "Remove a saved signature before adding new ones (max {{max}}).",
+      "carouselPosition": "{{current}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "delete": "Remove",
+      "label": "Label",
+      "defaultLabel": "Signature",
+      "defaultCanvasLabel": "Drawing signature",
+      "defaultImageLabel": "Uploaded signature",
+      "defaultTextLabel": "Typed signature",
+      "saveButton": "Save signature",
+      "saveUnavailable": "Create a signature first to save it.",
+      "noChanges": "Current signature is already saved.",
+      "status": {
+        "saved": "Saved"
+      }
+    },
     "save": "Save Signature",
     "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
@@ -2120,12 +2200,18 @@
     "steps": {
       "configure": "Configure Signature"
     },
+    "step": {
+      "createDesc": "Choose how you want to create the signature",
+      "place": "Place & save",
+      "placeDesc": "Position the signature on your PDF"
+    },
     "type": {
       "title": "Signature Type",
       "draw": "Draw",
       "canvas": "Canvas",
       "image": "Image",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Saved"
     },
     "image": {
       "label": "Upload signature image",
@@ -2136,11 +2222,17 @@
       "title": "How to add signature",
       "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
       "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
-      "text": "After entering your name above, click anywhere on the PDF to place your signature."
+      "saved": "Select a saved signature above, then click anywhere on the PDF to place it.",
+      "text": "After entering your name above, click anywhere on the PDF to place your signature.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your signature.",
+      "noSignature": "Create a signature above to enable placement tools."
     },
     "mode": {
       "move": "Move Signature",
-      "place": "Place Signature"
+      "place": "Place Signature",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
     },
     "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
@@ -2323,7 +2415,7 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-    
+
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2379,7 +2471,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    
+
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -4328,9 +4420,21 @@
         "title": "Premium & Enterprise",
         "description": "Configure your premium or enterprise license key.",
         "license": "License Configuration",
+        "licenseKey": {
+          "toggle": "Got a license key or certificate file?",
+          "info": "If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
+        },
         "key": {
           "label": "License Key",
-          "description": "Enter your premium or enterprise license key"
+          "description": "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
+          "success": "License Key Saved",
+          "successMessage": "Your license key has been activated successfully. No restart required.",
+          "overwriteWarning": {
+            "title": "⚠️ Warning: Existing License Detected",
+            "line1": "Overwriting your current license key cannot be undone.",
+            "line2": "Your previous license will be permanently lost unless you have backed it up elsewhere.",
+            "line3": "Important: Keep license keys private and secure. Never share them publicly."
+          }
         },
         "enabled": {
           "label": "Enable Premium Features",
@@ -4740,6 +4844,9 @@
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   },
+  "colorPicker": {
+    "title": "Choose colour"
+  },
   "common": {
     "previous": "Previous",
     "next": "Next",
@@ -4755,7 +4862,12 @@
     "used": "used",
     "available": "available",
     "cancel": "Cancel",
-    "preview": "Preview"
+    "preview": "Preview",
+    "close": "Close",
+    "done": "Done",
+    "loading": "Loading...",
+    "back": "Back",
+    "continue": "Continue"
   },
   "config": {
     "overview": {
@@ -5173,6 +5285,14 @@
     "showComparison": "Compare All Features",
     "hideComparison": "Hide Feature Comparison",
     "featureComparison": "Feature Comparison",
+    "from": "From",
+    "perMonth": "/month",
+    "licensedSeats": "Licensed: {{count}} seats",
+    "includedInCurrent": "Included in Your Plan",
+    "selectPlan": "Select Plan",
+    "manageSubscription": {
+      "description": "Manage your subscription, billing, and payment methods"
+    },
     "activePlan": {
       "title": "Active Plan",
       "subtitle": "Your current subscription details"
@@ -5190,13 +5310,16 @@
       "upTo": "Up to"
     },
     "period": {
-      "month": "month"
+      "month": "month",
+      "perUserPerMonth": "/user/month"
     },
     "free": {
       "name": "Free",
       "highlight1": "Limited Tool Usage Per week",
       "highlight2": "Access to all tools",
-      "highlight3": "Community support"
+      "highlight3": "Community support",
+      "forever": "Forever free",
+      "included": "Included"
     },
     "pro": {
       "name": "Pro",
@@ -5238,13 +5361,44 @@
       "error": "Failed to open billing portal"
     }
   },
+  "upgradeBanner": {
+    "title": "Upgrade to Server Plan",
+    "message": "Get the most out of Stirling PDF with unlimited users and advanced features",
+    "upgradeButton": "Upgrade Now",
+    "dismiss": "Dismiss banner"
+  },
   "payment": {
     "preparing": "Preparing your checkout...",
     "upgradeTitle": "Upgrade to {{planName}}",
     "success": "Payment Successful!",
     "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
     "autoClose": "This window will close automatically...",
-    "error": "Payment Error"
+    "error": "Payment Error",
+    "upgradeSuccess": "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly.",
+    "paymentSuccess": "Payment successful! Retrieving your license key...",
+    "licenseActivated": "License activated! Your license key has been saved. A confirmation email has been sent to your registered email address.",
+    "licenseDelayed": "Payment successful! Your license is being generated. You will receive an email with your license key shortly. If you don't receive it within 10 minutes, please contact support.",
+    "licensePollingError": "Payment successful but we couldn't retrieve your license key automatically. Please check your email or contact support with your payment confirmation.",
+    "licenseRetrievalError": "Payment successful but license retrieval failed. You will receive your license key via email. Please contact support if you don't receive it within 10 minutes.",
+    "syncError": "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist.",
+    "licenseSaveError": "Failed to save license key. Please contact support with your license key to complete activation.",
+    "paymentCanceled": "Payment was canceled. No charges were made.",
+    "syncingLicense": "Syncing your upgraded license...",
+    "generatingLicense": "Generating your license key...",
+    "upgradeComplete": "Upgrade Complete",
+    "upgradeCompleteMessage": "Your subscription has been upgraded successfully. Your existing license key has been updated.",
+    "stripeNotConfigured": "Stripe Not Configured",
+    "stripeNotConfiguredMessage": "Stripe payment integration is not configured. Please contact your administrator.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "billingPeriod": "Billing Period",
+    "enterpriseNote": "Seats can be adjusted in checkout (1-1000).",
+    "installationId": "Installation ID",
+    "licenseKey": "Your License Key",
+    "licenseInstructions": "Enter this key in Settings → Admin Plan → License Key section",
+    "canCloseWindow": "You can now close this window.",
+    "licenseKeyProcessing": "License Key Processing",
+    "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support."
   },
   "firstLogin": {
     "title": "First Time Login",
@@ -5403,5 +5557,142 @@
     "offline": "Backend Offline",
     "starting": "Backend starting up...",
     "wait": "Please wait for the backend to finish launching and try again."
+  },
+  "setup": {
+    "welcome": "Welcome to Stirling PDF",
+    "description": "Get started by choosing how you want to use Stirling PDF",
+    "step1": {
+      "label": "Choose Mode",
+      "description": "Offline or Server"
+    },
+    "step2": {
+      "label": "Select Server",
+      "description": "Self-hosted server"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Enter credentials"
+    },
+    "mode": {
+      "offline": {
+        "title": "Use Offline",
+        "description": "Run locally without an internet connection"
+      },
+      "server": {
+        "title": "Connect to Server",
+        "description": "Connect to a remote Stirling PDF server"
+      }
+    },
+    "server": {
+      "title": "Connect to Server",
+      "subtitle": "Enter your self-hosted server URL",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Self-hosted server"
+      },
+      "url": {
+        "label": "Server URL",
+        "description": "Enter the full URL of your self-hosted Stirling PDF server"
+      },
+      "error": {
+        "emptyUrl": "Please enter a server URL",
+        "unreachable": "Could not connect to server",
+        "testFailed": "Connection test failed"
+      },
+      "testing": "Testing connection..."
+    },
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to continue",
+      "connectingTo": "Connecting to:",
+      "username": {
+        "label": "Username",
+        "placeholder": "Enter your username"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password"
+      },
+      "error": {
+        "emptyUsername": "Please enter your username",
+        "emptyPassword": "Please enter your password"
+      },
+      "submit": "Login"
+    }
+  },
+  "settings": {
+    "connection": {
+      "title": "Connection Mode",
+      "mode": {
+        "offline": "Offline",
+        "server": "Server"
+      },
+      "server": "Server",
+      "user": "Logged in as",
+      "switchToServer": "Connect to Server",
+      "switchToOffline": "Switch to Offline",
+      "logout": "Logout",
+      "selectServer": "Select Server",
+      "login": "Login"
+    },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "user": "User",
+      "logout": "Log out",
+      "enableFeatures": {
+        "dismiss": "Dismiss",
+        "title": "For System Administrators",
+        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
+        "action": "Configure",
+        "and": "and",
+        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
+        "learnMore": "Learn more in documentation"
+      },
+      "defaultToolPickerMode": "Default tool picker mode",
+      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "mode": {
+        "sidebar": "Sidebar",
+        "fullscreen": "Fullscreen"
+      },
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
+    },
+    "hotkeys": {
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "searchPlaceholder": "Search tools...",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut",
+      "noShortcut": "No shortcut set"
+    }
+  },
+  "auth": {
+    "sessionExpired": "Session Expired",
+    "pleaseLoginAgain": "Please login again.",
+    "accessDenied": "Access Denied",
+    "insufficientPermissions": "You do not have permission to perform this action."
   }
 }
