@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export const DEFAULT_VISIBILITY_THRESHOLD = 80; // Require at least 80% of the page height to be visible
+export const DEFAULT_VISIBILITY_THRESHOLD = 70; // Require at least 70% of the page height to be visible
 export const DEFAULT_FALLBACK_ZOOM = 1.44; // 144% fallback when no reliable metadata is present
 
 export interface ZoomViewport {
@@ -36,47 +36,33 @@ export function determineAutoZoom({
   visibilityThreshold = DEFAULT_VISIBILITY_THRESHOLD,
   fallbackZoom = DEFAULT_FALLBACK_ZOOM,
 }: AutoZoomParams): AutoZoomDecision {
+  // Get aspect ratio from pageRect or metadata
   const rectWidth = pageRect?.width ?? 0;
   const rectHeight = pageRect?.height ?? 0;
-
   const aspectRatio: number | null =
     rectWidth > 0 ? rectHeight / rectWidth : metadataAspectRatio ?? null;
 
-  let renderedHeight: number | null = rectHeight > 0 ? rectHeight : null;
-
-  if (!renderedHeight || renderedHeight <= 0) {
-    if (aspectRatio == null || aspectRatio <= 0) {
-      return { type: 'fallback', zoom: Math.min(fitWidthZoom, fallbackZoom) };
-    }
-
-    const pageWidth = viewportWidth / (fitWidthZoom * pagesPerSpread);
-    const pageHeight = pageWidth * aspectRatio;
-    renderedHeight = pageHeight * fitWidthZoom;
+  // Need aspect ratio to proceed
+  if (!aspectRatio || aspectRatio <= 0) {
+    return { type: 'fallback', zoom: Math.min(fitWidthZoom, fallbackZoom) };
   }
 
-  if (!renderedHeight || renderedHeight <= 0) {
-    return { type: 'fitWidth' };
-  }
-
-  const isLandscape = aspectRatio !== null && aspectRatio < 1;
+  // Landscape pages need 100% visibility, portrait need the specified threshold
+  const isLandscape = aspectRatio < 1;
   const targetVisibility = isLandscape ? 100 : visibilityThreshold;
 
-  const visiblePercent = (viewportHeight / renderedHeight) * 100;
+  // Calculate zoom level that shows targetVisibility% of page height
+  const pageHeightAtFitWidth = (viewportWidth / pagesPerSpread) * aspectRatio;
+  const heightBasedZoom = fitWidthZoom * (viewportHeight / pageHeightAtFitWidth) / (targetVisibility / 100);
 
-  if (visiblePercent >= targetVisibility) {
+  // Use whichever zoom is smaller (more zoomed out) to satisfy both width and height constraints
+  if (heightBasedZoom < fitWidthZoom) {
+    // Need to zoom out from fitWidth to show enough height
+    return { type: 'adjust', zoom: heightBasedZoom };
+  } else {
+    // fitWidth already shows enough
     return { type: 'fitWidth' };
   }
-
-  const allowableHeightRatio = targetVisibility / 100;
-  const zoomScale =
-    viewportHeight / (allowableHeightRatio * renderedHeight);
-  const targetZoom = Math.min(fitWidthZoom, fitWidthZoom * zoomScale);
-
-  if (Math.abs(targetZoom - fitWidthZoom) < 0.001) {
-    return { type: 'fitWidth' };
-  }
-
-  return { type: 'adjust', zoom: targetZoom };
 }
 
 export interface MeasurePageRectOptions {
