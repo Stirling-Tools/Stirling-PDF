@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * PDFium-based redaction helper.
  *
