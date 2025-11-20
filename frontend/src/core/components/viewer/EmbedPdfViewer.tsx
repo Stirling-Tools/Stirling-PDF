@@ -15,6 +15,7 @@ import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
+import { SignaturePlacementOverlay } from '@app/components/viewer/SignaturePlacementOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 
 export interface EmbedPdfViewerProps {
@@ -67,7 +68,7 @@ const EmbedPdfViewerContent = ({
   }, [rotationState.rotation]);
 
   // Get signature context
-  const { signatureApiRef, historyApiRef } = useSignature();
+  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();
@@ -85,6 +86,9 @@ const EmbedPdfViewerContent = ({
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
+  const isPlacementOverlayActive = Boolean(
+    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+  );
 
   // Track which file tab is active
   const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
@@ -323,6 +327,11 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
+            />
+            <SignaturePlacementOverlay
+              containerRef={pdfContainerRef}
+              isActive={isPlacementOverlayActive}
+              signatureConfig={signatureConfig}
             />
           </Box>
         </>

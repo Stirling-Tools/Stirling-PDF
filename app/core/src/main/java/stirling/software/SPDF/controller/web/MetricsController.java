@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.SPDF.config.StartupApplicationListener;
+import stirling.software.SPDF.service.WeeklyActiveUsersService;
 import stirling.software.common.annotations.api.InfoApi;
 import stirling.software.common.model.ApplicationProperties;
 
@@ -34,6 +35,7 @@ public class MetricsController {
     private final ApplicationProperties applicationProperties;
     private final MeterRegistry meterRegistry;
     private final EndpointInspector endpointInspector;
+    private final Optional<WeeklyActiveUsersService> wauService;
     private boolean metricsEnabled;
 
     @PostConstruct
@@ -350,6 +352,35 @@ public class MetricsController {
         LocalDateTime now = LocalDateTime.now();
         Duration uptime = Duration.between(StartupApplicationListener.startTime, now);
         return ResponseEntity.ok(formatDuration(uptime));
+    }
+
+    @GetMapping("/wau")
+    @Operation(
+            summary = "Weekly Active Users statistics",
+            description =
+                    "Returns WAU (Weekly Active Users) count and total unique browsers. "
+                            + "Only available when security is disabled (no-login mode). "
+                            + "Tracks unique browsers via client-generated UUID in localStorage.")
+    public ResponseEntity<?> getWeeklyActiveUsers() {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+
+        // Check if WAU service is available (only when security.enableLogin=false)
+        if (wauService.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("WAU tracking is only available when security is disabled (no-login mode)");
+        }
+
+        WeeklyActiveUsersService service = wauService.get();
+
+        Map<String, Object> wauStats = new HashMap<>();
+        wauStats.put("weeklyActiveUsers", service.getWeeklyActiveUsers());
+        wauStats.put("totalUniqueBrowsers", service.getTotalUniqueBrowsers());
+        wauStats.put("daysOnline", service.getDaysOnline());
+        wauStats.put("trackingSince", service.getStartTime().toString());
+
+        return ResponseEntity.ok(wauStats);
     }
 
     private String formatDuration(Duration duration) {
