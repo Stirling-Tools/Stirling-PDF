@@ -51,6 +51,11 @@
         "desktopTemplate": "stirling-pdf.desktop"
       }
     },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com"
+    },
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": null,
