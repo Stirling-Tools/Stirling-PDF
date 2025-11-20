@@ -134,6 +134,7 @@ class SpringAuthClient {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
       console.debug('[SpringAuth] /me response status:', response.status);
@@ -314,6 +315,7 @@ class SpringAuthClient {
           'X-XSRF-TOKEN': this.getCsrfToken() || '',
         },
         withCredentials: true,
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
       const data = response.data;

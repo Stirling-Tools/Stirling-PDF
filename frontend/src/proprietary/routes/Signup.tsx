@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
+import { useAuth } from '@app/auth/UseSession';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
 import '@app/routes/authShared/auth.css';
 import { BASE_PATH } from '@app/constants/app';
@@ -17,12 +18,21 @@ import { useAuthService } from '@app/routes/signup/AuthService';
 export default function Signup() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { session, loading } = useAuth();
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+
+  // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
+  useEffect(() => {
+    if (!loading && session) {
+      console.debug('[Signup] User already authenticated, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [session, loading, navigate]);
 
   const baseUrl = window.location.origin + BASE_PATH;
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@app/auth/UseSession';
+import { springAuth } from '@app/auth/springAuthClient';
 
 /**
  * OAuth Callback Handler
@@ -11,7 +11,6 @@ import { useAuth } from '@app/auth/UseSession';
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { refreshSession } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -37,12 +36,23 @@ export default function AuthCallback() {
         console.log('[AuthCallback] JWT stored in localStorage');
 
         // Dispatch custom event for other components to react to JWT availability
-        window.dispatchEvent(new CustomEvent('jwt-available'))
+        window.dispatchEvent(new CustomEvent('jwt-available'));
 
-        // Refresh session to load user info into state
-        await refreshSession();
+        // Validate the token and load user info
+        // This calls /api/v1/auth/me with the JWT to get user details
+        const { data, error } = await springAuth.getSession();
 
-        console.log('[AuthCallback] Session refreshed, redirecting to home');
+        if (error || !data.session) {
+          console.error('[AuthCallback] Failed to validate token:', error);
+          localStorage.removeItem('stirling_jwt');
+          navigate('/login', {
+            replace: true,
+            state: { error: 'OAuth login failed - invalid token.' }
+          });
+          return;
+        }
+
+        console.log('[AuthCallback] Token validated, redirecting to home');
 
         // Clear the hash from URL and redirect to home page
         navigate('/', { replace: true });
@@ -56,7 +66,7 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-  }, [navigate, refreshSession]);
+  }, [navigate]);
 
   return (
     <div style={{

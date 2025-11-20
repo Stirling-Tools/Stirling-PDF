@@ -369,7 +369,8 @@ public class MetricsController {
         // Check if WAU service is available (only when security.enableLogin=false)
         if (wauService.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("WAU tracking is only available when security is disabled (no-login mode)");
+                    .body(
+                            "WAU tracking is only available when security is disabled (no-login mode)");
         }
 
         WeeklyActiveUsersService service = wauService.get();
