@@ -135,7 +135,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'docx': 'pdf-to-word', 'odt': 'pdf-to-word',
     'pptx': 'pdf-to-presentation', 'odp': 'pdf-to-presentation',
     'csv': 'pdf-to-csv',
-    'txt': 'pdf-to-text', 'rtf': 'pdf-to-rtf', 'md': 'pdf-to-markdown',
+    'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
     'cbz': 'pdf-to-cbz'
