@@ -918,6 +918,11 @@
     },
     "error": {
       "failed": "An error occurred while merging the PDFs."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Merge Settings Overview"
+      }
     }
   },
   "split": {
@@ -2372,6 +2377,14 @@
       "title": "About Remove Annotations",
       "description": "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
     },
+    "tooltip": {
+      "header": {
+        "title": "About Remove Annotations"
+      },
+      "description": {
+        "title": "What it does"
+      }
+    },
     "error": {
       "failed": "An error occurred while removing annotations from the PDF."
     }
@@ -2834,6 +2847,9 @@
       "header": {
         "title": "How Auto-Rename Works"
       },
+      "description": {
+        "title": "What it does"
+      },
       "howItWorks": {
         "title": "Smart Renaming",
         "text": "Automatically finds the title from your PDF content and uses it as the filename.",
@@ -2841,6 +2857,9 @@
         "bullet2": "Creates a clean, valid filename from the detected title",
         "bullet3": "Keeps the original name if no suitable title is found"
       }
+    },
+    "settings": {
+      "title": "About"
     }
   },
   "adjust-contrast": {
@@ -4840,7 +4859,9 @@
       "secureWorkflow": "Security Workflow",
       "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
       "processImages": "Process Images",
-      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images.",
+      "prePublishSanitization": "Pre-publish Sanitization",
+      "prePublishSanitizationDesc": "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."
     }
   },
   "colorPicker": {
@@ -4932,6 +4953,14 @@
     "addMoreFiles": "Add more files...",
     "selectedFiles": "Selected Files",
     "submit": "Add Attachments",
+    "tooltip": {
+      "header": {
+        "title": "About Add Attachments"
+      },
+      "description": {
+        "title": "What it does"
+      }
+    },
     "results": {
       "title": "Attachment Results"
     },
@@ -5556,6 +5585,24 @@
     "offline": "Backend Offline",
     "starting": "Backend starting up...",
     "wait": "Please wait for the backend to finish launching and try again."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Unlock PDF to continue",
+    "title": "Remove password to continue",
+    "description": "This PDF is password protected. Enter the password so you can continue working with it.",
+    "password": {
+      "label": "PDF password",
+      "placeholder": "Enter the PDF password"
+    },
+    "skip": "Skip for now",
+    "unlock": "Unlock & Continue",
+    "incorrectPassword": "Incorrect password",
+    "missingFile": "The selected file is no longer available.",
+    "emptyResponse": "Password removal did not produce a file.",
+    "required": "Enter the password to continue.",
+    "successTitle": "Password removed",
+    "successBodyWithName": "Password removed from {{fileName}}",
+    "successBody": "Password removed successfully."
   },
   "setup": {
     "welcome": "Welcome to Stirling PDF",
