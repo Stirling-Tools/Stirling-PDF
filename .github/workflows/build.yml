@@ -340,7 +340,6 @@ jobs:
             latest=false
           tags: |
             type=raw,value=alpha,enable=${{ matrix.docker-rev == 'Dockerfile.fat' }}
-            type=raw,value=dev-{{sha}},enable=true
             type=raw,value=${{ steps.variant.outputs.variant }},enable=true
           labels: |
             org.opencontainers.image.title=stirling-pdf-test
