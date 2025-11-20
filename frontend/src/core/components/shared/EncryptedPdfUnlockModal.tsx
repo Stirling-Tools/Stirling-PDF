@@ -44,15 +44,13 @@ const EncryptedPdfUnlockModal = ({
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="md">
-        <Stack gap={4} ta="center">
-          <Text fw={600}>{fileName}</Text>
-          <Text c="dimmed">
-            {t(
-              'encryptedPdfUnlock.description',
-              'This PDF is password protected. Enter the password so you can continue working with it.'
-            )}
-          </Text>
-        </Stack>
+        <Text fw={600} ta="center">{fileName}</Text>
+        <Text c="dimmed" ta="center">
+          {t(
+            'encryptedPdfUnlock.description',
+            'This PDF is password protected. Enter the password so you can continue working with it.'
+          )}
+        </Text>
 
         <Stack gap={4}>
           <PasswordInput

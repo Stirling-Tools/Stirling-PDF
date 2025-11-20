@@ -42,8 +42,7 @@ import type { RemovePasswordParameters } from '@app/hooks/tools/removePassword/u
 import apiClient from '@app/services/apiClient';
 import { processResponse } from '@app/utils/toolResponseProcessor';
 import { ToolOperation } from '@app/types/file';
-import { extractErrorMessage } from '@app/utils/toolErrorHandler';
-import { normalizeAxiosErrorData } from '@app/services/errorUtils';
+import { handlePasswordError } from '@app/utils/toolErrorHandler';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -298,25 +297,12 @@ function FileContextInner({
       dismissedEncryptedFilesRef.current.delete(activeEncryptedFileId);
       setActiveEncryptedFileId(null);
     } catch (error) {
-      const status = (error as any)?.response?.status;
-
-      // Handle specific error cases with user-friendly messages
-      if (status === 500) {
-        // 500 typically means incorrect password for encrypted PDFs
-        setUnlockError(t('encryptedPdfUnlock.incorrectPassword', 'Incorrect password'));
-      } else {
-        // For other errors, try to extract the message
-        const normalizedData = await normalizeAxiosErrorData((error as any)?.response?.data);
-        const errorWithNormalizedData = {
-          ...(error as any),
-          response: {
-            ...(error as any)?.response,
-            data: normalizedData
-          }
-        };
-        const fallback = t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.');
-        setUnlockError(extractErrorMessage(errorWithNormalizedData) || fallback);
-      }
+      const errorMessage = await handlePasswordError(
+        error,
+        t('encryptedPdfUnlock.incorrectPassword', 'Incorrect password'),
+        t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.')
+      );
+      setUnlockError(errorMessage);
     } finally {
       setIsUnlocking(false);
     }

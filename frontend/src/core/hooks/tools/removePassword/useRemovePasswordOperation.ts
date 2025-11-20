@@ -13,7 +13,7 @@ export const buildRemovePasswordFormData = (parameters: RemovePasswordParameters
 
 // Static configuration object
 export const removePasswordOperationConfig = {
-  toolType: 0 as ToolType.singleFile, // Use literal to avoid circular dependency issues
+  toolType: ToolType.singleFile,
   buildFormData: buildRemovePasswordFormData,
   operationType: 'removePassword',
   endpoint: '/api/v1/security/remove-password',
