@@ -10,6 +10,7 @@ import AdminDatabaseSection from '@app/components/shared/config/configSections/A
 import AdminAdvancedSection from '@app/components/shared/config/configSections/AdminAdvancedSection';
 import AdminLegalSection from '@app/components/shared/config/configSections/AdminLegalSection';
 import AdminPremiumSection from '@app/components/shared/config/configSections/AdminPremiumSection';
+import AdminPlanSection from '@app/components/shared/config/configSections/AdminPlanSection';
 import AdminFeaturesSection from '@app/components/shared/config/configSections/AdminFeaturesSection';
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
@@ -133,6 +134,14 @@ export const createConfigNavSections = (
           label: 'Premium',
           icon: 'star-rounded',
           component: <AdminPremiumSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
+        },
+        {
+          key: 'adminPlan',
+          label: 'Plan',
+          icon: 'star-rounded',
+          component: <AdminPlanSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
