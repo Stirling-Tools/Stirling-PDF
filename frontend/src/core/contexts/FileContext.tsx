@@ -37,7 +37,7 @@ import ZipWarningModal from '@app/components/shared/ZipWarningModal';
 import EncryptedPdfUnlockModal from '@app/components/shared/EncryptedPdfUnlockModal';
 import { useTranslation } from 'react-i18next';
 import { alert } from '@app/components/toast';
-import { buildRemovePasswordFormData, removePasswordOperationConfig } from '@app/hooks/tools/removePassword/useRemovePasswordOperation';
+import { buildRemovePasswordFormData } from '@app/hooks/tools/removePassword/useRemovePasswordOperation';
 import type { RemovePasswordParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
 import apiClient from '@app/services/apiClient';
 import { processResponse } from '@app/utils/toolResponseProcessor';
@@ -243,9 +243,8 @@ function FileContextInner({
 
     const params: RemovePasswordParameters = { password };
     const formData = buildRemovePasswordFormData(params, file);
-    const endpoint = removePasswordOperationConfig.endpoint;
 
-    const response = await apiClient.post(endpoint, formData, {
+    const response = await apiClient.post('/api/v1/security/remove-password', formData, {
       responseType: 'blob',
       suppressErrorToast: true  // Handle errors in modal UI instead of toast
     });
