@@ -201,7 +201,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
               : isDowngrade
                 ? t('plan.includedInCurrent', 'Included in Your Plan')
                 : isEnterpriseBlockedForFree
-                  ? t('plan.enterprise.requiresServer', 'Requires Server plan')
+                  ? t('plan.enterprise.requiresServer', 'Requires Server')
                   : isEnterprise
                     ? t('plan.selectPlan', 'Select Plan')
                     : t('plan.upgrade', 'Upgrade')}
