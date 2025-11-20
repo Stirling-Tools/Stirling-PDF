@@ -13,6 +13,7 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
+import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ const AdminPlanSection: React.FC = () => {
   useEffect(() => {
     // Check if Stripe is configured
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!stripeKey || error) {
+    if (!stripeKey || !isSupabaseConfigured || error) {
       setUseStaticVersion(true);
     }
   }, [error]);
@@ -148,7 +149,7 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {shouldShowLicenseWarning && (
+            {shouldShowLicenseWarning && (
         <InfoBanner
           icon="warning-rounded"
           tone="warning"
@@ -170,28 +171,41 @@ const AdminPlanSection: React.FC = () => {
           buttonColor="orange.7"
         />
       )}
-      {/* Manage Subscription Button - Only show if user has active license */}
-      {licenseInfo?.licenseKey && (
-        <Paper withBorder p="md" radius="md">
+      {/* Currency Selection & Manage Subscription */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text size="sm" c="dimmed">
-              {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
+            <Text size="lg" fw={600}>
+              {t('plan.currency', 'Currency')}
             </Text>
-            <ManageBillingButton />
+            <Select
+              value={currency}
+              onChange={(value) => setCurrency(value || 'gbp')}
+              data={currencyOptions}
+              searchable
+              clearable={false}
+              w={300}
+              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+            />
           </Group>
-        </Paper>
-      )}
 
-      <div id="available-plans-section">
-        <AvailablePlansSection
-          plans={plans}
-          currentLicenseInfo={licenseInfo}
-          onUpgradeClick={handleUpgradeClick}
-          currency={currency}
-          onCurrencyChange={(value) => setCurrency(value)}
-          currencyOptions={currencyOptions}
-        />
-      </div>
+          {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
+          {licenseInfo?.licenseKey && isSupabaseConfigured && (
+            <Group justify="space-between" align="center">
+              <Text size="sm" c="dimmed">
+                {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
+              </Text>
+              <ManageBillingButton />
+            </Group>
+          )}
+        </Stack>
+      </Paper>
+
+      <AvailablePlansSection
+        plans={plans}
+        currentLicenseInfo={licenseInfo}
+        onUpgradeClick={handleUpgradeClick}
+      />
 
       <Divider />
 

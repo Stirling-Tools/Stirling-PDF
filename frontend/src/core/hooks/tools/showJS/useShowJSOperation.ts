@@ -5,7 +5,6 @@ import type { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation
 import type { StirlingFile } from '@app/types/fileContext';
 import { extractErrorMessage } from '@app/utils/toolErrorHandler';
 import type { ShowJSParameters } from '@app/hooks/tools/showJS/useShowJSParameters';
-import type { ResponseType } from 'axios';
 
 export interface ShowJSOperationHook extends ToolOperationHook<ShowJSParameters> {
 	scriptText: string | null;
@@ -71,8 +70,7 @@ export const useShowJSOperation = (): ShowJSOperationHook => {
 
 				const response = await apiClient.post('/api/v1/misc/show-javascript', formData, {
 					headers: { 'Content-Type': 'multipart/form-data' },
-					responseType: 'text' as ResponseType,
-					transformResponse: [(data) => data],
+					responseType: 'text',
 				});
 
 				const text: string = typeof response.data === 'string' ? response.data : '';

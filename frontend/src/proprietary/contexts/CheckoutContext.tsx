@@ -7,6 +7,7 @@ import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
 import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 import { useLicense } from '@app/contexts/LicenseContext';
+import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 export interface CheckoutOptions {
   minimumSeats?: number;      // Override calculated seats for enterprise
@@ -201,6 +202,11 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     async (tier: 'server' | 'enterprise', options: CheckoutOptions = {}) => {
       try {
         setIsLoading(true);
+
+        // Check if Supabase is configured
+        if (!isSupabaseConfigured) {
+          throw new Error('Checkout is not available. Supabase is not configured.');
+        }
 
         // Update currency if provided
         const currency = options.currency || currentCurrency;

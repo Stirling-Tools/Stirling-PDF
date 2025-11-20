@@ -7,9 +7,18 @@
   ],
   "permissions": [
     "core:default",
-    { 
-    "identifier": "fs:allow-read-file",
-    "allow": [{ "path": "**" }]
-   }
+    "http:default",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        { "url": "http://localhost:*" },
+        { "url": "http://127.0.0.1:*" },
+        { "url": "https://*" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "**" }]
+    }
   ]
 }
