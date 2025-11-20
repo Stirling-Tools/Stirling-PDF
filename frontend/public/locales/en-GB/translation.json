@@ -2415,7 +2415,7 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
-    
+
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2471,7 +2471,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    
+
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -5515,14 +5515,22 @@
       "description": "Enter credentials"
     },
     "mode": {
-      "offline": {
-        "title": "Use Offline",
-        "description": "Run locally without an internet connection"
+      "saas": {
+        "title": "Use SaaS",
+        "description": "Sign in to Stirling PDF cloud service"
       },
-      "server": {
-        "title": "Connect to Server",
-        "description": "Connect to a remote Stirling PDF server"
+      "selfhosted": {
+        "title": "Self-Hosted Server",
+        "description": "Connect to your own Stirling PDF server"
       }
+    },
+    "saas": {
+      "title": "Sign In to SaaS",
+      "subtitle": "Enter your Stirling PDF account credentials"
+    },
+    "selfhosted": {
+      "title": "Sign In to Server",
+      "subtitle": "Enter your server credentials"
     },
     "server": {
       "title": "Connect to Server",
@@ -5565,16 +5573,12 @@
     "connection": {
       "title": "Connection Mode",
       "mode": {
-        "offline": "Offline",
-        "server": "Server"
+        "saas": "SaaS",
+        "selfhosted": "Self-Hosted"
       },
       "server": "Server",
       "user": "Logged in as",
-      "switchToServer": "Connect to Server",
-      "switchToOffline": "Switch to Offline",
-      "logout": "Logout",
-      "selectServer": "Select Server",
-      "login": "Login"
+      "logout": "Log Out"
     },
     "general": {
       "title": "General",

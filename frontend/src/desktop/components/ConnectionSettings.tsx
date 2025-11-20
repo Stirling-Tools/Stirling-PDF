@@ -98,7 +98,7 @@ export const ConnectionSettings: React.FC = () => {
 
           <Group mt="md">
             <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
-              {t('settings.connection.logout', 'Logout')}
+              {t('settings.connection.logout', 'Log Out')}
             </Button>
           </Group>
         </Stack>
