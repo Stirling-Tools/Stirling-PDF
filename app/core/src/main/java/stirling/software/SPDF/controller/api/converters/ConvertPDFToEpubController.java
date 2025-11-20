@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
+import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -42,7 +43,6 @@ public class ConvertPDFToEpubController {
 
     private static final String CALIBRE_GROUP = "Calibre";
     private static final String DEFAULT_EXTENSION = "pdf";
-    private static final MediaType EPUB_MEDIA_TYPE = MediaType.valueOf("application/epub+zip");
     private static final String FILTERED_CSS =
             "font-family,color,background-color,margin-left,margin-right";
     private static final String SMART_CHAPTER_EXPRESSION =
@@ -79,10 +79,10 @@ public class ConvertPDFToEpubController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/epub")
     @Operation(
-            summary = "Convert PDF to EPUB",
+            summary = "Convert PDF to EPUB/AZW3",
             description =
-                    "Convert a PDF file to a high-quality EPUB ebook using Calibre. Input:PDF"
-                            + " Output:EPUB Type:SISO")
+                    "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
+                            + " Output:EPUB/AZW3 Type:SISO")
     public ResponseEntity<byte[]> convertPdfToEpub(@ModelAttribute ConvertPdfToEpubRequest request)
             throws Exception {
 
@@ -102,6 +102,8 @@ public class ConvertPDFToEpubController {
                 request.getTargetDevice() == null
                         ? TargetDevice.TABLET_PHONE_IMAGES
                         : request.getTargetDevice();
+        OutputFormat outputFormat =
+                request.getOutputFormat() == null ? OutputFormat.EPUB : request.getOutputFormat();
 
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -129,7 +131,7 @@ public class ConvertPDFToEpubController {
         try {
             workingDirectory = tempFileManager.createTempDirectory();
             inputPath = workingDirectory.resolve(baseName + "." + DEFAULT_EXTENSION);
-            outputPath = workingDirectory.resolve(baseName + ".epub");
+            outputPath = workingDirectory.resolve(baseName + "." + outputFormat.getExtension());
 
             try (InputStream inputStream = inputFile.getInputStream()) {
                 Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
@@ -154,14 +156,21 @@ public class ConvertPDFToEpubController {
             }
 
             if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-                throw new IllegalStateException("Calibre did not produce an EPUB output");
+                throw new IllegalStateException(
+                        "Calibre did not produce a " + outputFormat.name() + " output");
             }
 
             String outputFilename =
-                    GeneralUtils.generateFilename(originalFilename, "_convertedToEPUB.epub");
+                    GeneralUtils.generateFilename(
+                            originalFilename,
+                            "_convertedTo"
+                                    + outputFormat.name()
+                                    + "."
+                                    + outputFormat.getExtension());
 
-            byte[] epubBytes = Files.readAllBytes(outputPath);
-            return WebResponseUtils.bytesToWebResponse(epubBytes, outputFilename, EPUB_MEDIA_TYPE);
+            byte[] outputBytes = Files.readAllBytes(outputPath);
+            MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
+            return WebResponseUtils.bytesToWebResponse(outputBytes, outputFilename, mediaType);
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }

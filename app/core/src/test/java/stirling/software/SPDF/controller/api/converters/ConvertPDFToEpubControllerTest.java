@@ -32,6 +32,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
+import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -216,6 +217,94 @@ class ConvertPDFToEpubControllerTest {
                     "story_convertedToEPUB.epub",
                     response.getHeaders().getContentDisposition().getFilename());
             assertEquals("epub", new String(response.getBody(), StandardCharsets.UTF_8));
+        } finally {
+            deleteIfExists(workingDir);
+        }
+    }
+
+    @Test
+    void convertPdfToAzw3_buildsCorrectCommandAndOutput() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "book.pdf", "application/pdf", "content".getBytes());
+
+        ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
+        request.setFileInput(pdfFile);
+        request.setOutputFormat(OutputFormat.AZW3);
+        request.setDetectChapters(false);
+        request.setTargetDevice(TargetDevice.KINDLE_EINK_TEXT);
+
+        Path workingDir = Files.createTempDirectory("pdf-azw3-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+
+        doAnswer(
+                        invocation -> {
+                            Path dir = invocation.getArgument(0);
+                            if (Files.exists(dir)) {
+                                try (Stream<Path> paths = Files.walk(dir)) {
+                                    paths.sorted(Comparator.reverseOrder())
+                                            .forEach(
+                                                    path -> {
+                                                        try {
+                                                            Files.deleteIfExists(path);
+                                                        } catch (IOException ignored) {
+                                                        }
+                                                    });
+                                }
+                            }
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
+
+            ProcessExecutor executor = mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
+
+            ProcessExecutorResult execResult = mock(ProcessExecutorResult.class);
+            when(execResult.getRc()).thenReturn(0);
+
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<List<String>> commandCaptor = ArgumentCaptor.forClass(List.class);
+            Path expectedInput = workingDir.resolve("book.pdf");
+            Path expectedOutput = workingDir.resolve("book.azw3");
+
+            when(executor.runCommandWithOutputHandling(
+                            commandCaptor.capture(), eq(workingDir.toFile())))
+                    .thenAnswer(
+                            invocation -> {
+                                Files.writeString(expectedOutput, "azw3");
+                                return execResult;
+                            });
+
+            gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
+                    .thenReturn("book_convertedToAZW3.azw3");
+            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+
+            List<String> command = commandCaptor.getValue();
+            assertEquals("ebook-convert", command.get(0));
+            assertEquals(expectedInput.toString(), command.get(1));
+            assertEquals(expectedOutput.toString(), command.get(2));
+            assertTrue(command.contains("--enable-heuristics"));
+            assertTrue(command.contains("--insert-blank-line"));
+            assertTrue(command.contains("--filter-css"));
+            assertTrue(command.stream().noneMatch(arg -> "--chapter".equals(arg)));
+            assertTrue(command.contains("--output-profile"));
+            assertTrue(command.contains(TargetDevice.KINDLE_EINK_TEXT.getCalibreProfile()));
+
+            assertEquals(
+                    MediaType.valueOf("application/vnd.amazon.ebook"),
+                    response.getHeaders().getContentType());
+            assertEquals(
+                    "book_convertedToAZW3.azw3",
+                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("azw3", new String(response.getBody(), StandardCharsets.UTF_8));
+
+            verify(tempFileManager).deleteTempDirectory(workingDir);
         } finally {
             deleteIfExists(workingDir);
         }
