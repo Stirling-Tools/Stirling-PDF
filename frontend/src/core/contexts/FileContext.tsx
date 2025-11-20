@@ -37,7 +37,7 @@ import ZipWarningModal from '@app/components/shared/ZipWarningModal';
 import EncryptedPdfUnlockModal from '@app/components/shared/EncryptedPdfUnlockModal';
 import { useTranslation } from 'react-i18next';
 import { alert } from '@app/components/toast';
-import { buildRemovePasswordFormData } from '@app/hooks/tools/removePassword/useRemovePasswordOperation';
+import { buildRemovePasswordFormData } from '@app/hooks/tools/removePassword/buildRemovePasswordFormData';
 import type { RemovePasswordParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
 import apiClient from '@app/services/apiClient';
 import { processResponse } from '@app/utils/toolResponseProcessor';
