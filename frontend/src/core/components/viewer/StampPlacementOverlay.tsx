@@ -15,13 +15,13 @@ import {
 // Convert rem to pixels using browser's base font size (typically 16px)
 const remToPx = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-interface SignaturePlacementOverlayProps {
+interface StampPlacementOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
   signatureConfig: SignParameters | null;
 }
 
-export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps> = ({
+export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
   containerRef,
   isActive,
   signatureConfig,
