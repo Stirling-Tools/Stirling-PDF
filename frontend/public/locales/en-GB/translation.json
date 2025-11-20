@@ -171,11 +171,6 @@
     "x-large": "X-Large"
   },
   "error": {
-    "404": {
-      "1": "We can't seem to find the page you're looking for.",
-      "2": "Something went wrong",
-      "head": "404 - Page Not Found | Oops, we tripped in the code!"
-    },
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
     "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
     "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
@@ -184,6 +179,11 @@
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
     "contactTip": "If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:",
+    "404": {
+      "head": "404 - Page Not Found | Oops, we tripped in the code!",
+      "1": "We can't seem to find the page you're looking for.",
+      "2": "Something went wrong"
+    },
     "github": "Submit a ticket on GitHub",
     "showStack": "Show Stack Trace",
     "copyStack": "Copy Stack Trace",
@@ -311,46 +311,55 @@
     }
   },
   "settings": {
-    "connection": {
-      "title": "Connection Mode",
-      "mode": {
-        "offline": "Offline",
-        "server": "Server"
-      },
-      "server": "Server",
-      "user": "Logged in as",
-      "switchToServer": "Connect to Server",
-      "switchToOffline": "Switch to Offline",
-      "logout": "Logout",
-      "selectServer": "Select Server",
-      "login": "Login"
+    "title": "Settings",
+    "update": "Update available",
+    "updateAvailable": "{0} is the current installed version. A new version ({1}) is available.",
+    "appVersion": "App Version:",
+    "downloadOption": {
+      "title": "Choose download option (For single file non zip downloads):",
+      "1": "Open in same window",
+      "2": "Open in new window",
+      "3": "Download file"
+    },
+    "zipThreshold": "Zip files when the number of downloaded files exceeds",
+    "signOut": "Sign Out",
+    "accountSettings": "Account Settings",
+    "bored": {
+      "help": "Enables easter egg game"
+    },
+    "cacheInputs": {
+      "name": "Save form inputs",
+      "help": "Enable to store previously used inputs for future runs"
     },
     "general": {
       "title": "General",
       "description": "Configure general application preferences.",
+      "account": "Account",
+      "accountDescription": "Manage your account settings",
       "user": "User",
+      "signedInAs": "Signed in as",
       "logout": "Log out",
       "enableFeatures": {
-        "dismiss": "Dismiss",
         "title": "For System Administrators",
-        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
+        "intro": "Enable user authentication, team management, and workspace features for your organization.",
         "action": "Configure",
         "and": "and",
         "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
-        "learnMore": "Learn more in documentation"
+        "learnMore": "Learn more in documentation",
+        "dismiss": "Dismiss"
       },
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
       "defaultToolPickerMode": "Default tool picker mode",
       "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
       "mode": {
-        "sidebar": "Sidebar",
-        "fullscreen": "Fullscreen"
+        "fullscreen": "Fullscreen",
+        "sidebar": "Sidebar"
       },
-      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-      "autoUnzip": "Auto-unzip API responses",
-      "autoUnzipDescription": "Automatically extract files from ZIP responses",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-      "autoUnzipFileLimit": "Auto-unzip file limit",
-      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
       "defaultPdfEditor": "Default PDF editor",
       "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
       "defaultPdfEditorInactive": "Another application is set as default",
@@ -367,8 +376,13 @@
       }
     },
     "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "errorModifier": {
+        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
+        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+      },
       "errorConflict": "Shortcut already used by {{tool}}.",
-      "searchPlaceholder": "Search tools...",
       "none": "Not assigned",
       "customBadge": "Custom",
       "defaultLabel": "Default: {{shortcut}}",
@@ -376,7 +390,8 @@
       "change": "Change shortcut",
       "reset": "Reset",
       "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set"
+      "noShortcut": "No shortcut set",
+      "searchPlaceholder": "Search tools..."
     }
   },
   "update": {
@@ -1198,6 +1213,7 @@
     "header": "PDF Page Organiser",
     "submit": "Rearrange Pages",
     "mode": {
+      "_value": "Organisation mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -1209,7 +1225,6 @@
       "9": "Remove First and Last",
       "10": "Odd-Even Merge",
       "11": "Duplicate all pages",
-      "_value": "Organisation mode",
       "desc": {
         "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
         "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
@@ -2398,12 +2413,8 @@
     "selection": {
       "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "original": {
-      "label": "Original PDF"
-    },
-    "edited": {
-      "label": "Edited PDF"
-    },
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
     "swap": {
       "confirmTitle": "Re-run comparison?",
       "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
@@ -2411,6 +2422,7 @@
     },
     "cta": "Compare",
     "loading": "Comparing...",
+
     "summary": {
       "baseHeading": "Original document",
       "comparisonHeading": "Edited document",
@@ -2466,6 +2478,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
+
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
@@ -3551,8 +3564,8 @@
     },
     "selectText": {
       "1": {
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality",
-        "_value": "Compression Settings"
+        "_value": "Compression Settings",
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
       },
       "2": "Optimisation level:",
       "4": "Auto mode - Auto adjusts quality to get PDF to exact size",
@@ -5613,51 +5626,105 @@
       "submit": "Login"
     }
   },
-  "auth": {
-    "sessionExpired": "Session Expired",
-    "pleaseLoginAgain": "Please login again.",
-    "accessDenied": "Access Denied",
-    "insufficientPermissions": "You do not have permission to perform this action."
+  "settings": {
+    "connection": {
+      "title": "Connection Mode",
+      "mode": {
+        "offline": "Offline",
+        "server": "Server"
+      },
+      "server": "Server",
+      "user": "Logged in as",
+      "switchToServer": "Connect to Server",
+      "switchToOffline": "Switch to Offline",
+      "logout": "Logout",
+      "selectServer": "Select Server",
+      "login": "Login"
+    },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "user": "User",
+      "logout": "Log out",
+      "enableFeatures": {
+        "dismiss": "Dismiss",
+        "title": "For System Administrators",
+        "intro": "Enable user authentication, team management, and workspace features for your organisation.",
+        "action": "Configure",
+        "and": "and",
+        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
+        "learnMore": "Learn more in documentation"
+      },
+      "defaultToolPickerMode": "Default tool picker mode",
+      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "mode": {
+        "sidebar": "Sidebar",
+        "fullscreen": "Fullscreen"
+      },
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default",
+      "updates": {
+        "title": "Software Updates",
+        "description": "Check for updates and view version information",
+        "currentVersion": "Current Version",
+        "latestVersion": "Latest Version",
+        "checkForUpdates": "Check for Updates",
+        "viewDetails": "View Details"
+      }
+    },
+    "hotkeys": {
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "searchPlaceholder": "Search tools...",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut",
+      "noShortcut": "No shortcut set"
+    }
   },
   "pdfTextEditor": {
-    "viewLabel": "PDF Text Editor",
-    "title": "PDF Editor",
-    "badges": {
-      "unsaved": "Unsaved changes",
-      "modified": "Edited",
-      "earlyAccess": "Early Access - Pre-Alpha"
+    "title": "PDF JSON Editor",
+    "viewLabel": "PDF Editor",
+    "converting": "Converting PDF to editable format...",
+    "conversionFailed": "Failed to convert PDF. Please try again.",
+    "currentFile": "Current file: {{name}}",
+    "pageSummary": "Page {{number}} of {{total}}",
+    "pagePreviewAlt": "Page preview",
+    "imageLabel": "Placed image",
+    "noTextOnPage": "No editable text was detected on this page.",
+    "pageType": {
+      "paragraph": "Paragraph page",
+      "sparse": "Sparse text"
     },
-    "controls": {
-      "title": "Document Controls"
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Paragraph",
+      "singleLine": "Single Line"
+    },
+    "badges": {
+      "unsaved": "Edited",
+      "modified": "Edited",
+      "earlyAccess": "Early Access"
     },
     "actions": {
-      "load": "Load File",
       "reset": "Reset Changes",
       "downloadJson": "Download JSON",
       "generatePdf": "Generate PDF"
     },
-    "currentFile": "Current file: {{name}}",
-    "pageSummary": "Page {{number}} of {{total}}",
-    "groupList": "Detected Text Groups",
-    "fontSizeValue": "{{size}}pt",
-    "noTextOnPage": "No editable text was detected on this page.",
-    "emptyGroup": "[Empty Group]",
-    "imageLabel": "Placed image",
-    "pagePreviewAlt": "Page preview",
-    "empty": {
-      "title": "No document loaded",
-      "subtitle": "Load a PDF or JSON file to begin editing text content."
-    },
-    "converting": "Converting PDF to editable format...",
-    "conversionFailed": "Failed to convert PDF. Please try again.",
-    "errors": {
-      "invalidJson": "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool.",
-      "pdfConversion": "Unable to convert the edited JSON back into a PDF."
-    },
     "options": {
-      "manualGrouping": {
-        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
-      },
       "autoScaleText": {
         "title": "Auto-scale text to fit boxes",
         "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
@@ -5668,25 +5735,33 @@
         "paragraphDescription": "Groups aligned lines into multi-line paragraph text boxes.",
         "singleLineDescription": "Keeps each PDF text line as a separate text box."
       },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
+      },
       "forceSingleElement": {
         "title": "Lock edited text to a single PDF element",
         "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
       }
     },
-    "pageType": {
-      "paragraph": "Paragraph page",
-      "sparse": "Sparse text"
+    "manual": {
+      "mergeTooltip": "Merge selected boxes",
+      "merge": "Merge selection",
+      "ungroupTooltip": "Split paragraph back into lines",
+      "ungroup": "Ungroup selection",
+      "widthMenu": "Width options",
+      "expandWidth": "Expand to page edge",
+      "resetWidth": "Reset width",
+      "resizeHandle": "Adjust text width"
     },
-    "groupingMode": {
-      "auto": "Auto",
-      "paragraph": "Paragraph",
-      "singleLine": "Single Line"
+    "disclaimer": {
+      "heading": "Preview Limitations",
+      "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
+      "previewVariance": "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",
+      "alpha": "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
     },
-    "modeChange": {
-      "title": "Confirm Mode Change",
-      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
-      "cancel": "Cancel",
-      "confirm": "Reset and Change Mode"
+    "empty": {
+      "title": "No document loaded",
+      "subtitle": "Load a PDF or JSON file to begin editing text content."
     },
     "welcomeBanner": {
       "title": "Welcome to PDF Text Editor (Early Access)",
@@ -5714,62 +5789,38 @@
       "gotIt": "Got it",
       "dontShowAgain": "Don't show again"
     },
-    "disclaimer": {
-      "heading": "Preview limitations",
-      "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
-      "previewVariance": "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",
-      "alpha": "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-    },
-    "stages": {
-      "uploading": "Uploading",
-      "initializing": "Initializing",
-      "loading": "Loading",
-      "normalizing": "Normalizing",
-      "parsing": "Parsing",
-      "processing": "Processing",
-      "fonts": "Fonts",
-      "text": "Text Extraction",
-      "images": "Images",
-      "annotations": "Annotations",
-      "metadata": "Metadata",
-      "serializing": "Finalizing",
-      "complete": "Complete"
+    "modeChange": {
+      "title": "Confirm Mode Change",
+      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
+      "cancel": "Cancel",
+      "confirm": "Reset and Change Mode"
     },
     "fontAnalysis": {
-      "currentPageFonts": "Fonts on this page",
-      "allFonts": "All fonts",
-      "perfectTitle": "All Fonts Available",
-      "perfectMessage": "All fonts are fully available. You can edit and add text without issues in exported PDFs.",
-      "warningTitle": "Font Limitations",
-      "warningMessage": "Some fonts have limitations. Existing text will export correctly, but adding new text may cause issues.",
-      "infoTitle": "Font Information",
-      "infoMessage": "Font reproduction information available.",
-      "summary": "Font Summary",
-      "font": "font",
-      "fonts": "fonts",
-      "perfect": "perfect",
-      "subset": "subset",
-      "fallback": "fallback",
-      "missing": "missing",
-      "fontDetails": "Font Details",
       "details": "Font Details",
       "embedded": "Embedded",
       "type": "Type",
-      "encoding": "Encoding",
       "webFormat": "Web Format",
-      "standard14": "Standard PDF Font",
       "warnings": "Warnings",
-      "suggestions": "Notes"
+      "suggestions": "Notes",
+      "currentPageFonts": "Fonts on this page",
+      "allFonts": "All fonts",
+      "fallback": "fallback",
+      "missing": "missing",
+      "perfectMessage": "All fonts can be reproduced perfectly.",
+      "warningMessage": "Some fonts may not render correctly.",
+      "infoMessage": "Font reproduction information available.",
+      "perfect": "perfect",
+      "subset": "subset"
     },
-    "manual": {
-      "mergeTooltip": "Merge selected boxes into a single paragraph",
-      "merge": "Merge selection",
-      "ungroupTooltip": "Split paragraph back into separate lines",
-      "ungroup": "Ungroup selection",
-      "widthMenu": "Width options",
-      "expandWidth": "Expand to page edge",
-      "resetWidth": "Reset width",
-      "resizeHandle": "Adjust text width"
+    "errors": {
+      "invalidJson": "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool.",
+      "pdfConversion": "Unable to convert the edited JSON back into a PDF."
     }
+  },
+  "auth": {
+    "sessionExpired": "Session Expired",
+    "pleaseLoginAgain": "Please login again.",
+    "accessDenied": "Access Denied",
+    "insufficientPermissions": "You do not have permission to perform this action."
   }
 }
