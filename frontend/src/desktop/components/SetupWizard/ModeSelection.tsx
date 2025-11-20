@@ -28,6 +28,9 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
           inner: {
             justifyContent: 'flex-start',
           },
+          section: {
+            marginRight: '1rem',
+          },
         }}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
@@ -51,6 +54,9 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
           },
           inner: {
             justifyContent: 'flex-start',
+          },
+          section: {
+            marginRight: '1rem',
           },
         }}
       >
