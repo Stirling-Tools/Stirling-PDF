@@ -1,0 +1,54 @@
+{
+  "name": "Pre-publish-sanitization",
+  "pipeline": [
+    {
+      "operation": "/api/v1/security/sanitize-pdf",
+      "parameters": {
+        "removeJavaScript": true,
+        "removeEmbeddedFiles": true,
+        "removeXMPMetadata": true,
+        "removeMetadata": true,
+        "removeLinks": true,
+        "removeFonts": false
+      }
+    },
+    {
+      "operation": "/api/v1/misc/flatten",
+      "parameters": {
+        "flattenOnlyForms": true
+      }
+    },
+    {
+      "operation": "/api/v1/general/remove-annotations",
+      "parameters": {}
+    },
+    {
+      "operation": "/api/v1/misc/update-metadata",
+      "parameters": {
+        "deleteAll": true,
+        "author": "",
+        "creationDate": "",
+        "creator": "",
+        "keywords": "",
+        "modificationDate": "",
+        "producer": "",
+        "subject": "",
+        "title": "",
+        "trapped": ""
+      }
+    },
+    {
+      "operation": "/api/v1/misc/compress-pdf",
+      "parameters": {
+        "optimizeLevel": 3,
+        "expectedOutputSize": ""
+      }
+    }
+  ],
+  "_examples": {
+    "outputDir": "{outputFolder}/{folderName}",
+    "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+  },
+  "outputDir": "{outputFolder}",
+  "outputFileName": "pre_publish_{filename}.PDF"
+}

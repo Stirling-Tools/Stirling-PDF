@@ -4840,7 +4840,9 @@
       "secureWorkflow": "Security Workflow",
       "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
       "processImages": "Process Images",
-      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images.",
+      "prePublishSanitization": "Pre-publish Sanitization",
+      "prePublishSanitizationDesc": "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."
     }
   },
   "colorPicker": {
