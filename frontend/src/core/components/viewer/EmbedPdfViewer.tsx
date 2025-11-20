@@ -138,7 +138,7 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   const bookmarkCacheKey = React.useMemo(() => {
-    if (isStirlingFile(currentFile)) {
+    if (currentFile && isStirlingFile(currentFile)) {
       return currentFile.fileId;
     }
 

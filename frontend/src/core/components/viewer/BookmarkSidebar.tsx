@@ -309,17 +309,18 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
     const term = searchTerm.trim().toLowerCase();
 
     const applyFilter = (nodeList: BookmarkNode[]): BookmarkNode[] => {
-      return nodeList
-        .map(node => {
-          const childMatches = node.children ? applyFilter(node.children as BookmarkNode[]) : [];
-          const matchesSelf = node.title?.toLowerCase().includes(term) ?? false;
+      const results: BookmarkNode[] = [];
 
-          if (matchesSelf || childMatches.length > 0) {
-            return { ...node, children: childMatches.length > 0 ? childMatches : node.children };
-          }
-          return null;
-        })
-        .filter((node): node is BookmarkNode => node !== null);
+      for (const node of nodeList) {
+        const childMatches = node.children ? applyFilter(node.children as BookmarkNode[]) : [];
+        const matchesSelf = node.title?.toLowerCase().includes(term) ?? false;
+
+        if (matchesSelf || childMatches.length > 0) {
+          results.push({ ...node, children: childMatches.length > 0 ? childMatches : node.children });
+        }
+      }
+
+      return results;
     };
 
     return applyFilter(bookmarksWithIds);
@@ -330,7 +331,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
       return null;
     }
 
-    return nodes.map((node, index) => {
+    return nodes.map((node, _index) => {
       if (!node || !node.id) {
         return null;
       }
