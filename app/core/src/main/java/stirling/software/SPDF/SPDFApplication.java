@@ -12,6 +12,8 @@ import java.util.Properties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -196,6 +198,14 @@ public class SPDFApplication {
         // if (webBrowser != null) {
         //     webBrowser.cleanup();
         // }
+    }
+
+    @EventListener
+    public void onWebServerInitialized(WebServerInitializedEvent event) {
+        int actualPort = event.getWebServer().getPort();
+        serverPortStatic = String.valueOf(actualPort);
+        // Log the actual runtime port for Tauri to parse
+        log.info("Stirling-PDF running on port: {}", actualPort);
     }
 
     private static void printStartupLogs() {

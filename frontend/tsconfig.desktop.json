@@ -13,6 +13,10 @@
     }
   },
   "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
     "node_modules"
   ]
 }

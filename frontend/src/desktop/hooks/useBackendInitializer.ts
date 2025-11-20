@@ -5,12 +5,18 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
 
 /**
  * Hook to initialize backend and monitor health
+ * @param enabled - Whether to initialize the backend (default: true)
  */
-export function useBackendInitializer() {
+export function useBackendInitializer(enabled = true) {
   const { status, checkHealth } = useBackendHealth();
   const { backendUrl } = useEndpointConfig();
 
   useEffect(() => {
+    // Skip if disabled
+    if (!enabled) {
+      return;
+    }
+
     // Skip if backend already running
     if (tauriBackendService.isBackendRunning()) {
       void checkHealth();
@@ -36,5 +42,5 @@ export function useBackendInitializer() {
     if (status !== 'healthy' && status !== 'starting') {
       void initializeBackend();
     }
-  }, [status, backendUrl, checkHealth]);
+  }, [enabled, status, backendUrl, checkHealth]);
 }
