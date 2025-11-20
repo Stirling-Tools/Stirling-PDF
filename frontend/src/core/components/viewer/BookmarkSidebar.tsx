@@ -159,7 +159,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
     }));
 
     const fetchWithRetry = async () => {
-      const maxAttempts = 5;
+      const maxAttempts = 10;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const result = await bookmarkActions.fetchBookmarks();
@@ -175,7 +175,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
             throw error;
           }
 
-          await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
+          await new Promise(resolve => setTimeout(resolve, 50));
         }
       }
       return [];
