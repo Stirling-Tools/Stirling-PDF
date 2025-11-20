@@ -104,6 +104,7 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
     <Modal
       opened={props.opened}
       onClose={closeAndMarkSeen}
+      closeOnClickOutside={false}
       centered
       size="lg"
       radius="lg"

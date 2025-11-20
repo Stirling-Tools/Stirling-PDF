@@ -10,6 +10,7 @@ declare global {
       show: (show?: boolean) => void;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
+      validConsent?: () => boolean;
     };
   }
 }
@@ -24,17 +25,45 @@ export const useCookieConsent = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasResponded, setHasResponded] = useState(!analyticsEnabled);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const markResponded = () => setHasResponded(true);
+    const removeConsentListeners = () => {
+      window.removeEventListener('cc:onFirstConsent', markResponded);
+      window.removeEventListener('cc:onConsent', markResponded);
+      window.removeEventListener('cc:onChange', markResponded);
+    };
+
+    window.addEventListener('cc:onFirstConsent', markResponded);
+    window.addEventListener('cc:onConsent', markResponded);
+    window.addEventListener('cc:onChange', markResponded);
+
+    if (analyticsEnabled) {
+      setHasResponded(window.CookieConsent?.validConsent?.() ?? false);
+    }
+
     if (!analyticsEnabled) {
       console.log('Cookie consent not enabled - analyticsEnabled is false');
-      return;
+      markResponded();
+      return () => {
+        removeConsentListeners();
+      };
     }
 
     // Prevent double initialization
     if (window.CookieConsent) {
       setIsInitialized(true);
-      return;
+      if (window.CookieConsent.validConsent?.()) {
+        markResponded();
+      }
+      return () => {
+        removeConsentListeners();
+      };
     }
 
     // Load the cookie consent CSS files first
@@ -198,13 +227,19 @@ export const useCookieConsent = ({
                   }
                 }
               }
-            }
+            },
+            onFirstConsent: markResponded,
+            onConsent: markResponded,
+            onChange: markResponded,
           });
 
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
-      setIsInitialized(true);
+        if (window.CookieConsent?.validConsent?.()) {
+          markResponded();
+        }
+        setIsInitialized(true);
       }, 100); // Small delay to ensure DOM is ready
     };
 
@@ -215,6 +250,8 @@ export const useCookieConsent = ({
     document.head.appendChild(script);
 
     return () => {
+      // Cleanup event listeners
+      removeConsentListeners();
       // Cleanup script and CSS when component unmounts
       if (document.head.contains(script)) {
         document.head.removeChild(script);
@@ -251,6 +288,7 @@ export const useCookieConsent = ({
     showCookieConsent,
     showCookiePreferences,
     isServiceAccepted,
-    isInitialized
+    isInitialized,
+    hasResponded,
   };
 };

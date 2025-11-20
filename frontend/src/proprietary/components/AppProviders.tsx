@@ -2,7 +2,8 @@ import { AppProviders as CoreAppProviders, AppProvidersProps } from "@core/compo
 import { AuthProvider } from "@app/auth/UseSession";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
-import UpgradeBanner from "@app/components/shared/UpgradeBanner";
+import { UpgradeBannerInitializer } from "./shared/UpgradeBannerInitializer";
+import { UpgradeBannerTestPanel } from "./shared/UpgradeBannerTestPanel";
 
 export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
   return (
@@ -13,9 +14,10 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
       <AuthProvider>
         <LicenseProvider>
           <CheckoutProvider>
-            <UpgradeBanner />
+            <UpgradeBannerInitializer />
+            {import.meta.env.DEV && <UpgradeBannerTestPanel />}
             {children}
-          </CheckoutProvider>
+          </CheckoutProvider>     
         </LicenseProvider>
       </AuthProvider>
     </CoreAppProviders>

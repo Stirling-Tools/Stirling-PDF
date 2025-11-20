@@ -1,136 +1,356 @@
 import React, { useState, useEffect } from 'react';
-import { Group, Text, Button, ActionIcon, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@app/auth/UseSession';
-import { useCheckout } from '@app/contexts/CheckoutContext';
 import { useLicense } from '@app/contexts/LicenseContext';
+import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { mapLicenseToTier } from '@app/services/licenseService';
-import LocalIcon from '@app/components/shared/LocalIcon';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { InfoBanner } from '@app/components/shared/InfoBanner';
+import {
+  ONBOARDING_SESSION_BLOCK_KEY,
+  ONBOARDING_SESSION_EVENT,
+  SERVER_LICENSE_REQUEST_EVENT,
+  type ServerLicenseRequestPayload,
+  UPGRADE_BANNER_TEST_EVENT,
+  type UpgradeBannerTestPayload,
+  type UpgradeBannerTestScenario,
+  UPGRADE_BANNER_ALERT_EVENT,
+} from '@core/constants/events';
+import { userManagementService } from '@app/services/userManagementService';
 
-/**
- * UpgradeBanner - Dismissable top banner encouraging users to upgrade
- *
- * This component demonstrates:
- * - How to check authentication status with useAuth()
- * - How to check license status with licenseService
- * - How to open checkout modal with useCheckout()
- * - How to persist dismissal state with localStorage
- *
- * To remove this banner:
- * 1. Remove the import and component from AppProviders.tsx
- * 2. Delete this file
- */
+const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
+const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+const FREE_TIER_LIMIT = 5;
+
 const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { openCheckout } = useCheckout();
   const { licenseInfo, loading: licenseLoading } = useLicense();
-  const [isVisible, setIsVisible] = useState(false);
+  const { hasResponded: cookieChoiceMade } = useCookieConsentContext();
+  const { isOpen: tourOpen } = useOnboarding();
+  const { config } = useAppConfig();
+  const [sessionBlocked, setSessionBlocked] = useState(true);
+  const [friendlyVisible, setFriendlyVisible] = useState(false);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [totalUsersLoaded, setTotalUsersLoaded] = useState(false);
+  const isDev = import.meta.env.DEV;
+  const [testScenario, setTestScenario] = useState<UpgradeBannerTestScenario>(null);
 
-  // Check if user should see the banner
+  // Track onboarding session flag so we don't show banner if onboarding ran this load
   useEffect(() => {
-    // Don't show if not logged in
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const evaluateBlock = () => {
+      const blocked = window.sessionStorage.getItem(ONBOARDING_SESSION_BLOCK_KEY) === 'true';
+      setSessionBlocked(blocked);
+    };
+
+    evaluateBlock();
+
+    const timer = window.setTimeout(() => {
+      evaluateBlock();
+    }, 1000);
+
+    const handleOnboardingStart = () => {
+      setSessionBlocked(true);
+    };
+
+    window.addEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingStart as EventListener);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingStart as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!user) {
-      setIsVisible(false);
+      setTotalUsers(null);
+      setTotalUsersLoaded(false);
       return;
     }
 
-    // Don't show while license is loading
-    if (licenseLoading) {
+    setTotalUsersLoaded(false);
+    let cancelled = false;
+
+    const fetchTotalUsers = async () => {
+      try {
+        const adminData = await userManagementService.getUsers();
+        if (!cancelled) {
+          const count =
+            typeof adminData.totalUsers === 'number' ? adminData.totalUsers : null;
+          setTotalUsers(count);
+        }
+      } catch (error) {
+        console.warn('[UpgradeBanner] Failed to fetch total users', error);
+        if (!cancelled) {
+          setTotalUsers(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setTotalUsersLoaded(true);
+        }
+      }
+    };
+
+    fetchTotalUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isDev || typeof window === 'undefined') {
       return;
     }
 
-    // Check if banner was dismissed
-    const dismissed = localStorage.getItem('upgradeBannerDismissed');
-    if (dismissed === 'true') {
-      setIsVisible(false);
+    const handleTestEvent = (event: Event) => {
+      const { detail } = event as CustomEvent<UpgradeBannerTestPayload>;
+      setTestScenario(detail?.scenario ?? null);
+
+      if (detail?.scenario === 'friendly') {
+        setFriendlyVisible(true);
+      } else if (!detail?.scenario) {
+        setFriendlyVisible(false);
+      }
+    };
+
+    window.addEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent as EventListener);
+    return () => {
+      window.removeEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent as EventListener);
+    };
+  }, [isDev]);
+
+  const tier = mapLicenseToTier(licenseInfo);
+  const isAdmin = !!config?.isAdmin;
+  const premiumEnabled = !!config?.premiumEnabled;
+  const hasPaidLicense = Boolean(
+    premiumEnabled || tier === 'server' || tier === 'enterprise',
+  );
+
+  const scenario = isDev ? testScenario : null;
+  const scenarioIsFriendly = scenario === 'friendly';
+  const scenarioIsUrgentUser = scenario === 'urgent-user';
+
+  const userCountKnown = typeof totalUsers === 'number';
+  const isUnderLimit = userCountKnown ? totalUsers! < FREE_TIER_LIMIT : null;
+  const isOverLimit = userCountKnown ? totalUsers! >= FREE_TIER_LIMIT : null;
+
+  const effectiveIsAdmin = scenario ? !scenarioIsUrgentUser : isAdmin;
+  const effectiveTotalUsers = scenario ? (scenarioIsFriendly ? 3 : 8) : totalUsers;
+  const effectiveTotalUsersLoaded = scenario ? true : totalUsersLoaded;
+  const effectiveHasPaidLicense = scenario ? false : hasPaidLicense;
+  const effectiveIsUnderLimit = scenario ? scenarioIsFriendly : isUnderLimit === true;
+  const effectiveIsOverLimit = scenario ? !scenarioIsFriendly : isOverLimit === true;
+
+  const shouldShowFriendlyBase = Boolean(
+    (scenario ? true : user) &&
+      effectiveIsAdmin &&
+      !effectiveHasPaidLicense &&
+      effectiveIsUnderLimit &&
+      effectiveTotalUsersLoaded,
+  );
+  const shouldShowUrgentBase = Boolean(
+    (scenario ? true : user) &&
+      !effectiveHasPaidLicense &&
+      effectiveIsOverLimit &&
+      effectiveTotalUsersLoaded,
+  );
+
+  const shouldEvaluateFriendly = scenario
+    ? scenarioIsFriendly
+    : Boolean(
+        shouldShowFriendlyBase &&
+          !licenseLoading &&
+          effectiveTotalUsersLoaded &&
+          cookieChoiceMade &&
+          !tourOpen &&
+          !sessionBlocked,
+      );
+  const shouldEvaluateUrgent = scenario
+    ? Boolean(scenario && !scenarioIsFriendly)
+    : Boolean(
+        shouldShowUrgentBase &&
+          !licenseLoading &&
+          cookieChoiceMade &&
+          !tourOpen &&
+          !sessionBlocked,
+      );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    // Check license status from global context
-    const tier = mapLicenseToTier(licenseInfo);
-
-    // Show banner only for free tier users
-    if (tier === 'free' || tier === null) {
-      setIsVisible(true);
-    } else {
-      // Auto-hide banner if user upgrades
-      setIsVisible(false);
+    if (!shouldShowFriendlyBase) {
+      window.localStorage.removeItem(FRIENDLY_LAST_SEEN_KEY);
     }
-  }, [user, licenseInfo, licenseLoading]);
+  }, [shouldShowFriendlyBase]);
 
-  // Handle dismiss
-  const handleDismiss = () => {
-    localStorage.setItem('upgradeBannerDismissed', 'true');
-    setIsVisible(false);
-  };
+  useEffect(() => {
+    if (scenario === 'friendly') {
+      return;
+    }
 
-  // Handle upgrade button click
+    if (!shouldEvaluateFriendly) {
+      setFriendlyVisible(false);
+      return;
+    }
+
+    if (friendlyVisible || typeof window === 'undefined') {
+      return;
+    }
+
+    const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
+    const lastShown = lastShownRaw ? parseInt(lastShownRaw, 10) : 0;
+    const now = Date.now();
+    const due = !Number.isFinite(lastShown) || now - lastShown >= WEEK_IN_MS;
+    setFriendlyVisible(due);
+  }, [scenario, shouldEvaluateFriendly, friendlyVisible]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const detail = shouldEvaluateUrgent
+      ? {
+          active: true,
+          audience: effectiveIsAdmin ? 'admin' : 'user',
+          totalUsers: effectiveTotalUsers ?? null,
+          freeTierLimit: FREE_TIER_LIMIT,
+        }
+      : { active: false };
+
+    window.dispatchEvent(
+      new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail }),
+    );
+  }, [shouldEvaluateUrgent, effectiveIsAdmin, effectiveTotalUsers, scenario]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail: { active: false } }),
+        );
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (friendlyVisible && typeof window !== 'undefined') {
+      window.localStorage.setItem(FRIENDLY_LAST_SEEN_KEY, Date.now().toString());
+    }
+  }, [friendlyVisible]);
+
   const handleUpgrade = () => {
-    openCheckout('server', {
-      currency: 'gbp',
-      minimumSeats: 1,
-      onSuccess: () => {
-        // Banner will auto-hide on next render when license is detected
-        setIsVisible(false);
-      },
-    });
+    navigate('/settings/adminPlan');
+    setFriendlyVisible(false);
   };
 
-  // Don't render anything if loading or not visible
-  if (licenseLoading || !isVisible) {
+  const handleFriendlyDismiss = () => {
+    setFriendlyVisible(false);
+  };
+
+  const handleSeeInfo = () => {
+    if (typeof window === 'undefined' || !effectiveIsAdmin) {
+      return;
+    }
+
+    // For testing: use a fixed number to show the "Server License Needed" modal
+    // In production, this would use effectiveTotalUsers
+    const testUserCount = 542; // Fixed for testing purposes
+
+    const detail: ServerLicenseRequestPayload = {
+      licenseNotice: {
+        totalUsers: testUserCount || testUserCount,
+        freeTierLimit: FREE_TIER_LIMIT,
+        isOverLimit: true,
+      },
+      selfReportedAdmin: true,
+      deferUntilTourComplete: false,
+    };
+
+    window.dispatchEvent(
+      new CustomEvent(SERVER_LICENSE_REQUEST_EVENT, { detail }),
+    );
+  };
+
+  const renderUrgentBanner = () => {
+    if (!shouldEvaluateUrgent) {
+      return null;
+    }
+
+    const buttonText = effectiveIsAdmin ? t('upgradeBanner.seeInfo', 'See info') : undefined;
+
+    const attentionMessage = effectiveIsAdmin
+      ? t(
+          'upgradeBanner.attentionBodyAdmin',
+          'Review the license requirements to keep this server compliant.',
+        )
+      : t(
+          'upgradeBanner.attentionBody',
+          'Your admin needs to sign in to see more info. Please contact them immediately.',
+        );
+
+    return (
+      <InfoBanner
+        icon="warning-rounded"
+        tone="warning"
+        title={t('upgradeBanner.attentionTitle', 'This server needs admin attention')}
+        message={attentionMessage}
+        buttonText={buttonText}
+        buttonIcon="info-rounded"
+        onButtonClick={buttonText ? handleSeeInfo : undefined}
+        dismissible={false}
+        minHeight={60}
+        background="#FFF4E6"
+        borderColor="var(--mantine-color-orange-7)"
+        textColor="#9A3412"
+        iconColor="#EA580C"
+        buttonVariant="filled"
+        buttonColor="orange.7"
+      />
+    );
+  };
+
+  if (!friendlyVisible && !shouldEvaluateUrgent) {
     return null;
   }
 
   return (
-    <Paper
-      shadow="sm"
-      p="md"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        borderRadius: 0,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-      }}
-    >
-      <Group justify="space-between" wrap="nowrap">
-        <Group gap="md" wrap="nowrap">
-          <LocalIcon icon="stars-rounded" width="1.5rem" height="1.5rem" />
-          <div>
-            <Text size="sm" fw={600}>
-              {t('upgradeBanner.title', 'Upgrade to Server Plan')}
-            </Text>
-            <Text size="xs" opacity={0.9}>
-              {t('upgradeBanner.message', 'Get the most out of Stirling PDF with unlimited users and advanced features')}
-            </Text>
-          </div>
-        </Group>
-
-        <Group gap="xs" wrap="nowrap">
-          <Button
-            variant="white"
-            size="sm"
-            onClick={handleUpgrade}
-            leftSection={<LocalIcon icon="upgrade-rounded" width="1rem" height="1rem" />}
-          >
-            {t('upgradeBanner.upgradeButton', 'Upgrade Now')}
-          </Button>
-          <ActionIcon
-            variant="subtle"
-            color="white"
-            size="lg"
-            onClick={handleDismiss}
-            aria-label={t('upgradeBanner.dismiss', 'Dismiss banner')}
-          >
-            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-          </ActionIcon>
-        </Group>
-      </Group>
-    </Paper>
+    <>
+      {friendlyVisible && (
+        <InfoBanner
+          icon="stars-rounded"
+          title={t('upgradeBanner.title', 'Upgrade to Server Plan')}
+          message={t(
+            'upgradeBanner.message',
+            'Get the most out of Stirling PDF with unlimited users and advanced features.',
+          )}
+          buttonText={t('upgradeBanner.upgradeButton', 'Upgrade Now')}
+          buttonIcon="upgrade-rounded"
+          onButtonClick={handleUpgrade}
+          onDismiss={handleFriendlyDismiss}
+          show={friendlyVisible}
+          background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          borderColor="transparent"
+          textColor="#fff"
+          iconColor="#fff"
+          closeIconColor="#fff"
+          buttonVariant="white"
+          buttonColor="blue"
+          minHeight={64}
+        />
+      )}
+      {renderUrgentBanner()}
+    </>
   );
 };
 

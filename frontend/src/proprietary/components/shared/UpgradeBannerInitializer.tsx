@@ -1,18 +1,12 @@
 import { useEffect } from 'react';
 import { useBanner } from '@app/contexts/BannerContext';
-import { DefaultAppBanner } from '@app/components/shared/DefaultAppBanner';
 import UpgradeBanner from '@app/components/shared/UpgradeBanner';
 
-export function DesktopBannerInitializer() {
+export function UpgradeBannerInitializer() {
   const { setBanner } = useBanner();
 
   useEffect(() => {
-    setBanner(
-      <>
-        <UpgradeBanner />
-        <DefaultAppBanner />
-      </>,
-    );
+    setBanner(<UpgradeBanner />);
     return () => {
       setBanner(null);
     };
@@ -20,3 +14,4 @@ export function DesktopBannerInitializer() {
 
   return null;
 }
+

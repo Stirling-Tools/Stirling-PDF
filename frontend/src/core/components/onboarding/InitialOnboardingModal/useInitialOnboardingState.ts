@@ -3,6 +3,7 @@ import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOs } from '@app/hooks/useOs';
+import { useNavigate } from 'react-router-dom';
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
@@ -42,6 +43,7 @@ export function useInitialOnboardingState({
   const { startTour } = useOnboarding();
   const { config } = useAppConfig();
   const osType = useOs();
+  const navigate = useNavigate();
   const isDevMode = import.meta.env.MODE === 'development';
 
   const [state, setState] = useState<OnboardingState>(DEFAULT_STATE);
@@ -288,6 +290,7 @@ export function useInitialOnboardingState({
           return;
         case 'see-plans':
           closeAndMarkSeen();
+          navigate('/settings/adminPlan');
           return;
         default:
           return;
@@ -301,6 +304,7 @@ export function useInitialOnboardingState({
       goNext,
       goPrev,
       launchTour,
+      navigate,
       onRequestServerLicense,
       os.url,
       state.selectedDownloadIcon,

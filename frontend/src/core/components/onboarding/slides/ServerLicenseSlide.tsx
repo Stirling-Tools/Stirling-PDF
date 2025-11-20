@@ -1,6 +1,8 @@
 import React from 'react';
+import { Trans } from 'react-i18next';
 import { SlideConfig, LicenseNotice } from './types';
 import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
+import i18n from '@app/i18n';
 
 interface ServerLicenseSlideProps {
   licenseNotice?: LicenseNotice;
@@ -14,22 +16,34 @@ export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlide
   const isOverLimit = licenseNotice?.isOverLimit ?? false;
   const formattedTotalUsers = totalUsers != null ? totalUsers.toLocaleString() : null;
   const overLimitUserCopy = formattedTotalUsers ?? `more than ${freeTierLimit}`;
-  const title = isOverLimit ? 'Server License Needed' : 'Server License';
+  const title = isOverLimit
+    ? i18n.t('onboarding.serverLicense.overLimitTitle', 'Server License Needed')
+    : i18n.t('onboarding.serverLicense.freeTitle', 'Server License');
   const key = isOverLimit ? 'server-license-over-limit' : 'server-license';
 
-  const body = isOverLimit ? (
-    <span>
-      Our licensing permits up to <strong>{freeTierLimit}</strong> users for free per server. You have{' '}
-      <strong>{overLimitUserCopy}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server
-      plan - unlimited seats, PDF text editing, and full admin control for $99/server/mo.
-    </span>
-  ) : (
-    <span>
-      Our licensing permits up to <strong>{freeTierLimit}</strong> users for free per server. To scale uninterrupted
-      and access our new PDF text editing tool, we recommend the Stirling Server plan - full editing and unlimited
-      seats for $99/server/mo.
-    </span>
+  const overLimitBody = (
+    <Trans
+      i18nKey="onboarding.serverLicense.overLimitBody"
+      values={{ freeTierLimit, overLimitUserCopy }}
+      components={{
+        strong: <strong />,
+      }}
+      defaults="Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
+    />
   );
+
+  const freeBody = (
+    <Trans
+      i18nKey="onboarding.serverLicense.freeBody"
+      values={{ freeTierLimit }}
+      components={{
+        strong: <strong />,
+      }}
+      defaults="Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+    />
+  );
+
+  const body = isOverLimit ? overLimitBody : freeBody;
 
   return {
     key,

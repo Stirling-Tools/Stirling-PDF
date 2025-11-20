@@ -4892,7 +4892,19 @@
     "next": "Next",
     "finish": "Finish",
     "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "startTourDescription": "Take a guided tour of Stirling PDF's key features",
+    "serverLicense": {
+      "skip": "Skip for now",
+      "seePlans": "See Plans →",
+      "upgrade": "Upgrade now →",
+      "freeTitle": "Server License",
+      "overLimitTitle": "Server License Needed",
+      "overLimitBody": "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo.",
+      "freeBody": "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+    },
+    "securityCheck": {
+      "message": "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."
+    }
   },
   "adminOnboarding": {
     "welcome": "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
@@ -5171,7 +5183,23 @@
       "api": "API Access",
       "priority": "Priority Support",
       "customPricing": "Custom Pricing"
+    },
+    "licenseWarning": {
+      "title": "Free self-hosted limit reached",
+      "body": "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly.",
+      "overLimit": "more than {{limit}}",
+      "cta": "See plans"
     }
+  },
+  "upgradeBanner": {
+    "title": "Upgrade to Server Plan",
+    "message": "Get the most out of Stirling PDF with unlimited users and advanced features",
+    "upgradeButton": "Upgrade Now",
+    "dismiss": "Dismiss banner",
+    "attentionTitle": "This server needs admin attention",
+    "attentionBody": "Your admin needs to sign in to see more info. Please contact them immediately.",
+    "attentionBodyAdmin": "Review the license requirements to keep this server compliant.",
+    "seeInfo": "See info"
   },
   "subscription": {
     "status": {

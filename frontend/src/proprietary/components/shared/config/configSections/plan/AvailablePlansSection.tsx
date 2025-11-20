@@ -1,20 +1,27 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Card, Badge, Text, Collapse } from '@mantine/core';
+import { Button, Card, Badge, Text, Collapse, Select, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
   currentPlanId?: string;
   currentLicenseInfo?: LicenseInfo | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
+  currency?: string;
+  onCurrencyChange?: (value: string) => void;
+  currencyOptions?: Array<{ value: string; label: string }>;
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   plans,
   currentLicenseInfo,
   onUpgradeClick,
+  currency,
+  onCurrencyChange,
+  currencyOptions,
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
@@ -57,18 +64,33 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
   return (
     <div>
-      <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
-        {t('plan.availablePlans.title', 'Available Plans')}
-      </h3>
-      <p
-        style={{
-          margin: '0.25rem 0 1rem 0',
-          color: 'var(--mantine-color-dimmed)',
-          fontSize: '0.875rem',
-        }}
-      >
-        {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
-      </p>
+      <Group justify="space-between" align="flex-start" mb="1rem">
+        <div>
+          <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
+            {t('plan.availablePlans.title', 'Available Plans')}
+          </h3>
+          <p
+            style={{
+              margin: '0.25rem 0 0 0',
+              color: 'var(--mantine-color-dimmed)',
+              fontSize: '0.875rem',
+            }}
+          >
+            {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
+          </p>
+        </div>
+        {currency && onCurrencyChange && currencyOptions && (
+          <Select
+            value={currency}
+            onChange={(value) => onCurrencyChange(value || 'gbp')}
+            data={currencyOptions}
+            searchable
+            clearable={false}
+            w={300}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          />
+        )}
+      </Group>
 
       <div
         style={{
@@ -129,7 +151,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
                           size="xs"
                           style={{
                             position: 'absolute',
-                            top: '0.5rem',
+                            top: '0rem',
                             right: '0.5rem',
                           }}
                         >

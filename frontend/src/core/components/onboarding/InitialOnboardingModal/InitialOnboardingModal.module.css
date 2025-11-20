@@ -48,22 +48,23 @@
 
 .securityCard {
   width: 100%;
-  max-width: 380px;
+  max-width: 480px;
   background: var(--bg-surface, #ffffff);
   border-radius: 16px;
-  padding: 16px;
+  padding: 20px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .securityAlertRow {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--onboarding-body, #1f2937);
 }
 

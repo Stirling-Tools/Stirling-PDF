@@ -5,6 +5,13 @@ import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useAuth } from '@app/auth/UseSession';
 import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import { useNavigate } from 'react-router-dom';
+import {
+  ONBOARDING_SESSION_BLOCK_KEY,
+  ONBOARDING_SESSION_EVENT,
+  SERVER_LICENSE_REQUEST_EVENT,
+  type ServerLicenseRequestPayload,
+} from '@core/constants/events';
 
 interface InitialModalHandlers {
   opened: boolean;
@@ -17,6 +24,7 @@ interface ServerLicenseModalHandlers {
   opened: boolean;
   licenseNotice: LicenseNotice;
   onClose: () => void;
+  onSeePlans: () => void;
 }
 
 export function useOnboardingFlow() {
@@ -51,6 +59,8 @@ export function useOnboardingFlow() {
     preferences.toolPanelModePromptSeen || preferences.hasSelectedToolPanelMode,
   );
   const introWasOpenRef = useRef(false);
+  const navigate = useNavigate();
+  const onboardingSessionMarkedRef = useRef(false);
 
   const handleInitialModalClose = useCallback(() => {
     if (!preferences.hasSeenIntroOnboarding) {
@@ -114,6 +124,46 @@ export function useOnboardingFlow() {
     },
     [isAdminUser],
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleServerLicenseRequested = (event: Event) => {
+      const { detail } = event as CustomEvent<ServerLicenseRequestPayload>;
+
+      if (detail?.licenseNotice) {
+        setLicenseNotice((prev) => ({
+          ...prev,
+          ...detail.licenseNotice,
+          totalUsers:
+            detail.licenseNotice?.totalUsers ?? prev.totalUsers,
+          freeTierLimit:
+            detail.licenseNotice?.freeTierLimit ?? prev.freeTierLimit,
+          isOverLimit:
+            detail.licenseNotice?.isOverLimit ?? prev.isOverLimit,
+        }));
+      }
+
+      requestServerLicense({
+        deferUntilTourComplete: detail?.deferUntilTourComplete ?? false,
+        selfReportedAdmin: detail?.selfReportedAdmin ?? false,
+      });
+    };
+
+    window.addEventListener(
+      SERVER_LICENSE_REQUEST_EVENT,
+      handleServerLicenseRequested as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        SERVER_LICENSE_REQUEST_EVENT,
+        handleServerLicenseRequested as EventListener,
+      );
+    };
+  }, [requestServerLicense]);
 
   useEffect(() => {
     if (
@@ -187,6 +237,25 @@ export function useOnboardingFlow() {
     maybeShowCookieBanner();
   }, [maybeShowCookieBanner]);
 
+  useEffect(() => {
+    if (onboardingSessionMarkedRef.current) {
+      return;
+    }
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (shouldShowIntro || isOpen) {
+      onboardingSessionMarkedRef.current = true;
+      window.sessionStorage.setItem(ONBOARDING_SESSION_BLOCK_KEY, 'true');
+      window.dispatchEvent(new CustomEvent(ONBOARDING_SESSION_EVENT));
+    }
+  }, [isOpen, shouldShowIntro]);
+
+  const handleServerLicenseSeePlans = useCallback(() => {
+    handleServerLicenseClose();
+    navigate('/settings/adminPlan');
+  }, [handleServerLicenseClose, navigate]);
+
   const handleTourCompletion = useCallback(() => {
     completeTour();
     if (serverLicenseIntent === 'deferred') {
@@ -220,8 +289,9 @@ export function useOnboardingFlow() {
       opened: isServerLicenseOpen,
       licenseNotice,
       onClose: handleServerLicenseClose,
+      onSeePlans: handleServerLicenseSeePlans,
     }),
-    [handleServerLicenseClose, isServerLicenseOpen, licenseNotice],
+    [handleServerLicenseClose, handleServerLicenseSeePlans, isServerLicenseOpen, licenseNotice],
   );
 
   return {

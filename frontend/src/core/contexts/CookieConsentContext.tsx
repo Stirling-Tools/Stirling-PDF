@@ -6,6 +6,7 @@ interface CookieConsentContextValue {
   isReady: boolean;
   showCookieConsent: () => void;
   showCookiePreferences: () => void;
+  hasResponded: boolean;
 }
 
 const CookieConsentContext = createContext<CookieConsentContextValue | undefined>(undefined);
@@ -17,13 +18,15 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
     showCookieConsent,
     showCookiePreferences,
     isInitialized,
+    hasResponded,
   } = useCookieConsent({ analyticsEnabled });
 
   const value = useMemo<CookieConsentContextValue>(() => ({
     isReady: analyticsEnabled && isInitialized,
     showCookieConsent,
     showCookiePreferences,
-  }), [analyticsEnabled, isInitialized, showCookieConsent, showCookiePreferences]);
+    hasResponded,
+  }), [analyticsEnabled, hasResponded, isInitialized, showCookieConsent, showCookiePreferences]);
 
   return (
     <CookieConsentContext.Provider value={value}>

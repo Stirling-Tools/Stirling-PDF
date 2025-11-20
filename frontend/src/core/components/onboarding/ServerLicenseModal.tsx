@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Button, Group, Stack } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedSlideBackground';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
 import { LicenseNotice } from '@app/components/onboarding/slides/types';
@@ -19,8 +20,12 @@ export default function ServerLicenseModal({
   onSeePlans,
   licenseNotice,
 }: ServerLicenseModalProps) {
+  const { t } = useTranslation();
   const slide = React.useMemo(() => ServerLicenseSlide({ licenseNotice }), [licenseNotice]);
-  const primaryLabel = licenseNotice.isOverLimit ? 'Upgrade now →' : 'See Plans →';
+  const primaryLabel = licenseNotice.isOverLimit
+    ? t('onboarding.serverLicense.upgrade', 'Upgrade now →')
+    : t('onboarding.serverLicense.seePlans', 'See Plans →');
+  const secondaryLabel = t('onboarding.serverLicense.skip', 'Skip for now');
 
   const handleSeePlans = () => {
     onSeePlans?.();
@@ -97,7 +102,7 @@ export default function ServerLicenseModal({
             </div>
             <Group justify="space-between">
               <Button styles={secondaryStyles} onClick={onClose}>
-                Skip for now
+                {secondaryLabel}
               </Button>
               <Button styles={primaryStyles} onClick={handleSeePlans}>
                 {primaryLabel}

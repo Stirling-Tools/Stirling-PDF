@@ -4,6 +4,7 @@ import styles from '../InitialOnboardingModal/InitialOnboardingModal.module.css'
 import { SlideConfig } from './types';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
+import i18n from '@app/i18n';
 
 interface SecurityCheckSlideProps {
   selectedRole: 'admin' | 'user' | null;
@@ -22,7 +23,7 @@ export default function SecurityCheckSlide({
         <div className={styles.securityCard}>
           <div className={styles.securityAlertRow}>
             <LocalIcon icon="error" width={20} height={20} style={{ color: '#F04438', flexShrink: 0 }} />
-            <span>Oops! Your Stirling server doesn't have an admin yet.</span>
+            <span>{i18n.t('onboarding.securityCheck.message', 'The application has undergone significant changes recently. Your server admin\'s attention may be required. Please confirm your role to continue.')}</span>
           </div>
 
           <Select
