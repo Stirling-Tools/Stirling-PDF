@@ -1,19 +1,15 @@
-import { useEffect } from 'react';
-import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
+import { useEffect, useState } from 'react';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
 
 /**
  * App initialization hook
- * Desktop version: Handles Tauri-specific initialization
- * - Starts the backend on app startup
+ * Desktop version: Handles Tauri-specific file initialization
+ * Requires FileContext - must be used inside FileContextProvider
  * - Handles files opened with the app (adds directly to FileContext)
  */
 export function useAppInitialization(): void {
-  // Initialize backend on app startup
-  useBackendInitializer();
-
   // Get file management actions
   const { addFiles } = useFileManagement();
 
@@ -58,4 +54,12 @@ export function useAppInitialization(): void {
 
     loadOpenedFiles();
   }, [openedFilePaths, openedFileLoading, addFiles]);
+}
+
+export function useSetupCompletion(): (completed: boolean) => void {
+  const [, setSetupComplete] = useState(false);
+
+  return (completed: boolean) => {
+    setSetupComplete(completed);
+  };
 }
