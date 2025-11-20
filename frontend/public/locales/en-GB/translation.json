@@ -4863,7 +4863,10 @@
     "cancel": "Cancel",
     "preview": "Preview",
     "close": "Close",
-    "done": "Done"
+    "done": "Done",
+    "loading": "Loading...",
+    "back": "Back",
+    "continue": "Continue"
   },
   "config": {
     "overview": {
@@ -5690,21 +5693,5 @@
     "pleaseLoginAgain": "Please login again.",
     "accessDenied": "Access Denied",
     "insufficientPermissions": "You do not have permission to perform this action."
-  },
-  "common": {
-    "loading": "Loading...",
-    "back": "Back",
-    "continue": "Continue",
-    "preview": "Preview",
-    "previous": "Previous",
-    "next": "Next",
-    "copied": "Copied!",
-    "copy": "Copy",
-    "expand": "Expand",
-    "collapse": "Collapse",
-    "retry": "Retry",
-    "refresh": "Refresh",
-    "cancel": "Cancel",
-    "done": "Done"
   }
 }
