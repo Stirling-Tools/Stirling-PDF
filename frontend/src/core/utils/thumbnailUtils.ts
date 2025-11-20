@@ -5,6 +5,7 @@ export interface ThumbnailWithMetadata {
   pageCount: number;
   pageRotations?: number[]; // Rotation for each page (0, 90, 180, 270)
   pageDimensions?: Array<{ width: number; height: number }>;
+  isEncrypted?: boolean;
 }
 
 interface ColorScheme {
@@ -451,7 +452,7 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
     if (error instanceof Error && error.name === "PasswordException") {
       // Handle encrypted PDFs
       const thumbnail = generateEncryptedPDFThumbnail(file);
-      return { thumbnail, pageCount: 1 };
+      return { thumbnail, pageCount: 1, isEncrypted: true };
     }
 
     const thumbnail = generatePlaceholderThumbnail(file);

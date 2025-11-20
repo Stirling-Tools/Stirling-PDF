@@ -1,14 +1,16 @@
-import { useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
 import { useHistoryCapability } from '@embedpdf/plugin-history/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '@app/contexts/SignatureContext';
-import { uuidV4 } from '@embedpdf/models';
+import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
+import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/constants/app';
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
   const { provides: annotationApi } = useAnnotationCapability();
   const { getImageData, storeImageData } = useSignature();
+  const restoringIds = useRef<Set<string>>(new Set());
 
   // Monitor annotation events to detect when annotations are restored
   useEffect(() => {
@@ -18,17 +20,58 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
       const annotation = event.annotation;
 
       // Store image data for all STAMP annotations immediately when created or modified
-      if (annotation && annotation.type === 13 && annotation.id && annotation.imageSrc) {
+      if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.id && annotation.imageSrc) {
         const storedImageData = getImageData(annotation.id);
-        if (!storedImageData || storedImageData !== annotation.imageSrc) {
+        if (!storedImageData) {
           storeImageData(annotation.id, annotation.imageSrc);
+        }
+      }
+
+      if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.id) {
+        // Prevent infinite loops when we recreate annotations
+        if (restoringIds.current.has(annotation.id)) {
+          restoringIds.current.delete(annotation.id);
+          return;
+        }
+
+        const storedImageData = getImageData(annotation.id);
+        // If EmbedPDF cropped the image (imageSrc changed), recreate annotation using stored data
+        if (storedImageData && annotation.imageSrc && annotation.imageSrc !== storedImageData) {
+          const newId = uuidV4();
+          restoringIds.current.add(newId);
+          storeImageData(newId, storedImageData);
+
+          const pageIndex = event.pageIndex ?? annotation.pageIndex ?? annotation.object?.pageIndex ?? 0;
+          const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
+
+          try {
+            annotationApi.deleteAnnotation(pageIndex, annotation.id);
+            setTimeout(() => {
+              annotationApi.createAnnotation(pageIndex, {
+                type: annotation.type,
+                rect,
+                author: annotation.author || 'Digital Signature',
+                subject: annotation.subject || 'Digital Signature',
+                pageIndex,
+                id: newId,
+                created: annotation.created || new Date(),
+                imageSrc: storedImageData,
+                contents: storedImageData,
+                data: storedImageData,
+                appearance: storedImageData,
+              });
+            }, ANNOTATION_RECREATION_DELAY_MS);
+          } catch (restoreError) {
+            console.error('HistoryAPI: Failed to restore cropped signature:', restoreError);
+          }
+          return;
         }
       }
 
       // Handle annotation restoration after undo operations
       if (event.type === 'create' && event.committed) {
         // Check if this is a STAMP annotation (signature) that might need image data restoration
-        if (annotation && annotation.type === 13 && annotation.id) {
+        if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.id) {
           getImageData(annotation.id);
 
           // Delay the check to allow the annotation to be fully created
@@ -61,12 +104,12 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
                 // Small delay to ensure deletion completes
                 setTimeout(() => {
                   annotationApi.createAnnotation(event.pageIndex, restoredData);
-                }, 50);
+                }, ANNOTATION_RECREATION_DELAY_MS);
               } catch (error) {
                 console.error('HistoryAPI: Failed to restore annotation:', error);
               }
             }
-          }, 100);
+          }, ANNOTATION_VERIFICATION_DELAY_MS);
         }
       }
     };
@@ -101,6 +144,21 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
 
     canRedo: () => {
       return historyApi ? historyApi.canRedo() : false;
+    },
+
+    subscribe: (listener: () => void) => {
+      if (!historyApi?.onHistoryChange) {
+        return () => {};
+      }
+
+      const wrapped = () => listener();
+      const unsubscribe = historyApi.onHistoryChange(wrapped);
+      listener();
+
+      if (typeof unsubscribe === 'function') {
+        return unsubscribe;
+      }
+      return () => {};
     },
   }), [historyApi]);
 

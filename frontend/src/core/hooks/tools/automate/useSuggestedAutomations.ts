@@ -9,6 +9,7 @@ import { SPLIT_METHODS } from '@app/constants/splitConstants';
 const CompressIcon = () => React.createElement(LocalIcon, { icon: 'compress', width: '1.5rem', height: '1.5rem' });
 const SecurityIcon = () => React.createElement(LocalIcon, { icon: 'security', width: '1.5rem', height: '1.5rem' });
 const StarIcon = () => React.createElement(LocalIcon, { icon: 'star', width: '1.5rem', height: '1.5rem' });
+const PrivacyIcon = () => React.createElement(LocalIcon, { icon: 'shield-lock', width: '1.5rem', height: '1.5rem' });
 
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
@@ -66,6 +67,63 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         createdAt: now,
         updatedAt: now,
         icon: SecurityIcon,
+      },
+      {
+        id: "pre-publish-sanitization",
+        name: t("automation.suggested.prePublishSanitization", "Pre-publish Sanitization"),
+        description: t("automation.suggested.prePublishSanitizationDesc", "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."),
+        operations: [
+          {
+            operation: "sanitize",
+            parameters: {
+              removeJavaScript: true,
+              removeEmbeddedFiles: true,
+              removeXMPMetadata: true,
+              removeMetadata: true,
+              removeLinks: true,
+              removeFonts: false,
+            }
+          },
+          {
+            operation: "flatten",
+            parameters: {
+              flattenOnlyForms: true,
+            }
+          },
+          {
+            operation: "removeAnnotations",
+            parameters: {}
+          },
+          {
+            operation: "changeMetadata",
+            parameters: {
+              deleteAll: true,
+              author: '',
+              creationDate: '',
+              creator: '',
+              keywords: '',
+              modificationDate: '',
+              producer: '',
+              subject: '',
+              title: '',
+              trapped: '',
+            }
+          },
+          {
+            operation: "compress",
+            parameters: {
+              compressionLevel: 3,
+              grayscale: false,
+              expectedSize: '',
+              compressionMethod: 'quality',
+              fileSizeValue: '',
+              fileSizeUnit: 'MB',
+            }
+          },
+        ],
+        createdAt: now,
+        updatedAt: now,
+        icon: PrivacyIcon,
       },
       {
         id: "email-preparation",
