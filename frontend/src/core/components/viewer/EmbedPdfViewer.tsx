@@ -314,7 +314,7 @@ const EmbedPdfViewerContent = ({
               minHeight: 0,
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
-              transition: 'margin 0.3s ease'
+              transition: 'margin-right 0.3s ease'
             }}>
             <LocalEmbedPDF
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
