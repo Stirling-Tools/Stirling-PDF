@@ -1,0 +1,109 @@
+import React, { useState, useMemo } from 'react';
+import { Button, Collapse } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
+import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
+import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
+
+interface AvailablePlansSectionProps {
+  plans: PlanTier[];
+  currentPlanId?: string;
+  currentLicenseInfo?: LicenseInfo | null;
+  onUpgradeClick: (planGroup: PlanTierGroup) => void;
+}
+
+const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
+  plans,
+  currentLicenseInfo,
+  onUpgradeClick,
+}) => {
+  const { t } = useTranslation();
+  const [showComparison, setShowComparison] = useState(false);
+
+  // Group plans by tier (Free, Server, Enterprise)
+  const groupedPlans = useMemo(() => {
+    return licenseService.groupPlansByTier(plans);
+  }, [plans]);
+
+  // Calculate current tier from license info
+  const currentTier = useMemo(() => {
+    return mapLicenseToTier(currentLicenseInfo || null);
+  }, [currentLicenseInfo]);
+
+  // Determine if the current tier matches (checks both Stripe subscription and license)
+  const isCurrentTier = (tierGroup: PlanTierGroup): boolean => {
+    // Check license tier match
+    if (currentTier && tierGroup.tier === currentTier) {
+      return true;
+    }
+    return false;
+  };
+
+  // Determine if selecting this plan would be a downgrade
+  const isDowngrade = (tierGroup: PlanTierGroup): boolean => {
+    if (!currentTier) return false;
+
+    // Define tier hierarchy: enterprise > server > free
+    const tierHierarchy: Record<string, number> = {
+      'enterprise': 3,
+      'server': 2,
+      'free': 1
+    };
+
+    const currentLevel = tierHierarchy[currentTier] || 0;
+    const targetLevel = tierHierarchy[tierGroup.tier] || 0;
+
+    return currentLevel > targetLevel;
+  };
+
+  return (
+    <div>
+      <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
+        {t('plan.availablePlans.title', 'Available Plans')}
+      </h3>
+      <p
+        style={{
+          margin: '0.25rem 0 1rem 0',
+          color: 'var(--mantine-color-dimmed)',
+          fontSize: '0.875rem',
+        }}
+      >
+        {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
+      </p>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '1rem',
+          marginBottom: '1rem',
+        }}
+      >
+        {groupedPlans.map((group) => (
+          <PlanCard
+            key={group.tier}
+            planGroup={group}
+            isCurrentTier={isCurrentTier(group)}
+            isDowngrade={isDowngrade(group)}
+            currentLicenseInfo={currentLicenseInfo}
+            onUpgradeClick={onUpgradeClick}
+          />
+        ))}
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <Button variant="subtle" onClick={() => setShowComparison(!showComparison)}>
+          {showComparison
+            ? t('plan.hideComparison', 'Hide Feature Comparison')
+            : t('plan.showComparison', 'Compare All Features')}
+        </Button>
+      </div>
+
+      <Collapse in={showComparison}>
+        <FeatureComparisonTable plans={groupedPlans} />
+      </Collapse>
+    </div>
+  );
+};
+
+export default AvailablePlansSection;
