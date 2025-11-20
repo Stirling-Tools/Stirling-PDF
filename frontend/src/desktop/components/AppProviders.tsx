@@ -17,17 +17,16 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'offline' | 'server' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
 
   // Load connection mode on mount
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
   }, []);
 
-  // Initialize backend health monitoring for server mode
+  // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (setupComplete && !isFirstLaunch && connectionMode === 'server') {
-      console.log('[AppProviders] Initializing external backend monitoring for server mode');
+    if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
       void tauriBackendService.initializeExternalBackend();
     }
   }, [setupComplete, isFirstLaunch, connectionMode]);
@@ -53,8 +52,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         <SetupWizard
           onComplete={async () => {
-            console.log('[AppProviders] Setup complete, waiting for backend to be healthy...');
-
             // Wait for backend to become healthy before reloading
             // This prevents reloading mid-startup which would interrupt the backend
             const maxWaitTime = 60000; // 60 seconds max
@@ -63,11 +60,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
             while (Date.now() - startTime < maxWaitTime) {
               if (tauriBackendService.isBackendHealthy()) {
-                console.log('[AppProviders] Backend is healthy, reloading page...');
                 window.location.reload();
                 return;
               }
-              console.log('[AppProviders] Waiting for backend... status:', tauriBackendService.getBackendStatus());
               await new Promise(resolve => setTimeout(resolve, checkInterval));
             }
 

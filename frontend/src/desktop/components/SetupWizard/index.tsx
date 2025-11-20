@@ -25,13 +25,11 @@ interface SetupWizardProps {
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.ModeSelection);
-  const [_selectedMode, setSelectedMode] = useState<'saas' | 'selfhosted' | null>(null);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleModeSelection = (mode: 'saas' | 'selfhosted') => {
-    setSelectedMode(mode);
     setError(null);
 
     if (mode === 'saas') {
@@ -54,18 +52,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      console.log('[SetupWizard] Starting SaaS login...');
       await authService.login(serverConfig.url, username, password);
-      console.log('[SetupWizard] Login successful, switching to SaaS mode...');
-
       await connectionModeService.switchToSaaS(serverConfig.url);
-      console.log('[SetupWizard] Mode switched, starting backend...');
-
       await tauriBackendService.startBackend();
-      console.log('[SetupWizard] Backend started, calling onComplete...');
-
       onComplete();
-      console.log('[SetupWizard] onComplete called');
     } catch (err) {
       console.error('SaaS login failed:', err);
       setError(err instanceof Error ? err.message : 'SaaS login failed');
@@ -104,13 +94,11 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     setError(null);
     if (activeStep === SetupStep.SaaSLogin) {
       setActiveStep(SetupStep.ModeSelection);
-      setSelectedMode(null);
       setServerConfig(null);
     } else if (activeStep === SetupStep.SelfHostedLogin) {
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.ModeSelection);
-      setSelectedMode(null);
       setServerConfig(null);
     }
   };

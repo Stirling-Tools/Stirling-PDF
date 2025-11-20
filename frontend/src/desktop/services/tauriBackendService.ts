@@ -64,40 +64,29 @@ export class TauriBackendService {
       return;
     }
 
-    console.log('[TauriBackendService] Initializing external backend monitoring');
     this.backendStarted = true; // Mark as active for health checks
     this.setStatus('starting');
     this.beginHealthMonitoring();
   }
 
   async startBackend(backendUrl?: string): Promise<void> {
-    console.log('[TauriBackendService] startBackend called - backendStarted:', this.backendStarted);
-
     if (this.backendStarted) {
-      console.log('[TauriBackendService] Backend already started, skipping');
       return;
     }
 
     if (this.startPromise) {
-      console.log('[TauriBackendService] Start already in progress, returning existing promise');
       return this.startPromise;
     }
 
-    console.log('[TauriBackendService] Starting backend...');
     this.setStatus('starting');
 
     this.startPromise = invoke('start_backend', { backendUrl })
-      .then(async (result) => {
-        console.log('[TauriBackendService] Backend invoke completed:', result);
+      .then(async () => {
         this.backendStarted = true;
         this.setStatus('starting');
 
-        console.log('[TauriBackendService] Waiting for port assignment...');
         // Poll for the dynamically assigned port
         await this.waitForPort();
-        console.log('[TauriBackendService] Port assigned:', this.backendPort);
-
-        console.log('[TauriBackendService] Beginning health monitoring...');
         this.beginHealthMonitoring();
       })
       .catch((error) => {
@@ -113,13 +102,11 @@ export class TauriBackendService {
   }
 
   private async waitForPort(maxAttempts = 30): Promise<void> {
-    console.log('[TauriBackendService] Waiting for backend port assignment...');
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const port = await invoke<number | null>('get_backend_port');
         if (port) {
           this.backendPort = port;
-          console.log(`[TauriBackendService] Backend port detected: ${port}`);
           return;
         }
       } catch (error) {
@@ -145,7 +132,6 @@ export class TauriBackendService {
 
   async checkBackendHealth(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
-    console.log('[TauriBackendService] checkBackendHealth - mode:', mode, 'backendStarted:', this.backendStarted, 'backendPort:', this.backendPort);
 
     // For self-hosted mode, check the configured remote server
     if (mode === 'selfhosted') {
@@ -184,7 +170,6 @@ export class TauriBackendService {
     }
 
     if (!this.backendPort) {
-      console.debug('[TauriBackendService] Backend port not available yet');
       return false;
     }
 
@@ -206,7 +191,6 @@ export class TauriBackendService {
     for (let i = 0; i < maxAttempts; i++) {
       const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
-        console.log('Backend is healthy');
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -219,7 +203,6 @@ export class TauriBackendService {
    * Reset backend state (used when switching from external to local backend)
    */
   reset(): void {
-    console.log('[TauriBackendService] Resetting backend state');
     this.backendStarted = false;
     this.backendPort = null;
     this.setStatus('stopped');

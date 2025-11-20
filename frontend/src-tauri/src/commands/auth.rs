@@ -178,14 +178,10 @@ pub async fn login(
     username: String,
     password: String,
 ) -> Result<LoginResponse, String> {
-    println!("=== LOGIN ATTEMPT ===");
-    println!("User: {}", username);
-    println!("Server: {}", server_url);
     log::info!("Login attempt for user: {} to server: {}", username, server_url);
 
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.contains("auth.stirling.com");
-    println!("Detected as Supabase: {}", is_supabase);
     log::info!("Authentication type: {}", if is_supabase { "Supabase (SaaS)" } else { "Spring Boot (Self-hosted)" });
 
     // Create HTTP client
@@ -204,12 +200,6 @@ pub async fn login(
             "password": password,
         });
 
-        println!("=== SUPABASE LOGIN REQUEST ===");
-        println!("URL: {}", login_url);
-        println!("API Key: {}...{}", &supabase_key[..20], &supabase_key[supabase_key.len()-10..]);
-        println!("Email: {}", username);
-        println!("Sending request...");
-
         let response = client
             .post(&login_url)
             .header("Content-Type", "application/json;charset=UTF-8")
@@ -220,21 +210,15 @@ pub async fn login(
             .json(&request_body)
             .send()
             .await
-            .map_err(|e| {
-                let err_msg = format!("Network error: {}", e);
-                println!("ERROR: {}", err_msg);
-                err_msg
-            })?;
+            .map_err(|e| format!("Network error: {}", e))?;
 
         let status = response.status();
-        println!("Response status: {}", status);
 
         if !status.is_success() {
             let error_text = response
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            println!("ERROR Response body: {}", error_text);
             log::error!("Supabase login failed with status {}: {}", status, error_text);
 
             return Err(if status.as_u16() == 400 || status.as_u16() == 401 {

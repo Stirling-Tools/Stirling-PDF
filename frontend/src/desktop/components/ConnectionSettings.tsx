@@ -242,7 +242,6 @@ const ServerSelectionInSettings: React.FC<{ onSubmit: (config: ServerConfig) => 
 
       onSubmit({
         url,
-        server_type: serverType,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('setup.server.error.testFailed', 'Connection test failed'));
