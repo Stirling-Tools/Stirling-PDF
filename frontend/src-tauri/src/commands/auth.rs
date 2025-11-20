@@ -181,7 +181,9 @@ pub async fn login(
     log::info!("Login attempt for user: {} to server: {}", username, server_url);
 
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
-    let is_supabase = server_url.contains("auth.stirling.com");
+    // Compare against the configured SaaS server URL from environment
+    let saas_server_url = env!("VITE_SAAS_SERVER_URL");
+    let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
     log::info!("Authentication type: {}", if is_supabase { "Supabase (SaaS)" } else { "Spring Boot (Self-hosted)" });
 
     // Create HTTP client
