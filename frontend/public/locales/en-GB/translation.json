@@ -918,6 +918,11 @@
     },
     "error": {
       "failed": "An error occurred while merging the PDFs."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Merge Settings Overview"
+      }
     }
   },
   "split": {
@@ -2372,6 +2377,14 @@
       "title": "About Remove Annotations",
       "description": "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
     },
+    "tooltip": {
+      "header": {
+        "title": "About Remove Annotations"
+      },
+      "description": {
+        "title": "What it does"
+      }
+    },
     "error": {
       "failed": "An error occurred while removing annotations from the PDF."
     }
@@ -2834,6 +2847,9 @@
       "header": {
         "title": "How Auto-Rename Works"
       },
+      "description": {
+        "title": "What it does"
+      },
       "howItWorks": {
         "title": "Smart Renaming",
         "text": "Automatically finds the title from your PDF content and uses it as the filename.",
@@ -2841,6 +2857,9 @@
         "bullet2": "Creates a clean, valid filename from the detected title",
         "bullet3": "Keeps the original name if no suitable title is found"
       }
+    },
+    "settings": {
+      "title": "About"
     }
   },
   "adjust-contrast": {
@@ -4934,6 +4953,14 @@
     "addMoreFiles": "Add more files...",
     "selectedFiles": "Selected Files",
     "submit": "Add Attachments",
+    "tooltip": {
+      "header": {
+        "title": "About Add Attachments"
+      },
+      "description": {
+        "title": "What it does"
+      }
+    },
     "results": {
       "title": "Attachment Results"
     },

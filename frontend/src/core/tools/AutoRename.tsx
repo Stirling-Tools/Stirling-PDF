@@ -9,21 +9,28 @@ import { useAutoRenameTips } from "@app/components/tooltips/useAutoRenameTips";
 
 const AutoRename =(props: BaseToolProps) => {
   const { t } = useTranslation();
+  const autoRenameTips = useAutoRenameTips();
 
   const base = useBaseTool(
-    '"auto-rename-pdf-file',
+    'auto-rename-pdf-file',
     useAutoRenameParameters,
     useAutoRenameOperation,
     props
   );
 
 return createToolFlow({
-    title: { title:t("auto-rename.title", "Auto Rename PDF"), description: t("auto-rename.description", "Auto Rename PDF"), tooltip: useAutoRenameTips()},
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [],
+    steps: [
+      {
+        title: t("auto-rename.settings.title", "About"),
+        isCollapsed: false,
+        tooltip: autoRenameTips,
+        content: null,
+      },
+    ],
     executeButton: {
       text: t("auto-rename.submit", "Auto Rename"),
       isVisible: !base.hasResults,
