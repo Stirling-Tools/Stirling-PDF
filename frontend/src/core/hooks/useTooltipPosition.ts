@@ -87,7 +87,7 @@ export function useTooltipPosition({
     if (sidebarTooltip) {
       // Require sidebar refs and state for proper positioning
       if (!sidebarRefs || !sidebarState) {
-        console.warn('⚠️ Sidebar tooltip requires sidebarRefs and sidebarState props');
+        console.warn('Sidebar tooltip requires sidebarRefs and sidebarState props');
         setPositionReady(false);
         return;
       }
@@ -97,7 +97,7 @@ export function useTooltipPosition({
 
       // Only show tooltip if we have the tool panel active
       if (!sidebarInfo.isToolPanelActive) {
-        console.log('🚫 Not showing tooltip - tool panel not active');
+        console.log('Not showing tooltip - tool panel not active');
         setPositionReady(false);
         return;
       }
