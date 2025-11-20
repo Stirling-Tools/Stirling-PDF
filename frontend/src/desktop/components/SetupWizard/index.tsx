@@ -109,11 +109,11 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       case SetupStep.ModeSelection:
         return t('setup.welcome', 'Welcome to Stirling PDF');
       case SetupStep.SaaSLogin:
-        return t('setup.saas.title', 'Sign In to SaaS');
+        return t('setup.saas.title', 'Sign in to Stirling Cloud');
       case SetupStep.ServerSelection:
         return t('setup.server.title', 'Connect to Server');
       case SetupStep.SelfHostedLogin:
-        return t('setup.selfhosted.title', 'Sign In to Server');
+        return t('setup.selfhosted.title', 'Sign in to Server');
       default:
         return '';
     }
@@ -124,7 +124,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       case SetupStep.ModeSelection:
         return t('setup.description', 'Get started by choosing how you want to use Stirling PDF');
       case SetupStep.SaaSLogin:
-        return t('setup.saas.subtitle', 'Enter your Stirling PDF account credentials');
+        return t('setup.saas.subtitle', 'Sign in with your Stirling account');
       case SetupStep.ServerSelection:
         return t('setup.server.subtitle', 'Enter your self-hosted server URL');
       case SetupStep.SelfHostedLogin:

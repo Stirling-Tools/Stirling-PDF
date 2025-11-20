@@ -66,7 +66,7 @@ export const ConnectionSettings: React.FC = () => {
             <Text fw={600}>{t('settings.connection.title', 'Connection Mode')}</Text>
             <Badge color={config.mode === 'saas' ? 'blue' : 'green'} variant="light">
               {config.mode === 'saas'
-                ? t('settings.connection.mode.saas', 'SaaS')
+                ? t('settings.connection.mode.saas', 'Stirling Cloud')
                 : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
             </Badge>
           </Group>
