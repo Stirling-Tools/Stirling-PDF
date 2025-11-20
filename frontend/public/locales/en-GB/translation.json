@@ -5330,7 +5330,9 @@
       "name": "Enterprise",
       "highlight1": "Custom pricing",
       "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "highlight3": "Latest features",
+      "requiresServer": "Requires Server plan",
+      "requiresServerMessage": "Please upgrade to the Server plan first before upgrading to Enterprise."
     },
     "feature": {
       "title": "Feature",

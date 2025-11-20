@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, Badge, Text, Stack, Divider } from '@mantine/core';
+import { Button, Card, Badge, Text, Stack, Divider, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
 
@@ -8,10 +8,11 @@ interface PlanCardProps {
   isCurrentTier: boolean;
   isDowngrade: boolean;
   currentLicenseInfo?: LicenseInfo | null;
+  currentTier?: 'free' | 'server' | 'enterprise' | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
 }
 
-const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, onUpgradeClick }) => {
+const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick }) => {
   const { t } = useTranslation();
 
   // Render Free plan
@@ -82,6 +83,9 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   const { monthly, yearly } = planGroup;
   const isEnterprise = planGroup.tier === 'enterprise';
 
+  // Block enterprise for free tier users (must have server first)
+  const isEnterpriseBlockedForFree = isEnterprise && currentTier === 'free';
+
   // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
   let displayPrice = monthly?.price || 0;
   let displaySeatPrice = monthly?.seatPrice;
@@ -116,7 +120,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
         >
           {t('plan.current', 'Current Plan')}
         </Badge>
-      ) : planGroup.popular ? (
+      ) : planGroup.popular && !(planGroup.tier === 'server' && currentTier === 'enterprise') ? (
         <Badge
           variant="filled"
           size="sm"
@@ -141,10 +145,10 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           {isEnterprise && displaySeatPrice !== undefined ? (
             <>
               <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-                {displayCurrency}{displayPrice}
+                {displayCurrency}{displaySeatPrice}/seat
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
-                + {displayCurrency}{displaySeatPrice}/seat {t('plan.perMonth', '/month')}
+                {t('plan.perMonth', '/month')} + Server plan
               </Text>
             </>
           ) : (
@@ -180,20 +184,29 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
         <div style={{ flexGrow: 1 }} />
 
         {/* Single Upgrade Button */}
-        <Button
-          variant={isCurrentTier || isDowngrade ? 'light' : 'filled'}
-          fullWidth
-          onClick={() => onUpgradeClick(planGroup)}
-          disabled={isCurrentTier || isDowngrade}
+        <Tooltip
+          label={t('plan.enterprise.requiresServer', 'Requires Server plan')}
+          disabled={!isEnterpriseBlockedForFree}
+          position="top"
+          withArrow
         >
-          {isCurrentTier
-            ? t('plan.current', 'Current Plan')
-            : isDowngrade
-              ? t('plan.includedInCurrent', 'Included in Your Plan')
-              : isEnterprise
-                ? t('plan.selectPlan', 'Select Plan')
-                : t('plan.upgrade', 'Upgrade')}
-        </Button>
+          <Button
+            variant={isCurrentTier || isDowngrade || isEnterpriseBlockedForFree ? 'light' : 'filled'}
+            fullWidth
+            onClick={() => onUpgradeClick(planGroup)}
+            disabled={isCurrentTier || isDowngrade || isEnterpriseBlockedForFree}
+          >
+            {isCurrentTier
+              ? t('plan.current', 'Current Plan')
+              : isDowngrade
+                ? t('plan.includedInCurrent', 'Included in Your Plan')
+                : isEnterpriseBlockedForFree
+                  ? t('plan.enterprise.requiresServer', 'Requires Server plan')
+                  : isEnterprise
+                    ? t('plan.selectPlan', 'Select Plan')
+                    : t('plan.upgrade', 'Upgrade')}
+          </Button>
+        </Tooltip>
       </Stack>
     </Card>
   );

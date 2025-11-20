@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup } from '@app/services/licenseService';
+import licenseService, { PlanTierGroup, mapLicenseToTier } from '@app/services/licenseService';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import { useLicense } from '@app/contexts/LicenseContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
@@ -87,6 +87,20 @@ const AdminPlanSection: React.FC = () => {
         return;
       }
 
+      // Prevent free tier users from directly accessing enterprise (must have server first)
+      const currentTier = mapLicenseToTier(licenseInfo);
+      if (currentTier === 'free' && planGroup.tier === 'enterprise') {
+        alert({
+          alertType: 'warning',
+          title: t('plan.enterprise.requiresServer', 'Server Plan Required'),
+          body: t(
+            'plan.enterprise.requiresServerMessage',
+            'Please upgrade to the Server plan first before upgrading to Enterprise.'
+          ),
+        });
+        return;
+      }
+
       // Use checkout context to open checkout modal
       openCheckout(planGroup.tier, {
         currency,
@@ -97,7 +111,7 @@ const AdminPlanSection: React.FC = () => {
         },
       });
     },
-    [openCheckout, currency, refetch]
+    [openCheckout, currency, refetch, licenseInfo, t]
   );
 
   // Show static version if Stripe is not configured or there's an error

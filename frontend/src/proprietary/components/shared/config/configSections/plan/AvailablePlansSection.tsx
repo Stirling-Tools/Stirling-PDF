@@ -86,6 +86,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             isCurrentTier={isCurrentTier(group)}
             isDowngrade={isDowngrade(group)}
             currentLicenseInfo={currentLicenseInfo}
+            currentTier={currentTier}
             onUpgradeClick={onUpgradeClick}
           />
         ))}
@@ -100,7 +101,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
       </div>
 
       <Collapse in={showComparison}>
-        <FeatureComparisonTable plans={groupedPlans} />
+        <FeatureComparisonTable plans={groupedPlans} currentTier={currentTier} />
       </Collapse>
     </div>
   );
