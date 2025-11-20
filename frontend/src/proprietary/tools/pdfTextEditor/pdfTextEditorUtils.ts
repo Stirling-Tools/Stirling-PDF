@@ -7,7 +7,7 @@ import {
   TextGroup,
   DEFAULT_PAGE_HEIGHT,
   DEFAULT_PAGE_WIDTH,
-} from './pdfTextEditorTypes';
+} from '@proprietary/tools/pdfTextEditor/pdfTextEditorTypes';
 
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;
@@ -586,7 +586,7 @@ const groupLinesIntoParagraphs = (
     const currentText = (currentLine.text ?? '').trim();
 
     // Bullet detection - look for bullet markers or very short lines
-    const bulletMarkerRegex = /^[\u2022\u2023\u25E6\u2043\u2219•·◦‣⁃\-\*]\s|^\d+[\.\)]\s|^[a-z][\.\)]\s/i;
+    const bulletMarkerRegex = /^[\u2022\u2023\u25E6\u2043\u2219•·◦‣⁃\-*]\s|^\d+[.)]\s|^[a-z][.)]\s/i;
     const prevHasBulletMarker = bulletMarkerRegex.test(prevText);
     const currentHasBulletMarker = bulletMarkerRegex.test(currentText);
 
@@ -667,7 +667,7 @@ const groupLinesIntoParagraphs = (
   }
 
   // Merge line groups into single paragraph groups
-  return paragraphs.map((lines, paragraphIndex) => {
+  return paragraphs.map((lines, _paragraphIndex) => {
     if (lines.length === 1) {
       return lines[0];
     }
@@ -794,7 +794,7 @@ export const groupPageTextElements = (
         const currentBaseline = getBaseline(element);
         const baselineDelta = Math.abs(prevBaseline - currentBaseline);
         const prevEndX = getX(previous) + getWidth(previous, metrics);
-        const prevEndY = prevBaseline;
+        const _prevEndY = prevBaseline;
         const diagonalGap = Math.hypot(Math.max(0, getX(element) - prevEndX), baselineDelta);
         const diagonalThreshold = Math.max(avgFontSize * 0.8, splitThreshold);
         if (diagonalGap <= diagonalThreshold) {
@@ -1229,7 +1229,7 @@ export const restoreGlyphElements = (
   updated.pages = pages.map((page, pageIndex) => {
     const groups = groupsByPage[pageIndex] ?? [];
     const images = imagesByPage[pageIndex] ?? [];
-    const baselineImages = originalImagesByPage[pageIndex] ?? [];
+    const _baselineImages = originalImagesByPage[pageIndex] ?? [];
 
     if (!groups.length) {
       return {

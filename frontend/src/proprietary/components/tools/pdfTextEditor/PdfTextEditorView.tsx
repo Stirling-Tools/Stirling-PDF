@@ -39,7 +39,6 @@ import {
   PdfTextEditorViewData,
   PdfJsonFont,
   PdfJsonPage,
-  ConversionProgress,
   TextGroup,
 } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import { getImageBounds, pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
@@ -257,7 +256,7 @@ const buildFontLookupKeys = (
 const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean => {
   if (groups.length === 0) return false;
 
-  let multiLineGroups = 0;
+  const _multiLineGroups = 0;
   let totalWords = 0;
   let longTextGroups = 0;
   let totalGroups = 0;
@@ -1099,7 +1098,7 @@ const selectionToolbarPosition = useMemo(() => {
         const originalTransform = textSpan.style.transform;
         textSpan.style.transform = 'none';
 
-        const bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
+        const _bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
         const { width: resolvedWidth } = resolveGroupWidth(group);
         const containerWidth = resolvedWidth * scale;
         const textWidth = textSpan.getBoundingClientRect().width;
@@ -1182,8 +1181,8 @@ const selectionToolbarPosition = useMemo(() => {
       if (!rndRef || !rndRef.updatePosition) return;
 
       const bounds = getImageBounds(image);
-      const width = Math.max(bounds.right - bounds.left, 1);
-      const height = Math.max(bounds.top - bounds.bottom, 1);
+      const _width = Math.max(bounds.right - bounds.left, 1);
+      const _height = Math.max(bounds.top - bounds.bottom, 1);
       const cssLeft = bounds.left * scale;
       const cssTop = (pageHeight - bounds.top) * scale;
 
@@ -1978,7 +1977,7 @@ const selectionToolbarPosition = useMemo(() => {
                         bounds="parent"
                         size={{ width: cssWidth, height: cssHeight }}
                         position={{ x: cssLeft, y: cssTop }}
-                        onDragStart={(_event, data) => {
+                        onDragStart={(_event, _data) => {
                           setActiveGroupId(null);
                           setEditingGroupId(null);
                           setActiveImageId(imageId);
@@ -2115,7 +2114,7 @@ const selectionToolbarPosition = useMemo(() => {
 
                       let containerLeft = bounds.left;
                       let containerTop = bounds.top;
-                      const { width: resolvedWidth, base: baseWidth, max: maxWidth } = resolveGroupWidth(group);
+                      const { width: resolvedWidth, base: baseWidth, max: _maxWidth } = resolveGroupWidth(group);
                       let containerWidth = Math.max(resolvedWidth * scale, fontSizePx);
                       let containerHeight = Math.max(bounds.height, paragraphHeightPx);
                       let transform: string | undefined;

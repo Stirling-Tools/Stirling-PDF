@@ -45,8 +45,8 @@ function normalizeRedirectPath(target?: string): string {
 function persistRedirectPath(path: string): void {
   try {
     document.cookie = `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent(path)}; path=/; max-age=${OAUTH_REDIRECT_COOKIE_MAX_AGE}; SameSite=Lax`;
-  } catch (error) {
-    // console.warn('[SpringAuth] Failed to persist OAuth redirect path', error);
+  } catch (_error) {
+    // console.warn('[SpringAuth] Failed to persist OAuth redirect path', _error);
   }
 }
 

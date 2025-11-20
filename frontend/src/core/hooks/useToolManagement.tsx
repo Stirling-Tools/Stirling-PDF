@@ -4,7 +4,6 @@ import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "@app
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { FileId } from '@app/types/file';
 import { ToolId } from "@app/types/toolId";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
@@ -16,7 +15,6 @@ interface ToolManagementResult {
 
 export const useToolManagement = (): ToolManagementResult => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
-  const { config } = useAppConfig();
 
   // Build endpoints list from registry entries with fallback to legacy mapping
   const { allTools } = useToolRegistry();

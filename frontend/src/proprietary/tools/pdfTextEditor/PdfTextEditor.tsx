@@ -20,7 +20,7 @@ import {
   PdfTextEditorViewData,
   BoundingBox,
   ConversionProgress,
-} from './pdfTextEditorTypes';
+} from '@proprietary/tools/pdfTextEditor/pdfTextEditorTypes';
 import {
   deepCloneDocument,
   getDirtyPages,
@@ -30,7 +30,7 @@ import {
   cloneImageElement,
   cloneTextElement,
   valueOr,
-} from './pdfTextEditorUtils';
+} from '@proprietary/tools/pdfTextEditor/pdfTextEditorUtils';
 import PdfTextEditorView from '@app/components/tools/pdfTextEditor/PdfTextEditorView';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
@@ -487,7 +487,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
 
-      const fileKey = getAutoLoadKey(file);
+      const _fileKey = getAutoLoadKey(file);
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
 
       try {
@@ -1205,7 +1205,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
               const bottom = image.bottom ?? image.y ?? 0;
               const width = image.width ?? Math.max((image.right ?? left) - left, 0);
               const height = image.height ?? Math.max((image.top ?? bottom) - bottom, 0);
-              const right = left + width;
+              const _right = left + width;
               const top = bottom + height;
 
               // Convert to canvas coordinates (PDF origin is bottom-left, canvas is top-left)
