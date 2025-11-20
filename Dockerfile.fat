@@ -6,7 +6,7 @@
 # ========================================
 # STAGE 1: Build Stirling-PDF with Gradle (Alpine)
 # ========================================
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine@sha256:c4799f335a65b1ecca8a31239b05522f2b0a184d6818f6349e83484ee6956198 AS build
 
 # Install build tools
 RUN apk add --no-cache bash unzip curl git
@@ -48,7 +48,7 @@ RUN ./gradlew --no-daemon clean build \
 # STAGE 2: Runtime image based on Debian stable-slim
 # Contains Java runtime + LibreOffice + Calibre + all PDF tools
 # ========================================
-FROM debian:stable-slim
+FROM debian:stable-slim@sha256:7cb087f19bcc175b96fbe4c2aef42ed00733a659581a80f6ebccfd8fe3185a3d
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -152,13 +152,11 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 # Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
 # ==============================================================================
 RUN python3 -m venv /opt/venv --system-site-packages \
-    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
     && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
 
 # Separate venv for unoserver (keeps it isolated)
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir --upgrade pip \
     && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
 
 # Make unoserver tools available in main venv PATH
@@ -172,7 +170,7 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 RUN set -eux; \
     TESS_PATH="$(find /usr/share/tesseract-ocr -type d -name tessdata | head -1 || true)"; \
     [ -n "$TESS_PATH" ] || { echo "ERROR: tessdata directory not found!" >&2; exit 1; }; \
-    ln -sf "$TESS_PATH" /usr/share/tessdata; \
+    ln -s "$TESS_PATH" /usr/share/tessdata; \
     echo "Linked tessdata: $TESS_PATH → /usr/share/tessdata"
 
 # ==============================================================================
