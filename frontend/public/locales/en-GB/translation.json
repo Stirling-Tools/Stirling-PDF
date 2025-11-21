@@ -5722,7 +5722,11 @@
         "latestVersion": "Latest Version",
         "checkForUpdates": "Check for Updates",
         "viewDetails": "View Details"
-      }
+      },
+      "hideUnavailableTools": "Hide unavailable tools",
+      "hideUnavailableToolsDescription": "Remove tools that have been disabled by your server instead of showing them greyed out.",
+      "hideUnavailableConversions": "Hide unavailable conversions",
+      "hideUnavailableConversionsDescription": "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
     },
     "hotkeys": {
       "errorConflict": "Shortcut already used by {{tool}}.",
