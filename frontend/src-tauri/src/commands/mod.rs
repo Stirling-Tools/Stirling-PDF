@@ -15,13 +15,10 @@ pub use connection::{
 };
 pub use auth::{
     clear_auth_token,
-    clear_oauth_state,
     clear_user_info,
     get_auth_token,
-    get_oauth_state,
     get_user_info,
     login,
-    parse_oauth_callback_url,
     save_auth_token,
     save_user_info,
     start_oauth_login,

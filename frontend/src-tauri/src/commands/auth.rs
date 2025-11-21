@@ -14,16 +14,6 @@ const USER_INFO_KEY: &str = "user_info";
 const KEYRING_SERVICE: &str = "stirling-pdf";
 const KEYRING_TOKEN_KEY: &str = "auth-token";
 
-// OAuth state management
-const OAUTH_STATE_KEY: &str = "oauth_state";
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OAuthState {
-    pub provider: String,
-    pub server_url: String,
-    pub timestamp: i64,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
     pub username: String,
@@ -541,15 +531,6 @@ async fn exchange_code_for_token(
     })
 }
 
-/// Parse OAuth callback URL to extract authorization code
-/// This is called by the frontend when it receives an oauth-callback event
-/// Note: This function is for the deep-link flow (not currently used)
-#[tauri::command]
-pub async fn parse_oauth_callback_url(_url_str: String) -> Result<OAuthCallbackResult, String> {
-    log::info!("Parsing OAuth callback URL");
-    Err("Deep-link OAuth flow not implemented - use start_oauth_login instead".to_string())
-}
-
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
     // Parse URL to extract authorization code
     let parsed_url = url::Url::parse(url_str)
@@ -593,38 +574,4 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
 
     // No authorization code found
     Err("No authorization code found in OAuth callback".to_string())
-}
-
-/// Gets the stored OAuth state (for validation when callback is received)
-#[tauri::command]
-pub async fn get_oauth_state(app_handle: AppHandle) -> Result<Option<OAuthState>, String> {
-    log::debug!("Retrieving OAuth state");
-
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-
-    let state: Option<OAuthState> = store
-        .get(OAUTH_STATE_KEY)
-        .and_then(|v| serde_json::from_value(v.clone()).ok());
-
-    Ok(state)
-}
-
-/// Clears the OAuth state after successful/failed authentication
-#[tauri::command]
-pub async fn clear_oauth_state(app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing OAuth state");
-
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-
-    store.delete(OAUTH_STATE_KEY);
-
-    store
-        .save()
-        .map_err(|e| format!("Failed to save store: {}", e))?;
-
-    Ok(())
 }

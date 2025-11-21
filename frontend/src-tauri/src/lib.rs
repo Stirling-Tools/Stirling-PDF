@@ -9,19 +9,16 @@ use commands::{
     check_backend_health,
     cleanup_backend,
     clear_auth_token,
-    clear_oauth_state,
     clear_opened_files,
     clear_user_info,
     is_default_pdf_handler,
     get_auth_token,
     get_backend_port,
     get_connection_config,
-    get_oauth_state,
     get_opened_files,
     get_user_info,
     is_first_launch,
     login,
-    parse_oauth_callback_url,
     reset_setup_completion,
     save_auth_token,
     save_user_info,
@@ -107,9 +104,6 @@ pub fn run() {
       get_user_info,
       clear_user_info,
       start_oauth_login,
-      parse_oauth_callback_url,
-      get_oauth_state,
-      clear_oauth_state,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
@@ -133,13 +127,8 @@ pub fn run() {
           for url in urls {
             let url_str = url.as_str();
 
-            // Handle OAuth deep link callbacks
-            if url_str.starts_with("stirlingpdf://auth/callback") {
-              add_log(format!("🔐 OAuth callback received: {}", url_str));
-              let _ = app_handle.emit("oauth-callback", url_str);
-            }
             // Handle file:// URLs (PDF file opens)
-            else if url_str.starts_with("file://") {
+            if url_str.starts_with("file://") {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
