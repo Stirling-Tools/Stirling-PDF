@@ -12,6 +12,8 @@ export interface UserPreferences {
   hasCompletedOnboarding: boolean;
   hasSeenIntroOnboarding: boolean;
   hasSeenCookieBanner: boolean;
+  hideUnavailableTools: boolean;
+  hideUnavailableConversions: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -25,6 +27,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hasCompletedOnboarding: false,
   hasSeenIntroOnboarding: false,
   hasSeenCookieBanner: false,
+  hideUnavailableTools: false,
+  hideUnavailableConversions: false,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';

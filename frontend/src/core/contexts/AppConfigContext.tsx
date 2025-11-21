@@ -126,7 +126,8 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         }
 
         // apiClient automatically adds JWT header if available via interceptors
-        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', !isBlockingMode ? { suppressErrorToast: true } : undefined);
+        // Always suppress error toast - we handle 401 errors locally
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', { suppressErrorToast: true });
         const data = response.data;
 
         console.debug('[AppConfig] Config fetched successfully:', data);
@@ -171,8 +172,25 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   }, [fetchCount, hasResolvedConfig, isBlockingMode, maxRetries, initialDelay]);
 
   useEffect(() => {
-    // Always try to fetch config to check if login is disabled
-    // The endpoint should be public and return proper JSON
+    // Skip config fetch on auth pages (/login, /signup, /auth/callback, /invite/*)
+    // Config will be fetched after successful authentication via jwt-available event
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('/login') ||
+                       currentPath.includes('/signup') ||
+                       currentPath.includes('/auth/callback') ||
+                       currentPath.includes('/invite/');
+
+    // On auth pages, always skip the config fetch
+    // The config will be fetched after authentication via jwt-available event
+    if (isAuthPage) {
+      console.debug('[AppConfig] On auth page - using default config, skipping fetch');
+      setConfig({ enableLogin: true });
+      setHasResolvedConfig(true);
+      setLoading(false);
+      return;
+    }
+
+    // On non-auth pages, fetch config (will validate JWT if present)
     if (autoFetch) {
       fetchConfig();
     }
