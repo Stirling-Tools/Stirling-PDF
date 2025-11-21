@@ -30,6 +30,14 @@ export default function Login() {
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
 
+  // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
+  useEffect(() => {
+    if (!loading && session) {
+      console.debug('[Login] User already authenticated, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [session, loading, navigate]);
+
   // Fetch enabled SSO providers and login config from backend
   useEffect(() => {
     const fetchProviders = async () => {

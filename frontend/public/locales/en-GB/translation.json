@@ -17,6 +17,8 @@
       "comingSoon": "Coming soon:",
       "favorite": "Add to favourites",
       "favorites": "Favourites",
+      "unavailable": "Disabled by server administrator:",
+      "unavailableDependency": "Unavailable - required tool missing on server:",
       "heading": "All tools (fullscreen view)",
       "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
       "recommended": "Recommended",
@@ -3825,6 +3827,7 @@
     "downloadSelected": "Download Selected Files",
     "downloadAll": "Download All",
     "toggleTheme": "Toggle Theme",
+    "toggleBookmarks": "Toggle Bookmarks",
     "language": "Language",
     "search": "Search PDF",
     "panMode": "Pan Mode",
@@ -5728,7 +5731,11 @@
         "latestVersion": "Latest Version",
         "checkForUpdates": "Check for Updates",
         "viewDetails": "View Details"
-      }
+      },
+      "hideUnavailableTools": "Hide unavailable tools",
+      "hideUnavailableToolsDescription": "Remove tools that have been disabled by your server instead of showing them greyed out.",
+      "hideUnavailableConversions": "Hide unavailable conversions",
+      "hideUnavailableConversionsDescription": "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
     },
     "hotkeys": {
       "errorConflict": "Shortcut already used by {{tool}}.",
