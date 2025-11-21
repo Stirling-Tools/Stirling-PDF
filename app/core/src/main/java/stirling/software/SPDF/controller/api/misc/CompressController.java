@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,7 +103,6 @@ public class CompressController {
         long totalCompressedBytes = 0;
     }
 
-    // Replace all instances of original images with their compressed versions
     private static void replaceImages(
             PDDocument doc,
             Map<ImageIdentity, List<ImageReference>> uniqueImages,
@@ -115,11 +113,9 @@ public class CompressController {
             ImageIdentity imageIdentity = entry.getKey();
             List<ImageReference> references = entry.getValue();
 
-            // Skip if no compressed version exists
             PDImageXObject compressedImage = compressedVersions.get(imageIdentity);
             if (compressedImage == null) continue;
 
-            // Replace ALL instances with the compressed version
             for (ImageReference ref : references) {
                 replaceImageReference(doc, ref, compressedImage);
             }
@@ -305,19 +301,15 @@ public class CompressController {
         return compressedVersions;
     }
 
-    // Enhanced hash function to identify identical images with more data
     private static String generateImageHash(PDImageXObject image) {
         try {
-            // Create a stream for the raw stream data
             try (InputStream stream = image.getCOSObject().createRawInputStream()) {
-                // Read more data for better hash accuracy (16KB instead of 8KB)
                 byte[] buffer = new byte[16384];
                 int bytesRead = stream.read(buffer);
                 if (bytesRead > 0) {
                     byte[] dataToHash =
                             bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
 
-                    // Also include image dimensions and color space in the hash
                     String enhancedData =
                             new String(dataToHash, StandardCharsets.UTF_8)
                                     + "_"
@@ -394,10 +386,8 @@ public class CompressController {
         }
     }
 
-    // Hash function to identify identical masks
     private static String generateMaskHash(PDImageXObject image) {
         try {
-            // Try to get mask data from either getMask() or getSoftMask()
             PDImageXObject mask = image.getMask();
             if (mask == null) {
                 mask = image.getSoftMask();
@@ -405,7 +395,6 @@ public class CompressController {
 
             if (mask != null) {
                 try (InputStream stream = mask.getCOSObject().createRawInputStream()) {
-                    // Read up to first 4KB of mask data for the hash
                     byte[] buffer = new byte[4096];
                     int bytesRead = stream.read(buffer);
                     if (bytesRead > 0) {
@@ -931,11 +920,18 @@ public class CompressController {
     public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
+
+        // Validate input file
+        if (inputFile == null || inputFile.isEmpty()) {
+            throw ExceptionUtils.createFileNullOrEmptyException();
+        }
+
         Integer optimizeLevel = request.getOptimizeLevel();
         String expectedOutputSizeString = request.getExpectedOutputSize();
         Boolean convertToGrayscale = request.getGrayscale();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw new Exception("Both expected output size and optimize level are not specified");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
         }
 
         Long expectedOutputSize = 0L;
@@ -967,7 +963,6 @@ public class CompressController {
 
             boolean sizeMet = false;
             boolean imageCompressionApplied = false;
-            boolean externalCompressionApplied = false;
 
             while (!sizeMet && optimizeLevel <= 9) {
                 // Apply external compression first
@@ -978,8 +973,14 @@ public class CompressController {
                         applyGhostscriptCompression(request, optimizeLevel, currentFile);
                         log.info("Ghostscript compression applied successfully");
                         ghostscriptSuccess = true;
+                    } catch (ExceptionUtils.GhostscriptException e) {
+                        // Critical Ghostscript errors should be propagated
+                        log.error("Ghostscript encountered a critical error: {}", e.getMessage());
+                        throw e;
                     } catch (IOException e) {
-                        log.warn("Ghostscript compression failed, continuing with other methods");
+                        log.warn(
+                                "Ghostscript compression failed, continuing with other methods: {}",
+                                e.getMessage());
                     }
                 }
 
@@ -989,15 +990,13 @@ public class CompressController {
                         applyQpdfCompression(request, optimizeLevel, currentFile);
                         log.info("QPDF compression applied successfully");
                     } catch (IOException e) {
-                        log.warn("QPDF compression failed");
+                        log.warn("QPDF compression failed: {}", e.getMessage());
                     }
                 } else if (!ghostscriptSuccess) {
                     log.info(
                             "No external compression tools available, using image compression"
                                     + " only");
                 }
-
-                externalCompressionApplied = true;
 
                 // Skip image compression if Ghostscript succeeded
                 if (ghostscriptSuccess) {
@@ -1044,7 +1043,6 @@ public class CompressController {
                     } else {
                         // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
-                        externalCompressionApplied = false;
                         optimizeLevel = newOptimizeLevel;
                     }
                 }
@@ -1067,8 +1065,12 @@ public class CompressController {
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
 
-            return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
+            try {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
+            } catch (IOException e) {
+                throw ExceptionUtils.handlePdfException(e, "PDF optimization");
+            }
 
         } finally {
             // Clean up all temporary files
@@ -1176,6 +1178,16 @@ public class CompressController {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                                 .runCommandWithOutputHandling(command);
 
+                // Check for critical errors in the output before checking return code
+                String gsOutput = returnCode.getMessages();
+                ExceptionUtils.GhostscriptException criticalError =
+                        ExceptionUtils.detectGhostscriptCriticalError(gsOutput);
+                if (criticalError != null) {
+                    log.error(
+                            "Ghostscript critical error detected: {}", criticalError.getMessage());
+                    throw criticalError;
+                }
+
                 if (returnCode.getRc() == 0) {
                     // Update current file to the Ghostscript output
                     Files.copy(gsOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
@@ -1190,20 +1202,17 @@ public class CompressController {
                     log.warn(
                             "Ghostscript compression failed with return code: {}",
                             returnCode.getRc());
-                    throw new IOException("Ghostscript compression failed");
+                    throw ExceptionUtils.createGhostscriptCompressionException(gsOutput);
                 }
 
-                // replace the existing catch with these two catches
             } catch (InterruptedException e) {
-                // restore interrupted status and propagate as an IOException
-                Thread.currentThread().interrupt();
-                InterruptedIOException ie =
-                        new InterruptedIOException("Ghostscript command interrupted");
-                ie.initCause(e);
-                throw ie;
+                throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
+            } catch (ExceptionUtils.GhostscriptException e) {
+                // Re-throw Ghostscript-specific exceptions
+                throw e;
             } catch (Exception e) {
                 log.warn("Ghostscript compression failed, will fallback to other methods", e);
-                throw new IOException("Ghostscript compression failed", e);
+                throw ExceptionUtils.createGhostscriptCompressionException(e);
             }
         }
     }
@@ -1296,16 +1305,15 @@ public class CompressController {
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {
-                    throw new IOException("QPDF command failed", e);
+                    throw ExceptionUtils.createIOException(
+                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getMessageKey(),
+                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getDefaultMessage(),
+                            e);
                 }
                 // If QPDF fails, keep using the current file
                 log.warn("QPDF compression failed, continuing with current file", e);
             } catch (InterruptedException e) {
-                // restore interrupted status and propagate as an IOException
-                Thread.currentThread().interrupt();
-                InterruptedIOException ie = new InterruptedIOException("QPDF command interrupted");
-                ie.initCause(e);
-                throw ie;
+                throw ExceptionUtils.createProcessingInterruptedException("QPDF", e);
             }
         }
     }

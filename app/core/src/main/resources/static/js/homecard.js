@@ -186,7 +186,9 @@ function sortNavElements(criteria) {
 async function fetchPopularityData(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const errorText = await response.text().catch(() => '');
+    const errorMsg = errorText || response.statusText || 'Request failed';
+    throw new Error(`HTTP ${response.status}: ${errorMsg}`);
   }
   return await response.text();
 }
@@ -220,7 +222,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     const response = await fetch('/files/popularity.txt');
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text().catch(() => '');
+      const errorMsg = errorText || response.statusText || 'Request failed';
+      throw new Error(`HTTP ${response.status}: ${errorMsg}`);
     }
     const popularityData = await response.json();
     applyPopularityData(popularityData);
