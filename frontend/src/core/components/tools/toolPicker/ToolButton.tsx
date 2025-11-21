@@ -165,7 +165,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       justify="flex-start"
       className="tool-button"
       aria-disabled={isUnavailable}
-      disabled={isUnavailable}
       data-tour={`tool-button-${id}`}
       styles={{
         root: {
