@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -56,7 +57,11 @@ public class MultiPageLayoutController {
         if (pagesPerSheet != 2
                 && pagesPerSheet != 3
                 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-            throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "pagesPerSheet",
+                    "must be 2, 3 or a perfect square");
         }
 
         int cols =

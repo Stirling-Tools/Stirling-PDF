@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.WebResponseUtils;
@@ -308,7 +309,7 @@ public class CropController {
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Ghostscript processing was interrupted", e);
+            throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
         } finally {
             if (tempInputFile != null) {
                 Files.deleteIfExists(tempInputFile);
