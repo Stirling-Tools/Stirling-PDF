@@ -35,7 +35,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Info)
         .build()
     )
     .plugin(tauri_plugin_opener::init())
