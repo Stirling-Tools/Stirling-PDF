@@ -54,14 +54,14 @@ public class ConvertHtmlToPDFWebBased {
         }
         byte[] fileBytes = fileInput.getBytes();
         String htmlContent = new String(fileBytes, StandardCharsets.UTF_8);
-        // String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
         byte[] pdfBytes;
         try (Playwright playwright = Playwright.create()) {
             BrowserType chromium = playwright.chromium();
             Browser browser = chromium.launch();
             BrowserContext context = browser.newContext();
             Page page = context.newPage();
-            page.setContent(htmlContent);
+            page.setContent(sanitizedHtml);
             // Generates a PDF with "screen" media type.
             page.emulateMedia(new Page.EmulateMediaOptions().setMedia(Media.SCREEN));
             pdfBytes = page.pdf(new Page.PdfOptions().setPrintBackground(true));
