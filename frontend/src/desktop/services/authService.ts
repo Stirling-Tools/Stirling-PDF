@@ -223,6 +223,11 @@ export class AuthService {
       });
 
       console.log('OAuth callback received!');
+      console.log('Token result:', {
+        access_token: result.access_token.substring(0, 20) + '...',
+        refresh_token: result.refresh_token ? result.refresh_token.substring(0, 20) + '...' : null,
+        expires_in: result.expires_in,
+      });
 
       console.log('OAuth callback received, storing tokens');
 
@@ -254,12 +259,24 @@ export class AuthService {
    */
   private async fetchSupabaseUserInfo(authServerUrl: string, accessToken: string): Promise<UserInfo> {
     try {
-      const response = await axios.get(`${authServerUrl}/auth/v1/user`, {
+      console.log('===========================================');
+      console.log('Fetching user info from Supabase');
+      console.log('Auth Server:', authServerUrl);
+      console.log('Access Token (first 20 chars):', accessToken.substring(0, 20) + '...');
+      console.log('API Key:', import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY);
+      console.log('===========================================');
+
+      const userEndpoint = `${authServerUrl}/auth/v1/user`;
+      console.log('User endpoint:', userEndpoint);
+
+      const response = await axios.get(userEndpoint, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '',
         },
       });
+
+      console.log('User info response:', response.data);
 
       const data = response.data;
       return {
@@ -268,6 +285,11 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Failed to fetch user info from Supabase:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Response status:', error.response?.status);
+        console.error('Response data:', error.response?.data);
+        console.error('Response headers:', error.response?.headers);
+      }
       // Fallback to basic info
       return {
         username: 'User',

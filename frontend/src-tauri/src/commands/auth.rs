@@ -4,6 +4,10 @@ use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 use tiny_http::{Response, Server};
+use sha2::{Sha256, Digest};
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
@@ -314,18 +318,44 @@ pub async fn login(
     }
 }
 
+/// Generate PKCE code_verifier (random 43-128 character string)
+fn generate_code_verifier() -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(128)
+        .map(char::from)
+        .collect()
+}
+
+/// Generate PKCE code_challenge from code_verifier (SHA256 hash, base64url encoded)
+fn generate_code_challenge(code_verifier: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(code_verifier.as_bytes());
+    let hash = hasher.finalize();
+    URL_SAFE_NO_PAD.encode(hash)
+}
+
 /// Opens the system browser for OAuth authentication with localhost callback server
 /// Uses 127.0.0.1 (loopback) which is supported by Google OAuth with any port
+/// Implements PKCE (Proof Key for Code Exchange) for secure OAuth flow
 #[tauri::command]
 pub async fn start_oauth_login(
     _app_handle: AppHandle,
     provider: String,
     auth_server_url: String,
 ) -> Result<OAuthCallbackResult, String> {
-    log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
+    println!("========================================");
+    println!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
-    // Start HTTP server on random available port
-    // Configure wildcard in Supabase: http://127.0.0.1:*/callback
+    // Generate PKCE code_verifier and code_challenge
+    let code_verifier = generate_code_verifier();
+    let code_challenge = generate_code_challenge(&code_verifier);
+
+    println!("PKCE code_verifier generated (first 20 chars): {}...", &code_verifier[..20]);
+    println!("PKCE code_challenge: {}", code_challenge);
+    println!("========================================");
+
+    // Start HTTP server on fixed port
     let server = Server::http("127.0.0.1:54321")
         .map_err(|e| format!("Failed to start localhost server: {}", e))?;
 
@@ -335,16 +365,18 @@ pub async fn start_oauth_login(
     };
 
     let callback_url = format!("http://127.0.0.1:{}/callback", port);
-    log::info!("========================================");
     log::info!("OAuth callback URL: {}", callback_url);
-    log::info!("========================================");
 
-    // Build OAuth URL with loopback callback
+    // Build OAuth URL with authorization code flow + PKCE
+    // Note: Use redirect_to (not redirect_uri) to tell Supabase where to redirect after processing
+    // Supabase handles its own /auth/v1/callback internally
+    // prompt=select_account forces Google to show account picker every time
     let oauth_url = format!(
-        "{}/auth/v1/authorize?provider={}&redirect_uri={}",
+        "{}/auth/v1/authorize?provider={}&redirect_to={}&code_challenge={}&code_challenge_method=S256&prompt=select_account",
         auth_server_url.trim_end_matches('/'),
         provider,
-        urlencoding::encode(&callback_url)
+        urlencoding::encode(&callback_url),
+        urlencoding::encode(&code_challenge)
     );
 
     log::info!("Full OAuth URL: {}", oauth_url);
@@ -368,14 +400,16 @@ pub async fn start_oauth_login(
         for _ in 0..120 { // 2 minute timeout
             if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
                 let url_str = format!("http://127.0.0.1{}", request.url());
-                log::info!("Received callback request: {}", url_str);
+                println!("========================================");
+                println!("FULL CALLBACK URL: {}", url_str);
+                println!("========================================");
 
-                // Try to parse data from URL (either tokens or code)
+                // Parse the authorization code from URL
                 let callback_data = parse_oauth_callback(&url_str);
 
-                // Check if we got valid data
+                // Check if we got a code
                 if callback_data.is_ok() {
-                    log::info!("Successfully extracted callback data");
+                    log::info!("Successfully extracted authorization code");
 
                     let html_response = r#"
                         <!DOCTYPE html>
@@ -396,34 +430,7 @@ pub async fn start_oauth_login(
                     *result_lock = Some(callback_data);
                     break;
                 } else {
-                    // No data yet - send HTML that extracts from hash and redirects
-                    log::info!("No callback data found, sending hash extraction HTML");
-
-                    let html_response = r#"
-                        <!DOCTYPE html>
-                        <html>
-                        <head><title>Processing Authentication...</title></head>
-                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                            <h1>Processing...</h1>
-                            <script>
-                                // OAuth providers may return tokens in hash fragment
-                                // Extract and redirect with tokens as query params
-                                if (window.location.hash) {
-                                    const hash = window.location.hash.substring(1);
-                                    if (hash) {
-                                        const newUrl = window.location.origin + window.location.pathname + '?' + hash;
-                                        window.location.replace(newUrl);
-                                    }
-                                }
-                            </script>
-                        </body>
-                        </html>
-                    "#;
-
-                    let _ = request.respond(Response::from_string(html_response)
-                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
-
-                    // Continue listening for the redirected request
+                    log::warn!("No authorization code found in callback");
                 }
             }
         }
@@ -437,15 +444,11 @@ pub async fn start_oauth_login(
     let callback_data = result.lock().unwrap().take()
         .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
 
-    // Handle the callback data - either tokens directly or code that needs exchange
+    // Handle the callback data - exchange authorization code for tokens
     match callback_data? {
-        OAuthCallbackData::Tokens(tokens) => {
-            log::info!("OAuth completed with implicit flow");
-            Ok(tokens)
-        }
-        OAuthCallbackData::Code { code, redirect_uri } => {
+        OAuthCallbackData::Code { code, redirect_uri, state } => {
             log::info!("OAuth completed with authorization code flow, exchanging code...");
-            exchange_code_for_token(&auth_server_url, &code, &redirect_uri).await
+            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier, state.as_deref()).await
         }
     }
 }
@@ -457,35 +460,54 @@ pub struct OAuthCallbackResult {
     pub expires_in: Option<i64>,
 }
 
-// Internal enum for handling both implicit and authorization code flows
+// Internal enum for handling authorization code flow
 #[derive(Debug, Clone)]
 enum OAuthCallbackData {
-    Tokens(OAuthCallbackResult),
-    Code { code: String, redirect_uri: String },
+    Code { code: String, redirect_uri: String, state: Option<String> },
 }
 
-/// Exchange authorization code for access token
+/// Exchange authorization code for access token using PKCE
 async fn exchange_code_for_token(
     auth_server_url: &str,
     code: &str,
-    redirect_uri: &str,
+    _redirect_uri: &str,
+    _code_verifier: &str,
+    state: Option<&str>,
 ) -> Result<OAuthCallbackResult, String> {
-    log::info!("Exchanging authorization code for access token");
+    println!("========================================");
+    println!("Exchanging authorization code for access token with PKCE");
 
     let client = reqwest::Client::new();
-    let token_url = format!("{}/auth/v1/token", auth_server_url.trim_end_matches('/'));
+    // grant_type goes in query string, not body!
+    let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
 
-    let params = [
-        ("grant_type", "authorization_code"),
-        ("code", code),
-        ("redirect_uri", redirect_uri),
-    ];
+    // Supabase requires API key for token exchange
+    let supabase_key = env!("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
 
-    log::info!("Token exchange URL: {}", token_url);
+    // Body should be JSON with auth_code, code_verifier, and optionally state
+    let mut body_map = serde_json::Map::new();
+    body_map.insert("auth_code".to_string(), serde_json::Value::String(code.to_string()));
+    body_map.insert("code_verifier".to_string(), serde_json::Value::String(_code_verifier.to_string()));
+
+    if let Some(state_val) = state {
+        body_map.insert("state".to_string(), serde_json::Value::String(state_val.to_string()));
+        println!("Including state parameter in token exchange (first 30 chars): {}...",
+            &state_val[..std::cmp::min(30, state_val.len())]);
+    }
+
+    let body = serde_json::Value::Object(body_map);
+
+    println!("Token exchange URL: {}", token_url);
+    println!("Token exchange body: auth_code={}..., code_verifier={}...",
+        &code[..std::cmp::min(20, code.len())], &_code_verifier[..20]);
+    println!("========================================");
 
     let response = client
         .post(&token_url)
-        .form(&params)
+        .header("Content-Type", "application/json")
+        .header("apikey", supabase_key)
+        .header("Authorization", format!("Bearer {}", supabase_key))
+        .json(&body)
         .send()
         .await
         .map_err(|e| format!("Failed to exchange code for token: {}", e))?;
@@ -530,98 +552,68 @@ async fn exchange_code_for_token(
     })
 }
 
-/// Parse OAuth callback URL to extract tokens
+/// Parse OAuth callback URL to extract authorization code
 /// This is called by the frontend when it receives an oauth-callback event
 /// Note: This function is for the deep-link flow (not currently used)
 #[tauri::command]
-pub async fn parse_oauth_callback_url(url_str: String) -> Result<OAuthCallbackResult, String> {
+pub async fn parse_oauth_callback_url(_url_str: String) -> Result<OAuthCallbackResult, String> {
     log::info!("Parsing OAuth callback URL");
-    match parse_oauth_callback(&url_str)? {
-        OAuthCallbackData::Tokens(tokens) => Ok(tokens),
-        OAuthCallbackData::Code { .. } => {
-            Err("Authorization code flow not supported in this context".to_string())
-        }
-    }
+    Err("Deep-link OAuth flow not implemented - use start_oauth_login instead".to_string())
 }
 
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
-    // Parse URL - tokens might be in query params or hash fragment
+    // Parse URL to extract authorization code and state
     let parsed_url = url::Url::parse(url_str)
         .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
 
-    // Check query parameters first
-    let mut access_token = None;
-    let mut refresh_token = None;
-    let mut expires_in = None;
+    // Check query parameters for authorization code and state
     let mut code = None;
+    let mut state = None;
 
     for (key, value) in parsed_url.query_pairs() {
         match key.as_ref() {
-            "access_token" => access_token = Some(value.to_string()),
-            "refresh_token" => refresh_token = Some(value.to_string()),
-            "expires_in" => expires_in = value.parse::<i64>().ok(),
             "code" => code = Some(value.to_string()),
+            "state" => state = Some(value.to_string()),
             _ => {}
         }
     }
 
-    // If not in query params, check hash fragment
-    if access_token.is_none() {
-        if let Some(fragment) = parsed_url.fragment() {
-            for pair in fragment.split('&') {
-                let mut parts = pair.split('=');
-                if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
-                    match key {
-                        "access_token" => access_token = Some(value.to_string()),
-                        "refresh_token" => refresh_token = Some(value.to_string()),
-                        "expires_in" => expires_in = value.parse::<i64>().ok(),
-                        "code" => code = Some(value.to_string()),
-                        _ => {}
-                    }
-                }
-            }
-        }
-    }
-
-    // If we have an access_token, return it directly (implicit flow)
-    if let Some(token) = access_token {
-        log::info!("Found access_token in callback (implicit flow)");
-        return Ok(OAuthCallbackData::Tokens(OAuthCallbackResult {
-            access_token: token,
-            refresh_token,
-            expires_in,
-        }));
-    }
-
-    // If we have a code but no access_token, we need to exchange it (authorization code flow)
+    // If we have a code, return it
     if let Some(auth_code) = code {
-        log::info!("Found authorization code in callback (code flow)");
-        // Extract the full callback URL (without query params) to use as redirect_uri
-        let redirect_uri = format!("{}://{}{}",
-            parsed_url.scheme(),
-            parsed_url.host_str().unwrap_or("127.0.0.1"),
-            parsed_url.path()
-        );
-        if let Some(port) = parsed_url.port() {
-            let redirect_uri = format!("{}://{}:{}{}",
+        println!("Found authorization code in callback: {}...", &auth_code[..std::cmp::min(20, auth_code.len())]);
+
+        if let Some(ref state_val) = state {
+            println!("Found state parameter in callback (first 30 chars): {}...",
+                &state_val[..std::cmp::min(30, state_val.len())]);
+        } else {
+            println!("No state parameter found in callback");
+        }
+
+        // Reconstruct the redirect_uri (without query params) for token exchange
+        let redirect_uri = if let Some(port) = parsed_url.port() {
+            format!("{}://{}:{}{}",
                 parsed_url.scheme(),
                 parsed_url.host_str().unwrap_or("127.0.0.1"),
                 port,
                 parsed_url.path()
-            );
-            return Ok(OAuthCallbackData::Code {
-                code: auth_code,
-                redirect_uri,
-            });
-        }
+            )
+        } else {
+            format!("{}://{}{}",
+                parsed_url.scheme(),
+                parsed_url.host_str().unwrap_or("127.0.0.1"),
+                parsed_url.path()
+            )
+        };
+
         return Ok(OAuthCallbackData::Code {
             code: auth_code,
             redirect_uri,
+            state,
         });
     }
 
-    // Neither access_token nor code found
-    Err("No access_token or authorization code found in OAuth callback".to_string())
+    // No authorization code found
+    Err("No authorization code found in OAuth callback".to_string())
 }
 
 /// Gets the stored OAuth state (for validation when callback is received)
