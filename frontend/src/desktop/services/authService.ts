@@ -201,79 +201,49 @@ export class AuthService {
   }
 
   /**
-   * Start OAuth login flow by opening system browser with deep link callback
+   * Start OAuth login flow by opening system browser with localhost callback
    */
   async loginWithOAuth(provider: string, authServerUrl: string): Promise<UserInfo> {
     try {
-      console.log('Starting OAuth login with provider:', provider);
+      console.log('===========================================');
+      console.log('Starting OAuth login');
+      console.log('Provider:', provider);
+      console.log('Auth Server:', authServerUrl);
+      console.log('===========================================');
       this.setAuthStatus('oauth_pending', null);
 
-      // Import Tauri event listener
-      const { listen } = await import('@tauri-apps/api/event');
-
-      // Set up listener for OAuth callback before opening browser
-      const unlisten = await listen<string>('oauth-callback', async (event) => {
-        try {
-          console.log('OAuth callback received via deep link:', event.payload);
-
-          // Parse the callback URL to extract tokens
-          const result = await invoke<OAuthCallbackResult>('parse_oauth_callback_url', {
-            urlStr: event.payload,
-          });
-
-          console.log('Tokens extracted, storing...');
-
-          // Save the access token to keyring
-          await invoke('save_auth_token', { token: result.access_token });
-
-          // Fetch user info from Supabase using the access token
-          const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
-
-          // Save user info to store
-          await invoke('save_user_info', {
-            username: userInfo.username,
-            email: userInfo.email || null,
-          });
-
-          this.setAuthStatus('authenticated', userInfo);
-          console.log('OAuth login successful');
-
-          // Clean up listener
-          unlisten();
-        } catch (error) {
-          console.error('Failed to process OAuth callback:', error);
-          this.setAuthStatus('unauthenticated', null);
-          unlisten();
-          throw error;
-        }
-      });
-
-      // Call Rust command to open browser
-      // The callback will arrive via the oauth-callback event
-      await invoke('start_oauth_login', {
+      // Call Rust command which:
+      // 1. Starts localhost HTTP server on 127.0.0.1 (random port)
+      // 2. Opens browser to OAuth provider
+      // 3. Waits for callback
+      // 4. Returns tokens
+      const result = await invoke<OAuthCallbackResult>('start_oauth_login', {
         provider,
         authServerUrl,
       });
 
-      console.log('Browser opened, waiting for OAuth callback...');
+      console.log('OAuth callback received!');
 
-      // Return a promise that resolves when authentication completes
-      // We wait for the status to change from oauth_pending
-      return new Promise((resolve, reject) => {
-        const checkStatus = () => {
-          if (this.authStatus === 'authenticated' && this.userInfo) {
-            resolve(this.userInfo);
-          } else if (this.authStatus === 'unauthenticated') {
-            reject(new Error('OAuth authentication failed'));
-          } else {
-            // Still pending, check again
-            setTimeout(checkStatus, 100);
-          }
-        };
-        checkStatus();
+      console.log('OAuth callback received, storing tokens');
+
+      // Save the access token to keyring
+      await invoke('save_auth_token', { token: result.access_token });
+
+      // Fetch user info from Supabase using the access token
+      const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
+
+      // Save user info to store
+      await invoke('save_user_info', {
+        username: userInfo.username,
+        email: userInfo.email || null,
       });
+
+      this.setAuthStatus('authenticated', userInfo);
+      console.log('OAuth login successful');
+
+      return userInfo;
     } catch (error) {
-      console.error('Failed to start OAuth login:', error);
+      console.error('Failed to complete OAuth login:', error);
       this.setAuthStatus('unauthenticated', null);
       throw error;
     }

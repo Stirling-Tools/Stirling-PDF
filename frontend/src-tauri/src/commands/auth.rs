@@ -314,31 +314,41 @@ pub async fn login(
     }
 }
 
-/// Opens the system browser for OAuth authentication using deep linking
-/// The OAuth callback will be received via the stirlingpdf:// protocol
-/// and emitted as an 'oauth-callback' event to the frontend
+/// Opens the system browser for OAuth authentication with localhost callback server
+/// Uses 127.0.0.1 (loopback) which is supported by Google OAuth with any port
 #[tauri::command]
 pub async fn start_oauth_login(
     _app_handle: AppHandle,
     provider: String,
     auth_server_url: String,
-) -> Result<(), String> {
+) -> Result<OAuthCallbackResult, String> {
     log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
-    // Use custom URL scheme for deep linking
-    // The callback will be received via the stirlingpdf:// protocol
-    let callback_url = "stirlingpdf://auth/callback";
+    // Start HTTP server on random available port
+    // Configure wildcard in Supabase: http://127.0.0.1:*/callback
+    let server = Server::http("127.0.0.1:54321")
+        .map_err(|e| format!("Failed to start localhost server: {}", e))?;
 
-    // Build Supabase OAuth URL with deep link callback
-    // Note: The Supabase project must have stirlingpdf://auth/callback configured as an allowed redirect URL
+    let port = match server.server_addr() {
+        tiny_http::ListenAddr::IP(addr) => addr.port(),
+        _ => return Err("Unexpected server address type".to_string()),
+    };
+
+    let callback_url = format!("http://127.0.0.1:{}/callback", port);
+    log::info!("========================================");
+    log::info!("OAuth callback URL: {}", callback_url);
+    log::info!("========================================");
+
+    // Build OAuth URL with loopback callback
     let oauth_url = format!(
         "{}/auth/v1/authorize?provider={}&redirect_uri={}",
         auth_server_url.trim_end_matches('/'),
         provider,
-        urlencoding::encode(callback_url)
+        urlencoding::encode(&callback_url)
     );
 
-    log::info!("Opening OAuth URL with deep link callback: {}", oauth_url);
+    log::info!("Full OAuth URL: {}", oauth_url);
+    log::info!("========================================");
 
     // Open system browser
     if let Err(e) = tauri_plugin_opener::open_url(&oauth_url, None::<&str>) {
@@ -346,11 +356,89 @@ pub async fn start_oauth_login(
         return Err(format!("Failed to open browser: {}", e));
     }
 
-    log::info!("Browser opened successfully. Waiting for OAuth callback via deep link...");
+    // Wait for OAuth callback with timeout
+    let result = Arc::new(Mutex::new(None));
+    let result_clone = Arc::clone(&result);
 
-    // The callback will arrive via RunEvent::Opened in lib.rs
-    // and will be emitted as an 'oauth-callback' event for the frontend to handle
-    Ok(())
+    // Spawn server handling in blocking thread
+    let server_handle = std::thread::spawn(move || {
+        log::info!("Waiting for OAuth callback...");
+
+        // Wait for callback (with timeout)
+        for _ in 0..120 { // 2 minute timeout
+            if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
+                let url_str = format!("http://127.0.0.1{}", request.url());
+                log::info!("Received callback request: {}", url_str);
+
+                // Try to parse tokens from URL
+                let callback_result = parse_oauth_callback(&url_str);
+
+                // Check if we got valid tokens
+                if callback_result.is_ok() {
+                    log::info!("Successfully extracted tokens from callback");
+
+                    let html_response = r#"
+                        <!DOCTYPE html>
+                        <html>
+                        <head><title>Authentication Successful</title></head>
+                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                            <h1>✓ Authentication Successful</h1>
+                            <p>You can close this window and return to Stirling PDF.</p>
+                            <script>setTimeout(() => window.close(), 2000);</script>
+                        </body>
+                        </html>
+                    "#;
+
+                    let _ = request.respond(Response::from_string(html_response)
+                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
+
+                    let mut result_lock = result_clone.lock().unwrap();
+                    *result_lock = Some(callback_result);
+                    break;
+                } else {
+                    // No tokens yet - send HTML that extracts from hash and redirects
+                    log::info!("No tokens in query params, sending hash extraction HTML");
+
+                    let html_response = r#"
+                        <!DOCTYPE html>
+                        <html>
+                        <head><title>Processing Authentication...</title></head>
+                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                            <h1>Processing...</h1>
+                            <script>
+                                // OAuth providers may return tokens in hash fragment
+                                // Extract and redirect with tokens as query params
+                                if (window.location.hash) {
+                                    const hash = window.location.hash.substring(1);
+                                    if (hash) {
+                                        const newUrl = window.location.origin + window.location.pathname + '?' + hash;
+                                        window.location.replace(newUrl);
+                                    }
+                                }
+                            </script>
+                        </body>
+                        </html>
+                    "#;
+
+                    let _ = request.respond(Response::from_string(html_response)
+                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
+
+                    // Continue listening for the redirected request with tokens
+                }
+            }
+        }
+    });
+
+    // Wait for server thread to complete
+    server_handle.join()
+        .map_err(|_| "OAuth callback server thread panicked".to_string())?;
+
+    // Get result
+    let final_result = result.lock().unwrap().take()
+        .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
+
+    log::info!("OAuth callback completed successfully");
+    final_result
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
