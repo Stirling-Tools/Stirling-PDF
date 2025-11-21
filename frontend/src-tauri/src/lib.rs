@@ -9,12 +9,14 @@ use commands::{
     check_backend_health,
     cleanup_backend,
     clear_auth_token,
+    clear_oauth_state,
     clear_opened_files,
     clear_user_info,
     is_default_pdf_handler,
     get_auth_token,
     get_backend_port,
     get_connection_config,
+    get_oauth_state,
     get_opened_files,
     get_user_info,
     is_first_launch,
@@ -25,6 +27,7 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     start_backend,
+    start_oauth_login,
 };
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
@@ -32,6 +35,7 @@ use utils::{add_log, get_tauri_logs};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_http::init())
@@ -95,6 +99,9 @@ pub fn run() {
       save_user_info,
       get_user_info,
       clear_user_info,
+      start_oauth_login,
+      get_oauth_state,
+      clear_oauth_state,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")

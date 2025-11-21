@@ -1,12 +1,24 @@
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
+use tiny_http::{Response, Server};
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
 const KEYRING_SERVICE: &str = "stirling-pdf";
 const KEYRING_TOKEN_KEY: &str = "auth-token";
+
+// OAuth state management
+const OAUTH_STATE_KEY: &str = "oauth_state";
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OAuthState {
+    pub provider: String,
+    pub server_url: String,
+    pub timestamp: i64,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
@@ -300,4 +312,185 @@ pub async fn login(
             email: login_response.user.email,
         })
     }
+}
+
+/// Opens the system browser for OAuth authentication with localhost callback
+#[tauri::command]
+pub async fn start_oauth_login(
+    _app_handle: AppHandle,
+    provider: String,
+    auth_server_url: String,
+) -> Result<OAuthCallbackResult, String> {
+    log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
+
+    // Start localhost HTTP server on a random available port
+    let server = Server::http("127.0.0.1:0")
+        .map_err(|e| format!("Failed to start localhost server: {}", e))?;
+
+    let port = server.server_addr().port();
+    let callback_url = format!("http://localhost:{}/auth/callback", port);
+
+    log::info!("Started OAuth callback server on port {}", port);
+
+    // Build Supabase OAuth URL
+    let oauth_url = format!(
+        "{}/auth/v1/authorize?provider={}&redirect_to={}",
+        auth_server_url.trim_end_matches('/'),
+        provider,
+        urlencoding::encode(&callback_url)
+    );
+
+    log::info!("Opening OAuth URL: {}", oauth_url);
+
+    // Open system browser
+    if let Err(e) = tauri_plugin_opener::open_url(&oauth_url, None::<&str>) {
+        log::error!("Failed to open browser: {}", e);
+        return Err(format!("Failed to open browser: {}", e));
+    }
+
+    // Wait for OAuth callback with timeout
+    let result = Arc::new(Mutex::new(None));
+    let result_clone = Arc::clone(&result);
+
+    // Spawn server handling in blocking thread
+    let server_handle = std::thread::spawn(move || {
+        log::info!("Waiting for OAuth callback...");
+
+        // Wait for callback (with timeout)
+        for _ in 0..120 { // 2 minute timeout (120 * 1 second)
+            // Try to receive request with short timeout
+            if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
+                let url_str = format!("http://localhost{}", request.url());
+                log::info!("Received callback request: {}", url_str);
+
+                // Send success HTML response
+                let html_response = r#"
+                    <!DOCTYPE html>
+                    <html>
+                    <head><title>Authentication Successful</title></head>
+                    <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                        <h1>✓ Authentication Successful</h1>
+                        <p>You can close this window and return to Stirling PDF.</p>
+                        <script>
+                            // Extract tokens from hash fragment and send to parent
+                            if (window.location.hash) {
+                                window.close();
+                            }
+                        </script>
+                    </body>
+                    </html>
+                "#;
+
+                let _ = request.respond(Response::from_string(html_response)
+                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
+
+                // Parse URL to extract tokens from hash fragment
+                // Supabase uses hash-based OAuth, but the redirect should have query params
+                let callback_result = parse_oauth_callback(&url_str);
+
+                let mut result_lock = result_clone.lock().unwrap();
+                *result_lock = Some(callback_result);
+
+                break;
+            }
+        }
+    });
+
+    // Wait for server thread to complete
+    server_handle.join()
+        .map_err(|_| "OAuth callback server thread panicked".to_string())?;
+
+    // Get result
+    let final_result = result.lock().unwrap().take()
+        .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
+
+    log::info!("OAuth callback completed successfully");
+    Ok(final_result)
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OAuthCallbackResult {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub expires_in: Option<i64>,
+}
+
+fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
+    // Parse URL - tokens might be in query params or hash fragment
+    let parsed_url = url::Url::parse(url_str)
+        .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
+
+    // Check query parameters first
+    let mut access_token = None;
+    let mut refresh_token = None;
+    let mut expires_in = None;
+
+    for (key, value) in parsed_url.query_pairs() {
+        match key.as_ref() {
+            "access_token" => access_token = Some(value.to_string()),
+            "refresh_token" => refresh_token = Some(value.to_string()),
+            "expires_in" => expires_in = value.parse::<i64>().ok(),
+            _ => {}
+        }
+    }
+
+    // If not in query params, check hash fragment
+    if access_token.is_none() {
+        if let Some(fragment) = parsed_url.fragment() {
+            for pair in fragment.split('&') {
+                let mut parts = pair.split('=');
+                if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                    match key {
+                        "access_token" => access_token = Some(value.to_string()),
+                        "refresh_token" => refresh_token = Some(value.to_string()),
+                        "expires_in" => expires_in = value.parse::<i64>().ok(),
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    let access_token = access_token
+        .ok_or_else(|| "No access_token found in OAuth callback".to_string())?;
+
+    Ok(OAuthCallbackResult {
+        access_token,
+        refresh_token,
+        expires_in,
+    })
+}
+
+/// Gets the stored OAuth state (for validation when callback is received)
+#[tauri::command]
+pub async fn get_oauth_state(app_handle: AppHandle) -> Result<Option<OAuthState>, String> {
+    log::debug!("Retrieving OAuth state");
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    let state: Option<OAuthState> = store
+        .get(OAUTH_STATE_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok());
+
+    Ok(state)
+}
+
+/// Clears the OAuth state after successful/failed authentication
+#[tauri::command]
+pub async fn clear_oauth_state(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Clearing OAuth state");
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    store.delete(OAUTH_STATE_KEY);
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    Ok(())
 }

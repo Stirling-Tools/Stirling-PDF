@@ -12,7 +12,13 @@ interface LoginResponse {
   email: string | null;
 }
 
-export type AuthStatus = 'authenticated' | 'unauthenticated' | 'refreshing';
+interface OAuthCallbackResult {
+  access_token: string;
+  refresh_token: string | null;
+  expires_in: number | null;
+}
+
+export type AuthStatus = 'authenticated' | 'unauthenticated' | 'refreshing' | 'oauth_pending';
 
 export class AuthService {
   private static instance: AuthService;
@@ -193,6 +199,77 @@ export class AuthService {
       this.setAuthStatus('unauthenticated', null);
     }
   }
+
+  /**
+   * Start OAuth login flow by opening system browser with localhost callback
+   */
+  async loginWithOAuth(provider: string, authServerUrl: string): Promise<UserInfo> {
+    try {
+      console.log('Starting OAuth login with provider:', provider);
+      this.setAuthStatus('oauth_pending', null);
+
+      // Call Rust command which:
+      // 1. Starts localhost HTTP server
+      // 2. Opens browser to Supabase OAuth
+      // 3. Waits for callback
+      // 4. Returns tokens
+      const result = await invoke<OAuthCallbackResult>('start_oauth_login', {
+        provider,
+        authServerUrl,
+      });
+
+      console.log('OAuth callback received, storing tokens');
+
+      // Save the access token to keyring
+      await invoke('save_auth_token', { token: result.access_token });
+
+      // Fetch user info from Supabase using the access token
+      const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
+
+      // Save user info to store
+      await invoke('save_user_info', {
+        username: userInfo.username,
+        email: userInfo.email || null,
+      });
+
+      this.setAuthStatus('authenticated', userInfo);
+      console.log('OAuth login successful');
+
+      return userInfo;
+    } catch (error) {
+      console.error('Failed to complete OAuth login:', error);
+      this.setAuthStatus('unauthenticated', null);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch user info from Supabase using access token
+   */
+  private async fetchSupabaseUserInfo(authServerUrl: string, accessToken: string): Promise<UserInfo> {
+    try {
+      const response = await axios.get(`${authServerUrl}/auth/v1/user`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '',
+        },
+      });
+
+      const data = response.data;
+      return {
+        username: data.user_metadata?.full_name || data.email || 'Unknown',
+        email: data.email,
+      };
+    } catch (error) {
+      console.error('Failed to fetch user info from Supabase:', error);
+      // Fallback to basic info
+      return {
+        username: 'User',
+        email: undefined,
+      };
+    }
+  }
+
 }
 
 export const authService = AuthService.getInstance();

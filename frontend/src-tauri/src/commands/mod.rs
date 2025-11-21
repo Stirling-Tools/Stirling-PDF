@@ -15,12 +15,15 @@ pub use connection::{
 };
 pub use auth::{
     clear_auth_token,
+    clear_oauth_state,
     clear_user_info,
     get_auth_token,
+    get_oauth_state,
     get_user_info,
     login,
     save_auth_token,
     save_user_info,
+    start_oauth_login,
 };
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
 pub use health::check_backend_health;
