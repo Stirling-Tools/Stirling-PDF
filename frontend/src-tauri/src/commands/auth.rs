@@ -353,9 +353,10 @@ pub async fn start_oauth_login(
     log::debug!("PKCE code_verifier generated: {} chars", code_verifier.len());
     log::debug!("PKCE code_challenge: {}", code_challenge);
 
-    // Start HTTP server on fixed port
-    let server = Server::http("127.0.0.1:54321")
-        .map_err(|e| format!("Failed to start localhost server: {}", e))?;
+    // Use port 0 to let OS assign an available port (avoids port reuse issues)
+    // Supabase allows any localhost port via redirect_to parameter
+    let server = Server::http("127.0.0.1:0")
+        .map_err(|e| format!("Failed to create OAuth callback server: {}", e))?;
 
     let port = match server.server_addr() {
         tiny_http::ListenAddr::IP(addr) => addr.port(),
@@ -419,8 +420,11 @@ pub async fn start_oauth_login(
                         </html>
                     "#;
 
-                    let _ = request.respond(Response::from_string(html_response)
-                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
+                    let response = Response::from_string(html_response)
+                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap())
+                        .with_header(tiny_http::Header::from_bytes(&b"Connection"[..], &b"close"[..]).unwrap());
+
+                    let _ = request.respond(response);
 
                     let mut result_lock = result_clone.lock().unwrap();
                     *result_lock = Some(callback_data);
