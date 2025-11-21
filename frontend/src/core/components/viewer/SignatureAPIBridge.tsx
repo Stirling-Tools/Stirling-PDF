@@ -1,5 +1,4 @@
 import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
-import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -199,83 +198,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       console.error('Error preparing signature defaults:', error);
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
-  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
-  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
-  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
-  const lastStampImageRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
-    const unregister = registerImmediateZoomUpdate(percent => {
-      setCurrentZoom(Math.max(percent / 100, 0.01));
-    });
-    return () => {
-      unregister?.();
-    };
-  }, [getZoomState, registerImmediateZoomUpdate]);
-
-  const cssToPdfSize = useCallback(
-    (size: { width: number; height: number }) => {
-      const zoom = currentZoom || 1;
-      const factor = 1 / zoom;
-      return {
-        width: size.width * factor,
-        height: size.height * factor,
-      };
-    },
-    [currentZoom]
-  );
-
-  const applyStampDefaults = useCallback(
-    (imageSrc: string, subject: string, size?: { width: number; height: number }) => {
-      if (!annotationApi) return;
-
-      annotationApi.setActiveTool(null);
-      annotationApi.setActiveTool('stamp');
-      const stampTool = annotationApi.getActiveTool();
-      if (stampTool && stampTool.id === 'stamp') {
-        annotationApi.setToolDefaults('stamp', {
-          imageSrc,
-          subject,
-          ...(size ? { imageSize: { width: size.width, height: size.height } } : {}),
-        });
-      }
-    },
-    [annotationApi]
-  );
-
-  const configureStampDefaults = useCallback(async () => {
-    if (!annotationApi || !signatureConfig) {
-      return;
-    }
-
-    try {
-      if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-        const textStamp = createTextStampImage(signatureConfig, placementPreviewSize);
-        if (textStamp) {
-          const displaySize =
-            placementPreviewSize ?? {
-              width: textStamp.displayWidth,
-              height: textStamp.displayHeight,
-            };
-          const pdfSize = cssToPdfSize(displaySize);
-          lastStampImageRef.current = textStamp.dataUrl;
-          applyStampDefaults(textStamp.dataUrl, `Text Signature - ${signatureConfig.signerName}`, pdfSize);
-        }
-        return;
-      }
-
-      if (signatureConfig.signatureData) {
-        const pdfSize = placementPreviewSize ? cssToPdfSize(placementPreviewSize) : undefined;
-        lastStampImageRef.current = signatureConfig.signatureData;
-        applyStampDefaults(signatureConfig.signatureData, `Digital Signature - ${signatureConfig.reason || 'Document signing'}`, pdfSize);
-        return;
-      }
-    } catch (error) {
-      console.error('Error preparing signature defaults:', error);
-    }
-  }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
-
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -377,9 +299,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (!annotationApi || !signatureConfig) return;
 
       configureStampDefaults().catch((error) => {
-      configureStampDefaults().catch((error) => {
         console.error('Error activating signature tool:', error);
-      });
       });
     },
 
@@ -506,7 +426,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       cancelled = true;
     };
   }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
-  }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
 
   useEffect(() => {
     if (!annotationApi?.onAnnotationEvent) {

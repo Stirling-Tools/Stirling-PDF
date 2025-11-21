@@ -73,7 +73,6 @@ const SignSettings = ({
   onActivateSignaturePlacement,
   onDeactivateSignature,
   onUpdateDrawSettings,
-  onUpdateDrawSettings,
   onUndo,
   onRedo,
   onSave,
@@ -102,7 +101,6 @@ const SignSettings = ({
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState('2');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [isPlacementManuallyPaused, setPlacementManuallyPaused] = useState(false);
   const [isPlacementManuallyPaused, setPlacementManuallyPaused] = useState(false);
 
   // State for different signature types
@@ -539,61 +537,7 @@ const SignSettings = ({
     });
   }, [canvasSignatureData]);
 
-    setSignatureDrafts(prev => {
-      if (canvasSignatureData) {
-        if (prev.canvas === canvasSignatureData) {
-          return prev;
-        }
-        return { ...prev, canvas: canvasSignatureData };
-      }
-
-      if (prev.canvas !== undefined) {
-        const next = { ...prev };
-        delete next.canvas;
-        return next;
-      }
-
-      return prev;
-    });
-  }, [canvasSignatureData]);
-
   useEffect(() => {
-    setSignatureDrafts(prev => {
-      if (imageSignatureData) {
-        if (prev.image === imageSignatureData) {
-          return prev;
-        }
-        return { ...prev, image: imageSignatureData };
-      }
-
-      if (prev.image !== undefined) {
-        const next = { ...prev };
-        delete next.image;
-        return next;
-      }
-
-      return prev;
-    });
-  }, [imageSignatureData]);
-
-  useEffect(() => {
-    const nextDraft = {
-      signerName: parameters.signerName || '',
-      fontSize: parameters.fontSize || 16,
-      fontFamily: parameters.fontFamily || 'Helvetica',
-      textColor: parameters.textColor || '#000000',
-    };
-
-    setSignatureDrafts(prev => {
-      const prevDraft = prev.text;
-      if (
-        prevDraft &&
-        prevDraft.signerName === nextDraft.signerName &&
-        prevDraft.fontSize === nextDraft.fontSize &&
-        prevDraft.fontFamily === nextDraft.fontFamily &&
-        prevDraft.textColor === nextDraft.textColor
-      ) {
-        return prev;
     setSignatureDrafts(prev => {
       if (imageSignatureData) {
         if (prev.image === imageSignatureData) {
@@ -636,70 +580,7 @@ const SignSettings = ({
     });
   }, [parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
 
-      return { ...prev, text: nextDraft };
-    });
-  }, [parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
-
   useEffect(() => {
-    if (parameters.signatureType === 'text') {
-      const draft = signatureDrafts.text;
-      if (!draft) {
-        lastSyncedTextDraft.current = null;
-        return;
-      }
-
-      const currentSignerName = parameters.signerName ?? '';
-      const currentFontSize = parameters.fontSize ?? 16;
-      const currentFontFamily = parameters.fontFamily ?? 'Helvetica';
-      const currentTextColor = parameters.textColor ?? '#000000';
-
-      const isSynced =
-        draft.signerName === currentSignerName &&
-        draft.fontSize === currentFontSize &&
-        draft.fontFamily === currentFontFamily &&
-        draft.textColor === currentTextColor;
-
-      if (isSynced) {
-        lastSyncedTextDraft.current = draft;
-        return;
-      }
-
-      const lastSynced = lastSyncedTextDraft.current;
-      const alreadyAttempted =
-        lastSynced &&
-        lastSynced.signerName === draft.signerName &&
-        lastSynced.fontSize === draft.fontSize &&
-        lastSynced.fontFamily === draft.fontFamily &&
-        lastSynced.textColor === draft.textColor;
-
-      if (!alreadyAttempted) {
-        lastSyncedTextDraft.current = draft;
-        if (draft.signerName !== currentSignerName) {
-          onParameterChange('signerName', draft.signerName);
-        }
-        if (draft.fontSize !== currentFontSize) {
-          onParameterChange('fontSize', draft.fontSize);
-        }
-        if (draft.fontFamily !== currentFontFamily) {
-          onParameterChange('fontFamily', draft.fontFamily);
-        }
-        if (draft.textColor !== currentTextColor) {
-          onParameterChange('textColor', draft.textColor);
-        }
-      }
-    } else {
-      lastSyncedTextDraft.current = null;
-    }
-  }, [
-    parameters.signatureType,
-    parameters.signerName,
-    parameters.fontSize,
-    parameters.fontFamily,
-    parameters.textColor,
-    signatureDrafts.text,
-    onParameterChange,
-  ]);
-
     if (parameters.signatureType === 'text') {
       const draft = signatureDrafts.text;
       if (!draft) {
@@ -1119,8 +1000,6 @@ const SignSettings = ({
             {placementAlert.message}
           </Text>
         </Alert>
-
-      </Stack>
 
       </Stack>
 
