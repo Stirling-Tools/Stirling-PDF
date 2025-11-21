@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
+import stirling.software.common.util.ExceptionUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -49,7 +50,8 @@ public class PrintFileController {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null
                 && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
-            throw new IOException("Invalid file path detected: " + originalFilename);
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.filepath", "Invalid file path detected: " + originalFilename);
         }
         String printerName = request.getPrinterName();
         String contentType = file.getContentType();

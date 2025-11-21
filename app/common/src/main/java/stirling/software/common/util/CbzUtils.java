@@ -48,10 +48,10 @@ public class CbzUtils {
                                     new java.io.FileInputStream(tempFile.getFile()));
                     ZipInputStream zis = new ZipInputStream(bis)) {
                 if (zis.getNextEntry() == null) {
-                    throw new IllegalArgumentException("Archive is empty or invalid ZIP");
+                    throw ExceptionUtils.createCbzEmptyException();
                 }
             } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid CBZ/ZIP archive", e);
+                throw ExceptionUtils.createCbzInvalidFormatException(e);
             }
 
             try (PDDocument document = pdfDocumentFactory.createNewDocument();
@@ -76,7 +76,7 @@ public class CbzUtils {
                         Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
-                    throw new IllegalArgumentException("No valid images found in the CBZ file");
+                    throw ExceptionUtils.createCbzNoImagesException();
                 }
 
                 for (ImageEntryData imageEntry : imageEntries) {
@@ -99,8 +99,7 @@ public class CbzUtils {
                 }
 
                 if (document.getNumberOfPages() == 0) {
-                    throw new IllegalArgumentException(
-                            "No images could be processed from the CBZ file");
+                    throw ExceptionUtils.createCbzCorruptedImagesException();
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 document.save(baos);
@@ -122,17 +121,17 @@ public class CbzUtils {
 
     private void validateCbzFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be null or empty");
+            throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw new IllegalArgumentException("File must have a name");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"cbz".equals(extension) && !"zip".equals(extension)) {
-            throw new IllegalArgumentException("File must be a CBZ or ZIP archive");
+            throw ExceptionUtils.createNotCbzFileException();
         }
     }
 

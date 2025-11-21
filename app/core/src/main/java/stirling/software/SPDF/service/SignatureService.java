@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.util.ExceptionUtils;
 
 @Service
 @Slf4j
@@ -103,7 +104,8 @@ public class SignatureService {
 
     private void validateFileName(String fileName) {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
-            throw new IllegalArgumentException("Invalid filename");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat", "Invalid {0} format: {1}", "filename", fileName);
         }
     }
 }

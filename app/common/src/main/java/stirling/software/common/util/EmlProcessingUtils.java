@@ -48,11 +48,11 @@ public class EmlProcessingUtils {
 
     public void validateEmlInput(byte[] emlBytes) {
         if (emlBytes == null || emlBytes.length == 0) {
-            throw new IllegalArgumentException("EML file is empty or null");
+            throw ExceptionUtils.createEmlEmptyException();
         }
 
         if (isInvalidEmlFormat(emlBytes)) {
-            throw new IllegalArgumentException("Invalid EML file format");
+            throw ExceptionUtils.createEmlInvalidFormatException();
         }
     }
 

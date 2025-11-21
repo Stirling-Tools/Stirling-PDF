@@ -51,31 +51,24 @@ public class CbrUtils {
                     log.warn(
                             "Failed to open CBR/RAR archive due to corrupt header: {}",
                             e.getMessage());
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat",
-                            "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use"
-                                    + " an unsupported RAR format (RAR5+), or may not be a valid RAR"
-                                    + " archive. Please ensure the file is a valid RAR archive.");
+                    throw ExceptionUtils.createCbrInvalidFormatException(null);
                 } catch (RarException e) {
                     log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
-                    String errorMessage;
                     String exMessage = e.getMessage() != null ? e.getMessage() : "";
 
                     if (exMessage.contains("encrypted")) {
-                        errorMessage = "Encrypted CBR/RAR archives are not supported.";
+                        throw ExceptionUtils.createCbrEncryptedException();
                     } else if (exMessage.isEmpty()) {
-                        errorMessage =
+                        throw ExceptionUtils.createCbrInvalidFormatException(
                                 "Invalid CBR/RAR archive. The file may be encrypted, corrupted, or"
-                                        + " use an unsupported format.";
+                                        + " use an unsupported format.");
                     } else {
-                        errorMessage =
+                        throw ExceptionUtils.createCbrInvalidFormatException(
                                 "Invalid CBR/RAR archive: "
                                         + exMessage
                                         + ". The file may be encrypted, corrupted, or use an"
-                                        + " unsupported format.";
+                                        + " unsupported format.");
                     }
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat", errorMessage);
                 } catch (IOException e) {
                     log.warn("IO error reading CBR/RAR archive: {}", e.getMessage());
                     throw ExceptionUtils.createFileProcessingException("CBR extraction", e);
@@ -164,17 +157,17 @@ public class CbrUtils {
 
     private void validateCbrFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be null or empty");
+            throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw new IllegalArgumentException("File must have a name");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"cbr".equals(extension) && !"rar".equals(extension)) {
-            throw new IllegalArgumentException("File must be a CBR or RAR archive");
+            throw ExceptionUtils.createNotCbrFileException();
         }
     }
 

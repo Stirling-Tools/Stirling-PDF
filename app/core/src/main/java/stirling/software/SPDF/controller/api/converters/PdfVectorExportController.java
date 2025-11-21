@@ -173,6 +173,17 @@ public class PdfVectorExportController {
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
 
+        ExceptionUtils.GhostscriptException criticalError =
+                ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
+        if (criticalError != null) {
+            log.error(
+                    "Ghostscript PDF to {} conversion detected critical error: {}. Command: {}",
+                    outputFormat.toUpperCase(),
+                    criticalError.getMessage(),
+                    String.join(" ", command));
+            throw criticalError;
+        }
+
         if (result.getRc() != 0) {
             log.error(
                     "Ghostscript PDF to {} conversion failed with rc={} and messages={}. Command: {}",
@@ -210,6 +221,16 @@ public class PdfVectorExportController {
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
+
+        ExceptionUtils.GhostscriptException criticalError =
+                ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
+        if (criticalError != null) {
+            log.error(
+                    "Ghostscript PostScript-to-PDF conversion detected critical error: {}. Command: {}",
+                    criticalError.getMessage(),
+                    String.join(" ", command));
+            throw criticalError;
+        }
 
         if (result.getRc() != 0) {
             log.error(

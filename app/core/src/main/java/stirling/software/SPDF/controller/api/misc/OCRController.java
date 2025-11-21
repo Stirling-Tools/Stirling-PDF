@@ -101,7 +101,7 @@ public class OCRController {
         }
 
         if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
-            throw new IOException("ocrRenderType wrong");
+            throw ExceptionUtils.createOcrInvalidRenderTypeException();
         }
 
         // Get available Tesseract languages
@@ -270,7 +270,7 @@ public class OCRController {
         }
 
         if (result.getRc() != 0) {
-            throw new IOException("OCRmyPDF failed with return code: " + result.getRc());
+            throw ExceptionUtils.createOcrProcessingFailedException(result.getRc());
         }
 
         // Remove images from the OCR processed PDF if the flag is set to true
@@ -350,16 +350,14 @@ public class OCRController {
                                 && applicationProperties.getSystem() != null) {
                             renderDpi = applicationProperties.getSystem().getMaxDPI();
                         }
+                        final int dpi = renderDpi;
+                        final int currentPageNum = pageNum;
 
-                        try {
-                            image = pdfRenderer.renderImageWithDPI(pageNum, renderDpi);
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageNum + 1, renderDpi, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageNum + 1, renderDpi, e);
-                        }
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageNum + 1,
+                                        dpi,
+                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
                         File imagePath =
                                 new File(
                                         tempImagesDir,

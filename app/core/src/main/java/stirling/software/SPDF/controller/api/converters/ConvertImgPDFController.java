@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -18,7 +17,6 @@ import java.util.zip.ZipOutputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -276,19 +274,9 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes;
-        try {
-            pdfBytes =
-                    CbzUtils.convertCbzToPdf(
-                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid CBZ file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] pdfBytes =
+                CbzUtils.convertCbzToPdf(
+                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -310,17 +298,7 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        byte[] cbzBytes;
-        try {
-            cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
@@ -345,19 +323,9 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes;
-        try {
-            pdfBytes =
-                    CbrUtils.convertCbrToPdf(
-                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid CBR file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid CBR file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] pdfBytes =
+                CbrUtils.convertCbrToPdf(
+                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -379,17 +347,7 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        byte[] cbrBytes;
-        try {
-            cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
 

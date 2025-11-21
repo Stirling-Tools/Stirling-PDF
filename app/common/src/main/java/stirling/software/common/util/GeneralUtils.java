@@ -1100,17 +1100,29 @@ public class GeneralUtils {
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                             .runCommandWithOutputHandling(command);
 
+            ExceptionUtils.GhostscriptException detectedError =
+                    ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
+            if (detectedError != null) {
+                log.warn(
+                        "Ghostscript ebook optimization reported a critical error: {}",
+                        detectedError.getMessage());
+                throw detectedError;
+            }
+
             if (result.getRc() != 0) {
                 log.warn(
                         "Ghostscript ebook optimization failed with return code: {}",
                         result.getRc());
-                throw ExceptionUtils.createGhostscriptCompressionException();
+                throw ExceptionUtils.createGhostscriptCompressionException(result.getMessages());
             }
 
             return Files.readAllBytes(tempOutput);
 
         } catch (Exception e) {
             log.warn("Ghostscript ebook optimization failed", e);
+            if (e instanceof ExceptionUtils.GhostscriptException ghostscriptException) {
+                throw ghostscriptException;
+            }
             throw ExceptionUtils.createGhostscriptCompressionException(e);
         } finally {
             if (tempInput != null) {
