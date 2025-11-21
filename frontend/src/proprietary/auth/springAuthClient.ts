@@ -107,7 +107,7 @@ class SpringAuthClient {
     for (const cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
       if (name === 'XSRF-TOKEN') {
-        return value;
+        return decodeURIComponent(value);
       }
     }
     return null;
@@ -134,6 +134,7 @@ class SpringAuthClient {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
       console.debug('[SpringAuth] /me response status:', response.status);
@@ -251,7 +252,7 @@ class SpringAuthClient {
    * This redirects to the Spring OAuth2 authorization endpoint
    */
   async signInWithOAuth(params: {
-    provider: 'github' | 'google' | 'apple' | 'azure';
+    provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc';
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
@@ -278,7 +279,7 @@ class SpringAuthClient {
     try {
       const response = await apiClient.post('/api/v1/auth/logout', null, {
         headers: {
-          'X-CSRF-TOKEN': this.getCsrfToken() || '',
+          'X-XSRF-TOKEN': this.getCsrfToken() || '',
         },
         withCredentials: true,
       });
@@ -311,9 +312,10 @@ class SpringAuthClient {
     try {
       const response = await apiClient.post('/api/v1/auth/refresh', null, {
         headers: {
-          'X-CSRF-TOKEN': this.getCsrfToken() || '',
+          'X-XSRF-TOKEN': this.getCsrfToken() || '',
         },
         withCredentials: true,
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
       const data = response.data;

@@ -36,6 +36,7 @@ const EmbedPdfViewerContent = ({
 }: EmbedPdfViewerProps) => {
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
@@ -56,6 +57,7 @@ const EmbedPdfViewerContent = ({
 
   // Get signature context
   const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();
@@ -74,6 +76,9 @@ const EmbedPdfViewerContent = ({
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
+  const isPlacementOverlayActive = Boolean(
+    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+  );
   const isPlacementOverlayActive = Boolean(
     isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
   );
@@ -253,6 +258,17 @@ const EmbedPdfViewerContent = ({
       ) : (
         <>
           {/* EmbedPDF Viewer */}
+          <Box
+            ref={pdfContainerRef}
+            style={{
+              position: 'relative',
+              flex: 1,
+              overflow: 'hidden',
+              minHeight: 0,
+              minWidth: 0,
+              marginRight: isThumbnailSidebarVisible ? '15rem' : '0',
+              transition: 'margin-right 0.3s ease'
+            }}>
           <Box
             ref={pdfContainerRef}
             style={{
