@@ -352,7 +352,7 @@ public class SecurityConfiguration {
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,
-                                                    securityProperties.getOauth2(),
+                                                    securityProperties,
                                                     userService,
                                                     jwtService))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
@@ -393,7 +393,7 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                securityProperties.getSaml2(),
+                                                                securityProperties,
                                                                 userService,
                                                                 jwtService))
                                                 .failureHandler(

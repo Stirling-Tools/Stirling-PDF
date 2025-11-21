@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.CookieUtils;
 
 @AllArgsConstructor
 @Slf4j
@@ -46,7 +47,7 @@ public class CustomSaml2AuthenticationSuccessHandler
     private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private LoginAttemptService loginAttemptService;
-    private ApplicationProperties.Security.SAML2 saml2Properties;
+    private ApplicationProperties.Security securityProperties;
     private UserService userService;
     private final JwtServiceInterface jwtService;
 
@@ -85,7 +86,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             } else {
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
-                        saml2Properties.getAutoCreateUser());
+                        securityProperties.getSaml2().getAutoCreateUser());
 
                 if (loginAttemptService.isBlocked(username)) {
                     log.debug("User {} is blocked due to too many login attempts", username);
@@ -113,7 +114,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 if (userExists
                         && hasPassword
                         && (!isSSOUser || !isSAML2User)
-                        && saml2Properties.getAutoCreateUser()) {
+                        && securityProperties.getSaml2().getAutoCreateUser()) {
                     log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
@@ -123,7 +124,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 try {
-                    if (!userExists || saml2Properties.getBlockRegistration()) {
+                    if (!userExists || securityProperties.getSaml2().getBlockRegistration()) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
@@ -144,7 +145,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             username,
                             ssoProviderId,
                             ssoProvider,
-                            saml2Properties.getAutoCreateUser(),
+                            securityProperties.getSaml2().getAutoCreateUser(),
                             SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
@@ -181,6 +182,7 @@ public class CustomSaml2AuthenticationSuccessHandler
      * Builds a context-aware redirect URL based on the request's origin
      *
      * @param request The HTTP request
+     * @param response HTTP response (used to set JWT cookie and clear redirect cookies)
      * @param contextPath The application context path
      * @param jwt The JWT token to include
      * @return The appropriate redirect URL
@@ -190,6 +192,11 @@ public class CustomSaml2AuthenticationSuccessHandler
             HttpServletResponse response,
             String contextPath,
             String jwt) {
+        boolean secure = securityProperties.getJwt().isSecure();
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                CookieUtils.createAccessTokenCookie(jwt, secure).toString());
+
         String redirectPath = resolveRedirectPath(request, contextPath);
         String origin =
                 resolveForwardedOrigin(request)
@@ -198,7 +205,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                                         resolveOriginFromReferer(request)
                                                 .orElseGet(() -> buildOriginFromRequest(request)));
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+
+        return origin + redirectPath;
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {

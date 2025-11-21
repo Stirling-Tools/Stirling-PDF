@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -219,7 +220,7 @@ class JwtServiceTest {
         assertEquals("IT", extractedClaims.get("department"));
         assertEquals(username, extractedClaims.get("sub"));
         // Verify the constant issuer is set correctly
-        assertEquals("https://stirling.com", extractedClaims.get("iss"));
+        assertEquals("https://stirlingpdf.com", extractedClaims.get("iss"));
     }
 
     @Test
@@ -234,8 +235,53 @@ class JwtServiceTest {
     }
 
     @Test
+    void testExtractTokenFromCookie() {
+        String token = "test-cookie-token";
+        Cookie jwtCookie = new Cookie("stirling_jwt", token);
+        when(request.getCookies()).thenReturn(new Cookie[] {jwtCookie});
+        // No need to mock getHeader - won't be called when cookie is found
+
+        assertEquals(token, jwtService.extractToken(request));
+    }
+
+    @Test
+    void testExtractTokenFromCookieWithMultipleCookies() {
+        String token = "test-cookie-token";
+        Cookie otherCookie = new Cookie("other_cookie", "other_value");
+        Cookie jwtCookie = new Cookie("stirling_jwt", token);
+        Cookie anotherCookie = new Cookie("another_cookie", "another_value");
+        when(request.getCookies()).thenReturn(new Cookie[] {otherCookie, jwtCookie, anotherCookie});
+        // No need to mock getHeader - won't be called when cookie is found
+
+        assertEquals(token, jwtService.extractToken(request));
+    }
+
+    @Test
+    void testExtractTokenPrefersCookieOverHeader() {
+        String cookieToken = "cookie-token";
+        String headerToken = "header-token";
+        Cookie jwtCookie = new Cookie("stirling_jwt", cookieToken);
+        when(request.getCookies()).thenReturn(new Cookie[] {jwtCookie});
+        // Use lenient() since getHeader won't actually be called
+        lenient().when(request.getHeader("Authorization")).thenReturn("Bearer " + headerToken);
+
+        // Cookie should be preferred (header shouldn't be checked)
+        assertEquals(cookieToken, jwtService.extractToken(request));
+    }
+
+    @Test
+    void testExtractTokenFallsBackToAuthorizationHeader() {
+        String token = "test-token";
+        when(request.getCookies()).thenReturn(null);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+
+        assertEquals(token, jwtService.extractToken(request));
+    }
+
+    @Test
     void testExtractTokenWithAuthorizationHeader() {
         String token = "test-token";
+        when(request.getCookies()).thenReturn(new Cookie[] {});
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
 
         assertEquals(token, jwtService.extractToken(request));
@@ -243,6 +289,7 @@ class JwtServiceTest {
 
     @Test
     void testExtractTokenWithNoAuthorizationHeader() {
+        when(request.getCookies()).thenReturn(null);
         when(request.getHeader("Authorization")).thenReturn(null);
 
         assertNull(jwtService.extractToken(request));
@@ -250,8 +297,27 @@ class JwtServiceTest {
 
     @Test
     void testExtractTokenWithInvalidAuthorizationHeaderFormat() {
+        when(request.getCookies()).thenReturn(null);
         when(request.getHeader("Authorization")).thenReturn("InvalidFormat token");
 
+        assertNull(jwtService.extractToken(request));
+    }
+
+    @Test
+    void testExtractTokenWithEmptyCookie() {
+        Cookie jwtCookie = new Cookie("stirling_jwt", "");
+        when(request.getCookies()).thenReturn(new Cookie[] {jwtCookie});
+
+        // Should fallback to header (null in this case)
+        assertNull(jwtService.extractToken(request));
+    }
+
+    @Test
+    void testExtractTokenWithNullCookie() {
+        Cookie jwtCookie = new Cookie("stirling_jwt", null);
+        when(request.getCookies()).thenReturn(new Cookie[] {jwtCookie});
+
+        // Should fallback to header (null in this case)
         assertNull(jwtService.extractToken(request));
     }
 

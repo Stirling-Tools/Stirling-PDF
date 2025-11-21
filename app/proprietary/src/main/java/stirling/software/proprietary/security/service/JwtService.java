@@ -26,6 +26,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,8 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String ISSUER = "https://stirling.com";
-    private static final long EXPIRATION = 43200000;
+    private static final String ISSUER = "https://stirlingpdf.com";
+    private static final long EXPIRATION = 21600000;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
@@ -252,7 +253,21 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        // Extract from Authorization header Bearer token
+        // First try to extract from cookies (preferred method)
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("stirling_jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (token != null && !token.isEmpty()) {
+                        log.debug("JWT token extracted from cookie");
+                        return token;
+                    }
+                }
+            }
+        }
+
+        // Fallback to Authorization header Bearer token (for API clients)
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
@@ -260,7 +275,7 @@ public class JwtService implements JwtServiceInterface {
             return token;
         }
 
-        log.debug("No JWT token found in Authorization header");
+        log.debug("No JWT token found in cookie or Authorization header");
         return null;
     }
 

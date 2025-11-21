@@ -115,25 +115,14 @@ class SpringAuthClient {
 
   /**
    * Get current session
-   * JWT is stored in localStorage and sent via Authorization header
+   * JWT is in HttpOnly cookie - backend reads it automatically
    */
   async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
-      // Get JWT from localStorage
-      const token = localStorage.getItem('stirling_jwt');
-
-      if (!token) {
-        // console.debug('[SpringAuth] getSession: No JWT in localStorage');
-        return { data: { session: null }, error: null };
-      }
-
-      // Verify with backend
-      // Note: We pass the token explicitly here, overriding the interceptor's default
-      // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
+      // JWT is in HttpOnly cookie - backend will read it automatically
+//       console.debug('[SpringAuth] getSession: Verifying session with /api/v1/auth/me');
       const response = await apiClient.get('/api/v1/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        withCredentials: true, // Include cookies
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
@@ -141,12 +130,12 @@ class SpringAuthClient {
       const data = response.data;
       // console.debug('[SpringAuth] /me response data:', data);
 
-      // Create session object
+      // Create session object (no token on client side)
       const session: Session = {
         user: data.user,
-        access_token: token,
-        expires_in: 3600,
-        expires_at: Date.now() + 3600 * 1000,
+        access_token: '', // Not needed on client side (in HttpOnly cookie)
+        expires_in: 21600, // 6 hours
+        expires_at: Date.now() + 21600 * 1000,
       };
 
       // console.debug('[SpringAuth] getSession: Session retrieved successfully');
@@ -154,15 +143,12 @@ class SpringAuthClient {
     } catch (error: unknown) {
       console.error('[SpringAuth] getSession error:', error);
 
-      // If 401/403, token is invalid - clear it
+      // If 401/403, not authenticated
       if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
-        localStorage.removeItem('stirling_jwt');
         console.debug('[SpringAuth] getSession: Not authenticated');
         return { data: { session: null }, error: null };
       }
 
-      // Clear potentially invalid token on other errors too
-      localStorage.removeItem('stirling_jwt');
       return {
         data: { session: null },
         error: { message: getErrorMessage(error, 'Unknown error') },
@@ -182,24 +168,19 @@ class SpringAuthClient {
         username: credentials.email,
         password: credentials.password
       }, {
-        withCredentials: true, // Include cookies for CSRF
+        withCredentials: true, // Include cookies for CSRF and receive JWT cookie
       });
 
       const data = response.data;
-      const token = data.session.access_token;
 
-      // Store JWT in localStorage
-      localStorage.setItem('stirling_jwt', token);
-      // console.log('[SpringAuth] JWT stored in localStorage');
-
-      // Dispatch custom event for other components to react to JWT availability
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      // JWT is now in HttpOnly cookie - no localStorage needed
+      // console.log('[SpringAuth] Login successful - JWT in cookie');
 
       const session: Session = {
         user: data.user,
-        access_token: token,
-        expires_in: data.session.expires_in,
-        expires_at: Date.now() + data.session.expires_in * 1000,
+        access_token: '', // Not on client side
+        expires_in: 21600, // 6 hours
+        expires_at: Date.now() + 21600 * 1000,
       };
 
       // Notify listeners
@@ -288,8 +269,7 @@ class SpringAuthClient {
         // console.debug('[SpringAuth] signOut: Success');
       }
 
-      // Clean up local storage
-      localStorage.removeItem('stirling_jwt');
+      // No need to clean up localStorage - cookie is cleared by server
 
       // Notify listeners
       this.notifyListeners('SIGNED_OUT', null);
@@ -297,8 +277,6 @@ class SpringAuthClient {
       return { error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signOut error:', error);
-      // Still remove token even if backend call fails
-      localStorage.removeItem('stirling_jwt');
       return {
         error: { message: getErrorMessage(error, 'Logout failed') },
       };
@@ -318,29 +296,17 @@ class SpringAuthClient {
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
-      const data = response.data;
-      const token = data.session.access_token;
+      // Get user info from current session
+      const sessionResult = await this.getSession();
+      if (sessionResult.data.session) {
+        // Notify listeners
+        this.notifyListeners('TOKEN_REFRESHED', sessionResult.data.session);
+        return sessionResult;
+      }
 
-      // Update local storage with new token
-      localStorage.setItem('stirling_jwt', token);
-
-      // Dispatch custom event for other components to react to JWT availability
-      window.dispatchEvent(new CustomEvent('jwt-available'));
-
-      const session: Session = {
-        user: data.user,
-        access_token: token,
-        expires_in: data.session.expires_in,
-        expires_at: Date.now() + data.session.expires_in * 1000,
-      };
-
-      // Notify listeners
-      this.notifyListeners('TOKEN_REFRESHED', session);
-
-      return { data: { session }, error: null };
+      return { data: { session: null }, error: { message: 'Failed to get session after refresh' } };
     } catch (error: unknown) {
       console.error('[SpringAuth] refreshSession error:', error);
-      localStorage.removeItem('stirling_jwt');
 
       // Handle different error statuses
       if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {

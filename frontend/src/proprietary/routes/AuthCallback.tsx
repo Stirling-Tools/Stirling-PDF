@@ -6,8 +6,8 @@ import { springAuth } from '@app/auth/springAuthClient';
  * OAuth Callback Handler
  *
  * This component is rendered after OAuth providers (GitHub, Google, etc.) redirect back.
- * The JWT is passed in the URL fragment (#access_token=...) by the Spring backend.
- * We extract it, store in localStorage, and redirect to the home page.
+ * The JWT is set in an HttpOnly cookie by the Spring backend - no URL parsing needed.
+ * We just validate the session and redirect to the home page.
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -17,44 +17,22 @@ export default function AuthCallback() {
       try {
         console.log('[AuthCallback] Handling OAuth callback...');
 
-        // Extract JWT from URL fragment (#access_token=...)
-        const hash = window.location.hash.substring(1); // Remove '#'
-        const params = new URLSearchParams(hash);
-        const token = params.get('access_token');
-
-        if (!token) {
-          console.error('[AuthCallback] No access_token in URL fragment');
-          navigate('/login', {
-            replace: true,
-            state: { error: 'OAuth login failed - no token received.' }
-          });
-          return;
-        }
-
-        // Store JWT in localStorage
-        localStorage.setItem('stirling_jwt', token);
-        console.log('[AuthCallback] JWT stored in localStorage');
-
-        // Dispatch custom event for other components to react to JWT availability
-        window.dispatchEvent(new CustomEvent('jwt-available'));
-
-        // Validate the token and load user info
-        // This calls /api/v1/auth/me with the JWT to get user details
+        // JWT is already in HttpOnly cookie from the OAuth redirect
+        // Just validate the session to ensure we're authenticated
         const { data, error } = await springAuth.getSession();
 
         if (error || !data.session) {
-          console.error('[AuthCallback] Failed to validate token:', error);
-          localStorage.removeItem('stirling_jwt');
+          console.error('[AuthCallback] Failed to validate session:', error);
           navigate('/login', {
             replace: true,
-            state: { error: 'OAuth login failed - invalid token.' }
+            state: { error: 'OAuth login failed.' }
           });
           return;
         }
 
-        console.log('[AuthCallback] Token validated, redirecting to home');
+        console.log('[AuthCallback] Session validated, redirecting to home');
 
-        // Clear the hash from URL and redirect to home page
+        // Redirect to home page
         navigate('/', { replace: true });
       } catch (error) {
         console.error('[AuthCallback] Error:', error);

@@ -308,6 +308,7 @@ public class ApplicationProperties {
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
             private int keyRetentionDays = 7;
+            private boolean secure = true;
         }
 
         @Data

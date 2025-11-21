@@ -38,6 +38,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.CookieUtils;
 
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
@@ -47,7 +48,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private final LoginAttemptService loginAttemptService;
-    private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
+    private final ApplicationProperties.Security securityProperties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
 
@@ -95,13 +96,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     && userService.hasPassword(username)
                     && (!userService.isAuthenticationTypeByUsername(username, SSO)
                             || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
-                    && oauth2Properties.getAutoCreateUser()) {
+                    && securityProperties.getOauth2().getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
             }
 
             try {
-                if (oauth2Properties.getBlockRegistration()
+                if (securityProperties.getOauth2().getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
@@ -117,7 +118,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             username,
                             ssoProviderId,
                             ssoProvider,
-                            oauth2Properties.getAutoCreateUser(),
+                            securityProperties.getOauth2().getAutoCreateUser(),
                             OAUTH2);
                 }
 
@@ -159,7 +160,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
      * Builds a context-aware redirect URL based on the request's origin
      *
      * @param request The HTTP request
-     * @param response HTTP response (used to clear redirect cookies)
+     * @param response HTTP response (used to set JWT cookie and clear redirect cookies)
      * @param contextPath The application context path
      * @param jwt The JWT token to include
      * @return The appropriate redirect URL
@@ -169,6 +170,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
             HttpServletResponse response,
             String contextPath,
             String jwt) {
+        boolean secure = securityProperties.getJwt().isSecure();
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                CookieUtils.createAccessTokenCookie(jwt, secure).toString());
+
         String redirectPath = resolveRedirectPath(request, contextPath);
         String origin =
                 resolveForwardedOrigin(request)
@@ -177,7 +183,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                         resolveOriginFromReferer(request)
                                                 .orElseGet(() -> buildOriginFromRequest(request)));
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+
+        return origin + redirectPath;
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {

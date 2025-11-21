@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.controller.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -31,6 +33,7 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.CookieUtils;
 
 /** REST API Controller for authentication operations. */
 @RestController
@@ -44,6 +47,7 @@ public class AuthController {
     private final JwtServiceInterface jwtService;
     private final CustomUserDetailsService userDetailsService;
     private final LoginAttemptService loginAttemptService;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -109,14 +113,18 @@ public class AuthController {
 
             String token = jwtService.generateToken(user.getUsername(), claims);
 
+            // Set JWT in HttpOnly cookie
+            boolean secure = applicationProperties.getSecurity().getJwt().isSecure();
+            response.addHeader(
+                    HttpHeaders.SET_COOKIE,
+                    CookieUtils.createAccessTokenCookie(token, secure).toString());
+
             // Record successful login
             loginAttemptService.loginSucceeded(username);
             log.info("Login successful for user: {} from IP: {}", username, ip);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "user", buildUserResponse(user),
-                            "session", Map.of("access_token", token, "expires_in", 3600)));
+            // Return user info only (token is in cookie)
+            return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
         } catch (UsernameNotFoundException e) {
             String username = request.getUsername();
@@ -179,6 +187,11 @@ public class AuthController {
         try {
             SecurityContextHolder.clearContext();
 
+            // Clear JWT cookie
+            response.addHeader(
+                    HttpHeaders.SET_COOKIE,
+                    CookieUtils.createExpiredCookie(CookieUtils.JWT_COOKIE_NAME).toString());
+
             log.debug("User logged out successfully");
 
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
@@ -220,9 +233,15 @@ public class AuthController {
 
             String newToken = jwtService.generateToken(username, claims);
 
+            // Set new JWT in HttpOnly cookie
+            boolean secure = applicationProperties.getSecurity().getJwt().isSecure();
+            response.addHeader(
+                    HttpHeaders.SET_COOKIE,
+                    CookieUtils.createAccessTokenCookie(newToken, secure).toString());
+
             log.debug("Token refreshed for user: {}", username);
 
-            return ResponseEntity.ok(Map.of("access_token", newToken, "expires_in", 3600));
+            return ResponseEntity.ok(Map.of("message", "Token refreshed successfully"));
 
         } catch (Exception e) {
             log.error("Token refresh error", e);
