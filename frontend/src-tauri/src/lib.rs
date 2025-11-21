@@ -21,6 +21,7 @@ use commands::{
     get_user_info,
     is_first_launch,
     login,
+    parse_oauth_callback_url,
     reset_setup_completion,
     save_auth_token,
     save_user_info,
@@ -40,6 +41,7 @@ pub fn run() {
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_store::Builder::new().build())
+    .plugin(tauri_plugin_deep_link::init())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // This callback runs when a second instance tries to start
@@ -100,6 +102,7 @@ pub fn run() {
       get_user_info,
       clear_user_info,
       start_oauth_login,
+      parse_oauth_callback_url,
       get_oauth_state,
       clear_oauth_state,
     ])
@@ -118,13 +121,20 @@ pub fn run() {
           cleanup_backend();
           // Allow the window to close
         }
-        #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
-          add_log(format!("📂 Tauri file opened event: {:?}", urls));
+          add_log(format!("📂 Tauri opened event: {:?}", urls));
           let mut added_files = false;
+
           for url in urls {
             let url_str = url.as_str();
-            if url_str.starts_with("file://") {
+
+            // Handle OAuth deep link callbacks
+            if url_str.starts_with("stirlingpdf://auth/callback") {
+              add_log(format!("🔐 OAuth callback received: {}", url_str));
+              let _ = app_handle.emit("oauth-callback", url_str);
+            }
+            // Handle file:// URLs (PDF file opens)
+            else if url_str.starts_with("file://") {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
@@ -133,6 +143,7 @@ pub fn run() {
               }
             }
           }
+
           // Emit a generic notification that files were added (frontend will re-read storage)
           if added_files {
             let _ = app_handle.emit("files-changed", ());

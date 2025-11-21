@@ -69,6 +69,12 @@
     },
     "fs": {
       "requireLiteralLeadingDot": false
+    },
+    "deepLink": {
+      "mobile": [],
+      "desktop": {
+        "schemes": ["stirlingpdf"]
+      }
     }
   }
 }

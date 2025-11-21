@@ -314,36 +314,31 @@ pub async fn login(
     }
 }
 
-/// Opens the system browser for OAuth authentication with localhost callback
+/// Opens the system browser for OAuth authentication using deep linking
+/// The OAuth callback will be received via the stirlingpdf:// protocol
+/// and emitted as an 'oauth-callback' event to the frontend
 #[tauri::command]
 pub async fn start_oauth_login(
     _app_handle: AppHandle,
     provider: String,
     auth_server_url: String,
-) -> Result<OAuthCallbackResult, String> {
+) -> Result<(), String> {
     log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
-    // Start localhost HTTP server on a random available port
-    let server = Server::http("127.0.0.1:0")
-        .map_err(|e| format!("Failed to start localhost server: {}", e))?;
+    // Use custom URL scheme for deep linking
+    // The callback will be received via the stirlingpdf:// protocol
+    let callback_url = "stirlingpdf://auth/callback";
 
-    let port = match server.server_addr() {
-        tiny_http::ListenAddr::IP(addr) => addr.port(),
-        _ => return Err("Unexpected server address type".to_string()),
-    };
-    let callback_url = format!("http://localhost:{}/auth/callback", port);
-
-    log::info!("Started OAuth callback server on port {}", port);
-
-    // Build Supabase OAuth URL
+    // Build Supabase OAuth URL with deep link callback
+    // Note: The Supabase project must have stirlingpdf://auth/callback configured as an allowed redirect URL
     let oauth_url = format!(
-        "{}/auth/v1/authorize?provider={}&redirect_to={}",
+        "{}/auth/v1/authorize?provider={}&redirect_uri={}",
         auth_server_url.trim_end_matches('/'),
         provider,
-        urlencoding::encode(&callback_url)
+        urlencoding::encode(callback_url)
     );
 
-    log::info!("Opening OAuth URL: {}", oauth_url);
+    log::info!("Opening OAuth URL with deep link callback: {}", oauth_url);
 
     // Open system browser
     if let Err(e) = tauri_plugin_opener::open_url(&oauth_url, None::<&str>) {
@@ -351,64 +346,11 @@ pub async fn start_oauth_login(
         return Err(format!("Failed to open browser: {}", e));
     }
 
-    // Wait for OAuth callback with timeout
-    let result = Arc::new(Mutex::new(None));
-    let result_clone = Arc::clone(&result);
+    log::info!("Browser opened successfully. Waiting for OAuth callback via deep link...");
 
-    // Spawn server handling in blocking thread
-    let server_handle = std::thread::spawn(move || {
-        log::info!("Waiting for OAuth callback...");
-
-        // Wait for callback (with timeout)
-        for _ in 0..120 { // 2 minute timeout (120 * 1 second)
-            // Try to receive request with short timeout
-            if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
-                let url_str = format!("http://localhost{}", request.url());
-                log::info!("Received callback request: {}", url_str);
-
-                // Send success HTML response
-                let html_response = r#"
-                    <!DOCTYPE html>
-                    <html>
-                    <head><title>Authentication Successful</title></head>
-                    <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                        <h1>✓ Authentication Successful</h1>
-                        <p>You can close this window and return to Stirling PDF.</p>
-                        <script>
-                            // Extract tokens from hash fragment and send to parent
-                            if (window.location.hash) {
-                                window.close();
-                            }
-                        </script>
-                    </body>
-                    </html>
-                "#;
-
-                let _ = request.respond(Response::from_string(html_response)
-                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
-
-                // Parse URL to extract tokens from hash fragment
-                // Supabase uses hash-based OAuth, but the redirect should have query params
-                let callback_result = parse_oauth_callback(&url_str);
-
-                let mut result_lock = result_clone.lock().unwrap();
-                *result_lock = Some(callback_result);
-
-                break;
-            }
-        }
-    });
-
-    // Wait for server thread to complete
-    server_handle.join()
-        .map_err(|_| "OAuth callback server thread panicked".to_string())?;
-
-    // Get result
-    let final_result = result.lock().unwrap().take()
-        .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
-
-    log::info!("OAuth callback completed successfully");
-    final_result
+    // The callback will arrive via RunEvent::Opened in lib.rs
+    // and will be emitted as an 'oauth-callback' event for the frontend to handle
+    Ok(())
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -416,6 +358,14 @@ pub struct OAuthCallbackResult {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_in: Option<i64>,
+}
+
+/// Parse OAuth callback URL to extract tokens
+/// This is called by the frontend when it receives an oauth-callback event
+#[tauri::command]
+pub async fn parse_oauth_callback_url(url_str: String) -> Result<OAuthCallbackResult, String> {
+    log::info!("Parsing OAuth callback URL");
+    parse_oauth_callback(&url_str)
 }
 
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
