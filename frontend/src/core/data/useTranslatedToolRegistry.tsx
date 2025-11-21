@@ -730,17 +730,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: ReplaceColorSettings,
         synonyms: getSynonyms(t, "replaceColor"),
       },
-      addImage: {
-        icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.addImage.title", "Add Image"),
-        component: null,
-        description: t("home.addImage.desc", "Add images to PDF documents"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        endpoints: ["add-image"],
-        synonyms: getSynonyms(t, "addImage"),
-        automationSettings: null
-      },
       scannerEffect: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerEffect.title", "Scanner Effect"),

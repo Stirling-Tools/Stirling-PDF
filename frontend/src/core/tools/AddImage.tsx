@@ -7,6 +7,7 @@ const AddImage = createStampTool({
   allowedSignatureSources: ['image'],
   defaultSignatureSource: 'image',
   defaultSignatureType: 'image',
+  enableApplyAction: true,
 });
 
 export default AddImage;

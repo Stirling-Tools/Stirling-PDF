@@ -7,6 +7,7 @@ const AddText = createStampTool({
   allowedSignatureSources: ['text'],
   defaultSignatureSource: 'text',
   defaultSignatureType: 'text',
+  enableApplyAction: true,
 });
 
 export default AddText;
