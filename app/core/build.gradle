@@ -161,15 +161,19 @@ springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
 }
 
-tasks.register('playwright', JavaExec) {
+tasks.register('installChromium', JavaExec) {
     group = 'build'
     description = 'Installs Playwright Chrome-headless-shell'
-    classpath = sourceSets.test.runtimeClasspath
+    classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.microsoft.playwright.CLI'
     args = ['install', 'chromium', '--only-shell']
+    standardOutput = System.out
+    errorOutput = System.err
+    onlyIf {
+        System.getenv("INSTALL_CHROMIUM") == 'true'
+    }
 }
 
 
 bootJar.dependsOn ':common:jar'
 bootJar.dependsOn ':proprietary:jar'
-bootJar.dependsOn 'playwright'
