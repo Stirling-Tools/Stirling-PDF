@@ -344,16 +344,14 @@ pub async fn start_oauth_login(
     provider: String,
     auth_server_url: String,
 ) -> Result<OAuthCallbackResult, String> {
-    println!("========================================");
-    println!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
+    log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
     // Generate PKCE code_verifier and code_challenge
     let code_verifier = generate_code_verifier();
     let code_challenge = generate_code_challenge(&code_verifier);
 
-    println!("PKCE code_verifier generated (first 20 chars): {}...", &code_verifier[..20]);
-    println!("PKCE code_challenge: {}", code_challenge);
-    println!("========================================");
+    log::debug!("PKCE code_verifier generated: {} chars", code_verifier.len());
+    log::debug!("PKCE code_challenge: {}", code_challenge);
 
     // Start HTTP server on fixed port
     let server = Server::http("127.0.0.1:54321")
@@ -400,9 +398,7 @@ pub async fn start_oauth_login(
         for _ in 0..120 { // 2 minute timeout
             if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
                 let url_str = format!("http://127.0.0.1{}", request.url());
-                println!("========================================");
-                println!("FULL CALLBACK URL: {}", url_str);
-                println!("========================================");
+                log::debug!("Received OAuth callback: {}", url_str);
 
                 // Parse the authorization code from URL
                 let callback_data = parse_oauth_callback(&url_str);
@@ -446,9 +442,9 @@ pub async fn start_oauth_login(
 
     // Handle the callback data - exchange authorization code for tokens
     match callback_data? {
-        OAuthCallbackData::Code { code, redirect_uri, state } => {
+        OAuthCallbackData::Code { code, redirect_uri } => {
             log::info!("OAuth completed with authorization code flow, exchanging code...");
-            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier, state.as_deref()).await
+            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier).await
         }
     }
 }
@@ -463,7 +459,7 @@ pub struct OAuthCallbackResult {
 // Internal enum for handling authorization code flow
 #[derive(Debug, Clone)]
 enum OAuthCallbackData {
-    Code { code: String, redirect_uri: String, state: Option<String> },
+    Code { code: String, redirect_uri: String },
 }
 
 /// Exchange authorization code for access token using PKCE
@@ -471,11 +467,9 @@ async fn exchange_code_for_token(
     auth_server_url: &str,
     code: &str,
     _redirect_uri: &str,
-    _code_verifier: &str,
-    state: Option<&str>,
+    code_verifier: &str,
 ) -> Result<OAuthCallbackResult, String> {
-    println!("========================================");
-    println!("Exchanging authorization code for access token with PKCE");
+    log::info!("Exchanging authorization code for access token with PKCE");
 
     let client = reqwest::Client::new();
     // grant_type goes in query string, not body!
@@ -484,23 +478,14 @@ async fn exchange_code_for_token(
     // Supabase requires API key for token exchange
     let supabase_key = env!("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
 
-    // Body should be JSON with auth_code, code_verifier, and optionally state
-    let mut body_map = serde_json::Map::new();
-    body_map.insert("auth_code".to_string(), serde_json::Value::String(code.to_string()));
-    body_map.insert("code_verifier".to_string(), serde_json::Value::String(_code_verifier.to_string()));
+    // Body should be JSON with auth_code and code_verifier
+    let body = serde_json::json!({
+        "auth_code": code,
+        "code_verifier": code_verifier,
+    });
 
-    if let Some(state_val) = state {
-        body_map.insert("state".to_string(), serde_json::Value::String(state_val.to_string()));
-        println!("Including state parameter in token exchange (first 30 chars): {}...",
-            &state_val[..std::cmp::min(30, state_val.len())]);
-    }
-
-    let body = serde_json::Value::Object(body_map);
-
-    println!("Token exchange URL: {}", token_url);
-    println!("Token exchange body: auth_code={}..., code_verifier={}...",
-        &code[..std::cmp::min(20, code.len())], &_code_verifier[..20]);
-    println!("========================================");
+    log::debug!("Token exchange URL: {}", token_url);
+    log::debug!("Code verifier length: {} chars", code_verifier.len());
 
     let response = client
         .post(&token_url)
@@ -562,32 +547,23 @@ pub async fn parse_oauth_callback_url(_url_str: String) -> Result<OAuthCallbackR
 }
 
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
-    // Parse URL to extract authorization code and state
+    // Parse URL to extract authorization code
     let parsed_url = url::Url::parse(url_str)
         .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
 
-    // Check query parameters for authorization code and state
+    // Check query parameters for authorization code
     let mut code = None;
-    let mut state = None;
 
     for (key, value) in parsed_url.query_pairs() {
-        match key.as_ref() {
-            "code" => code = Some(value.to_string()),
-            "state" => state = Some(value.to_string()),
-            _ => {}
+        if key.as_ref() == "code" {
+            code = Some(value.to_string());
+            break;
         }
     }
 
     // If we have a code, return it
     if let Some(auth_code) = code {
-        println!("Found authorization code in callback: {}...", &auth_code[..std::cmp::min(20, auth_code.len())]);
-
-        if let Some(ref state_val) = state {
-            println!("Found state parameter in callback (first 30 chars): {}...",
-                &state_val[..std::cmp::min(30, state_val.len())]);
-        } else {
-            println!("No state parameter found in callback");
-        }
+        log::info!("Found authorization code in callback");
 
         // Reconstruct the redirect_uri (without query params) for token exchange
         let redirect_uri = if let Some(port) = parsed_url.port() {
@@ -608,7 +584,6 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
         return Ok(OAuthCallbackData::Code {
             code: auth_code,
             redirect_uri,
-            state,
         });
     }
 
