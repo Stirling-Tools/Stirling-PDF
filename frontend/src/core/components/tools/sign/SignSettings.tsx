@@ -1,13 +1,9 @@
 ﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from '@app/constants/signConstants';
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from '@app/constants/signConstants';
 
@@ -17,20 +13,6 @@ import { DrawingControls } from "@app/components/annotation/shared/DrawingContro
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
-import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
-
-type SignatureDrafts = {
-  canvas?: string;
-  image?: string;
-  text?: {
-    signerName: string;
-    fontSize: number;
-    fontFamily: string;
-    textColor: string;
-  };
-};
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
 import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
