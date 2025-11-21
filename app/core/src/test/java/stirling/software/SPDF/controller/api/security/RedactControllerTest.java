@@ -1103,11 +1103,19 @@ class RedactControllerTest {
 
             assertEquals(1, regions.size());
             PdfiumRedactionRegion region = regions.get(0);
+
+            // Test basic coordinates
             assertEquals(block.getPageIndex(), region.getPageIndex());
             assertEquals(block.getX1(), region.getX(), 0.001);
             assertEquals(block.getY1(), region.getY(), 0.001);
             assertEquals(block.getX2() - block.getX1(), region.getWidth(), 0.001);
-            assertEquals(block.getY2() - block.getY1(), region.getHeight(), 0.001);
+
+            // The implementation adds a top margin for full coverage
+            // topMargin = Math.max(1.0f, height * 0.1f)
+            float height = block.getY2() - block.getY1();
+            float topMargin = Math.max(1.0f, height * 0.1f);
+            float expectedHeight = height + topMargin; // No padding since customPadding=0
+            assertEquals(expectedHeight, region.getHeight(), 0.001);
         }
     }
 }
