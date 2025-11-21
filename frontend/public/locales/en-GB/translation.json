@@ -5416,7 +5416,34 @@
     "licenseInstructions": "Enter this key in Settings → Admin Plan → License Key section",
     "canCloseWindow": "You can now close this window.",
     "licenseKeyProcessing": "License Key Processing",
-    "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support."
+    "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support.",
+    "perYear": "/year",
+    "emailInvalid": "Please enter a valid email address",
+    "emailStage": {
+      "title": "Enter Your Email",
+      "description": "We'll use this to send your license key and receipts.",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Continue",
+      "modalTitle": "Get Started - {{planName}}"
+    },
+    "planStage": {
+      "title": "Choose Your Billing Period",
+      "savingsNote": "Save {{percent}}% with annual billing",
+      "basePrice": "Base Price",
+      "seatPrice": "Per Seat",
+      "totalForSeats": "Total ({{count}} seats)",
+      "selectMonthly": "Select Monthly",
+      "selectYearly": "Select Yearly",
+      "savePercent": "Save {{percent}}%",
+      "savingsAmount": "You save {{currency}}{{amount}}",
+      "modalTitle": "Select Billing Period - {{planName}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Back to Plan Selection",
+      "selectedPlan": "Selected Plan",
+      "modalTitle": "Complete Payment - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "First Time Login",

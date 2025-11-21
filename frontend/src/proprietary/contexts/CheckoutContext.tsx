@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
-import StripeCheckout from '@app/components/shared/StripeCheckout';
+import { StripeCheckout } from '@app/components/shared/stripeCheckout';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
 import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';

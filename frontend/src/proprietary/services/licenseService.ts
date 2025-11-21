@@ -43,6 +43,7 @@ export interface CheckoutSessionRequest {
   current_license_key?: string; // Current license key for upgrades
   requires_seats?: boolean; // Whether to add adjustable seat pricing
   seat_count?: number;      // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
+  email?: string;           // Customer email for checkout pre-fill
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -320,6 +321,7 @@ const licenseService = {
         current_license_key: request.current_license_key,
         requires_seats: request.requires_seats,
         seat_count: request.seat_count || 1,
+        email: request.email,
         callback_base_url: baseUrl,
         ui_mode: checkoutMode,
         // For hosted checkout, provide success/cancel URLs
