@@ -10,6 +10,7 @@
     "@embedpdf/core": "^1.4.1",
     "@embedpdf/engines": "^1.4.1",
     "@embedpdf/plugin-annotation": "^1.4.1",
+    "@embedpdf/plugin-bookmark": "^1.4.1",
     "@embedpdf/plugin-export": "^1.4.1",
     "@embedpdf/plugin-history": "^1.4.1",
     "@embedpdf/plugin-interaction-manager": "^1.4.1",

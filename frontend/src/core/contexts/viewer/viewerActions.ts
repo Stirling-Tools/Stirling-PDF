@@ -5,6 +5,7 @@ import {
   ScrollState,
   ZoomState,
 } from '@app/contexts/viewer/viewerBridges';
+import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollActions {
   scrollToPage: (page: number) => void;
@@ -58,6 +59,12 @@ export interface ExportActions {
   saveAsCopy: () => Promise<ArrayBuffer | null>;
 }
 
+export interface BookmarkActions {
+  fetchBookmarks: () => Promise<PdfBookmarkObject[] | null>;
+  clearBookmarks: () => void;
+  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+}
+
 export interface ViewerActionsBundle {
   scrollActions: ScrollActions;
   zoomActions: ZoomActions;
@@ -67,6 +74,7 @@ export interface ViewerActionsBundle {
   rotationActions: RotationActions;
   searchActions: SearchActions;
   exportActions: ExportActions;
+  bookmarkActions: BookmarkActions;
 }
 
 interface ViewerActionDependencies {
@@ -307,5 +315,22 @@ export function createViewerActions({
     rotationActions,
     searchActions,
     exportActions,
+    bookmarkActions: {
+      fetchBookmarks: async () => {
+        const api = registry.current.bookmark?.api;
+        if (!api?.fetchBookmarks) {
+          return null;
+        }
+        return api.fetchBookmarks();
+      },
+      clearBookmarks: () => {
+        const api = registry.current.bookmark?.api;
+        api?.clearBookmarks?.();
+      },
+      setLocalBookmarks: (bookmarks, error = null) => {
+        const api = registry.current.bookmark?.api;
+        api?.setLocalBookmarks?.(bookmarks ?? null, error);
+      },
+    },
   };
 }

@@ -8,6 +8,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
 import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
+import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
@@ -38,7 +39,19 @@ const EmbedPdfViewerContent = ({
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const {
+    isThumbnailSidebarVisible,
+    toggleThumbnailSidebar,
+    isBookmarkSidebarVisible,
+    zoomActions,
+    panActions: _panActions,
+    rotationActions: _rotationActions,
+    getScrollState,
+    getRotationState,
+    isAnnotationMode,
+    isAnnotationsVisible,
+    exportActions,
+  } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -127,6 +140,42 @@ const EmbedPdfViewerContent = ({
       return fileWithUrl;
     }
   }, [previewFile, fileWithUrl]);
+
+  const bookmarkCacheKey = React.useMemo(() => {
+    if (currentFile && isStirlingFile(currentFile)) {
+      return currentFile.fileId;
+    }
+
+    if (previewFile) {
+      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? 'na'}`;
+      return `preview-${uniquePreviewId}`;
+    }
+
+    if (effectiveFile?.url) {
+      return effectiveFile.url;
+    }
+
+    if (effectiveFile?.file instanceof File) {
+      const fileObj = effectiveFile.file;
+      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? 'na'}`;
+    }
+
+    return undefined;
+  }, [currentFile, effectiveFile, previewFile]);
+
+  // Generate cache keys for all active files to enable preloading
+  const allBookmarkCacheKeys = React.useMemo(() => {
+    if (previewFile) {
+      return [bookmarkCacheKey].filter(Boolean) as string[];
+    }
+
+    return activeFiles.map(file => {
+      if (isStirlingFile(file)) {
+        return file.fileId;
+      }
+      return undefined;
+    }).filter(Boolean) as string[];
+  }, [activeFiles, previewFile, bookmarkCacheKey]);
 
   useWheelZoom({
     ref: viewerRef,
@@ -219,6 +268,10 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
 
+  const sidebarWidthRem = 15;
+  const totalRightMargin =
+    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0);
+
   return (
     <Box
       ref={viewerRef}
@@ -260,7 +313,7 @@ const EmbedPdfViewerContent = ({
               overflow: 'hidden',
               minHeight: 0,
               minWidth: 0,
-              marginRight: isThumbnailSidebarVisible ? '15rem' : '0',
+              marginRight: `${totalRightMargin}rem`,
               transition: 'margin-right 0.3s ease'
             }}>
             <LocalEmbedPDF
@@ -314,6 +367,12 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileIndex={activeFileIndex}
+      />
+      <BookmarkSidebar
+        visible={isBookmarkSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
       />
 
       {/* Navigation Warning Modal */}
