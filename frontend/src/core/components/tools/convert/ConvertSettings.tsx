@@ -52,31 +52,16 @@ const ConvertSettings = ({
 
   const allEndpoints = useMemo(() => {
     const endpoints = getConversionEndpoints(EXTENSION_TO_ENDPOINT);
-    console.log('[Convert] Checking availability for endpoints:', endpoints);
     return endpoints;
   }, []);
 
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
-
-  // Debug: Log endpoint status when it changes
-  useMemo(() => {
-    const disabledEndpoints = Object.entries(endpointStatus).filter(([_, status]) => status === false);
-    if (disabledEndpoints.length > 0) {
-      console.log('[Convert] Disabled endpoints:', Object.fromEntries(disabledEndpoints));
-    }
-  }, [endpointStatus]);
 
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
 
     const isAvailable = endpointStatus[endpointKey] === true;
-
-    // Debug logging
-    if (endpointStatus[endpointKey] === false) {
-      console.log(`[Convert] Conversion ${fromExt} → ${toExt} using endpoint '${endpointKey}' is DISABLED`);
-    }
-
     return isAvailable;
   };
 
@@ -130,15 +115,6 @@ const ConvertSettings = ({
         enabled
       };
     });
-
-    // Debug: Log TO options
-    const disabledOptions = enhanced.filter(opt => opt.enabled === false);
-    if (disabledOptions.length > 0) {
-      console.log(`[Convert] TO options for '${parameters.fromExtension}':`, {
-        total: enhanced.length,
-        disabled: disabledOptions.map(o => o.value)
-      });
-    }
 
     // Filter out unavailable conversions if preference is enabled
     if (preferences.hideUnavailableConversions) {

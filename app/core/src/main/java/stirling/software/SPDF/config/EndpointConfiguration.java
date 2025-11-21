@@ -531,19 +531,14 @@ public class EndpointConfiguration {
             List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
             List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
-            log.info("DEBUG: endpointsToRemove from config: {}", endpointsToRemove);
-            log.info("DEBUG: groupsToRemove from config: {}", groupsToRemove);
-
             if (endpointsToRemove != null) {
                 for (String endpoint : endpointsToRemove) {
-                    log.info("DEBUG: Disabling endpoint '{}' from config", endpoint.trim());
                     disableEndpoint(endpoint.trim());
                 }
             }
 
             if (groupsToRemove != null) {
                 for (String group : groupsToRemove) {
-                    log.info("DEBUG: Disabling group '{}' from config", group.trim());
                     disableGroup(group.trim());
                 }
             }

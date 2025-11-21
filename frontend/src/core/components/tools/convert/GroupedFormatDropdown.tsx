@@ -42,13 +42,6 @@ const GroupedFormatDropdown = ({
       groups[option.group].push(option);
     });
 
-    // Debug: Log disabled options
-    const disabledOptions = options.filter(opt => opt.enabled === false);
-    if (disabledOptions.length > 0) {
-      console.log(`[GroupedFormatDropdown] Received ${disabledOptions.length} disabled options:`,
-        disabledOptions.map(o => `${o.value} (enabled=${o.enabled})`));
-    }
-
     return groups;
   }, [options]);
 
