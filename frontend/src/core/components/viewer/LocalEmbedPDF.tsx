@@ -19,6 +19,7 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -39,6 +40,7 @@ import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
+import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -138,6 +140,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register thumbnail plugin for page thumbnails
       createPluginRegistration(ThumbnailPluginPackage),
 
+      // Register bookmark plugin for PDF outline support
+      createPluginRegistration(BookmarkPluginPackage),
+
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage),
 
@@ -191,7 +196,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           height: '100%',
           width: '100%',
           position: 'relative',
-          overflow: 'hidden',
           flex: 1,
           minHeight: 0,
           minWidth: 0,
@@ -273,6 +277,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
+        <BookmarkAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -287,8 +292,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               minHeight: 0,
               minWidth: 0,
               contain: 'strict',
-              display: 'flex',
-              justifyContent: 'center',
             }}
           >
           <Scroller

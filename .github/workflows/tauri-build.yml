@@ -14,21 +14,14 @@ on:
           - macos
           - linux
   pull_request:
-    branches: [main, V2]
+    branches: [main, V2, V2-tauri-windows]
     paths:
       - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
+      - 'frontend/src/desktop/**'
+      - 'frontend/tsconfig.desktop.json'
       - '.github/workflows/tauri-build.yml'
   push:
     branches: [main, V2]
-    paths:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
-      - '.github/workflows/tauri-build.yml'
 
 permissions:
   contents: read
@@ -68,6 +61,9 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
+    env:
+      SM_API_KEY: ${{ secrets.SM_API_KEY }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
@@ -181,6 +177,84 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      # DigiCert KeyLocker Setup (Cloud HSM)
+      - name: Setup DigiCert KeyLocker
+        id: digicert-setup
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        uses: digicert/ssm-code-signing@v1.1.0
+        env:
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+          SM_HOST: ${{ secrets.SM_HOST }}
+
+      - name: Setup DigiCert KeyLocker Certificate
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          Write-Host "Setting up DigiCert KeyLocker environment..."
+
+          # Decode client certificate
+          $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
+          $certPath = "D:\Certificate_pkcs12.p12"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+          # Set environment variables
+          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
+          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> $env:GITHUB_ENV
+
+          # Get PKCS11 config path from DigiCert action
+          $pkcs11Config = $env:PKCS11_CONFIG
+          if ($pkcs11Config) {
+            Write-Host "Found PKCS11_CONFIG: $pkcs11Config"
+            echo "PKCS11_CONFIG=$pkcs11Config" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "PKCS11_CONFIG not set by DigiCert action, using default path"
+            $defaultPath = "C:\Users\RUNNER~1\AppData\Local\Temp\smtools-windows-x64\pkcs11properties.cfg"
+            if (Test-Path $defaultPath) {
+              Write-Host "Found config at default path: $defaultPath"
+              echo "PKCS11_CONFIG=$defaultPath" >> $env:GITHUB_ENV
+            } else {
+              Write-Host "Warning: Could not find PKCS11 config file"
+            }
+          }
+
+      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
+      - name: Import Windows Code Signing Certificate
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' }}
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        shell: powershell
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            Write-Host "Importing Windows Code Signing Certificate..."
+
+            # Decode base64 certificate and save to file
+            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+            [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+            # Import certificate to CurrentUser\My store
+            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+
+            # Extract and set thumbprint as environment variable
+            $thumbprint = $cert.Thumbprint
+            Write-Host "Certificate imported with thumbprint: $thumbprint"
+            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+
+            # Clean up certificate file
+            Remove-Item $certPath
+
+            Write-Host "Windows certificate import completed."
+          } else {
+            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
+          }
+
       - name: Import Apple Developer Certificate
         if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
         env:
@@ -236,12 +310,173 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
-          SIGN: 1
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          SIGN: ${{ (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      # Sign with DigiCert KeyLocker (post-build)
+      - name: Sign Windows binaries with DigiCert KeyLocker
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          Write-Host "=== DigiCert KeyLocker Signing ==="
+
+          # Test smctl connectivity first
+          Write-Host "Testing smctl connection..."
+          $healthCheck = & smctl healthcheck 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
+          } else {
+            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
+            Write-Host $healthCheck
+            exit 1
+          }
+          Write-Host ""
+
+          # Sync certificates to Windows certificate store
+          Write-Host "Syncing certificates to Windows certificate store..."
+          $syncOutput = & smctl windows certsync 2>&1
+          Write-Host "Cert sync result: $syncOutput"
+          Write-Host ""
+
+          # List available certificates and check if they have certificates attached
+          Write-Host "Checking for available certificates..."
+          $certList = & smctl keypair ls 2>&1
+          Write-Host "Keypair list output:"
+          Write-Host $certList
+          Write-Host ""
+
+          # Parse the output to check certificate status
+          $lines = $certList -split "`n"
+          $foundKeypair = $false
+          $hasCertificate = $false
+
+          foreach ($line in $lines) {
+            if ($line -match "${{ secrets.SM_KEYPAIR_ALIAS }}") {
+              $foundKeypair = $true
+              Write-Host "[SUCCESS] Found keypair in list"
+
+              # Check if this line has certificate info (not just empty spaces after alias)
+              $parts = $line -split "\s+"
+              if ($parts.Count -gt 2 -and $parts[1] -ne "" -and $parts[1] -ne "CERTIFICATE") {
+                $hasCertificate = $true
+                Write-Host "[SUCCESS] Certificate is associated with keypair"
+              }
+            }
+          }
+
+          if (-not $foundKeypair) {
+            Write-Host "[ERROR] Keypair not found: ${{ secrets.SM_KEYPAIR_ALIAS }}"
+            Write-Host "Available keypairs are listed above"
+            Write-Host ""
+            Write-Host "Please verify:"
+            Write-Host "  1. Keypair alias is correct in GitHub secret"
+            Write-Host "  2. API key has access to this keypair"
+            exit 1
+          }
+
+          if (-not $hasCertificate) {
+            Write-Host "[ERROR] No certificate associated with keypair"
+            Write-Host "This usually means:"
+            Write-Host "  1. Certificate not yet synced to KeyLocker (run sync manually)"
+            Write-Host "  2. Certificate is pending approval"
+            Write-Host "  3. Certificate needs to be attached to the keypair"
+            Write-Host ""
+            Write-Host "Try running in DigiCert ONE portal:"
+            Write-Host "  smctl keypair sync"
+            exit 1
+          }
+
+          Write-Host "[SUCCESS] Certificate check passed"
+          Write-Host ""
+
+          # Find only the files we need to sign (not build scripts)
+          $filesToSign = @()
+
+          # Main application executable
+          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
+          if ($mainExe) { $filesToSign += $mainExe }
+
+          # MSI installer
+          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+          $filesToSign += $msiFiles
+
+          if ($filesToSign.Count -eq 0) {
+            Write-Host "[ERROR] No files found to sign"
+            exit 1
+          }
+
+          Write-Host "Found $($filesToSign.Count) files to sign:"
+          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
+          Write-Host ""
+
+          $signedCount = 0
+          foreach ($file in $filesToSign) {
+            Write-Host "Signing: $($file.Name)"
+
+            # Get PKCS11 config file path (set by DigiCert action)
+            $pkcs11Config = $env:PKCS11_CONFIG
+            if (-not $pkcs11Config) {
+              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
+              Write-Host "DigiCert KeyLocker action may not have run correctly"
+              exit 1
+            }
+
+            Write-Host "Using PKCS11 config: $pkcs11Config"
+
+            # Try signing with certificate fingerprint first (if available)
+            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
+            if ($fingerprint -and $fingerprint -ne "") {
+              Write-Host "Attempting to sign with certificate fingerprint..."
+              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            } else {
+              Write-Host "No fingerprint provided, using keypair alias..."
+              # Use smctl to sign with keypair alias
+              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            }
+
+            Write-Host "Exit code: $exitCode"
+            Write-Host "Output: $output"
+
+            # Check if output contains "FAILED" even with exit code 0
+            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
+              Write-Host ""
+              Write-Host "[ERROR] Signing failed for $($file.Name)"
+              Write-Host "[ERROR] smctl returned success but output indicates failure"
+              Write-Host ""
+              Write-Host "Possible issues:"
+              Write-Host "  1. Certificate not fully synced to KeyLocker (wait a few minutes)"
+              Write-Host "  2. Incorrect keypair alias"
+              Write-Host "  3. API key lacks signing permissions"
+              Write-Host ""
+              Write-Host "Please verify in DigiCert ONE portal:"
+              Write-Host "  - Certificate status is 'Issued' (not Pending)"
+              Write-Host "  - Keypair status is 'Online'"
+              Write-Host "  - 'Can sign' is set to 'Yes'"
+              exit 1
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "[ERROR] Failed to sign $($file.Name)"
+              Write-Host "Full error output:"
+              Write-Host $output
+              exit 1
+            }
+
+            $signedCount++
+            Write-Host "[SUCCESS] Signed: $($file.Name)"
+            Write-Host ""
+          }
+
+          Write-Host "=== Summary ==="
+          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
 
       - name: Verify notarization (macOS only)
         if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
@@ -275,6 +510,66 @@ jobs:
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
+
+      - name: Verify Windows Code Signature
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "Verifying Windows code signatures..."
+
+          $exePath = "./dist/Stirling-PDF-${{ matrix.name }}.exe"
+          $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
+
+          $allSigned = $true
+          $usingKeyLocker = "${{ env.SM_API_KEY }}" -ne ""
+          $usingPfx = "${{ env.WINDOWS_CERTIFICATE }}" -ne ""
+
+          # Check EXE signature
+          if (Test-Path $exePath) {
+            $exeSig = Get-AuthenticodeSignature -FilePath $exePath
+            Write-Host "EXE Signature Status: $($exeSig.Status)"
+            Write-Host "EXE Signer: $($exeSig.SignerCertificate.Subject)"
+            Write-Host "EXE Timestamp: $($exeSig.TimeStamperCertificate.NotAfter)"
+
+            if ($exeSig.Status -ne "Valid") {
+              Write-Host "[WARNING] EXE is not properly signed (Status: $($exeSig.Status))"
+              if ($usingKeyLocker -or $usingPfx) {
+                Write-Host "[ERROR] Certificate was provided but signing failed"
+                $allSigned = $false
+              } else {
+                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
+              }
+            } else {
+              Write-Host "[SUCCESS] EXE is properly signed"
+            }
+          }
+
+          # Check MSI signature
+          if (Test-Path $msiPath) {
+            $msiSig = Get-AuthenticodeSignature -FilePath $msiPath
+            Write-Host "MSI Signature Status: $($msiSig.Status)"
+            Write-Host "MSI Signer: $($msiSig.SignerCertificate.Subject)"
+            Write-Host "MSI Timestamp: $($msiSig.TimeStamperCertificate.NotAfter)"
+
+            if ($msiSig.Status -ne "Valid") {
+              Write-Host "[WARNING] MSI is not properly signed (Status: $($msiSig.Status))"
+              if ($usingKeyLocker -or $usingPfx) {
+                Write-Host "[ERROR] Certificate was provided but signing failed"
+                $allSigned = $false
+              } else {
+                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
+              }
+            } else {
+              Write-Host "[SUCCESS] MSI is properly signed"
+            }
+          }
+
+          if (($usingKeyLocker -or $usingPfx) -and -not $allSigned) {
+            Write-Host "[ERROR] Code signing verification failed"
+            exit 1
+          } else {
+            Write-Host "[SUCCESS] Code signature verification completed"
+          }
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

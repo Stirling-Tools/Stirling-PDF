@@ -2,10 +2,10 @@ import React, { useState, useCallback, useMemo } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import rainbowStyles from '@app/styles/rainbow.module.css';
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import { LocalIcon } from '@app/components/shared/LocalIcon';
 import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
 import { PageEditorFileDropdown } from '@app/components/shared/PageEditorFileDropdown';
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
@@ -55,7 +55,7 @@ const createViewOptions = (
         {switchingTo === "viewer" ? (
           <Loader size="sm" />
         ) : (
-          <VisibilityIcon fontSize="medium" />
+          <InsertDriveFileIcon fontSize="medium" />
         )}
       </div>
     ),
@@ -84,7 +84,7 @@ const createViewOptions = (
         {switchingTo === "pageEditor" ? (
           <Loader size="sm" />
         ) : (
-          <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />
+          <GridViewIcon fontSize="medium" />
         )}
       </div>
     ),

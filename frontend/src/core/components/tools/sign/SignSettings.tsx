@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
@@ -137,7 +137,7 @@ const SignSettings = ({
       }
       return `${baseLabel} ${nextIndex}`;
     },
-    [byTypeCounts, t]
+    [byTypeCounts, t, translate]
   );
 
   const signatureKeysByType = useMemo(() => {
@@ -437,6 +437,8 @@ const SignSettings = ({
         console.error('Error reading file:', error);
       }
     } else if (!file) {
+      setImageSignatureData(undefined);
+      onDeactivateSignature?.();
       setImageSignatureData(undefined);
       onDeactivateSignature?.();
     }

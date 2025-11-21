@@ -199,7 +199,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
-
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
@@ -338,7 +337,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (pageAnnotationsTask) {
         pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
           const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+          if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
             // Store image data before deletion
             storeImageData(annotationId, annotation.imageSrc);
           }
@@ -373,6 +372,60 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       }
     },
   }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
+
+  useEffect(() => {
+    if (!annotationApi?.onAnnotationEvent) {
+      return;
+    }
+
+    const unsubscribe = annotationApi.onAnnotationEvent(event => {
+      if (event.type !== 'create' && event.type !== 'update') {
+        return;
+      }
+
+      const annotation: any = event.annotation;
+      const annotationId: string | undefined = annotation?.id;
+      if (!annotationId) {
+        return;
+      }
+
+      const directData =
+        extractDataUrl(annotation.imageSrc) ||
+        extractDataUrl(annotation.imageData) ||
+        extractDataUrl(annotation.appearance) ||
+        extractDataUrl(annotation.stampData) ||
+        extractDataUrl(annotation.contents) ||
+        extractDataUrl(annotation.data) ||
+        extractDataUrl(annotation.customData) ||
+        extractDataUrl(annotation.asset);
+
+      const dataToStore = directData || lastStampImageRef.current;
+      if (dataToStore) {
+        storeImageData(annotationId, dataToStore);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [annotationApi, storeImageData]);
+
+  useEffect(() => {
+    if (!isPlacementMode) {
+      return;
+    }
+
+    let cancelled = false;
+    configureStampDefaults().catch((error) => {
+      if (!cancelled) {
+        console.error('Error updating signature defaults:', error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
 
   useEffect(() => {
     if (!annotationApi?.onAnnotationEvent) {
