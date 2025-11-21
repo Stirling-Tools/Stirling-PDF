@@ -6,13 +6,16 @@ import { describe, test, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { FIT_OPTIONS } from '@app/constants/convertConstants';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderConvertHook = () => renderHook(() => useConvertParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useConvertParameters', () => {
 
   describe('Parameter Management', () => {
 
     test('should initialize with default parameters', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       expect(result.current.parameters.fromExtension).toBe('');
       expect(result.current.parameters.toExtension).toBe('');
@@ -28,7 +31,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should update individual parameters', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'pdf');
@@ -39,7 +42,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should update nested image options', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('imageOptions', {
@@ -61,7 +64,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should update nested HTML options', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('htmlOptions', {
@@ -73,7 +76,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should update nested email options', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('emailOptions', {
@@ -91,7 +94,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should update nested PDF/A options', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('pdfaOptions', {
@@ -103,7 +106,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should reset parameters to defaults', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'pdf');
@@ -124,7 +127,7 @@ describe('useConvertParameters', () => {
   describe('Parameter Validation', () => {
 
     test('should validate parameters correctly', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       // No parameters - should be invalid
       expect(result.current.validateParameters()).toBe(false);
@@ -143,7 +146,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should validate unsupported conversions', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'pdf');
@@ -158,7 +161,7 @@ describe('useConvertParameters', () => {
   describe('Endpoint Generation', () => {
 
     test('should generate correct endpoint names', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'pdf');
@@ -170,7 +173,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should generate correct endpoint URLs', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'pdf');
@@ -182,7 +185,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should return empty strings for invalid conversions', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       act(() => {
         result.current.updateParameter('fromExtension', 'invalid');
@@ -197,7 +200,7 @@ describe('useConvertParameters', () => {
   describe('Available Extensions', () => {
 
     test('should return available extensions for valid source format', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const availableExtensions = result.current.getAvailableToExtensions('pdf');
 
@@ -207,7 +210,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should return empty array for invalid source format', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const availableExtensions = result.current.getAvailableToExtensions('invalid');
 
@@ -219,7 +222,7 @@ describe('useConvertParameters', () => {
     });
 
     test('should return empty array for empty source format', () => {
-      const { result } = renderHook(() => useConvertParameters());
+      const { result } = renderConvertHook();
 
       const availableExtensions = result.current.getAvailableToExtensions('');
 

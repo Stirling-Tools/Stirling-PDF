@@ -137,6 +137,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     defaultParameters,
     endpointName: getEndpointName,
     validateFn: validateParameters,
+    storageKey: 'convert',
   }), []);
 
   const baseHook = useBaseParameters(config);

@@ -57,5 +57,6 @@ export const useSplitParameters = (): SplitParametersHook => {
           return false;
       }
     },
+    storageKey: 'split',
   });
 };

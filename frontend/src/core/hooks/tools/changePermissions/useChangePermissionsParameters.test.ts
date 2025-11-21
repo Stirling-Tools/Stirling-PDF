@@ -1,16 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useChangePermissionsParameters, defaultParameters, ChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
+import { PreferencesTestWrapper } from '@testing/preferencesTestWrapper';
+
+const renderChangePermissionsHook = () => renderHook(() => useChangePermissionsParameters(), { wrapper: PreferencesTestWrapper });
 
 describe('useChangePermissionsParameters', () => {
   test('should initialize with default parameters', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should update individual boolean parameters', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     act(() => {
       result.current.updateParameter('preventAssembly', true);
@@ -28,7 +31,7 @@ describe('useChangePermissionsParameters', () => {
   });
 
   test('should update all permission parameters', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
 
@@ -56,7 +59,7 @@ describe('useChangePermissionsParameters', () => {
   });
 
   test('should reset parameters to defaults', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     // First, change some parameters
     act(() => {
@@ -78,13 +81,13 @@ describe('useChangePermissionsParameters', () => {
   });
 
   test('should return correct endpoint name', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     expect(result.current.getEndpointName()).toBe('add-password');
   });
 
   test('should always validate as true', () => {
-    const { result } = renderHook(() => useChangePermissionsParameters());
+    const { result } = renderChangePermissionsHook();
 
     // Default state should be valid
     expect(result.current.validateParameters()).toBe(true);
