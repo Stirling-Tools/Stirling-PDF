@@ -82,6 +82,7 @@ import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
+import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from '@app/constants/splitConstants';
 import CompressSettings from "@app/components/tools/compress/CompressSettings";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
@@ -300,6 +301,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
+        endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
         automationSettings: null
@@ -398,6 +400,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: Array.from(new Set(Object.values(SPLIT_ENDPOINT_NAMES))),
         operationConfig: splitOperationConfig,
         automationSettings: SplitAutomationSettings,
         synonyms: getSynonyms(t, "split")
@@ -465,6 +468,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.bookletImposition.desc", "Create booklets with proper page ordering and multi-page layout for printing and binding"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: ["booklet-imposition"],
       },
       pdfToSinglePage: {
 
@@ -559,6 +563,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
+        endpoints: ["remove-annotations"],
         operationConfig: removeAnnotationsOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, "removeAnnotations")
@@ -597,7 +602,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"],
+        endpoints: ["remove-cert-sign"],
         operationConfig: removeCertificateSignOperationConfig,
         synonyms: getSynonyms(t, "removeCertSign"),
         automationSettings: null,
@@ -626,7 +631,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         name: t("home.autoRename.title", "Auto Rename PDF File"),
         component: AutoRename,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"],
+        endpoints: ["auto-rename"],
         operationConfig: autoRenameOperationConfig,
         description: t("home.autoRename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
@@ -681,6 +686,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["overlay-pdf"],
         operationConfig: overlayPdfsOperationConfig,
         synonyms: getSynonyms(t, "overlay-pdfs"),
         automationSettings: OverlayPdfsSettings
@@ -705,6 +711,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.addImage.desc", "Add images to PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["add-image"],
         synonyms: getSynonyms(t, "addImage"),
         automationSettings: null
       },
@@ -715,6 +722,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        endpoints: ["scanner-effect"],
         synonyms: getSynonyms(t, "scannerEffect"),
         automationSettings: null
       },
@@ -805,6 +813,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["compress-pdf"],
         operationConfig: compressOperationConfig,
         automationSettings: CompressSettings,
         synonyms: getSynonyms(t, "compress")
@@ -848,6 +857,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["ocr-pdf"],
         operationConfig: ocrOperationConfig,
         automationSettings: OCRSettings,
         synonyms: getSynonyms(t, "ocr")

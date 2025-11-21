@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
@@ -10,9 +11,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
@@ -197,6 +202,21 @@ public class ConfigController {
         for (String endpoint : endpointArray) {
             String trimmedEndpoint = endpoint.trim();
             result.put(trimmedEndpoint, endpointConfiguration.isEndpointEnabled(trimmedEndpoint));
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/endpoints-availability")
+    public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
+            @RequestParam(name = "endpoints")
+                    @Size(min = 1, max = 100, message = "Must provide between 1 and 100 endpoints")
+                    List<@NotBlank String> endpoints) {
+        Map<String, EndpointAvailability> result = new HashMap<>();
+        for (String endpoint : endpoints) {
+            String trimmedEndpoint = endpoint.trim();
+            result.put(
+                    trimmedEndpoint,
+                    endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
     }
