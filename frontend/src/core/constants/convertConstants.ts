@@ -34,8 +34,8 @@ export const CONVERSION_ENDPOINTS = {
   'html-pdf': '/api/v1/convert/html/pdf',
   'markdown-pdf': '/api/v1/convert/markdown/pdf',
   'eml-pdf': '/api/v1/convert/eml/pdf',
-  'pdf-json': '/api/v1/convert/pdf/json',
-  'json-pdf': '/api/v1/convert/json/pdf'
+  'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
+  'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -55,8 +55,8 @@ export const ENDPOINT_NAMES = {
   'html-pdf': 'html-to-pdf',
   'markdown-pdf': 'markdown-to-pdf',
   'eml-pdf': 'eml-to-pdf',
-  'pdf-json': 'pdf-to-json',
-  'json-pdf': 'json-to-pdf'
+  'pdf-text-editor': 'pdf-to-text-editor',
+  'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
 
 
@@ -86,7 +86,6 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'zip', label: 'ZIP', group: 'Web' },
   { value: 'md', label: 'MD', group: 'Text' },
-  { value: 'json', label: 'JSON', group: 'Data' },
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
@@ -112,7 +111,6 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'xml', label: 'XML', group: 'Web' },
-  { value: 'json', label: 'JSON', group: 'Data' },
 ];
 
 // Conversion matrix - what each source format can convert to
@@ -128,7 +126,6 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'html': ['pdf'],
   'zip': ['pdf'],
   'md': ['pdf'],
-  'json': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
   'eml': ['pdf']
 };
@@ -145,8 +142,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
-    'cbz': 'pdf-to-cbz',
-    'json': 'pdf-to-json'
+    'cbz': 'pdf-to-cbz'
   },
   'cbz': { 'pdf': 'cbz-to-pdf' },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
@@ -158,8 +154,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'zip': { 'pdf': 'html-to-pdf' },
   'md': { 'pdf': 'markdown-to-pdf' },
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
-  'eml': { 'pdf': 'eml-to-pdf' },
-  'json': { 'pdf': 'json-to-pdf' }
+  'eml': { 'pdf': 'eml-to-pdf' }
 };
 
 export type ColorType = typeof COLOR_TYPES[keyof typeof COLOR_TYPES];

@@ -336,7 +336,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       return;
     }
     console.log(`[PdfTextEditor] Cleaning up cached document for jobId: ${jobId}`);
-    apiClient.post(`/api/v1/convert/pdf/json/clear-cache/${jobId}`).catch((error) => {
+    apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
       console.warn('[PdfTextEditor] Failed to clear cache:', error);
     });
   }, []);
@@ -408,7 +408,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
       try {
         const response = await apiClient.get(
-          `/api/v1/convert/pdf/json/page/${cachedJobId}/${pageNumber}`,
+          `/api/v1/convert/pdf/text-editor/page/${cachedJobId}/${pageNumber}`,
           {
             responseType: 'json',
           },
@@ -509,7 +509,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
           console.log('Sending conversion request with async=true');
           const response = await apiClient.post(
-            `${CONVERSION_ENDPOINTS['pdf-json']}?async=true&lightweight=true`,
+            `${CONVERSION_ENDPOINTS['pdf-text-editor']}?async=true&lightweight=true`,
             formData,
             {
               responseType: 'json',
@@ -1038,7 +1038,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
           const expectedName = `${baseName || 'document'}.pdf`;
           const response = await apiClient.post(
-            `/api/v1/convert/pdf/json/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
+            `/api/v1/convert/pdf/text-editor/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
             partialDocument,
             {
               responseType: 'blob',
@@ -1081,7 +1081,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
       const formData = new FormData();
       formData.append('fileInput', jsonFile);
-      const response = await apiClient.post(CONVERSION_ENDPOINTS['json-pdf'], formData, {
+      const response = await apiClient.post(CONVERSION_ENDPOINTS['text-editor-pdf'], formData, {
         responseType: 'blob',
       });
 
