@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Group, ActionIcon } from '@mantine/core';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { ButtonDefinition, type FlowState } from '@app/components/onboarding/onboardingFlowConfig';
-import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import type { LicenseNotice } from '@app/types/types';
 import type { ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
 
 interface RenderButtonsProps {

@@ -1,4 +1,4 @@
-import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import type { LicenseNotice } from '@app/types/types';
 
 export interface InitialOnboardingModalProps {
   opened: boolean;

@@ -3,7 +3,7 @@ import { Modal, Button, Group, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedSlideBackground';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
-import { LicenseNotice } from '@app/components/onboarding/slides/types';
+import { LicenseNotice } from '@app/types/types';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
 

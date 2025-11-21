@@ -270,12 +270,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     <div
                       key={buttonConfig.id}
                       data-tour="help-button"
-                      onClick={() =>
-                        startTour('tools', {
-                          source: 'quick-access-help-button',
-                          metadata: { entry: 'direct' },
-                        })
-                      }
+                      onClick={() => startTour('tools')}
                     >
                       {renderNavButton(buttonConfig, index)}
                     </div>
@@ -292,12 +287,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       <Menu.Dropdown>
                         <Menu.Item
                           leftSection={<LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() =>
-                            startTour('tools', {
-                              source: 'quick-access-help-menu',
-                              metadata: { entry: 'menu-tools' },
-                            })
-                          }
+                          onClick={() => startTour('tools')}
                         >
                           <div>
                             <div style={{ fontWeight: 500 }}>
@@ -310,12 +300,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         </Menu.Item>
                         <Menu.Item
                           leftSection={<LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() =>
-                            startTour('admin', {
-                              source: 'quick-access-help-menu',
-                              metadata: { entry: 'menu-admin' },
-                            })
-                          }
+                          onClick={() => startTour('admin')}
                         >
                           <div>
                             <div style={{ fontWeight: 500 }}>

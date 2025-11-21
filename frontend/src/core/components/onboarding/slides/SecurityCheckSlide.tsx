@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select } from '@mantine/core';
 import styles from '../InitialOnboardingModal/InitialOnboardingModal.module.css';
-import { SlideConfig } from './types';
+import { SlideConfig } from '../../../types/types';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
 import i18n from '@app/i18n';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trans } from 'react-i18next';
-import { SlideConfig, LicenseNotice } from './types';
+import { SlideConfig, LicenseNotice } from '../../../types/types';
 import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
 import i18n from '@app/i18n';
 

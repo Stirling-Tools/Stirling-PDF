@@ -1,4 +1,4 @@
-import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import type { LicenseNotice } from '@app/types/types';
 
 export const ONBOARDING_SESSION_BLOCK_KEY = 'stirling-onboarding-session-active';
 export const ONBOARDING_SESSION_EVENT = 'stirling:onboarding-session-started';

@@ -1,4 +1,4 @@
-import { AnimatedCircleConfig } from './types';
+import { AnimatedCircleConfig } from '../../../types/types';
 
 /**
  * Unified circle background configuration used across all onboarding slides.

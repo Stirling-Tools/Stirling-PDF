@@ -4872,7 +4872,7 @@
     },
     "welcomeSlide": {
       "title": "Welcome to Stirling",
-      "body": "Stirling PDF is now ready for teams of all sizes.<br />This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+      "body": "Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
     },
     "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
@@ -4905,6 +4905,17 @@
       "overLimitTitle": "Server License Needed",
       "overLimitBody": "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo.",
       "freeBody": "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+    },
+    "desktopInstall": {
+      "title": "Download",
+      "titleWithOs": "Download for {{osLabel}}",
+      "body": "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
+    },
+    "planOverview": {
+      "adminTitle": "Admin Overview",
+      "userTitle": "Plan Overview",
+      "adminBody": "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "userBody": "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
     },
     "securityCheck": {
       "message": "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."

@@ -4,7 +4,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useAuth } from '@app/auth/UseSession';
-import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import type { LicenseNotice } from '@app/types/types';
 import { useNavigate } from 'react-router-dom';
 import {
   ONBOARDING_SESSION_BLOCK_KEY,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useOs } from '@app/hooks/useOs';
@@ -9,7 +9,7 @@ import {
   type FlowState,
   type SlideId,
 } from '@app/components/onboarding/onboardingFlowConfig';
-import type { LicenseNotice } from '@app/components/onboarding/slides/types';
+import type { LicenseNotice } from '@app/types/types';
 import { resolveFlow } from './flowResolver';
 import { useServerExperience } from '@app/hooks/useServerExperience';
 import { DEFAULT_STATE, type InitialOnboardingModalProps, type OnboardingState } from './types';
@@ -45,6 +45,7 @@ export function useInitialOnboardingState({
   } = useServerExperience();
   const osType = useOs();
   const navigate = useNavigate();
+  const selectedDownloadUrlRef = useRef<string>('');
 
   const [state, setState] = useState<OnboardingState>(DEFAULT_STATE);
 
@@ -105,7 +106,7 @@ export function useInitialOnboardingState({
       case 'windows':
         return { label: 'Windows', url: 'https://files.stirlingpdf.com/win-installer.exe' };
       case 'mac-apple':
-        return { label: 'Mac', url: 'https://files.stirlingpdf.com/mac-installer.dmg' };
+        return { label: 'Mac (Apple Silicon)', url: 'https://files.stirlingpdf.com/mac-installer.dmg' };
       case 'mac-intel':
         return { label: 'Mac (Intel)', url: 'https://files.stirlingpdf.com/mac-x86_64-installer.dmg' };
       case 'linux-x64':
@@ -115,6 +116,16 @@ export function useInitialOnboardingState({
         return { label: '', url: '' };
     }
   }, [osType]);
+
+  const osOptions = useMemo(() => {
+    const options = [
+      { label: 'Windows', url: 'https://files.stirlingpdf.com/win-installer.exe', value: 'windows' },
+      { label: 'Mac (Apple Silicon)', url: 'https://files.stirlingpdf.com/mac-installer.dmg', value: 'mac-apple' },
+      { label: 'Mac (Intel)', url: 'https://files.stirlingpdf.com/mac-x86_64-installer.dmg', value: 'mac-intel' },
+      { label: 'Linux', url: 'https://docs.stirlingpdf.com/Installation/Unix%20Installation/', value: 'linux' },
+    ];
+    return options.filter(opt => opt.url);
+  }, []);
 
   const { ids: flowSlideIds, type: flowType } = resolveFlow(
     effectiveEnableLogin,
@@ -182,9 +193,22 @@ export function useInitialOnboardingState({
     onLicenseNoticeUpdate?.(licenseNotice);
   }, [licenseNotice, onLicenseNoticeUpdate]);
 
+  // Initialize ref with default URL
+  useEffect(() => {
+    if (!selectedDownloadUrlRef.current && os.url) {
+      selectedDownloadUrlRef.current = os.url;
+    }
+  }, [os.url]);
+
+  const handleDownloadUrlChange = useCallback((url: string) => {
+    selectedDownloadUrlRef.current = url;
+  }, []);
+
   const currentSlide = slideDefinition.createSlide({
     osLabel: os.label,
     osUrl: os.url,
+    osOptions,
+    onDownloadUrlChange: handleDownloadUrlChange,
     selectedRole: state.selectedRole,
     onRoleSelect: handleRoleSelect,
     licenseNotice,
@@ -243,7 +267,7 @@ export function useInitialOnboardingState({
           closeAndMarkSeen();
           return;
         case 'download-selected': {
-          const downloadUrl = os.url || currentSlide.downloadUrl;
+          const downloadUrl = selectedDownloadUrlRef.current || os.url || currentSlide.downloadUrl;
           if (downloadUrl) {
             window.open(downloadUrl, '_blank', 'noopener');
           }

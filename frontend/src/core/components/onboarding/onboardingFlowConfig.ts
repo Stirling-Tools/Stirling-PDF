@@ -3,7 +3,7 @@ import DesktopInstallSlide from '@app/components/onboarding/slides/DesktopInstal
 import SecurityCheckSlide from '@app/components/onboarding/slides/SecurityCheckSlide';
 import PlanOverviewSlide from '@app/components/onboarding/slides/PlanOverviewSlide';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
-import { SlideConfig, LicenseNotice } from '@app/components/onboarding/slides/types';
+import { SlideConfig, LicenseNotice } from '@app/types/types';
 
 export type SlideId =
   | 'welcome'
@@ -31,9 +31,17 @@ export interface FlowState {
   selectedRole: 'admin' | 'user' | null;
 }
 
+export interface OSOption {
+  label: string;
+  url: string;
+  value: string;
+}
+
 export interface SlideFactoryParams {
   osLabel: string;
   osUrl: string;
+  osOptions?: OSOption[];
+  onDownloadUrlChange?: (url: string) => void;
   selectedRole: 'admin' | 'user' | null;
   onRoleSelect: (role: 'admin' | 'user' | null) => void;
   licenseNotice?: LicenseNotice;
@@ -79,7 +87,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   'desktop-install': {
     id: 'desktop-install',
-    createSlide: ({ osLabel, osUrl }) => DesktopInstallSlide({ osLabel, osUrl }),
+    createSlide: ({ osLabel, osUrl, osOptions, onDownloadUrlChange }) => DesktopInstallSlide({ osLabel, osUrl, osOptions, onDownloadUrlChange }),
     hero: { type: 'dual-icon' },
     buttons: [
       {
