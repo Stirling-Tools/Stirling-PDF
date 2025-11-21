@@ -2,6 +2,7 @@ import { useHotkeys } from '@app/contexts/HotkeyContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
+import type { ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 
 export const getItemClasses = (isDetailed: boolean): string => {
   return isDetailed ? 'tool-panel__fullscreen-item--detailed' : '';
@@ -22,23 +23,67 @@ export const getIconStyle = (): Record<string, string> => {
   return {};
 };
 
-export const isToolDisabled = (id: string, tool: ToolRegistryEntry): boolean => {
-  return !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+export type ToolDisabledReason = 'comingSoon' | 'disabledByAdmin' | 'missingDependency' | 'unknownUnavailable' | null;
+
+export const getToolDisabledReason = (
+  id: string,
+  tool: ToolRegistryEntry,
+  toolAvailability?: ToolAvailabilityMap
+): ToolDisabledReason => {
+  if (!tool.component && !tool.link && id !== 'read' && id !== 'multiTool') {
+    return 'comingSoon';
+  }
+
+  const availabilityInfo = toolAvailability?.[id as ToolId];
+  if (availabilityInfo && availabilityInfo.available === false) {
+    if (availabilityInfo.reason === 'missingDependency') {
+      return 'missingDependency';
+    }
+    if (availabilityInfo.reason === 'disabledByAdmin') {
+      return 'disabledByAdmin';
+    }
+    return 'unknownUnavailable';
+  }
+
+  return null;
+};
+
+export const getDisabledLabel = (
+  disabledReason: ToolDisabledReason
+): { key: string; fallback: string } => {
+  if (disabledReason === 'missingDependency') {
+    return {
+      key: 'toolPanel.fullscreen.unavailableDependency',
+      fallback: 'Unavailable - required tool missing on server:'
+    };
+  }
+  if (disabledReason === 'disabledByAdmin' || disabledReason === 'unknownUnavailable') {
+    return {
+      key: 'toolPanel.fullscreen.unavailable',
+      fallback: 'Disabled by server administrator:'
+    };
+  }
+  return {
+    key: 'toolPanel.fullscreen.comingSoon',
+    fallback: 'Coming soon:'
+  };
 };
 
 export function useToolMeta(id: string, tool: ToolRegistryEntry) {
   const { hotkeys } = useHotkeys();
-  const { isFavorite, toggleFavorite } = useToolWorkflow();
+  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
 
   const isFav = isFavorite(id as ToolId);
   const binding = hotkeys[id as ToolId];
-  const disabled = isToolDisabled(id, tool);
+  const disabledReason = getToolDisabledReason(id, tool, toolAvailability);
+  const disabled = disabledReason !== null;
 
   return {
     binding,
     isFav,
     toggleFavorite: () => toggleFavorite(id as ToolId),
     disabled,
+    disabledReason,
   };
 }
 

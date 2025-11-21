@@ -1,6 +1,6 @@
 export interface UpdateSummary {
-  latest_version: string;
-  latest_stable_version?: string;
+  latest_version: string | null;
+  latest_stable_version?: string | null;
   max_priority: 'urgent' | 'normal' | 'minor' | 'low';
   recommended_action?: string;
   any_breaking: boolean;

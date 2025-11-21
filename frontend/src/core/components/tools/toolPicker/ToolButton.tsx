@@ -12,6 +12,7 @@ import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
+import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -26,12 +27,12 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false }) => {
   const { t } = useTranslation();
-  // Special case: read and multiTool are navigational tools that are always available
-  const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
+  const disabledReason = getToolDisabledReason(id, tool, toolAvailability);
+  const isUnavailable = disabledReason !== null;
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
-  const { isFavorite, toggleFavorite } = useToolWorkflow();
   const fav = isFavorite(id as ToolId);
 
   const handleClick = (id: ToolId) => {
@@ -48,8 +49,11 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   // Get navigation props for URL support (only if navigation is not disabled)
   const navProps = !isUnavailable && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
 
+  const { key: disabledKey, fallback: disabledFallback } = getDisabledLabel(disabledReason);
+  const disabledMessage = t(disabledKey, disabledFallback);
+
   const tooltipContent = isUnavailable
-    ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
+    ? (<span><strong>{disabledMessage}</strong> {tool.description}</span>)
     : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <span>{tool.description}</span>

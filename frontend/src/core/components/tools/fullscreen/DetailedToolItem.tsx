@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
 import FavoriteStar from '@app/components/tools/toolPicker/FavoriteStar';
 import { ToolRegistryEntry, getSubcategoryColor } from '@app/data/toolsTaxonomy';
-import { getIconBackground, getIconStyle, getItemClasses, useToolMeta } from '@app/components/tools/fullscreen/shared';
+import { getIconBackground, getIconStyle, getItemClasses, useToolMeta, getDisabledLabel } from '@app/components/tools/fullscreen/shared';
 
 interface DetailedToolItemProps {
   id: string;
@@ -15,7 +15,7 @@ interface DetailedToolItemProps {
 
 const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelected, onClick }) => {
   const { t } = useTranslation();
-  const { binding, isFav, toggleFavorite, disabled } = useToolMeta(id, tool);
+  const { binding, isFav, toggleFavorite, disabled, disabledReason } = useToolMeta(id, tool);
 
   const categoryColor = getSubcategoryColor(tool.subcategoryId);
   const iconBg = getIconBackground(categoryColor, true);
@@ -33,6 +33,9 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
   } else {
     iconNode = tool.icon;
   }
+
+  const { key: disabledKey, fallback: disabledFallback } = getDisabledLabel(disabledReason);
+  const disabledMessage = t(disabledKey, disabledFallback);
 
   return (
     <button
@@ -60,7 +63,12 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
           {tool.name}
         </Text>
         <Text size="sm" c="dimmed" className="tool-panel__fullscreen-description">
-          {tool.description}
+          {disabled ? (
+            <>
+              <strong>{disabledMessage} </strong>
+              {tool.description}
+            </>
+          ) : tool.description}
         </Text>
         {binding && (
           <div className="tool-panel__fullscreen-shortcut">

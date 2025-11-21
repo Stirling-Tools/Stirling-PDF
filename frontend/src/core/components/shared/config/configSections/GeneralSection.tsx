@@ -53,11 +53,17 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
     };
 
     const summary = await updateService.getUpdateSummary(config.appVersion, machineInfo);
-    if (summary) {
+    if (summary && summary.latest_version) {
       const isNewerVersion = updateService.compareVersions(summary.latest_version, config.appVersion) > 0;
       if (isNewerVersion) {
         setUpdateSummary(summary);
+      } else {
+        // Clear any existing update summary if user is on latest version
+        setUpdateSummary(null);
       }
+    } else {
+      // No update available (latest_version is null) - clear any existing update summary
+      setUpdateSummary(null);
     }
     setCheckingUpdate(false);
   };
@@ -127,83 +133,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
           </Stack>
         </Paper>
       )}
-
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">
-                {t('settings.general.defaultToolPickerMode', 'Default tool picker mode')}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('settings.general.defaultToolPickerModeDescription', 'Choose whether the tool picker opens in fullscreen or sidebar by default')}
-              </Text>
-            </div>
-            <SegmentedControl
-              value={preferences.defaultToolPanelMode}
-              onChange={(val: string) => updatePreference('defaultToolPanelMode', val as ToolPanelMode)}
-              data={[
-                { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
-                { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },
-              ]}
-            />
-          </div>
-          <Tooltip
-            label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
-            multiline
-            w={300}
-            withArrow
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
-              <div>
-                <Text fw={500} size="sm">
-                  {t('settings.general.autoUnzip', 'Auto-unzip API responses')}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t('settings.general.autoUnzipDescription', 'Automatically extract files from ZIP responses')}
-                </Text>
-              </div>
-              <Switch
-                checked={preferences.autoUnzip}
-                onChange={(event) => updatePreference('autoUnzip', event.currentTarget.checked)}
-              />
-            </div>
-          </Tooltip>
-
-          <Tooltip
-            label={t('settings.general.autoUnzipFileLimitTooltip', 'Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.')}
-            multiline
-            w={300}
-            withArrow
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
-              <div>
-                <Text fw={500} size="sm">
-                  {t('settings.general.autoUnzipFileLimit', 'Auto-unzip file limit')}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t('settings.general.autoUnzipFileLimitDescription', 'Maximum number of files to extract from ZIP')}
-                </Text>
-              </div>
-              <NumberInput
-                value={fileLimitInput}
-                onChange={setFileLimitInput}
-                onBlur={() => {
-                  const numValue = Number(fileLimitInput);
-                  const finalValue = (!fileLimitInput || isNaN(numValue) || numValue < 1 || numValue > 100) ? DEFAULT_AUTO_UNZIP_FILE_LIMIT : numValue;
-                  setFileLimitInput(finalValue);
-                  updatePreference('autoUnzipFileLimit', finalValue);
-                }}
-                min={1}
-                max={100}
-                step={1}
-                disabled={!preferences.autoUnzip}
-                style={{ width: 90 }}
-              />
-            </div>
-          </Tooltip>
-        </Stack>
-      </Paper>
 
       {/* Update Check Section */}
       {config?.appVersion && (
@@ -291,6 +220,111 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
           </Stack>
         </Paper>
       )}
+
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.defaultToolPickerMode', 'Default tool picker mode')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('settings.general.defaultToolPickerModeDescription', 'Choose whether the tool picker opens in fullscreen or sidebar by default')}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.defaultToolPanelMode}
+              onChange={(val: string) => updatePreference('defaultToolPanelMode', val as ToolPanelMode)}
+              data={[
+                { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
+                { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },
+              ]}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.hideUnavailableTools', 'Hide unavailable tools')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('settings.general.hideUnavailableToolsDescription', 'Remove tools that have been disabled by your server instead of showing them greyed out.')}
+              </Text>
+            </div>
+            <Switch
+              checked={preferences.hideUnavailableTools}
+              onChange={(event) => updatePreference('hideUnavailableTools', event.currentTarget.checked)}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.hideUnavailableConversions', 'Hide unavailable conversions')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('settings.general.hideUnavailableConversionsDescription', 'Remove disabled conversion options in the Convert tool instead of showing them greyed out.')}
+              </Text>
+            </div>
+            <Switch
+              checked={preferences.hideUnavailableConversions}
+              onChange={(event) => updatePreference('hideUnavailableConversions', event.currentTarget.checked)}
+            />
+          </div>
+          <Tooltip
+            label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
+            multiline
+            w={300}
+            withArrow
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
+              <div>
+                <Text fw={500} size="sm">
+                  {t('settings.general.autoUnzip', 'Auto-unzip API responses')}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t('settings.general.autoUnzipDescription', 'Automatically extract files from ZIP responses')}
+                </Text>
+              </div>
+              <Switch
+                checked={preferences.autoUnzip}
+                onChange={(event) => updatePreference('autoUnzip', event.currentTarget.checked)}
+              />
+            </div>
+          </Tooltip>
+
+          <Tooltip
+            label={t('settings.general.autoUnzipFileLimitTooltip', 'Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.')}
+            multiline
+            w={300}
+            withArrow
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
+              <div>
+                <Text fw={500} size="sm">
+                  {t('settings.general.autoUnzipFileLimit', 'Auto-unzip file limit')}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t('settings.general.autoUnzipFileLimitDescription', 'Maximum number of files to extract from ZIP')}
+                </Text>
+              </div>
+              <NumberInput
+                value={fileLimitInput}
+                onChange={setFileLimitInput}
+                onBlur={() => {
+                  const numValue = Number(fileLimitInput);
+                  const finalValue = (!fileLimitInput || isNaN(numValue) || numValue < 1 || numValue > 100) ? DEFAULT_AUTO_UNZIP_FILE_LIMIT : numValue;
+                  setFileLimitInput(finalValue);
+                  updatePreference('autoUnzipFileLimit', finalValue);
+                }}
+                min={1}
+                max={100}
+                step={1}
+                disabled={!preferences.autoUnzip}
+                style={{ width: 90 }}
+              />
+            </div>
+          </Tooltip>
+        </Stack>
+      </Paper>
 
       {/* Update Modal */}
       {updateSummary && config?.appVersion && config?.machineType && (

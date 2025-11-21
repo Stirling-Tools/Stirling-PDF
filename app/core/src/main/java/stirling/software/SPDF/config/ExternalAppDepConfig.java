@@ -12,6 +12,7 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.RegexPatternUtils;
 
@@ -97,7 +98,7 @@ public class ExternalAppDepConfig {
             if (affectedGroups != null) {
                 for (String group : affectedGroups) {
                     List<String> affectedFeatures = getAffectedFeatures(group);
-                    endpointConfiguration.disableGroup(group);
+                    endpointConfiguration.disableGroup(group, DisableReason.DEPENDENCY);
                     log.warn(
                             "Missing dependency: {} - Disabling group: {} (Affected features: {})",
                             command,
@@ -127,8 +128,8 @@ public class ExternalAppDepConfig {
         if (!pythonAvailable) {
             List<String> pythonFeatures = getAffectedFeatures("Python");
             List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-            endpointConfiguration.disableGroup("Python");
-            endpointConfiguration.disableGroup("OpenCV");
+            endpointConfiguration.disableGroup("Python", DisableReason.DEPENDENCY);
+            endpointConfiguration.disableGroup("OpenCV", DisableReason.DEPENDENCY);
             log.warn(
                     "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
                     String.join(", ", pythonFeatures),
@@ -146,14 +147,14 @@ public class ExternalAppDepConfig {
                 int exitCode = process.waitFor();
                 if (exitCode != 0) {
                     List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-                    endpointConfiguration.disableGroup("OpenCV");
+                    endpointConfiguration.disableGroup("OpenCV", DisableReason.DEPENDENCY);
                     log.warn(
                             "OpenCV not available in Python - Disabling OpenCV features: {}",
                             String.join(", ", openCVFeatures));
                 }
             } catch (Exception e) {
                 List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-                endpointConfiguration.disableGroup("OpenCV");
+                endpointConfiguration.disableGroup("OpenCV", DisableReason.DEPENDENCY);
                 log.warn(
                         "Error checking OpenCV: {} - Disabling OpenCV features: {}",
                         e.getMessage(),
