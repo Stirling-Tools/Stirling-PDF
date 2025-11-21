@@ -327,7 +327,10 @@ pub async fn start_oauth_login(
     let server = Server::http("127.0.0.1:0")
         .map_err(|e| format!("Failed to start localhost server: {}", e))?;
 
-    let port = server.server_addr().port();
+    let port = match server.server_addr() {
+        tiny_http::ListenAddr::IP(addr) => addr.port(),
+        _ => return Err("Unexpected server address type".to_string()),
+    };
     let callback_url = format!("http://localhost:{}/auth/callback", port);
 
     log::info!("Started OAuth callback server on port {}", port);
@@ -405,7 +408,7 @@ pub async fn start_oauth_login(
         .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
 
     log::info!("OAuth callback completed successfully");
-    Ok(final_result)
+    final_result
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
