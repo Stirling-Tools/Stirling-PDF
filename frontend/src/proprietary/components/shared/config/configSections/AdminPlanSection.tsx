@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
+import { Divider, Loader, Alert, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup } from '@app/services/licenseService';
@@ -171,40 +171,25 @@ const AdminPlanSection: React.FC = () => {
           buttonColor="orange.7"
         />
       )}
-      {/* Currency Selection & Manage Subscription */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
+      {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
+      {licenseInfo?.licenseKey && isSupabaseConfigured && (
+        <Paper withBorder p="md" radius="md">
           <Group justify="space-between" align="center">
-            <Text size="lg" fw={600}>
-              {t('plan.currency', 'Currency')}
+            <Text size="sm" c="dimmed">
+              {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
             </Text>
-            <Select
-              value={currency}
-              onChange={(value) => setCurrency(value || 'gbp')}
-              data={currencyOptions}
-              searchable
-              clearable={false}
-              w={300}
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-            />
+            <ManageBillingButton />
           </Group>
-
-          {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-          {licenseInfo?.licenseKey && isSupabaseConfigured && (
-            <Group justify="space-between" align="center">
-              <Text size="sm" c="dimmed">
-                {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-              </Text>
-              <ManageBillingButton />
-            </Group>
-          )}
-        </Stack>
-      </Paper>
+        </Paper>
+      )}
 
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}
         onUpgradeClick={handleUpgradeClick}
+        currency={currency}
+        currencyOptions={currencyOptions}
+        onCurrencyChange={(value) => setCurrency(value)}
       />
 
       <Divider />

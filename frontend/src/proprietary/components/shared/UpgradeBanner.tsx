@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@app/auth/UseSession';
-import { useLicense } from '@app/contexts/LicenseContext';
 import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
-import { mapLicenseToTier } from '@app/services/licenseService';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import {
   ONBOARDING_SESSION_BLOCK_KEY,
@@ -18,24 +14,28 @@ import {
   type UpgradeBannerTestScenario,
   UPGRADE_BANNER_ALERT_EVENT,
 } from '@core/constants/events';
-import { userManagementService } from '@app/services/userManagementService';
+import { useServerExperience } from '@app/hooks/useServerExperience';
 
 const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
-const FREE_TIER_LIMIT = 5;
-
 const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { licenseInfo, loading: licenseLoading } = useLicense();
   const { hasResponded: cookieChoiceMade } = useCookieConsentContext();
   const { isOpen: tourOpen } = useOnboarding();
-  const { config } = useAppConfig();
+  const {
+    totalUsers,
+    userCountResolved,
+    userCountLoading,
+    effectiveIsAdmin: configIsAdmin,
+    hasPaidLicense,
+    licenseLoading,
+    freeTierLimit,
+    overFreeTierLimit,
+    scenarioKey,
+  } = useServerExperience();
   const [sessionBlocked, setSessionBlocked] = useState(true);
   const [friendlyVisible, setFriendlyVisible] = useState(false);
-  const [totalUsers, setTotalUsers] = useState<number | null>(null);
-  const [totalUsersLoaded, setTotalUsersLoaded] = useState(false);
   const isDev = import.meta.env.DEV;
   const [testScenario, setTestScenario] = useState<UpgradeBannerTestScenario>(null);
 
@@ -56,54 +56,17 @@ const UpgradeBanner: React.FC = () => {
       evaluateBlock();
     }, 1000);
 
-    const handleOnboardingStart = () => {
-      setSessionBlocked(true);
+    const handleOnboardingEvent = () => {
+      evaluateBlock();
     };
 
-    window.addEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingStart as EventListener);
+    window.addEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingStart as EventListener);
+      window.removeEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
     };
   }, []);
-
-  useEffect(() => {
-    if (!user) {
-      setTotalUsers(null);
-      setTotalUsersLoaded(false);
-      return;
-    }
-
-    setTotalUsersLoaded(false);
-    let cancelled = false;
-
-    const fetchTotalUsers = async () => {
-      try {
-        const adminData = await userManagementService.getUsers();
-        if (!cancelled) {
-          const count =
-            typeof adminData.totalUsers === 'number' ? adminData.totalUsers : null;
-          setTotalUsers(count);
-        }
-      } catch (error) {
-        console.warn('[UpgradeBanner] Failed to fetch total users', error);
-        if (!cancelled) {
-          setTotalUsers(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setTotalUsersLoaded(true);
-        }
-      }
-    };
-
-    fetchTotalUsers();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   useEffect(() => {
     if (!isDev || typeof window === 'undefined') {
@@ -127,40 +90,65 @@ const UpgradeBanner: React.FC = () => {
     };
   }, [isDev]);
 
-  const tier = mapLicenseToTier(licenseInfo);
-  const isAdmin = !!config?.isAdmin;
-  const premiumEnabled = !!config?.premiumEnabled;
-  const hasPaidLicense = Boolean(
-    premiumEnabled || tier === 'server' || tier === 'enterprise',
-  );
+  const isAdmin = configIsAdmin;
 
   const scenario = isDev ? testScenario : null;
   const scenarioIsFriendly = scenario === 'friendly';
   const scenarioIsUrgentUser = scenario === 'urgent-user';
 
   const userCountKnown = typeof totalUsers === 'number';
-  const isUnderLimit = userCountKnown ? totalUsers! < FREE_TIER_LIMIT : null;
-  const isOverLimit = userCountKnown ? totalUsers! >= FREE_TIER_LIMIT : null;
+  const isUnderLimit = userCountKnown ? totalUsers < freeTierLimit : null;
+  const isOverLimit = userCountKnown ? totalUsers > freeTierLimit : overFreeTierLimit;
+  const baseTotalUsersLoaded = userCountResolved && !userCountLoading;
 
-  const effectiveIsAdmin = scenario ? !scenarioIsUrgentUser : isAdmin;
-  const effectiveTotalUsers = scenario ? (scenarioIsFriendly ? 3 : 8) : totalUsers;
-  const effectiveTotalUsersLoaded = scenario ? true : totalUsersLoaded;
-  const effectiveHasPaidLicense = scenario ? false : hasPaidLicense;
-  const effectiveIsUnderLimit = scenario ? scenarioIsFriendly : isUnderLimit === true;
-  const effectiveIsOverLimit = scenario ? !scenarioIsFriendly : isOverLimit === true;
+  const scenarioProvidesInfo =
+    scenarioKey && scenarioKey !== 'unknown' && scenarioKey !== 'licensed';
+  const derivedIsAdmin = scenarioProvidesInfo
+    ? scenarioKey!.includes('admin')
+    : isAdmin;
+  const derivedHasPaidLicense =
+    scenarioKey === 'licensed'
+      ? true
+      : scenarioKey === 'unknown'
+        ? hasPaidLicense
+        : false;
+  const derivedIsUnderLimit = scenarioProvidesInfo
+    ? scenarioKey!.includes('under-limit')
+    : isUnderLimit === true;
+  const derivedIsOverLimit = scenarioProvidesInfo
+    ? scenarioKey!.includes('over-limit')
+    : isOverLimit === true;
+
+  const effectiveIsAdmin = scenario
+    ? scenarioIsUrgentUser
+      ? false
+      : true
+    : derivedIsAdmin;
+  const effectiveTotalUsers =
+    scenario != null ? (scenarioIsFriendly ? 3 : 8) : totalUsers;
+  const effectiveTotalUsersLoaded = scenario != null ? true : baseTotalUsersLoaded;
+  const effectiveHasPaidLicense = scenario != null ? false : derivedHasPaidLicense;
+  const effectiveIsUnderLimit =
+    scenario != null ? scenarioIsFriendly : derivedIsUnderLimit;
+  const effectiveIsOverLimit =
+    scenario != null ? !scenarioIsFriendly : derivedIsOverLimit;
+
+  const isDerivedAdmin = scenario
+    ? !scenarioIsUrgentUser
+    : scenarioKey === 'login-user-over-limit-no-license'
+      ? false
+      : effectiveIsAdmin;
 
   const shouldShowFriendlyBase = Boolean(
-    (scenario ? true : user) &&
-      effectiveIsAdmin &&
+    isDerivedAdmin &&
       !effectiveHasPaidLicense &&
       effectiveIsUnderLimit &&
       effectiveTotalUsersLoaded,
   );
   const shouldShowUrgentBase = Boolean(
-    (scenario ? true : user) &&
-      !effectiveHasPaidLicense &&
-      effectiveIsOverLimit &&
-      effectiveTotalUsersLoaded,
+    !effectiveHasPaidLicense &&
+      effectiveTotalUsersLoaded &&
+      (effectiveIsOverLimit || scenarioKey === 'login-user-over-limit-no-license'),
   );
 
   const shouldEvaluateFriendly = scenario
@@ -188,10 +176,10 @@ const UpgradeBanner: React.FC = () => {
       return;
     }
 
-    if (!shouldShowFriendlyBase) {
+    if (!shouldShowFriendlyBase && effectiveTotalUsersLoaded) {
       window.localStorage.removeItem(FRIENDLY_LAST_SEEN_KEY);
     }
-  }, [shouldShowFriendlyBase]);
+  }, [shouldShowFriendlyBase, effectiveTotalUsersLoaded]);
 
   useEffect(() => {
     if (scenario === 'friendly') {
@@ -203,7 +191,7 @@ const UpgradeBanner: React.FC = () => {
       return;
     }
 
-    if (friendlyVisible || typeof window === 'undefined') {
+    if (friendlyVisible || typeof window === 'undefined' || userCountLoading) {
       return;
     }
 
@@ -212,7 +200,7 @@ const UpgradeBanner: React.FC = () => {
     const now = Date.now();
     const due = !Number.isFinite(lastShown) || now - lastShown >= WEEK_IN_MS;
     setFriendlyVisible(due);
-  }, [scenario, shouldEvaluateFriendly, friendlyVisible]);
+  }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -224,14 +212,24 @@ const UpgradeBanner: React.FC = () => {
           active: true,
           audience: effectiveIsAdmin ? 'admin' : 'user',
           totalUsers: effectiveTotalUsers ?? null,
-          freeTierLimit: FREE_TIER_LIMIT,
+          freeTierLimit,
         }
       : { active: false };
+
+    console.debug('[UpgradeBanner] Dispatching alert event', {
+      shouldEvaluateUrgent,
+      detail,
+      totalUsers: effectiveTotalUsers,
+      freeTierLimit,
+      effectiveIsAdmin,
+      effectiveHasPaidLicense,
+      userCountLoaded: effectiveTotalUsersLoaded,
+    });
 
     window.dispatchEvent(
       new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail }),
     );
-  }, [shouldEvaluateUrgent, effectiveIsAdmin, effectiveTotalUsers, scenario]);
+  }, [shouldEvaluateUrgent, effectiveIsAdmin, effectiveTotalUsers, scenario, freeTierLimit]);
 
   useEffect(() => {
     return () => {
@@ -243,18 +241,27 @@ const UpgradeBanner: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (friendlyVisible && typeof window !== 'undefined') {
-      window.localStorage.setItem(FRIENDLY_LAST_SEEN_KEY, Date.now().toString());
+  const recordFriendlyLastShown = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
     }
-  }, [friendlyVisible]);
+    window.localStorage.setItem(FRIENDLY_LAST_SEEN_KEY, Date.now().toString());
+  }, []);
+
+  useEffect(() => {
+    if (friendlyVisible) {
+      recordFriendlyLastShown();
+    }
+  }, [friendlyVisible, recordFriendlyLastShown]);
 
   const handleUpgrade = () => {
+    recordFriendlyLastShown();
     navigate('/settings/adminPlan');
     setFriendlyVisible(false);
   };
 
   const handleFriendlyDismiss = () => {
+    recordFriendlyLastShown();
     setFriendlyVisible(false);
   };
 
@@ -263,15 +270,11 @@ const UpgradeBanner: React.FC = () => {
       return;
     }
 
-    // For testing: use a fixed number to show the "Server License Needed" modal
-    // In production, this would use effectiveTotalUsers
-    const testUserCount = 542; // Fixed for testing purposes
-
     const detail: ServerLicenseRequestPayload = {
       licenseNotice: {
-        totalUsers: testUserCount || testUserCount,
-        freeTierLimit: FREE_TIER_LIMIT,
-        isOverLimit: true,
+        totalUsers: effectiveTotalUsers ?? null,
+        freeTierLimit,
+        isOverLimit: effectiveIsOverLimit ?? false,
       },
       selfReportedAdmin: true,
       deferUntilTourComplete: false,
@@ -284,8 +287,15 @@ const UpgradeBanner: React.FC = () => {
 
   const renderUrgentBanner = () => {
     if (!shouldEvaluateUrgent) {
+      console.debug('[UpgradeBanner] renderUrgentBanner → hidden (shouldEvaluateUrgent=false)');
       return null;
     }
+    console.debug('[UpgradeBanner] renderUrgentBanner → visible', {
+      totalUsers: effectiveTotalUsers,
+      freeTierLimit,
+      effectiveIsAdmin,
+      effectiveHasPaidLicense,
+    });
 
     const buttonText = effectiveIsAdmin ? t('upgradeBanner.seeInfo', 'See info') : undefined;
 

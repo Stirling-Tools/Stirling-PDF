@@ -12,6 +12,7 @@ import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
 } from '@core/constants/events';
+import { useServerExperience } from '@app/hooks/useServerExperience';
 
 interface InitialModalHandlers {
   opened: boolean;
@@ -44,11 +45,13 @@ export function useOnboardingFlow() {
   const isAuthenticated = !!session;
   const shouldShowIntro = !preferences.hasSeenIntroOnboarding && (!loginEnabled || isAuthenticated);
   const isAdminUser = !!config?.isAdmin;
+  const { hasPaidLicense } = useServerExperience();
 
   const [licenseNotice, setLicenseNotice] = useState<LicenseNotice>({
     totalUsers: null,
     freeTierLimit: 5,
     isOverLimit: false,
+    requiresLicense: false,
   });
   const [cookieBannerPending, setCookieBannerPending] = useState(false);
   const [serverLicenseIntent, setServerLicenseIntent] = useState<'idle' | 'pending' | 'deferred'>('idle');
@@ -108,6 +111,9 @@ export function useOnboardingFlow() {
       if (!qualifies) {
         return;
       }
+      if (hasPaidLicense || !licenseNotice.requiresLicense) {
+        return;
+      }
       setServerLicenseSource(isAdminUser ? 'config' : 'self-reported');
       setServerLicenseIntent((prev) => {
         if (prev === 'pending') {
@@ -122,7 +128,7 @@ export function useOnboardingFlow() {
         return prev;
       });
     },
-    [isAdminUser],
+    [hasPaidLicense, isAdminUser, licenseNotice.requiresLicense],
   );
 
   useEffect(() => {
@@ -143,6 +149,8 @@ export function useOnboardingFlow() {
             detail.licenseNotice?.freeTierLimit ?? prev.freeTierLimit,
           isOverLimit:
             detail.licenseNotice?.isOverLimit ?? prev.isOverLimit,
+          requiresLicense:
+            detail.licenseNotice?.requiresLicense ?? prev.requiresLicense,
         }));
       }
 
@@ -185,15 +193,20 @@ export function useOnboardingFlow() {
   ]);
 
   useEffect(() => {
-    const isEligibleAdmin = isAdminUser || serverLicenseSource === 'self-reported';
+    const isEligibleAdmin =
+      isAdminUser || serverLicenseSource === 'self-reported' || licenseNotice.requiresLicense;
     if (
       introWasOpenRef.current &&
       !shouldShowIntro &&
       isEligibleAdmin &&
       toolPromptCompleted &&
       !hasShownServerLicense &&
+      licenseNotice.requiresLicense &&
       serverLicenseIntent === 'idle'
     ) {
+      if (!serverLicenseSource) {
+        setServerLicenseSource(isAdminUser ? 'config' : 'self-reported');
+      }
       setServerLicenseIntent('pending');
     }
     introWasOpenRef.current = shouldShowIntro;
@@ -204,17 +217,20 @@ export function useOnboardingFlow() {
     shouldShowIntro,
     serverLicenseSource,
     toolPromptCompleted,
+    licenseNotice.requiresLicense,
   ]);
 
   useEffect(() => {
-    const isEligibleAdmin = isAdminUser || serverLicenseSource === 'self-reported';
+    const isEligibleAdmin =
+      isAdminUser || serverLicenseSource === 'self-reported' || licenseNotice.requiresLicense;
     if (
       serverLicenseIntent !== 'idle' &&
       !shouldShowIntro &&
       !isOpen &&
       !isServerLicenseOpen &&
       isEligibleAdmin &&
-      toolPromptCompleted
+      toolPromptCompleted &&
+      licenseNotice.requiresLicense
     ) {
       setIsServerLicenseOpen(true);
       setServerLicenseIntent(serverLicenseIntent === 'deferred' ? 'pending' : 'idle');
@@ -227,6 +243,7 @@ export function useOnboardingFlow() {
     shouldShowIntro,
     serverLicenseSource,
     toolPromptCompleted,
+    licenseNotice.requiresLicense,
   ]);
 
   const handleServerLicenseClose = useCallback(() => {
@@ -247,6 +264,16 @@ export function useOnboardingFlow() {
     if (shouldShowIntro || isOpen) {
       onboardingSessionMarkedRef.current = true;
       window.sessionStorage.setItem(ONBOARDING_SESSION_BLOCK_KEY, 'true');
+      window.dispatchEvent(new CustomEvent(ONBOARDING_SESSION_EVENT));
+    }
+  }, [isOpen, shouldShowIntro]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (!shouldShowIntro && !isOpen) {
+      window.sessionStorage.removeItem(ONBOARDING_SESSION_BLOCK_KEY);
       window.dispatchEvent(new CustomEvent(ONBOARDING_SESSION_EVENT));
     }
   }, [isOpen, shouldShowIntro]);

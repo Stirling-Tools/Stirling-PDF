@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOs } from '@app/hooks/useOs';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,11 +11,8 @@ import {
 } from '@app/components/onboarding/onboardingFlowConfig';
 import type { LicenseNotice } from '@app/components/onboarding/slides/types';
 import { resolveFlow } from './flowResolver';
-import { useLicenseInfo } from './useLicenseInfo';
-import { useDevScenarios } from './useDevScenarios';
+import { useServerExperience } from '@app/hooks/useServerExperience';
 import { DEFAULT_STATE, type InitialOnboardingModalProps, type OnboardingState } from './types';
-
-const FREE_TIER_LIMIT = 5;
 
 interface UseInitialOnboardingStateResult {
   state: OnboardingState;
@@ -27,10 +23,6 @@ interface UseInitialOnboardingStateResult {
   flowState: FlowState;
   closeAndMarkSeen: () => void;
   handleButtonAction: (action: ButtonAction) => void;
-  handleDownloadIconSelect: (icon: 'new' | 'classic') => void;
-  devButtons: ReturnType<typeof useDevScenarios>['devButtons'];
-  activeDevScenario: ReturnType<typeof useDevScenarios>['activeDevScenario'];
-  handleDevScenarioClick: ReturnType<typeof useDevScenarios>['handleDevScenarioClick'];
 }
 
 export function useInitialOnboardingState({
@@ -41,10 +33,18 @@ export function useInitialOnboardingState({
 }: InitialOnboardingModalProps): UseInitialOnboardingStateResult | null {
   const { preferences, updatePreference } = usePreferences();
   const { startTour } = useOnboarding();
-  const { config } = useAppConfig();
+  const {
+    loginEnabled: loginEnabledFromServer,
+    configIsAdmin,
+    totalUsers: serverTotalUsers,
+    userCountResolved: serverUserCountResolved,
+    freeTierLimit,
+    hasPaidLicense,
+    scenarioKey,
+    setSelfReportedAdmin,
+  } = useServerExperience();
   const osType = useOs();
   const navigate = useNavigate();
-  const isDevMode = import.meta.env.MODE === 'development';
 
   const [state, setState] = useState<OnboardingState>(DEFAULT_STATE);
 
@@ -58,17 +58,27 @@ export function useInitialOnboardingState({
     }
   }, [opened, resetState]);
 
-  const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
-    setState((prev) => ({
-      ...prev,
-      selectedRole: role,
-      selfReportedAdmin: role === 'admin',
-    }));
+  const handleRoleSelect = useCallback(
+    (role: 'admin' | 'user' | null) => {
+      const isAdminSelection = role === 'admin';
+      setState((prev) => ({
+        ...prev,
+        selectedRole: role,
+        selfReportedAdmin: isAdminSelection,
+      }));
 
-    if (role === 'admin') {
-      window?.localStorage?.setItem('stirling-self-reported-admin', 'true');
-    }
-  }, []);
+      if (typeof window !== 'undefined') {
+        if (isAdminSelection) {
+          window.localStorage.setItem('stirling-self-reported-admin', 'true');
+        } else {
+          window.localStorage.removeItem('stirling-self-reported-admin');
+        }
+      }
+
+      setSelfReportedAdmin(isAdminSelection);
+    },
+    [setSelfReportedAdmin],
+  );
 
   const closeAndMarkSeen = useCallback(() => {
     if (!preferences.hasSeenIntroOnboarding) {
@@ -77,42 +87,18 @@ export function useInitialOnboardingState({
     onClose();
   }, [onClose, preferences.hasSeenIntroOnboarding, updatePreference]);
 
-  const handleDevScenarioApply = useCallback(
-    ({
-      selectedRole,
-      selfReportedAdmin,
-    }: {
-      selectedRole: 'admin' | 'user' | null;
-      selfReportedAdmin: boolean;
-    }) => {
-      setState({
-        ...DEFAULT_STATE,
-        selectedRole,
-        selfReportedAdmin,
-      });
-    },
-    [],
-  );
+  const isAdmin = configIsAdmin;
+  const enableLogin = loginEnabledFromServer;
 
-  const { devButtons, activeDevScenario, handleDevScenarioClick, devOverrides } = useDevScenarios({
-    opened,
-    isDevMode,
-    onApplyScenario: handleDevScenarioApply,
-  });
+  const effectiveEnableLogin = enableLogin;
+  const effectiveIsAdmin = isAdmin;
 
-  const isAdmin = !!config?.isAdmin;
-  const enableLogin = config?.enableLogin ?? true;
+  const shouldUseServerCount =
+    (effectiveEnableLogin && effectiveIsAdmin) || !effectiveEnableLogin;
+  const licenseUserCountFromServer =
+    shouldUseServerCount && serverUserCountResolved ? serverTotalUsers : null;
 
-  const effectiveEnableLogin = devOverrides?.enableLogin ?? enableLogin;
-  const effectiveIsAdmin = devOverrides?.isAdmin ?? isAdmin;
-
-  const licenseUserCountFromApi = useLicenseInfo({
-    opened,
-    shouldFetch: effectiveEnableLogin && effectiveIsAdmin && !devOverrides,
-  });
-
-  const effectiveLicenseUserCount =
-    devOverrides?.licenseUserCount ?? licenseUserCountFromApi ?? null;
+  const effectiveLicenseUserCount = licenseUserCountFromServer ?? null;
 
   const os = useMemo(() => {
     switch (osType) {
@@ -154,14 +140,42 @@ export function useInitialOnboardingState({
     return null;
   }
 
+  const scenarioProvidesInfo =
+    scenarioKey && scenarioKey !== 'unknown' && scenarioKey !== 'licensed';
+  const scenarioIndicatesAdmin = scenarioProvidesInfo
+    ? scenarioKey!.includes('admin')
+    : state.selfReportedAdmin || effectiveIsAdmin;
+  const scenarioIndicatesOverLimit = scenarioProvidesInfo
+    ? scenarioKey!.includes('over-limit')
+    : effectiveLicenseUserCount != null && effectiveLicenseUserCount > freeTierLimit;
+  const scenarioRequiresLicense =
+    scenarioKey === 'licensed' ? false : scenarioKey === 'unknown' ? !hasPaidLicense : true;
+
+  const shouldShowServerLicenseInfo = scenarioIndicatesAdmin && scenarioRequiresLicense;
+
   const licenseNotice = useMemo<LicenseNotice>(
     () => ({
       totalUsers: effectiveLicenseUserCount,
-      freeTierLimit: FREE_TIER_LIMIT,
-      isOverLimit:
-        effectiveLicenseUserCount != null && effectiveLicenseUserCount > FREE_TIER_LIMIT,
+      freeTierLimit,
+      isOverLimit: scenarioIndicatesOverLimit,
+      requiresLicense: shouldShowServerLicenseInfo,
     }),
-    [effectiveLicenseUserCount],
+    [
+      effectiveLicenseUserCount,
+      freeTierLimit,
+      scenarioIndicatesOverLimit,
+      shouldShowServerLicenseInfo,
+    ],
+  );
+
+  const requestServerLicenseIfNeeded = useCallback(
+    (options?: { deferUntilTourComplete?: boolean; selfReportedAdmin?: boolean }) => {
+      if (!shouldShowServerLicenseInfo) {
+        return;
+      }
+      onRequestServerLicense?.(options);
+    },
+    [onRequestServerLicense, shouldShowServerLicenseInfo],
   );
 
   useEffect(() => {
@@ -229,12 +243,7 @@ export function useInitialOnboardingState({
           closeAndMarkSeen();
           return;
         case 'download-selected': {
-          const downloadUrl =
-            state.selectedDownloadIcon === 'new'
-              ? os.url
-              : state.selectedDownloadIcon === 'classic'
-              ? os.url
-              : currentSlide.downloadUrl;
+          const downloadUrl = os.url || currentSlide.downloadUrl;
           if (downloadUrl) {
             window.open(downloadUrl, '_blank', 'noopener');
           }
@@ -260,7 +269,7 @@ export function useInitialOnboardingState({
           }
           return;
         case 'launch-admin':
-          onRequestServerLicense?.({
+          requestServerLicenseIfNeeded({
             deferUntilTourComplete: true,
             selfReportedAdmin: state.selfReportedAdmin || effectiveIsAdmin,
           });
@@ -272,7 +281,7 @@ export function useInitialOnboardingState({
         case 'launch-auto': {
           const launchMode = state.selfReportedAdmin || effectiveIsAdmin ? 'admin' : 'tools';
           if (launchMode === 'admin') {
-            onRequestServerLicense?.({
+            requestServerLicenseIfNeeded({
               deferUntilTourComplete: true,
               selfReportedAdmin: state.selfReportedAdmin || effectiveIsAdmin,
             });
@@ -282,7 +291,7 @@ export function useInitialOnboardingState({
         }
         case 'skip-to-license':
           updatePreference('hasCompletedOnboarding', true);
-          onRequestServerLicense?.({
+          requestServerLicenseIfNeeded({
             deferUntilTourComplete: false,
             selfReportedAdmin: state.selfReportedAdmin || effectiveIsAdmin,
           });
@@ -305,21 +314,14 @@ export function useInitialOnboardingState({
       goPrev,
       launchTour,
       navigate,
+      requestServerLicenseIfNeeded,
       onRequestServerLicense,
       os.url,
-      state.selectedDownloadIcon,
       state.selectedRole,
       state.selfReportedAdmin,
       updatePreference,
     ],
   );
-
-  const handleDownloadIconSelect = useCallback((icon: 'new' | 'classic') => {
-    setState((prev) => ({
-      ...prev,
-      selectedDownloadIcon: icon,
-    }));
-  }, []);
 
   const flowState: FlowState = { selectedRole: state.selectedRole };
 
@@ -332,10 +334,6 @@ export function useInitialOnboardingState({
     flowState,
     closeAndMarkSeen,
     handleButtonAction,
-    handleDownloadIconSelect,
-    devButtons,
-    activeDevScenario,
-    handleDevScenarioClick,
   };
 }
 

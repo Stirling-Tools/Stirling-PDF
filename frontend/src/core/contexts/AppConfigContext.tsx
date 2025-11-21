@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
+import { getSimulatedAppConfig } from '@app/testing/serverExperienceSimulations';
 
 /**
  * Sleep utility for delays
@@ -43,6 +44,8 @@ export interface AppConfig {
   machineType?: string;
   activeSecurity?: boolean;
   error?: string;
+  isNewServer?: boolean;
+  isNewUser?: boolean;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
@@ -105,6 +108,15 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        const testConfig = getSimulatedAppConfig();
+        if (testConfig) {
+          setConfig(testConfig);
+          setFetchCount((prev) => prev + 1);
+          setHasResolvedConfig(true);
+          setLoading(false);
+          return;
+        }
+
         if (attempt > 0) {
           const delay = initialDelay * Math.pow(2, attempt - 1);
           console.log(`[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`);

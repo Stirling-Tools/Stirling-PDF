@@ -26,37 +26,14 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
     flowState,
     closeAndMarkSeen,
     handleButtonAction,
-    handleDownloadIconSelect,
-    devButtons,
-    activeDevScenario,
-    handleDevScenarioClick,
   } = flow;
-
-  const showDevButtons = devButtons.length > 0;
 
   const renderHero = () => {
     if (slideDefinition.hero.type === 'dual-icon') {
       return (
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
-            <button
-              className={`${styles.iconButton} ${state.selectedDownloadIcon === 'new' ? styles.iconButtonSelected : ''}`}
-              onClick={() => handleDownloadIconSelect('new')}
-              aria-label="Select new icon version"
-            >
-              <img src="/branding/StirlingLogo.svg" alt="Stirling new icon" className={styles.downloadIcon} />
-            </button>
-            {state.selectedDownloadIcon === 'new' && <div className={styles.iconLabel}>Modern Icon</div>}
-          </div>
-          <div className={styles.iconWrapper}>
-            <button
-              className={`${styles.iconButton} ${state.selectedDownloadIcon === 'classic' ? styles.iconButtonSelected : ''}`}
-              onClick={() => handleDownloadIconSelect('classic')}
-              aria-label="Select classic icon version"
-            >
-              <img src="/branding/StirlingLogoLegacy.svg" alt="Stirling classic icon" className={styles.downloadIcon} />
-            </button>
-            {state.selectedDownloadIcon === 'classic' && <div className={styles.iconLabel}>Classic Icon</div>}
+            <img src="/branding/StirlingLogoLegacy.svg" alt="Stirling icon" className={styles.downloadIcon} />
           </div>
         </div>
       );
@@ -74,28 +51,6 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
         {slideDefinition.hero.type === 'logo' && (
           <img src="/branding/StirlingPDFLogoNoTextLightHC.svg" alt="Stirling logo" />
         )}
-      </div>
-    );
-  };
-
-  const renderDevOverlay = () => {
-    if (!showDevButtons) {
-      return null;
-    }
-
-    return (
-      <div className={styles.devOverlay}>
-        {devButtons.map((btn) => (
-          <button
-            key={btn.label}
-            type="button"
-            onClick={() => handleDevScenarioClick(btn)}
-            title={btn.overLimit ? 'Set simulated users to 57' : 'Set simulated users to 3'}
-            className={`${styles.devButton} ${activeDevScenario === btn.label ? styles.devButtonActive : ''}`}
-          >
-            {btn.label}
-          </button>
-        ))}
       </div>
     );
   };
@@ -156,7 +111,6 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
             </div>
           </Stack>
         </div>
-        {renderDevOverlay()}
       </Stack>
     </Modal>
   );

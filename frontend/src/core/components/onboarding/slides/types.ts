@@ -30,4 +30,5 @@ export interface LicenseNotice {
   totalUsers: number | null;
   freeTierLimit: number;
   isOverLimit: boolean;
+  requiresLicense: boolean;
 }

@@ -4870,6 +4870,10 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
+    "welcomeSlide": {
+      "title": "Welcome to Stirling",
+      "body": "Stirling PDF is now ready for teams of all sizes.<br />This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+    },
     "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",

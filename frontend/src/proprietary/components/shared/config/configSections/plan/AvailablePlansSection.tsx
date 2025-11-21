@@ -1,21 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Collapse } from '@mantine/core';
+import { Button, Collapse, Select } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
 import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+
+interface CurrencyOption {
+  value: string;
+  label: string;
+}
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
   currentPlanId?: string;
   currentLicenseInfo?: LicenseInfo | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
+  currency: string;
+  currencyOptions: CurrencyOption[];
+  onCurrencyChange: (value: string) => void;
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   plans,
   currentLicenseInfo,
   onUpgradeClick,
+  currency,
+  currencyOptions,
+  onCurrencyChange,
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
@@ -56,20 +68,48 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
     return currentLevel > targetLevel;
   };
 
+  const handleCurrencyChange = (value: string | null) => {
+    onCurrencyChange(value || currency);
+  };
+
   return (
     <div>
-      <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
-        {t('plan.availablePlans.title', 'Available Plans')}
-      </h3>
-      <p
+      <div
         style={{
-          margin: '0.25rem 0 1rem 0',
-          color: 'var(--mantine-color-dimmed)',
-          fontSize: '0.875rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          gap: '0.75rem',
+          justifyContent: 'space-between',
+          marginBottom: '1rem',
         }}
       >
-        {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
-      </p>
+        <div style={{ flex: '1 1 320px', minWidth: '240px' }}>
+          <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
+            {t('plan.availablePlans.title', 'Available Plans')}
+          </h3>
+          <p
+            style={{
+              margin: '0.25rem 0 0 0',
+              color: 'var(--mantine-color-dimmed)',
+              fontSize: '0.875rem',
+            }}
+          >
+            {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
+          </p>
+        </div>
+
+        <Select
+          aria-label={t('plan.currency', 'Currency')}
+          value={currency}
+          onChange={handleCurrencyChange}
+          data={currencyOptions}
+          searchable
+          clearable={false}
+          w={280}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+        />
+      </div>
 
       <div
         style={{

@@ -9,14 +9,12 @@ export interface InitialOnboardingModalProps {
 
 export interface OnboardingState {
   step: number;
-  selectedDownloadIcon: 'new' | 'classic';
   selectedRole: 'admin' | 'user' | null;
   selfReportedAdmin: boolean;
 }
 
 export const DEFAULT_STATE: OnboardingState = {
   step: 0,
-  selectedDownloadIcon: 'new',
   selectedRole: null,
   selfReportedAdmin: false,
 };
