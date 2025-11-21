@@ -370,12 +370,12 @@ pub async fn start_oauth_login(
                 let url_str = format!("http://127.0.0.1{}", request.url());
                 log::info!("Received callback request: {}", url_str);
 
-                // Try to parse tokens from URL
-                let callback_result = parse_oauth_callback(&url_str);
+                // Try to parse data from URL (either tokens or code)
+                let callback_data = parse_oauth_callback(&url_str);
 
-                // Check if we got valid tokens
-                if callback_result.is_ok() {
-                    log::info!("Successfully extracted tokens from callback");
+                // Check if we got valid data
+                if callback_data.is_ok() {
+                    log::info!("Successfully extracted callback data");
 
                     let html_response = r#"
                         <!DOCTYPE html>
@@ -393,11 +393,11 @@ pub async fn start_oauth_login(
                         .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
 
                     let mut result_lock = result_clone.lock().unwrap();
-                    *result_lock = Some(callback_result);
+                    *result_lock = Some(callback_data);
                     break;
                 } else {
-                    // No tokens yet - send HTML that extracts from hash and redirects
-                    log::info!("No tokens in query params, sending hash extraction HTML");
+                    // No data yet - send HTML that extracts from hash and redirects
+                    log::info!("No callback data found, sending hash extraction HTML");
 
                     let html_response = r#"
                         <!DOCTYPE html>
@@ -423,7 +423,7 @@ pub async fn start_oauth_login(
                     let _ = request.respond(Response::from_string(html_response)
                         .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap()));
 
-                    // Continue listening for the redirected request with tokens
+                    // Continue listening for the redirected request
                 }
             }
         }
@@ -434,11 +434,20 @@ pub async fn start_oauth_login(
         .map_err(|_| "OAuth callback server thread panicked".to_string())?;
 
     // Get result
-    let final_result = result.lock().unwrap().take()
+    let callback_data = result.lock().unwrap().take()
         .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
 
-    log::info!("OAuth callback completed successfully");
-    final_result
+    // Handle the callback data - either tokens directly or code that needs exchange
+    match callback_data? {
+        OAuthCallbackData::Tokens(tokens) => {
+            log::info!("OAuth completed with implicit flow");
+            Ok(tokens)
+        }
+        OAuthCallbackData::Code { code, redirect_uri } => {
+            log::info!("OAuth completed with authorization code flow, exchanging code...");
+            exchange_code_for_token(&auth_server_url, &code, &redirect_uri).await
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -448,15 +457,94 @@ pub struct OAuthCallbackResult {
     pub expires_in: Option<i64>,
 }
 
+// Internal enum for handling both implicit and authorization code flows
+#[derive(Debug, Clone)]
+enum OAuthCallbackData {
+    Tokens(OAuthCallbackResult),
+    Code { code: String, redirect_uri: String },
+}
+
+/// Exchange authorization code for access token
+async fn exchange_code_for_token(
+    auth_server_url: &str,
+    code: &str,
+    redirect_uri: &str,
+) -> Result<OAuthCallbackResult, String> {
+    log::info!("Exchanging authorization code for access token");
+
+    let client = reqwest::Client::new();
+    let token_url = format!("{}/auth/v1/token", auth_server_url.trim_end_matches('/'));
+
+    let params = [
+        ("grant_type", "authorization_code"),
+        ("code", code),
+        ("redirect_uri", redirect_uri),
+    ];
+
+    log::info!("Token exchange URL: {}", token_url);
+
+    let response = client
+        .post(&token_url)
+        .form(&params)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to exchange code for token: {}", e))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        log::error!("Token exchange failed with status {}: {}", status, error_text);
+        return Err(format!("Token exchange failed: {}", error_text));
+    }
+
+    // Parse token response
+    let token_response: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse token response: {}", e))?;
+
+    log::info!("Token exchange successful");
+
+    let access_token = token_response
+        .get("access_token")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "No access_token in token response".to_string())?
+        .to_string();
+
+    let refresh_token = token_response
+        .get("refresh_token")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let expires_in = token_response
+        .get("expires_in")
+        .and_then(|v| v.as_i64());
+
+    Ok(OAuthCallbackResult {
+        access_token,
+        refresh_token,
+        expires_in,
+    })
+}
+
 /// Parse OAuth callback URL to extract tokens
 /// This is called by the frontend when it receives an oauth-callback event
+/// Note: This function is for the deep-link flow (not currently used)
 #[tauri::command]
 pub async fn parse_oauth_callback_url(url_str: String) -> Result<OAuthCallbackResult, String> {
     log::info!("Parsing OAuth callback URL");
-    parse_oauth_callback(&url_str)
+    match parse_oauth_callback(&url_str)? {
+        OAuthCallbackData::Tokens(tokens) => Ok(tokens),
+        OAuthCallbackData::Code { .. } => {
+            Err("Authorization code flow not supported in this context".to_string())
+        }
+    }
 }
 
-fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
+fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
     // Parse URL - tokens might be in query params or hash fragment
     let parsed_url = url::Url::parse(url_str)
         .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
@@ -465,12 +553,14 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
     let mut access_token = None;
     let mut refresh_token = None;
     let mut expires_in = None;
+    let mut code = None;
 
     for (key, value) in parsed_url.query_pairs() {
         match key.as_ref() {
             "access_token" => access_token = Some(value.to_string()),
             "refresh_token" => refresh_token = Some(value.to_string()),
             "expires_in" => expires_in = value.parse::<i64>().ok(),
+            "code" => code = Some(value.to_string()),
             _ => {}
         }
     }
@@ -485,6 +575,7 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
                         "access_token" => access_token = Some(value.to_string()),
                         "refresh_token" => refresh_token = Some(value.to_string()),
                         "expires_in" => expires_in = value.parse::<i64>().ok(),
+                        "code" => code = Some(value.to_string()),
                         _ => {}
                     }
                 }
@@ -492,14 +583,45 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackResult, String> {
         }
     }
 
-    let access_token = access_token
-        .ok_or_else(|| "No access_token found in OAuth callback".to_string())?;
+    // If we have an access_token, return it directly (implicit flow)
+    if let Some(token) = access_token {
+        log::info!("Found access_token in callback (implicit flow)");
+        return Ok(OAuthCallbackData::Tokens(OAuthCallbackResult {
+            access_token: token,
+            refresh_token,
+            expires_in,
+        }));
+    }
 
-    Ok(OAuthCallbackResult {
-        access_token,
-        refresh_token,
-        expires_in,
-    })
+    // If we have a code but no access_token, we need to exchange it (authorization code flow)
+    if let Some(auth_code) = code {
+        log::info!("Found authorization code in callback (code flow)");
+        // Extract the full callback URL (without query params) to use as redirect_uri
+        let redirect_uri = format!("{}://{}{}",
+            parsed_url.scheme(),
+            parsed_url.host_str().unwrap_or("127.0.0.1"),
+            parsed_url.path()
+        );
+        if let Some(port) = parsed_url.port() {
+            let redirect_uri = format!("{}://{}:{}{}",
+                parsed_url.scheme(),
+                parsed_url.host_str().unwrap_or("127.0.0.1"),
+                port,
+                parsed_url.path()
+            );
+            return Ok(OAuthCallbackData::Code {
+                code: auth_code,
+                redirect_uri,
+            });
+        }
+        return Ok(OAuthCallbackData::Code {
+            code: auth_code,
+            redirect_uri,
+        });
+    }
+
+    // Neither access_token nor code found
+    Err("No access_token or authorization code found in OAuth callback".to_string())
 }
 
 /// Gets the stored OAuth state (for validation when callback is received)
