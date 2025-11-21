@@ -597,6 +597,9 @@ tasks.named('build') {
     group = 'build'
     description = 'Delegates to :stirling-pdf:bootJar'
     dependsOn ':stirling-pdf:bootJar'
+    if (System.getenv().get("INSTALL_CHROMIUM")=='true'){
+        dependsOn(':stirling-pdf:installChromium')
+    }
 
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
