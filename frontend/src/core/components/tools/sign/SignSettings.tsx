@@ -137,7 +137,7 @@ const SignSettings = ({
       }
       return `${baseLabel} ${nextIndex}`;
     },
-    [byTypeCounts, t]
+    [byTypeCounts, t, translate]
   );
 
   const signatureKeysByType = useMemo(() => {
