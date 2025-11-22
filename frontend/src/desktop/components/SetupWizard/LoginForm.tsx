@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 
 interface LoginFormProps {
   serverUrl: string;
+  isSaaS?: boolean;
   onLogin: (username: string, password: string) => Promise<void>;
   loading: boolean;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, onLogin, loading }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false, onLogin, loading }) => {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +37,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, onLogin, loadin
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          {t('setup.login.connectingTo', 'Connecting to:')} <strong>{serverUrl}</strong>
+          {t('setup.login.connectingTo', 'Connecting to:')} <strong>{isSaaS ? 'stirling.com' : serverUrl}</strong>
         </Text>
 
         <TextInput

@@ -41,7 +41,6 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       // Connection successful
       onSelect({
         url,
-        server_type: 'selfhosted',
       });
     } catch (error) {
       console.error('Connection test failed:', error);

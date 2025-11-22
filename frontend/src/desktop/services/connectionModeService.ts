@@ -1,12 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 
-export type ConnectionMode = 'offline' | 'server';
-export type ServerType = 'saas' | 'selfhosted';
+export type ConnectionMode = 'saas' | 'selfhosted';
 
 export interface ServerConfig {
   url: string;
-  server_type: ServerType;
 }
 
 export interface ConnectionConfig {
@@ -31,7 +29,7 @@ export class ConnectionModeService {
     if (!this.configLoadedOnce) {
       await this.loadConfig();
     }
-    return this.currentConfig || { mode: 'offline', server_config: null };
+    return this.currentConfig || { mode: 'saas', server_config: null };
   }
 
   async getCurrentMode(): Promise<ConnectionMode> {
@@ -64,38 +62,40 @@ export class ConnectionModeService {
       this.configLoadedOnce = true;
     } catch (error) {
       console.error('Failed to load connection config:', error);
-      // Default to offline mode on error
-      this.currentConfig = { mode: 'offline', server_config: null };
+      // Default to SaaS mode on error
+      this.currentConfig = { mode: 'saas', server_config: null };
       this.configLoadedOnce = true;
     }
   }
 
-  async switchToOffline(): Promise<void> {
-    console.log('Switching to offline mode');
+  async switchToSaaS(saasServerUrl: string): Promise<void> {
+    console.log('Switching to SaaS mode');
+
+    const serverConfig: ServerConfig = { url: saasServerUrl };
 
     await invoke('set_connection_mode', {
-      mode: 'offline',
-      serverConfig: null,
-    });
-
-    this.currentConfig = { mode: 'offline', server_config: null };
-    this.notifyListeners();
-
-    console.log('Switched to offline mode successfully');
-  }
-
-  async switchToServer(serverConfig: ServerConfig): Promise<void> {
-    console.log('Switching to server mode:', serverConfig);
-
-    await invoke('set_connection_mode', {
-      mode: 'server',
+      mode: 'saas',
       serverConfig,
     });
 
-    this.currentConfig = { mode: 'server', server_config: serverConfig };
+    this.currentConfig = { mode: 'saas', server_config: serverConfig };
     this.notifyListeners();
 
-    console.log('Switched to server mode successfully');
+    console.log('Switched to SaaS mode successfully');
+  }
+
+  async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {
+    console.log('Switching to self-hosted mode:', serverConfig);
+
+    await invoke('set_connection_mode', {
+      mode: 'selfhosted',
+      serverConfig,
+    });
+
+    this.currentConfig = { mode: 'selfhosted', server_config: serverConfig };
+    this.notifyListeners();
+
+    console.log('Switched to self-hosted mode successfully');
   }
 
   async testConnection(url: string): Promise<boolean> {
@@ -124,6 +124,16 @@ export class ConnectionModeService {
     } catch (error) {
       console.error('Failed to check first launch:', error);
       return false;
+    }
+  }
+
+  async resetSetupCompletion(): Promise<void> {
+    try {
+      await invoke('reset_setup_completion');
+      console.log('Setup completion flag reset successfully');
+    } catch (error) {
+      console.error('Failed to reset setup completion:', error);
+      throw error;
     }
   }
 }

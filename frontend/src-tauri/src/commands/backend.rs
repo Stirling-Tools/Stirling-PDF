@@ -349,11 +349,11 @@ pub async fn start_backend(
     };
 
     match mode {
-        ConnectionMode::Offline => {
-            add_log("🔌 Running in Offline mode - starting local backend".to_string());
+        ConnectionMode::SaaS => {
+            add_log("☁️ Running in SaaS mode - starting local backend".to_string());
         }
-        ConnectionMode::Server => {
-            add_log("🌐 Running in Server mode - starting local backend (for hybrid execution support)".to_string());
+        ConnectionMode::SelfHosted => {
+            add_log("🌐 Running in Self-Hosted mode - starting local backend (for hybrid execution support)".to_string());
         }
     }
 

@@ -7,13 +7,15 @@ import { LoginForm } from '@app/components/SetupWizard/LoginForm';
 import { connectionModeService, ServerConfig } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoPath } from '@app/hooks/useLogoPath';
+import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
 import '@app/components/SetupWizard/SetupWizard.css';
 
 enum SetupStep {
   ModeSelection,
+  SaaSLogin,
   ServerSelection,
-  Login,
+  SelfHostedLogin,
 }
 
 interface SetupWizardProps {
@@ -22,34 +24,42 @@ interface SetupWizardProps {
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const { t } = useTranslation();
+  const logoPath = useLogoPath();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.ModeSelection);
-  const [_selectedMode, setSelectedMode] = useState<'offline' | 'server' | null>(null);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleModeSelection = (mode: 'offline' | 'server') => {
-    setSelectedMode(mode);
+  const handleModeSelection = (mode: 'saas' | 'selfhosted') => {
     setError(null);
 
-    if (mode === 'offline') {
-      handleOfflineSetup();
+    if (mode === 'saas') {
+      // For SaaS, go directly to login screen with SaaS URL
+      setServerConfig({ url: STIRLING_SAAS_URL });
+      setActiveStep(SetupStep.SaaSLogin);
     } else {
+      // For self-hosted, show server selection first
       setActiveStep(SetupStep.ServerSelection);
     }
   };
 
-  const handleOfflineSetup = async () => {
+  const handleSaaSLogin = async (username: string, password: string) => {
+    if (!serverConfig) {
+      setError('No SaaS server configured');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      await connectionModeService.switchToOffline();
+      await authService.login(serverConfig.url, username, password);
+      await connectionModeService.switchToSaaS(serverConfig.url);
       await tauriBackendService.startBackend();
       onComplete();
     } catch (err) {
-      console.error('Failed to set up offline mode:', err);
-      setError(err instanceof Error ? err.message : 'Failed to set up offline mode');
+      console.error('SaaS login failed:', err);
+      setError(err instanceof Error ? err.message : 'SaaS login failed');
       setLoading(false);
     }
   };
@@ -57,10 +67,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleServerSelection = (config: ServerConfig) => {
     setServerConfig(config);
     setError(null);
-    setActiveStep(SetupStep.Login);
+    setActiveStep(SetupStep.SelfHostedLogin);
   };
 
-  const handleLogin = async (username: string, password: string) => {
+  const handleSelfHostedLogin = async (username: string, password: string) => {
     if (!serverConfig) {
       setError('No server configured');
       return;
@@ -71,23 +81,25 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setError(null);
 
       await authService.login(serverConfig.url, username, password);
-      await connectionModeService.switchToServer(serverConfig);
+      await connectionModeService.switchToSelfHosted(serverConfig);
       await tauriBackendService.initializeExternalBackend();
       onComplete();
     } catch (err) {
-      console.error('Login failed:', err);
-      setError(err instanceof Error ? err.message : 'Login failed');
+      console.error('Self-hosted login failed:', err);
+      setError(err instanceof Error ? err.message : 'Self-hosted login failed');
       setLoading(false);
     }
   };
 
   const handleBack = () => {
     setError(null);
-    if (activeStep === SetupStep.Login) {
+    if (activeStep === SetupStep.SaaSLogin) {
+      setActiveStep(SetupStep.ModeSelection);
+      setServerConfig(null);
+    } else if (activeStep === SetupStep.SelfHostedLogin) {
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.ModeSelection);
-      setSelectedMode(null);
       setServerConfig(null);
     }
   };
@@ -96,10 +108,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     switch (activeStep) {
       case SetupStep.ModeSelection:
         return t('setup.welcome', 'Welcome to Stirling PDF');
+      case SetupStep.SaaSLogin:
+        return t('setup.saas.title', 'Sign in to Stirling Cloud');
       case SetupStep.ServerSelection:
         return t('setup.server.title', 'Connect to Server');
-      case SetupStep.Login:
-        return t('setup.login.title', 'Sign In');
+      case SetupStep.SelfHostedLogin:
+        return t('setup.selfhosted.title', 'Sign in to Server');
       default:
         return '';
     }
@@ -109,10 +123,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     switch (activeStep) {
       case SetupStep.ModeSelection:
         return t('setup.description', 'Get started by choosing how you want to use Stirling PDF');
+      case SetupStep.SaaSLogin:
+        return t('setup.saas.subtitle', 'Sign in with your Stirling account');
       case SetupStep.ServerSelection:
         return t('setup.server.subtitle', 'Enter your self-hosted server URL');
-      case SetupStep.Login:
-        return t('setup.login.subtitle', 'Enter your credentials to continue');
+      case SetupStep.SelfHostedLogin:
+        return t('setup.selfhosted.subtitle', 'Enter your server credentials');
       default:
         return '';
     }
@@ -126,9 +142,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             {/* Logo Header */}
             <Stack gap="xs" align="center">
               <Image
-                src={`${BASE_PATH}/branding/StirlingPDFLogoBlackText.svg`}
+                src={logoPath}
                 alt="Stirling PDF"
-                h={32}
+                h={64}
                 fit="contain"
               />
               <Title order={1} ta="center" style={{ fontSize: '2rem', fontWeight: 800 }}>
@@ -153,14 +169,24 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
               <ModeSelection onSelect={handleModeSelection} loading={loading} />
             )}
 
+            {activeStep === SetupStep.SaaSLogin && (
+              <LoginForm
+                serverUrl={serverConfig?.url || ''}
+                isSaaS={true}
+                onLogin={handleSaaSLogin}
+                loading={loading}
+              />
+            )}
+
             {activeStep === SetupStep.ServerSelection && (
               <ServerSelection onSelect={handleServerSelection} loading={loading} />
             )}
 
-            {activeStep === SetupStep.Login && (
+            {activeStep === SetupStep.SelfHostedLogin && (
               <LoginForm
                 serverUrl={serverConfig?.url || ''}
-                onLogin={handleLogin}
+                isSaaS={false}
+                onLogin={handleSelfHostedLogin}
                 loading={loading}
               />
             )}

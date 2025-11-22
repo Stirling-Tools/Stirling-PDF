@@ -22,14 +22,16 @@ export class OperationRouter {
     const mode = await connectionModeService.getCurrentMode();
 
     // Current implementation: simple mode-based routing
-    if (mode === 'offline') {
+    if (mode === 'saas') {
+      // SaaS mode: For now, all operations run locally
+      // Future enhancement: complex operations will be sent to SaaS server
       return 'local';
     }
 
-    // In server mode, currently all operations go to remote
+    // In self-hosted mode, currently all operations go to remote
     // Future enhancement: check if operation is "simple" and route to local if so
     // Example future logic:
-    // if (mode === 'server' && operation && this.isSimpleOperation(operation)) {
+    // if (mode === 'selfhosted' && operation && this.isSimpleOperation(operation)) {
     //   return 'local';
     // }
 
@@ -66,19 +68,19 @@ export class OperationRouter {
   }
 
   /**
-   * Checks if we're currently in remote mode
+   * Checks if we're currently in self-hosted mode
    */
-  async isRemoteMode(): Promise<boolean> {
+  async isSelfHostedMode(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
-    return mode === 'server';
+    return mode === 'selfhosted';
   }
 
   /**
-   * Checks if we're currently in offline mode
+   * Checks if we're currently in SaaS mode
    */
-  async isOfflineMode(): Promise<boolean> {
+  async isSaaSMode(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
-    return mode === 'offline';
+    return mode === 'saas';
   }
 
   // Future enhancement: operation classification
