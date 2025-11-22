@@ -33,6 +33,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -60,13 +61,14 @@ public class ConvertOfficeController {
         // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("Missing original filename");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
         if (extension == null || !isValidFileExtension(extension)) {
-            throw new IllegalArgumentException("Invalid file extension");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.extension", "Invalid file extension: " + extension);
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
