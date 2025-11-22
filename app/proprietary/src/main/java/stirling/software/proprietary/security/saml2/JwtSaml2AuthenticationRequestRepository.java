@@ -38,11 +38,6 @@ public class JwtSaml2AuthenticationRequestRepository
             Saml2PostAuthenticationRequest authRequest,
             HttpServletRequest request,
             HttpServletResponse response) {
-        if (!jwtService.isJwtEnabled()) {
-            log.debug("V2 is not enabled, skipping SAMLRequest token storage");
-            return;
-        }
-
         if (authRequest == null) {
             removeAuthenticationRequest(request, response);
             return;

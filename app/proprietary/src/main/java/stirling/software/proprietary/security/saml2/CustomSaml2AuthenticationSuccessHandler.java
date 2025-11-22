@@ -149,22 +149,15 @@ public class CustomSaml2AuthenticationSuccessHandler
                             SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    // Generate JWT if v2 is enabled
-                    if (jwtService.isJwtEnabled()) {
-                        String jwt =
-                                jwtService.generateToken(
-                                        authentication,
-                                        Map.of("authType", AuthenticationType.SAML2));
+                    String jwt =
+                            jwtService.generateToken(
+                                    authentication, Map.of("authType", AuthenticationType.SAML2));
 
-                        // Build context-aware redirect URL based on the original request
-                        String redirectUrl =
-                                buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+                    // Build context-aware redirect URL based on the original request
+                    String redirectUrl =
+                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
 
-                        response.sendRedirect(redirectUrl);
-                    } else {
-                        // v1: redirect directly to home
-                        response.sendRedirect(contextPath + "/");
-                    }
+                    response.sendRedirect(redirectUrl);
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",

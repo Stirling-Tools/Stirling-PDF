@@ -12,16 +12,10 @@ public class CookieUtils {
 
     public static final String JWT_COOKIE_NAME = "stirling_jwt";
     public static final String REFRESH_TOKEN_COOKIE_NAME = "stirling_refresh_token";
+    private static final int ACCESS_TOKEN_MAX_AGE = 21600; // 6 hours
+    private static final int REFRESH_TOKEN_MAX_AGE = 604800; // 7 days
 
-    // 6 hours in seconds (user requested medium-lived token)
-    private static final int ACCESS_TOKEN_MAX_AGE = 21600; // 6 * 60 * 60
-
-    // 7 days in seconds for refresh token
-    private static final int REFRESH_TOKEN_MAX_AGE = 604800; // 7 * 24 * 60 * 60
-
-    private CookieUtils() {
-        // Private constructor to prevent instantiation
-    }
+    private CookieUtils() {}
 
     /**
      * Creates an access token cookie with the specified JWT.

@@ -68,18 +68,7 @@ class JwtAuthenticationFilterTest {
     @InjectMocks private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
-    void shouldNotAuthenticateWhenJwtDisabled() throws ServletException, IOException {
-        when(jwtService.isJwtEnabled()).thenReturn(false);
-
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        verify(filterChain).doFilter(request, response);
-        verify(jwtService, never()).extractToken(any());
-    }
-
-    @Test
     void shouldNotFilterWhenPageIsLogin() throws ServletException, IOException {
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/login");
         when(request.getContextPath()).thenReturn("/login");
 
@@ -95,7 +84,6 @@ class JwtAuthenticationFilterTest {
         String username = "testuser";
         Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
 
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getContextPath()).thenReturn("/");
         when(request.getRequestURI()).thenReturn("/protected");
         when(jwtService.extractToken(request)).thenReturn(token);
@@ -133,7 +121,6 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void testDoFilterInternalWithMissingTokenForRootPath() throws ServletException, IOException {
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/");
         when(request.getMethod()).thenReturn("GET");
         when(jwtService.extractToken(request)).thenReturn(null);
@@ -148,7 +135,6 @@ class JwtAuthenticationFilterTest {
     void validationFailsWithInvalidToken() throws ServletException, IOException {
         String token = "invalid-jwt-token";
 
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractToken(request)).thenReturn(token);
@@ -168,7 +154,6 @@ class JwtAuthenticationFilterTest {
     void validationFailsWithExpiredToken() throws ServletException, IOException {
         String token = "expired-jwt-token";
 
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractToken(request)).thenReturn(token);
@@ -189,7 +174,6 @@ class JwtAuthenticationFilterTest {
         String username = "nonexistentuser";
         Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
 
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractToken(request)).thenReturn(token);
@@ -220,7 +204,6 @@ class JwtAuthenticationFilterTest {
     @Test
     void testAuthenticationEntryPointCalledWithCorrectException()
             throws ServletException, IOException {
-        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractToken(request)).thenReturn(null);

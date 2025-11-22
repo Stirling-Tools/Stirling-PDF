@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -43,13 +42,9 @@ public class JwtService implements JwtServiceInterface {
     private static final long EXPIRATION = 21600000;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
-    private final boolean v2Enabled;
 
     @Autowired
-    public JwtService(
-            @Qualifier("v2Enabled") boolean v2Enabled,
-            KeyPersistenceServiceInterface keyPersistenceService) {
-        this.v2Enabled = v2Enabled;
+    public JwtService(KeyPersistenceServiceInterface keyPersistenceService) {
         this.keyPersistenceService = keyPersistenceService;
         log.info("JwtService initialized");
     }
@@ -277,11 +272,6 @@ public class JwtService implements JwtServiceInterface {
 
         log.debug("No JWT token found in cookie or Authorization header");
         return null;
-    }
-
-    @Override
-    public boolean isJwtEnabled() {
-        return v2Enabled;
     }
 
     private String extractKeyId(String token) {

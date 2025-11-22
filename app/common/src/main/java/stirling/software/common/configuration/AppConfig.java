@@ -49,14 +49,6 @@ public class AppConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
-    @Value("${v2}")
-    public boolean v2Enabled;
-
-    @Bean
-    public boolean v2Enabled() {
-        return v2Enabled;
-    }
-
     /* Commented out Thymeleaf template engine bean - to be removed when frontend migration is complete
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")

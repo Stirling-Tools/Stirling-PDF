@@ -64,7 +64,6 @@ export interface User {
 
 export interface Session {
   user: User;
-  access_token: string;
   expires_in: number;
   expires_at?: number;
 }
@@ -133,7 +132,6 @@ class SpringAuthClient {
       // Create session object (no token on client side)
       const session: Session = {
         user: data.user,
-        access_token: '', // Not needed on client side (in HttpOnly cookie)
         expires_in: 21600, // 6 hours
         expires_at: Date.now() + 21600 * 1000,
       };
@@ -178,7 +176,6 @@ class SpringAuthClient {
 
       const session: Session = {
         user: data.user,
-        access_token: '', // Not on client side
         expires_in: 21600, // 6 hours
         expires_at: Date.now() + 21600 * 1000,
       };
@@ -425,7 +422,6 @@ export const createAnonymousUser = (): User => {
 export const createAnonymousSession = (): Session => {
   return {
     user: createAnonymousUser(),
-    access_token: '',
     expires_in: Number.MAX_SAFE_INTEGER,
     expires_at: Number.MAX_SAFE_INTEGER,
   };

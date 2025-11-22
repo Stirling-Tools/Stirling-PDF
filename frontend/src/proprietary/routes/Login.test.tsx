@@ -100,7 +100,6 @@ describe('Login', () => {
         username: 'testuser',
         role: 'USER',
       },
-      access_token: 'mock-token',
       expires_in: 3600,
     };
 
@@ -159,7 +158,6 @@ describe('Login', () => {
 
     const mockSession = {
       user: mockUser,
-      access_token: 'new-token',
       expires_in: 3600,
     };
 

@@ -198,8 +198,6 @@ public class SecurityConfiguration {
         }
 
         if (loginEnabledValue) {
-            boolean v2Enabled = appConfig.v2Enabled();
-
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
@@ -249,17 +247,7 @@ public class SecurityConfiguration {
 
             http.sessionManagement(
                     sessionManagement -> {
-                        if (v2Enabled) {
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
-                        } else {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
-                                    .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true");
-                        }
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                     });
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
@@ -327,7 +315,8 @@ public class SecurityConfiguration {
                                                 new CustomAuthenticationSuccessHandler(
                                                         loginAttemptService,
                                                         userService,
-                                                        jwtService))
+                                                        jwtService,
+                                                        securityProperties))
                                         .failureHandler(
                                                 new CustomAuthenticationFailureHandler(
                                                         loginAttemptService, userService))
@@ -337,12 +326,6 @@ public class SecurityConfiguration {
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 -> {
-                            // v1: Use /oauth2 as login page for Thymeleaf templates
-                            if (!v2Enabled) {
-                                oauth2.loginPage("/oauth2");
-                            }
-
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
                             oauth2
                                     /*
                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
@@ -380,30 +363,20 @@ public class SecurityConfiguration {
                 http.authenticationProvider(authenticationProvider)
                         .saml2Login(
                                 saml2 -> {
-                                    try {
-                                        // Only set login page for v1/Thymeleaf mode
-                                        if (!v2Enabled) {
-                                            saml2.loginPage("/saml2");
-                                        }
-
-                                        saml2.relyingPartyRegistrationRepository(
-                                                        saml2RelyingPartyRegistrations)
-                                                .authenticationManager(
-                                                        new ProviderManager(authenticationProvider))
-                                                .successHandler(
-                                                        new CustomSaml2AuthenticationSuccessHandler(
-                                                                loginAttemptService,
-                                                                securityProperties,
-                                                                userService,
-                                                                jwtService))
-                                                .failureHandler(
-                                                        new CustomSaml2AuthenticationFailureHandler())
-                                                .authenticationRequestResolver(
-                                                        saml2AuthenticationRequestResolver);
-                                    } catch (Exception e) {
-                                        log.error("Error configuring SAML 2 login", e);
-                                        throw new RuntimeException(e);
-                                    }
+                                    saml2.relyingPartyRegistrationRepository(
+                                                    saml2RelyingPartyRegistrations)
+                                            .authenticationManager(
+                                                    new ProviderManager(authenticationProvider))
+                                            .successHandler(
+                                                    new CustomSaml2AuthenticationSuccessHandler(
+                                                            loginAttemptService,
+                                                            securityProperties,
+                                                            userService,
+                                                            jwtService))
+                                            .failureHandler(
+                                                    new CustomSaml2AuthenticationFailureHandler())
+                                            .authenticationRequestResolver(
+                                                    saml2AuthenticationRequestResolver);
                                 });
             }
         } else {

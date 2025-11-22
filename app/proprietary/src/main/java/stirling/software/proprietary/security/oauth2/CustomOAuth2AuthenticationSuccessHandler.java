@@ -110,6 +110,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 if (principal instanceof OAuth2User oAuth2User) {
                     // Extract SSO provider information from OAuth2User
                     String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
+
                     // Extract provider from authentication - need to get it from the token/request
                     // For now, we'll extract it in a more generic way
                     String ssoProvider = extractProviderFromAuthentication(authentication);
@@ -122,21 +123,15 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             OAUTH2);
                 }
 
-                // Generate JWT if v2 is enabled
-                if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                String jwt =
+                        jwtService.generateToken(
+                                authentication, Map.of("authType", AuthenticationType.OAUTH2));
 
-                    // Build context-aware redirect URL based on the original request
-                    String redirectUrl =
-                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+                // Build context-aware redirect URL based on the original request
+                String redirectUrl =
+                        buildContextAwareRedirectUrl(request, response, contextPath, jwt);
 
-                    response.sendRedirect(redirectUrl);
-                } else {
-                    // v1: redirect directly to home
-                    response.sendRedirect(contextPath + "/");
-                }
+                response.sendRedirect(redirectUrl);
             } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
             }
