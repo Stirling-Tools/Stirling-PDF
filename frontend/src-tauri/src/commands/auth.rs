@@ -128,11 +128,8 @@ pub async fn clear_user_info(app_handle: AppHandle) -> Result<(), String> {
 }
 
 // Response types for Spring Boot login (self-hosted)
-#[derive(Debug, Deserialize)]
-struct SpringBootSession {
-    access_token: String,
-}
-
+// The backend detects Tauri User-Agent and returns token in response body
+// (Web clients get token via HttpOnly cookie instead)
 #[derive(Debug, Deserialize)]
 struct SpringBootUser {
     username: String,
@@ -141,7 +138,7 @@ struct SpringBootUser {
 
 #[derive(Debug, Deserialize)]
 struct SpringBootLoginResponse {
-    session: SpringBootSession,
+    token: Option<String>,
     user: SpringBootUser,
 }
 
@@ -186,8 +183,11 @@ pub async fn login(
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
     log::info!("Authentication type: {}", if is_supabase { "Supabase (SaaS)" } else { "Spring Boot (Self-hosted)" });
 
-    // Create HTTP client
-    let client = reqwest::Client::new();
+    // Create HTTP client with custom User-Agent
+    let client = reqwest::Client::builder()
+        .user_agent("Stirling-PDF-Tauri/1.0")
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     if is_supabase {
         // Supabase authentication flow
@@ -294,8 +294,14 @@ pub async fn login(
 
         log::info!("Spring Boot login successful for user: {}", login_response.user.username);
 
-        Ok(LoginResponse {
-            token: login_response.session.access_token,
+        // Verify that token is present (backend should detect Tauri User-Agent and include it)
+        let token = login_response.token.ok_or_else(|| {
+            "Backend did not return JWT token. Ensure backend is configured to detect Tauri User-Agent."
+                .to_string()
+    })?;
+
+    Ok(LoginResponse {
+            token,
             username: login_response.user.username,
             email: login_response.user.email,
         })

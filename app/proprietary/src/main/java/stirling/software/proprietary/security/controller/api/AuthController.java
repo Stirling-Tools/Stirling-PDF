@@ -123,7 +123,21 @@ public class AuthController {
             loginAttemptService.loginSucceeded(username);
             log.info("Login successful for user: {} from IP: {}", username, ip);
 
-            // Return user info only (token is in cookie)
+            // Check if request is from Tauri native app
+            // Tauri clients need token in response body since they can't use HttpOnly cookies
+            String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
+            boolean isTauriClient = userAgent != null && userAgent.toLowerCase().contains("tauri");
+
+            if (isTauriClient) {
+                // For Tauri clients, include token in response body
+                log.debug("Detected Tauri client, including token in response body");
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("user", buildUserResponse(user));
+                responseBody.put("token", token);
+                return ResponseEntity.ok(responseBody);
+            }
+
+            // Return user info only (token is in cookie for web clients)
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
         } catch (UsernameNotFoundException e) {
