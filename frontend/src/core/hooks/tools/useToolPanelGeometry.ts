@@ -42,11 +42,23 @@ export function useToolPanelGeometry({
     const computeAndSetGeometry = () => {
       const rect = panelEl.getBoundingClientRect();
       const rail = rightRailEl();
-      const rightOffset = rail ? Math.max(0, window.innerWidth - rail.getBoundingClientRect().left) : 0;
-      const width = Math.max(360, window.innerWidth - rect.left - rightOffset);
+      const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+      const railRect = rail?.getBoundingClientRect();
+      const railIsOnRight = railRect ? railRect.right > window.innerWidth / 2 : false;
+      const rightOffset = railRect && railIsOnRight ? Math.max(0, window.innerWidth - railRect.right) : 0;
+      let width: number;
+      let left: number;
+
+      if (isRTL) {
+        width = Math.max(360, window.innerWidth - rightOffset);
+        left = 0;
+      } else {
+        width = Math.max(360, window.innerWidth - rect.left - rightOffset);
+        left = rect.left;
+      }
       const height = Math.max(rect.height, window.innerHeight - rect.top);
       setGeometry({
-        left: rect.left,
+        left,
         top: rect.top,
         width,
         height,
