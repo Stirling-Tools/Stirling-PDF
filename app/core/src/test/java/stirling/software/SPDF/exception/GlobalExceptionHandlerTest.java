@@ -29,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -117,19 +118,14 @@ class GlobalExceptionHandlerTest {
 
     @Nested
     @DisplayName("Security Exceptions")
-    @ConditionalOnClass(
-            name =
-                    "org.springframework.security.access.org.springframework.security.access.AccessDeniedException")
+    @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
     class SecurityExceptionTests {
 
         @Test
-        @DisplayName(
-                "org.springframework.security.access.AccessDeniedException returns 403 Forbidden")
+        @DisplayName("AccessDeniedException returns 403 Forbidden")
         void testHandleAccessDenied() {
             when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException(
-                            "Access is denied");
+            AccessDeniedException ex = new AccessDeniedException("Access is denied");
 
             ResponseEntity<ProblemDetail> response =
                     exceptionHandler.handleAccessDenied(ex, request);
@@ -146,12 +142,10 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
-        @DisplayName(
-                "org.springframework.security.access.AccessDeniedException with null message handled gracefully")
+        @DisplayName("AccessDeniedException with null message handled gracefully")
         void testHandleAccessDeniedWithNullMessage() {
             when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException(null);
+            AccessDeniedException ex = new AccessDeniedException(null);
 
             ResponseEntity<ProblemDetail> response =
                     exceptionHandler.handleAccessDenied(ex, request);
@@ -168,13 +162,11 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
-        @DisplayName(
-                "org.springframework.security.access.AccessDeniedException message is properly included in response")
+        @DisplayName("AccessDeniedException message is properly included in response")
         void testHandleAccessDeniedMessageLocalization() {
             when(request.getRequestURI()).thenReturn("/api/v1/admin/users");
             String customMessage = "User does not have permission to access user management";
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException(customMessage);
+            AccessDeniedException ex = new AccessDeniedException(customMessage);
 
             ResponseEntity<ProblemDetail> response =
                     exceptionHandler.handleAccessDenied(ex, request);
@@ -964,8 +956,7 @@ class GlobalExceptionHandlerTest {
             when(messageSource.getMessage(anyString(), isNull(), anyString(), any()))
                     .thenThrow(new RuntimeException("MessageSource error"));
 
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException("test");
+            AccessDeniedException ex = new AccessDeniedException("test");
 
             // Should propagate the MessageSource exception
             assertThrows(
@@ -981,9 +972,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("All mandatory fields present")
         void testRfc7807Compliance() {
             when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException(
-                            "Access is denied");
+            AccessDeniedException ex = new AccessDeniedException("Access is denied");
 
             ResponseEntity<ProblemDetail> response =
                     exceptionHandler.handleAccessDenied(ex, request);
@@ -1028,9 +1017,7 @@ class GlobalExceptionHandlerTest {
             List<ResponseEntity<ProblemDetail>> responses =
                     List.of(
                             exceptionHandler.handleAccessDenied(
-                                    new org.springframework.security.access.AccessDeniedException(
-                                            "Test"),
-                                    request),
+                                    new AccessDeniedException("Test"), request),
                             exceptionHandler.handleIllegalArgument(
                                     new IllegalArgumentException("Test"), request),
                             exceptionHandler.handleIOException(new IOException("Test"), request));
@@ -1096,8 +1083,7 @@ class GlobalExceptionHandlerTest {
                             eq("error.accessDenied.title"), isNull(), eq("Access Denied"), any()))
                     .thenReturn("Access Denied");
 
-            org.springframework.security.access.AccessDeniedException ex =
-                    new org.springframework.security.access.AccessDeniedException("test");
+            AccessDeniedException ex = new AccessDeniedException("test");
             ResponseEntity<ProblemDetail> response =
                     exceptionHandler.handleAccessDenied(ex, request);
 
