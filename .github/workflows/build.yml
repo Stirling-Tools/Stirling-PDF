@@ -349,7 +349,6 @@ jobs:
             org.opencontainers.image.documentation=https://docs.stirlingpdf.com
             org.opencontainers.image.authors=Stirling-Tools
             org.opencontainers.image.licenses=MIT
-            org.opencontainers.image.description=CI test image for Stirling-PDF
             org.opencontainers.image.version=${{ matrix.docker.tag }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repository }}
