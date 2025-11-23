@@ -119,7 +119,7 @@ class HomeWebControllerTest {
         @Test
         @DisplayName("googlevisibility=true -> allow all agents")
         void robots_allow() throws Exception {
-            when(applicationProperties.getSystem().getGooglevisibility()).thenReturn(Boolean.TRUE);
+            when(applicationProperties.getSystem().isGooglevisibility()).thenReturn(true);
 
             mockMvc.perform(get("/robots.txt"))
                     .andExpect(status().isOk())
@@ -136,7 +136,7 @@ class HomeWebControllerTest {
         @Test
         @DisplayName("googlevisibility=false -> disallow all agents")
         void robots_disallow() throws Exception {
-            when(applicationProperties.getSystem().getGooglevisibility()).thenReturn(Boolean.FALSE);
+            when(applicationProperties.getSystem().isGooglevisibility()).thenReturn(false);
 
             mockMvc.perform(get("/robots.txt"))
                     .andExpect(status().isOk())
@@ -151,9 +151,9 @@ class HomeWebControllerTest {
         }
 
         @Test
-        @DisplayName("googlevisibility=null -> disallow all (default branch)")
-        void robots_disallowWhenNull() throws Exception {
-            when(applicationProperties.getSystem().getGooglevisibility()).thenReturn(null);
+        @DisplayName("googlevisibility not set (default false) -> disallow all")
+        void robots_disallowWhenNotSet() throws Exception {
+            when(applicationProperties.getSystem().isGooglevisibility()).thenReturn(false);
 
             mockMvc.perform(get("/robots.txt"))
                     .andExpect(status().isOk())

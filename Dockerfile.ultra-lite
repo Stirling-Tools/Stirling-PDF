@@ -24,9 +24,13 @@ COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+RUN apk add --no-cache bash \
+    && ln -sf /bin/bash /bin/sh \
+    && printf '%s\n' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
+      > /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
         ca-certificates \
@@ -42,7 +46,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
