@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -67,7 +66,7 @@ import stirling.software.common.util.RegexPatternUtils;
  *         <li>{@link HttpMediaTypeNotSupportedException} - 415 Unsupported Media Type
  *         <li>{@link HttpMessageNotReadableException} - 400 Bad Request
  *         <li>{@link NoHandlerFoundException} - 404 Not Found
- *         <li>{@link AccessDeniedException} - 403 Forbidden
+ *         <li>{@link org.springframework.security.access.AccessDeniedException} - 403 Forbidden
  *       </ul>
  *   <li>Java Standard Exceptions
  *       <ul>
@@ -930,10 +929,11 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 403 FORBIDDEN
      */
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
     public ResponseEntity<ProblemDetail> handleAccessDenied(
-            AccessDeniedException ex, HttpServletRequest request) {
+            org.springframework.security.access.AccessDeniedException ex,
+            HttpServletRequest request) {
         log.warn("Access denied to {}", request.getRequestURI());
 
         String message =
