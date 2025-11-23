@@ -93,7 +93,7 @@ public class RuntimePathConfig {
                 resolvePath(
                         defaultSOfficePath, operations != null ? operations.getSoffice() : null);
 
-        // Initialize Tessa data path
+        // Initialize Tesseract data path
         String defaultTessDataPath =
                 isDocker ? "/usr/share/tesseract-ocr/5/tessdata" : "/usr/share/tessdata";
 
