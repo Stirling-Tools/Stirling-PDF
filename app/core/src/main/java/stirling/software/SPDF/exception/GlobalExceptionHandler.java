@@ -812,10 +812,6 @@ public class GlobalExceptionHandler {
                 .body(problemDetail);
     }
 
-    // ===========================================================================================
-    // JAVA STANDARD EXCEPTIONS
-    // ===========================================================================================
-
     /**
      * Handle malformed JSON or request body parsing errors.
      *
