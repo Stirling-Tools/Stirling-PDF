@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -60,6 +61,7 @@ public class RotationControllerTest {
 
     @Test
     public void testRotatePDFInvalidAngle() {
+        Locale.setDefault(Locale.ENGLISH);
         // Create a mock file
         MockMultipartFile mockFile =
                 new MockMultipartFile(
