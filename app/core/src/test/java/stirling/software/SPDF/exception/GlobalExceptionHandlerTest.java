@@ -20,7 +20,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpInputMessage;
@@ -29,7 +28,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -114,69 +112,6 @@ class GlobalExceptionHandlerTest {
                         assertTrue(
                                 response.getBody().getProperties().containsKey("path"),
                                 "path should be present"));
-    }
-
-    @Nested
-    @DisplayName("Security Exceptions")
-    @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
-    class SecurityExceptionTests {
-
-        @Test
-        @DisplayName("AccessDeniedException returns 403 Forbidden")
-        void testHandleAccessDenied() {
-            when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            AccessDeniedException ex = new AccessDeniedException("Access is denied");
-
-            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAccessDenied(request);
-
-            assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
-            ProblemDetail detail = response.getBody();
-            assertAll(
-                    () -> assertEquals(URI.create("/errors/access-denied"), detail.getType()),
-                    () -> assertEquals("Access Denied", detail.getTitle()),
-                    () -> assertNotNull(detail.getProperties().get("timestamp")),
-                    () -> assertTrue(detail.getProperties().containsKey("hints")),
-                    () -> assertTrue(detail.getProperties().containsKey("actionRequired")),
-                    () -> assertNotNull(detail.getDetail(), "detail should contain message"));
-        }
-
-        @Test
-        @DisplayName("AccessDeniedException with null message handled gracefully")
-        void testHandleAccessDeniedWithNullMessage() {
-            when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            AccessDeniedException ex = new AccessDeniedException(null);
-
-            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAccessDenied(request);
-
-            assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
-            ProblemDetail detail = response.getBody();
-            assertAll(
-                    () -> assertEquals(URI.create("/errors/access-denied"), detail.getType()),
-                    () -> assertEquals("Access Denied", detail.getTitle()),
-                    () ->
-                            assertNotNull(
-                                    detail.getDetail(),
-                                    "detail should have fallback message even when exception message is null"));
-        }
-
-        @Test
-        @DisplayName("AccessDeniedException message is properly included in response")
-        void testHandleAccessDeniedMessageLocalization() {
-            when(request.getRequestURI()).thenReturn("/api/v1/admin/users");
-            String customMessage = "User does not have permission to access user management";
-            AccessDeniedException ex = new AccessDeniedException(customMessage);
-
-            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAccessDenied(request);
-
-            assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
-            ProblemDetail detail = response.getBody();
-            assertAll(
-                    () ->
-                            assertTrue(
-                                    detail.getDetail().contains("permission")
-                                            || detail.getDetail().contains("access"),
-                                    "detail should contain meaningful access denial information"));
-        }
     }
 
     @Nested
@@ -944,37 +879,11 @@ class GlobalExceptionHandlerTest {
                                 "Path should be null/empty/unknown when request URI is missing");
                     });
         }
-
-        @Test
-        @DisplayName("MessageSource failure propagates exception")
-        void testMessageSourceFailurePropagates() {
-            when(request.getRequestURI()).thenReturn("/api/v1/test");
-            // Simulate MessageSource throwing an exception
-            when(messageSource.getMessage(anyString(), isNull(), anyString(), any()))
-                    .thenThrow(new RuntimeException("MessageSource error"));
-
-            AccessDeniedException ex = new AccessDeniedException("test");
-
-            // Should propagate the MessageSource exception
-            assertThrows(
-                    RuntimeException.class, () -> exceptionHandler.handleAccessDenied(request));
-        }
     }
 
     @Nested
     @DisplayName("RFC 7807 Compliance")
     class Rfc7807ComplianceTests {
-
-        @Test
-        @DisplayName("All mandatory fields present")
-        void testRfc7807Compliance() {
-            when(request.getRequestURI()).thenReturn("/api/v1/admin/settings");
-            AccessDeniedException ex = new AccessDeniedException("Access is denied");
-
-            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAccessDenied(request);
-
-            assertRfc7807Compliant(response.getBody(), HttpStatus.FORBIDDEN);
-        }
 
         @Test
         @DisplayName("Type field uses /errors/ URI format")
@@ -1012,7 +921,6 @@ class GlobalExceptionHandlerTest {
             // Test with different exception types to ensure consistency
             List<ResponseEntity<ProblemDetail>> responses =
                     List.of(
-                            exceptionHandler.handleAccessDenied(request),
                             exceptionHandler.handleIllegalArgument(
                                     new IllegalArgumentException("Test"), request),
                             exceptionHandler.handleIOException(new IOException("Test"), request));
@@ -1060,29 +968,6 @@ class GlobalExceptionHandlerTest {
                     () -> assertNotNull(errorCode),
                     () -> assertInstanceOf(String.class, errorCode),
                     () -> assertFalse(((String) errorCode).isEmpty()));
-        }
-
-        @Test
-        @DisplayName("MessageSource localization works correctly")
-        void testMessageSourceLocalization() {
-            // Set up MessageSource to return expected values
-            when(messageSource.getMessage(
-                            eq("error.accessDenied.detail"),
-                            isNull(),
-                            eq(
-                                    "Access to this resource is forbidden. You do not have the required permissions."),
-                            any()))
-                    .thenReturn(
-                            "Access to this resource is forbidden. You do not have the required permissions.");
-            when(messageSource.getMessage(
-                            eq("error.accessDenied.title"), isNull(), eq("Access Denied"), any()))
-                    .thenReturn("Access Denied");
-
-            AccessDeniedException ex = new AccessDeniedException("test");
-            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAccessDenied(request);
-
-            assertEquals("Access Denied", response.getBody().getTitle());
-            assertTrue(response.getBody().getDetail().contains("forbidden"));
         }
 
         @Test

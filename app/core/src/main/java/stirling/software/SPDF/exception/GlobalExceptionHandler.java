@@ -5,7 +5,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
@@ -66,7 +65,6 @@ import stirling.software.common.util.RegexPatternUtils;
  *         <li>{@link HttpMediaTypeNotSupportedException} - 415 Unsupported Media Type
  *         <li>{@link HttpMessageNotReadableException} - 400 Bad Request
  *         <li>{@link NoHandlerFoundException} - 404 Not Found
- *         <li>{@link org.springframework.security.access.AccessDeniedException} - 403 Forbidden
  *       </ul>
  *   <li>Java Standard Exceptions
  *       <ul>
@@ -917,51 +915,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle Spring Security access denied exceptions.
-     *
-     * <p>When thrown: When a user attempts to access a resource they don't have permission to
-     * access, typically due to insufficient roles or privileges (e.g., @PreAuthorize annotations).
-     *
-     * <p>Client action: Ensure you have the necessary permissions or contact an administrator to
-     * grant access.
-     *
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 403 FORBIDDEN
-     */
-    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
-    public ResponseEntity<ProblemDetail> handleAccessDenied(HttpServletRequest request) {
-        log.warn("Access denied to {}", request.getRequestURI());
-
-        String message =
-                getLocalizedMessage(
-                        "error.accessDenied.detail",
-                        "Access to this resource is forbidden. You do not have the required permissions.");
-
-        String title =
-                getLocalizedMessage("error.accessDenied.title", ErrorTitles.ACCESS_DENIED_DEFAULT);
-
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.FORBIDDEN, message, request);
-        problemDetail.setType(URI.create(ErrorTypes.ACCESS_DENIED));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        addStandardHints(
-                problemDetail,
-                "error.accessDenied.hints",
-                List.of(
-                        "Verify you have the required role or permissions for this operation.",
-                        "Contact an administrator if you believe you should have access.",
-                        "Check that you are logged in with the correct account."));
-        problemDetail.setProperty(
-                "actionRequired", "Request appropriate permissions or contact an administrator.");
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
-    /**
      * Handle IllegalArgumentException.
      *
      * <p>When thrown: When method receives an illegal or inappropriate argument.
@@ -1208,7 +1161,6 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND = "/errors/not-found";
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
-        static final String ACCESS_DENIED = "/errors/access-denied";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1236,7 +1188,6 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND_DEFAULT = "Endpoint Not Found";
         static final String INVALID_ARGUMENT_DEFAULT = "Invalid Argument";
         static final String IO_ERROR_DEFAULT = "File Processing Error";
-        static final String ACCESS_DENIED_DEFAULT = "Access Denied";
         static final String UNEXPECTED_DEFAULT = "Internal Server Error";
     }
 }
