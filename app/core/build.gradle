@@ -99,6 +99,7 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     compileOnly 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security'
 }
 
 sourceSets {
