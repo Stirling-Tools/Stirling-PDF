@@ -80,6 +80,7 @@ CHAPTERED_PDF_SAMPLE_FILE = "testing/samples/split_pdf_by_chapters_sample.pdf"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
 PDF_WITH_ATTACHMENTS_SAMPLE_FILE = "testing/samples/pdf_with_attachments.pdf"
+EPUB_SAMPLE_FILE = "testing/samples/sample.epub"
 
 DEFAULT_SPEC_ENDPOINT = "/v1/api-docs"
 
@@ -805,6 +806,9 @@ class SwaggerTester:
             return self._open_file(
                 PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf"
             )
+
+        if "ebook" in path_lower:
+            return self._open_file(EPUB_SAMPLE_FILE, "application/epub+zip")
 
         if "image" in name_lower or "img" in path_lower:
             return self._open_file(IMAGE_SAMPLE_FILE, "image/png")
