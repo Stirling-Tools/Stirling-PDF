@@ -126,6 +126,8 @@ DEFAULT_SKIP_ENDPOINTS = {
     ("get", "/api/v1/admin/settings/key/{key}"),
     ("get", "/api/v1/admin/settings/delta"),
     ("get", "/api/v1/admin/settings")
+    # Could not find the Qt platform plugin headless error
+    ("post", "/api/v1/ebook/pdf"),
 }
 
 
