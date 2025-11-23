@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.util.HtmlUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -64,6 +66,7 @@ import stirling.software.common.util.RegexPatternUtils;
  *         <li>{@link HttpMediaTypeNotSupportedException} - 415 Unsupported Media Type
  *         <li>{@link HttpMessageNotReadableException} - 400 Bad Request
  *         <li>{@link NoHandlerFoundException} - 404 Not Found
+ *         <li>{@link AccessDeniedException} - 403 Forbidden
  *       </ul>
  *   <li>Java Standard Exceptions
  *       <ul>
@@ -182,7 +185,8 @@ public class GlobalExceptionHandler {
      */
     private static ProblemDetail createBaseProblemDetail(
             HttpStatus status, String detail, HttpServletRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
+        String escapedDetail = detail != null ? HtmlUtils.htmlEscape(detail) : null;
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, escapedDetail);
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
         return problemDetail;
@@ -910,6 +914,56 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle Spring Security access denied exceptions.
+     *
+     * <p>When thrown: When a user attempts to access a resource they don't have permission to
+     * access, typically due to insufficient roles or privileges (e.g., @PreAuthorize annotations).
+     *
+     * <p>Client action: Ensure you have the necessary permissions or contact an administrator to
+     * grant access.
+     *
+     * @param ex the AccessDeniedException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 403 FORBIDDEN
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("Access denied to {}", request.getRequestURI());
+
+        String message =
+                getLocalizedMessage(
+                        "error.accessDenied.detail",
+                        "Access to this resource is forbidden. You do not have the required permissions.");
+
+        String title =
+                getLocalizedMessage("error.accessDenied.title", ErrorTitles.ACCESS_DENIED_DEFAULT);
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.FORBIDDEN, message, request);
+        problemDetail.setType(URI.create(ErrorTypes.ACCESS_DENIED));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title); // Ensure serialization
+        addStandardHints(
+                problemDetail,
+                "error.accessDenied.hints",
+                List.of(
+                        "Verify you have the required role or permissions for this operation.",
+                        "Contact an administrator if you believe you should have access.",
+                        "Check that you are logged in with the correct account."));
+        problemDetail.setProperty(
+                "actionRequired", "Request appropriate permissions or contact an administrator.");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
+    // ===========================================================================================
+    // JAVA STANDARD EXCEPTIONS
+    // ===========================================================================================
+
+    /**
      * Handle IllegalArgumentException.
      *
      * <p>When thrown: When method receives an illegal or inappropriate argument.
@@ -1156,6 +1210,7 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND = "/errors/not-found";
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
+        static final String ACCESS_DENIED = "/errors/access-denied";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1183,6 +1238,7 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND_DEFAULT = "Endpoint Not Found";
         static final String INVALID_ARGUMENT_DEFAULT = "Invalid Argument";
         static final String IO_ERROR_DEFAULT = "File Processing Error";
+        static final String ACCESS_DENIED_DEFAULT = "Access Denied";
         static final String UNEXPECTED_DEFAULT = "Internal Server Error";
     }
 }
