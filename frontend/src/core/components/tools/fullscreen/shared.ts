@@ -2,6 +2,7 @@ import { useHotkeys } from '@app/contexts/HotkeyContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
+import type { ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 export const getItemClasses = (isDetailed: boolean): string => {
@@ -23,32 +24,81 @@ export const getIconStyle = (): Record<string, string> => {
   return {};
 };
 
-export const isToolDisabled = (id: string, tool: ToolRegistryEntry, premiumEnabled?: boolean): boolean => {
-  // Check if tool is unavailable (no component and not a link)
-  const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
-  
+export type ToolDisabledReason = 'comingSoon' | 'disabledByAdmin' | 'missingDependency' | 'unknownUnavailable' | 'requiresPremium' | null;
+
+export const getToolDisabledReason = (
+  id: string,
+  tool: ToolRegistryEntry,
+  toolAvailability?: ToolAvailabilityMap,
+  premiumEnabled?: boolean
+): ToolDisabledReason => {
+  if (!tool.component && !tool.link && id !== 'read' && id !== 'multiTool') {
+    return 'comingSoon';
+  }
+
   // Check if tool requires premium but premium is not enabled
-  const requiresPremiumButNotEnabled = tool.requiresPremium === true && premiumEnabled !== true;
-  
-  return isUnavailable || requiresPremiumButNotEnabled;
+  if (tool.requiresPremium === true && premiumEnabled !== true) {
+    return 'requiresPremium';
+  }
+
+  const availabilityInfo = toolAvailability?.[id as ToolId];
+  if (availabilityInfo && availabilityInfo.available === false) {
+    if (availabilityInfo.reason === 'missingDependency') {
+      return 'missingDependency';
+    }
+    if (availabilityInfo.reason === 'disabledByAdmin') {
+      return 'disabledByAdmin';
+    }
+    return 'unknownUnavailable';
+  }
+
+  return null;
+};
+
+export const getDisabledLabel = (
+  disabledReason: ToolDisabledReason
+): { key: string; fallback: string } => {
+  if (disabledReason === 'requiresPremium') {
+    return {
+      key: 'toolPanel.premiumFeature',
+      fallback: 'Premium feature:'
+    };
+  }
+  if (disabledReason === 'missingDependency') {
+    return {
+      key: 'toolPanel.fullscreen.unavailableDependency',
+      fallback: 'Unavailable - required tool missing on server:'
+    };
+  }
+  if (disabledReason === 'disabledByAdmin' || disabledReason === 'unknownUnavailable') {
+    return {
+      key: 'toolPanel.fullscreen.unavailable',
+      fallback: 'Disabled by server administrator:'
+    };
+  }
+  return {
+    key: 'toolPanel.fullscreen.comingSoon',
+    fallback: 'Coming soon:'
+  };
 };
 
 export function useToolMeta(id: string, tool: ToolRegistryEntry) {
   const { hotkeys } = useHotkeys();
-  const { isFavorite, toggleFavorite } = useToolWorkflow();
+  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
 
   const isFav = isFavorite(id as ToolId);
   const binding = hotkeys[id as ToolId];
-  const disabled = isToolDisabled(id, tool, premiumEnabled);
+  const disabledReason = getToolDisabledReason(id, tool, toolAvailability, premiumEnabled);
+  const disabled = disabledReason !== null;
 
   return {
     binding,
     isFav,
     toggleFavorite: () => toggleFavorite(id as ToolId),
     disabled,
-    premiumEnabled,
+    disabledReason,
   };
 }
 

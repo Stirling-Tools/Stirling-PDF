@@ -4,13 +4,6 @@ use std::sync::Mutex;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ConnectionMode {
-    Offline,
-    Server,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum ServerType {
     SaaS,
     SelfHosted,
 }
@@ -18,7 +11,6 @@ pub enum ServerType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub url: String,
-    pub server_type: ServerType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,7 +22,7 @@ pub struct ConnectionState {
 impl Default for ConnectionState {
     fn default() -> Self {
         Self {
-            mode: ConnectionMode::Offline,
+            mode: ConnectionMode::SaaS,
             server_config: None,
         }
     }

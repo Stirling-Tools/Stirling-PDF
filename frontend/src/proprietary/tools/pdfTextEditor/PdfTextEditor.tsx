@@ -34,7 +34,7 @@ import {
 import PdfTextEditorView from '@app/components/tools/pdfTextEditor/PdfTextEditorView';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
-const VIEW_ID = 'pdfTextEditorView';
+const WORKBENCH_VIEW_ID = 'pdfTextEditorWorkbench';
 const WORKBENCH_ID = 'custom:pdfTextEditor' as const;
 
 const sanitizeBaseName = (name?: string | null): string => {
@@ -1347,22 +1347,41 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     void handleLoadFile(file);
   }, [selectedFiles, navigationState.selectedTool, handleLoadFile]);
 
+  // Auto-navigate to workbench when tool is selected
+  const hasAutoOpenedWorkbenchRef = useRef(false);
+  useEffect(() => {
+    if (navigationState.selectedTool !== 'pdfTextEditor') {
+      hasAutoOpenedWorkbenchRef.current = false;
+      return;
+    }
+
+    if (hasAutoOpenedWorkbenchRef.current) {
+      return;
+    }
+
+    hasAutoOpenedWorkbenchRef.current = true;
+    // Use timeout to ensure registration effect has run first
+    setTimeout(() => {
+      navigationActions.setWorkbench(WORKBENCH_ID);
+    }, 0);
+  }, [navigationActions, navigationState.selectedTool]);
+
   useEffect(() => {
     registerCustomWorkbenchView({
-      id: VIEW_ID,
+      id: WORKBENCH_VIEW_ID,
       workbenchId: WORKBENCH_ID,
       label: viewLabel,
       icon: <DescriptionIcon fontSize="small" />,
       component: PdfTextEditorView,
     });
     setLeftPanelView('hidden');
-    setCustomWorkbenchViewData(VIEW_ID, latestViewDataRef.current);
+    setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
 
     return () => {
       // Clear backend cache if we were using lazy loading
       clearCachedJob(cachedJobIdRef.current);
-      clearCustomWorkbenchViewData(VIEW_ID);
-      unregisterCustomWorkbenchView(VIEW_ID);
+      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
+      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
       setLeftPanelView('toolPicker');
     };
   }, [
@@ -1407,7 +1426,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       return;
     }
     lastSentViewDataRef.current = viewData;
-    setCustomWorkbenchViewData(VIEW_ID, viewData);
+    setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, viewData);
   }, [setCustomWorkbenchViewData, viewData]);
 
   // All editing happens in the custom workbench view.

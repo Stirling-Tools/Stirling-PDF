@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
+import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
 import { connectionModeService } from '@desktop/services/connectionModeService';
+
 
 interface EndpointConfig {
   backendUrl: string;
@@ -128,6 +130,7 @@ export function useEndpointEnabled(endpoint: string): {
 
 export function useMultipleEndpointsEnabled(endpoints: string[]): {
   endpointStatus: Record<string, boolean>;
+  endpointDetails: Record<string, EndpointAvailabilityDetails>;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -140,6 +143,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       return acc;
     }, {} as Record<string, boolean>);
   });
+  const [endpointDetails, setEndpointDetails] = useState<Record<string, EndpointAvailabilityDetails>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -174,13 +178,27 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
       const endpointsParam = endpoints.join(',');
 
-      const response = await apiClient.get<Record<string, boolean>>('/api/v1/config/endpoints-enabled', {
+      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>('/api/v1/config/endpoints-availability', {
         params: { endpoints: endpointsParam },
         suppressErrorToast: true,
       });
 
       if (!isMountedRef.current) return;
-      setEndpointStatus(response.data);
+      const details = Object.entries(response.data).reduce((acc, [endpointName, detail]) => {
+        acc[endpointName] = {
+          enabled: detail?.enabled ?? true,
+          reason: detail?.reason ?? null,
+        };
+        return acc;
+      }, {} as Record<string, EndpointAvailabilityDetails>);
+
+      const statusMap = Object.keys(details).reduce((acc, key) => {
+        acc[key] = details[key].enabled;
+        return acc;
+      }, {} as Record<string, boolean>);
+
+      setEndpointDetails(prev => ({ ...prev, ...details }));
+      setEndpointStatus(statusMap);
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
@@ -188,10 +206,13 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {
-        acc[endpointName] = true;
+        const fallbackDetail: EndpointAvailabilityDetails = { enabled: true, reason: null };
+        acc.status[endpointName] = true;
+        acc.details[endpointName] = fallbackDetail;
         return acc;
-      }, {} as Record<string, boolean>);
-      setEndpointStatus(fallbackStatus);
+      }, { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> });
+      setEndpointStatus(fallbackStatus.status);
+      setEndpointDetails(prev => ({ ...prev, ...fallbackStatus.details }));
 
       if (!retryTimeoutRef.current) {
         retryTimeoutRef.current = setTimeout(() => {
@@ -209,6 +230,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   useEffect(() => {
     if (!endpoints || endpoints.length === 0) {
       setEndpointStatus({});
+      setEndpointDetails({});
       setLoading(false);
       return;
     }
@@ -230,6 +252,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
   return {
     endpointStatus,
+    endpointDetails,
     loading,
     error,
     refetch: fetchAllEndpointStatuses,
@@ -244,8 +267,8 @@ const DEFAULT_BACKEND_URL =
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
- * - Offline mode: Uses local bundled backend (from env vars)
- * - Server mode: Uses configured server URL from connection config
+ * - SaaS mode: Uses local bundled backend (from env vars)
+ * - Self-hosted mode: Uses configured server URL from connection config
  */
 export function useEndpointConfig(): EndpointConfig {
   const [backendUrl, setBackendUrl] = useState<string>(DEFAULT_BACKEND_URL);
@@ -253,10 +276,10 @@ export function useEndpointConfig(): EndpointConfig {
   useEffect(() => {
     connectionModeService.getCurrentConfig()
       .then((config) => {
-        if (config.mode === 'server' && config.server_config?.url) {
+        if (config.mode === 'selfhosted' && config.server_config?.url) {
           setBackendUrl(config.server_config.url);
         } else {
-          // Offline mode - use default from env vars
+          // SaaS mode - use default from env vars (local backend)
           setBackendUrl(DEFAULT_BACKEND_URL);
         }
       })

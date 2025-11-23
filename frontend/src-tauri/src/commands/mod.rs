@@ -10,6 +10,7 @@ pub use files::{add_opened_file, clear_opened_files, get_opened_files};
 pub use connection::{
     get_connection_config,
     is_first_launch,
+    reset_setup_completion,
     set_connection_mode,
 };
 pub use auth::{

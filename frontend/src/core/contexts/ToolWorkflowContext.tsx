@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
-import { useToolManagement } from '@app/hooks/useToolManagement';
+import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
@@ -21,7 +21,6 @@ import {
 import type { ToolPanelMode } from '@app/constants/toolPanel';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -45,6 +44,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: Partial<ToolRegistry>;
   getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  toolAvailability: ToolAvailabilityMap;
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
@@ -113,10 +113,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const navigationState = useNavigationState();
 
   // Tool management hook
-  const { toolRegistry, getSelectedTool } = useToolManagement();
+  const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
   const { allTools } = useToolRegistry();
-  const { config } = useAppConfig();
-  const premiumEnabled = config?.premiumEnabled;
 
   // Tool history hook
   const {
@@ -221,25 +219,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [customViewRegistry, customViewData]);
 
   useEffect(() => {
-    const { workbench } = navigationState;
-    if (isBaseWorkbench(workbench)) {
+    if (isBaseWorkbench(navigationState.workbench)) {
       return;
     }
 
-    const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === workbench);
-    const expectedWorkbench = selectedTool?.workbench;
-    const workbenchOwnedBySelectedTool = expectedWorkbench === workbench;
-
+    const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
-      // If the currently selected tool expects this custom workbench, allow it
-      // some time to register/populate the view instead of immediately bouncing
-      // the user back to Active Files.
-      if (workbenchOwnedBySelectedTool) {
-        return;
-      }
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench, selectedTool]);
+  }, [actions, customWorkbenchViews, navigationState.workbench]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 
@@ -271,13 +259,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: ToolId) => {
-    // Check if tool requires premium and premium is not enabled
-    const selectedTool = allTools[toolId];
-    if (selectedTool?.requiresPremium === true && premiumEnabled !== true) {
-      // Premium tool selected without premium - do nothing (should be disabled in UI)
+    const availabilityInfo = toolAvailability[toolId];
+    const isExplicitlyDisabled = availabilityInfo ? availabilityInfo.available === false : false;
+    if (toolId !== 'read' && toolId !== 'multiTool' && isExplicitlyDisabled) {
       return;
     }
-
     // If we're currently on a custom workbench (e.g., Validate Signature report),
     // selecting any tool should take the user back to the default file manager view.
     const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -319,7 +305,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery, allTools, premiumEnabled]);
+  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery, toolAvailability]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -374,6 +360,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     toolResetFunctions,
     registerToolReset,
     resetTool,
+    toolAvailability,
 
     // Workflow Actions
     handleToolSelect,
@@ -401,6 +388,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     selectedTool,
     toolRegistry,
     getSelectedTool,
+    toolAvailability,
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,

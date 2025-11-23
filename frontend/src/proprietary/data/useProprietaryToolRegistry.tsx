@@ -29,7 +29,7 @@ export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
       ),
       categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
       subcategoryId: SubcategoryId.GENERAL,
-      workbench: "custom:pdfTextEditor",
+      maxFiles: 1,
       endpoints: ["text-editor-pdf"],
       synonyms: getSynonyms(t, "pdfTextEditor"),
       supportsAutomate: false,

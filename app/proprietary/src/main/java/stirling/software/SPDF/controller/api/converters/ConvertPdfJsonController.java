@@ -31,10 +31,12 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.security.config.PremiumEndpoint;
 
 @Slf4j
 @ConvertApi
 @RequiredArgsConstructor
+@PremiumEndpoint
 public class ConvertPdfJsonController {
 
     private final PdfJsonConversionService pdfJsonConversionService;
