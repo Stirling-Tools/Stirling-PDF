@@ -81,6 +81,8 @@ CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
 PDF_WITH_ATTACHMENTS_SAMPLE_FILE = "testing/samples/pdf_with_attachments.pdf"
 EPUB_SAMPLE_FILE = "testing/samples/sample.epub"
+EPS_SAMPLE_FILE = "testing/samples/sample.eps"
+PDF_VECTOR_SAMPLE_FILE = "testing/samples/sample_vector.pdf"
 
 DEFAULT_SPEC_ENDPOINT = "/v1/api-docs"
 
@@ -807,8 +809,20 @@ class SwaggerTester:
                 PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf"
             )
 
+        if "url/pdf" in path_lower:
+            return (
+                ("urlInput", "https://example.com/sample.pdf", "text/plain"),
+                None,
+            )
+
         if "ebook" in path_lower:
             return self._open_file(EPUB_SAMPLE_FILE, "application/epub+zip")
+
+        if "vector/pdf" in path_lower:
+            return self._open_file(EPS_SAMPLE_FILE, "application/postscript")
+
+        if "pdf/vector" in path_lower:
+            return self._open_file(PDF_VECTOR_SAMPLE_FILE, "application/pdf")
 
         if "image" in name_lower or "img" in path_lower:
             return self._open_file(IMAGE_SAMPLE_FILE, "image/png")
