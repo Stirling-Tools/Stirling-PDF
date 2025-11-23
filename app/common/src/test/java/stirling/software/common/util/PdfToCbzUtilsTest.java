@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.converters;
+package stirling.software.common.util;
 
 import java.io.IOException;
 
@@ -12,7 +12,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.PdfToCbzUtils;
 
 public class PdfToCbzUtilsTest {
 
