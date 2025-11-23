@@ -68,18 +68,36 @@ fi
 
 # # === tessdata ===
 # # Prepare Tesseract OCR data directory.
-# mkdir -p /usr/share/tessdata
+REAL_TESSDATA="/usr/share/tesseract-ocr/5/tessdata"
+SEC_TESSDATA="/usr/share/tessdata"
 
-# # Copy original tesseract data files if present.
-# if [ -d /usr/share/tessdata-original ]; then
-#   cp -rn /usr/share/tessdata-original/. /usr/share/tessdata/ || true
-# fi
+log_warn() {
+  echo "[init][warn] $*" >&2
+}
 
-# # Merge tessdata from different Tesseract versions if available.
-# for version in 4.00 5; do
-#   SRC="/usr/share/tesseract-ocr/${version}/tessdata"
-#   [ -d "$SRC" ] && cp -rn "$SRC"/* /usr/share/tessdata/ 2>/dev/null || true
-# done
+if [ -d "$REAL_TESSDATA" ] && [ -w "$REAL_TESSDATA" ]; then
+  log_warn "Skipping tessdata adjustments; directory writable: $REAL_TESSDATA"
+else
+  log_warn "Skipping tessdata adjustments; directory missing or not writable: $REAL_TESSDATA"
+fi
+
+if [ -d /usr/share/tesseract-ocr/5/tessdata ]; then
+  REAL_TESSDATA="/usr/share/tesseract-ocr/5/tessdata"
+  log_warn "Using /usr/share/tesseract-ocr/5/tessdata as TESSDATA_PREFIX"
+elif [ -d /usr/share/tessdata ]; then
+  REAL_TESSDATA="/usr/share/tessdata"
+  log_warn "Using /usr/share/tessdata as TESSDATA_PREFIX"
+elif [ -d /tessdata ]; then
+  REAL_TESSDATA="/tessdata"
+  log_warn "Using /tessdata as TESSDATA_PREFIX"
+else
+  REAL_TESSDATA=""
+  log_warn "No tessdata directory found"
+fi
+
+if [ -n "$REAL_TESSDATA" ]; then
+  export TESSDATA_PREFIX="$REAL_TESSDATA"
+fi
 
 # === Temp dir ===
 # Ensure the temporary directory exists and has proper permissions.

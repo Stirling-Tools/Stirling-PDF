@@ -115,7 +115,7 @@ system:
   showUpdate: false # see when a new update is available
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
-  tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableScarf: null # Enable Scarf pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled

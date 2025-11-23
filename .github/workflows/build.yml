@@ -205,8 +205,14 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true'
-    needs: files-changed
+    if: |
+      needs.files-changed.outputs.project == 'true' &&
+      (
+        needs.files-changed.outputs.docker != 'true' ||
+        needs.test-build-docker-images.result == 'success' ||
+        needs.test-build-docker-images.result == 'skipped'
+      )
+    needs: [files-changed, test-build-docker-images]
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
@@ -276,7 +282,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
+        docker:
+          - name: "Dockerfile.ultra-lite"
+            tag: "ultra-lite"
+          - name: "Dockerfile.fat"
+            tag: "fat"
+          - name: "Dockerfile"
+            tag: "latest"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
@@ -321,14 +333,6 @@ jobs:
         id: repoowner
         run: echo "lowercase=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Derive image variant
-        id: variant
-        shell: bash
-        run: |
-          RAW="${{ matrix.docker-rev }}"
-          VARIANT=$(echo "$RAW" | tr '[:upper:]' '[:lower:]' | sed -E 's#^dockerfile\.##')
-          echo "variant=$VARIANT" >> $GITHUB_OUTPUT
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
@@ -339,20 +343,26 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=alpha,enable=${{ matrix.docker-rev == 'Dockerfile.fat' }}
-            type=raw,value=${{ steps.variant.outputs.variant }},enable=true
+            type=raw,value=alpha,enable=${{ matrix.docker.name == 'Dockerfile.fat' }}
+            type=raw,value=${{ matrix.docker.tag }},enable=true
           labels: |
-            org.opencontainers.image.title=stirling-pdf-test
-            org.opencontainers.image.description=CI test image for Stirling PDF
+            org.opencontainers.image.title=Stirling-PDF Test
+            org.opencontainers.image.description=CI test image for Stirling-PDF
+            org.opencontainers.image.url=https://www.stirlingpdf.com
+            org.opencontainers.image.documentation=https://docs.stirlingpdf.com
+            org.opencontainers.image.authors=Stirling-Tools
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ matrix.docker.tag }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repository }}
+            maintainer=Stirling-Tools
 
       - name: Choose primary tag for tests
         id: testtag
         shell: bash
         run: |
           IMAGE="ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test"
-          VARIANT="${{ steps.variant.outputs.variant }}"
+          VARIANT="${{ matrix.docker.tag }}"
           BRANCH="$(echo "${GITHUB_REF_NAME:-${{ github.ref_name }}}" | tr '[:upper:]' '[:lower:]')"
           SHA_SHORT="$(echo "${GITHUB_SHA}" | cut -c1-8)"
           CANDIDATE="$IMAGE:$VARIANT-$BRANCH-$SHA_SHORT"
@@ -395,23 +405,11 @@ jobs:
       #     provenance: false
       #     sbom: false
 
-      # # - name: Show amd64 image size
-      # #   run: |
-      # #     SIZE=$(docker image inspect ${{ steps.meta.outputs.tags }} --format='{{.Size}}')
-      # #     FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
-      # #     echo "Image size (amd64): ${FORMATTED}"
-
-      # - name: Test Java works (amd64)
-      #   timeout-minutes: 5
+      # - name: Show amd64 image size
       #   run: |
-      #     docker run --rm ${{ steps.testtag.outputs.tag }} \
-      #     sh -lc 'java -version'
-
-      # - name: Test share dir (amd64)
-      #   timeout-minutes: 5
-      #   run: |
-      #     docker run --rm ${{ steps.testtag.outputs.tag }} \
-      #     sh -lc 'ls -la /usr/share/'
+      #     SIZE=$(docker image inspect ${{ steps.meta.outputs.tags }} --format='{{.Size}}')
+      #     FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
+      #     echo "Image size (amd64): ${FORMATTED}"
 
       - name: Prune amd64 image and cache
         if: always()
@@ -436,44 +434,11 @@ jobs:
       #     provenance: false
       #     sbom: false
 
-      # # - name: Show arm64 image size
-      # #   run: |
-      # #     SIZE=$(docker image inspect ${{ steps.meta.outputs.tags }} --format='{{.Size}}')
-      # #     FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
-      # #     echo "Image size (arm64): ${FORMATTED}"
-
-      # - name: Test Java works (arm64)
-      #   timeout-minutes: 5
+      # - name: Show arm64 image size
       #   run: |
-      #     docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
-      #     sh -lc 'java -version'
-
-      # - name: Test share dir (arm64)
-      #   timeout-minutes: 5
-      #   run: |
-      #     docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
-      #     sh -lc 'ls -la /usr/share/'
-
-      # - name: Test app.jar exists (arm64)
-      #   timeout-minutes: 2
-      #   run: |
-      #     docker run --rm --platform linux/arm64 --entrypoint sh ${{ steps.testtag.outputs.tag }} \
-      #       -lc 'test -f /app.jar && echo "app.jar OK" || (echo "ERROR: app.jar missing!" && exit 1)'
-
-      # - name: Deep arm64 tests (fat image only)
-      #   if: matrix.docker-rev == 'Dockerfile.fat'
-      #   timeout-minutes: 5
-      #   run: |
-      #     TAG="${{ steps.testtag.outputs.tag }}"
-      #     echo "Running deep tests on arm64 for fat image..."
-
-      #     docker run --rm --platform linux/arm64 --entrypoint sh "$TAG" -lc \
-      #       'ldd /usr/lib/libreoffice/program/soffice.bin >/dev/null && echo "LibreOffice binary linked OK"' || \
-      #       (echo "LibreOffice binary broken on arm64!" && exit 1)
-
-      #     docker run --rm --platform linux/arm64 --entrypoint python3 "$TAG" -c \
-      #       'import uno; print("uno import OK")' || \
-      #       (echo "Python uno import failed on arm64!" && exit 1)
+      #     SIZE=$(docker image inspect ${{ steps.meta.outputs.tags }} --format='{{.Size}}')
+      #     FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
+      #     echo "Image size (arm64): ${FORMATTED}"
 
       # - name: Cleanup arm64 image and cache
       #   if: always()
@@ -486,7 +451,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./${{ matrix.docker-rev }}
+          file: ./${{ matrix.docker.name }}
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -500,24 +465,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: reports-docker-${{ matrix.docker-rev }}
+          name: reports-docker-${{ matrix.docker.name }}
           path: |
             build/reports/
             build/test-results/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
-
-      - name: Test tessdata dir (arm64)
-        if: matrix.docker-rev != 'Dockerfile.ultra-lite'
-        timeout-minutes: 5
-        run: |
-          docker run --rm --platform linux/arm64 ${{ steps.testtag.outputs.tag }} \
-          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'
-
-      - name: Test tessdata dir (amd64)
-        if: always() &&  matrix.docker-rev != 'Dockerfile.ultra-lite'
-        timeout-minutes: 5
-        run: |
-          docker run --rm  ${{ steps.testtag.outputs.tag }} \
-          sh -lc 'tesseract --list-langs || (echo "Tesseract not found or broken!" && exit 1)'

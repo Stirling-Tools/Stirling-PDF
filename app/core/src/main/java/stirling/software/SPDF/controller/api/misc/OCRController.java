@@ -40,8 +40,14 @@ import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.*;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempDirectory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -66,7 +72,7 @@ public class OCRController {
 
     /** Gets the list of available Tesseract languages from the tessdata directory */
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
+        String tessdataDir = runtimePathConfig.getTessDataPath();
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();

@@ -16,28 +16,52 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
-# Function to check the health of the service with a timeout of 80 seconds
+# Function to check application readiness via HTTP instead of Docker's health status
 check_health() {
     local service_name=$1
     local compose_file=$2
-    local end=$((SECONDS+60))
 
-    echo -n "Waiting for $service_name to become healthy..."
-    until [ "$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$service_name")" == "healthy" ] || [ $SECONDS -ge $end ]; do
-        sleep 3
-        echo -n "."
-        if [ $SECONDS -ge $end ]; then
-            echo -e "\n$service_name health check timed out after 80 seconds."
-            echo "Printing logs for $service_name:"
-            docker logs "$service_name"
-            return 1
+    local timeout=80          # total timeout in seconds
+    local interval=3          # poll interval in seconds
+    local end=$((SECONDS + timeout))
+    local last_code="000"
+
+    echo "Waiting for $service_name to become reachable on http://localhost:8080/ (timeout ${timeout}s)..."
+
+    while [ $SECONDS -lt $end ]; do
+        # Optional: check if container is running at all (nice for debugging)
+        if ! docker ps --format '{{.Names}}' | grep -q "$service_name"; then
+            echo "  Container $service_name not running yet (still waiting)..."
         fi
+
+        # Try simple HTTP GET on the root page
+        last_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/") || last_code="000"
+
+        # Treat any 2xx or 3xx as "ready"
+        if [ "$last_code" -ge 200 ] && [ "$last_code" -lt 400 ]; then
+            echo "$service_name is reachable over HTTP (status $last_code)."
+            echo "Printing logs for $service_name:"
+            docker logs "$service_name" || true
+            return 0
+        fi
+
+        echo "  Still waiting for HTTP readiness, current status: $last_code"
+        sleep "$interval"
     done
-    echo -e "\n$service_name is healthy!"
+
+    echo "$service_name did not become HTTP-ready within ${timeout}s (last HTTP status: $last_code)."
+
+    # For extra debugging: show Docker health status, but DO NOT depend on it
+    local docker_health
+    docker_health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}(no healthcheck){{end}}' "$service_name" 2>/dev/null || echo "inspect failed")
+    echo "Docker-reported health status for $service_name: $docker_health"
+
     echo "Printing logs for $service_name:"
-    docker logs "$service_name"
-    return 0
+    docker logs "$service_name" || true
+    return 1
 }
+
+
 
 # Function to capture file list from a Docker container
 capture_file_list() {
@@ -223,21 +247,31 @@ test_compose() {
     local service_name=$2
     local status=0
 
-    echo "Testing $compose_file configuration..."
+    echo "Testing ${compose_file} configuration..."
 
     # Start up the Docker Compose service
     docker-compose -f "$compose_file" up -d
 
+    # Resolve actual container id created by docker-compose
+    local container_id
+    container_id=$(docker-compose -f "$compose_file" ps -q | head -n1)
+
+    if [ -z "$container_id" ]; then
+        echo "ERROR: No container found for ${compose_file}"
+        return 1
+    fi
+
     # Wait for the service to become healthy
-    if check_health "$service_name" "$compose_file"; then
-        echo "$service_name test passed."
+    if check_health "$container_id" "$compose_file"; then
+        echo "${service_name} test passed."
     else
-        echo "$service_name test failed."
+        echo "${service_name} test failed."
         status=1
     fi
 
     return $status
 }
+
 
 # Keep track of which tests passed and failed
 declare -a passed_tests
@@ -278,7 +312,7 @@ main() {
 
     # Building Docker images
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
+    docker build --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:ultra-lite -f ./Dockerfile.ultra-lite .
 
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
@@ -322,7 +356,7 @@ main() {
     # Building Docker images with security enabled
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
+    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:alpha -f ./Dockerfile.fat .
 
 
     # Test each configuration with security
@@ -385,15 +419,15 @@ main() {
             # Compare file lists
             if compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"; then
                 echo "No unexpected temporary files found."
-                passed_tests+=("Stirling-PDF-Regression")
+                passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             else
                 echo "WARNING: Unexpected temporary files detected after behave tests!"
                 failed_tests+=("Stirling-PDF-Regression-Temp-Files")
             fi
 
-            passed_tests+=("Stirling-PDF-Regression")
+            passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
         else
-            failed_tests+=("Stirling-PDF-Regression")
+            failed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             echo "Printing docker logs of failed regression"
             docker logs "$CONTAINER_NAME"
             echo "Printed docker logs of failed regression"

@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
     \
     # Clean up installer-only packages
-    && apt-get purge -y xz-utils gpgv curl xdg-utils \
+    && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -134,18 +134,6 @@ RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
 # Extend PATH to include both virtual environments
 ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 
-# Symlink Tesseract language data to expected location
-# RUN set -eux; \
-#     if [ -d /usr/share/tesseract-ocr/5/tessdata ]; then \
-#       TESS_PATH=/usr/share/tesseract-ocr/5/tessdata; \
-#     else \
-#       TESS_PATH="$(find /usr/share/tesseract-ocr -type d -name tessdata | head -1 || true)"; \
-#     fi; \
-#     [ -n "$TESS_PATH" ] || { echo "ERROR: tessdata directory not found!" >&2; exit 1; }; \
-#     rm -f /usr/share/tessdata || true; \
-#     ln -s "$TESS_PATH" /usr/share/tessdata; \
-#     echo "Linked tessdata: $TESS_PATH → /usr/share/tessdata"
-
 # ==============================================================================
 # Final permissions, directories and font cache
 # ==============================================================================
@@ -166,6 +154,8 @@ ENV QT_QPA_PLATFORM=offscreen \
 
 # Expose web UI port
 EXPOSE 8080/tcp
+
+STOPSIGNAL SIGTERM
 
 # Use tini as init (handles signals and zombies correctly)
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
