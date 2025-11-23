@@ -41,7 +41,6 @@ jobs:
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         with:
-          base: docker_test
           filters: ".github/config/.files.yaml"
   build:
     runs-on: ubuntu-latest
@@ -273,8 +272,7 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.docker == 'true'
-    # needs: [files-changed, build] # tmp disable
-    needs: [files-changed]
+    needs: [files-changed, build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
