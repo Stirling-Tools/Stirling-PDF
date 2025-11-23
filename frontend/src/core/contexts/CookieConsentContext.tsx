@@ -13,7 +13,7 @@ const CookieConsentContext = createContext<CookieConsentContextValue | undefined
 
 export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { config } = useAppConfig();
-  const analyticsEnabled = config?.enableAnalytics === true;
+  const analyticsEnabled = config ? config.enableAnalytics !== false : false;
   const {
     showCookieConsent,
     showCookiePreferences,

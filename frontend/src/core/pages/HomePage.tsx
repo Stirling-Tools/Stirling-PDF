@@ -9,6 +9,7 @@ import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
+import { useCookieConsentContext } from "@app/contexts/CookieConsentContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -45,6 +46,7 @@ export default function HomePage() {
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
+  const { hasResponded: cookieConsentResponded } = useCookieConsentContext();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
@@ -54,10 +56,10 @@ export default function HomePage() {
 
   // Show admin analytics choice modal if analytics settings not configured
   useEffect(() => {
-    if (config && config.enableAnalytics === null) {
+    if (config && config.enableAnalytics === null && cookieConsentResponded) {
       setShowAnalyticsModal(true);
     }
-  }, [config]);
+  }, [config, cookieConsentResponded]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();

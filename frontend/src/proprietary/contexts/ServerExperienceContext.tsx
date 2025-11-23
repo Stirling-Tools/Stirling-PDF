@@ -158,6 +158,15 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  useEffect(() => {
+    if (!config) {
+      return;
+    }
+    if (config.isNewServer && !loginEnabled && !selfReportedAdmin) {
+      setSelfReportedAdmin(true);
+    }
+  }, [config, loginEnabled, selfReportedAdmin, setSelfReportedAdmin]);
+
   const fetchUserCounts = useCallback(async () => {
     if (!config) {
       return;

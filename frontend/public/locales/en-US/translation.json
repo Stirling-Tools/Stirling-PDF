@@ -4914,7 +4914,8 @@
     "planOverview": {
       "adminTitle": "Admin Overview",
       "userTitle": "Plan Overview",
-      "adminBody": "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "adminBodyLoginEnabled": "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "adminBodyLoginDisabled": "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
       "userBody": "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
     },
     "securityCheck": {

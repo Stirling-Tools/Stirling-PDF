@@ -42,6 +42,7 @@ export function useInitialOnboardingState({
     hasPaidLicense,
     scenarioKey,
     setSelfReportedAdmin,
+    isNewServer,
   } = useServerExperience();
   const osType = useOs();
   const navigate = useNavigate();
@@ -93,6 +94,13 @@ export function useInitialOnboardingState({
 
   const effectiveEnableLogin = enableLogin;
   const effectiveIsAdmin = isAdmin;
+  const shouldAssumeAdminForNewServer = Boolean(isNewServer) && !effectiveEnableLogin;
+
+  useEffect(() => {
+    if (shouldAssumeAdminForNewServer && !state.selfReportedAdmin) {
+      handleRoleSelect('admin');
+    }
+  }, [handleRoleSelect, shouldAssumeAdminForNewServer, state.selfReportedAdmin]);
 
   const shouldUseServerCount =
     (effectiveEnableLogin && effectiveIsAdmin) || !effectiveEnableLogin;
@@ -127,11 +135,19 @@ export function useInitialOnboardingState({
     return options.filter(opt => opt.url);
   }, []);
 
-  const { ids: flowSlideIds, type: flowType } = resolveFlow(
-    effectiveEnableLogin,
-    effectiveIsAdmin,
-    state.selfReportedAdmin,
+  const resolvedFlow = useMemo(
+    () => resolveFlow(effectiveEnableLogin, effectiveIsAdmin, state.selfReportedAdmin),
+    [effectiveEnableLogin, effectiveIsAdmin, state.selfReportedAdmin],
   );
+  const shouldSkipSecurityCheck = shouldAssumeAdminForNewServer;
+  const flowSlideIds = useMemo(
+    () =>
+      shouldSkipSecurityCheck
+        ? resolvedFlow.ids.filter((id) => id !== 'security-check')
+        : resolvedFlow.ids,
+    [resolvedFlow.ids, shouldSkipSecurityCheck],
+  );
+  const flowType = resolvedFlow.type;
   const totalSteps = flowSlideIds.length;
   const maxIndex = Math.max(totalSteps - 1, 0);
 
@@ -212,6 +228,7 @@ export function useInitialOnboardingState({
     selectedRole: state.selectedRole,
     onRoleSelect: handleRoleSelect,
     licenseNotice,
+    loginEnabled: effectiveEnableLogin,
   });
 
   const goNext = useCallback(() => {

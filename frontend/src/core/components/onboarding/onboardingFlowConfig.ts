@@ -45,6 +45,7 @@ export interface SlideFactoryParams {
   selectedRole: 'admin' | 'user' | null;
   onRoleSelect: (role: 'admin' | 'user' | null) => void;
   licenseNotice?: LicenseNotice;
+  loginEnabled?: boolean;
 }
 
 export interface HeroDefinition {
@@ -142,7 +143,8 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   'admin-overview': {
     id: 'admin-overview',
-    createSlide: ({ licenseNotice }) => PlanOverviewSlide({ isAdmin: true, licenseNotice }),
+    createSlide: ({ licenseNotice, loginEnabled }) =>
+      PlanOverviewSlide({ isAdmin: true, licenseNotice, loginEnabled }),
     hero: { type: 'diamond' },
     buttons: [
       {
