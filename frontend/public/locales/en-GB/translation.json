@@ -5661,14 +5661,22 @@
       "description": "Enter credentials"
     },
     "mode": {
-      "offline": {
-        "title": "Use Offline",
-        "description": "Run locally without an internet connection"
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Sign in with your Stirling account"
       },
-      "server": {
-        "title": "Connect to Server",
-        "description": "Connect to a remote Stirling PDF server"
+      "selfhosted": {
+        "title": "Self-Hosted Server",
+        "description": "Connect to your own Stirling PDF server"
       }
+    },
+    "saas": {
+      "title": "Sign in to Stirling",
+      "subtitle": "Sign in with your Stirling account"
+    },
+    "selfhosted": {
+      "title": "Sign in to Server",
+      "subtitle": "Enter your server credentials"
     },
     "server": {
       "title": "Connect to Server",
@@ -5711,16 +5719,12 @@
     "connection": {
       "title": "Connection Mode",
       "mode": {
-        "offline": "Offline",
-        "server": "Server"
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-Hosted"
       },
       "server": "Server",
       "user": "Logged in as",
-      "switchToServer": "Connect to Server",
-      "switchToOffline": "Switch to Offline",
-      "logout": "Logout",
-      "selectServer": "Select Server",
-      "login": "Login"
+      "logout": "Log Out"
     },
     "general": {
       "title": "General",

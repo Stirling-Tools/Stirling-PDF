@@ -49,7 +49,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
       // Add auth token for remote requests
-      const isRemote = await operationRouter.isRemoteMode();
+      const isRemote = await operationRouter.isSelfHostedMode();
       if (isRemote) {
         const token = await authService.getAuthToken();
         if (token) {
@@ -59,9 +59,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Backend readiness check (for local backend)
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
-      const isOffline = await operationRouter.isOfflineMode();
+      const isSaaS = await operationRouter.isSaaSMode();
 
-      if (isOffline && !skipCheck && !tauriBackendService.isBackendHealthy()) {
+      if (isSaaS && !skipCheck && !tauriBackendService.isBackendHealthy()) {
         const method = (extendedConfig.method || 'get').toLowerCase();
         if (method !== 'get') {
           const now = Date.now();
@@ -93,7 +93,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
-        const isRemote = await operationRouter.isRemoteMode();
+        const isRemote = await operationRouter.isSelfHostedMode();
         if (isRemote) {
           const serverConfig = await connectionModeService.getServerConfig();
           if (serverConfig) {
