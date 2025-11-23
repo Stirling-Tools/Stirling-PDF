@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpInputMessage;
@@ -117,6 +118,7 @@ class GlobalExceptionHandlerTest {
 
     @Nested
     @DisplayName("Security Exceptions")
+    @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
     class SecurityExceptionTests {
 
         @Test
@@ -939,7 +941,9 @@ class GlobalExceptionHandlerTest {
                     () -> {
                         Object path = response.getBody().getProperties().get("path");
                         assertTrue(
-                                path == null || "".equals(path) || "unknown".equals(path),
+                                path == null
+                                        || (path instanceof String && ((String) path).length() == 0)
+                                        || "unknown".equals(path),
                                 "Path should be null/empty/unknown when request URI is missing");
                     });
         }

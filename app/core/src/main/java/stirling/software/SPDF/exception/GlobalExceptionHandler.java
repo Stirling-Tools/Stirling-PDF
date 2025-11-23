@@ -5,6 +5,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
@@ -723,14 +724,19 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(),
                 ex.getMethod());
 
+        String supportedMethodsStr =
+                ex.getSupportedMethods() != null
+                        ? String.join(", ", ex.getSupportedMethods())
+                        : "none";
+
         String message =
                 getLocalizedMessage(
                         "error.methodNotAllowed.detail",
                         String.format(
                                 "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
-                                ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
+                                ex.getMethod(), supportedMethodsStr),
                         ex.getMethod(),
-                        String.join(", ", ex.getSupportedMethods()));
+                        supportedMethodsStr);
 
         String title =
                 getLocalizedMessage(
@@ -742,7 +748,9 @@ public class GlobalExceptionHandler {
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
         problemDetail.setProperty("method", ex.getMethod());
-        problemDetail.setProperty("supportedMethods", ex.getSupportedMethods());
+        problemDetail.setProperty(
+                "supportedMethods",
+                ex.getSupportedMethods() != null ? ex.getSupportedMethods() : List.of());
         addStandardHints(
                 problemDetail,
                 "error.methodNotAllowed.hints",
@@ -923,6 +931,7 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 403 FORBIDDEN
      */
     @ExceptionHandler(AccessDeniedException.class)
+    @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
     public ResponseEntity<ProblemDetail> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
         log.warn("Access denied to {}", request.getRequestURI());
@@ -1016,8 +1025,8 @@ public class GlobalExceptionHandler {
 
         // If it was wrapped as a specific PDF exception, the more specific handler will catch it on
         // retry
-        if (processedException instanceof BaseAppException) {
-            return handleBaseApp((BaseAppException) processedException, request);
+        if (processedException instanceof BaseAppException baseappexception) {
+            return handleBaseApp(baseappexception, request);
         }
 
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
