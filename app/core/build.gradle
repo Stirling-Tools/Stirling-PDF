@@ -98,7 +98,7 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    compileOnly 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.boot:spring-boot-starter-security'
 }
 

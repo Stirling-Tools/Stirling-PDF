@@ -930,8 +930,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
-    public ResponseEntity<ProblemDetail> handleAccessDenied(
-            HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleAccessDenied(HttpServletRequest request) {
         log.warn("Access denied to {}", request.getRequestURI());
 
         String message =
