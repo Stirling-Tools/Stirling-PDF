@@ -126,16 +126,16 @@ public class BlankPageController {
                         if (properties != null && properties.getSystem() != null) {
                             renderDpi = properties.getSystem().getMaxDPI();
                         }
+                        final int dpi = renderDpi;
+                        final int currentPageIndex = pageIndex;
 
-                        try {
-                            image = pdfRenderer.renderImageWithDPI(pageIndex, renderDpi);
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageIndex + 1, renderDpi, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageIndex + 1, renderDpi, e);
-                        }
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageIndex + 1,
+                                        dpi,
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        currentPageIndex, dpi));
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }
@@ -174,6 +174,8 @@ public class BlankPageController {
             return WebResponseUtils.baosToWebResponse(
                     baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
+        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+            throw e;
         } catch (IOException e) {
             log.error("exception", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

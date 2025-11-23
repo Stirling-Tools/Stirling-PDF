@@ -2,7 +2,6 @@ let pdfCanvas = document.getElementById('cropPdfCanvas');
 let overlayCanvas = document.getElementById('overlayCanvas');
 let canvasesContainer = document.getElementById('canvasesContainer');
 canvasesContainer.style.display = 'none';
-let containerRect = canvasesContainer.getBoundingClientRect();
 
 let context = pdfCanvas.getContext('2d');
 let overlayContext = overlayCanvas.getContext('2d');
@@ -30,9 +29,16 @@ let rectHeight = 0;
 
 let pageScale = 1; // The scale which the pdf page renders
 let timeId = null; // timeout id for resizing canvases event
+let currentRenderTask = null; // Track current PDF render task to cancel if needed
 
 function renderPageFromFile(file) {
   if (file.type === 'application/pdf') {
+    // Cancel any ongoing render task when loading a new file
+    if (currentRenderTask) {
+      currentRenderTask.cancel();
+      currentRenderTask = null;
+    }
+
     let reader = new FileReader();
     reader.onload = function (ev) {
       let typedArray = new Uint8Array(reader.result);
@@ -51,7 +57,7 @@ window.addEventListener('resize', function () {
   clearTimeout(timeId);
 
   timeId = setTimeout(function () {
-    if (fileInput.files.length == 0) return;
+    if (!pdfDoc) return; // Only resize if we have a PDF loaded
     let canvasesContainer = document.getElementById('canvasesContainer');
     let containerRect = canvasesContainer.getBoundingClientRect();
 
@@ -59,35 +65,33 @@ window.addEventListener('resize', function () {
 
     overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-    pdfCanvas.width = containerRect.width;
-    pdfCanvas.height = containerRect.height;
-
-    overlayCanvas.width = containerRect.width;
-    overlayCanvas.height = containerRect.height;
-
-    let file = fileInput.files[0];
-    renderPageFromFile(file);
+    // Re-render with new container size
+    renderPage(currentPage);
   }, 1000);
 });
 
-fileInput.addEventListener('change', function (e) {
-  fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
-    if (allFiles && allFiles.length > 0) {
-      canvasesContainer.style.display = 'block'; // set for visual purposes
+fileInput.addEventListener('file-input-change', async (e) => {
+  if (!e.detail) return; // Guard against null detail
+  const {allFiles} = e.detail;
+  if (allFiles && allFiles.length > 0) {
+    canvasesContainer.style.display = 'block'; // set for visual purposes
+
+    // Wait for the layout to be updated before rendering
+    setTimeout(() => {
       let file = allFiles[0];
       renderPageFromFile(file);
-    }
-  });
+    }, 100);
+  }
 });
 
 cropForm.addEventListener('submit', function (e) {
   if (xInput.value == '' && yInput.value == '' && widthInput.value == '' && heightInput.value == '') {
-    // Ορίστε συντεταγμένες για ολόκληρη την επιφάνεια του PDF
+    // Set coordinates for the entire PDF surface
+    let currentContainerRect = canvasesContainer.getBoundingClientRect();
     xInput.value = 0;
     yInput.value = 0;
-    widthInput.value = containerRect.width;
-    heightInput.value = containerRect.height;
+    widthInput.value = currentContainerRect.width;
+    heightInput.value = currentContainerRect.height;
   }
 });
 
@@ -135,16 +139,24 @@ overlayCanvas.addEventListener('mouseup', function (e) {
 });
 
 function renderPage(pageNumber) {
+  // Cancel any ongoing render task
+  if (currentRenderTask) {
+    currentRenderTask.cancel();
+    currentRenderTask = null;
+  }
+
   pdfDoc.getPage(pageNumber).then(function (page) {
     let canvasesContainer = document.getElementById('canvasesContainer');
     let containerRect = canvasesContainer.getBoundingClientRect();
 
     pageScale = containerRect.width / page.getViewport({scale: 1}).width; // The new scale
 
-    let viewport = page.getViewport({scale: containerRect.width / page.getViewport({scale: 1}).width});
+    // Normalize rotation to 0, 90, 180, or 270 degrees
+    let normalizedRotation = ((page.rotate % 360) + 360) % 360;
+    let viewport = page.getViewport({scale: pageScale, rotation: normalizedRotation});
 
-    canvasesContainer.width = viewport.width;
-    canvasesContainer.height = viewport.height;
+    // Don't set container width, let CSS handle it
+    canvasesContainer.style.height = viewport.height + 'px';
 
     pdfCanvas.width = viewport.width;
     pdfCanvas.height = viewport.height;
@@ -152,8 +164,21 @@ function renderPage(pageNumber) {
     overlayCanvas.width = viewport.width; // Match overlay canvas size with PDF canvas
     overlayCanvas.height = viewport.height;
 
+    context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+
     let renderContext = {canvasContext: context, viewport: viewport};
-    page.render(renderContext);
-    pdfCanvas.classList.add('shadow-canvas');
+    currentRenderTask = page.render(renderContext);
+    currentRenderTask.promise.then(function() {
+      currentRenderTask = null;
+      pdfCanvas.classList.add('shadow-canvas');
+    }).catch(function(error) {
+      if (error.name !== 'RenderingCancelledException') {
+        console.error('PDF rendering error:', error);
+      }
+      currentRenderTask = null;
+    });
   });
 }
