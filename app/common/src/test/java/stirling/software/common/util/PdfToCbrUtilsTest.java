@@ -160,7 +160,6 @@ class PdfToCbrUtilsTest {
             when(mockExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
                     .thenReturn(mockResult);
             when(mockResult.getRc()).thenReturn(1);
-            when(mockResult.getMessages()).thenReturn("failure");
 
             IOException exception =
                     assertThrows(
