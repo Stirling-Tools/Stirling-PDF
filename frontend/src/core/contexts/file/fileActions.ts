@@ -63,7 +63,7 @@ export function createProcessedFile(
   thumbnail?: string,
   pageRotations?: number[],
   pageDimensions?: Array<{ width: number; height: number }>
-) {
+): ProcessedFileMetadata {
   return {
     totalPages: pageCount,
     pages: Array.from({ length: pageCount }, (_, index) => ({
@@ -105,6 +105,10 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
 
     // Use rotated thumbnail for file manager
     processedFile.thumbnailUrl = rotatedResult.thumbnail;
+
+    if (unrotatedResult.isEncrypted || rotatedResult.isEncrypted) {
+      processedFile.isEncrypted = true;
+    }
 
     return processedFile;
   } catch (error) {
