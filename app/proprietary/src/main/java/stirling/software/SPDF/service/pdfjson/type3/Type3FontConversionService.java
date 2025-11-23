@@ -108,7 +108,7 @@ public class Type3FontConversionService {
             if (result.getStrategyLabel() == null) {
                 result.setStrategyLabel(strategy.getLabel());
             }
-            log.info(
+            log.debug(
                     "[TYPE3] Strategy {} finished with status {} (message: {}) for font {}",
                     strategy.getId(),
                     result.getStatus(),

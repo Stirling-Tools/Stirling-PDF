@@ -93,34 +93,35 @@ public class PdfJsonFontService {
 
         if ("python".equalsIgnoreCase(cffConverterMethod)) {
             if (!pythonCffConverterAvailable) {
-                log.warn("[FONT-DEBUG] Python CFF converter not available, skipping conversion");
+                log.debug("[FONT-DEBUG] Python CFF converter not available, skipping conversion");
                 return null;
             }
             byte[] result = convertCffUsingPython(fontBytes, toUnicode);
-            log.info(
+            log.debug(
                     "[FONT-DEBUG] Python conversion result: {}",
                     result == null ? "null" : result.length + " bytes");
             return result;
         } else if ("fontforge".equalsIgnoreCase(cffConverterMethod)) {
             if (!fontForgeCffConverterAvailable) {
-                log.warn("[FONT-DEBUG] FontForge CFF converter not available, skipping conversion");
+                log.debug(
+                        "[FONT-DEBUG] FontForge CFF converter not available, skipping conversion");
                 return null;
             }
             byte[] result = convertCffUsingFontForge(fontBytes);
-            log.info(
+            log.debug(
                     "[FONT-DEBUG] FontForge conversion result: {}",
                     result == null ? "null" : result.length + " bytes");
             return result;
         } else {
-            log.warn(
+            log.debug(
                     "[FONT-DEBUG] Unknown CFF converter method: {}, falling back to Python",
                     cffConverterMethod);
             if (!pythonCffConverterAvailable) {
-                log.warn("[FONT-DEBUG] Python CFF converter not available, skipping conversion");
+                log.debug("[FONT-DEBUG] Python CFF converter not available, skipping conversion");
                 return null;
             }
             byte[] result = convertCffUsingPython(fontBytes, toUnicode);
-            log.info(
+            log.debug(
                     "[FONT-DEBUG] Python conversion result: {}",
                     result == null ? "null" : result.length + " bytes");
             return result;
@@ -182,18 +183,18 @@ public class PdfJsonFontService {
 
     private byte[] convertCffUsingPython(byte[] fontBytes, String toUnicode) {
         if (!pythonCffConverterAvailable) {
-            log.warn("[FONT-DEBUG] Python CFF converter not available");
+            log.debug("[FONT-DEBUG] Python CFF converter not available");
             return null;
         }
         if (pythonCommand == null
                 || pythonCommand.isBlank()
                 || pythonScript == null
                 || pythonScript.isBlank()) {
-            log.warn("[FONT-DEBUG] Python converter not configured");
+            log.debug("[FONT-DEBUG] Python converter not configured");
             return null;
         }
 
-        log.info(
+        log.debug(
                 "[FONT-DEBUG] Running Python CFF converter: command={}, script={}",
                 pythonCommand,
                 pythonScript);
@@ -208,7 +209,7 @@ public class PdfJsonFontService {
                     byte[] toUnicodeBytes = Base64.getDecoder().decode(toUnicode);
                     Files.write(toUnicodeFile.getPath(), toUnicodeBytes);
                 } catch (IllegalArgumentException ex) {
-                    log.warn(
+                    log.debug(
                             "[FONT-DEBUG] Failed to decode ToUnicode data for CFF conversion: {}",
                             ex.getMessage());
                     return null;
@@ -220,7 +221,7 @@ public class PdfJsonFontService {
                             inputFile.getAbsolutePath(),
                             outputFile.getAbsolutePath(),
                             toUnicodeFile != null ? toUnicodeFile.getAbsolutePath() : null);
-            log.info("[FONT-DEBUG] Executing: {}", String.join(" ", command));
+            log.debug("[FONT-DEBUG] Executing: {}", String.join(" ", command));
 
             ProcessExecutorResult result =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER)

@@ -342,7 +342,7 @@ public class PdfJsonConversionService {
                                     document, page, pageNumber, fonts, fontCache, jobId);
                     pageFontResources.put(pageNumber, resourceMap);
                     log.debug(
-                            "PDF→JSON: collected {} font resources on page {}",
+                            "PDF->JSON: collected {} font resources on page {}",
                             resourceMap.size(),
                             pageNumber);
 
@@ -454,11 +454,50 @@ public class PdfJsonConversionService {
                 progress.accept(
                         PdfJsonConversionProgress.of(95, "serializing", "Generating JSON output"));
 
-                log.debug(
-                        "PDF→JSON conversion complete (fonts: {}, pages: {}, lazyImages: {})",
-                        serializedFonts.size(),
-                        pdfJson.getPages().size(),
-                        useLazyImages);
+                // Collect font issues for summary
+                java.util.List<String> fontsWithMissingProgram =
+                        serializedFonts.stream()
+                                .filter(
+                                        f ->
+                                                Boolean.TRUE.equals(f.getEmbedded())
+                                                        && (f.getProgram() == null
+                                                                || f.getProgram().isEmpty()))
+                                .map(
+                                        f -> {
+                                            String name =
+                                                    f.getBaseName() != null
+                                                            ? f.getBaseName()
+                                                            : "Unknown";
+                                            String subtype =
+                                                    f.getSubtype() != null
+                                                            ? f.getSubtype()
+                                                            : "Unknown";
+                                            // Clean up subset prefix (e.g., "ABCDEF+TimesNewRoman"
+                                            // -> "TimesNewRoman")
+                                            String cleanName = name.replaceAll("^[A-Z]{6}\\+", "");
+                                            return String.format("%s (%s)", cleanName, subtype);
+                                        })
+                                .collect(java.util.stream.Collectors.toList());
+                long type3Fonts =
+                        serializedFonts.stream()
+                                .filter(f -> "Type3".equals(f.getSubtype()))
+                                .count();
+
+                if (!fontsWithMissingProgram.isEmpty()) {
+                    log.warn(
+                            "PDF->JSON conversion complete: {} fonts ({} Type3), {} pages. Missing font programs for {} embedded font(s): {}",
+                            serializedFonts.size(),
+                            type3Fonts,
+                            pdfJson.getPages().size(),
+                            fontsWithMissingProgram.size(),
+                            String.join(", ", fontsWithMissingProgram));
+                } else {
+                    log.info(
+                            "PDF->JSON conversion complete: {} fonts ({} Type3), {} pages",
+                            serializedFonts.size(),
+                            type3Fonts,
+                            pdfJson.getPages().size());
+                }
 
                 byte[] result = objectMapper.writeValueAsBytes(pdfJson);
                 progress.accept(PdfJsonConversionProgress.complete());
@@ -490,7 +529,7 @@ public class PdfJsonConversionService {
             pdfJson.setFonts(fontModels);
         }
 
-        // Generate synthetic jobId for this JSON→PDF conversion to prevent cache collisions
+        // Generate synthetic jobId for this JSON->PDF conversion to prevent cache collisions
         // Each conversion gets its own namespace for Type3 font caching
         String syntheticJobId = "json2pdf:" + java.util.UUID.randomUUID().toString();
 
@@ -509,6 +548,8 @@ public class PdfJsonConversionService {
             }
 
             int pageIndex = 0;
+            Set<String> allFallbackFontIds = new java.util.HashSet<>();
+            int pagesWithFallbacks = 0;
             for (PdfJsonPage pageModel : pages) {
                 int pageNumberValue =
                         pageModel.getPageNumber() != null
@@ -563,7 +604,9 @@ public class PdfJsonConversionService {
 
                 if (!preflightResult.fallbackFontIds().isEmpty()) {
                     ensureFallbackResources(page, preflightResult.fallbackFontIds(), fontMap);
-                    log.info(
+                    allFallbackFontIds.addAll(preflightResult.fallbackFontIds());
+                    pagesWithFallbacks++;
+                    log.debug(
                             "Page {} registered fallback fonts: {}",
                             pageNumberValue,
                             preflightResult.fallbackFontIds());
@@ -654,6 +697,18 @@ public class PdfJsonConversionService {
             List<PdfJsonFormField> formFields =
                     pdfJson.getFormFields() != null ? pdfJson.getFormFields() : new ArrayList<>();
             restoreFormFields(document, formFields);
+
+            // Log conversion summary
+            if (!allFallbackFontIds.isEmpty()) {
+                log.info(
+                        "JSON->PDF conversion complete: {} pages, {} fallback font(s) used across {} page(s): {}",
+                        pages.size(),
+                        allFallbackFontIds.size(),
+                        pagesWithFallbacks,
+                        allFallbackFontIds);
+            } else {
+                log.info("JSON->PDF conversion complete: {} pages", pages.size());
+            }
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 document.save(baos);
@@ -791,7 +846,7 @@ public class PdfJsonConversionService {
         if (font.getId() == null) {
             return null;
         }
-        // JSON→PDF conversion: no jobId context, pass null
+        // JSON->PDF conversion: no jobId context, pass null
         return buildFontKey(null, font.getPageNumber(), font.getId());
     }
 
@@ -804,7 +859,7 @@ public class PdfJsonConversionService {
             if (font == null || font.getId() == null) {
                 continue;
             }
-            // JSON→PDF conversion: no jobId context, pass null
+            // JSON->PDF conversion: no jobId context, pass null
             lookup.put(buildFontKey(null, font.getPageNumber(), font.getId()), font);
         }
         return lookup;
@@ -815,7 +870,7 @@ public class PdfJsonConversionService {
         if (lookup == null || fontId == null) {
             return null;
         }
-        // JSON→PDF conversion: no jobId context, pass null
+        // JSON->PDF conversion: no jobId context, pass null
         PdfJsonFont model = lookup.get(buildFontKey(null, pageNumber, fontId));
         if (model != null) {
             return model;
@@ -1261,6 +1316,8 @@ public class PdfJsonConversionService {
 
         Set<String> fallbackIds = new LinkedHashSet<>();
         boolean fallbackNeeded = false;
+        Set<String> warnedFonts =
+                new HashSet<>(); // Track fonts we've already warned about on this page
 
         Map<String, PdfJsonFont> fontLookup = buildFontModelLookup(fontModels);
         Map<String, Set<Integer>> type3GlyphCache = new HashMap<>();
@@ -1326,12 +1383,22 @@ public class PdfJsonConversionService {
             }
 
             if (!fallbackFontService.canEncodeFully(font, text)) {
-                log.info(
-                        "[FONT-DEBUG] Font {} (resource {}) cannot encode text '{}' on page {}",
-                        fontModel != null ? fontModel.getId() : "unknown",
-                        element.getFontId(),
-                        text,
-                        pageNumber);
+                String fontName =
+                        fontModel != null && fontModel.getBaseName() != null
+                                ? fontModel
+                                        .getBaseName()
+                                        .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
+                                : (font != null ? font.getName() : "unknown");
+                String fontKey = fontName + ":" + element.getFontId() + ":" + pageNumber;
+                if (!warnedFonts.contains(fontKey)) {
+                    log.warn(
+                            "[FALLBACK-NEEDED] Font '{}' (resource {}, subtype {}) cannot encode text on page {}. Using fallback font.",
+                            fontName,
+                            element.getFontId(),
+                            fontModel != null ? fontModel.getSubtype() : "unknown",
+                            pageNumber);
+                    warnedFonts.add(fontKey);
+                }
                 fallbackNeeded = true;
                 element.setFallbackUsed(Boolean.TRUE);
                 for (int offset = 0; offset < text.length(); ) {
@@ -1613,17 +1680,17 @@ public class PdfJsonConversionService {
 
         PDStream fontFile2 = descriptor.getFontFile2();
         if (fontFile2 != null) {
-            log.info("[FONT-DEBUG] Font {}: Found FontFile2 (TrueType)", font.getName());
+            log.debug("[FONT-DEBUG] Font {}: Found FontFile2 (TrueType)", font.getName());
             return readFontProgram(fontFile2, null, true, toUnicode);
         }
 
         PDStream fontFile = descriptor.getFontFile();
         if (fontFile != null) {
-            log.info("[FONT-DEBUG] Font {}: Found FontFile (Type1)", font.getName());
+            log.debug("[FONT-DEBUG] Font {}: Found FontFile (Type1)", font.getName());
             return readFontProgram(fontFile, "type1", false, toUnicode);
         }
 
-        log.warn("[FONT-DEBUG] Font {}: No font program found", font.getName());
+        log.debug("[FONT-DEBUG] Font {}: No font program found", font.getName());
         return null;
     }
 
@@ -1638,7 +1705,7 @@ public class PdfJsonConversionService {
             if (detectTrueType) {
                 format = fontService.detectTrueTypeFormat(data);
             }
-            log.info(
+            log.debug(
                     "[FONT-DEBUG] Font program: size={} bytes, formatHint={}, detectedFormat={}",
                     data.length,
                     formatHint,
@@ -1649,7 +1716,7 @@ public class PdfJsonConversionService {
             String pdfBase64 = null;
             String pdfFormat = null;
             if (format != null && isCffFormat(format)) {
-                log.info(
+                log.debug(
                         "[FONT-DEBUG] Font is CFF format, attempting conversion. CFF conversion enabled: {}, method: {}",
                         fontService.isCffConversionEnabled(),
                         fontService.getCffConverterMethod());
@@ -1659,7 +1726,7 @@ public class PdfJsonConversionService {
                     String detectedFormat = fontService.detectFontFlavor(converted);
                     webBase64 = Base64.getEncoder().encodeToString(converted);
                     webFormat = detectedFormat;
-                    log.info(
+                    log.debug(
                             "[FONT-DEBUG] Primary CFF conversion succeeded: {} bytes -> {}",
                             data.length,
                             detectedFormat);
@@ -1668,11 +1735,11 @@ public class PdfJsonConversionService {
                         pdfFormat = detectedFormat;
                     }
                 } else {
-                    log.warn("[FONT-DEBUG] Primary CFF conversion returned null/empty");
+                    log.debug("[FONT-DEBUG] Primary CFF conversion returned null/empty");
                 }
 
                 if (pdfBase64 == null && fontService.isCffConversionEnabled()) {
-                    log.info("[FONT-DEBUG] Attempting fallback FontForge conversion");
+                    log.debug("[FONT-DEBUG] Attempting fallback FontForge conversion");
                     byte[] ttfConverted = fontService.convertCffUsingFontForge(data);
                     if (ttfConverted != null && ttfConverted.length > 0) {
                         String detectedFormat = fontService.detectFontFlavor(ttfConverted);
@@ -1683,24 +1750,24 @@ public class PdfJsonConversionService {
                                 webBase64 = pdfBase64;
                                 webFormat = detectedFormat;
                             }
-                            log.info(
+                            log.debug(
                                     "[FONT-DEBUG] FontForge conversion succeeded: {} bytes -> {}",
                                     data.length,
                                     detectedFormat);
                         }
                     } else {
-                        log.warn("[FONT-DEBUG] FontForge conversion also returned null/empty");
+                        log.debug("[FONT-DEBUG] FontForge conversion also returned null/empty");
                     }
                 }
 
                 if (webBase64 == null && pdfBase64 == null) {
-                    log.error(
+                    log.warn(
                             "[FONT-DEBUG] ALL CFF conversions failed - font will not be usable in browser!");
                 }
             } else if (format != null) {
-                log.info("[FONT-DEBUG] Font is non-CFF format ({}), using as-is", format);
+                log.debug("[FONT-DEBUG] Font is non-CFF format ({}), using as-is", format);
                 // For non-CFF formats (TrueType, etc.), preserve original font stream as pdfProgram
-                // This allows PDFBox to reconstruct the font during JSON→PDF
+                // This allows PDFBox to reconstruct the font during JSON->PDF
                 String base64 = Base64.getEncoder().encodeToString(data);
                 pdfBase64 = base64;
                 pdfFormat = format;
@@ -2820,12 +2887,7 @@ public class PdfJsonConversionService {
                         }
                     }
                 }
-                if (targetFont != baseFont) {
-                    log.info(
-                            "Using fallback font '{}' for code point U+{}",
-                            targetFont.getName(),
-                            Integer.toHexString(codePoint));
-                }
+                // Fallback applied - tracked at page level, not logged per character
             }
 
             boolean useRawType3Glyph =
@@ -3405,7 +3467,7 @@ public class PdfJsonConversionService {
                 byte[] encoded = font.encode(text);
                 return sanitizeEncoded(encoded);
             } catch (IllegalArgumentException ex) {
-                log.info(
+                log.debug(
                         "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
                         font.getName(),
                         text,
@@ -3644,7 +3706,7 @@ public class PdfJsonConversionService {
                 }
                 PDFont loadedFont = createFontFromModel(document, fontModel, jobId);
                 if (loadedFont != null && fontModel.getId() != null) {
-                    // Use null jobId for map keys - JSON→PDF doesn't need job-scoped lookups
+                    // Use null jobId for map keys - JSON->PDF doesn't need job-scoped lookups
                     // The jobId is only used internally for Type3 cache isolation
                     fontMap.put(
                             buildFontKey(null, fontModel.getPageNumber(), fontModel.getId()),
@@ -3659,7 +3721,7 @@ public class PdfJsonConversionService {
             PdfJsonFont fallbackModel = fallbackFontService.buildFallbackFontModel();
             if (fonts != null) {
                 fonts.add(fallbackModel);
-                log.info("Added fallback font definition to JSON font list");
+                log.debug("Added fallback font definition to JSON font list");
             }
             PDFont fallbackFont = createFontFromModel(document, fallbackModel, jobId);
             fontMap.put(buildFontKey(null, -1, FALLBACK_FONT_ID), fallbackFont);
@@ -4119,7 +4181,7 @@ public class PdfJsonConversionService {
             }
 
             applyAdditionalFontMetadata(document, font, fontModel);
-            log.info(
+            log.debug(
                     "[FONT-RESTORE] Successfully restored embedded font {} (subtype={}) from original dictionary",
                     fontModel.getId(),
                     font.getSubType());

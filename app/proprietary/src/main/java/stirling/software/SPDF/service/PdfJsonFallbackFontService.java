@@ -44,12 +44,15 @@ public class PdfJsonFallbackFontService {
                     Map.entry("arial", "fallback-liberation-sans"),
                     Map.entry("helvetica", "fallback-liberation-sans"),
                     Map.entry("arimo", "fallback-liberation-sans"),
+                    Map.entry("liberationsans", "fallback-liberation-sans"),
                     Map.entry("times", "fallback-liberation-serif"),
                     Map.entry("timesnewroman", "fallback-liberation-serif"),
                     Map.entry("tinos", "fallback-liberation-serif"),
+                    Map.entry("liberationserif", "fallback-liberation-serif"),
                     Map.entry("courier", "fallback-liberation-mono"),
                     Map.entry("couriernew", "fallback-liberation-mono"),
                     Map.entry("cousine", "fallback-liberation-mono"),
+                    Map.entry("liberationmono", "fallback-liberation-mono"),
                     // DejaVu fonts - widely used open source fonts
                     Map.entry("dejavu", "fallback-dejavu-sans"),
                     Map.entry("dejavusans", "fallback-dejavu-sans"),
@@ -77,7 +80,9 @@ public class PdfJsonFallbackFontService {
                     Map.entry(
                             FALLBACK_FONT_KR_ID,
                             new FallbackFontSpec(
-                                    "classpath:/static/fonts/malgun.ttf", "MalgunGothic", "ttf")),
+                                    "classpath:/static/fonts/NotoSansKR-Regular.ttf",
+                                    "NotoSansKR-Regular",
+                                    "ttf")),
                     Map.entry(
                             FALLBACK_FONT_AR_ID,
                             new FallbackFontSpec(
@@ -327,7 +332,8 @@ public class PdfJsonFallbackFontService {
             font.encode(text);
             return true;
         } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
-            log.info(
+            // Only log at debug level to reduce verbosity - summary is logged elsewhere
+            log.debug(
                     "[FONT-DEBUG] Font {} cannot encode text '{}' ({}): {}",
                     font != null ? font.getName() : "null",
                     text,
