@@ -18,11 +18,37 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 public class EndpointConfiguration {
 
+    public enum DisableReason {
+        CONFIG,
+        DEPENDENCY,
+        UNKNOWN
+    }
+
+    public static class EndpointAvailability {
+        private final boolean enabled;
+        private final DisableReason reason;
+
+        public EndpointAvailability(boolean enabled, DisableReason reason) {
+            this.enabled = enabled;
+            this.reason = reason;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public DisableReason getReason() {
+            return reason;
+        }
+    }
+
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private Set<String> disabledGroups = new HashSet<>();
+    private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
+    private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
@@ -35,16 +61,31 @@ public class EndpointConfiguration {
         processEnvironmentConfigs();
     }
 
+    private String normalizeEndpoint(String endpoint) {
+        if (endpoint == null) {
+            return null;
+        }
+        return endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+    }
+
     public void enableEndpoint(String endpoint) {
-        endpointStatuses.put(endpoint, true);
-        log.debug("Enabled endpoint: {}", endpoint);
+        String normalized = normalizeEndpoint(endpoint);
+        endpointStatuses.put(normalized, true);
+        endpointDisableReasons.remove(normalized);
+        log.debug("Enabled endpoint: {}", normalized);
     }
 
     public void disableEndpoint(String endpoint) {
-        if (!Boolean.FALSE.equals(endpointStatuses.get(endpoint))) {
-            log.debug("Disabling endpoint: {}", endpoint);
+        disableEndpoint(endpoint, DisableReason.CONFIG);
+    }
+
+    public void disableEndpoint(String endpoint, DisableReason reason) {
+        String normalized = normalizeEndpoint(endpoint);
+        if (!Boolean.FALSE.equals(endpointStatuses.get(normalized))) {
+            log.debug("Disabling endpoint: {}", normalized);
         }
-        endpointStatuses.put(endpoint, false);
+        endpointStatuses.put(normalized, false);
+        endpointDisableReasons.put(normalized, reason);
     }
 
     public boolean isEndpointEnabled(String endpoint) {
@@ -150,6 +191,10 @@ public class EndpointConfiguration {
     }
 
     public void disableGroup(String group) {
+        disableGroup(group, DisableReason.CONFIG);
+    }
+
+    public void disableGroup(String group, DisableReason reason) {
         if (disabledGroups.add(group)) {
             if (isToolGroup(group)) {
                 log.debug(
@@ -161,11 +206,12 @@ public class EndpointConfiguration {
                         group);
             }
         }
+        groupDisableReasons.put(group, reason);
         // Only cascade to endpoints for *functional* groups
         if (!isToolGroup(group)) {
             Set<String> endpoints = endpointGroups.get(group);
             if (endpoints != null) {
-                endpoints.forEach(this::disableEndpoint);
+                endpoints.forEach(endpoint -> disableEndpoint(endpoint, reason));
             }
         }
     }
@@ -174,10 +220,37 @@ public class EndpointConfiguration {
         if (disabledGroups.remove(group)) {
             log.debug("Enabling group: {}", group);
         }
+        groupDisableReasons.remove(group);
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints != null) {
             endpoints.forEach(this::enableEndpoint);
         }
+    }
+
+    public EndpointAvailability getEndpointAvailability(String endpoint) {
+        boolean enabled = isEndpointEnabled(endpoint);
+        DisableReason reason = enabled ? null : determineDisableReason(endpoint);
+        return new EndpointAvailability(enabled, reason);
+    }
+
+    private DisableReason determineDisableReason(String endpoint) {
+        String normalized = normalizeEndpoint(endpoint);
+        if (Boolean.FALSE.equals(endpointStatuses.get(normalized))) {
+            return endpointDisableReasons.getOrDefault(normalized, DisableReason.CONFIG);
+        }
+
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            Set<String> endpoints = entry.getValue();
+            if (!disabledGroups.contains(group) || endpoints == null) {
+                continue;
+            }
+            if (endpoints.contains(normalized)) {
+                return groupDisableReasons.getOrDefault(group, DisableReason.CONFIG);
+            }
+        }
+
+        return DisableReason.UNKNOWN;
     }
 
     public Set<String> getDisabledGroups() {
@@ -261,6 +334,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "cbz-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-cbz");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -394,6 +469,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("Java", "cbz-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-cbz");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript

@@ -3,15 +3,31 @@ use tauri::Manager;
 use std::sync::Mutex;
 use std::path::PathBuf;
 use crate::utils::add_log;
+use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
-// Store backend process handle globally
+// Store backend process handle and port globally
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
+static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
 
 // Helper function to reset starting flag
 fn reset_starting_flag() {
     let mut starting_guard = BACKEND_STARTING.lock().unwrap();
     *starting_guard = false;
+}
+
+// Extract port number from "Stirling-PDF running on port: PORT" log line
+fn extract_port_from_running_log(log_line: &str) -> Option<u16> {
+    // Look for pattern: "running on port: PORT"
+    if let Some(start) = log_line.find("running on port: ") {
+        let after_prefix = &log_line[start + 17..]; // Skip "running on port: "
+        // Take digits until whitespace or end of line
+        let port_str: String = after_prefix.chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        return port_str.parse::<u16>().ok();
+    }
+    None
 }
 
 // Check if backend is already running or starting
@@ -24,7 +40,7 @@ fn check_backend_status() -> Result<(), String> {
             return Err("Backend already running".to_string());
         }
     }
-    
+
     // Check and set starting flag to prevent multiple simultaneous starts
     {
         let mut starting_guard = BACKEND_STARTING.lock().unwrap();
@@ -34,7 +50,7 @@ fn check_backend_status() -> Result<(), String> {
         }
         *starting_guard = true;
     }
-    
+
     Ok(())
 }
 
@@ -46,13 +62,13 @@ fn find_bundled_jre(resource_dir: &PathBuf) -> Result<PathBuf, String> {
     } else {
         jre_dir.join("bin").join("java")
     };
-    
+
     if !java_executable.exists() {
         let error_msg = format!("❌ Bundled JRE not found at: {:?}", java_executable);
         add_log(error_msg.clone());
         return Err(error_msg);
     }
-    
+
     add_log(format!("✅ Found bundled JRE: {:?}", java_executable));
     Ok(java_executable)
 }
@@ -77,20 +93,20 @@ fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
                     .unwrap_or(false)
         })
         .collect();
-    
+
     if jar_files.is_empty() {
         let error_msg = "No Stirling-PDF JAR found in libs directory.".to_string();
         add_log(error_msg.clone());
         return Err(error_msg);
     }
-    
+
     // Sort by filename to get the latest version (case-insensitive)
     jar_files.sort_by(|a, b| {
         let name_a = a.file_name().to_string_lossy().to_ascii_lowercase();
         let name_b = b.file_name().to_string_lossy().to_ascii_lowercase();
         name_b.cmp(&name_a) // Reverse order to get latest first
     });
-    
+
     let jar_path = jar_files[0].path();
     add_log(format!("📋 Selected JAR: {:?}", jar_path.file_name().unwrap()));
     Ok(jar_path)
@@ -123,23 +139,23 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join(".config").join("Stirling-PDF")
     };
-    
+
     // Create subdirectories for different purposes
     let config_dir = app_data_dir.join("configs");
     let log_dir = app_data_dir.join("logs");
     let work_dir = app_data_dir.join("workspace");
-    
+
     // Create all necessary directories
     std::fs::create_dir_all(&app_data_dir).ok();
     std::fs::create_dir_all(&log_dir).ok();
     std::fs::create_dir_all(&work_dir).ok();
     std::fs::create_dir_all(&config_dir).ok();
-    
+
     add_log(format!("📁 App data directory: {}", app_data_dir.display()));
     add_log(format!("📁 Log directory: {}", log_dir.display()));
     add_log(format!("📁 Working directory: {}", work_dir.display()));
     add_log(format!("📁 Config directory: {}", config_dir.display()));
-    
+
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
 
@@ -150,10 +166,13 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
+        "-Dserver.port=0",  // Let OS assign an available port
+        "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
+        "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
         "-jar",
-        jar_path.to_str().unwrap()
+        jar_path.to_str().unwrap(),
     ];
-    
+
     // Log the equivalent command for external testing
     let java_command = format!(
         "TAURI_PARENT_PID={} \"{}\" {}",
@@ -163,14 +182,14 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     );
     add_log(format!("🔧 Equivalent command: {}", java_command));
     add_log(format!("📁 Backend logs will be in: {}", log_dir.display()));
-    
+
     // Additional macOS-specific checks
     if cfg!(target_os = "macos") {
         // Check if java executable has execute permissions
         if let Ok(metadata) = std::fs::metadata(java_path) {
             let permissions = metadata.permissions();
             add_log(format!("🔍 Java executable permissions: {:?}", permissions));
-            
+
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -181,7 +200,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
                 }
             }
         }
-        
+
         // Check if we can read the JAR file
         if let Ok(metadata) = std::fs::metadata(jar_path) {
             add_log(format!("📦 JAR file size: {} bytes", metadata.len()));
@@ -189,7 +208,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
             add_log("⚠️ Cannot read JAR file metadata".to_string());
         }
     }
-    
+
     let sidecar_command = app
         .shell()
         .command(java_path.to_str().unwrap())
@@ -199,9 +218,9 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap());
-    
+
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
-    
+
     let (rx, child) = sidecar_command
         .spawn()
         .map_err(|e| {
@@ -209,18 +228,18 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
             add_log(error_msg.clone());
             error_msg
         })?;
-    
+
     // Store the process handle
     {
         let mut process_guard = BACKEND_PROCESS.lock().unwrap();
         *process_guard = Some(child);
     }
-    
+
     add_log("✅ Backend started with bundled JRE, monitoring output...".to_string());
-    
+
     // Start monitoring output
     monitor_backend_output(rx);
-    
+
     Ok(())
 }
 
@@ -229,7 +248,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
     tokio::spawn(async move {
         let mut _startup_detected = false;
         let mut error_count = 0;
-        
+
         while let Some(event) = rx.recv().await {
             match event {
                 tauri_plugin_shell::process::CommandEvent::Stdout(output) => {
@@ -237,17 +256,22 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     // Strip exactly one trailing newline to avoid double newlines
                     let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📤 Backend: {}", output_str));
-                    
-                    // Look for startup indicators
-                    if output_str.contains("Started SPDFApplication") || 
-                       output_str.contains("Navigate to "){
+
+                    // Look for actual runtime port from web server initialization
+                    // Format: "Stirling-PDF running on port: PORT"
+                    if output_str.contains("running on port:") {
                         _startup_detected = true;
-                        add_log(format!("🎉 Backend startup detected: {}", output_str));
+                        if let Some(port) = extract_port_from_running_log(&output_str) {
+                            let mut port_guard = BACKEND_PORT.lock().unwrap();
+                            *port_guard = Some(port);
+                            add_log(format!("🎉 Backend started on port: {}", port));
+                            add_log(format!("🔌 Navigate to: http://localhost:{}/", port));
+                        }
                     }
-                    
-                    // Look for port binding
-                    if output_str.contains("8080") {
-                        add_log(format!("🔌 Port 8080 related output: {}", output_str));
+
+                    if output_str.contains("Started SPDFApplication") {
+                        _startup_detected = true;
+                        add_log(format!("🎉 Backend startup completed: {}", output_str));
                     }
                 }
                 tauri_plugin_shell::process::CommandEvent::Stderr(output) => {
@@ -255,13 +279,13 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     // Strip exactly one trailing newline to avoid double newlines
                     let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📥 Backend Error: {}", output_str));
-                    
+
                     // Look for error indicators
                     if output_str.contains("ERROR") || output_str.contains("Exception") || output_str.contains("FATAL") {
                         error_count += 1;
                         add_log(format!("⚠️ Backend error #{}: {}", error_count, output_str));
                     }
-                    
+
                     // Look for specific common issues
                     if output_str.contains("Address already in use") {
                         add_log("🚨 CRITICAL: Port 8080 is already in use by another process!".to_string());
@@ -299,7 +323,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                 }
             }
         }
-        
+
         if error_count > 0 {
             println!("⚠️ Backend process ended with {} errors detected", error_count);
         }
@@ -308,14 +332,36 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
 
 // Command to start the backend with bundled JRE
 #[tauri::command]
-pub async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
+pub async fn start_backend(
+    app: tauri::AppHandle,
+    connection_state: tauri::State<'_, AppConnectionState>,
+) -> Result<String, String> {
     add_log("🚀 start_backend() called - Attempting to start backend with bundled JRE...".to_string());
-    
+
+    // Check connection mode
+    let mode = {
+        let state = connection_state.0.lock().map_err(|e| {
+            let error_msg = format!("❌ Failed to access connection state: {}", e);
+            add_log(error_msg.clone());
+            error_msg
+        })?;
+        state.mode.clone()
+    };
+
+    match mode {
+        ConnectionMode::SaaS => {
+            add_log("☁️ Running in SaaS mode - starting local backend".to_string());
+        }
+        ConnectionMode::SelfHosted => {
+            add_log("🌐 Running in Self-Hosted mode - starting local backend (for hybrid execution support)".to_string());
+        }
+    }
+
     // Check if backend is already running or starting
     if let Err(msg) = check_backend_status() {
         return Ok(msg);
     }
-    
+
     // Use Tauri's resource API to find the bundled JRE and JAR
     let resource_dir = app.path().resource_dir().map_err(|e| {
         let error_msg = format!("❌ Failed to get resource directory: {}", e);
@@ -323,44 +369,51 @@ pub async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         reset_starting_flag();
         error_msg
     })?;
-    
+
     add_log(format!("🔍 Resource directory: {:?}", resource_dir));
-    
+
     // Find the bundled JRE
     let java_executable = find_bundled_jre(&resource_dir).map_err(|e| {
         reset_starting_flag();
         e
     })?;
-    
+
     // Find the Stirling-PDF JAR
     let jar_path = find_stirling_jar(&resource_dir).map_err(|e| {
         reset_starting_flag();
         e
     })?;
-    
+
     // Normalize the paths to remove Windows UNC prefix
     let normalized_java_path = normalize_path(&java_executable);
     let normalized_jar_path = normalize_path(&jar_path);
-    
+
     add_log(format!("📦 Found JAR file: {:?}", jar_path));
     add_log(format!("📦 Normalized JAR path: {:?}", normalized_jar_path));
     add_log(format!("📦 Normalized Java path: {:?}", normalized_java_path));
-    
+
     // Create and start the Java command
     run_stirling_pdf_jar(&app, &normalized_java_path, &normalized_jar_path).map_err(|e| {
         reset_starting_flag();
         e
     })?;
-    
+
     // Wait for the backend to start
     println!("⏳ Waiting for backend startup...");
     tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
-    
+
     // Reset the starting flag since startup is complete
     reset_starting_flag();
     add_log("✅ Backend startup sequence completed, starting flag cleared".to_string());
-    
+
     Ok("Backend startup initiated successfully with bundled JRE".to_string())
+}
+
+// Get the dynamically assigned backend port
+#[tauri::command]
+pub fn get_backend_port() -> Option<u16> {
+    let port_guard = BACKEND_PORT.lock().unwrap();
+    *port_guard
 }
 
 // Cleanup function to stop backend on app exit
@@ -369,7 +422,7 @@ pub fn cleanup_backend() {
     if let Some(child) = process_guard.take() {
         let pid = child.pid();
         add_log(format!("🧹 App shutting down, cleaning up backend process (PID: {})", pid));
-        
+
         match child.kill() {
             Ok(_) => {
                 add_log(format!("✅ Backend process (PID: {}) terminated during cleanup", pid));
