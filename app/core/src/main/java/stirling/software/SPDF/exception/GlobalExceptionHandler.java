@@ -955,10 +955,6 @@ public class GlobalExceptionHandler {
                 .body(problemDetail);
     }
 
-    // ===========================================================================================
-    // JAVA STANDARD EXCEPTIONS
-    // ===========================================================================================
-
     /**
      * Handle IllegalArgumentException.
      *
