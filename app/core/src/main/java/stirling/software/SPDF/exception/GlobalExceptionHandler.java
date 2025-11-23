@@ -925,14 +925,12 @@ public class GlobalExceptionHandler {
      * <p>Client action: Ensure you have the necessary permissions or contact an administrator to
      * grant access.
      *
-     * @param ex the AccessDeniedException
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 403 FORBIDDEN
      */
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     @ConditionalOnClass(name = "org.springframework.security.access.AccessDeniedException")
     public ResponseEntity<ProblemDetail> handleAccessDenied(
-            org.springframework.security.access.AccessDeniedException ex,
             HttpServletRequest request) {
         log.warn("Access denied to {}", request.getRequestURI());
 

@@ -128,7 +128,7 @@ class GlobalExceptionHandlerTest {
             AccessDeniedException ex = new AccessDeniedException("Access is denied");
 
             ResponseEntity<ProblemDetail> response =
-                    exceptionHandler.handleAccessDenied(ex, request);
+                    exceptionHandler.handleAccessDenied(request);
 
             assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
             ProblemDetail detail = response.getBody();
@@ -148,7 +148,7 @@ class GlobalExceptionHandlerTest {
             AccessDeniedException ex = new AccessDeniedException(null);
 
             ResponseEntity<ProblemDetail> response =
-                    exceptionHandler.handleAccessDenied(ex, request);
+                    exceptionHandler.handleAccessDenied(request);
 
             assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
             ProblemDetail detail = response.getBody();
@@ -169,7 +169,7 @@ class GlobalExceptionHandlerTest {
             AccessDeniedException ex = new AccessDeniedException(customMessage);
 
             ResponseEntity<ProblemDetail> response =
-                    exceptionHandler.handleAccessDenied(ex, request);
+                    exceptionHandler.handleAccessDenied(request);
 
             assertStandardErrorStructure(response, HttpStatus.FORBIDDEN);
             ProblemDetail detail = response.getBody();
@@ -960,7 +960,7 @@ class GlobalExceptionHandlerTest {
 
             // Should propagate the MessageSource exception
             assertThrows(
-                    RuntimeException.class, () -> exceptionHandler.handleAccessDenied(ex, request));
+                    RuntimeException.class, () -> exceptionHandler.handleAccessDenied(request));
         }
     }
 
@@ -975,7 +975,7 @@ class GlobalExceptionHandlerTest {
             AccessDeniedException ex = new AccessDeniedException("Access is denied");
 
             ResponseEntity<ProblemDetail> response =
-                    exceptionHandler.handleAccessDenied(ex, request);
+                    exceptionHandler.handleAccessDenied(request);
 
             assertRfc7807Compliant(response.getBody(), HttpStatus.FORBIDDEN);
         }
@@ -1017,7 +1017,7 @@ class GlobalExceptionHandlerTest {
             List<ResponseEntity<ProblemDetail>> responses =
                     List.of(
                             exceptionHandler.handleAccessDenied(
-                                    new AccessDeniedException("Test"), request),
+                                request),
                             exceptionHandler.handleIllegalArgument(
                                     new IllegalArgumentException("Test"), request),
                             exceptionHandler.handleIOException(new IOException("Test"), request));
@@ -1085,7 +1085,7 @@ class GlobalExceptionHandlerTest {
 
             AccessDeniedException ex = new AccessDeniedException("test");
             ResponseEntity<ProblemDetail> response =
-                    exceptionHandler.handleAccessDenied(ex, request);
+                    exceptionHandler.handleAccessDenied(request);
 
             assertEquals("Access Denied", response.getBody().getTitle());
             assertTrue(response.getBody().getDetail().contains("forbidden"));
