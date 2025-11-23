@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -63,7 +64,8 @@ public class PdfOverlayController {
             int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
-                    Overlay overlay = new Overlay()) {
+                    Overlay overlay = new Overlay();
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 Map<Integer, String> overlayGuide =
                         prepareOverlayGuide(
                                 basePdf.getNumberOfPages(),
@@ -79,7 +81,6 @@ public class PdfOverlayController {
                     overlay.setOverlayPosition(Overlay.Position.BACKGROUND);
                 }
 
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
@@ -118,7 +119,8 @@ public class PdfOverlayController {
                 fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid overlay mode");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", mode);
         }
         return overlayGuide;
     }
@@ -140,12 +142,11 @@ public class PdfOverlayController {
                 overlayFileIndex = (overlayFileIndex + 1) % overlayFiles.length;
             }
 
-            try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex])) {
-                PDDocument singlePageDocument = new PDDocument();
+            try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex]);
+                    PDDocument singlePageDocument = new PDDocument()) {
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
                 File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
                 singlePageDocument.save(tempFile);
-                singlePageDocument.close();
 
                 overlayGuide.put(basePageIndex, tempFile.getAbsolutePath());
                 tempFiles.add(tempFile); // Keep track of the temporary file for cleanup
@@ -181,8 +182,11 @@ public class PdfOverlayController {
             Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
             throws IOException {
         if (overlayFiles.length != counts.length) {
-            throw new IllegalArgumentException(
-                    "Counts array length must match the number of overlay files");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "counts array",
+                    "length must match the number of overlay files");
         }
         int currentPage = 1;
         for (int i = 0; i < overlayFiles.length; i++) {
@@ -202,6 +206,3 @@ public class PdfOverlayController {
         }
     }
 }
-
-// Additional classes like OverlayPdfsRequest, WebResponseUtils, etc. are assumed to be defined
-// elsewhere.

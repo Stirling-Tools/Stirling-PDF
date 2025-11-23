@@ -37,10 +37,7 @@ ignore = [
 
 [bg_BG]
 ignore = [
-    'lang.div',
-    'lang.dzo',
     'lang.iku',
-    'lang.que',
     'language.direction',
 ]
 
@@ -266,11 +263,17 @@ ignore = [
 
 [es_ES]
 ignore = [
+    'audit.dashboard.export.csv',
+    'audit.dashboard.export.json',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.table.id',
     'error',
+    'fileChooser.click',
     'lang.ceb',
     'lang.chr',
     'lang.div',
     'lang.dzo',
+    'lang.epo',
     'lang.fil',
     'lang.guj',
     'lang.iku',
@@ -278,6 +281,7 @@ ignore = [
     'lang.lao',
     'lang.mal',
     'lang.ori',
+    'lang.que',
     'lang.snd',
     'lang.tam',
     'lang.tel',
@@ -285,7 +289,12 @@ ignore = [
     'lang.yor',
     'language.direction',
     'no',
+    'pro',
+    'redact.zoom',
+    'scannerEffect.colorspace.color',
     'showJS.tags',
+    'update.priority.normal',
+    'validateSignature.cert.bits',
 ]
 
 [eu_ES]
@@ -345,7 +354,6 @@ ignore = [
     'lang.chr',
     'lang.div',
     'lang.dzo',
-    'lang.equ',
     'lang.eus',
     'lang.guj',
     'lang.hin',
@@ -366,7 +374,6 @@ ignore = [
     'lang.san',
     'lang.snd',
     'lang.swa',
-    'lang.tel',
     'lang.tam',
     'lang.tat',
     'lang.tgl',
@@ -443,7 +450,6 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
     'endpointStatistics.top10',
@@ -596,7 +602,6 @@ ignore = [
     'lang.urd',
     'lang.yor',
     'language.direction',
-    'navbar.allTools',
     'sponsor',
 ]
 
