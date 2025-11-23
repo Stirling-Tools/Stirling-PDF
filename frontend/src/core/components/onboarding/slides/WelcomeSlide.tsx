@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { SlideConfig } from '../../../types/types';
-import styles from '../InitialOnboardingModal/InitialOnboardingModal.module.css';
-import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
+import { SlideConfig } from '@app/types/types';
+import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
+import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
 
 function WelcomeSlideTitle() {
   const { t } = useTranslation();

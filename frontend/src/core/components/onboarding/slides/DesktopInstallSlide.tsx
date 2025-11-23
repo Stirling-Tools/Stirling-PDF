@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { SlideConfig } from '../../../types/types';
-import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
-import { DesktopInstallTitle, type OSOption } from './DesktopInstallTitle';
+import { SlideConfig } from '@app/types/types';
+import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
+import { DesktopInstallTitle, type OSOption } from '@app/components/onboarding/slides/DesktopInstallTitle';
 
 export type { OSOption };
 

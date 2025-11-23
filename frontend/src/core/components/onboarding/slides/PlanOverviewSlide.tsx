@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { SlideConfig, LicenseNotice } from '../../../types/types';
-import { UNIFIED_CIRCLE_CONFIG } from './unifiedBackgroundConfig';
+import { SlideConfig, LicenseNotice } from '@app/types/types';
+import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
 
 interface PlanOverviewSlideProps {
   isAdmin: boolean;

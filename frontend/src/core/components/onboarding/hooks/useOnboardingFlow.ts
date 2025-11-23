@@ -11,7 +11,7 @@ import {
   ONBOARDING_SESSION_EVENT,
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
-} from '@core/constants/events';
+} from '@app/constants/events';
 import { useServerExperience } from '@app/hooks/useServerExperience';
 
 interface InitialModalHandlers {
