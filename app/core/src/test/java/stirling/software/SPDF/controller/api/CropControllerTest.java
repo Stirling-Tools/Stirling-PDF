@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
@@ -18,7 +17,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -292,7 +290,7 @@ class CropControllerTest {
                 assertThat(response).isNotNull();
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-                assertNotNull(response.getBody());
+                Assertions.assertNotNull(response.getBody());
                 try (PDDocument result = Loader.loadPDF(response.getBody())) {
                     assertThat(result.getNumberOfPages()).isEqualTo(1);
                 }
@@ -563,8 +561,7 @@ class CropControllerTest {
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(
-                            "Crop coordinates (x, y, width, height) are required when auto-crop is"
-                                    + " not enabled");
+                            "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
         }
 
         @Test
