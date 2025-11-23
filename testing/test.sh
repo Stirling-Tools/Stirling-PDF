@@ -303,7 +303,7 @@ main() {
 
     # Build Ultra-Lite image (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
     docker build --build-arg VERSION_TAG=alpha \
-        -t ghcr.io/ludy87/stirling-pdf-test:ultra-lite \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
         -f ./Dockerfile.ultra-lite .
 
     # Test Ultra-Lite configuration
@@ -345,7 +345,7 @@ main() {
 
     # Build Fat (Security) image for GHCR tag used in all 'fat' compose files
     docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
-        -t ghcr.io/ludy87/stirling-pdf-test:fat \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
         -f ./Dockerfile.fat .
 
     # Test fat + security compose
