@@ -34,7 +34,24 @@ public class SecurityConfig {
                         "/actuator/info",
                         "/favicon.ico")
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(
+                                                "/v1/api-docs/**",
+                                                "/v1/api-docs",
+                                                "/v3/api-docs/**",
+                                                "/v3/api-docs",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html",
+                                                "/index.html",
+                                                "/v1/api-docs.yaml",
+                                                "/api-docs/**",
+                                                "/actuator/health",
+                                                "/actuator/info",
+                                                "/favicon.ico")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
                 .formLogin(AbstractHttpConfigurer::disable);
 
         return http.build();

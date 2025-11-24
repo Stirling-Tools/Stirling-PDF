@@ -719,7 +719,7 @@ public class GlobalExceptionHandler {
         log.warn(
                 "Method not supported at {}: {} not allowed",
                 request.getRequestURI(),
-                ex.getMethod());
+                ex.getMethod() != null ? ex.getMethod() : "unknown");
 
         String supportedMethodsStr =
                 ex.getSupportedMethods() != null
@@ -731,8 +731,9 @@ public class GlobalExceptionHandler {
                         "error.methodNotAllowed.detail",
                         String.format(
                                 "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
-                                ex.getMethod(), supportedMethodsStr),
-                        ex.getMethod(),
+                                ex.getMethod() != null ? ex.getMethod() : "unknown",
+                                supportedMethodsStr),
+                        ex.getMethod() != null ? ex.getMethod() : "unknown",
                         supportedMethodsStr);
 
         String title =
@@ -744,7 +745,7 @@ public class GlobalExceptionHandler {
         problemDetail.setType(URI.create(ErrorTypes.METHOD_NOT_ALLOWED));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("method", ex.getMethod());
+        problemDetail.setProperty("method", ex.getMethod() != null ? ex.getMethod() : "unknown");
         problemDetail.setProperty(
                 "supportedMethods",
                 ex.getSupportedMethods() != null ? ex.getSupportedMethods() : List.of());
