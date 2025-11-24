@@ -51,7 +51,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
       await onLogin(userInfo.username, '');
     } catch (error) {
       console.error('OAuth login failed:', error);
-      setValidationError(t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.'));
+
+      const errorMessage = error instanceof Error
+        ? error.message
+        : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
+
+      setValidationError(errorMessage);
       setOauthLoading(false);
     }
   };

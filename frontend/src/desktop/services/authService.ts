@@ -99,13 +99,7 @@ export class AuthService {
     } catch (error) {
       console.error('Login failed:', error);
       this.setAuthStatus('unauthenticated', null);
-
-      // Rust commands return string errors
-      if (typeof error === 'string') {
-        throw new Error(error);
-      }
-
-      throw new Error('Login failed. Please try again.');
+      throw error;
     }
   }
 
