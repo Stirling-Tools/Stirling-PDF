@@ -13,10 +13,10 @@ export function isSecureContext(): boolean {
     const protocol = window.location.protocol;
 
     // Localhost is considered secure for development
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
-      return true;
-    }
+    // const hostname = window.location.hostname;
+    // if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+    //   return true;
+    // }
 
     // Check if HTTPS
     return protocol === 'https:';
