@@ -7,5 +7,4 @@ export const DESKTOP_DEFAULT_APP_CONFIG: AppConfig = {
   enableLogin: false,
   premiumEnabled: false,
   runningProOrHigher: false,
-  logoStyle: 'classic',
 };
