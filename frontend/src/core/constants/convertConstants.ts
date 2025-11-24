@@ -33,7 +33,9 @@ export const CONVERSION_ENDPOINTS = {
   'pdf-pdfa': '/api/v1/convert/pdf/pdfa',
   'html-pdf': '/api/v1/convert/html/pdf',
   'markdown-pdf': '/api/v1/convert/markdown/pdf',
-  'eml-pdf': '/api/v1/convert/eml/pdf'
+  'eml-pdf': '/api/v1/convert/eml/pdf',
+  'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
+  'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -52,7 +54,9 @@ export const ENDPOINT_NAMES = {
   'pdf-pdfa': 'pdf-to-pdfa',
   'html-pdf': 'html-to-pdf',
   'markdown-pdf': 'markdown-to-pdf',
-  'eml-pdf': 'eml-to-pdf'
+  'eml-pdf': 'eml-to-pdf',
+  'pdf-text-editor': 'pdf-to-text-editor',
+  'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
 
 
