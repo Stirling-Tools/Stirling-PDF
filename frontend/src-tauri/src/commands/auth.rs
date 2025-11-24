@@ -350,7 +350,10 @@ pub async fn start_oauth_login(
 
     let port = match server.server_addr() {
         tiny_http::ListenAddr::IP(addr) => addr.port(),
-        _ => return Err("Unexpected server address type".to_string()),
+        #[cfg(unix)]
+        tiny_http::ListenAddr::Unix(_) => {
+            return Err("OAuth callback server bound to Unix socket instead of TCP port".to_string())
+        }
     };
 
     let callback_url = format!("http://127.0.0.1:{}/callback", port);

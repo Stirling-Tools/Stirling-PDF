@@ -119,14 +119,13 @@ pub fn run() {
           cleanup_backend();
           // Allow the window to close
         }
+        #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
-          add_log(format!("📂 Tauri opened event: {:?}", urls));
+          add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let mut added_files = false;
 
           for url in urls {
             let url_str = url.as_str();
-
-            // Handle file:// URLs (PDF file opens)
             if url_str.starts_with("file://") {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
@@ -136,7 +135,6 @@ pub fn run() {
               }
             }
           }
-
           // Emit a generic notification that files were added (frontend will re-read storage)
           if added_files {
             let _ = app_handle.emit("files-changed", ());
