@@ -37,6 +37,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    // Prevent concurrent OAuth attempts
+    if (oauthLoading || loading) {
+      return;
+    }
+
     try {
       setOauthLoading(true);
       setValidationError(null);
