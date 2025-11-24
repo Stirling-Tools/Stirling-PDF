@@ -22,6 +22,9 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
 
   // Render Free plan
   if (planGroup.tier === 'free') {
+    // Get currency from the free plan
+    const freeCurrency = planGroup.monthly?.currency || '$';
+
     return (
       <Card
         padding="lg"
@@ -46,7 +49,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             <PriceDisplay
               mode="simple"
               price={0}
-              currency="£"
+              currency={freeCurrency}
               period={t('plan.free.forever', 'Forever free')}
             />
           </div>
@@ -131,13 +134,6 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
               period={t('plan.perMonth', '/month')}
             />
           )}
-
-          {/* Show seat count for enterprise plans when current */}
-          {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
-            <Text size="sm" c="green" fw={500} mt="xs">
-              {t('plan.licensedSeats', 'Licensed: {{count}} seats', { count: currentLicenseInfo.maxUsers })}
-            </Text>
-          )}
         </div>
 
         <Divider />
@@ -152,6 +148,14 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
         </Stack>
 
         <div style={{ flexGrow: 1 }} />
+
+      <Stack gap="xs">
+        {/* Show seat count for enterprise plans when current */}
+        {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
+          <Text size="sm" c="green" fw={500} ta="center">
+            {t('plan.licensedSeats', 'Licensed: {{count}} seats', { count: currentLicenseInfo.maxUsers })}
+          </Text>
+        )}
 
         {/* Single Upgrade Button */}
         <Tooltip
@@ -177,6 +181,8 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
                     : t('plan.upgrade', 'Upgrade')}
           </Button>
         </Tooltip>
+
+        </Stack>
       </Stack>
     </Card>
   );

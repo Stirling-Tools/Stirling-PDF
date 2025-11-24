@@ -85,7 +85,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
         {currency && onCurrencyChange && currencyOptions && (
           <Select
             value={currency}
-            onChange={(value) => onCurrencyChange(value || 'gbp')}
+            onChange={(value) => onCurrencyChange(value || 'usd')}
             data={currencyOptions}
             searchable
             clearable={false}
@@ -100,7 +100,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '1rem',
-          marginBottom: '1rem',
+          marginBottom: '0.5rem',
         }}
       >
         {groupedPlans.map((group) => (

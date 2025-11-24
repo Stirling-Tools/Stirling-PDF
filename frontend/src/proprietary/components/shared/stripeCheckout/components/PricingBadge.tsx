@@ -7,7 +7,7 @@ interface PricingBadgeProps {
   savingsPercent?: number;
 }
 
-export const PricingBadge: React.FC<PricingBadgeProps> = ({ type, label, savingsPercent }) => {
+export const PricingBadge: React.FC<PricingBadgeProps> = ({ type, label }) => {
   const color = type === 'current' || type === 'savings' ? 'green' : 'blue';
   const size = type === 'savings' ? 'lg' : 'sm';
 
@@ -16,7 +16,7 @@ export const PricingBadge: React.FC<PricingBadgeProps> = ({ type, label, savings
       color={color}
       variant="filled"
       size={size}
-      style={{ position: 'absolute', top: '1rem', right: '1rem' }}
+      style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
     >
       {label}
     </Badge>

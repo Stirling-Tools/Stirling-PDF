@@ -110,7 +110,7 @@ const licenseService = {
   /**
    * Get available plans with pricing for the specified currency
    */
-  async getPlans(currency: string = 'gbp'): Promise<PlansResponse> {
+  async getPlans(currency: string = 'usd'): Promise<PlansResponse> {
     try {
       // Check if Supabase is configured
       if (!isSupabaseConfigured || !supabase) {

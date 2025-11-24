@@ -15,7 +15,7 @@ const AdminPlanSection: React.FC = () => {
   const { t } = useTranslation();
   const { openCheckout } = useCheckout();
   const { licenseInfo, refetchLicense } = useLicense();
-  const [currency, setCurrency] = useState<string>('gbp');
+  const [currency, setCurrency] = useState<string>('usd');
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
   const [licenseKeyInput, setLicenseKeyInput] = useState<string>('');
