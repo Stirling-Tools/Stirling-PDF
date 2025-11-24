@@ -13,9 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.UserLicenseSettings;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.security.repository.UserLicenseSettingsRepository;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -27,6 +30,8 @@ class UserLicenseSettingsServiceTest {
     @Mock private UserService userService;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.Premium premium;
+    @Mock private LicenseKeyChecker licenseKeyChecker;
+    @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
 
     private UserLicenseSettingsService service;
     private UserLicenseSettings mockSettings;
@@ -45,11 +50,16 @@ class UserLicenseSettingsServiceTest {
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
 
         // Create service with overridden validateSettingsIntegrity to bypass signature validation
         service =
                 new UserLicenseSettingsService(
-                        settingsRepository, userService, applicationProperties) {
+                        settingsRepository,
+                        userService,
+                        applicationProperties,
+                        licenseKeyCheckerProvider) {
                     @Override
                     public void validateSettingsIntegrity() {
                         // Override to do nothing in tests - avoid HMAC signature validation
@@ -62,6 +72,7 @@ class UserLicenseSettingsServiceTest {
     void noLicense_returnsGrandfatheredLimit() {
         // No license active
         when(premium.isEnabled()).thenReturn(false);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
 
         int result = service.calculateMaxAllowedUsers();
 
@@ -72,6 +83,7 @@ class UserLicenseSettingsServiceTest {
     void serverLicense_returnsUnlimited() {
         // SERVER license with users=0
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -83,6 +95,7 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_returnsLicenseSeatsOnly() {
         // ENTERPRISE license with 5 seats
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();

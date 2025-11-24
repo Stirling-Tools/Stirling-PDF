@@ -10,6 +10,7 @@ import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.UserLicenseSettings;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.security.repository.UserLicenseSettingsRepository;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -45,6 +48,7 @@ public class UserLicenseSettingsService {
     private final UserLicenseSettingsRepository settingsRepository;
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
+    private final ObjectProvider<LicenseKeyChecker> licenseKeyChecker;
 
     /**
      * Gets the current user license settings, creating them if they don't exist.
@@ -151,7 +155,7 @@ public class UserLicenseSettingsService {
         UserLicenseSettings settings = getOrCreateSettings();
 
         int licenseMaxUsers = 0;
-        if (applicationProperties.getPremium().isEnabled()) {
+        if (hasPaidLicense()) {
             licenseMaxUsers = applicationProperties.getPremium().getMaxUsers();
         }
 
@@ -297,7 +301,7 @@ public class UserLicenseSettingsService {
         }
 
         // No license: use grandfathered limit
-        if (!applicationProperties.getPremium().isEnabled()) {
+        if (!hasPaidLicense()) {
             log.debug("No license: using grandfathered limit of {}", grandfatheredLimit);
             return grandfatheredLimit;
         }
@@ -339,7 +343,7 @@ public class UserLicenseSettingsService {
         }
 
         // Users can use OAuth if system has a paid license (SERVER or ENTERPRISE)
-        boolean hasPaidLicense = applicationProperties.getPremium().isEnabled();
+        boolean hasPaidLicense = hasPaidLicense();
         log.debug("OAuth eligibility check: hasPaidLicense={}", hasPaidLicense);
         return hasPaidLicense;
     }
@@ -476,5 +480,14 @@ public class UserLicenseSettingsService {
         } catch (InvalidKeyException e) {
             throw new IllegalStateException("Invalid key for grandfathered user signature", e);
         }
+    }
+
+    private boolean hasPaidLicense() {
+        LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
+        if (checker == null) {
+            return false;
+        }
+        License license = checker.getPremiumLicenseEnabledResult();
+        return license == License.SERVER || license == License.ENTERPRISE;
     }
 }
