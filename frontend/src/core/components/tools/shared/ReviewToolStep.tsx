@@ -8,6 +8,7 @@ import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -29,6 +30,7 @@ function ReviewStepContent<TParams = unknown>({
   onUndo?: () => void;
 }) {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const stepRef = useRef<HTMLDivElement>(null);
 
   const handleUndo = async () => {
@@ -96,7 +98,7 @@ function ReviewStepContent<TParams = unknown>({
           fullWidth
           mb="md"
         >
-          {t("download", "Download")}
+          {terminology.download}
         </Button>
       )}
 

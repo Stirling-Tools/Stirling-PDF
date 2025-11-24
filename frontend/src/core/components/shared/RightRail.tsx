@@ -6,6 +6,7 @@ import { useRightRail } from '@app/contexts/RightRailContext';
 import { useFileState, useFileSelection } from '@app/contexts/FileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 
 import LanguageSelector from '@app/components/shared/LanguageSelector';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
@@ -40,6 +41,7 @@ function renderWithTooltip(
 export default function RightRail() {
   const { sidebarRefs } = useSidebarContext();
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme, themeMode } = useRainbowThemeContext();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
@@ -161,9 +163,9 @@ export default function RightRail() {
       return t('rightRail.exportAll', 'Export PDF');
     }
     if (selectedCount > 0) {
-      return t('rightRail.downloadSelected', 'Download Selected Files');
+      return terminology.downloadSelected;
     }
-    return t('rightRail.downloadAll', 'Download All');
+    return terminology.downloadAll;
   }, [currentView, selectedCount, t]);
 
   return (

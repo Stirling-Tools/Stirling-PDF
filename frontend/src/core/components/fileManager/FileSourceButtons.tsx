@@ -6,6 +6,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -17,6 +18,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const { activeSource, onSourceChange, onLocalFileClick, onGoogleDriveSelect } = useFileManagerContext();
   const { t } = useTranslation();
   const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } = useGoogleDrivePicker();
+  const terminology = useFileActionTerminology();
 
   const handleGoogleDriveClick = async () => {
     try {
@@ -76,7 +78,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           }
         }}
       >
-        {horizontal ? t('fileUpload.uploadFiles', 'Upload') : t('fileUpload.uploadFiles', 'Upload Files')}
+        {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>
 
       <Button

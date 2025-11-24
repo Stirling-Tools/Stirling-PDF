@@ -13,6 +13,7 @@ import styles from '@app/components/pageEditor/PageEditor.module.css';
 import { useFileContext } from '@app/contexts/FileContext';
 import { FileId } from '@app/types/file';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 
 interface FileItem {
   id: FileId;
@@ -51,6 +52,7 @@ const FileThumbnail = ({
   isSupported = true,
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
   // ---- Drag state ----
@@ -86,7 +88,7 @@ const FileThumbnail = ({
     }
 
     // If we can't find a way to download, surface a status message
-    onSetStatus?.(typeof t === 'function' ? t('downloadUnavailable', 'Download unavailable for this item') : 'Download unavailable for this item');
+    onSetStatus?.(terminology.downloadUnavailable);
   }, [file, onDownloadFile, onSetStatus, t]);
   const handleRef = useRef<HTMLSpanElement | null>(null);
 
@@ -279,7 +281,7 @@ const FileThumbnail = ({
             onClick={() => { downloadSelectedFile(); setShowActions(false); }}
           >
             <DownloadOutlinedIcon fontSize="small" />
-            <span>{t('download', 'Download')}</span>
+            <span>{terminology.download}</span>
           </button>
 
           <div className={styles.actionsDivider} />

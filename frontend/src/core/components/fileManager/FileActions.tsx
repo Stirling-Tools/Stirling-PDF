@@ -5,9 +5,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
     useFileManagerContext();
 
@@ -95,7 +97,7 @@ const FileActions: React.FC = () => {
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t("fileManager.downloadSelected", "Download Selected")}>
+        <Tooltip label={terminology.downloadSelected}>
           <ActionIcon
             variant="light"
             size="sm"
