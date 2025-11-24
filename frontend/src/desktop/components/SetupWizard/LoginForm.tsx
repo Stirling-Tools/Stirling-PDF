@@ -3,6 +3,7 @@ import { Stack, TextInput, PasswordInput, Button, Text, Divider, Group } from '@
 import { useTranslation } from 'react-i18next';
 import { authService } from '@app/services/authService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 
 interface LoginFormProps {
   serverUrl: string;
@@ -51,7 +52,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
         ? STIRLING_SAAS_URL
         : serverUrl; // Self-hosted might have its own auth
 
-      const userInfo = await authService.loginWithOAuth(provider, authServerUrl);
+      // Build callback page HTML with translations and dark mode support
+      const successHtml = buildOAuthCallbackHtml({
+        title: t('oauth.success.title', 'Authentication Successful'),
+        message: t('oauth.success.message', 'You can close this window and return to Stirling PDF.'),
+        isError: false,
+      });
+
+      const errorHtml = buildOAuthCallbackHtml({
+        title: t('oauth.error.title', 'Authentication Failed'),
+        message: t('oauth.error.message', 'Authentication was not successful. You can close this window and try again.'),
+        isError: true,
+        errorPlaceholder: true, // {error} will be replaced by Rust
+      });
+
+      const userInfo = await authService.loginWithOAuth(provider, authServerUrl, successHtml, errorHtml);
 
       // Call the onLogin callback to complete setup (username/password not needed for OAuth)
       await onLogin(userInfo.username, '');

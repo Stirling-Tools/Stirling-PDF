@@ -210,7 +210,7 @@ export class AuthService {
   /**
    * Start OAuth login flow by opening system browser with localhost callback
    */
-  async loginWithOAuth(provider: string, authServerUrl: string): Promise<UserInfo> {
+  async loginWithOAuth(provider: string, authServerUrl: string, successHtml: string, errorHtml: string): Promise<UserInfo> {
     try {
       console.log('Starting OAuth login with provider:', provider);
       this.setAuthStatus('oauth_pending', null);
@@ -229,6 +229,8 @@ export class AuthService {
         provider,
         authServerUrl,
         supabaseKey: SUPABASE_KEY,
+        successHtml,
+        errorHtml,
       });
 
       console.log('OAuth authentication successful, storing tokens');

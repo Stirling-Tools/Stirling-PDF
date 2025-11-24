@@ -331,6 +331,8 @@ pub async fn start_oauth_login(
     provider: String,
     auth_server_url: String,
     supabase_key: String,
+    success_html: String,
+    error_html: String,
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
@@ -392,34 +394,29 @@ pub async fn start_oauth_login(
                 // Parse the authorization code from URL
                 let callback_data = parse_oauth_callback(&url_str);
 
-                // Check if we got a code
-                if callback_data.is_ok() {
-                    log::info!("Successfully extracted authorization code");
+                // Respond with appropriate HTML based on result
+                let html_response = match &callback_data {
+                    Ok(_) => {
+                        log::info!("Successfully extracted authorization code");
+                        success_html.clone()
+                    }
+                    Err(error_msg) => {
+                        log::warn!("OAuth callback error: {}", error_msg);
+                        // Replace {error} placeholder with actual error message
+                        error_html.replace("{error}", error_msg)
+                    }
+                };
 
-                    let html_response = r#"
-                        <!DOCTYPE html>
-                        <html>
-                        <head><title>Authentication Successful</title></head>
-                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                            <h1>✓ Authentication Successful</h1>
-                            <p>You can close this window and return to Stirling PDF.</p>
-                            <script>setTimeout(() => window.close(), 2000);</script>
-                        </body>
-                        </html>
-                    "#;
+                let response = Response::from_string(html_response)
+                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap())
+                    .with_header(tiny_http::Header::from_bytes(&b"Connection"[..], &b"close"[..]).unwrap());
 
-                    let response = Response::from_string(html_response)
-                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap())
-                        .with_header(tiny_http::Header::from_bytes(&b"Connection"[..], &b"close"[..]).unwrap());
+                let _ = request.respond(response);
 
-                    let _ = request.respond(response);
-
-                    let mut result_lock = result_clone.lock().unwrap();
-                    *result_lock = Some(callback_data);
-                    break;
-                } else {
-                    log::warn!("No authorization code found in callback");
-                }
+                // Store result and exit loop
+                let mut result_lock = result_clone.lock().unwrap();
+                *result_lock = Some(callback_data);
+                break;
             }
         }
     });

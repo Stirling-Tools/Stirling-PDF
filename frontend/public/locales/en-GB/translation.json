@@ -5681,6 +5681,16 @@
       "orContinueWith": "Or continue with email"
     }
   },
+  "oauth": {
+    "success": {
+      "title": "Authentication Successful",
+      "message": "You can close this window and return to Stirling PDF."
+    },
+    "error": {
+      "title": "Authentication Failed",
+      "message": "Authentication was not successful. You can close this window and try again."
+    }
+  },
   "settings": {
     "connection": {
       "title": "Connection Mode",
