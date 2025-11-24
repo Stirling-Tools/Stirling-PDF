@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
@@ -25,6 +25,128 @@ type TransitionAnimation =
   | 'pageEditorToFileEditor'
   | 'fileEditorToPageEditor';
 
+type OverlayPage = {
+  id: string;
+  style: CSSProperties;
+  hasThumbnail: boolean;
+};
+
+type Placement = {
+  x: number;
+  y: number;
+  rotation: number;
+  scale: number;
+  opacity?: number;
+};
+
+const clampCount = (count: number) => Math.max(6, Math.min(count, 12));
+
+const createGridTargets = (count: number): Placement[] => {
+  const placements: Placement[] = [];
+  const columns = 3;
+  const columnSpacing = 14;
+  const rowSpacing = 18;
+  const centerOffset = (columns - 1) / 2;
+
+  for (let index = 0; index < count; index += 1) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const x = (column - centerOffset) * columnSpacing + (Math.random() - 0.5) * 4;
+    const y = row * rowSpacing - 12 + (Math.random() - 0.5) * 4;
+
+    placements.push({
+      x,
+      y,
+      rotation: (Math.random() - 0.5) * 4,
+      scale: 1,
+    });
+  }
+
+  return placements;
+};
+
+const createScatterPlacements = (count: number, radiusX: number, radiusY: number, baseY = 0): Placement[] =>
+  Array.from({ length: count }, (_, index) => {
+    const angle = (index / count) * Math.PI * 2 + Math.random() * 0.6;
+    const distanceX = radiusX * (0.45 + Math.random() * 0.55);
+    const distanceY = radiusY * (0.4 + Math.random() * 0.6);
+
+    return {
+      x: Math.cos(angle) * distanceX,
+      y: baseY + Math.sin(angle) * distanceY,
+      rotation: (Math.random() - 0.5) * 10,
+      scale: 0.88 + Math.random() * 0.18,
+    };
+  });
+
+const createStackPlacements = (count: number, fileCount: number): Placement[] => {
+  const stacks = Math.min(Math.max(fileCount, 1), 4);
+  const spread = stacks > 1 ? 26 / (stacks - 1) : 0;
+
+  return Array.from({ length: count }, (_, index) => {
+    const stackIndex = index % stacks;
+    const layer = Math.floor(index / stacks);
+    const baseX = (stackIndex - (stacks - 1) / 2) * spread + (Math.random() - 0.5) * 4;
+    const baseY = 6 + layer * 2.6 + (Math.random() - 0.5) * 3;
+
+    return {
+      x: baseX,
+      y: baseY,
+      rotation: (Math.random() - 0.5) * 8,
+      scale: 0.86 - Math.min(layer, 3) * 0.03,
+      opacity: 0.9 - Math.min(layer, 3) * 0.08,
+    };
+  });
+};
+
+const createOverlayPages = (
+  animation: TransitionAnimation,
+  thumbnails: string[],
+  fileCount: number,
+): OverlayPage[] => {
+  const usableThumbs = thumbnails.filter(Boolean);
+  const count = clampCount(Math.max(usableThumbs.length, 8));
+  const gridPlacements = createGridTargets(count);
+  const viewerScatter = createScatterPlacements(count, 9, 6, -2);
+  const expandedScatter = createScatterPlacements(count, 16, 12, 2);
+  const stackPlacements = createStackPlacements(count, fileCount);
+
+  const placementsByAnimation: Record<TransitionAnimation, { from: Placement[]; to: Placement[]; delayStep: number }> = {
+    viewerToPageEditor: { from: viewerScatter, to: gridPlacements, delayStep: 32 },
+    pageEditorToViewer: { from: gridPlacements, to: expandedScatter, delayStep: 28 },
+    pageEditorToFileEditor: { from: gridPlacements, to: stackPlacements, delayStep: 30 },
+    fileEditorToPageEditor: { from: stackPlacements, to: gridPlacements, delayStep: 28 },
+  };
+
+  const { from, to, delayStep } = placementsByAnimation[animation];
+
+  return Array.from({ length: count }, (_, index) => {
+    const thumbnail = usableThumbs[index] ?? usableThumbs[index % Math.max(usableThumbs.length, 1)];
+    const fromPlacement = from[index];
+    const toPlacement = to[index];
+
+    const style: CSSProperties = {
+      ['--from-x' as string]: `${fromPlacement.x}vw`,
+      ['--from-y' as string]: `${fromPlacement.y}vh`,
+      ['--from-scale' as string]: fromPlacement.scale.toString(),
+      ['--from-rot' as string]: `${fromPlacement.rotation}deg`,
+      ['--to-x' as string]: `${toPlacement.x}vw`,
+      ['--to-y' as string]: `${toPlacement.y}vh`,
+      ['--to-scale' as string]: toPlacement.scale.toString(),
+      ['--to-rot' as string]: `${toPlacement.rotation}deg`,
+      ['--to-opacity' as string]: (toPlacement.opacity ?? 1).toString(),
+      animationDelay: `${delayStep * index}ms`,
+      backgroundImage: thumbnail ? `url(${thumbnail})` : undefined,
+    };
+
+    return {
+      id: `overlay-page-${index}`,
+      style,
+      hasThumbnail: Boolean(thumbnail),
+    };
+  });
+};
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
@@ -39,6 +161,8 @@ export default function Workbench() {
   const previousViewRef = useRef(currentView);
   const [overlayAnimation, setOverlayAnimation] = useState<TransitionAnimation | null>(null);
   const [overlayRunId, setOverlayRunId] = useState(0);
+  const [overlayPages, setOverlayPages] = useState<OverlayPage[]>([]);
+  const overlayThumbsRef = useRef<string[]>([]);
   const activeFiles = selectors.getFiles();
   const {
     previewFile,
@@ -61,7 +185,7 @@ export default function Workbench() {
   const { addFiles } = useFileHandler();
 
   // Get active file index from ViewerContext
-  const { activeFileIndex, setActiveFileIndex } = useViewer();
+  const { activeFileIndex, setActiveFileIndex, getThumbnailAPI, getScrollState } = useViewer();
 
   useEffect(() => {
     const previousView = previousViewRef.current;
@@ -87,11 +211,72 @@ export default function Workbench() {
 
     if (animation) {
       setOverlayRunId((runId) => runId + 1);
-      const timeout = setTimeout(() => setOverlayAnimation(null), 720);
+      const timeout = setTimeout(() => setOverlayAnimation(null), 820);
 
       return () => clearTimeout(timeout);
     }
   }, [currentView]);
+
+  useEffect(() => {
+    if (!overlayAnimation) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const thumbnailApi = getThumbnailAPI();
+    const { totalPages } = getScrollState();
+    const pagesToRender = totalPages > 0 ? Math.min(totalPages, 12) : 8;
+
+    const resetThumbnails = () => {
+      overlayThumbsRef.current.forEach((url) => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+      overlayThumbsRef.current = [];
+    };
+
+    const loadThumbnails = async () => {
+      resetThumbnails();
+
+      if (!thumbnailApi || pagesToRender === 0) {
+        setOverlayPages(createOverlayPages(overlayAnimation, [], activeFiles.length));
+        return;
+      }
+
+      const promises = Array.from({ length: pagesToRender }, (_, index) =>
+        thumbnailApi
+          .renderThumb(index, 0.6)
+          .toPromise()
+          .then((blob: Blob) => URL.createObjectURL(blob))
+          .catch(() => ''),
+      );
+
+      const thumbnailUrls = await Promise.all(promises);
+
+      if (cancelled) {
+        resetThumbnails();
+        return;
+      }
+
+      overlayThumbsRef.current = thumbnailUrls.filter((url) => url.startsWith('blob:'));
+      setOverlayPages(createOverlayPages(overlayAnimation, thumbnailUrls, activeFiles.length));
+    };
+
+    void loadThumbnails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [overlayAnimation, getScrollState, getThumbnailAPI, activeFiles.length]);
+
+  useEffect(() => () => {
+    overlayThumbsRef.current.forEach((url) => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+  }, []);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -110,14 +295,6 @@ export default function Workbench() {
       setCurrentView('fileEditor');
     }
   };
-
-  const overlayPages = useMemo(
-    () =>
-      Array.from({ length: 8 }, (_, index) => ({
-        id: `overlay-page-${index}`,
-      })),
-    [],
-  );
 
   const renderMainContent = () => {
     if (activeFiles.length === 0) {
@@ -238,10 +415,14 @@ export default function Workbench() {
         className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable} ${styles.workbenchTransition}`}
       >
         {renderMainContent()}
-        {overlayAnimation && (
+        {overlayAnimation && overlayPages.length > 0 && (
           <div key={overlayRunId} className={`${styles.transitionOverlay} ${styles[overlayAnimation]}`}>
             {overlayPages.map((page) => (
-              <span key={page.id} className={styles.transitionPage} />
+              <span
+                key={page.id}
+                className={`${styles.transitionPage} ${!page.hasThumbnail ? styles.transitionPagePlaceholder : ''}`}
+                style={page.style}
+              />
             ))}
           </div>
         )}

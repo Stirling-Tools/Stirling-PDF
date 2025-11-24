@@ -33,7 +33,7 @@
   z-index: 20;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.04), transparent 55%);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.045), transparent 60%);
 }
 
 .transitionPage {
@@ -45,15 +45,19 @@
   --to-y: 0px;
   --to-scale: 1;
   --to-rot: 0deg;
+  --to-opacity: 1;
   width: clamp(5rem, 9vw, 8.75rem);
   aspect-ratio: 0.72;
   border-radius: 0.5rem;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(245, 246, 248, 0.88));
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(245, 246, 248, 0.9));
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.06);
   opacity: 0;
   transform: translate(var(--from-x), var(--from-y)) scale(var(--from-scale)) rotate(var(--from-rot));
-  animation: scopeTransition 640ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: scopeTransition 760ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   filter: saturate(1.08);
 }
 
@@ -75,64 +79,34 @@
     opacity: 1;
   }
   100% {
-    opacity: 1;
+    opacity: var(--to-opacity);
     transform: translate(var(--to-x), var(--to-y)) scale(var(--to-scale)) rotate(var(--to-rot));
   }
 }
 
-.viewerToPageEditor .transitionPage {
-  animation-delay: calc(var(--page-index) * 24ms);
+.transitionPagePlaceholder {
+  background-image: linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(235, 238, 242, 0.92));
+  filter: saturate(0.95);
 }
 
-.viewerToPageEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -16vw; --from-y: -6vh; --to-x: -12vw; --to-y: -4vh; --to-rot: -1deg; }
-.viewerToPageEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -8vw; --from-y: -8vh; --to-x: -4vw; --to-y: -6vh; --to-rot: 2deg; }
-.viewerToPageEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: 0vw; --from-y: -10vh; --to-x: 4vw; --to-y: -6vh; --to-rot: -1deg; }
-.viewerToPageEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: 8vw; --from-y: -8vh; --to-x: 12vw; --to-y: -4vh; --to-rot: 1deg; }
-.viewerToPageEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: -14vw; --from-y: 8vh; --to-x: -12vw; --to-y: 6vh; --to-rot: 1deg; }
-.viewerToPageEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: -4vw; --from-y: 10vh; --to-x: -4vw; --to-y: 6vh; --to-rot: -2deg; }
-.viewerToPageEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 6vw; --from-y: 10vh; --to-x: 4vw; --to-y: 6vh; --to-rot: 2deg; }
-.viewerToPageEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 12vw; --to-y: 6vh; --to-rot: -1deg; }
+.viewerToPageEditor .transitionPage {
+  animation-duration: 780ms;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08), 0 6px 10px rgba(0, 0, 0, 0.06);
+}
 
 .pageEditorToViewer .transitionPage {
-  animation-delay: calc(var(--page-index) * 22ms);
-  --from-scale: 1.02;
-  --to-scale: 0.82;
-  opacity: 1;
+  animation-duration: 780ms;
+  filter: saturate(1.05) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.18));
 }
-
-.pageEditorToViewer .transitionPage:nth-child(1) { --page-index: 0; --from-x: -18vw; --from-y: -6vh; --to-x: -6vw; --to-y: -2vh; --to-rot: -4deg; }
-.pageEditorToViewer .transitionPage:nth-child(2) { --page-index: 1; --from-x: -10vw; --from-y: -8vh; --to-x: -2vw; --to-y: -4vh; --to-rot: 2deg; }
-.pageEditorToViewer .transitionPage:nth-child(3) { --page-index: 2; --from-x: -2vw; --from-y: -10vh; --to-x: 2vw; --to-y: -6vh; --to-rot: -3deg; }
-.pageEditorToViewer .transitionPage:nth-child(4) { --page-index: 3; --from-x: 6vw; --from-y: -8vh; --to-x: 6vw; --to-y: -4vh; --to-rot: 2deg; }
-.pageEditorToViewer .transitionPage:nth-child(5) { --page-index: 4; --from-x: -14vw; --from-y: 8vh; --to-x: -6vw; --to-y: 4vh; --to-rot: 3deg; }
-.pageEditorToViewer .transitionPage:nth-child(6) { --page-index: 5; --from-x: -4vw; --from-y: 10vh; --to-x: -2vw; --to-y: 6vh; --to-rot: -2deg; }
-.pageEditorToViewer .transitionPage:nth-child(7) { --page-index: 6; --from-x: 6vw; --from-y: 10vh; --to-x: 2vw; --to-y: 6vh; --to-rot: 4deg; }
-.pageEditorToViewer .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 6vw; --to-y: 4vh; --to-rot: -3deg; }
 
 .pageEditorToFileEditor .transitionPage {
-  animation-delay: calc(var(--page-index) * 26ms);
-  --to-scale: 0.9;
+  animation-duration: 840ms;
+  --to-scale: 0.88;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-
-.pageEditorToFileEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -14vw; --from-y: -6vh; --to-x: -18vw; --to-y: -2vh; --to-rot: -6deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -6vw; --from-y: -8vh; --to-x: -12vw; --to-y: 0vh; --to-rot: 4deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: 2vw; --from-y: -10vh; --to-x: -6vw; --to-y: 2vh; --to-rot: -8deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: 10vw; --from-y: -8vh; --to-x: -2vw; --to-y: 4vh; --to-rot: 5deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: -12vw; --from-y: 8vh; --to-x: 6vw; --to-y: -2vh; --to-rot: -5deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: -2vw; --from-y: 10vh; --to-x: 10vw; --to-y: 0vh; --to-rot: 6deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 8vw; --from-y: 10vh; --to-x: 14vw; --to-y: 2vh; --to-rot: -4deg; }
-.pageEditorToFileEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 18vw; --to-y: 4vh; --to-rot: 5deg; }
 
 .fileEditorToPageEditor .transitionPage {
-  animation-delay: calc(var(--page-index) * 24ms);
+  animation-duration: 820ms;
   --from-scale: 0.9;
+  filter: saturate(1.08);
 }
-
-.fileEditorToPageEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -18vw; --from-y: -2vh; --to-x: -12vw; --to-y: -4vh; --to-rot: 2deg; --to-scale: 1.02; }
-.fileEditorToPageEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -12vw; --from-y: 0vh; --to-x: -4vw; --to-y: -6vh; --to-rot: -1deg; --to-scale: 1.02; }
-.fileEditorToPageEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: -6vw; --from-y: 2vh; --to-x: 4vw; --to-y: -6vh; --to-rot: 2deg; --to-scale: 1.02; }
-.fileEditorToPageEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: -2vw; --from-y: 4vh; --to-x: 12vw; --to-y: -4vh; --to-rot: -2deg; --to-scale: 1.02; }
-.fileEditorToPageEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: 6vw; --from-y: -2vh; --to-x: -12vw; --to-y: 6vh; --to-rot: -2deg; --to-scale: 1; }
-.fileEditorToPageEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: 10vw; --from-y: 0vh; --to-x: -4vw; --to-y: 6vh; --to-rot: 1deg; --to-scale: 1; }
-.fileEditorToPageEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 14vw; --from-y: 2vh; --to-x: 4vw; --to-y: 6vh; --to-rot: -1deg; --to-scale: 1; }
-.fileEditorToPageEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 18vw; --from-y: 4vh; --to-x: 12vw; --to-y: 6vh; --to-rot: 2deg; --to-scale: 1; }
