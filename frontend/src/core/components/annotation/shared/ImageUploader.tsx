@@ -43,16 +43,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     <Stack gap="sm">
       <PrivateContent>
         <FileInput
-          label={label || t('sign.image.label', 'Upload signature image')}
+          label={label}
           placeholder={placeholder || t('sign.image.placeholder', 'Select image file')}
           accept="image/*"
           onChange={handleImageChange}
           disabled={disabled}
         />
       </PrivateContent>
-      <Text size="sm" c="dimmed">
-        {hint || t('sign.image.hint', 'Upload an image of your signature')}
-      </Text>
+      {hint && (
+        <Text size="sm" c="dimmed">
+          {hint}
+        </Text>
+      )}
     </Stack>
   );
 };

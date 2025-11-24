@@ -83,7 +83,7 @@ const EmbedPdfViewerContent = ({
   // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
   // Tools that use the stamp/signature placement system with hover preview
-  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText';
+  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
