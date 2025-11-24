@@ -1,6 +1,6 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
-import { TourStep } from './tourSteps';
+import { TourStep } from '@app/components/onboarding/tourSteps';
 
 interface UserStepActions {
   saveWorkbenchState: () => void;

@@ -1,9 +1,9 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
-import { AdminTourStep } from './tourSteps';
-import { addGlowToElements, removeAllGlows } from './tourGlow';
+import { AdminTourStep } from '@app/components/onboarding/tourSteps';
+import { addGlowToElements, removeAllGlows } from '@app/components/onboarding/tourGlow';
 
-interface AdminStepActions {
+interface AdminStepActions {  
   saveAdminState: () => void;
   openConfigModal: () => void;
   navigateToSection: (section: string) => void;

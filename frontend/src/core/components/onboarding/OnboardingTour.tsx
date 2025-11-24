@@ -5,17 +5,17 @@ import { CloseButton, ActionIcon } from '@mantine/core';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import InitialOnboardingModal from '@app/components/onboarding/InitialOnboardingModal';
-import ServerLicenseModal from './ServerLicenseModal';
+import ServerLicenseModal from '@app/components/onboarding/ServerLicenseModal';
 import '@app/components/onboarding/OnboardingTour.css';
 import ToolPanelModePrompt from '@app/components/tools/ToolPanelModePrompt';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import { useAdminTourOrchestration } from '@app/contexts/AdminTourOrchestrationContext';
-import { useOnboardingFlow } from './hooks/useOnboardingFlow';
-import { createUserStepsConfig } from './userStepsConfig';
-import { createAdminStepsConfig } from './adminStepsConfig';
-import { removeAllGlows } from './tourGlow';
-import TourContent from './TourContent';
+import { useOnboardingFlow } from '@app/components/onboarding/hooks/useOnboardingFlow';
+import { createUserStepsConfig } from '@app/components/onboarding/userStepsConfig';
+import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsConfig';
+import { removeAllGlows } from '@app/components/onboarding/tourGlow';
+import TourContent from '@app/components/onboarding/TourContent';
 import i18n from "@app/i18n";
 
 export default function OnboardingTour() {

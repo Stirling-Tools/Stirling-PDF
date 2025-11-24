@@ -1,14 +1,13 @@
 import React from 'react';
 import { Modal, Stack } from '@mantine/core';
 import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedSlideBackground';
 import OnboardingStepper from '@app/components/onboarding/OnboardingStepper';
-import { renderButtons } from './renderButtons';
-import styles from './InitialOnboardingModal.module.css';
-import type { InitialOnboardingModalProps } from './types';
-import { useInitialOnboardingState } from './useInitialOnboardingState';
+import { renderButtons } from '@app/components/onboarding/InitialOnboardingModal/renderButtons';
+import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
+import type { InitialOnboardingModalProps } from '@app/components/onboarding/InitialOnboardingModal/types';
+import { useInitialOnboardingState } from '@app/components/onboarding/InitialOnboardingModal/useInitialOnboardingState';
 
 export default function InitialOnboardingModal(props: InitialOnboardingModalProps) {
   const flow = useInitialOnboardingState(props);

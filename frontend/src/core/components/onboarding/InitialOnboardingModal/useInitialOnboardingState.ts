@@ -10,9 +10,9 @@ import {
   type SlideId,
 } from '@app/components/onboarding/onboardingFlowConfig';
 import type { LicenseNotice } from '@app/types/types';
-import { resolveFlow } from './flowResolver';
+import { resolveFlow } from '@app/components/onboarding/InitialOnboardingModal/flowResolver';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-import { DEFAULT_STATE, type InitialOnboardingModalProps, type OnboardingState } from './types';
+import { DEFAULT_STATE, type InitialOnboardingModalProps, type OnboardingState } from '@app/components/onboarding/InitialOnboardingModal/types';
 
 interface UseInitialOnboardingStateResult {
   state: OnboardingState;

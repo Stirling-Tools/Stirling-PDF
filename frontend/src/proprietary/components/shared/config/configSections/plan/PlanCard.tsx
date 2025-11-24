@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, Badge, Text, Group, Stack, Divider } from '@mantine/core';
+import { Button, Card, Badge, Text, Stack, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
 

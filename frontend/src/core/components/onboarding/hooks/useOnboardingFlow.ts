@@ -35,7 +35,6 @@ export function useOnboardingFlow() {
   const { completeTour, tourType, isOpen } = useOnboarding();
   let session: any = null;
   try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     session = useAuth()?.session ?? null;
   } catch {
     session = {} as any;

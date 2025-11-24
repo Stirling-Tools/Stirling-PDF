@@ -2,7 +2,7 @@ import { AppProviders as CoreAppProviders, AppProvidersProps } from "@core/compo
 import { AuthProvider } from "@app/auth/UseSession";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
-import { UpgradeBannerInitializer } from "./shared/UpgradeBannerInitializer";
+import { UpgradeBannerInitializer } from "@app/components/shared/UpgradeBannerInitializer";
 import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 
 export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {

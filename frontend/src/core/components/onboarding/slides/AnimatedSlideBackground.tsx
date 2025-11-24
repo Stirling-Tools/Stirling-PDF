@@ -18,7 +18,6 @@ export default function AnimatedSlideBackground({
   gradientStops,
   circles,
   isActive,
-  slideKey,
 }: AnimatedSlideBackgroundComponentProps) {
   const [prevGradient, setPrevGradient] = React.useState<[string, string] | null>(null);
   const [currentGradient, setCurrentGradient] = React.useState<[string, string]>(gradientStops);

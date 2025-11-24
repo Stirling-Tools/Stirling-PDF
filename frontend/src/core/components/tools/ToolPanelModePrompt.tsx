@@ -5,7 +5,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import '@app/components/tools/ToolPanelModePrompt.css';
-import { DEFAULT_TOOL_PANEL_MODE, type ToolPanelMode } from '@app/constants/toolPanel';
+import { type ToolPanelMode } from '@app/constants/toolPanel';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 interface ToolPanelModePromptProps {

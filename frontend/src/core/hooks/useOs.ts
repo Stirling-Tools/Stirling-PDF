@@ -44,7 +44,6 @@ export function useOs(): OS {
       let detected: OS = parseUA(navigator.userAgent);
 
       // Try Client Hints for better platform + architecture
-      // @ts-ignore
       const uaData = (navigator as any).userAgentData;
       if (uaData?.getHighEntropyValues) {
         try {
