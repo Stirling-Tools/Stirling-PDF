@@ -15,8 +15,6 @@ interface PaymentStageProps {
   selectedPeriod: 'monthly' | 'yearly';
   planName: string;
   loading: boolean;
-  canGoBack: boolean;
-  onBack: () => void;
   onPaymentComplete: () => void;
 }
 
@@ -26,8 +24,6 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
   selectedPeriod,
   planName,
   loading,
-  canGoBack,
-  onBack,
   onPaymentComplete,
 }) => {
   const { t } = useTranslation();
@@ -54,18 +50,6 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
 
   return (
     <Stack gap="md">
-      {/* Back button */}
-      {canGoBack && (
-        <Button
-          variant="subtle"
-          onClick={onBack}
-          disabled={loading}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          ← {t('payment.paymentStage.backToPlan', 'Back to Plan Selection')}
-        </Button>
-      )}
-
       {/* Selected plan summary */}
       <Paper withBorder p="md" radius="md" bg="gray.0">
         <Group justify="space-between">

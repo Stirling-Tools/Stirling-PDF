@@ -5436,7 +5436,7 @@
       "selectMonthly": "Select Monthly",
       "selectYearly": "Select Yearly",
       "savePercent": "Save {{percent}}%",
-      "savingsAmount": "You save {{currency}}{{amount}}",
+      "savingsAmount": "You save {{amount}}",
       "modalTitle": "Select Billing Period - {{planName}}"
     },
     "paymentStage": {

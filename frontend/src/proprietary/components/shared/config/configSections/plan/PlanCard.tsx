@@ -1,7 +1,11 @@
 import React from 'react';
-import { Button, Card, Badge, Text, Stack, Divider, Tooltip } from '@mantine/core';
+import { Button, Card, Text, Stack, Divider, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
+import { PricingBadge } from '@app/components/shared/stripeCheckout/components/PricingBadge';
+import { PriceDisplay } from '@app/components/shared/stripeCheckout/components/PriceDisplay';
+import { calculateDisplayPricing } from '@app/components/shared/stripeCheckout/utils/pricingUtils';
+import { getBaseCardStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
 
 interface PlanCardProps {
   planGroup: PlanTierGroup;
@@ -22,24 +26,13 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
         padding="lg"
         radius="md"
         withBorder
-        style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '400px',
-          borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
-          borderWidth: isCurrentTier ? '2px' : undefined,
-        }}
+        style={getBaseCardStyle(isCurrentTier)}
       >
         {isCurrentTier && (
-          <Badge
-            color="green"
-            variant="filled"
-            size="sm"
-            style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-          >
-            {t('plan.current', 'Current Plan')}
-          </Badge>
+          <PricingBadge
+            type="current"
+            label={t('plan.current', 'Current Plan')}
+          />
         )}
         <Stack gap="md" style={{ height: '100%' }}>
           <div>
@@ -49,12 +42,12 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             <Text size="xs" c="dimmed" mb="xs" style={{ opacity: 0 }}>
               {t('plan.from', 'From')}
             </Text>
-            <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-              £0
-            </Text>
-            <Text size="sm" c="dimmed" mt="xs">
-              {t('plan.free.forever', 'Forever free')}
-            </Text>
+            <PriceDisplay
+              mode="simple"
+              price={0}
+              currency="£"
+              period={t('plan.free.forever', 'Forever free')}
+            />
           </div>
 
           <Divider />
@@ -87,47 +80,25 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   const isEnterpriseBlockedForFree = isEnterprise && currentTier === 'free';
 
   // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
-  let displayPrice = monthly?.price || 0;
-  let displaySeatPrice = monthly?.seatPrice;
-  let displayCurrency = monthly?.currency || '£';
-
-  if (yearly) {
-    displayPrice = Math.round(yearly.price / 12);
-    displaySeatPrice = yearly.seatPrice ? Math.round(yearly.seatPrice / 12) : undefined;
-    displayCurrency = yearly.currency;
-  }
+  const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(monthly, yearly);
 
   return (
     <Card
       padding="lg"
       radius="md"
       withBorder
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '400px',
-        borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
-        borderWidth: isCurrentTier ? '2px' : undefined,
-      }}
+      style={getBaseCardStyle(isCurrentTier)}
     >
       {isCurrentTier ? (
-        <Badge
-          color="green"
-          variant="filled"
-          size="sm"
-          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-        >
-          {t('plan.current', 'Current Plan')}
-        </Badge>
+        <PricingBadge
+          type="current"
+          label={t('plan.current', 'Current Plan')}
+        />
       ) : planGroup.popular && !(planGroup.tier === 'server' && currentTier === 'enterprise') ? (
-        <Badge
-          variant="filled"
-          size="sm"
-          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-        >
-          {t('plan.popular', 'Popular')}
-        </Badge>
+        <PricingBadge
+          type="popular"
+          label={t('plan.popular', 'Popular')}
+        />
       ) : null}
 
       <Stack gap="md" style={{ height: '100%' }}>
@@ -144,7 +115,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           {/* Price */}
           {isEnterprise && displaySeatPrice !== undefined ? (
             <>
-              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
+              <Text size="2.25rem" fw={600} style={{ lineHeight: 1 }}>
                 {displayCurrency}{displaySeatPrice}/seat
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
@@ -152,14 +123,12 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
               </Text>
             </>
           ) : (
-            <>
-              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-                {displayCurrency}{displayPrice}
-              </Text>
-              <Text size="sm" c="dimmed" mt="xs">
-                {t('plan.perMonth', '/month')}
-              </Text>
-            </>
+            <PriceDisplay
+              mode="simple"
+              price={displayPrice}
+              currency={displayCurrency}
+              period={t('plan.perMonth', '/month')}
+            />
           )}
 
           {/* Show seat count for enterprise plans when current */}

@@ -1,21 +1,23 @@
 import React, { useEffect } from 'react';
-import { Modal, Text, Alert, Stack, Button } from '@mantine/core';
+import { Modal, Text, Alert, Stack, Button, Group, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { loadStripe } from '@stripe/stripe-js';
 import licenseService from '@app/services/licenseService';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { StripeCheckoutProps } from './types/checkout';
-import { validateEmail, getModalTitle } from './utils/checkoutUtils';
-import { calculateSavings } from './utils/savingsCalculator';
-import { useCheckoutState } from './hooks/useCheckoutState';
-import { useCheckoutNavigation } from './hooks/useCheckoutNavigation';
-import { useLicensePolling } from './hooks/useLicensePolling';
-import { useCheckoutSession } from './hooks/useCheckoutSession';
-import { EmailStage } from './stages/EmailStage';
-import { PlanSelectionStage } from './stages/PlanSelectionStage';
-import { PaymentStage } from './stages/PaymentStage';
-import { SuccessStage } from './stages/SuccessStage';
-import { ErrorStage } from './stages/ErrorStage';
+import { StripeCheckoutProps } from '@app/components/shared/stripeCheckout/types/checkout';
+import { validateEmail, getModalTitle } from '@app/components/shared/stripeCheckout/utils/checkoutUtils';
+import { calculateSavings } from '@app/components/shared/stripeCheckout/utils/savingsCalculator';
+import { useCheckoutState } from '@app/components/shared/stripeCheckout/hooks/useCheckoutState';
+import { useCheckoutNavigation } from '@app/components/shared/stripeCheckout/hooks/useCheckoutNavigation';
+import { useLicensePolling } from '@app/components/shared/stripeCheckout/hooks/useLicensePolling';
+import { useCheckoutSession } from '@app/components/shared/stripeCheckout/hooks/useCheckoutSession';
+import { EmailStage } from '@app/components/shared/stripeCheckout/stages/EmailStage';
+import { PlanSelectionStage } from '@app/components/shared/stripeCheckout/stages/PlanSelectionStage';
+import { PaymentStage } from '@app/components/shared/stripeCheckout/stages/PaymentStage';
+import { SuccessStage } from '@app/components/shared/stripeCheckout/stages/SuccessStage';
+import { ErrorStage } from '@app/components/shared/stripeCheckout/stages/ErrorStage';
 
 // Validate Stripe key (static validation, no dynamic imports)
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -48,6 +50,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   hostedCheckoutSuccess,
 }) => {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   // Initialize all state via custom hook
   const checkoutState = useCheckoutState(planGroup);
@@ -224,8 +227,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             planGroup={planGroup}
             minimumSeats={minimumSeats}
             savings={savings}
-            canGoBack={checkoutState.stageHistory.length > 0}
-            onBack={navigation.goBack}
             onSelectPlan={handlePlanSelect}
           />
         );
@@ -238,8 +239,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             selectedPeriod={checkoutState.selectedPeriod}
             planName={planGroup.name}
             loading={checkoutState.state.loading || false}
-            canGoBack={checkoutState.stageHistory.length > 0}
-            onBack={navigation.goBack}
             onPaymentComplete={session.handlePaymentComplete}
           />
         );
@@ -267,20 +266,36 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     }
   };
 
+  const canGoBack = checkoutState.stageHistory.length > 0;
+
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        <Text fw={600} size="lg">
-          {getModalTitle(checkoutState.state.currentStage, planGroup.name, t)}
-        </Text>
+        <Group gap="sm" wrap="nowrap">
+          {canGoBack && (
+            <ActionIcon
+              variant="subtle"
+              size="lg"
+              onClick={navigation.goBack}
+              aria-label={t('common.back', 'Back')}
+            >
+              <LocalIcon icon="arrow-back" width={20} height={20} />
+            </ActionIcon>
+          )}
+          <Text fw={600} size="lg">
+            {getModalTitle(checkoutState.state.currentStage, planGroup.name, t)}
+          </Text>
+        </Group>
       }
-      size="lg"
+      size={isMobile ? "100%" : 980}
       centered
+      radius="lg"
       withCloseButton={true}
       closeOnEscape={true}
       closeOnClickOutside={false}
+      fullScreen={isMobile}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       styles={{
         body: {},

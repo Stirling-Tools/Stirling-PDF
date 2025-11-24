@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Title, Text, TextInput, Button } from '@mantine/core';
+import { Stack, Text, TextInput, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
 interface EmailStageProps {
@@ -19,14 +19,9 @@ export const EmailStage: React.FC<EmailStageProps> = ({
 
   return (
     <Stack gap="lg" style={{ maxWidth: '500px', margin: '0 auto', padding: '2rem 0' }}>
-      <div>
-        <Title order={3} mb="xs">
-          {t('payment.emailStage.title', 'Enter Your Email')}
-        </Title>
-        <Text size="sm" c="dimmed">
-          {t('payment.emailStage.description', "We'll use this to send your license key and receipts.")}
-        </Text>
-      </div>
+      <Text size="sm" c="dimmed">
+        {t('payment.emailStage.description', "We'll use this to send your license key and receipts.")}
+      </Text>
 
       <TextInput
         label={t('payment.emailStage.emailLabel', 'Email Address')}
