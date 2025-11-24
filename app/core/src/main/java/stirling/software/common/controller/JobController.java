@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.RegexPatternUtils;
@@ -41,6 +43,9 @@ public class JobController {
     private final JobQueue jobQueue;
     private final HttpServletRequest request;
 
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
+
     /**
      * Get the status of a job
      *
@@ -50,6 +55,13 @@ public class JobController {
     @GetMapping("/job/{jobId}")
     @Operation(summary = "Get job status")
     public ResponseEntity<?> getJobStatus(@PathVariable("jobId") String jobId) {
+        // Validate job ownership
+        if (!validateJobAccess(jobId)) {
+            log.warn("Unauthorized attempt to access job status: {}", jobId);
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "You are not authorized to access this job"));
+        }
+
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
             return ResponseEntity.notFound().build();
@@ -79,6 +91,13 @@ public class JobController {
     @GetMapping("/job/{jobId}/result")
     @Operation(summary = "Get job result")
     public ResponseEntity<?> getJobResult(@PathVariable("jobId") String jobId) {
+        // Validate job ownership
+        if (!validateJobAccess(jobId)) {
+            log.warn("Unauthorized attempt to access job result: {}", jobId);
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "You are not authorized to access this job"));
+        }
+
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
             return ResponseEntity.notFound().build();
@@ -144,13 +163,8 @@ public class JobController {
     public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
 
-        // Verify that this job belongs to the current user
-        // We can use the current request's session to validate ownership
-        Object sessionJobIds = request.getSession().getAttribute("userJobIds");
-        if (sessionJobIds == null
-                || !(sessionJobIds instanceof java.util.Set)
-                || !((java.util.Set<?>) sessionJobIds).contains(jobId)) {
-            // Either no jobs in session or jobId doesn't match user's jobs
+        // Validate job ownership
+        if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to cancel job: {}", jobId);
             return ResponseEntity.status(403)
                     .body(Map.of("message", "You are not authorized to cancel this job"));
@@ -210,6 +224,13 @@ public class JobController {
     @GetMapping("/job/{jobId}/result/files")
     @Operation(summary = "Get job result files")
     public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
+        // Validate job ownership
+        if (!validateJobAccess(jobId)) {
+            log.warn("Unauthorized attempt to access job files: {}", jobId);
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "You are not authorized to access this job"));
+        }
+
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
             return ResponseEntity.notFound().build();
@@ -329,5 +350,27 @@ public class JobController {
             // Fallback to basic filename if encoding fails
             return "attachment; filename=\"" + fileName + "\"";
         }
+    }
+
+    /**
+     * Validate that the current user has access to the given job.
+     *
+     * @param jobId the job identifier to validate
+     * @return true if user has access, false otherwise
+     */
+    private boolean validateJobAccess(String jobId) {
+        // If JobOwnershipService is available (security enabled), use it
+        if (jobOwnershipService != null) {
+            try {
+                return jobOwnershipService.validateJobAccess(jobId);
+            } catch (SecurityException e) {
+                log.warn("Job ownership validation failed for jobId {}: {}", jobId, e.getMessage());
+                return false;
+            }
+        }
+
+        // Security disabled - allow all access (backwards compatibility)
+        // When security is not enabled, any user can access any job by jobId
+        return true;
     }
 }

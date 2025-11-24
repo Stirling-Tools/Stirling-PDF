@@ -8,6 +8,7 @@ import { parseToolRoute, updateToolRoute, clearToolRoute } from '@app/utils/urlR
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { firePixel } from '@app/utils/scarfTracking';
 import { withBasePath } from '@app/constants/app';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 /**
  * Hook to sync workbench and tool with URL using registry
@@ -19,11 +20,33 @@ export function useNavigationUrlSync(
   registry: ToolRegistry,
   enableSync: boolean = true
 ) {
+  const { config } = useAppConfig();
+  const premiumEnabled = config?.premiumEnabled;
   const hasInitialized = useRef(false);
   const prevSelectedTool = useRef<ToolId | null>(null);
+  
+  // Check if tool requires premium and redirect if needed
+  const checkPremiumAndSelect = useCallback((toolId: ToolId) => {
+    const tool = registry[toolId];
+    if (tool?.requiresPremium === true && premiumEnabled !== true) {
+      // Premium tool accessed without premium - redirect to home
+      const homePath = withBasePath('/');
+      if (window.location.pathname !== homePath) {
+        clearToolRoute(true); // Use replaceState to avoid adding to history
+        window.location.href = homePath;
+      }
+      return;
+    }
+    handleToolSelect(toolId);
+  }, [registry, premiumEnabled, handleToolSelect]);
+  
   // Initialize workbench and tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
+    // Wait for config to load before checking premium status
+    if (config === null) return;
+    // Only run once on initial mount
+    if (hasInitialized.current) return;
 
     // Fire pixel for initial page load
     const currentPath = window.location.pathname;
@@ -32,7 +55,7 @@ export function useNavigationUrlSync(
     const route = parseToolRoute(registry);
     if (route.toolId !== selectedTool) {
       if (route.toolId) {
-        handleToolSelect(route.toolId);
+        checkPremiumAndSelect(route.toolId);
       } else if (selectedTool !== null) {
         // Only clear selection if we actually had a tool selected
         // Don't clear on initial load when selectedTool starts as null
@@ -41,7 +64,7 @@ export function useNavigationUrlSync(
     }
 
     hasInitialized.current = true;
-  }, []); // Only run on mount
+  }, [checkPremiumAndSelect, config, enableSync, registry, selectedTool]); // Include dependencies
 
   // Update URL when tool or workbench changes
   useEffect(() => {
@@ -73,7 +96,7 @@ export function useNavigationUrlSync(
         firePixel(currentPath);
 
         if (route.toolId) {
-          handleToolSelect(route.toolId);
+          checkPremiumAndSelect(route.toolId);
         } else {
           clearToolSelection();
         }
@@ -82,7 +105,7 @@ export function useNavigationUrlSync(
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync]);
+  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync, checkPremiumAndSelect]);
 }
 
 /**

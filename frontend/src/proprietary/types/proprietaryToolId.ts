@@ -5,6 +5,7 @@
  */
 
 export const PROPRIETARY_REGULAR_TOOL_IDS = [
+  'pdfTextEditor',
 ] as const;
 
 export const PROPRIETARY_SUPER_TOOL_IDS = [

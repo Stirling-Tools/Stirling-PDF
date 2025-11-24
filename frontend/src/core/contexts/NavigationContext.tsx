@@ -121,10 +121,11 @@ export const NavigationProvider: React.FC<{
         hasUnsavedChanges
       });
 
-      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
         (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
-        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges) ||
+        (state.workbench.startsWith('custom:') && workbench !== state.workbench && hasUnsavedChanges);
 
       if (leavingWorkbenchWithChanges) {
         // Update state to reflect unsaved changes so modal knows
@@ -132,7 +133,19 @@ export const NavigationProvider: React.FC<{
           dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges: true } });
         }
         const performWorkbenchChange = () => {
-          dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+          // When leaving a custom workbench, clear the selected tool
+          console.log('[NavigationContext] performWorkbenchChange executing', {
+            from: state.workbench,
+            to: workbench,
+            isCustom: state.workbench.startsWith('custom:')
+          });
+          if (state.workbench.startsWith('custom:')) {
+            console.log('[NavigationContext] Clearing tool and changing workbench to:', workbench);
+            dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench } });
+          } else {
+            console.log('[NavigationContext] Just changing workbench to:', workbench);
+            dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+          }
         };
         dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performWorkbenchChange } });
         dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
@@ -149,10 +162,11 @@ export const NavigationProvider: React.FC<{
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
 
-      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
         (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
-        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges) ||
+        (state.workbench.startsWith('custom:') && workbench !== state.workbench && hasUnsavedChanges);
 
       if (leavingWorkbenchWithChanges) {
         const performWorkbenchChange = () => {
@@ -192,13 +206,19 @@ export const NavigationProvider: React.FC<{
     }, [state.hasUnsavedChanges]),
 
     confirmNavigation: useCallback(() => {
+      console.log('[NavigationContext] confirmNavigation called', {
+        hasPendingNav: !!state.pendingNavigation,
+        currentWorkbench: state.workbench,
+        currentTool: state.selectedTool
+      });
       if (state.pendingNavigation) {
         state.pendingNavigation();
       }
 
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
-    }, [state.pendingNavigation]),
+      console.log('[NavigationContext] confirmNavigation completed');
+    }, [state.pendingNavigation, state.workbench, state.selectedTool]),
 
     cancelNavigation: useCallback(() => {
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });

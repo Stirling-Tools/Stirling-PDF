@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from '@mantine/core';
+import { Text, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
@@ -57,9 +57,20 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
         </span>
       ) : null}
       <span className="tool-panel__fullscreen-list-body">
-        <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
-          {tool.name}
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
+            {tool.name}
+          </Text>
+          {tool.versionStatus === 'alpha' && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="orange"
+            >
+              {t('toolPanel.alpha', 'Alpha')}
+            </Badge>
+          )}
+        </div>
       </span>
       {!disabled && (
         <div className="tool-panel__fullscreen-star-compact">

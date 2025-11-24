@@ -41,7 +41,7 @@ public class CustomPDFDocumentFactory {
 
     // Memory thresholds and limits
 
-    private static final long SMALL_FILE_THRESHOLD = 10 * 1024 * 1024; // 10 MB
+    public static final long SMALL_FILE_THRESHOLD = 10 * 1024 * 1024; // 10 MB
     // Files smaller than this threshold are loaded entirely in memory for better performance.
     // These files use IOUtils.createMemoryOnlyStreamCache() which keeps all document data in RAM.
     // No temp files are created for document data, reducing I/O operations but consuming more

@@ -59,6 +59,10 @@ export type ToolRegistryEntry = {
 	supportsAutomate?: boolean;
 	// Synonyms for search (optional)
 	synonyms?: string[];
+	// Version status indicator (e.g., "alpha", "beta")
+	versionStatus?: "alpha" | "beta";
+	// Whether this tool requires premium access
+	requiresPremium?: boolean;
 }
 
 export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;

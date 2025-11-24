@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from '@mantine/core';
+import { Text, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
 import FavoriteStar from '@app/components/tools/toolPicker/FavoriteStar';
@@ -59,9 +59,21 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
         </span>
       ) : null}
       <span className="tool-panel__fullscreen-body">
-        <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
-          {tool.name}
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
+            {tool.name}
+          </Text>
+          {tool.versionStatus === 'alpha' && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="orange"
+            >
+              {/* we can add more translations for different badges in future, like beta, etc. */}
+            {t('toolPanel.alpha', 'Alpha')} 
+            </Badge>
+          )}
+        </div>
         <Text size="sm" c="dimmed" className="tool-panel__fullscreen-description">
           {disabled ? (
             <>
