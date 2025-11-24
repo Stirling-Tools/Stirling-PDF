@@ -130,14 +130,6 @@ export const createConfigNavSections = (
       title: 'Licensing & Analytics',
       items: [
         {
-          key: 'adminPremium',
-          label: 'Premium',
-          icon: 'star-rounded',
-          component: <AdminPremiumSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
-        },
-        {
           key: 'adminPlan',
           label: 'Plan',
           icon: 'star-rounded',
