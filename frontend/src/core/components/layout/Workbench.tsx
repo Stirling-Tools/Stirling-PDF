@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
@@ -19,13 +19,11 @@ import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
 
-type TransitionEffect = 'zoomIn' | 'zoomOut' | 'fade';
-
-const BASE_SCOPE_LEVELS: Record<BaseWorkbenchType, number> = {
-  fileEditor: 0,
-  pageEditor: 1,
-  viewer: 2,
-};
+type TransitionAnimation =
+  | 'viewerToPageEditor'
+  | 'pageEditorToViewer'
+  | 'pageEditorToFileEditor'
+  | 'fileEditorToPageEditor';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -39,7 +37,8 @@ export default function Workbench() {
   const setCurrentView = navActions.setWorkbench;
 
   const previousViewRef = useRef(currentView);
-  const [transitionEffect, setTransitionEffect] = useState<TransitionEffect | null>(null);
+  const [overlayAnimation, setOverlayAnimation] = useState<TransitionAnimation | null>(null);
+  const [overlayRunId, setOverlayRunId] = useState(0);
   const activeFiles = selectors.getFiles();
   const {
     previewFile,
@@ -71,25 +70,27 @@ export default function Workbench() {
       return;
     }
 
-    const previousLevel = BASE_SCOPE_LEVELS[previousView as BaseWorkbenchType] ?? -1;
-    const nextLevel = BASE_SCOPE_LEVELS[currentView as BaseWorkbenchType] ?? -1;
+    let animation: TransitionAnimation | null = null;
 
-    let effect: TransitionEffect = 'fade';
-
-    if (previousLevel !== -1 && nextLevel !== -1) {
-      if (previousLevel > nextLevel) {
-        effect = 'zoomOut';
-      } else if (previousLevel < nextLevel) {
-        effect = 'zoomIn';
-      }
+    if (previousView === 'viewer' && currentView === 'pageEditor') {
+      animation = 'viewerToPageEditor';
+    } else if (previousView === 'pageEditor' && currentView === 'viewer') {
+      animation = 'pageEditorToViewer';
+    } else if (previousView === 'pageEditor' && currentView === 'fileEditor') {
+      animation = 'pageEditorToFileEditor';
+    } else if (previousView === 'fileEditor' && currentView === 'pageEditor') {
+      animation = 'fileEditorToPageEditor';
     }
 
-    setTransitionEffect(effect);
+    setOverlayAnimation(animation);
     previousViewRef.current = currentView;
 
-    const timeout = setTimeout(() => setTransitionEffect(null), 480);
+    if (animation) {
+      setOverlayRunId((runId) => runId + 1);
+      const timeout = setTimeout(() => setOverlayAnimation(null), 720);
 
-    return () => clearTimeout(timeout);
+      return () => clearTimeout(timeout);
+    }
   }, [currentView]);
 
   const handlePreviewClose = () => {
@@ -110,7 +111,13 @@ export default function Workbench() {
     }
   };
 
-  const transitionClassName = transitionEffect ? styles[transitionEffect] : '';
+  const overlayPages = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, index) => ({
+        id: `overlay-page-${index}`,
+      })),
+    [],
+  );
 
   const renderMainContent = () => {
     if (activeFiles.length === 0) {
@@ -228,12 +235,16 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable} ${styles.workbenchTransition} ${transitionClassName}`}
-        style={{
-          transition: 'opacity 0.15s ease-in-out',
-        }}
+        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable} ${styles.workbenchTransition}`}
       >
         {renderMainContent()}
+        {overlayAnimation && (
+          <div key={overlayRunId} className={`${styles.transitionOverlay} ${styles[overlayAnimation]}`}>
+            {overlayPages.map((page) => (
+              <span key={page.id} className={styles.transitionPage} />
+            ))}
+          </div>
+        )}
       </Box>
 
       <Footer

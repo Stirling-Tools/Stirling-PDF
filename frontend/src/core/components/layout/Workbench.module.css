@@ -25,68 +25,114 @@
   isolation: isolate;
 }
 
-.workbenchTransition > * {
-  height: 100%;
-  will-change: transform, opacity, filter;
+.transitionOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.04), transparent 55%);
 }
 
-.zoomOut {
-  animation: workbenchZoomOut 420ms cubic-bezier(0.16, 1, 0.3, 1);
-  animation-fill-mode: both;
+.transitionPage {
+  --from-x: 0px;
+  --from-y: 0px;
+  --from-scale: 0.9;
+  --from-rot: 0deg;
+  --to-x: 0px;
+  --to-y: 0px;
+  --to-scale: 1;
+  --to-rot: 0deg;
+  width: clamp(5rem, 9vw, 8.75rem);
+  aspect-ratio: 0.72;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(245, 246, 248, 0.88));
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  transform: translate(var(--from-x), var(--from-y)) scale(var(--from-scale)) rotate(var(--from-rot));
+  animation: scopeTransition 640ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  filter: saturate(1.08);
 }
 
-.zoomIn {
-  animation: workbenchZoomIn 420ms cubic-bezier(0.16, 1, 0.3, 1);
-  animation-fill-mode: both;
+.transitionPage::after {
+  content: '';
+  position: absolute;
+  inset: 0.55rem;
+  border-radius: 0.35rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.035), rgba(0, 0, 0, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.fade {
-  animation: workbenchFade 240ms ease-in-out;
-  animation-fill-mode: both;
-}
-
-@keyframes workbenchZoomOut {
+@keyframes scopeTransition {
   0% {
-    transform: perspective(1200px) translateZ(0) scale(1);
-    opacity: 1;
-    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.08));
+    opacity: 0;
+    transform: translate(var(--from-x), var(--from-y)) scale(var(--from-scale)) rotate(var(--from-rot));
   }
-  40% {
-    transform: perspective(1200px) translateZ(-24px) scale(0.98);
-    opacity: 0.96;
+  14% {
+    opacity: 1;
   }
   100% {
-    transform: perspective(1200px) translateZ(-48px) scale(0.94);
-    opacity: 0.9;
-    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.05));
+    opacity: 1;
+    transform: translate(var(--to-x), var(--to-y)) scale(var(--to-scale)) rotate(var(--to-rot));
   }
 }
 
-@keyframes workbenchZoomIn {
-  0% {
-    transform: perspective(1200px) translateZ(-48px) scale(0.94);
-    opacity: 0.9;
-    filter: blur(0.5px);
-  }
-  35% {
-    transform: perspective(1200px) translateZ(-24px) scale(0.97);
-    opacity: 0.96;
-    filter: blur(0.35px);
-  }
-  100% {
-    transform: perspective(1200px) translateZ(0) scale(1);
-    opacity: 1;
-    filter: blur(0);
-  }
+.viewerToPageEditor .transitionPage {
+  animation-delay: calc(var(--page-index) * 24ms);
 }
 
-@keyframes workbenchFade {
-  from {
-    opacity: 0.85;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.viewerToPageEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -16vw; --from-y: -6vh; --to-x: -12vw; --to-y: -4vh; --to-rot: -1deg; }
+.viewerToPageEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -8vw; --from-y: -8vh; --to-x: -4vw; --to-y: -6vh; --to-rot: 2deg; }
+.viewerToPageEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: 0vw; --from-y: -10vh; --to-x: 4vw; --to-y: -6vh; --to-rot: -1deg; }
+.viewerToPageEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: 8vw; --from-y: -8vh; --to-x: 12vw; --to-y: -4vh; --to-rot: 1deg; }
+.viewerToPageEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: -14vw; --from-y: 8vh; --to-x: -12vw; --to-y: 6vh; --to-rot: 1deg; }
+.viewerToPageEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: -4vw; --from-y: 10vh; --to-x: -4vw; --to-y: 6vh; --to-rot: -2deg; }
+.viewerToPageEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 6vw; --from-y: 10vh; --to-x: 4vw; --to-y: 6vh; --to-rot: 2deg; }
+.viewerToPageEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 12vw; --to-y: 6vh; --to-rot: -1deg; }
+
+.pageEditorToViewer .transitionPage {
+  animation-delay: calc(var(--page-index) * 22ms);
+  --from-scale: 1.02;
+  --to-scale: 0.82;
+  opacity: 1;
 }
+
+.pageEditorToViewer .transitionPage:nth-child(1) { --page-index: 0; --from-x: -18vw; --from-y: -6vh; --to-x: -6vw; --to-y: -2vh; --to-rot: -4deg; }
+.pageEditorToViewer .transitionPage:nth-child(2) { --page-index: 1; --from-x: -10vw; --from-y: -8vh; --to-x: -2vw; --to-y: -4vh; --to-rot: 2deg; }
+.pageEditorToViewer .transitionPage:nth-child(3) { --page-index: 2; --from-x: -2vw; --from-y: -10vh; --to-x: 2vw; --to-y: -6vh; --to-rot: -3deg; }
+.pageEditorToViewer .transitionPage:nth-child(4) { --page-index: 3; --from-x: 6vw; --from-y: -8vh; --to-x: 6vw; --to-y: -4vh; --to-rot: 2deg; }
+.pageEditorToViewer .transitionPage:nth-child(5) { --page-index: 4; --from-x: -14vw; --from-y: 8vh; --to-x: -6vw; --to-y: 4vh; --to-rot: 3deg; }
+.pageEditorToViewer .transitionPage:nth-child(6) { --page-index: 5; --from-x: -4vw; --from-y: 10vh; --to-x: -2vw; --to-y: 6vh; --to-rot: -2deg; }
+.pageEditorToViewer .transitionPage:nth-child(7) { --page-index: 6; --from-x: 6vw; --from-y: 10vh; --to-x: 2vw; --to-y: 6vh; --to-rot: 4deg; }
+.pageEditorToViewer .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 6vw; --to-y: 4vh; --to-rot: -3deg; }
+
+.pageEditorToFileEditor .transitionPage {
+  animation-delay: calc(var(--page-index) * 26ms);
+  --to-scale: 0.9;
+}
+
+.pageEditorToFileEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -14vw; --from-y: -6vh; --to-x: -18vw; --to-y: -2vh; --to-rot: -6deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -6vw; --from-y: -8vh; --to-x: -12vw; --to-y: 0vh; --to-rot: 4deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: 2vw; --from-y: -10vh; --to-x: -6vw; --to-y: 2vh; --to-rot: -8deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: 10vw; --from-y: -8vh; --to-x: -2vw; --to-y: 4vh; --to-rot: 5deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: -12vw; --from-y: 8vh; --to-x: 6vw; --to-y: -2vh; --to-rot: -5deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: -2vw; --from-y: 10vh; --to-x: 10vw; --to-y: 0vh; --to-rot: 6deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 8vw; --from-y: 10vh; --to-x: 14vw; --to-y: 2vh; --to-rot: -4deg; }
+.pageEditorToFileEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 16vw; --from-y: 8vh; --to-x: 18vw; --to-y: 4vh; --to-rot: 5deg; }
+
+.fileEditorToPageEditor .transitionPage {
+  animation-delay: calc(var(--page-index) * 24ms);
+  --from-scale: 0.9;
+}
+
+.fileEditorToPageEditor .transitionPage:nth-child(1) { --page-index: 0; --from-x: -18vw; --from-y: -2vh; --to-x: -12vw; --to-y: -4vh; --to-rot: 2deg; --to-scale: 1.02; }
+.fileEditorToPageEditor .transitionPage:nth-child(2) { --page-index: 1; --from-x: -12vw; --from-y: 0vh; --to-x: -4vw; --to-y: -6vh; --to-rot: -1deg; --to-scale: 1.02; }
+.fileEditorToPageEditor .transitionPage:nth-child(3) { --page-index: 2; --from-x: -6vw; --from-y: 2vh; --to-x: 4vw; --to-y: -6vh; --to-rot: 2deg; --to-scale: 1.02; }
+.fileEditorToPageEditor .transitionPage:nth-child(4) { --page-index: 3; --from-x: -2vw; --from-y: 4vh; --to-x: 12vw; --to-y: -4vh; --to-rot: -2deg; --to-scale: 1.02; }
+.fileEditorToPageEditor .transitionPage:nth-child(5) { --page-index: 4; --from-x: 6vw; --from-y: -2vh; --to-x: -12vw; --to-y: 6vh; --to-rot: -2deg; --to-scale: 1; }
+.fileEditorToPageEditor .transitionPage:nth-child(6) { --page-index: 5; --from-x: 10vw; --from-y: 0vh; --to-x: -4vw; --to-y: 6vh; --to-rot: 1deg; --to-scale: 1; }
+.fileEditorToPageEditor .transitionPage:nth-child(7) { --page-index: 6; --from-x: 14vw; --from-y: 2vh; --to-x: 4vw; --to-y: 6vh; --to-rot: -1deg; --to-scale: 1; }
+.fileEditorToPageEditor .transitionPage:nth-child(8) { --page-index: 7; --from-x: 18vw; --from-y: 4vh; --to-x: 12vw; --to-y: 6vh; --to-rot: 2deg; --to-scale: 1; }
