@@ -12,7 +12,7 @@ export interface PriceCalculation {
  * Calculate monthly equivalent from yearly price
  */
 export function calculateMonthlyEquivalent(yearlyPrice: number): number {
-  return Math.round(yearlyPrice / 12);
+  return yearlyPrice / 12;
 }
 
 /**

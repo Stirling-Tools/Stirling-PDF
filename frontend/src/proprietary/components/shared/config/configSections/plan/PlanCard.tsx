@@ -119,11 +119,14 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           {/* Price */}
           {isEnterprise && displaySeatPrice !== undefined ? (
             <>
-              <Text size="2.25rem" fw={600} style={{ lineHeight: 1 }}>
-                {displayCurrency}{displaySeatPrice}/seat
+              <Text span size="2.25rem" fw={600} style={{ lineHeight: 1 }}>
+                {displayCurrency}{displaySeatPrice.toFixed(2)}
+              </Text>
+              <Text span size="1.5rem" c="dimmed" mt="xs">
+                {t('plan.perSeat', '/seat')}
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
-                {t('plan.perMonth', '/month')} + Server plan
+                {t('plan.perMonth', '/month')} {t('plan.withServer', '+ Server Plan')}
               </Text>
             </>
           ) : (
