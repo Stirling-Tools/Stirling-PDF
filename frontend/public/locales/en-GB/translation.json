@@ -5413,7 +5413,7 @@
     "enterpriseNote": "Seats can be adjusted in checkout (1-1000).",
     "installationId": "Installation ID",
     "licenseKey": "Your License Key",
-    "licenseInstructions": "Enter this key in Settings → Admin Plan → License Key section",
+    "licenseInstructions": "This has been added to your installation. You will receive a copy in your email as well.",
     "canCloseWindow": "You can now close this window.",
     "licenseKeyProcessing": "License Key Processing",
     "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support.",

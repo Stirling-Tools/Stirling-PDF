@@ -57,7 +57,7 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
               <Text size="xs" c="dimmed">
                 {t(
                   'payment.licenseInstructions',
-                  'Enter this key in Settings → Admin Plan → License Key section'
+                  'This has been added to your installation. You will receive a copy in your email as well.'
                 )}
               </Text>
             </Stack>
