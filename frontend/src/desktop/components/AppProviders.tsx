@@ -17,23 +17,23 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'offline' | 'server' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
 
   // Load connection mode on mount
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
   }, []);
 
-  // Initialize backend health monitoring for server mode
+  // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (setupComplete && !isFirstLaunch && connectionMode === 'server') {
-      console.log('[AppProviders] Initializing external backend monitoring for server mode');
+    if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
       void tauriBackendService.initializeExternalBackend();
     }
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
-  // Only start bundled backend if in offline mode and setup is complete
-  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'offline';
+  // Only start bundled backend if in SaaS mode (local backend) and setup is complete
+  // Self-hosted mode connects to remote server so doesn't need local backend
+  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
   useBackendInitializer(shouldStartBackend);
 
   // Show setup wizard on first launch
@@ -51,8 +51,23 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <SetupWizard
-          onComplete={() => {
-            // Reload the page to reinitialize with new connection config
+          onComplete={async () => {
+            // Wait for backend to become healthy before reloading
+            // This prevents reloading mid-startup which would interrupt the backend
+            const maxWaitTime = 60000; // 60 seconds max
+            const checkInterval = 1000; // Check every second
+            const startTime = Date.now();
+
+            while (Date.now() - startTime < maxWaitTime) {
+              if (tauriBackendService.isBackendHealthy()) {
+                window.location.reload();
+                return;
+              }
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+            }
+
+            // If we timeout, reload anyway
+            console.warn('[AppProviders] Backend health check timeout, reloading anyway...');
             window.location.reload();
           }}
         />

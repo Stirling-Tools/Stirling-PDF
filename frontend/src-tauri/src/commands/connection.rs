@@ -31,7 +31,7 @@ pub async fn get_connection_config(
     let mode = store
         .get(CONNECTION_MODE_KEY)
         .and_then(|v| serde_json::from_value(v.clone()).ok())
-        .unwrap_or(ConnectionMode::Offline);
+        .unwrap_or(ConnectionMode::SaaS);
 
     let server_config: Option<ServerConfig> = store
         .get(SERVER_CONFIG_KEY)
@@ -108,4 +108,23 @@ pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {
         .unwrap_or(false);
 
     Ok(!setup_completed)
+}
+
+#[tauri::command]
+pub async fn reset_setup_completion(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Resetting setup completion flag");
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    // Reset setup completion flag to force SetupWizard on next launch
+    store.set(FIRST_LAUNCH_KEY, serde_json::json!(false));
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    log::info!("Setup completion flag reset successfully");
+    Ok(())
 }
