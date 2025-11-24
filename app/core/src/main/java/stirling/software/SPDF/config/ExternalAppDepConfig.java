@@ -41,6 +41,8 @@ public class ExternalAppDepConfig {
     private final String weasyprintPath;
     private final String unoconvPath;
     private final String calibrePath;
+    private final String ocrMyPdfPath;
+    private final String sOfficePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -58,11 +60,13 @@ public class ExternalAppDepConfig {
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         this.unoconvPath = runtimePathConfig.getUnoConvertPath();
         this.calibrePath = runtimePathConfig.getCalibrePath();
+        this.ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
+        this.sOfficePath = runtimePathConfig.getSOfficePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
-        tmp.put("ocrmypdf", List.of("OCRmyPDF"));
-        tmp.put("soffice", List.of("LibreOffice"));
+        tmp.put(ocrMyPdfPath, List.of("OCRmyPDF"));
+        tmp.put(sOfficePath, List.of("LibreOffice"));
         tmp.put(weasyprintPath, List.of("Weasyprint"));
         tmp.put("pdftohtml", List.of("Pdftohtml"));
         tmp.put(unoconvPath, List.of("Unoconvert"));
