@@ -43,6 +43,10 @@
   max-width: 4rem;
   position: relative;
   z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr; /* keep layout stable when document is rtl */
 }
 
 /* Rainbow mode container */
@@ -53,6 +57,17 @@
   max-width: 4rem;
   position: relative;
   z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr;
+}
+
+/* RTL adjustments keep the bar on-screen and separated from content */
+:root[dir='rtl'] .quick-access-bar-main,
+:root[dir='rtl'] .quick-access-bar-main.rainbow-mode {
+  border-right: none;
+  border-left: 1px solid var(--border-default);
 }
 
 /* Header padding */
