@@ -11,6 +11,7 @@ interface SavedSignaturesSectionProps {
   onUseSignature: (signature: SavedSignature) => void;
   onDeleteSignature: (signature: SavedSignature) => void;
   onRenameSignature: (id: string, label: string) => void;
+  translationScope?: string;
 }
 
 const typeBadgeColor: Record<SavedSignatureType, string> = {
@@ -26,17 +27,28 @@ export const SavedSignaturesSection = ({
   onUseSignature,
   onDeleteSignature,
   onRenameSignature,
+  translationScope = 'sign',
 }: SavedSignaturesSectionProps) => {
   const { t } = useTranslation();
+  const translate = useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      t(`${translationScope}.${key}`, { defaultValue, ...options }),
+    [t, translationScope]
+  );
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
   const [activeIndex, setActiveIndex] = useState(0);
   const activeSignature = signatures[activeIndex];
+  const activeSignatureRef = useRef<SavedSignature | null>(activeSignature ?? null);
   const appliedSignatureIdRef = useRef<string | null>(null);
   const onUseSignatureRef = useRef(onUseSignature);
 
   useEffect(() => {
     onUseSignatureRef.current = onUseSignature;
   }, [onUseSignature]);
+
+  useEffect(() => {
+    activeSignatureRef.current = activeSignature ?? null;
+  }, [activeSignature]);
 
   useEffect(() => {
     setLabelDrafts(prev => {
@@ -132,10 +144,10 @@ export const SavedSignaturesSection = ({
   const emptyState = (
     <Card withBorder>
       <Stack gap="xs">
-        <Text fw={500}>{t('sign.saved.emptyTitle', 'No saved signatures yet')}</Text>
+        <Text fw={500}>{translate('saved.emptyTitle', 'No saved signatures yet')}</Text>
         <Text size="sm" c="dimmed">
-          {t(
-            'sign.saved.emptyDescription',
+          {translate(
+            'saved.emptyDescription',
             'Draw, upload, or type a signature above, then use "Save to library" to keep up to {{max}} favourites ready to use.',
             { max: MAX_SAVED_SIGNATURES }
           )}
@@ -147,11 +159,11 @@ export const SavedSignaturesSection = ({
   const typeLabel = (type: SavedSignatureType) => {
     switch (type) {
       case 'canvas':
-        return t('sign.saved.type.canvas', 'Drawing');
+        return translate('saved.type.canvas', 'Drawing');
       case 'image':
-        return t('sign.saved.type.image', 'Upload');
+        return translate('saved.type.image', 'Upload');
       case 'text':
-        return t('sign.saved.type.text', 'Text');
+        return translate('saved.type.text', 'Text');
       default:
         return type;
     }
@@ -182,36 +194,37 @@ export const SavedSignaturesSection = ({
   };
 
   useEffect(() => {
-    if (!activeSignature || disabled) {
+    const signature = activeSignatureRef.current;
+    if (!signature || disabled) {
       appliedSignatureIdRef.current = null;
       return;
     }
 
-    if (appliedSignatureIdRef.current === activeSignature.id) {
+    if (appliedSignatureIdRef.current === signature.id) {
       return;
     }
 
-    appliedSignatureIdRef.current = activeSignature.id;
-    onUseSignatureRef.current(activeSignature);
-  }, [activeSignature, disabled]);
+    appliedSignatureIdRef.current = signature.id;
+    onUseSignatureRef.current(signature);
+  }, [activeSignature?.id, disabled]);
 
   return (
     <Stack gap="sm">
       <Group justify="space-between" align="flex-start">
         <Stack gap={0}>
           <Text fw={600} size="md">
-            {t('sign.saved.heading', 'Saved signatures')}
+            {translate('saved.heading', 'Saved signatures')}
           </Text>
           <Text size="sm" c="dimmed">
-            {t('sign.saved.description', 'Reuse saved signatures at any time.')}
+            {translate('saved.description', 'Reuse saved signatures at any time.')}
           </Text>
         </Stack>
       </Group>
 
       {isAtCapacity && (
-        <Alert color="yellow" title={t('sign.saved.limitTitle', 'Limit reached')}>
+        <Alert color="yellow" title={translate('saved.limitTitle', 'Limit reached')}>
           <Text size="sm">
-            {t('sign.saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
+            {translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
               max: MAX_SAVED_SIGNATURES,
             })}
           </Text>
@@ -224,7 +237,7 @@ export const SavedSignaturesSection = ({
         <Stack gap="xs">
           <Group justify="space-between" align="center">
             <Text size="sm" c="dimmed">
-              {t('sign.saved.carouselPosition', '{{current}} of {{total}}', {
+              {translate('saved.carouselPosition', '{{current}} of {{total}}', {
                 current: activeIndex + 1,
                 total: signatures.length,
               })}
@@ -232,7 +245,7 @@ export const SavedSignaturesSection = ({
             <Group gap={4}>
               <ActionIcon
                 variant="light"
-                aria-label={t('sign.saved.prev', 'Previous')}
+                aria-label={translate('saved.prev', 'Previous')}
                 onClick={() => handleNavigate('prev')}
                 disabled={disabled || activeIndex === 0}
               >
@@ -240,7 +253,7 @@ export const SavedSignaturesSection = ({
               </ActionIcon>
               <ActionIcon
                 variant="light"
-                aria-label={t('sign.saved.next', 'Next')}
+                aria-label={translate('saved.next', 'Next')}
                 onClick={() => handleNavigate('next')}
                 disabled={disabled || activeIndex >= signatures.length - 1}
               >
@@ -256,11 +269,11 @@ export const SavedSignaturesSection = ({
                   <Badge color={typeBadgeColor[activeSignature.type]} variant="light">
                     {typeLabel(activeSignature.type)}
                   </Badge>
-                  <Tooltip label={t('sign.saved.delete', 'Remove')}>
+                  <Tooltip label={translate('saved.delete', 'Remove')}>
                     <ActionIcon
                       variant="subtle"
                       color="red"
-                      aria-label={t('sign.saved.delete', 'Remove')}
+                      aria-label={translate('saved.delete', 'Remove')}
                       onClick={() => onDeleteSignature(activeSignature)}
                       disabled={disabled}
                     >
@@ -272,7 +285,7 @@ export const SavedSignaturesSection = ({
                 {renderPreview(activeSignature)}
 
                 <TextInput
-                  label={t('sign.saved.label', 'Label')}
+                  label={translate('saved.label', 'Label')}
                   value={labelDrafts[activeSignature.id] ?? activeSignature.label}
                   onChange={event => handleLabelChange(event, activeSignature)}
                   onBlur={() => handleLabelBlur(activeSignature)}

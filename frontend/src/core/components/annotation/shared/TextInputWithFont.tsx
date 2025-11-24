@@ -15,6 +15,7 @@ interface TextInputWithFontProps {
   disabled?: boolean;
   label?: string;
   placeholder?: string;
+  onAnyChange?: () => void;
 }
 
 export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
@@ -28,7 +29,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   onTextColorChange,
   disabled = false,
   label,
-  placeholder
+  placeholder,
+  onAnyChange
 }) => {
   const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
@@ -67,7 +69,10 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         label={label || t('sign.text.name', 'Signer name')}
         placeholder={placeholder || t('sign.text.placeholder', 'Enter your full name')}
         value={text}
-        onChange={(e) => onTextChange(e.target.value)}
+        onChange={(e) => {
+          onTextChange(e.target.value);
+          onAnyChange?.();
+        }}
         disabled={disabled}
         required
       />
@@ -76,7 +81,10 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
       <Select
         label={t('sign.text.fontLabel', 'Font')}
         value={fontFamily}
-        onChange={(value) => onFontFamilyChange(value || 'Helvetica')}
+        onChange={(value) => {
+          onFontFamilyChange(value || 'Helvetica');
+          onAnyChange?.();
+        }}
         data={fontOptions}
         disabled={disabled}
         searchable
@@ -110,6 +118,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                 const size = parseInt(value);
                 if (!isNaN(size) && size >= 8 && size <= 200) {
                   onFontSizeChange(size);
+                  onAnyChange?.();
                 }
 
                 fontSizeCombobox.openDropdown();
@@ -157,6 +166,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                 // Update color if valid hex
                 if (isValidHexColor(value)) {
                   onTextColorChange(value);
+                  onAnyChange?.();
                 }
               }}
               onBlur={() => {
@@ -190,7 +200,10 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
           isOpen={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
           selectedColor={textColor}
-          onColorChange={onTextColorChange}
+          onColorChange={(color) => {
+            onTextColorChange(color);
+            onAnyChange?.();
+          }}
         />
       )}
     </Stack>
