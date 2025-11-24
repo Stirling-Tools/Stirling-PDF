@@ -50,8 +50,11 @@ export function useToolPanelGeometry({
       let left: number;
 
       if (isRTL) {
-        width = Math.max(360, window.innerWidth - rightOffset);
-        left = 0;
+        // In RTL, QuickAccessBar is on the right, so start after it (using rect.right as the right edge)
+        const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
+        const quickAccessWidth = quickAccessRect ? quickAccessRect.width : 0;
+        width = Math.max(360, window.innerWidth - quickAccessWidth - rightOffset);
+        left = quickAccessWidth;
       } else {
         width = Math.max(360, window.innerWidth - rect.left - rightOffset);
         left = rect.left;
