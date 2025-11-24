@@ -31,3 +31,15 @@
       inset 0 0 30px rgba(59, 130, 246, 0.2);
   }
 }
+
+/* RTL: mirror step indicator and controls in Reactour popovers */
+:root[dir='rtl'] .reactour__popover {
+  direction: rtl;
+}
+
+/* Minimal overrides retained for glow only */
+
+:root[dir='rtl'] .reactour__badge {
+  left: auto;
+  right: 16px;
+}

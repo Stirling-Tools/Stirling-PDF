@@ -18,7 +18,7 @@ export function useFileEditorRightRailButtons({
   onDeselectAll,
   onCloseSelected,
 }: FileEditorRightRailButtonsParams) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const buttons = useMemo<RightRailButtonWithAction[]>(() => [
     {
@@ -54,7 +54,7 @@ export function useFileEditorRightRailButtons({
       visible: totalItems > 0,
       onClick: onCloseSelected,
     },
-  ], [t, totalItems, selectedCount, onSelectAll, onDeselectAll, onCloseSelected]);
+  ], [t, i18n.language, totalItems, selectedCount, onSelectAll, onDeselectAll, onCloseSelected]);
 
   useRightRailButtons(buttons);
 }

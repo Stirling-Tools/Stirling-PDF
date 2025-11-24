@@ -39,6 +39,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
 
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+
   // Open modal if URL is at /settings/*
   useEffect(() => {
     const isSettings = location.pathname.startsWith('/settings');
@@ -189,9 +191,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       ref={ref}
       data-sidebar="quick-access"
       className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
-      style={{
-        borderRight: '1px solid var(--border-default)'
-      }}
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
@@ -278,7 +277,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 // If admin, show menu with both options
                 return (
                   <div key={buttonConfig.id} data-tour="help-button">
-                    <Menu position="right" offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
+                    <Menu position={isRTL ? 'left' : 'right'} offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
                       <Menu.Target>
                         <div>{renderNavButton(buttonConfig, index)}</div>
                       </Menu.Target>

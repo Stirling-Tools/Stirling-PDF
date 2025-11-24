@@ -41,7 +41,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     closePdf,
   } = params;
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
   const selectAllLabel = t('rightRail.selectAll', 'Select All');
@@ -144,6 +144,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     ];
   }, [
     t,
+    i18n.language,
     selectAllLabel,
     deselectAllLabel,
     selectByNumberLabel,

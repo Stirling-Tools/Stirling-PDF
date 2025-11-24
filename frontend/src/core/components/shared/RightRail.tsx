@@ -19,19 +19,22 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
+import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
 function renderWithTooltip(
   node: React.ReactNode,
-  tooltip: React.ReactNode | undefined
+  tooltip: React.ReactNode | undefined,
+  position: 'left' | 'right',
+  offset: number
 ) {
   if (!tooltip) return node;
 
   const portalTarget = typeof document !== 'undefined' ? document.body : undefined;
 
   return (
-    <Tooltip content={tooltip} position="left" offset={12} arrow portalTarget={portalTarget}>
+    <Tooltip content={tooltip} position={position} offset={offset} arrow portalTarget={portalTarget}>
       <div className="right-rail-tooltip-wrapper">{node}</div>
     </Tooltip>
   );
@@ -39,6 +42,7 @@ function renderWithTooltip(
 
 export default function RightRail() {
   const { sidebarRefs } = useSidebarContext();
+  const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme, themeMode } = useRainbowThemeContext();
@@ -117,9 +121,9 @@ export default function RightRail() {
         </ActionIcon>
       );
 
-      return renderWithTooltip(buttonNode, btn.tooltip);
+      return renderWithTooltip(buttonNode, btn.tooltip, tooltipPosition, tooltipOffset);
     },
-    [actions, allButtonsDisabled, disableForFullscreen]
+    [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset]
   );
 
   const handleExportAll = useCallback(async () => {
@@ -203,14 +207,18 @@ export default function RightRail() {
                 <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
               )}
             </ActionIcon>,
-            t('rightRail.toggleTheme', 'Toggle Theme')
+            t('rightRail.toggleTheme', 'Toggle Theme'),
+            tooltipPosition,
+            tooltipOffset
           )}
 
           {renderWithTooltip(
             <div style={{ display: 'inline-flex' }}>
               <LanguageSelector position="left-start" offset={6} compact />
             </div>,
-            t('rightRail.language', 'Language')
+            t('rightRail.language', 'Language'),
+            tooltipPosition,
+            tooltipOffset
           )}
 
           {renderWithTooltip(
@@ -226,7 +234,9 @@ export default function RightRail() {
             >
               <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
             </ActionIcon>,
-            downloadTooltip
+            downloadTooltip,
+            tooltipPosition,
+            tooltipOffset
           )}
         </div>
 

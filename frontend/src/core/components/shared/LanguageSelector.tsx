@@ -185,6 +185,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
 
         // Clear ripple effect
         setTimeout(() => setRippleEffect(null), 100);
+
+        // Force a full reload so RTL/LTR layout and tooltips re-evaluate correctly
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
       }, 300);
     }, 200);
   };

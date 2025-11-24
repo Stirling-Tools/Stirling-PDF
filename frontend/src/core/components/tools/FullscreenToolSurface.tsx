@@ -47,6 +47,7 @@ const FullscreenToolSurface = ({
   const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, !isExiting);
@@ -114,7 +115,10 @@ const FullscreenToolSurface = ({
                 aria-label={toggleLabel}
                 style={{ color: 'var(--right-rail-icon)' }}
               >
-                <DoubleArrowIcon fontSize="small" style={{ transform: 'rotate(180deg)' }} />
+                <DoubleArrowIcon
+                  fontSize="small"
+                  style={{ transform: isRTL ? undefined : 'rotate(180deg)' }}
+                />
               </ActionIcon>
             </Tooltip>
           </div>
@@ -155,5 +159,4 @@ const FullscreenToolSurface = ({
 };
 
 export default FullscreenToolSurface;
-
 

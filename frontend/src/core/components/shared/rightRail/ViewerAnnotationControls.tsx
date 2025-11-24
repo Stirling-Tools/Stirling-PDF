@@ -11,6 +11,8 @@ import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile } from '@app/contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useSidebarContext } from '@app/contexts/SidebarContext';
+import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -19,6 +21,8 @@ interface ViewerAnnotationControlsProps {
 
 export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
+  const { sidebarRefs } = useSidebarContext();
+  const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHoverColorPickerOpen, setIsHoverColorPickerOpen] = useState(false);
@@ -53,7 +57,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   return (
     <>
       {/* Annotation Visibility Toggle */}
-      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="left" offset={12} arrow portalTarget={document.body}>
+      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"
@@ -130,7 +134,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         </div>
       ) : (
         // When inactive: Show "Draw" tooltip
-        <Tooltip content={t('rightRail.draw', 'Draw')} position="left" offset={12} arrow portalTarget={document.body}>
+        <Tooltip content={t('rightRail.draw', 'Draw')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
           <ActionIcon
             variant="subtle"
             radius="md"
@@ -156,7 +160,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       )}
 
       {/* Save PDF with Annotations */}
-      <Tooltip content={t('rightRail.save', 'Save')} position="left" offset={12} arrow portalTarget={document.body}>
+      <Tooltip content={t('rightRail.save', 'Save')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"

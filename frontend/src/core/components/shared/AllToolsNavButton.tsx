@@ -10,9 +10,14 @@ import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 interface AllToolsNavButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
+  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
 }
 
-const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, setActiveButton }) => {
+const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
+  activeButton,
+  setActiveButton,
+  tooltipPosition = 'right'
+}) => {
   const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
   const { getHomeNavigation } = useSidebarNavigation();
@@ -40,7 +45,13 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
   );
 
   return (
-    <Tooltip content={t("quickAccess.allTools", "Tools")} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
+    <Tooltip
+      content={t("quickAccess.allTools", "Tools")}
+      position={tooltipPosition}
+      arrow
+      containerStyle={{ marginTop: "-1rem" }}
+      maxWidth={200}
+    >
       <div className="flex flex-col items-center gap-1 mt-4 mb-2">
         <ActionIcon
           component="a"
@@ -69,5 +80,4 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
 };
 
 export default AllToolsNavButton;
-
 

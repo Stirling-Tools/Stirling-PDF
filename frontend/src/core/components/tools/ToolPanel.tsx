@@ -50,6 +50,7 @@ export default function ToolPanel() {
   const isFullscreenMode = toolPanelMode === 'fullscreen';
   const toolPickerVisible = !readerMode;
   const fullscreenExpanded = isFullscreenMode && leftPanelView === 'toolPicker' && !isMobile && toolPickerVisible;
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
 
   // Disable right rail buttons when fullscreen mode is active
@@ -150,7 +151,10 @@ export default function ToolPanel() {
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"
                 >
-                  <DoubleArrowIcon fontSize="small" />
+                  <DoubleArrowIcon
+                    fontSize="small"
+                    style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}
+                  />
                 </ActionIcon>
               </Tooltip>
             )}
