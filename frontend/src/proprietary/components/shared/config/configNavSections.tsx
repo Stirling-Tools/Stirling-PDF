@@ -9,7 +9,6 @@ import AdminPrivacySection from '@app/components/shared/config/configSections/Ad
 import AdminDatabaseSection from '@app/components/shared/config/configSections/AdminDatabaseSection';
 import AdminAdvancedSection from '@app/components/shared/config/configSections/AdminAdvancedSection';
 import AdminLegalSection from '@app/components/shared/config/configSections/AdminLegalSection';
-import AdminPremiumSection from '@app/components/shared/config/configSections/AdminPremiumSection';
 import AdminPlanSection from '@app/components/shared/config/configSections/AdminPlanSection';
 import AdminFeaturesSection from '@app/components/shared/config/configSections/AdminFeaturesSection';
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';

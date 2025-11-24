@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import licenseService, { PlanTier } from '@app/services/licenseService';
 import { resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
-import { CheckoutState, PollingStatus } from '../types/checkout';
+import { CheckoutState, PollingStatus } from '@app/components/shared/stripeCheckout/types/checkout';
 
 /**
  * Checkout session creation and payment handling hook

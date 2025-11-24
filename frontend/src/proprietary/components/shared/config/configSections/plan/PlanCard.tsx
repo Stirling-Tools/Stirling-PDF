@@ -84,7 +84,10 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   const isEnterpriseBlockedForFree = isEnterprise && currentTier === 'free';
 
   // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
-  const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(monthly, yearly);
+  const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(
+    monthly || undefined,
+    yearly || undefined
+  );
 
   return (
     <Card

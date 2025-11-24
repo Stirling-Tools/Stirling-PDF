@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import licenseService, { LicenseInfo } from '@app/services/licenseService';
+import licenseService, {} from '@app/services/licenseService';
 import UpdateSeatsModal from '@app/components/shared/UpdateSeatsModal';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
@@ -66,7 +66,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
             alert({
               alertType: 'success',
               title: t('billing.seatsUpdated', 'Seats Updated'),
-              message: t(
+              body: t(
                 'billing.seatsUpdatedMessage',
                 'Your enterprise seats have been updated to {{seats}}',
                 { seats: updatedLicense.maxUsers }
@@ -80,7 +80,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
           alert({
             alertType: 'warning',
             title: t('billing.updateProcessing', 'Update Processing'),
-            message: t(
+            body: t(
               'billing.updateProcessingMessage',
               'Your seat update is being processed. Please refresh in a few moments.'
             ),
@@ -130,7 +130,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
       alert({
         alertType: 'error',
         title: t('common.error', 'Error'),
-        message: errorMessage,
+        body: errorMessage,
       });
       options.onError?.(errorMessage);
     } finally {
@@ -203,7 +203,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
         onClose={closeUpdateSeats}
         currentSeats={currentSeats}
         minimumSeats={minimumSeats}
-        onSuccess={handleSuccess}
+        _onSuccess={handleSuccess}
         onError={handleError}
         onUpdateSeats={handleUpdateSeats}
       />

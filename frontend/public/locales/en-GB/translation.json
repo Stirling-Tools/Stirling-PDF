@@ -5286,6 +5286,8 @@
     "featureComparison": "Feature Comparison",
     "from": "From",
     "perMonth": "/month",
+    "perSeat": "/seat",
+    "withServer": "+ Server Plan",
     "licensedSeats": "Licensed: {{count}} seats",
     "includedInCurrent": "Included in Your Plan",
     "selectPlan": "Select Plan",

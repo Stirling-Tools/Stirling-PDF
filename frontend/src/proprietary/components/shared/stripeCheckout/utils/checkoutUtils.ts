@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next';
-import { CheckoutStage } from '../types/checkout';
+import { CheckoutStage } from '@app/components/shared/stripeCheckout/types/checkout';
 
 /**
  * Validate email address format

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Stack, Text, Paper, Code, Button, Group, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { PollingStatus } from '../types/checkout';
+import { PollingStatus } from '@app/components/shared/stripeCheckout/types/checkout';
 
 interface SuccessStageProps {
   pollingStatus: PollingStatus;

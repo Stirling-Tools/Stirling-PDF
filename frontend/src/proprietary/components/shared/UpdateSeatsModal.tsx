@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Text, Alert, Loader, Stack, Group, NumberInput, Paper } from '@mantine/core';
+import { Modal, Button, Text, Alert, Loader, Stack, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
@@ -8,7 +8,7 @@ interface UpdateSeatsModalProps {
   onClose: () => void;
   currentSeats: number;
   minimumSeats: number;
-  onSuccess?: () => void;
+  _onSuccess?: () => void;
   onError?: (error: string) => void;
   onUpdateSeats?: (newSeats: number) => Promise<string>; // Returns billing portal URL
 }
@@ -23,21 +23,21 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
   onClose,
   currentSeats,
   minimumSeats,
-  onSuccess,
+  _onSuccess,
   onError,
   onUpdateSeats,
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<UpdateState>({ status: 'idle' });
-  const [newSeatCount, setNewSeatCount] = useState<number>(currentSeats);
+  const [newSeatCount, setNewSeatCount] = useState<number>(minimumSeats);
 
   // Reset seat count when modal opens
   useEffect(() => {
     if (opened) {
-      setNewSeatCount(currentSeats);
+      setNewSeatCount(minimumSeats);
       setState({ status: 'idle' });
     }
-  }, [opened, currentSeats]);
+  }, [opened, minimumSeats]);
 
   const handleUpdateSeats = async () => {
     if (!onUpdateSeats) {
@@ -117,26 +117,24 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
           </Alert>
         )}
 
-        <Paper withBorder p="md" radius="md">
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text size="sm" fw={500}>
-                {t('billing.currentSeats', 'Current Seats')}:
-              </Text>
-              <Text size="sm" fw={600}>
-                {currentSeats}
-              </Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm" fw={500}>
-                {t('billing.minimumSeats', 'Minimum Seats')}:
-              </Text>
-              <Text size="sm" c="dimmed">
-                {minimumSeats} {t('billing.basedOnUsers', '(current users)')}
-              </Text>
-            </Group>
-          </Stack>
-        </Paper>
+        <Stack gap="md" mt="md">
+          <Group justify="space-between">
+            <Text size="sm" fw={500}>
+              {t('billing.currentSeats', 'Current Seats')}:
+            </Text>
+            <Text size="sm" fw={600}>
+              {currentSeats}
+            </Text>
+          </Group>
+          <Group justify="space-between">
+            <Text size="sm" fw={500}>
+              {t('billing.minimumSeats', 'Minimum Seats')}:
+            </Text>
+            <Text size="sm" c="dimmed">
+              {minimumSeats} {t('billing.basedOnUsers', '(current users)')}
+            </Text>
+          </Group>
+        </Stack>
 
         <NumberInput
           label={t('billing.newSeatCount', 'New Seat Count')}
@@ -149,11 +147,11 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
           min={minimumSeats}
           max={10000}
           step={1}
-          size="lg"
+          size="md"
           styles={{
             input: {
               fontSize: '1.5rem',
-              fontWeight: 600,
+              fontWeight: 500,
               textAlign: 'center',
             },
           }}
@@ -169,12 +167,11 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
         </Alert>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="outline" onClick={handleClose} disabled={state.status === 'loading'}>
+          <Button variant="outline" onClick={handleClose}>
             {t('common.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleUpdateSeats}
-            loading={state.status === 'loading'}
             disabled={newSeatCount === currentSeats || newSeatCount < minimumSeats}
           >
             {t('billing.updateSeats', 'Update Seats')}
