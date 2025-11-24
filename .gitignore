@@ -33,6 +33,7 @@ SwaggerDoc.json
 
 # Gradle
 .gradle
+.gradle-home
 .lock
 
 # External tool builders
@@ -213,3 +214,17 @@ node_modules/
 test_batch.json
 *.backup.*.json
 frontend/public/locales/*/translation.backup*.json
+
+# Development/build artifacts
+.gradle-cache/
+scripts/pdf-collection/
+**/tmp/
+*.backup
+
+# Type3 development data
+docs/type3/signatures/
+
+
+# Type3 sample PDFs (development only)
+**/type3/samples/
+
