@@ -128,6 +128,11 @@ pub async fn clear_user_info(app_handle: AppHandle) -> Result<(), String> {
 }
 
 // Response types for Spring Boot login (self-hosted)
+#[derive(Debug, Deserialize)]
+struct SpringBootSession {
+    access_token: String,
+}
+
 // The backend detects Tauri User-Agent and returns token in response body
 // (Web clients get token via HttpOnly cookie instead)
 #[derive(Debug, Deserialize)]
@@ -139,6 +144,7 @@ struct SpringBootUser {
 #[derive(Debug, Deserialize)]
 struct SpringBootLoginResponse {
     token: Option<String>,
+    session: Option<SpringBootSession>,
     user: SpringBootUser,
 }
 
@@ -294,11 +300,15 @@ pub async fn login(
 
         log::info!("Spring Boot login successful for user: {}", login_response.user.username);
 
-        // Verify that token is present (backend should detect Tauri User-Agent and include it)
-        let token = login_response.token.ok_or_else(|| {
-            "Backend did not return JWT token. Ensure backend is configured to detect Tauri User-Agent."
-                .to_string()
-    })?;
+        // Prefer the new `token` field, but fall back to legacy session.access_token for older servers
+        let token = login_response
+            .token
+            .clone()
+            .or_else(|| login_response.session.as_ref().map(|s| s.access_token.clone()))
+            .ok_or_else(|| {
+                "Backend did not return JWT token. Ensure backend detects the Tauri User-Agent or exposes session.access_token."
+                    .to_string()
+            })?;
 
     Ok(LoginResponse {
             token,
