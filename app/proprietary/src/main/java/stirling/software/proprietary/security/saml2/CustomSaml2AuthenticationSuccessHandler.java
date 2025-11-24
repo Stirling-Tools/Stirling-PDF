@@ -49,6 +49,8 @@ public class CustomSaml2AuthenticationSuccessHandler
     private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
     private final JwtServiceInterface jwtService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -62,6 +64,19 @@ public class CustomSaml2AuthenticationSuccessHandler
         if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {
             String username = saml2Principal.name();
             log.debug("Authenticated principal found for user: {}", username);
+
+            // Check if user is eligible for SAML (grandfathered or system has paid license)
+            if (userService.usernameExistsIgnoreCase(username)) {
+                stirling.software.proprietary.security.model.User user =
+                        userService.findByUsernameIgnoreCase(username).orElse(null);
+
+                if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
+                    // User is not grandfathered and no paid license - block SAML login
+                    response.sendRedirect(
+                            request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                    return;
+                }
+            }
 
             HttpSession session = request.getSession(false);
             String contextPath = request.getContextPath();

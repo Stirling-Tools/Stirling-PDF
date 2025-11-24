@@ -39,4 +39,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByTeam(Team team);
 
     List<User> findAllByTeam(Team team);
+
+    // OAuth grandfathering queries
+    long countBySsoProviderIsNotNull();
+
+    long countByOauthGrandfatheredTrue();
+
+    List<User> findAllBySsoProviderIsNotNull();
 }

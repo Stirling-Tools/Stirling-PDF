@@ -50,6 +50,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -64,6 +66,19 @@ public class CustomOAuth2AuthenticationSuccessHandler
             username = oAuth2User.getName();
         } else if (principal instanceof UserDetails detailsUser) {
             username = detailsUser.getUsername();
+        }
+
+        // Check if user is eligible for OAuth (grandfathered or system has paid license)
+        if (userService.usernameExistsIgnoreCase(username)) {
+            stirling.software.proprietary.security.model.User user =
+                    userService.findByUsernameIgnoreCase(username).orElse(null);
+
+            if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
+                // User is not grandfathered and no paid license - block OAuth login
+                response.sendRedirect(
+                        request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
+                return;
+            }
         }
 
         // Get the saved request

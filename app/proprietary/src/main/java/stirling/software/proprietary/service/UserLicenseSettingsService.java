@@ -163,6 +163,40 @@ public class UserLicenseSettingsService {
     }
 
     /**
+     * Grandfathers existing OAuth users on first run. This is a one-time migration that marks all
+     * existing OAuth/SAML users as grandfathered, allowing them to keep OAuth access even without a
+     * paid license.
+     *
+     * <p>New users created after this migration will NOT be grandfathered and will require a paid
+     * license to use OAuth.
+     */
+    @Transactional
+    public void grandfatherExistingOAuthUsers() {
+        UserLicenseSettings settings = getOrCreateSettings();
+
+        // Check if we've already run this migration
+        if (settings.getId() != null && settings.isGrandfatheringLocked()) {
+            // Migration should happen at the same time as grandfathering is locked
+            long oauthUsersCount = userService.countOAuthUsers();
+            long grandfatheredCount = userService.countGrandfatheredOAuthUsers();
+
+            if (oauthUsersCount > 0 && grandfatheredCount == 0) {
+                // We have OAuth users but none are grandfathered - this is first run after upgrade
+                int updated = userService.grandfatherAllOAuthUsers();
+                log.warn(
+                        "OAuth GRANDFATHERING: Marked {} existing OAuth/SAML users as grandfathered. "
+                                + "They will retain OAuth access even without a paid license. "
+                                + "New users will require a paid license for OAuth.",
+                        updated);
+            } else if (grandfatheredCount > 0) {
+                log.debug(
+                        "OAuth grandfathering already completed: {} users grandfathered",
+                        grandfatheredCount);
+            }
+        }
+    }
+
+    /**
      * Validates and enforces the integrity of license settings. This ensures that even if someone
      * manually modifies the database, the grandfathering rules are still enforced.
      */
@@ -241,12 +275,15 @@ public class UserLicenseSettingsService {
      * <p>Logic:
      *
      * <ul>
-     *   <li>Grandfathered limit = max(5, existing user count at initialization)
-     *   <li>If premium enabled: total limit = grandfathered limit + license maxUsers
-     *   <li>If premium disabled: total limit = grandfathered limit
+     *   <li>Grandfathered limit = max(5, existing user count at V1→V2 migration)
+     *   <li>No license: Uses grandfathered limit only
+     *   <li>SERVER license (maxUsers=0): Unlimited users (Integer.MAX_VALUE)
+     *   <li>ENTERPRISE license (maxUsers>0): License seats only (NO grandfathering added)
      * </ul>
      *
-     * @return Maximum number of users allowed
+     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering.
+     *
+     * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
      */
     public int calculateMaxAllowedUsers() {
         validateSettingsIntegrity();
@@ -259,20 +296,52 @@ public class UserLicenseSettingsService {
             grandfatheredLimit = DEFAULT_USER_LIMIT;
         }
 
-        int totalLimit = grandfatheredLimit;
-
-        if (applicationProperties.getPremium().isEnabled()) {
-            totalLimit = grandfatheredLimit + settings.getLicenseMaxUsers();
+        // No license: use grandfathered limit
+        if (!applicationProperties.getPremium().isEnabled()) {
+            log.debug("No license: using grandfathered limit of {}", grandfatheredLimit);
+            return grandfatheredLimit;
         }
 
-        log.debug(
-                "Calculated max allowed users: {} (grandfathered: {}, license: {}, premium enabled: {})",
-                totalLimit,
-                grandfatheredLimit,
-                settings.getLicenseMaxUsers(),
-                applicationProperties.getPremium().isEnabled());
+        int licenseMaxUsers = settings.getLicenseMaxUsers();
 
-        return totalLimit;
+        // SERVER license (maxUsers=0): unlimited users
+        if (licenseMaxUsers == 0) {
+            log.debug("SERVER license: unlimited users allowed");
+            return Integer.MAX_VALUE;
+        }
+
+        // ENTERPRISE license (maxUsers>0): license seats only (replaces grandfathering)
+        log.debug(
+                "ENTERPRISE license: {} seats (grandfathered {} not added)",
+                licenseMaxUsers,
+                grandfatheredLimit);
+        return licenseMaxUsers;
+    }
+
+    /**
+     * Checks if a user is eligible to use OAuth/SAML authentication.
+     *
+     * <p>A user is eligible if:
+     *
+     * <ul>
+     *   <li>They are grandfathered for OAuth (existing user before policy change), OR
+     *   <li>The system has a paid license (SERVER or ENTERPRISE)
+     * </ul>
+     *
+     * @param user The user to check
+     * @return true if the user can use OAuth/SAML
+     */
+    public boolean isOAuthEligible(stirling.software.proprietary.security.model.User user) {
+        // Grandfathered users always have OAuth access
+        if (user != null && user.isOauthGrandfathered()) {
+            log.debug("User {} is grandfathered for OAuth", user.getUsername());
+            return true;
+        }
+
+        // Users can use OAuth if system has a paid license (SERVER or ENTERPRISE)
+        boolean hasPaidLicense = applicationProperties.getPremium().isEnabled();
+        log.debug("OAuth eligibility check: hasPaidLicense={}", hasPaidLicense);
+        return hasPaidLicense;
     }
 
     /**
