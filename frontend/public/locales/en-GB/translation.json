@@ -1262,10 +1262,44 @@
   "addImage": {
     "tags": "img,jpg,picture,photo",
     "title": "Add Image",
-    "header": "Add image to PDF",
-    "everyPage": "Every Page?",
-    "upload": "Add image",
-    "submit": "Add image"
+    "header": "Add images to PDFs",
+    "image": {
+      "name": "Image",
+      "placeholder": "Upload an image",
+      "label": "Image file"
+    },
+    "steps": {
+      "configure": "Configure Image"
+    },
+    "step": {
+      "createDesc": "Upload the image you want to add",
+      "place": "Place image",
+      "placeDesc": "Click on the PDF to add your image"
+    },
+    "instructions": {
+      "title": "How to add images",
+      "text": "After uploading your image above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your image.",
+      "noSignature": "Upload an image above to enable placement."
+    },
+    "mode": {
+      "move": "Move Image",
+      "place": "Place Image",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "results": {
+      "title": "Add Image Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding image to the PDF."
+    },
+    "saved": {
+      "defaultLabel": "Image",
+      "defaultImageLabel": "Uploaded image"
+    },
+    "applySignatures": "Apply Images"
   },
   "attachments": {
     "tags": "attachments,add,remove,embed,file",
@@ -5799,6 +5833,7 @@
     "error": {
       "failed": "An error occurred while adding text to the PDF."
     },
-    "tags": "text,annotation,label"
+    "tags": "text,annotation,label",
+    "applySignatures": "Apply Text"
   }
 }
