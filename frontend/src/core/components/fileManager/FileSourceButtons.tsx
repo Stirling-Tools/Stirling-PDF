@@ -1,12 +1,12 @@
 import React from 'react';
 import { Stack, Text, Button, Group } from '@mantine/core';
 import HistoryIcon from '@mui/icons-material/History';
-import UploadIcon from '@mui/icons-material/Upload';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -19,6 +19,8 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const { t } = useTranslation();
   const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } = useGoogleDrivePicker();
   const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const UploadIcon = icons.upload;
 
   const handleGoogleDriveClick = async () => {
     try {

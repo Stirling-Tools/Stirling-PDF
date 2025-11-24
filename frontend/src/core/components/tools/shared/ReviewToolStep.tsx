@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -9,6 +8,7 @@ import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToo
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -31,6 +31,8 @@ function ReviewStepContent<TParams = unknown>({
 }) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
 
   const handleUndo = async () => {

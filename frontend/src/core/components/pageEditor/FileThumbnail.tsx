@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { ActionIcon, CheckboxIndicator } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
@@ -14,6 +13,7 @@ import { useFileContext } from '@app/contexts/FileContext';
 import { FileId } from '@app/types/file';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 interface FileItem {
   id: FileId;
@@ -53,6 +53,8 @@ const FileThumbnail = ({
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const DownloadOutlinedIcon = icons.download;
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
   // ---- Drag state ----

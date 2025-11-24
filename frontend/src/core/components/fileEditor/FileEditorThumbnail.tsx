@@ -4,7 +4,7 @@ import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
@@ -59,6 +59,8 @@ const FileEditorThumbnail = ({
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const DownloadOutlinedIcon = icons.download;
   const {
     pinFile,
     unpinFile,

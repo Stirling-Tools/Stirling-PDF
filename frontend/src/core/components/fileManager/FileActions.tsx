@@ -2,14 +2,16 @@ import React from "react";
 import { Group, Text, ActionIcon, Tooltip } from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const DownloadIcon = icons.download;
   const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
     useFileManagerContext();
 
