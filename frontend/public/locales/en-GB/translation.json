@@ -365,7 +365,7 @@
       },
       "logoVariant": {
         "label": "Interface logo",
-        "description": "Choose whether Stirling PDF uses the modern or classic logo on this device.",
+        "description": "Override the system default logo style for this device only. Controls whether Stirling PDF uses the modern or classic logo across the interface, login header, landing page, and favicons.",
         "modern": "Modern",
         "classic": "Classic"
       },
@@ -4050,7 +4050,7 @@
         },
         "logoStyle": {
           "label": "Logo Style",
-          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "description": "Set the default logo style for all users on this server. Users can override this setting in their personal preferences.",
           "classic": "Classic",
           "modern": "Modern"
         },

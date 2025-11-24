@@ -9,6 +9,7 @@ import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { usePreferences } from '@app/contexts/PreferencesContext';
 
 interface GeneralSettingsData {
   ui: {
@@ -45,6 +46,7 @@ export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { preferences, updatePreference } = usePreferences();
 
   const {
     settings,
@@ -149,8 +151,34 @@ export default function AdminGeneralSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
+  useEffect(() => {
+    const serverLogoStyle = settings.ui?.logoStyle;
+    if (loginEnabled && serverLogoStyle && serverLogoStyle !== preferences.logoVariant) {
+      updatePreference('logoVariant', serverLogoStyle);
+    }
+  }, [loginEnabled, preferences.logoVariant, settings.ui?.logoStyle, updatePreference]);
+
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
+
+  const logoStyleValue = loginEnabled ? (settings.ui?.logoStyle || 'classic') : (preferences.logoVariant ?? 'classic');
+
+  const handleLogoStyleChange = (value: string) => {
+    const nextValue = value === 'modern' ? 'modern' : 'classic';
+    updatePreference('logoVariant', nextValue);
+
+    if (!loginEnabled) {
+      return;
+    }
+
+    setSettings({
+      ...settings,
+      ui: {
+        ...settings.ui,
+        logoStyle: nextValue,
+      }
+    });
+  };
 
   const handleSave = async () => {
     // Block save if login is disabled
@@ -221,8 +249,8 @@ export default function AdminGeneralSection() {
               {t('admin.settings.general.logoStyle.description', 'Choose between the modern minimalist logo or the classic S icon')}
             </Text>
             <SegmentedControl
-              value={settings.ui?.logoStyle || 'classic'}
-              onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, logoStyle: value as 'modern' | 'classic' } })}
+              value={logoStyleValue}
+              onChange={handleLogoStyleChange}
               data={[
                 {
                   value: 'classic',
@@ -251,7 +279,6 @@ export default function AdminGeneralSection() {
                   )
                 },
               ]}
-              disabled={!loginEnabled}
             />
           </div>
 

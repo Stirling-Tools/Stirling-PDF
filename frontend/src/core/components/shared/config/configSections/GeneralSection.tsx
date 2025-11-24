@@ -7,8 +7,6 @@ import type { ToolPanelMode } from '@app/constants/toolPanel';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { updateService, UpdateSummary } from '@app/services/updateService';
 import UpdateModal from '@app/components/shared/UpdateModal';
-import type { LogoVariant } from '@app/services/preferencesService';
-import { BASE_PATH } from '@app/constants/app';
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = 'stirlingpdf_features_banner_dismissed';
@@ -240,48 +238,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               data={[
                 { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
                 { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },
-              ]}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">
-                {t('settings.general.logoVariant.label', 'Interface logo')}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('settings.general.logoVariant.description', 'Choose whether Stirling PDF shows the modern or classic logo on this device.')}
-              </Text>
-            </div>
-            <SegmentedControl
-              value={preferences.logoVariant ?? config?.logoStyle ?? 'modern'}
-              onChange={(value) => updatePreference('logoVariant', value as LogoVariant)}
-              data={[
-                {
-                  value: 'modern',
-                  label: (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
-                      <img
-                        src={`${BASE_PATH}/modern-logo/logo192.png`}
-                        alt={t('settings.general.logoVariant.modern', 'Modern')}
-                        style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                      />
-                      <span>{t('settings.general.logoVariant.modern', 'Modern')}</span>
-                    </div>
-                  )
-                },
-                {
-                  value: 'classic',
-                  label: (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
-                      <img
-                        src={`${BASE_PATH}/classic-logo/logo192.png`}
-                        alt={t('settings.general.logoVariant.classic', 'Classic')}
-                        style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                      />
-                      <span>{t('settings.general.logoVariant.classic', 'Classic')}</span>
-                    </div>
-                  )
-                },
               ]}
             />
           </div>

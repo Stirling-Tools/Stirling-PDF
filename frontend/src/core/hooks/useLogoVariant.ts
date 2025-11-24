@@ -9,6 +9,7 @@ export function useLogoVariant(): LogoVariant {
   const { config } = useAppConfig();
 
   return useMemo(() => {
+    // Check local storage first, then fall back to server config
     const preferenceVariant = preferences.logoVariant;
     const configVariant = config?.logoStyle;
     return ensureLogoVariant(preferenceVariant ?? configVariant);
