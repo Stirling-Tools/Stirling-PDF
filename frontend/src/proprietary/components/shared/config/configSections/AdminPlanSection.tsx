@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
+import { Divider, Loader, Alert, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, mapLicenseToTier } from '@app/services/licenseService';
@@ -9,8 +9,6 @@ import AvailablePlansSection from '@app/components/shared/config/configSections/
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 const AdminPlanSection: React.FC = () => {
@@ -80,6 +78,30 @@ const AdminPlanSection: React.FC = () => {
     { value: 'idr', label: 'Indonesian rupiah (IDR, Rp)' },
   ];
 
+  const handleManageClick = useCallback(async () => {
+    try {
+      if (!licenseInfo?.licenseKey) {
+        throw new Error('No license key found. Please activate a license first.');
+      }
+
+      // Create billing portal session with license key
+      const response = await licenseService.createBillingPortalSession(
+        window.location.href,
+        licenseInfo.licenseKey
+      );
+
+      // Open billing portal in new tab
+      window.open(response.url, '_blank');
+    } catch (error: any) {
+      console.error('Failed to open billing portal:', error);
+      alert({
+        alertType: 'error',
+        title: t('billing.portal.error', 'Failed to open billing portal'),
+        body: error.message || 'Please try again or contact support.',
+      });
+    }
+  }, [licenseInfo, t]);
+
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
       // Only allow upgrades for server and enterprise tiers
@@ -143,40 +165,14 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Currency Selection & Manage Subscription */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text size="lg" fw={600}>
-              {t('plan.currency', 'Currency')}
-            </Text>
-            <Select
-              value={currency}
-              onChange={(value) => setCurrency(value || 'gbp')}
-              data={currencyOptions}
-              searchable
-              clearable={false}
-              w={300}
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-            />
-          </Group>
-
-          {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-          {licenseInfo?.licenseKey && isSupabaseConfigured && (
-            <Group justify="space-between" align="center">
-              <Text size="sm" c="dimmed">
-                {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-              </Text>
-              <ManageBillingButton />
-            </Group>
-          )}
-        </Stack>
-      </Paper>
-
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}
         onUpgradeClick={handleUpgradeClick}
+        onManageClick={handleManageClick}
+        currency={currency}
+        onCurrencyChange={setCurrency}
+        currencyOptions={currencyOptions}
       />
 
       <Divider />

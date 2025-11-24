@@ -14,9 +14,10 @@ interface PlanCardProps {
   currentLicenseInfo?: LicenseInfo | null;
   currentTier?: 'free' | 'server' | 'enterprise' | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
+  onManageClick?: () => void;
 }
 
-const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick }) => {
+const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick, onManageClick }) => {
   const { t } = useTranslation();
 
   // Render Free plan
@@ -160,15 +161,15 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           withArrow
         >
           <Button
-            variant={isCurrentTier || isDowngrade || isEnterpriseBlockedForFree ? 'light' : 'filled'}
+            variant={isCurrentTier ? 'filled' : isDowngrade ? 'filled' : isEnterpriseBlockedForFree ? 'light' : 'filled'}
             fullWidth
-            onClick={() => onUpgradeClick(planGroup)}
-            disabled={isCurrentTier || isDowngrade || isEnterpriseBlockedForFree}
+            onClick={() => isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup)}
+            disabled={isDowngrade || isEnterpriseBlockedForFree}
           >
             {isCurrentTier
-              ? t('plan.current', 'Current Plan')
+              ? t('plan.manage', 'Manage')
               : isDowngrade
-                ? t('plan.includedInCurrent', 'Included in Your Plan')
+                ? t('plan.free.included', 'Included')
                 : isEnterpriseBlockedForFree
                   ? t('plan.enterprise.requiresServer', 'Requires Server')
                   : isEnterprise
