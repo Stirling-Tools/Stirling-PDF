@@ -4,7 +4,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { BASE_PATH } from "@app/constants/app";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
