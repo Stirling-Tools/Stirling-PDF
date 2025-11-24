@@ -4941,7 +4941,8 @@
     "done": "Done",
     "loading": "Loading...",
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "error": "Error"
   },
   "config": {
     "overview": {
@@ -5374,6 +5375,7 @@
     "licensedSeats": "Licensed: {{count}} seats",
     "includedInCurrent": "Included in Your Plan",
     "selectPlan": "Select Plan",
+    "manage": "Manage",
     "manageSubscription": {
       "description": "Manage your subscription, billing, and payment methods"
     },
@@ -5503,6 +5505,7 @@
     "licenseKeyProcessing": "License Key Processing",
     "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support.",
     "perYear": "/year",
+    "perMonth": "/month",
     "emailInvalid": "Please enter a valid email address",
     "emailStage": {
       "title": "Enter Your Email",
@@ -5522,7 +5525,8 @@
       "selectYearly": "Select Yearly",
       "savePercent": "Save {{percent}}%",
       "savingsAmount": "You save {{amount}}",
-      "modalTitle": "Select Billing Period - {{planName}}"
+      "modalTitle": "Select Billing Period - {{planName}}",
+      "billedYearly": "Billed yearly at {{currency}}{{amount}}"
     },
     "paymentStage": {
       "backToPlan": "Back to Plan Selection",
