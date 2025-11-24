@@ -1,10 +1,11 @@
 import { Box } from '@mantine/core';
+import { useEffect, useRef, useState } from 'react';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import { isBaseWorkbench } from '@app/types/workbench';
+import { BaseWorkbenchType, isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import styles from '@app/components/layout/Workbench.module.css';
@@ -18,6 +19,14 @@ import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
 
+type TransitionEffect = 'zoomIn' | 'zoomOut' | 'fade';
+
+const BASE_SCOPE_LEVELS: Record<BaseWorkbenchType, number> = {
+  fileEditor: 0,
+  pageEditor: 1,
+  viewer: 2,
+};
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
@@ -28,6 +37,9 @@ export default function Workbench() {
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
+
+  const previousViewRef = useRef(currentView);
+  const [transitionEffect, setTransitionEffect] = useState<TransitionEffect | null>(null);
   const activeFiles = selectors.getFiles();
   const {
     previewFile,
@@ -52,6 +64,34 @@ export default function Workbench() {
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
 
+  useEffect(() => {
+    const previousView = previousViewRef.current;
+
+    if (previousView === currentView) {
+      return;
+    }
+
+    const previousLevel = BASE_SCOPE_LEVELS[previousView as BaseWorkbenchType] ?? -1;
+    const nextLevel = BASE_SCOPE_LEVELS[currentView as BaseWorkbenchType] ?? -1;
+
+    let effect: TransitionEffect = 'fade';
+
+    if (previousLevel !== -1 && nextLevel !== -1) {
+      if (previousLevel > nextLevel) {
+        effect = 'zoomOut';
+      } else if (previousLevel < nextLevel) {
+        effect = 'zoomIn';
+      }
+    }
+
+    setTransitionEffect(effect);
+    previousViewRef.current = currentView;
+
+    const timeout = setTimeout(() => setTransitionEffect(null), 480);
+
+    return () => clearTimeout(timeout);
+  }, [currentView]);
+
   const handlePreviewClose = () => {
     setPreviewFile(null);
     const previousMode = sessionStorage.getItem('previousMode');
@@ -69,6 +109,8 @@ export default function Workbench() {
       setCurrentView('fileEditor');
     }
   };
+
+  const transitionClassName = transitionEffect ? styles[transitionEffect] : '';
 
   const renderMainContent = () => {
     if (activeFiles.length === 0) {
@@ -186,7 +228,7 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable} ${styles.workbenchTransition} ${transitionClassName}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
         }}

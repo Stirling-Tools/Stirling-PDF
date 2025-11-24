@@ -19,3 +19,74 @@
 .workbenchScrollable::-webkit-scrollbar-thumb:hover {
   background-color: var(--mantine-color-gray-5);
 }
+
+.workbenchTransition {
+  position: relative;
+  isolation: isolate;
+}
+
+.workbenchTransition > * {
+  height: 100%;
+  will-change: transform, opacity, filter;
+}
+
+.zoomOut {
+  animation: workbenchZoomOut 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.zoomIn {
+  animation: workbenchZoomIn 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.fade {
+  animation: workbenchFade 240ms ease-in-out;
+  animation-fill-mode: both;
+}
+
+@keyframes workbenchZoomOut {
+  0% {
+    transform: perspective(1200px) translateZ(0) scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.08));
+  }
+  40% {
+    transform: perspective(1200px) translateZ(-24px) scale(0.98);
+    opacity: 0.96;
+  }
+  100% {
+    transform: perspective(1200px) translateZ(-48px) scale(0.94);
+    opacity: 0.9;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.05));
+  }
+}
+
+@keyframes workbenchZoomIn {
+  0% {
+    transform: perspective(1200px) translateZ(-48px) scale(0.94);
+    opacity: 0.9;
+    filter: blur(0.5px);
+  }
+  35% {
+    transform: perspective(1200px) translateZ(-24px) scale(0.97);
+    opacity: 0.96;
+    filter: blur(0.35px);
+  }
+  100% {
+    transform: perspective(1200px) translateZ(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes workbenchFade {
+  from {
+    opacity: 0.85;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
