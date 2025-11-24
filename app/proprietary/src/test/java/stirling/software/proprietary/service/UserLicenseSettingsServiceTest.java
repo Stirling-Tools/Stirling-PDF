@@ -110,6 +110,7 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_ignoresGrandfathering() {
         // ENTERPRISE with 20 seats, grandfathered was 80
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(20);
         mockSettings.setGrandfatheredUserCount(80); // This should be ignored
 
@@ -137,6 +138,7 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with SERVER license
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -152,6 +154,7 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with ENTERPRISE 10 seats
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(10);
 
         int result = service.calculateMaxAllowedUsers();
@@ -176,6 +179,7 @@ class UserLicenseSettingsServiceTest {
         // V1→V2 with 80 users, then buy ENTERPRISE 5 seats
         mockSettings.setGrandfatheredUserCount(80);
         when(premium.isEnabled()).thenReturn(true);
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();
