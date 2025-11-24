@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
   username: string;
@@ -57,15 +57,22 @@ export class AuthService {
     try {
       console.log('Logging in to:', serverUrl);
 
-      // Get Supabase key from environment (needed for SaaS login, ignored for self-hosted)
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
+      // Validate SaaS configuration if connecting to SaaS
+      if (serverUrl === STIRLING_SAAS_URL) {
+        if (!STIRLING_SAAS_URL) {
+          throw new Error('VITE_SAAS_SERVER_URL is not configured');
+        }
+        if (!SUPABASE_KEY) {
+          throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+        }
+      }
 
       // Call Rust login command (bypasses CORS)
       const response = await invoke<LoginResponse>('login', {
         serverUrl,
         username,
         password,
-        supabaseKey,
+        supabaseKey: SUPABASE_KEY,
         saasServerUrl: STIRLING_SAAS_URL,
       });
 
@@ -214,9 +221,8 @@ export class AuthService {
       console.log('Starting OAuth login with provider:', provider);
       this.setAuthStatus('oauth_pending', null);
 
-      // Get Supabase key from environment (available at runtime in browser)
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
-      if (!supabaseKey) {
+      // Validate Supabase key is configured for OAuth
+      if (!SUPABASE_KEY) {
         throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
       }
 
@@ -228,7 +234,7 @@ export class AuthService {
       const result = await invoke<OAuthCallbackResult>('start_oauth_login', {
         provider,
         authServerUrl,
-        supabaseKey,
+        supabaseKey: SUPABASE_KEY,
       });
 
       console.log('OAuth authentication successful, storing tokens');
@@ -266,7 +272,7 @@ export class AuthService {
       const response = await axios.get(userEndpoint, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '',
+          'apikey': SUPABASE_KEY,
         },
       });
 
