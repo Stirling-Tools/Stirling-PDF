@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Button, Paper, Group, Text, Loader } from '@mantine/core';
+import { Stack, Text, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
@@ -12,18 +12,12 @@ const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 interface PaymentStageProps {
   clientSecret: string | null;
   selectedPlan: PlanTier | null;
-  selectedPeriod: 'monthly' | 'yearly';
-  planName: string;
-  loading: boolean;
   onPaymentComplete: () => void;
 }
 
 export const PaymentStage: React.FC<PaymentStageProps> = ({
   clientSecret,
   selectedPlan,
-  selectedPeriod,
-  planName,
-  loading,
   onPaymentComplete,
 }) => {
   const { t } = useTranslation();
@@ -50,22 +44,6 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
 
   return (
     <Stack gap="md">
-      {/* Selected plan summary */}
-      <Paper withBorder p="md" radius="md" bg="gray.0">
-        <Group justify="space-between">
-          <div>
-            <Text size="sm" c="dimmed">
-              {t('payment.paymentStage.selectedPlan', 'Selected Plan')}
-            </Text>
-            <Text size="lg" fw={600}>
-              {planName} - {selectedPeriod === 'yearly' ? t('payment.yearly', 'Yearly') : t('payment.monthly', 'Monthly')}
-            </Text>
-          </div>
-          <Text size="xl" fw={700}>
-            {selectedPlan.currency}{selectedPlan.price.toFixed(2)}
-          </Text>
-        </Group>
-      </Paper>
 
       {/* Stripe Embedded Checkout */}
       <EmbeddedCheckoutProvider

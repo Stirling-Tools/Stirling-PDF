@@ -236,9 +236,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           <PaymentStage
             clientSecret={checkoutState.state.clientSecret || null}
             selectedPlan={checkoutState.selectedPlan}
-            selectedPeriod={checkoutState.selectedPeriod}
-            planName={planGroup.name}
-            loading={checkoutState.state.loading || false}
             onPaymentComplete={session.handlePaymentComplete}
           />
         );

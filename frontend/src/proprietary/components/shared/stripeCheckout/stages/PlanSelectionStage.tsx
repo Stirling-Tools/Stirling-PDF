@@ -6,7 +6,7 @@ import { SavingsCalculation } from '@app/components/shared/stripeCheckout/types/
 import { PricingBadge } from '@app/components/shared/stripeCheckout/components/PricingBadge';
 import { PriceDisplay } from '@app/components/shared/stripeCheckout/components/PriceDisplay';
 import { formatPrice, calculateMonthlyEquivalent, calculateTotalWithSeats } from '@app/components/shared/stripeCheckout/utils/pricingUtils';
-import { getClickablePaperStyle, PRICE_FONT_WEIGHT } from '@app/components/shared/stripeCheckout/utils/cardStyles';
+import { getClickablePaperStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
 
 interface PlanSelectionStageProps {
   planGroup: PlanTierGroup;
@@ -118,10 +118,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                     <Text size="sm" c="dimmed">
                       {t('payment.planStage.billedYearly', 'Billed yearly at {{currency}}{{amount}}', {
                         currency: planGroup.yearly.currency,
-                        amount: formatPrice(
-                          calculateTotalWithSeats(planGroup.yearly.price, planGroup.yearly.seatPrice, seatCount),
-                          planGroup.yearly.currency
-                        )
+                        amount: calculateTotalWithSeats(planGroup.yearly.price, planGroup.yearly.seatPrice, seatCount).toFixed(2)
                       })}
                     </Text>
                   </Stack>
