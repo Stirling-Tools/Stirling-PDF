@@ -528,18 +528,33 @@ async fn exchange_code_for_token(
 }
 
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
-    // Parse URL to extract authorization code
+    // Parse URL to extract authorization code or error
     let parsed_url = url::Url::parse(url_str)
         .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
 
-    // Check query parameters for authorization code
+    // Check for OAuth error first (error responses take precedence)
+    let mut error = None;
+    let mut error_description = None;
     let mut code = None;
 
     for (key, value) in parsed_url.query_pairs() {
-        if key.as_ref() == "code" {
-            code = Some(value.to_string());
-            break;
+        match key.as_ref() {
+            "error" => error = Some(value.to_string()),
+            "error_description" => error_description = Some(value.to_string()),
+            "code" => code = Some(value.to_string()),
+            _ => {}
         }
+    }
+
+    // If OAuth provider returned an error, fail immediately
+    if let Some(error_code) = error {
+        let error_msg = if let Some(description) = error_description {
+            format!("OAuth authentication failed: {} - {}", error_code, description)
+        } else {
+            format!("OAuth authentication failed: {}", error_code)
+        };
+        log::error!("{}", error_msg);
+        return Err(error_msg);
     }
 
     // If we have a code, return it
@@ -568,6 +583,6 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
         });
     }
 
-    // No authorization code found
-    Err("No authorization code found in OAuth callback".to_string())
+    // No authorization code or error found
+    Err("No authorization code or error found in OAuth callback".to_string())
 }
