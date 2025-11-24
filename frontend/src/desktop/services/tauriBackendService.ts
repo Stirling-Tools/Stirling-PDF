@@ -64,7 +64,6 @@ export class TauriBackendService {
       return;
     }
 
-    console.log('[TauriBackendService] Initializing external backend monitoring');
     this.backendStarted = true; // Mark as active for health checks
     this.setStatus('starting');
     this.beginHealthMonitoring();
@@ -82,19 +81,17 @@ export class TauriBackendService {
     this.setStatus('starting');
 
     this.startPromise = invoke('start_backend', { backendUrl })
-      .then(async (result) => {
-        console.log('Backend started:', result);
+      .then(async () => {
         this.backendStarted = true;
         this.setStatus('starting');
 
         // Poll for the dynamically assigned port
         await this.waitForPort();
-
         this.beginHealthMonitoring();
       })
       .catch((error) => {
         this.setStatus('unhealthy');
-        console.error('Failed to start backend:', error);
+        console.error('[TauriBackendService] Failed to start backend:', error);
         throw error;
       })
       .finally(() => {
@@ -105,13 +102,11 @@ export class TauriBackendService {
   }
 
   private async waitForPort(maxAttempts = 30): Promise<void> {
-    console.log('[TauriBackendService] Waiting for backend port assignment...');
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const port = await invoke<number | null>('get_backend_port');
         if (port) {
           this.backendPort = port;
-          console.log(`[TauriBackendService] Backend port detected: ${port}`);
           return;
         }
       } catch (error) {
@@ -138,11 +133,11 @@ export class TauriBackendService {
   async checkBackendHealth(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // For remote server mode, check the configured server
-    if (mode !== 'offline') {
+    // For self-hosted mode, check the configured remote server
+    if (mode === 'selfhosted') {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
-        console.error('[TauriBackendService] Server mode but no server URL configured');
+        console.error('[TauriBackendService] Self-hosted mode but no server URL configured');
         this.setStatus('unhealthy');
         return false;
       }
@@ -161,21 +156,20 @@ export class TauriBackendService {
       } catch (error) {
         const errorStr = String(error);
         if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-          console.error('[TauriBackendService] Server health check failed:', error);
+          console.error('[TauriBackendService] Self-hosted server health check failed:', error);
         }
         this.setStatus('unhealthy');
         return false;
       }
     }
 
-    // For offline mode, check the bundled backend via Rust
+    // For SaaS mode, check the bundled local backend via Rust
     if (!this.backendStarted) {
       this.setStatus('stopped');
       return false;
     }
 
     if (!this.backendPort) {
-      console.debug('[TauriBackendService] Backend port not available yet');
       return false;
     }
 
@@ -197,7 +191,6 @@ export class TauriBackendService {
     for (let i = 0; i < maxAttempts; i++) {
       const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
-        console.log('Backend is healthy');
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -210,7 +203,6 @@ export class TauriBackendService {
    * Reset backend state (used when switching from external to local backend)
    */
   reset(): void {
-    console.log('[TauriBackendService] Resetting backend state');
     this.backendStarted = false;
     this.backendPort = null;
     this.setStatus('stopped');
