@@ -9,6 +9,7 @@ import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -83,9 +84,8 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
-  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
-    colorScheme === "dark" ? "White" : "Black"
-  }Text.svg`;
+  const { wordmark } = useLogoAssets();
+  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);

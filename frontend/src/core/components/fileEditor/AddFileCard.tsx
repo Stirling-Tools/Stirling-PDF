@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import styles from '@app/components/fileEditor/FileEditor.module.css';
 
 interface AddFileCardProps {
@@ -23,6 +23,7 @@ const AddFileCard = ({
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const [isUploadHover, setIsUploadHover] = useState(false);
+  const { wordmark } = useLogoAssets();
 
   const handleCardClick = () => {
     openFilesModal();
@@ -87,7 +88,7 @@ const AddFileCard = ({
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
             <img
-              src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
+              src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
               alt="Stirling PDF"
               style={{ height: '2.2rem', width: 'auto' }}
             />

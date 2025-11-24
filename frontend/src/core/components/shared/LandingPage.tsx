@@ -5,8 +5,9 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { BASE_PATH } from '@app/constants/app';
 import { useLogoPath } from '@app/hooks/useLogoPath';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import { useLogoVariant } from '@app/hooks/useLogoVariant';
 import { useFileManager } from '@app/hooks/useFileManager';
 
 const LandingPage = () => {
@@ -17,6 +18,8 @@ const LandingPage = () => {
   const { openFilesModal } = useFilesModalContext();
   const [isUploadHover, setIsUploadHover] = React.useState(false);
   const logoPath = useLogoPath();
+  const logoVariant = useLogoVariant();
+  const { wordmark } = useLogoAssets();
   const { loadRecentFiles } = useFileManager();
   const [hasRecents, setHasRecents] = React.useState<boolean>(false);
 
@@ -83,24 +86,25 @@ const LandingPage = () => {
           },
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            zIndex: 10,
-
-          }}
-        >
-          <img
-            src={logoPath}
-            alt="Stirling PDF Logo"
+        {logoVariant === 'modern' && (
+          <div
             style={{
-              height: 'auto',
-              pointerEvents: 'none',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              zIndex: 10,
             }}
-          />
-        </div>
+          >
+            <img
+              src={logoPath}
+              alt="Stirling PDF Logo"
+              style={{
+                height: 'auto',
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+        )}
         <div
           className={`min-h-[45vh] flex flex-col items-center justify-center px-8 py-8 w-full min-w-[30rem] max-w-[calc(100%-2rem)] border transition-all duration-200 dropzone-inner relative`}
           style={{
@@ -119,7 +123,7 @@ const LandingPage = () => {
             {/* Stirling PDF Branding */}
             <Group gap="xs" align="center">
               <img
-                src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
+                src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
                 alt="Stirling PDF"
                 style={{ height: '2.2rem', width: 'auto' }}
               />

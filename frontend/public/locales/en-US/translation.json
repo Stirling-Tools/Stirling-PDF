@@ -332,6 +332,12 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
+      },
+      "logoVariant": {
+        "label": "Interface logo",
+        "description": "Choose whether Stirling PDF uses the modern or classic logo on this device.",
+        "modern": "Modern",
+        "classic": "Classic"
       }
     },
     "hotkeys": {

@@ -1,6 +1,8 @@
 import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '@app/constants/toolPanel';
 import { type ThemeMode, getSystemTheme } from '@app/constants/theme';
 
+export type LogoVariant = 'modern' | 'classic';
+
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
@@ -11,6 +13,7 @@ export interface UserPreferences {
   hasCompletedOnboarding: boolean;
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
+  logoVariant: LogoVariant | null;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -23,6 +26,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hasCompletedOnboarding: false,
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
+  logoVariant: null,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';
