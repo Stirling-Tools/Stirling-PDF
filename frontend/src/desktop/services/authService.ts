@@ -56,11 +56,15 @@ export class AuthService {
     try {
       console.log('Logging in to:', serverUrl);
 
+      // Get Supabase key from environment (needed for SaaS login, ignored for self-hosted)
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
+
       // Call Rust login command (bypasses CORS)
       const response = await invoke<LoginResponse>('login', {
         serverUrl,
         username,
         password,
+        supabaseKey,
       });
 
       const { token, username: returnedUsername, email } = response;
@@ -208,14 +212,21 @@ export class AuthService {
       console.log('Starting OAuth login with provider:', provider);
       this.setAuthStatus('oauth_pending', null);
 
+      // Get Supabase key from environment (available at runtime in browser)
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+      if (!supabaseKey) {
+        throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+      }
+
       // Call Rust command which:
-      // 1. Starts localhost HTTP server on 127.0.0.1:54321
+      // 1. Starts localhost HTTP server on random port
       // 2. Opens browser to OAuth provider
       // 3. Waits for callback
       // 4. Returns tokens
       const result = await invoke<OAuthCallbackResult>('start_oauth_login', {
         provider,
         authServerUrl,
+        supabaseKey,
       });
 
       console.log('OAuth authentication successful, storing tokens');

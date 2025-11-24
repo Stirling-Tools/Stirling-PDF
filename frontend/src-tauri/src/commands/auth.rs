@@ -183,6 +183,7 @@ pub async fn login(
     server_url: String,
     username: String,
     password: String,
+    supabase_key: String,
 ) -> Result<LoginResponse, String> {
     log::info!("Login attempt for user: {} to server: {}", username, server_url);
 
@@ -198,10 +199,6 @@ pub async fn login(
     if is_supabase {
         // Supabase authentication flow
         let login_url = format!("{}/auth/v1/token?grant_type=password", server_url.trim_end_matches('/'));
-
-        // Supabase public API key from environment variable (required at compile time)
-        // Set VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY before building
-        let supabase_key = env!("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
 
         let request_body = serde_json::json!({
             "email": username,
@@ -333,6 +330,7 @@ pub async fn start_oauth_login(
     _app_handle: AppHandle,
     provider: String,
     auth_server_url: String,
+    supabase_key: String,
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
 
@@ -438,7 +436,7 @@ pub async fn start_oauth_login(
     match callback_data? {
         OAuthCallbackData::Code { code, redirect_uri } => {
             log::info!("OAuth completed with authorization code flow, exchanging code...");
-            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier).await
+            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier, &supabase_key).await
         }
     }
 }
@@ -462,15 +460,13 @@ async fn exchange_code_for_token(
     code: &str,
     _redirect_uri: &str,
     code_verifier: &str,
+    supabase_key: &str,
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
     let client = reqwest::Client::new();
     // grant_type goes in query string, not body!
     let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
-
-    // Supabase requires API key for token exchange
-    let supabase_key = env!("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
 
     // Body should be JSON with auth_code and code_verifier
     let body = serde_json::json!({
