@@ -508,9 +508,9 @@ export default function PeopleSection() {
                           <div>
                             <Text size="xs" fw={500}>Authentication: {user.authenticationType || 'Unknown'}</Text>
                             <Text size="xs">
-                              Last Activity: {user.lastRequest
+                              Last Activity: {user.lastRequest && new Date(user.lastRequest).getFullYear() >= 1980
                                 ? new Date(user.lastRequest).toLocaleString()
-                                : 'Never'}
+                                :t('never', 'Never')}
                             </Text>
                           </div>
                         }
