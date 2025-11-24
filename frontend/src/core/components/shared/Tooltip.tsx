@@ -342,7 +342,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           <div className={styles['tooltip-logo']}>
             {header.logo || (
               <img
-                src={`${BASE_PATH}/logo-tooltip.svg`}
+                src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextDark.svg`}
                 alt="Stirling PDF"
                 style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
               />
