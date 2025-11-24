@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Stack, TextInput, PasswordInput, Button, Text, Divider, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { authService } from '@app/services/authService';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 
 interface LoginFormProps {
   serverUrl: string;
@@ -40,9 +41,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
       setOauthLoading(true);
       setValidationError(null);
 
-      // For SaaS, use auth.stirling.com; for self-hosted, derive from serverUrl
+      // For SaaS, use configured SaaS URL; for self-hosted, derive from serverUrl
       const authServerUrl = isSaaS
-        ? 'https://auth.stirling.com'
+        ? STIRLING_SAAS_URL
         : serverUrl; // Self-hosted might have its own auth
 
       const userInfo = await authService.loginWithOAuth(provider, authServerUrl);
