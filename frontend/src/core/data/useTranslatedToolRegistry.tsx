@@ -46,6 +46,8 @@ import Rotate from "@app/tools/Rotate";
 import ChangeMetadata from "@app/tools/ChangeMetadata";
 import Crop from "@app/tools/Crop";
 import Sign from "@app/tools/Sign";
+import AddText from "@app/tools/AddText";
+import AddImage from "@app/tools/AddImage";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
@@ -199,6 +201,30 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: SignSettings, // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
+      },
+      addText: {
+        icon: <LocalIcon icon="material-symbols:text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('home.addText.title', 'Add Text'),
+        component: AddText,
+        description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        operationConfig: signOperationConfig,
+        automationSettings: null,
+        synonyms: getSynonyms(t, 'addText'),
+        supportsAutomate: false,
+      },
+      addImage: {
+        icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('home.addImage.title', 'Add Image'),
+        component: AddImage,
+        description: t('home.addImage.desc', 'Add images anywhere in your PDF'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        operationConfig: signOperationConfig,
+        automationSettings: null,
+        synonyms: getSynonyms(t, 'addImage'),
+        supportsAutomate: false,
       },
 
       // Document Security
@@ -703,17 +729,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: replaceColorOperationConfig,
         automationSettings: ReplaceColorSettings,
         synonyms: getSynonyms(t, "replaceColor"),
-      },
-      addImage: {
-        icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.addImage.title", "Add Image"),
-        component: null,
-        description: t("home.addImage.desc", "Add images to PDF documents"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        endpoints: ["add-image"],
-        synonyms: getSynonyms(t, "addImage"),
-        automationSettings: null
       },
       scannerEffect: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
