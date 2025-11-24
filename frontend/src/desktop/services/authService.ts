@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 
 export interface UserInfo {
   username: string;
@@ -65,6 +66,7 @@ export class AuthService {
         username,
         password,
         supabaseKey,
+        saasServerUrl: STIRLING_SAAS_URL,
       });
 
       const { token, username: returnedUsername, email } = response;

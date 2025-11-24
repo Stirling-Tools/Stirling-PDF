@@ -9,4 +9,4 @@ if (!import.meta.env.VITE_SAAS_SERVER_URL) {
   throw new Error('VITE_SAAS_SERVER_URL environment variable is required');
 }
 
-export const STIRLING_SAAS_URL = import.meta.env.VITE_SAAS_SERVER_URL;
+export const STIRLING_SAAS_URL: string = import.meta.env.VITE_SAAS_SERVER_URL;

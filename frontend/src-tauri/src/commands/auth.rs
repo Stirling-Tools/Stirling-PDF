@@ -184,12 +184,12 @@ pub async fn login(
     username: String,
     password: String,
     supabase_key: String,
+    saas_server_url: String,
 ) -> Result<LoginResponse, String> {
     log::info!("Login attempt for user: {} to server: {}", username, server_url);
 
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
-    // Compare against the configured SaaS server URL from environment
-    let saas_server_url = env!("VITE_SAAS_SERVER_URL");
+    // Compare against the configured SaaS server URL
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
     log::info!("Authentication type: {}", if is_supabase { "Supabase (SaaS)" } else { "Spring Boot (Self-hosted)" });
 
@@ -208,7 +208,7 @@ pub async fn login(
         let response = client
             .post(&login_url)
             .header("Content-Type", "application/json;charset=UTF-8")
-            .header("apikey", supabase_key)
+            .header("apikey", &supabase_key)
             .header("Authorization", format!("Bearer {}", supabase_key))
             .header("X-Client-Info", "supabase-js-web/2.58.0")
             .header("X-Supabase-Api-Version", "2024-01-01")
