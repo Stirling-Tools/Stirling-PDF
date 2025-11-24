@@ -5666,12 +5666,17 @@
         "label": "Username",
         "placeholder": "Enter your username"
       },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email"
+      },
       "password": {
         "label": "Password",
         "placeholder": "Enter your password"
       },
       "error": {
         "emptyUsername": "Please enter your username",
+        "emptyEmail": "Please enter your email",
         "emptyPassword": "Please enter your password",
         "oauthFailed": "OAuth login failed. Please try again."
       },
