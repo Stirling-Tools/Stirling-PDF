@@ -16,6 +16,8 @@ import { createUserStepsConfig } from '@app/components/onboarding/userStepsConfi
 import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsConfig';
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import TourContent from '@app/components/onboarding/TourContent';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import '@app/components/onboarding/OnboardingTour.css';
 import i18n from "@app/i18n";
 
 export default function OnboardingTour() {
@@ -43,6 +45,8 @@ export default function OnboardingTour() {
     navigateToSection,
     scrollNavToSection,
   } = useAdminTourOrchestration();
+
+  const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
 
   useEffect(() => {
     if (!flow.isTourOpen) {
@@ -165,6 +169,7 @@ export default function OnboardingTour() {
             handleCloseTour(clickProps);
           }
         }}
+        rtl={isRTL}
         styles={{
           popover: (base) => ({
             ...base,
@@ -193,21 +198,19 @@ export default function OnboardingTour() {
         showBadge={false}
         showCloseButton={true}
         disableInteraction={true}
-        disableDotsNavigation={true}
+        disableDotsNavigation={false}
         prevButton={() => null}
         nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
           const isLast = currentStep === stepsLength - 1;
-
+          const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
           return (
             <ActionIcon
-              onClick={() => {
-                advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
-              }}
+              onClick={() => advanceTour({ setCurrentStep, currentStep, steps, setIsOpen })}
               variant="subtle"
               size="lg"
               aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
             >
-              {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
+              {isLast ? <CheckIcon /> : <ArrowIcon />}
             </ActionIcon>
           );
         }}

@@ -24,11 +24,12 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 interface ActiveToolButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
+  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
 }
 
 const NAV_IDS = ['read', 'sign', 'automate'];
 
-const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) => {
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = 'right' }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
   const { getHomeNavigation } = useSidebarNavigation();
 
@@ -139,7 +140,12 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
         {indicatorTool && (
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
-              <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
+              <Tooltip
+                content={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                position={tooltipPosition}
+                arrow
+                maxWidth={140}
+              >
                 <ActionIcon
                   component="a"
                   href={getHomeNavigation().href}
@@ -188,5 +194,4 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
 };
 
 export default ActiveToolButton;
-
 

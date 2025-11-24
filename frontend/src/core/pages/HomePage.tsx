@@ -10,6 +10,9 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
 import { useCookieConsentContext } from "@app/contexts/CookieConsentContext";
+import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -54,12 +57,30 @@ export default function HomePage() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
+  const { activeFiles } = useFileContext();
+  const { actions } = useNavigationActions();
+  const { setActiveFileIndex } = useViewer();
+  const prevFileCountRef = useRef(activeFiles.length);
+
   // Show admin analytics choice modal if analytics settings not configured
   useEffect(() => {
     if (config && config.enableAnalytics === null && cookieConsentResponded) {
       setShowAnalyticsModal(true);
     }
   }, [config, cookieConsentResponded]);
+
+  // Auto-switch to viewer when going from 0 to 1 file
+  useEffect(() => {
+    const prevCount = prevFileCountRef.current;
+    const currentCount = activeFiles.length;
+
+    if (prevCount === 0 && currentCount === 1) {
+      actions.setWorkbench('viewer');
+      setActiveFileIndex(0);
+    }
+
+    prevFileCountRef.current = currentCount;
+  }, [activeFiles.length, actions, setActiveFileIndex]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();

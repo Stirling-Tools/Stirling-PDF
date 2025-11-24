@@ -1,33 +1,30 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Collapse, Select } from '@mantine/core';
+import { Button, Collapse, Select, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
 import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
-interface CurrencyOption {
-  value: string;
-  label: string;
-}
-
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
   currentPlanId?: string;
   currentLicenseInfo?: LicenseInfo | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
-  currency: string;
-  currencyOptions: CurrencyOption[];
-  onCurrencyChange: (value: string) => void;
+  onManageClick?: () => void;
+  currency?: string;
+  onCurrencyChange?: (currency: string) => void;
+  currencyOptions?: { value: string; label: string }[];
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   plans,
   currentLicenseInfo,
   onUpgradeClick,
+  onManageClick,
   currency,
-  currencyOptions,
   onCurrencyChange,
+  currencyOptions,
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
@@ -68,23 +65,10 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
     return currentLevel > targetLevel;
   };
 
-  const handleCurrencyChange = (value: string | null) => {
-    onCurrencyChange(value || currency);
-  };
-
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'flex-start',
-          gap: '0.75rem',
-          justifyContent: 'space-between',
-          marginBottom: '1rem',
-        }}
-      >
-        <div style={{ flex: '1 1 320px', minWidth: '240px' }}>
+      <Group justify="space-between" align="flex-start" mb="xs">
+        <div>
           <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
             {t('plan.availablePlans.title', 'Available Plans')}
           </h3>
@@ -98,25 +82,25 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
           </p>
         </div>
-
-        <Select
-          aria-label={t('plan.currency', 'Currency')}
-          value={currency}
-          onChange={handleCurrencyChange}
-          data={currencyOptions}
-          searchable
-          clearable={false}
-          w={280}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-        />
-      </div>
+        {currency && onCurrencyChange && currencyOptions && (
+          <Select
+            value={currency}
+            onChange={(value) => onCurrencyChange(value || 'usd')}
+            data={currencyOptions}
+            searchable
+            clearable={false}
+            w={300}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          />
+        )}
+      </Group>
 
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '1rem',
-          marginBottom: '1rem',
+          marginBottom: '0.5rem',
         }}
       >
         {groupedPlans.map((group) => (
@@ -126,7 +110,9 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             isCurrentTier={isCurrentTier(group)}
             isDowngrade={isDowngrade(group)}
             currentLicenseInfo={currentLicenseInfo}
+            currentTier={currentTier}
             onUpgradeClick={onUpgradeClick}
+            onManageClick={onManageClick}
           />
         ))}
       </div>
@@ -140,7 +126,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
       </div>
 
       <Collapse in={showComparison}>
-        <FeatureComparisonTable plans={groupedPlans} />
+        <FeatureComparisonTable plans={groupedPlans} currentTier={currentTier} />
       </Collapse>
     </div>
   );

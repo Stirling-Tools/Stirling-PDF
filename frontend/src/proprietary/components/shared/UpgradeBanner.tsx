@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
+import { useCheckout } from '@app/contexts/CheckoutContext';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import {
   ONBOARDING_SESSION_BLOCK_KEY,
@@ -23,6 +24,7 @@ const UpgradeBanner: React.FC = () => {
   const navigate = useNavigate();
   const { hasResponded: cookieChoiceMade } = useCookieConsentContext();
   const { isOpen: tourOpen } = useOnboarding();
+  const { openCheckout } = useCheckout();
   const {
     totalUsers,
     userCountResolved,
@@ -256,8 +258,31 @@ const UpgradeBanner: React.FC = () => {
 
   const handleUpgrade = () => {
     recordFriendlyLastShown();
-    navigate('/settings/adminPlan');
-    setFriendlyVisible(false);
+
+    const hideBanner = () => setFriendlyVisible(false);
+    const navigateFallback = () => {
+      navigate('/settings/adminPlan');
+      hideBanner();
+    };
+
+    try {
+      openCheckout('server', {
+        minimumSeats: 1,
+        onSuccess: () => {
+          hideBanner();
+        },
+        onError: () => {
+          navigateFallback();
+        },
+      });
+    } catch (error) {
+      console.error('[UpgradeBanner] Failed to open checkout, redirecting instead', error);
+      navigateFallback();
+      return;
+    }
+
+    // Keep legacy behavior so banner disappears once the user initiates checkout
+    hideBanner();
   };
 
   const handleFriendlyDismiss = () => {
