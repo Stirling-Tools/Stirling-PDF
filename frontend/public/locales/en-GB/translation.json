@@ -862,6 +862,11 @@
     "pdfTextEditor": {
       "title": "PDF Text Editor",
       "desc": "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Add Text",
+      "desc": "Add custom text anywhere in your PDF"
     }
   },
   "landing": {
@@ -1264,10 +1269,44 @@
   "addImage": {
     "tags": "img,jpg,picture,photo",
     "title": "Add Image",
-    "header": "Add image to PDF",
-    "everyPage": "Every Page?",
-    "upload": "Add image",
-    "submit": "Add image"
+    "header": "Add images to PDFs",
+    "image": {
+      "name": "Image",
+      "placeholder": "Upload an image",
+      "label": "Image file"
+    },
+    "steps": {
+      "configure": "Configure Image"
+    },
+    "step": {
+      "createDesc": "Upload the image you want to add",
+      "place": "Place image",
+      "placeDesc": "Click on the PDF to add your image"
+    },
+    "instructions": {
+      "title": "How to add images",
+      "text": "After uploading your image above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your image.",
+      "noSignature": "Upload an image above to enable placement."
+    },
+    "mode": {
+      "move": "Move Image",
+      "place": "Place Image",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "results": {
+      "title": "Add Image Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding image to the PDF."
+    },
+    "saved": {
+      "defaultLabel": "Image",
+      "defaultImageLabel": "Uploaded image"
+    },
+    "applySignatures": "Apply Images"
   },
   "attachments": {
     "tags": "attachments,add,remove,embed,file",
@@ -2159,8 +2198,8 @@
       "colorPickerTitle": "Choose stroke colour"
     },
     "text": {
-      "name": "Signer Name",
-      "placeholder": "Enter your full name",
+      "name": "Text",
+      "placeholder": "Enter text",
       "fontLabel": "Font",
       "fontSizeLabel": "Font size",
       "fontSizePlaceholder": "Type or select font size (8-200)",
@@ -2428,8 +2467,12 @@
     "selection": {
       "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "original": { "label": "Original PDF" },
-    "edited": { "label": "Edited PDF" },
+    "original": {
+      "label": "Original PDF"
+    },
+    "edited": {
+      "label": "Edited PDF"
+    },
     "swap": {
       "confirmTitle": "Re-run comparison?",
       "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
@@ -5880,5 +5923,46 @@
     "pleaseLoginAgain": "Please login again.",
     "accessDenied": "Access Denied",
     "insufficientPermissions": "You do not have permission to perform this action."
+  },
+  "addText": {
+    "title": "Add Text",
+    "header": "Add text to PDFs",
+    "text": {
+      "name": "Text content",
+      "placeholder": "Enter the text you want to add",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
+    },
+    "steps": {
+      "configure": "Configure Text"
+    },
+    "step": {
+      "createDesc": "Enter the text you want to add",
+      "place": "Place text",
+      "placeDesc": "Click on the PDF to add your text"
+    },
+    "instructions": {
+      "title": "How to add text",
+      "text": "After entering your text above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your text.",
+      "noSignature": "Enter text above to enable placement."
+    },
+    "mode": {
+      "move": "Move Text",
+      "place": "Place Text",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "results": {
+      "title": "Add Text Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding text to the PDF."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Apply Text"
   }
 }
