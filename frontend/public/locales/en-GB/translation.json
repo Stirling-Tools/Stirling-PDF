@@ -5139,7 +5139,10 @@
       "role": "Role",
       "team": "Team",
       "status": "Status",
-      "actions": "Actions",
+      "actions": {
+        "label": "Actions",
+        "upgrade": "Upgrade"
+      },
       "noMembersFound": "No members found",
       "active": "Active",
       "disabled": "Disabled",
@@ -5251,7 +5254,8 @@
         "slotsAvailable": "{{count}} user slot(s) available",
         "noSlotsAvailable": "No slots available",
         "currentUsage": "Currently using {{current}} of {{max}} user licences"
-      }
+      },
+      "loginRequired": "Enable login mode first"
     },
     "teams": {
       "title": "Teams",
