@@ -36,7 +36,6 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
@@ -189,11 +188,8 @@ public class ConvertWebsiteToPDF {
                 client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         if (response.statusCode() >= 400 || response.body() == null) {
-            throw ExceptionUtils.createIOException(
-                    "error.httpRequestFailed",
-                    "Failed to retrieve remote HTML. Status: {0}",
-                    null,
-                    response.statusCode());
+            throw new IOException(
+                    "Failed to retrieve remote HTML. Status: " + response.statusCode());
         }
 
         return response.body();

@@ -43,17 +43,7 @@ public class PasswordController {
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
-
-        PDDocument document;
-        try {
-            document = pdfDocumentFactory.load(fileInput, password);
-        } catch (IOException e) {
-            // Handle password errors specifically
-            if (ExceptionUtils.isPasswordError(e)) {
-                throw ExceptionUtils.createPdfPasswordException(e);
-            }
-            throw ExceptionUtils.handlePdfException(e);
-        }
+        PDDocument document = pdfDocumentFactory.load(fileInput, password);
 
         try {
             document.setAllSecurityToBeRemoved(true);

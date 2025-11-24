@@ -155,18 +155,24 @@ public class PdfVectorExportController {
         command.add("gs");
 
         // Set device based on output format
-        String device =
-                switch (outputFormat.toLowerCase(Locale.ROOT)) {
-                    case "eps" -> "eps2write";
-                    case "ps" -> "ps2write";
-                    case "pcl" -> "pxlcolor"; // PCL XL color
-                    case "xps" -> "xpswrite";
-                    default ->
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.invalidFormat",
-                                    "Unsupported output format: {0}",
-                                    outputFormat);
-                };
+        String device;
+        switch (outputFormat.toLowerCase(Locale.ROOT)) {
+            case "eps":
+                device = "eps2write";
+                break;
+            case "ps":
+                device = "ps2write";
+                break;
+            case "pcl":
+                device = "pxlcolor"; // PCL XL color
+                break;
+            case "xps":
+                device = "xpswrite";
+                break;
+            default:
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat", "Unsupported output format: {0}", outputFormat);
+        }
 
         command.add("-sDEVICE=" + device);
         command.add("-dNOPAUSE");
@@ -180,17 +186,6 @@ public class PdfVectorExportController {
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
-
-        ExceptionUtils.GhostscriptException criticalError =
-                ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
-        if (criticalError != null) {
-            log.error(
-                    "Ghostscript PDF to {} conversion detected critical error: {}. Command: {}",
-                    outputFormat.toUpperCase(),
-                    criticalError.getMessage(),
-                    String.join(" ", command));
-            throw criticalError;
-        }
 
         if (result.getRc() != 0) {
             log.error(
@@ -229,16 +224,6 @@ public class PdfVectorExportController {
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
-
-        ExceptionUtils.GhostscriptException criticalError =
-                ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
-        if (criticalError != null) {
-            log.error(
-                    "Ghostscript PostScript-to-PDF conversion detected critical error: {}. Command: {}",
-                    criticalError.getMessage(),
-                    String.join(" ", command));
-            throw criticalError;
-        }
 
         if (result.getRc() != 0) {
             log.error(

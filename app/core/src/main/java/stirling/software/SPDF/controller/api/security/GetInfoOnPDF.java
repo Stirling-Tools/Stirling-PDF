@@ -474,11 +474,10 @@ public class GetInfoOnPDF {
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    file.getSize(),
-                    MAX_FILE_SIZE);
+            throw new IllegalArgumentException(
+                    String.format(
+                            "File size (%d bytes) exceeds maximum allowed size (%d bytes)",
+                            file.getSize(), MAX_FILE_SIZE));
         }
 
         String contentType = file.getContentType();

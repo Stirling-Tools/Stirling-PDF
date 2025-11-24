@@ -217,12 +217,7 @@ public class RearrangePagesPDFController {
                 case REMOVE_LAST -> removeLast(totalPages);
                 case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
                 case DUPLICATE -> duplicate(totalPages, pageOrder);
-                default ->
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidFormat",
-                                "Invalid {0} format: {1}",
-                                "custom mode",
-                                "unsupported");
+                default -> throw new IllegalArgumentException("Unsupported custom mode");
             };
         } catch (IllegalArgumentException e) {
             log.error("Unsupported custom mode", e);

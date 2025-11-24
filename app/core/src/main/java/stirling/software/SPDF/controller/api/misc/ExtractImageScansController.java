@@ -108,14 +108,14 @@ public class ExtractImageScansController {
                         if (properties != null && properties.getSystem() != null) {
                             renderDpi = properties.getSystem().getMaxDPI();
                         }
-                        final int dpi = renderDpi;
-                        final int pageIndex = i;
 
-                        image =
-                                ExceptionUtils.handleOomRendering(
-                                        pageIndex + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(i, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        }
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list
@@ -202,8 +202,7 @@ public class ExtractImageScansController {
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
             if (processedImageBytes.isEmpty()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.noContent", "No {0} detected", "images");
+                throw new IllegalArgumentException("No images detected");
             } else {
 
                 // Return the processed image as a response

@@ -30,7 +30,7 @@ public class PdfToCbzUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             if (document.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
+                throw new IllegalArgumentException("PDF file contains no pages");
             }
 
             return createCbzFromPdf(document, dpi);
@@ -39,17 +39,17 @@ public class PdfToCbzUtils {
 
     private static void validatePdfFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw ExceptionUtils.createFileNullOrEmptyException();
+            throw new IllegalArgumentException("File cannot be null or empty");
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw ExceptionUtils.createFileNoNameException();
+            throw new IllegalArgumentException("File must have a name");
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"pdf".equals(extension)) {
-            throw ExceptionUtils.createPdfFileRequiredException();
+            throw new IllegalArgumentException("File must be a PDF");
         }
     }
 
@@ -62,31 +62,25 @@ public class PdfToCbzUtils {
             int totalPages = document.getNumberOfPages();
 
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                final int currentPage = pageIndex;
                 try {
                     BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    currentPage + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    currentPage, dpi, ImageType.RGB));
+                            pdfRenderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
 
                     String imageFilename =
-                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
+                            String.format(Locale.ROOT, "page_%03d.png", pageIndex + 1);
+
                     ZipEntry zipEntry = new ZipEntry(imageFilename);
                     zipOut.putNextEntry(zipEntry);
 
                     ImageIO.write(image, "PNG", zipOut);
                     zipOut.closeEntry();
 
-                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                    // Re-throw OOM exceptions without wrapping
-                    throw e;
                 } catch (IOException e) {
-                    // Wrap other IOExceptions with context
-                    throw ExceptionUtils.createFileProcessingException(
-                            "CBZ creation for page " + (currentPage + 1), e);
+                    log.warn("Error processing page {}: {}", pageIndex + 1, e.getMessage());
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
                 }
             }
 

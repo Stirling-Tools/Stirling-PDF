@@ -27,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -119,8 +118,7 @@ public class PdfOverlayController {
                 fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
                 break;
             default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", mode);
+                throw new IllegalArgumentException("Invalid overlay mode");
         }
         return overlayGuide;
     }
@@ -182,11 +180,8 @@ public class PdfOverlayController {
             Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
             throws IOException {
         if (overlayFiles.length != counts.length) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "counts array",
-                    "length must match the number of overlay files");
+            throw new IllegalArgumentException(
+                    "Counts array length must match the number of overlay files");
         }
         int currentPage = 1;
         for (int i = 0; i < overlayFiles.length; i++) {

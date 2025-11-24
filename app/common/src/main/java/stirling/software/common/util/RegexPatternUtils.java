@@ -301,11 +301,6 @@ public final class RegexPatternUtils {
         return getPattern("\\+");
     }
 
-    /** Pattern for splitting on pipe delimiter (used for hint lists in i18n messages) */
-    public Pattern getPipeDelimiterPattern() {
-        return getPattern("\\|");
-    }
-
     /** Pattern for username validation */
     public Pattern getUsernameValidationPattern() {
         return getPattern("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");
@@ -521,16 +516,6 @@ public final class RegexPatternUtils {
     /* Pattern for validating file extensions (2-4 alphanumeric, case-insensitive) */
     public Pattern getFileExtensionValidationPattern() {
         return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
-    }
-
-    /** Pattern for splitting on line breaks (Unicode line separator) */
-    public Pattern getLineSeparatorPattern() {
-        return getPattern("\\R");
-    }
-
-    /** Pattern for removing leading asterisks and whitespace */
-    public Pattern getLeadingAsterisksWhitespacePattern() {
-        return getPattern("^[*\\s]+");
     }
 
     private record PatternKey(String regex, int flags) {

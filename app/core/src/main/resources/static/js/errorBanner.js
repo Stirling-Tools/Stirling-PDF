@@ -3,7 +3,7 @@ var traceVisible = false;
 function toggletrace() {
   var traceDiv = document.getElementById("trace");
   if (!traceVisible) {
-    traceDiv.style.maxHeight = "100vh";
+    traceDiv.style.maxHeight = "500px";
     traceVisible = true;
   } else {
     traceDiv.style.maxHeight = "0px";

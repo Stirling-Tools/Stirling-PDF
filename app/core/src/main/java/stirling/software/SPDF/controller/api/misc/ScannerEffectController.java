@@ -45,7 +45,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -59,7 +58,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous PDF APIs")
 @RequiredArgsConstructor
-@Slf4j
 public class ScannerEffectController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -97,8 +95,11 @@ public class ScannerEffectController {
 
     private static BufferedImage renderPageSafely(PDFRenderer renderer, int pageIndex, int dpi)
             throws IOException {
-        return ExceptionUtils.handleOomRendering(
-                pageIndex + 1, dpi, () -> renderer.renderImageWithDPI(pageIndex, dpi));
+        try {
+            return renderer.renderImageWithDPI(pageIndex, dpi);
+        } catch (OutOfMemoryError | NegativeArraySizeException e) {
+            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+        }
     }
 
     private static BufferedImage convertColorspace(
@@ -489,8 +490,7 @@ public class ScannerEffectController {
             float noise,
             boolean yellowish,
             int renderResolution,
-            ScannerEffectRequest.Colorspace colorspace)
-            throws ExceptionUtils.OutOfMemoryDpiException {
+            ScannerEffectRequest.Colorspace colorspace) {
 
         try {
             PDRectangle pageSize = renderingResources.getPageMediaBox(pageIndex);
@@ -548,8 +548,7 @@ public class ScannerEffectController {
             }
             return new ProcessedPage(adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
         } catch (IOException e) {
-            throw ExceptionUtils.wrapException(
-                    e, "scanner effect processing for page " + (pageIndex + 1));
+            throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
             throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
         }
@@ -691,12 +690,9 @@ public class ScannerEffectController {
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        throw ExceptionUtils.createProcessingInterruptedException(
-                                "scanner effect parallel page processing", e);
+                        throw new IOException("Parallel page processing interrupted", e);
                     } catch (ExecutionException e) {
-                        throw ExceptionUtils.createFileProcessingException(
-                                "scanner effect parallel page processing",
-                                new IOException("Processing failed", e.getCause()));
+                        throw new IOException("Parallel page processing failed", e.getCause());
                     } finally {
                         renderingResources.remove();
                         for (RenderingResources resources : renderingResourcesToClose) {
@@ -805,7 +801,7 @@ public class ScannerEffectController {
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
                     pool.shutdownNow();
                     if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                        log.warn("ForkJoinPool did not terminate within timeout");
+                        throw new RuntimeException("ForkJoinPool did not terminate");
                     }
                 }
             } catch (InterruptedException e) {

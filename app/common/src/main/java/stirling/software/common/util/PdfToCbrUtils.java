@@ -35,7 +35,7 @@ public class PdfToCbrUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             if (document.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
+                throw new IllegalArgumentException("PDF file contains no pages");
             }
 
             return createCbrFromPdf(document, dpi);
@@ -44,17 +44,17 @@ public class PdfToCbrUtils {
 
     private static void validatePdfFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw ExceptionUtils.createFileNullOrEmptyException();
+            throw new IllegalArgumentException("File cannot be null or empty");
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw ExceptionUtils.createFileNoNameException();
+            throw new IllegalArgumentException("File must have a name");
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"pdf".equals(extension)) {
-            throw ExceptionUtils.createPdfFileRequiredException();
+            throw new IllegalArgumentException("File must be a PDF");
         }
     }
 
@@ -67,36 +67,28 @@ public class PdfToCbrUtils {
             int totalPages = document.getNumberOfPages();
 
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                final int currentPage = pageIndex;
                 try {
                     BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    currentPage + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    currentPage, dpi, ImageType.RGB));
+                            pdfRenderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
 
                     String imageFilename =
-                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
+                            String.format(Locale.ROOT, "page_%03d.png", pageIndex + 1);
                     Path imagePath = tempDir.resolve(imageFilename);
 
                     ImageIO.write(image, "PNG", imagePath.toFile());
                     generatedImages.add(imagePath);
 
-                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                    // Re-throw OOM exceptions without wrapping
-                    throw e;
                 } catch (IOException e) {
-                    // Wrap other IOExceptions with context
-                    throw ExceptionUtils.createFileProcessingException(
-                            "CBR creation for page " + (currentPage + 1), e);
+                    log.warn("Error processing page {}: {}", pageIndex + 1, e.getMessage());
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
                 }
             }
 
             if (generatedImages.isEmpty()) {
-                throw ExceptionUtils.createFileProcessingException(
-                        "CBR conversion", new IOException("No pages were successfully rendered"));
+                throw new IOException("Failed to render any pages to images for CBR conversion");
             }
 
             return createRarArchive(tempDir, generatedImages);
@@ -125,18 +117,15 @@ public class PdfToCbrUtils {
             ProcessExecutorResult result =
                     executor.runCommandWithOutputHandling(command, tempDir.toFile());
             if (result.getRc() != 0) {
-                throw ExceptionUtils.createFileProcessingException(
-                        "RAR archive creation",
-                        new IOException("RAR command failed with code " + result.getRc()));
+                throw new IOException("RAR command failed: " + result.getMessages());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw ExceptionUtils.createProcessingInterruptedException("RAR creation", e);
+            throw new IOException("RAR command interrupted", e);
         }
 
         if (!Files.exists(rarFile)) {
-            throw ExceptionUtils.createFileProcessingException(
-                    "RAR archive creation", new IOException("RAR file was not created"));
+            throw new IOException("RAR file was not created");
         }
 
         try (FileInputStream fis = new FileInputStream(rarFile.toFile());

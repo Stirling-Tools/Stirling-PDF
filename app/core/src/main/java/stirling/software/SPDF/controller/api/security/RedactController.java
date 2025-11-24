@@ -62,7 +62,6 @@ import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -509,8 +508,7 @@ public class RedactController {
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
         if (listOfText.length == 0 || (listOfText.length == 1 && listOfText[0].trim().isEmpty())) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.redaction.no.patterns", "No text patterns provided for redaction");
+            throw new IllegalArgumentException("No text patterns provided for redaction");
         }
 
         PDDocument document = null;
@@ -519,15 +517,14 @@ public class RedactController {
         try {
             if (request.getFileInput() == null) {
                 log.error("File input is null");
-                throw ExceptionUtils.createFileNullOrEmptyException();
+                throw new IllegalArgumentException("File input cannot be null");
             }
 
             document = pdfDocumentFactory.load(request.getFileInput());
 
             if (document == null) {
                 log.error("Failed to load PDF document");
-                throw ExceptionUtils.createPdfCorruptedException(
-                        "during redaction", new IOException("Failed to load PDF document"));
+                throw new IllegalArgumentException("Failed to load PDF document");
             }
 
             Map<Integer, List<PDFText>> allFoundTextsByPage =
