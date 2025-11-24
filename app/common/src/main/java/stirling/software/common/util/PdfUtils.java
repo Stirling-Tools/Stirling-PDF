@@ -179,9 +179,20 @@ public class PdfUtils {
                         writer.prepareWriteSequence(null);
 
                         for (int i = 0; i < pageCount; ++i) {
+                            final int pageIndex = i;
                             BufferedImage image;
                             try {
-                                image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        document.getPage(pageIndex), pageIndex + 1, DPI);
+
+                                image =
+                                        ExceptionUtils.handleOomRendering(
+                                                pageIndex + 1,
+                                                DPI,
+                                                () ->
+                                                        pdfRenderer.renderImageWithDPI(
+                                                                pageIndex, DPI, colorType));
                             } catch (IllegalArgumentException e) {
                                 if (e.getMessage() != null
                                         && e.getMessage()
@@ -195,10 +206,6 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
-                            } catch (OutOfMemoryError e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
-                            } catch (NegativeArraySizeException e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
@@ -222,6 +229,7 @@ public class PdfUtils {
                     HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
                             new HashMap<>();
                     for (int i = 0; i < pageCount; ++i) {
+                        final int pageIndex = i;
                         PDPage page = document.getPage(i);
                         PDRectangle mediaBox = page.getMediaBox();
                         int rotation = page.getRotation();
@@ -232,7 +240,17 @@ public class PdfUtils {
                         if (dimension == null) {
                             // Render the image to get the dimensions
                             try {
-                                pdfSizeImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        page, pageIndex + 1, DPI);
+
+                                pdfSizeImage =
+                                        ExceptionUtils.handleOomRendering(
+                                                pageIndex + 1,
+                                                DPI,
+                                                () ->
+                                                        pdfRenderer.renderImageWithDPI(
+                                                                pageIndex, DPI, colorType));
                             } catch (IllegalArgumentException e) {
                                 if (e.getMessage() != null
                                         && e.getMessage()
@@ -247,10 +265,6 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
-                            } catch (OutOfMemoryError e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
-                            } catch (NegativeArraySizeException e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             pdfSizeImageIndex = i;
                             dimension =
@@ -276,11 +290,22 @@ public class PdfUtils {
                     boolean firstImageAlreadyRendered = pdfSizeImageIndex == 0;
 
                     for (int i = 0; i < pageCount; ++i) {
+                        final int pageIndex = i;
                         if (firstImageAlreadyRendered && i == 0) {
                             pageImage = pdfSizeImage;
                         } else {
                             try {
-                                pageImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        document.getPage(pageIndex), pageIndex + 1, DPI);
+
+                                pageImage =
+                                        ExceptionUtils.handleOomRendering(
+                                                pageIndex + 1,
+                                                DPI,
+                                                () ->
+                                                        pdfRenderer.renderImageWithDPI(
+                                                                pageIndex, DPI, colorType));
                             } catch (IllegalArgumentException e) {
                                 if (e.getMessage() != null
                                         && e.getMessage()
@@ -294,10 +319,6 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
-                            } catch (OutOfMemoryError e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
-                            } catch (NegativeArraySizeException e) {
-                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                         }
 
@@ -318,9 +339,20 @@ public class PdfUtils {
                 // Zip the images and return as byte array
                 try (ZipOutputStream zos = new ZipOutputStream(baos)) {
                     for (int i = 0; i < pageCount; ++i) {
+                        final int pageIndex = i;
                         BufferedImage image;
                         try {
-                            image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            // Validate dimensions before rendering
+                            ExceptionUtils.validateRenderingDimensions(
+                                    document.getPage(pageIndex), pageIndex + 1, DPI);
+
+                            image =
+                                    ExceptionUtils.handleOomRendering(
+                                            pageIndex + 1,
+                                            DPI,
+                                            () ->
+                                                    pdfRenderer.renderImageWithDPI(
+                                                            pageIndex, DPI, colorType));
                         } catch (IllegalArgumentException e) {
                             if (e.getMessage() != null
                                     && e.getMessage().contains("Maximum size of image exceeded")) {
@@ -332,10 +364,6 @@ public class PdfUtils {
                                         DPI);
                             }
                             throw e;
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                         }
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
                             ImageIO.write(image, imageType, baosImage);
@@ -375,6 +403,7 @@ public class PdfUtils {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            final int pageIndex = page;
             BufferedImage bim;
 
             // Use global maximum DPI setting, fallback to 300 if not set
@@ -384,9 +413,16 @@ public class PdfUtils {
             if (properties != null && properties.getSystem() != null) {
                 renderDpi = properties.getSystem().getMaxDPI();
             }
+            final int dpi = renderDpi;
 
             try {
-                bim = pdfRenderer.renderImageWithDPI(page, renderDpi, ImageType.RGB);
+                bim =
+                        ExceptionUtils.handleOomRendering(
+                                pageIndex + 1,
+                                dpi,
+                                () ->
+                                        pdfRenderer.renderImageWithDPI(
+                                                pageIndex, dpi, ImageType.RGB));
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
@@ -395,13 +431,9 @@ public class PdfUtils {
                             "PDF page {0} is too large to render at 300 DPI. The resulting image"
                                     + " would exceed Java's maximum array size. Please use a lower DPI"
                                     + " value for PDF-to-image conversion.",
-                            page + 1);
+                            pageIndex + 1);
                 }
                 throw e;
-            } catch (OutOfMemoryError e) {
-                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
-            } catch (NegativeArraySizeException e) {
-                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
             }
             PDPage originalPage = document.getPage(page);
 
