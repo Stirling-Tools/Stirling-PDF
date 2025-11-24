@@ -31,7 +31,13 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
     : planGroup.monthly;
 
   const resetState = useCallback(() => {
-    setState({ currentStage: 'email', loading: false });
+    setState({
+      currentStage: 'email',
+      loading: false,
+      clientSecret: undefined,
+      sessionId: undefined,
+      error: undefined
+    });
     setStageHistory([]);
     setEmailInput('');
     setEmailError('');
