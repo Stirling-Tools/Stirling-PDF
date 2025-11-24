@@ -21,6 +21,7 @@ import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import { useInitializeLogoPreference } from '@app/hooks/useInitializeLogoPreference';
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -58,6 +59,11 @@ function BrandingAssetManager() {
   return null;
 }
 
+function LogoPreferenceInitializer() {
+  useInitializeLogoPreference();
+  return null;
+}
+
 // Avoid requirement to have props which are required in app providers anyway
 type AppConfigProviderOverrides = Omit<AppConfigProviderProps, 'children' | 'retryOptions'>;
 
@@ -82,6 +88,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
+                <LogoPreferenceInitializer />
                 <ScarfTrackingInitializer />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                   <AppInitializer />
