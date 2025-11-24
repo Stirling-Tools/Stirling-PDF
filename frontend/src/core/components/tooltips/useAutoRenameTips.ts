@@ -10,6 +10,10 @@ export const useAutoRenameTips = (): TooltipContent => {
     },
     tips: [
       {
+        title: t("auto-rename.tooltip.description.title", "What it does"),
+        description: t("auto-rename.description", "Automatically finds the title from your PDF content and uses it as the filename."),
+      },
+      {
         title: t("auto-rename.tooltip.howItWorks.title", "Smart Renaming"),
         bullets: [
           t("auto-rename.tooltip.howItWorks.bullet1", "Looks for text that appears to be a title or heading"),

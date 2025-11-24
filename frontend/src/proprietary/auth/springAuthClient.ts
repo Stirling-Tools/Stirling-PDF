@@ -45,8 +45,8 @@ function normalizeRedirectPath(target?: string): string {
 function persistRedirectPath(path: string): void {
   try {
     document.cookie = `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent(path)}; path=/; max-age=${OAUTH_REDIRECT_COOKIE_MAX_AGE}; SameSite=Lax`;
-  } catch (error) {
-    console.warn('[SpringAuth] Failed to persist OAuth redirect path', error);
+  } catch (_error) {
+    // console.warn('[SpringAuth] Failed to persist OAuth redirect path', _error);
   }
 }
 
@@ -123,22 +123,23 @@ class SpringAuthClient {
       const token = localStorage.getItem('stirling_jwt');
 
       if (!token) {
-        console.debug('[SpringAuth] getSession: No JWT in localStorage');
+        // console.debug('[SpringAuth] getSession: No JWT in localStorage');
         return { data: { session: null }, error: null };
       }
 
       // Verify with backend
       // Note: We pass the token explicitly here, overriding the interceptor's default
-      console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
+      // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
       const response = await apiClient.get('/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
-      console.debug('[SpringAuth] /me response status:', response.status);
+      // console.debug('[SpringAuth] /me response status:', response.status);
       const data = response.data;
-      console.debug('[SpringAuth] /me response data:', data);
+      // console.debug('[SpringAuth] /me response data:', data);
 
       // Create session object
       const session: Session = {
@@ -148,7 +149,7 @@ class SpringAuthClient {
         expires_at: Date.now() + 3600 * 1000,
       };
 
-      console.debug('[SpringAuth] getSession: Session retrieved successfully');
+      // console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] getSession error:', error);
@@ -189,7 +190,7 @@ class SpringAuthClient {
 
       // Store JWT in localStorage
       localStorage.setItem('stirling_jwt', token);
-      console.log('[SpringAuth] JWT stored in localStorage');
+      // console.log('[SpringAuth] JWT stored in localStorage');
 
       // Dispatch custom event for other components to react to JWT availability
       window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -260,7 +261,7 @@ class SpringAuthClient {
 
       // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
       const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
       return { error: null };
@@ -284,7 +285,7 @@ class SpringAuthClient {
       });
 
       if (response.status === 200) {
-        console.debug('[SpringAuth] signOut: Success');
+        // console.debug('[SpringAuth] signOut: Success');
       }
 
       // Clean up local storage
@@ -314,6 +315,7 @@ class SpringAuthClient {
           'X-XSRF-TOKEN': this.getCsrfToken() || '',
         },
         withCredentials: true,
+        suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
       });
 
       const data = response.data;
@@ -399,7 +401,7 @@ class SpringAuthClient {
 
           // Refresh if token expires soon
           if (timeUntilExpiry > 0 && timeUntilExpiry < this.TOKEN_REFRESH_THRESHOLD) {
-            console.log('[SpringAuth] Proactively refreshing token');
+            // console.log('[SpringAuth] Proactively refreshing token');
             await this.refreshSession();
           }
         }

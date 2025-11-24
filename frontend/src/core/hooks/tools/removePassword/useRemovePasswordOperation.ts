@@ -2,14 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { RemovePasswordParameters, defaultParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
+import { buildRemovePasswordFormData } from '@app/hooks/tools/removePassword/buildRemovePasswordFormData';
 
-// Static function that can be used by both the hook and automation executor
-export const buildRemovePasswordFormData = (parameters: RemovePasswordParameters, file: File): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("password", parameters.password);
-  return formData;
-};
+// Re-export for backwards compatibility with any other imports
+export { buildRemovePasswordFormData };
 
 // Static configuration object
 export const removePasswordOperationConfig = {

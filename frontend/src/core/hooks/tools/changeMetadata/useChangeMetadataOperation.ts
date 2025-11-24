@@ -40,13 +40,15 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
 
   // Custom metadata - backend expects them as values to 'allRequestParams[customKeyX/customValueX]'
   let keyNumber = 0;
-  parameters.customMetadata.forEach((entry) => {
-    if (entry.key.trim() && entry.value.trim()) {
-      keyNumber += 1;
-      formData.append(`allRequestParams[customKey${keyNumber}]`, entry.key.trim());
-      formData.append(`allRequestParams[customValue${keyNumber}]`, entry.value.trim());
-    }
-  });
+  if (parameters.customMetadata && Array.isArray(parameters.customMetadata)) {
+    parameters.customMetadata.forEach((entry) => {
+      if (entry.key.trim() && entry.value.trim()) {
+        keyNumber += 1;
+        formData.append(`allRequestParams[customKey${keyNumber}]`, entry.key.trim());
+        formData.append(`allRequestParams[customValue${keyNumber}]`, entry.value.trim());
+      }
+    });
+  }
 
   return formData;
 };
