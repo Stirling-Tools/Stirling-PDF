@@ -10,12 +10,16 @@ import StaticPlanSection from '@app/components/shared/config/configSections/plan
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
 
 const AdminPlanSection: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { openCheckout } = useCheckout();
   const { licenseInfo, refetchLicense } = useLicense();
-  const [currency, setCurrency] = useState<string>('usd');
+  const [currency, setCurrency] = useState<string>(() => {
+    // Initialize with auto-detected currency on first render
+    return getPreferredCurrency(i18n.language);
+  });
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
   const [licenseKeyInput, setLicenseKeyInput] = useState<string>('');
@@ -102,6 +106,12 @@ const AdminPlanSection: React.FC = () => {
     }
   }, [licenseInfo, t]);
 
+  const handleCurrencyChange = useCallback((newCurrency: string) => {
+    setCurrency(newCurrency);
+    // Persist user's manual selection to localStorage
+    setCachedCurrency(newCurrency);
+  }, []);
+
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
       // Only allow upgrades for server and enterprise tiers
@@ -171,7 +181,7 @@ const AdminPlanSection: React.FC = () => {
         onUpgradeClick={handleUpgradeClick}
         onManageClick={handleManageClick}
         currency={currency}
-        onCurrencyChange={setCurrency}
+        onCurrencyChange={handleCurrencyChange}
         currencyOptions={currencyOptions}
       />
 

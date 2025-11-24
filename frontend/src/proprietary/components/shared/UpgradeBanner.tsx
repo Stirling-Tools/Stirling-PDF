@@ -75,7 +75,7 @@ const UpgradeBanner: React.FC = () => {
   // Handle upgrade button click
   const handleUpgrade = () => {
     openCheckout('server', {
-      currency: 'usd',
+      // Currency auto-detected from locale in CheckoutContext
       minimumSeats: 1,
       onSuccess: () => {
         // Banner will auto-hide on next render when license is detected
