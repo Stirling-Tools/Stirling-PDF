@@ -27,11 +27,14 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import InviteMembersModal from '@app/components/shared/InviteMembersModal';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
+import { useLicense } from '@app/contexts/LicenseContext';
 
 export default function PeopleSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
+  const { licenseInfo: globalLicenseInfo } = useLicense();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -342,6 +345,17 @@ export default function PeopleSection() {
               +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
             </Badge>
           )}
+
+          {/* Enterprise Seat Management Button */}
+          {globalLicenseInfo?.licenseType === 'ENTERPRISE' && (
+            <>
+              <Text size="sm" c="dimmed" span>•</Text>
+              <UpdateSeatsButton
+                size="xs"
+                onSuccess={fetchData}
+              />
+            </>
+          )}
         </Group>
       )}
 
@@ -494,9 +508,9 @@ export default function PeopleSection() {
                           <div>
                             <Text size="xs" fw={500}>Authentication: {user.authenticationType || 'Unknown'}</Text>
                             <Text size="xs">
-                              Last Activity: {user.lastRequest
+                              Last Activity: {user.lastRequest && new Date(user.lastRequest).getFullYear() >= 1980
                                 ? new Date(user.lastRequest).toLocaleString()
-                                : 'Never'}
+                                :t('never', 'Never')}
                             </Text>
                           </div>
                         }

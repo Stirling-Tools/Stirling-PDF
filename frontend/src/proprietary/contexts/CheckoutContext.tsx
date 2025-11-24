@@ -2,16 +2,17 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
-import StripeCheckout from '@app/components/shared/StripeCheckout';
+import { StripeCheckout } from '@app/components/shared/stripeCheckout';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
 import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 import { useLicense } from '@app/contexts/LicenseContext';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import { getPreferredCurrency } from '@app/utils/currencyDetection';
 
 export interface CheckoutOptions {
   minimumSeats?: number;      // Override calculated seats for enterprise
-  currency?: string;          // Optional currency override (defaults to 'gbp')
+  currency?: string;          // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void;  // Callback after successful payment
   onError?: (error: string) => void;  // Callback on error
 }
@@ -35,15 +36,18 @@ interface CheckoutProviderProps {
 
 export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
-  defaultCurrency = 'gbp'
+  defaultCurrency
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { refetchLicense } = useLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
-  const [currentCurrency, setCurrentCurrency] = useState(defaultCurrency);
+  const [currentCurrency, setCurrentCurrency] = useState(() => {
+    // Use provided default or auto-detect from locale
+    return defaultCurrency || getPreferredCurrency(i18n.language);
+  });
   const [currentOptions, setCurrentOptions] = useState<CheckoutOptions>({});
   const [hostedCheckoutSuccess, setHostedCheckoutSuccess] = useState<{
     isUpgrade: boolean;

@@ -74,12 +74,14 @@ export const PLAN_HIGHLIGHTS = {
     'Self-hosted on your infrastructure',
     'Unlimited users',
     'Advanced integrations',
+    'Editing text in PDFs',
     'Cancel anytime'
   ],
   SERVER_YEARLY: [
     'Self-hosted on your infrastructure',
     'Unlimited users',
     'Advanced integrations',
+    'Editing text in PDFs',
     'Save with annual billing'
   ],
   ENTERPRISE_MONTHLY: [

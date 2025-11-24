@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import licenseService, { LicenseInfo } from '@app/services/licenseService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 
@@ -17,17 +17,44 @@ interface LicenseProviderProps {
 
 export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) => {
   const { config } = useAppConfig();
+  const configRef = useRef(config);
   const [licenseInfo, setLicenseInfo] = useState<LicenseInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep ref updated with latest config
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
   const refetchLicense = useCallback(async () => {
+    // Wait for config to load if it's not available yet
+    let currentConfig = configRef.current;
+    if (!currentConfig) {
+      console.log('[LicenseContext] Config not loaded yet, waiting...');
+      // Wait up to 5 seconds for config to load
+      const maxWait = 5000;
+      const startTime = Date.now();
+      while (!configRef.current && Date.now() - startTime < maxWait) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        currentConfig = configRef.current;
+      }
+
+      if (!currentConfig) {
+        console.error('[LicenseContext] Config failed to load after waiting');
+        setLoading(false);
+        return;
+      }
+    }
+
     // Only fetch license info if user is an admin
-    if (!config?.isAdmin) {
-      console.debug('[LicenseContext] User is not an admin, skipping license fetch');
+    if (!currentConfig.isAdmin) {
+      console.log('[LicenseContext] User is not an admin, skipping license fetch');
       setLoading(false);
       return;
     }
+
+    console.log('[LicenseContext] Fetching license info');
 
     try {
       setLoading(true);
@@ -42,7 +69,7 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  }, [config?.isAdmin]);
+  }, []);
 
   // Fetch license info when config changes (only if user is admin)
   useEffect(() => {
@@ -51,12 +78,15 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     }
   }, [config, refetchLicense]);
 
-  const contextValue: LicenseContextValue = {
-    licenseInfo,
-    loading,
-    error,
-    refetchLicense,
-  };
+  const contextValue: LicenseContextValue = useMemo(
+    () => ({
+      licenseInfo,
+      loading,
+      error,
+      refetchLicense,
+    }),
+    [licenseInfo, loading, error, refetchLicense]
+  );
 
   return (
     <LicenseContext.Provider value={contextValue}>
