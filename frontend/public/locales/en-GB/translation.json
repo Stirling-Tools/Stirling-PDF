@@ -292,7 +292,8 @@
     "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
-    "settings": "You can change the settings for analytics in the config/settings.yml file"
+    "settings": "You can change the settings for analytics in the config/settings.yml file",
+    "privacyAssurance": "We do not track any personal information or the contents of your files."
   },
   "navbar": {
     "favorite": "Favorites",
