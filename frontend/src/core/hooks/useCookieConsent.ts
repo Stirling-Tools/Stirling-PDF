@@ -25,14 +25,14 @@ export const useCookieConsent = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasResponded, setHasResponded] = useState(!analyticsEnabled);
+  const [hasRespondedInternal, setHasRespondedInternal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const markResponded = () => setHasResponded(true);
+    const markResponded = () => setHasRespondedInternal(true);
     const removeConsentListeners = () => {
       window.removeEventListener('cc:onFirstConsent', markResponded);
       window.removeEventListener('cc:onConsent', markResponded);
@@ -44,12 +44,12 @@ export const useCookieConsent = ({
     window.addEventListener('cc:onChange', markResponded);
 
     if (analyticsEnabled) {
-      setHasResponded(window.CookieConsent?.validConsent?.() ?? false);
+      setHasRespondedInternal(window.CookieConsent?.validConsent?.() ?? false);
     }
 
     if (!analyticsEnabled) {
       console.log('Cookie consent not enabled - analyticsEnabled is false');
-      markResponded();
+      setHasRespondedInternal(false);
       return () => {
         removeConsentListeners();
       };
@@ -238,6 +238,8 @@ export const useCookieConsent = ({
         }
         if (window.CookieConsent?.validConsent?.()) {
           markResponded();
+        } else {
+          setHasRespondedInternal(false);
         }
         setIsInitialized(true);
       }, 100); // Small delay to ensure DOM is ready
@@ -284,11 +286,13 @@ export const useCookieConsent = ({
     return window.CookieConsent.acceptedService(service, category);
   }, []);
 
+  const effectiveHasResponded = analyticsEnabled ? hasRespondedInternal : true;
+
   return {
     showCookieConsent,
     showCookiePreferences,
     isServiceAccepted,
     isInitialized,
-    hasResponded,
+    hasResponded: effectiveHasResponded,
   };
 };
