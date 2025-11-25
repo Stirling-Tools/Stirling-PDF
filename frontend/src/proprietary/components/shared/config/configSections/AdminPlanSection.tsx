@@ -9,7 +9,6 @@ import AvailablePlansSection from '@app/components/shared/config/configSections/
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
@@ -32,9 +31,9 @@ const AdminPlanSection: React.FC = () => {
 
   // Check if we should use static version
   useEffect(() => {
-    // Check if Stripe is configured
-    const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!stripeKey || !isSupabaseConfigured || error) {
+    // Only use static version if Supabase is not configured or there's an error
+    // Stripe key is not required - hosted checkout works without it
+    if (!isSupabaseConfigured || error) {
       setUseStaticVersion(true);
     }
   }, [error]);
@@ -88,8 +87,13 @@ const AdminPlanSection: React.FC = () => {
 
   const handleManageClick = useCallback(async () => {
     try {
+      // Only allow PRO or ENTERPRISE licenses to access billing portal
+      if (!licenseInfo?.licenseType || licenseInfo.licenseType === 'NORMAL') {
+        throw new Error('No valid license found. Please purchase a license before accessing the billing portal.');
+      }
+
       if (!licenseInfo?.licenseKey) {
-        throw new Error('No license key found. Please activate a license first.');
+        throw new Error('License key missing. Please contact support.');
       }
 
       // Create billing portal session with license key
@@ -217,17 +221,6 @@ const AdminPlanSection: React.FC = () => {
           buttonVariant="filled"
           buttonColor="orange.7"
         />
-      )}
-      {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-      {licenseInfo?.licenseKey && isSupabaseConfigured && (
-        <Paper withBorder p="md" radius="md">
-          <Group justify="space-between" align="center">
-            <Text size="sm" c="dimmed">
-              {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-            </Text>
-            <ManageBillingButton />
-          </Group>
-        </Paper>
       )}
 
       <AvailablePlansSection

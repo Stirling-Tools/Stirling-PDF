@@ -175,7 +175,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   'server-license': {
     id: 'server-license',
     createSlide: ({ licenseNotice }) => ServerLicenseSlide({ licenseNotice }),
-    hero: { type: 'logo' },
+    hero: { type: 'dual-icon' },
     buttons: [
       {
         key: 'license-close',
