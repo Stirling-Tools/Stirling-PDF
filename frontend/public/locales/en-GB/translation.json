@@ -40,6 +40,11 @@
   "discardChanges": "Discard & Leave",
   "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
+  "backendStartup": {
+    "notFoundTitle": "Backend not found",
+    "retry": "Retry",
+    "unreachable": "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again."
+  },
   "zipWarning": {
     "title": "Large ZIP File",
     "message": "This ZIP contains {{count}} files. Extract anyway?",
