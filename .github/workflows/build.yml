@@ -204,16 +204,8 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    needs:
-      - files-changed
-      - ${{ needs.files-changed.outputs.docker == 'true' && 'test-build-docker-images' }}
-    if: ${{ 
-      needs.files-changed.outputs.project == 'true' &&
-      (
-        needs.files-changed.outputs.docker != 'true' ||
-        contains(fromJson('["success", "skipped"]'), needs.test-build-docker-images.result)
-      )
-    }}
+    if: needs.files-changed.outputs.project == 'true'
+    needs: files-changed
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
