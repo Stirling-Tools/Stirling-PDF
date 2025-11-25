@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -33,6 +34,8 @@ export default function Login() {
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
+  const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
   const loginEnabled = _enableLogin === true && backendProbe.loginDisabled !== true;
 
@@ -93,6 +96,10 @@ export default function Login() {
           }
 
           setEnableLogin(data.enableLogin ?? true);
+
+          // Set first-time setup flags
+          setIsFirstTimeSetup(data.firstTimeSetup ?? false);
+          setShowDefaultCredentials(data.showDefaultCredentials ?? false);
 
           // Extract provider IDs from the providerList map
           // The keys are like "/oauth2/authorization/google" - extract the last part
@@ -344,6 +351,31 @@ export default function Login() {
             submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
           />
         </div>
+      )}
+
+      {/* Help section - only show on first-time setup with default credentials */}
+      {isFirstTimeSetup && showDefaultCredentials && (
+        <Alert
+          color="blue"
+          variant="light"
+          radius="md"
+          mt="xl"
+        >
+          <Stack gap="xs" align="center">
+            <Text size="sm" fw={600} ta="center">
+              {t('login.defaultCredentials', 'Default Login Credentials')}
+            </Text>
+            <Text size="sm" ta="center">
+              <Text component="span" fw={600}>{t('login.username', 'Username')}:</Text> admin
+            </Text>
+            <Text size="sm" ta="center">
+              <Text component="span" fw={600}>{t('login.password', 'Password')}:</Text> stirling
+            </Text>
+            <Text size="xs" c="dimmed" ta="center" mt="xs">
+              {t('login.changePasswordWarning', 'Please change your password after logging in for the first time')}
+            </Text>
+          </Stack>
+        </Alert>
       )}
 
     </AuthLayout>

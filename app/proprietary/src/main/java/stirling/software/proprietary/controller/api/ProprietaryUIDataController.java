@@ -120,6 +120,37 @@ public class ProprietaryUIDataController {
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.getEnableLogin());
 
+        // Check if this is first-time setup with default credentials
+        // The isFirstLogin flag captures: default username/password usage and unchanged state
+        boolean isFirstTimeSetup = false;
+        boolean showDefaultCredentials = false;
+
+        List<User> allUsers = userRepository.findAll();
+        List<User> realUsers =
+                allUsers.stream()
+                        .filter(
+                                user ->
+                                        !Role.INTERNAL_API_USER
+                                                .getRoleId()
+                                                .equals(user.getUsername()))
+                        .toList();
+        long userCount = realUsers.size();
+
+        if (userCount == 0) {
+            isFirstTimeSetup = true;
+            showDefaultCredentials = true;
+        } else if (userCount == 1) {
+            Optional<User> adminUser = userRepository.findByUsernameIgnoreCase("admin");
+
+            if (adminUser.isPresent() && Boolean.TRUE.equals(adminUser.get().getIsFirstLogin())) {
+                isFirstTimeSetup = true;
+                showDefaultCredentials = true;
+            }
+        }
+
+        data.setFirstTimeSetup(isFirstTimeSetup);
+        data.setShowDefaultCredentials(showDefaultCredentials);
+
         OAUTH2 oauth = securityProps.getOauth2();
 
         if (oauth != null && oauth.getEnabled()) {
@@ -456,6 +487,8 @@ public class ProprietaryUIDataController {
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;
+        private boolean firstTimeSetup;
+        private boolean showDefaultCredentials;
     }
 
     @Data
