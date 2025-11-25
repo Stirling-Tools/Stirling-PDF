@@ -1,15 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
-import loginSlides from '@app/components/shared/loginSlides';
+import buildLoginSlides from '@app/components/shared/loginSlides';
 import styles from '@app/routes/authShared/AuthLayout.module.css';
+import { useLogoVariant } from '@app/hooks/useLogoVariant';
 
 interface AuthLayoutProps {
   children: React.ReactNode
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
+  const logoVariant = useLogoVariant();
+  const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
 
   // Force light mode on auth pages
   useEffect(() => {
@@ -52,7 +57,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div
         ref={cardRef}
         className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ''}`}
-        style={{ marginBottom: 'auto' }}
       >
         <div className={styles.authLeftPanel}>
           <div className={styles.authContent}>
@@ -60,7 +64,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </div>
         </div>
         {!hideRightPanel && (
-          <LoginRightCarousel imageSlides={loginSlides} initialSeconds={5} slideSeconds={8} />
+          <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
         )}
       </div>
     </div>

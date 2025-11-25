@@ -17,6 +17,8 @@
       "comingSoon": "Už čoskoro:",
       "favorite": "Pridať do obľúbených",
       "favorites": "Obľúbené",
+      "unavailable": "Zakázané správcom servera:",
+      "unavailableDependency": "Nedostupné – chýba požadovaný nástroj na serveri:",
       "heading": "Všetky nástroje (zobrazenie na celú obrazovku)",
       "noResults": "Skúste upraviť vyhľadávanie alebo prepnite popisy, aby ste našli, čo potrebujete.",
       "recommended": "Odporúčané",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Prepnúť na režim celej obrazovky",
       "sidebar": "Prepnúť na režim bočného panela"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Prémiová funkcia:",
+    "comingSoon": "Už čoskoro:"
   },
   "unsavedChanges": "Máte neuložené zmeny v PDF.",
   "areYouSure": "Naozaj chcete odísť?",
@@ -40,6 +45,30 @@
     "message": "Tento ZIP obsahuje {{count}} súborov. Aj tak rozbaliť?",
     "cancel": "Zrušiť",
     "confirm": "Rozbaliť"
+  },
+  "defaultApp": {
+    "title": "Nastaviť ako predvolenú aplikáciu PDF",
+    "message": "Chcete nastaviť Stirling PDF ako predvolený editor PDF?",
+    "description": "Neskôr to môžete zmeniť v nastaveniach systému.",
+    "notNow": "Teraz nie",
+    "setDefault": "Nastaviť ako predvolené",
+    "dismiss": "Zavrieť",
+    "prompt": {
+      "title": "Nastaviť ako predvolený editor PDF",
+      "message": "Nastavte Stirling PDF ako predvolenú aplikáciu na otváranie PDF súborov."
+    },
+    "success": {
+      "title": "Predvolená aplikácia nastavená",
+      "message": "Stirling PDF je teraz váš predvolený editor PDF"
+    },
+    "settingsOpened": {
+      "title": "Nastavenia otvorené",
+      "message": "Vyberte Stirling PDF v nastaveniach systému"
+    },
+    "error": {
+      "title": "Chyba",
+      "message": "Nepodarilo sa nastaviť predvolenú aplikáciu PDF"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Uložiť",
   "saveToBrowser": "Uložiť do prehliadača",
   "download": "Stiahnuť",
+  "downloadUnavailable": "Sťahovanie nie je pre túto položku dostupné",
+  "saveUnavailable": "Uloženie pre túto položku nie je dostupné",
   "pin": "Pripnúť súbor (ponechať aktívny po spustení nástroja)",
   "unpin": "Zrušiť pripnutie súboru (nahradiť po spustení nástroja)",
   "undoOperationTooltip": "Kliknutím vrátite poslednú operáciu a obnovíte pôvodné súbory",
@@ -168,6 +199,7 @@
   },
   "edit": "Upraviť",
   "delete": "Vymazať",
+  "never": "Nikdy",
   "username": "Používateľské meno",
   "password": "Heslo",
   "welcome": "Vitajte",
@@ -262,7 +294,8 @@
     "learnMore": "Viac informácií",
     "enable": "Povoliť analytiku",
     "disable": "Zakázať analytiku",
-    "settings": "Nastavenia analytiky môžete zmeniť v súbore config/settings.yml"
+    "settings": "Nastavenia analytiky môžete zmeniť v súbore config/settings.yml",
+    "privacyAssurance": "Nesledujeme žiadne osobné údaje ani obsah vašich súborov."
   },
   "navbar": {
     "favorite": "Obľúbené",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Nastavenia",
-    "update": "Dostupná aktualizácia",
-    "updateAvailable": "{0} je aktuálne nainštalovaná verzia. Nová verzia ({1}) je dostupná.",
-    "appVersion": "Verzia aplikácie:",
-    "downloadOption": {
-      "title": "Vyberte možnosť sťahovania (Pre jednotlivé neskomprimované súbory):",
-      "1": "Otvoriť v rovnakom okne",
-      "2": "Otvoriť v novom okne",
-      "3": "Stiahnuť súbor"
-    },
-    "zipThreshold": "Komprimovať súbory, keď počet stiahnutých súborov prekročí",
-    "signOut": "Odhlásiť sa",
-    "accountSettings": "Nastavenia účtu",
-    "bored": {
-      "help": "Umožňuje veľkonočnú hru"
-    },
-    "cacheInputs": {
-      "name": "Uložiť vstupy formulára",
-      "help": "Umožňuje uložiť predtým použité vstupy na budúce použitie"
+    "connection": {
+      "title": "Režim pripojenia",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-hostovaný"
+      },
+      "server": "Server",
+      "user": "Prihlásený ako",
+      "logout": "Odhlásiť sa"
     },
     "general": {
       "title": "Všeobecné",
       "description": "Nastavte všeobecné preferencie aplikácie.",
-      "account": "Účet",
-      "accountDescription": "Spravujte nastavenia účtu",
       "user": "Používateľ",
-      "signedInAs": "Prihlásený ako",
       "logout": "Odhlásiť sa",
       "enableFeatures": {
+        "dismiss": "Zavrieť",
         "title": "Pre správcov systému",
         "intro": "Povoľte overovanie používateľov, správu tímov a funkcie pracovného priestoru pre vašu organizáciu.",
         "action": "Nastaviť",
         "and": "a",
         "benefit": "Umožňuje používateľské roly, tímovú spoluprácu, administrátorské ovládanie a podnikové funkcie.",
-        "learnMore": "Viac v dokumentácii",
-        "dismiss": "Zavrieť"
+        "learnMore": "Viac v dokumentácii"
       },
-      "autoUnzip": "Automaticky rozbaliť odpovede API",
-      "autoUnzipDescription": "Automaticky extrahovať súbory zo ZIP odpovedí",
-      "autoUnzipTooltip": "Automaticky extrahuje ZIP súbory vrátené z operácií API. Zakážte, aby zostali ZIP súbory nedotknuté. Toto neovplyvní automatizačné pracovné postupy.",
-      "autoUnzipFileLimit": "Limit automatického rozbalenia súborov",
-      "autoUnzipFileLimitDescription": "Maximálny počet súborov na extrakciu zo ZIP",
-      "autoUnzipFileLimitTooltip": "Rozbaľovať len vtedy, ak ZIP obsahuje najviac tento počet súborov. Zvýšte hodnotu pre extrakciu väčších ZIPov.",
       "defaultToolPickerMode": "Predvolený režim výberu nástrojov",
       "defaultToolPickerModeDescription": "Vyberte, či sa výber nástrojov bude predvolene otvárať na celej obrazovke alebo v bočnom paneli",
       "mode": {
-        "fullscreen": "Celá obrazovka",
-        "sidebar": "Bočný panel"
-      }
+        "sidebar": "Bočný panel",
+        "fullscreen": "Celá obrazovka"
+      },
+      "autoUnzipTooltip": "Automaticky extrahuje ZIP súbory vrátené z operácií API. Zakážte, aby zostali ZIP súbory nedotknuté. Toto neovplyvní automatizačné pracovné postupy.",
+      "autoUnzip": "Automaticky rozbaliť odpovede API",
+      "autoUnzipDescription": "Automaticky extrahovať súbory zo ZIP odpovedí",
+      "autoUnzipFileLimitTooltip": "Rozbaľovať len vtedy, ak ZIP obsahuje najviac tento počet súborov. Zvýšte hodnotu pre extrakciu väčších ZIPov.",
+      "autoUnzipFileLimit": "Limit automatického rozbalenia súborov",
+      "autoUnzipFileLimitDescription": "Maximálny počet súborov na extrakciu zo ZIP",
+      "defaultPdfEditor": "Predvolený editor PDF",
+      "defaultPdfEditorActive": "Stirling PDF je váš predvolený editor PDF",
+      "defaultPdfEditorInactive": "Iná aplikácia je nastavená ako predvolená",
+      "defaultPdfEditorChecking": "Kontroluje sa...",
+      "defaultPdfEditorSet": "Už je predvolené",
+      "setAsDefault": "Nastaviť ako predvolené",
+      "updates": {
+        "title": "Aktualizácie softvéru",
+        "description": "Skontrolujte aktualizácie a zobrazte informácie o verzii",
+        "currentVersion": "Aktuálna verzia",
+        "latestVersion": "Najnovšia verzia",
+        "checkForUpdates": "Skontrolovať aktualizácie",
+        "viewDetails": "Zobraziť podrobnosti"
+      },
+      "hideUnavailableTools": "Skryť nedostupné nástroje",
+      "hideUnavailableToolsDescription": "Odstrániť nástroje zakázané vaším serverom namiesto ich sivého zobrazenia.",
+      "hideUnavailableConversions": "Skryť nedostupné konverzie",
+      "hideUnavailableConversionsDescription": "Odstrániť zakázané možnosti konverzie v nástroji Konvertovať namiesto ich sivého zobrazenia."
     },
     "hotkeys": {
-      "title": "Klávesové skratky",
-      "description": "Prejdite kurzorom na nástroj, aby ste videli jeho skratku, alebo si ju upravte nižšie. Kliknite na \"Zmeniť skratku\" a stlačte novú kombináciu kláves. Stlačením Esc zrušíte.",
-      "errorModifier": {
-        "mac": "Zahrňte ⌘ (Command), ⌥ (Option) alebo iný modifikátor do svojej skratky.",
-        "windows": "Zahrňte Ctrl, Alt alebo iný modifikátor do svojej skratky."
-      },
       "errorConflict": "Skratka sa už používa nástrojom {{tool}}.",
+      "searchPlaceholder": "Hľadať nástroje...",
       "none": "Nepriradené",
       "customBadge": "Vlastná",
       "defaultLabel": "Predvolené: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Zmeniť skratku",
       "reset": "Resetovať",
       "shortcut": "Skratka",
-      "noShortcut": "Nastavená žiadna skratka",
-      "searchPlaceholder": "Hľadať nástroje..."
+      "noShortcut": "Nastavená žiadna skratka"
     }
+  },
+  "update": {
+    "modalTitle": "Dostupná aktualizácia",
+    "current": "Aktuálna verzia",
+    "latest": "Najnovšia verzia",
+    "latestStable": "Najnovšia stabilná",
+    "priorityLabel": "Priorita",
+    "recommendedAction": "Odporúčaná akcia",
+    "breakingChangesDetected": "Zistené nezlučiteľné zmeny",
+    "breakingChangesMessage": "Niektoré verzie obsahujú nezlučiteľné zmeny. Pred aktualizáciou si pozrite migračné príručky nižšie.",
+    "migrationGuides": "Migračné príručky",
+    "viewGuide": "Zobraziť príručku",
+    "loadingDetailedInfo": "Načítavajú sa podrobné informácie...",
+    "close": "Zavrieť",
+    "viewAllReleases": "Zobraziť všetky vydania",
+    "downloadLatest": "Stiahnuť najnovšie",
+    "availableUpdates": "Dostupné aktualizácie",
+    "unableToLoadDetails": "Nedá sa načítať podrobné informácie.",
+    "version": "Verzia",
+    "urgentUpdateAvailable": "Urgentná aktualizácia",
+    "updateAvailable": "Dostupná aktualizácia",
+    "releaseNotes": "Poznámky k vydaniu",
+    "priority": {
+      "urgent": "Urgentná",
+      "normal": "Bežná",
+      "minor": "Menšia",
+      "low": "Nízka"
+    },
+    "breakingChanges": "Nezlučiteľné zmeny",
+    "breakingChangesDefault": "Táto verzia obsahuje nezlučiteľné zmeny.",
+    "migrationGuide": "Migračná príručka"
   },
   "changeCreds": {
     "title": "Zmeniť údaje",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Prekrýva PDF súbory na iný PDF",
       "title": "Prekrývanie PDF"
+    },
+    "pdfTextEditor": {
+      "title": "Editor textu PDF",
+      "desc": "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
+    },
+    "addText": {
+      "tags": "text,anotácia,štítok",
+      "title": "Pridať text",
+      "desc": "Pridajte vlastný text kdekoľvek do svojho PDF"
     }
   },
   "landing": {
     "addFiles": "Pridať súbory",
-    "uploadFromComputer": "Nahrať z počítača"
+    "uploadFromComputer": "Nahrať z počítača",
+    "openFromComputer": "Otvoriť z počítača"
   },
   "viewPdf": {
     "tags": "zobraziť,čítať,anotovať,text,obrázok",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Pri zlúčení PDF došlo k chybe."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Prehľad nastavení zlúčenia"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,obrázok,fotografia",
     "title": "Pridať obrázok",
     "header": "Pridať obrázok do PDF",
-    "everyPage": "Každá stránka?",
-    "upload": "Pridať obrázok",
-    "submit": "Pridať obrázok"
+    "image": {
+      "name": "Obrázok",
+      "placeholder": "Nahrajte obrázok",
+      "label": "Súbor obrázka"
+    },
+    "steps": {
+      "configure": "Nastaviť obrázok"
+    },
+    "step": {
+      "createDesc": "Nahrajte obrázok, ktorý chcete pridať",
+      "place": "Umiestniť obrázok",
+      "placeDesc": "Kliknite na PDF a pridajte svoj obrázok"
+    },
+    "instructions": {
+      "title": "Ako pridávať obrázky",
+      "text": "Po nahratí obrázka vyššie kliknite kdekoľvek do PDF na jeho umiestnenie.",
+      "paused": "Umiestňovanie pozastavené",
+      "resumeHint": "Obnovte umiestňovanie, potom kliknite a pridajte svoj obrázok.",
+      "noSignature": "Nahrajte vyššie obrázok na povolenie umiestňovania."
+    },
+    "mode": {
+      "move": "Presunúť obrázok",
+      "place": "Umiestniť obrázok",
+      "pause": "Pozastaviť umiestňovanie",
+      "resume": "Obnoviť umiestňovanie"
+    },
+    "results": {
+      "title": "Výsledky pridania obrázka"
+    },
+    "error": {
+      "failed": "Pri pridávaní obrázka do PDF sa vyskytla chyba."
+    },
+    "saved": {
+      "defaultLabel": "Obrázok",
+      "defaultImageLabel": "Nahraný obrázok"
+    },
+    "applySignatures": "Použiť obrázky"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Zakázať tlač rôznych formátov"
     },
     "submit": "Zmeniť"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Záložky a osnova",
+      "replaceExisting": "Nahradiť existujúce záložky (odškrtnite pre pripojenie)",
+      "replaceExistingHint": "Keď je vypnuté, nová osnova sa pripojí za aktuálne záložky."
+    },
+    "actions": {
+      "source": "Načítať záložky",
+      "selectedFile": "Načítané zo {{file}}",
+      "noFile": "Vyberte PDF na extrahovanie existujúcich záložiek.",
+      "loadFromPdf": "Načítať z vybraného PDF",
+      "importJson": "Importovať JSON",
+      "importClipboard": "Vložiť JSON zo schránky",
+      "export": "Exportovať záložky",
+      "exportJson": "Stiahnuť JSON",
+      "exportClipboard": "Kopírovať JSON do schránky",
+      "clipboardUnavailable": "Prístup k schránke nie je v tomto prehliadači dostupný."
+    },
+    "info": {
+      "line1": "Každá záložka potrebuje popisný názov a stranu, ktorú má otvoriť.",
+      "line2": "Použite podriadené záložky na vytvorenie hierarchie pre kapitoly, sekcie alebo podsekcie.",
+      "line3": "Importujte záložky z vybraného PDF alebo zo súboru JSON a ušetrite čas."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Otvorte nástroj a začnite upravovať",
+        "description": "Vyberte nástroj Upraviť obsah na načítanie pracovného priestoru."
+      },
+      "tabTitle": "Pracovný priestor osnovy",
+      "subtitle": "Importujte záložky, budujte hierarchie a aplikujte osnovu bez stiesnených bočných panelov.",
+      "noFile": "Nie je vybrané žiadne PDF",
+      "fileLabel": "Zmeny sa použijú na aktuálne vybrané PDF.",
+      "filePrompt": "Vyberte PDF zo svojej knižnice alebo nahrajte nové a začnite.",
+      "changeFile": "Zmeniť PDF",
+      "selectFile": "Vybrať PDF"
+    },
+    "editor": {
+      "heading": "Editor záložiek",
+      "description": "Pridávajte, vnárajte a preusporadúvajte záložky a vytvorte osnovu PDF.",
+      "addTopLevel": "Pridať záložku najvyššej úrovne",
+      "empty": {
+        "title": "Zatiaľ žiadne záložky",
+        "description": "Importujte existujúce záložky alebo začnite pridaním prvej položky.",
+        "action": "Pridať prvú záložku"
+      },
+      "defaultTitle": "Nová záložka",
+      "defaultChildTitle": "Podriadená záložka",
+      "defaultSiblingTitle": "Nová záložka",
+      "untitled": "Bez názvu",
+      "childBadge": "Podriadená",
+      "pagePreview": "Strana {{page}}",
+      "field": {
+        "title": "Názov záložky",
+        "page": "Cieľové číslo strany"
+      },
+      "actions": {
+        "toggle": "Prepnúť podriadené",
+        "addChild": "Pridať podriadenú záložku",
+        "addSibling": "Pridať súrodeneckú záložku",
+        "remove": "Odstrániť záložku"
+      },
+      "confirmRemove": "Odstrániť túto záložku a všetky jej podriadené?"
+    },
+    "messages": {
+      "loadedTitle": "Záložky extrahované",
+      "loadedBody": "Existujúce záložky z PDF boli načítané do editora.",
+      "noBookmarks": "Vo vybranom PDF sa nenašli žiadne záložky.",
+      "loadFailed": "Nepodarilo sa extrahovať záložky z vybraného PDF.",
+      "imported": "Záložky importované",
+      "importedBody": "Vaša JSON osnova nahradila aktuálny obsah editora.",
+      "importedClipboard": "Dáta zo schránky nahradili aktuálny zoznam záložiek.",
+      "invalidJson": "Neplatná štruktúra JSON",
+      "invalidJsonBody": "Poskytnite platný JSON súbor so záložkami a skúste znova.",
+      "exported": "JSON pripravený na stiahnutie",
+      "copied": "Skopírované do schránky",
+      "copiedBody": "JSON záložiek bol úspešne skopírovaný.",
+      "copyFailed": "Kopírovanie zlyhalo"
+    },
+    "error": {
+      "failed": "Nepodarilo sa aktualizovať obsah"
+    },
+    "submit": "Použiť obsah",
+    "results": {
+      "title": "Aktualizované PDF so záložkami",
+      "subtitle": "Stiahnite spracovaný súbor alebo vráťte operáciu nižšie."
+    }
   },
   "removePages": {
     "tags": "Odstrániť stránky,vymazať stránky",
@@ -1978,13 +2177,54 @@
       "title": "Nakreslite svoj podpis",
       "clear": "Vymazať"
     },
+    "canvas": {
+      "heading": "Nakreslite svoj podpis",
+      "clickToOpen": "Kliknite pre otvorenie kresliaceho plátna",
+      "modalTitle": "Nakreslite svoj podpis",
+      "colorLabel": "Farba",
+      "penSizeLabel": "Hrúbka pera",
+      "penSizePlaceholder": "Veľkosť",
+      "clear": "Vymazať plátno",
+      "colorPickerTitle": "Vyberte farbu ťahu"
+    },
     "text": {
       "name": "Meno podpisujúceho",
-      "placeholder": "Zadajte svoje celé meno"
+      "placeholder": "Zadajte svoje celé meno",
+      "fontLabel": "Písmo",
+      "fontSizeLabel": "Veľkosť písma",
+      "fontSizePlaceholder": "Zadajte alebo vyberte veľkosť písma (8-200)",
+      "colorLabel": "Farba textu"
     },
     "clear": "Vymazať",
     "add": "Pridať",
-    "saved": "Uložené podpisy",
+    "saved": {
+      "heading": "Uložené podpisy",
+      "description": "Uložené podpisy môžete použiť kedykoľvek.",
+      "emptyTitle": "Zatiaľ žiadne uložené podpisy",
+      "emptyDescription": "Nakreslite, nahrajte alebo napíšte podpis vyššie a potom použite „Uložiť do knižnice“ na uchovanie až {{max}} obľúbených pripravených na použitie.",
+      "type": {
+        "canvas": "Kresba",
+        "image": "Nahranie",
+        "text": "Text"
+      },
+      "limitTitle": "Dosiahnutý limit",
+      "limitDescription": "Pred pridaním nových odstráňte uložený podpis (max. {{max}}).",
+      "carouselPosition": "{{current}} z {{total}}",
+      "prev": "Predchádzajúci",
+      "next": "Ďalej",
+      "delete": "Odstrániť",
+      "label": "Štítok",
+      "defaultLabel": "Podpis",
+      "defaultCanvasLabel": "Kreslený podpis",
+      "defaultImageLabel": "Nahraný podpis",
+      "defaultTextLabel": "Napísaný podpis",
+      "saveButton": "Uložiť podpis",
+      "saveUnavailable": "Najprv vytvorte podpis, aby ste ho mohli uložiť.",
+      "noChanges": "Aktuálny podpis je už uložený.",
+      "status": {
+        "saved": "Uložené"
+      }
+    },
     "save": "Uložiť podpis",
     "applySignatures": "Použiť podpisy",
     "personalSigs": "Osobné podpisy",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Nastaviť podpis"
     },
+    "step": {
+      "createDesc": "Vyberte, ako chcete vytvoriť podpis",
+      "place": "Umiestniť a uložiť",
+      "placeDesc": "Umiestnite podpis do svojho PDF"
+    },
     "type": {
       "title": "Typ podpisu",
       "draw": "Kresliť",
       "canvas": "Plátno",
       "image": "Obrázok",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Uložené"
     },
     "image": {
       "label": "Nahrať obrázok podpisu",
@@ -2019,11 +2265,17 @@
       "title": "Ako pridať podpis",
       "canvas": "Po nakreslení podpisu v plátne zatvorte okno a potom kliknite kdekoľvek do PDF, aby ste ho umiestnili.",
       "image": "Po nahraní obrázka podpisu vyššie kliknite kdekoľvek do PDF, aby ste ho umiestnili.",
-      "text": "Po zadaní svojho mena vyššie kliknite kdekoľvek do PDF, aby ste umiestnili svoj podpis."
+      "saved": "Vyberte uložený podpis vyššie, potom kliknite kdekoľvek do PDF na jeho umiestnenie.",
+      "text": "Po zadaní svojho mena vyššie kliknite kdekoľvek do PDF, aby ste umiestnili svoj podpis.",
+      "paused": "Umiestňovanie pozastavené",
+      "resumeHint": "Obnovte umiestňovanie a kliknutím pridajte svoj podpis.",
+      "noSignature": "Vytvorte podpis vyššie, aby sa povolili nástroje umiestňovania."
     },
     "mode": {
       "move": "Presúvať podpis",
-      "place": "Umiestniť podpis"
+      "place": "Umiestniť podpis",
+      "pause": "Pozastaviť umiestňovanie",
+      "resume": "Obnoviť umiestňovanie"
     },
     "updateAndPlace": "Aktualizovať a umiestniť",
     "activate": "Aktivovať umiestňovanie podpisu",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "O odstránení anotácií",
       "description": "Tento nástroj odstráni všetky anotácie (komentáre, zvýraznenia, poznámky atď.) z vašich PDF dokumentov."
+    },
+    "tooltip": {
+      "header": {
+        "title": "O nástroji Odstrániť anotácie"
+      },
+      "description": {
+        "title": "Čo robí"
+      }
     },
     "error": {
       "failed": "Počas odstraňovania anotácií z PDF došlo k chybe."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Ako funguje automatické premenovanie"
       },
+      "description": {
+        "title": "Čo robí"
+      },
       "howItWorks": {
         "title": "Inteligentné premenovanie",
         "text": "Automaticky nájde názov z obsahu vášho PDF a použije ho ako názov súboru.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Vytvorí čistý, platný názov súboru z detegovaného názvu",
         "bullet3": "Ponechá pôvodný názov, ak sa nenájde vhodný titulok"
       }
+    },
+    "settings": {
+      "title": "O nástroji"
     }
   },
   "adjust-contrast": {
@@ -3227,7 +3493,26 @@
     "unexpectedError": "Neočakávaná chyba: {{message}}",
     "accountCreatedSuccess": "Účet bol úspešne vytvorený! Teraz sa môžete prihlásiť.",
     "passwordChangedSuccess": "Heslo bolo úspešne zmenené! Prihláste sa novým heslom.",
-    "credentialsUpdated": "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova."
+    "credentialsUpdated": "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova.",
+    "defaultCredentials": "Predvolené prihlasovacie údaje",
+    "changePasswordWarning": "Zmeňte si heslo po prvom prihlásení",
+    "slides": {
+      "overview": {
+        "alt": "Prehľad Stirling PDF",
+        "title": "Všetko pre vaše PDF na jednom mieste.",
+        "subtitle": "Cloudová sada s dôrazom na súkromie pre PDF: konvertovanie, podpisovanie, začierňovanie a správa dokumentov, a 50+ ďalších výkonných nástrojov."
+      },
+      "edit": {
+        "alt": "Úprava PDF",
+        "title": "Upravujte PDF na zobrazenie/ochranu požadovaných informácií",
+        "subtitle": "S viac než tuctom nástrojov na začierňovanie, podpisovanie, čítanie a prácu s PDF určite nájdete, čo hľadáte."
+      },
+      "secure": {
+        "alt": "Zabezpečenie PDF",
+        "title": "Chráňte citlivé informácie v PDF",
+        "subtitle": "Jednoducho pridávajte heslá, začierňujte obsah a spravujte certifikáty."
+      }
+    }
   },
   "signup": {
     "title": "Vytvoriť účet",
@@ -3598,7 +3883,9 @@
     "exportAll": "Exportovať PDF",
     "downloadSelected": "Stiahnuť vybrané súbory",
     "downloadAll": "Stiahnuť všetko",
+    "saveAll": "Uložiť všetko",
     "toggleTheme": "Prepnúť tému",
+    "toggleBookmarks": "Prepnúť záložky",
     "language": "Jazyk",
     "search": "Hľadať v PDF",
     "panMode": "Režim posunu",
@@ -3685,8 +3972,16 @@
       "saved": "Nastavenia boli úspešne uložené",
       "saveSuccess": "Nastavenia boli úspešne uložené",
       "save": "Uložiť zmeny",
+      "discard": "Zahodiť",
       "restartRequired": "Vyžaduje sa reštart",
       "loginRequired": "Na úpravu administrátorských nastavení musí byť povolené prihlásenie",
+      "unsavedChanges": {
+        "title": "Neuložené zmeny",
+        "message": "Máte neuložené zmeny. Chcete ich zahodiť?",
+        "cancel": "Pokračovať v úpravách",
+        "discard": "Zahodiť zmeny",
+        "hint": "Máte neuložené zmeny"
+      },
       "loginDisabled": {
         "title": "Vyžaduje sa režim prihlásenia",
         "message": "Na úpravu administrátorských nastavení musí byť povolený režim prihlásenia. Nastavte SECURITY_ENABLELOGIN=true vo vašom prostredí alebo security.enableLogin: true v settings.yml, potom reštartujte server.",
@@ -3869,7 +4164,7 @@
           },
           "level": {
             "label": "Úroveň auditu",
-            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+            "description": "0=VYP., 1=ZÁKLADNÉ, 2=ŠTANDARD, 3=PODROBNÉ"
           },
           "retentionDays": {
             "label": "Doba uchovania auditu (dni)",
@@ -3947,15 +4242,15 @@
             "description": "Poskytovateľ OAuth2 použitý pre overenie"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL vydavateľa",
             "description": "Adresa URL vydavateľa poskytovateľa OAuth2"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "ID klienta",
             "description": "OAuth2 Client ID od vášho poskytovateľa"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "Tajný kľúč klienta",
             "description": "OAuth2 Client Secret od vášho poskytovateľa"
           },
           "useAsUsername": {
@@ -3971,7 +4266,7 @@
             "description": "Zabrániť registrácii nových používateľov cez OAuth2"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
+            "label": "Rozsahy OAuth2",
             "description": "Čiarkou oddelený zoznam OAuth2 scopes (napr. openid, profile, email)"
           }
         },
@@ -4212,9 +4507,21 @@
         "title": "Premium a Enterprise",
         "description": "Nakonfigurujte svoj Premium alebo Enterprise licenčný kľúč.",
         "license": "Konfigurácia licencie",
+        "licenseKey": {
+          "toggle": "Máte licenčný kľúč alebo súbor certifikátu?",
+          "info": "Ak máte licenčný kľúč alebo súbor certifikátu z priameho nákupu, môžete ho sem zadať na aktiváciu prémiových alebo enterprise funkcií."
+        },
         "key": {
           "label": "Licenčný kľúč",
-          "description": "Zadajte svoj Premium alebo Enterprise licenčný kľúč"
+          "description": "Zadajte svoj Premium alebo Enterprise licenčný kľúč",
+          "success": "Licenčný kľúč uložený",
+          "successMessage": "Váš licenčný kľúč bol úspešne aktivovaný. Reštart nie je potrebný.",
+          "overwriteWarning": {
+            "title": "⚠️ Upozornenie: Zistená existujúca licencia",
+            "line1": "Prepísanie aktuálneho licenčného kľúča nemožno vrátiť späť.",
+            "line2": "Vaša predchádzajúca licencia bude natrvalo stratená, pokiaľ ju nemáte zálohovanú inde.",
+            "line3": "Dôležité: Licenčné kľúče uchovávajte súkromné a v bezpečí. Nikdy ich nezdieľajte verejne."
+          }
         },
         "enabled": {
           "label": "Povoliť Premium funkcie",
@@ -4278,12 +4585,17 @@
     "or": "alebo",
     "dropFileHere": "Presuňte súbor sem alebo kliknite pre nahratie",
     "dropFilesHere": "Presuňte súbory sem alebo kliknite na tlačidlo nahrania",
+    "dropFilesHereOpen": "Pretiahnite súbory sem alebo kliknite na tlačidlo Otvoriť",
     "pdfFilesOnly": "Iba súbory PDF",
     "supportedFileTypes": "Podporované typy súborov",
     "upload": "Nahrať",
     "uploadFile": "Nahrať súbor",
     "uploadFiles": "Nahrať súbory",
+    "open": "Otvoriť",
+    "openFile": "Otvoriť súbor",
+    "openFiles": "Otvoriť súbory",
     "noFilesInStorage": "V úložisku nie sú dostupné žiadne súbory. Najprv nahrajte nejaké súbory.",
+    "noFilesInStorageOpen": "V úložisku nie sú dostupné žiadne súbory. Najprv otvorte nejaké súbory.",
     "selectFromStorage": "Vybrať z úložiska",
     "backToTools": "Späť na Nástroje",
     "addFiles": "Pridať súbory",
@@ -4329,6 +4641,8 @@
     "myFiles": "Moje súbory",
     "noRecentFiles": "Nenašli sa žiadne nedávne súbory",
     "googleDriveNotAvailable": "Integrácia Google Drive nie je dostupná",
+    "downloadSelected": "Stiahnuť vybrané",
+    "saveSelected": "Uložiť vybrané",
     "openFiles": "Otvoriť súbory",
     "openFile": "Otvoriť súbor",
     "details": "Podrobnosti o súbore",
@@ -4341,7 +4655,6 @@
     "selectAll": "Vybrať všetko",
     "deselectAll": "Zrušiť výber všetkých",
     "deleteSelected": "Odstrániť vybrané",
-    "downloadSelected": "Stiahnuť vybrané",
     "selectedCount": "{{count}} vybraných",
     "download": "Stiahnuť",
     "delete": "Vymazať",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "Bezpečnostný pracovný postup",
       "secureWorkflowDesc": "Zabezpečí dokumenty PDF odstránením potenciálne škodlivého obsahu ako JavaScript a vložené súbory, potom pridá ochranu heslom na zabránenie neoprávnenému prístupu. Heslo je predvolene nastavené na 'password'.",
       "processImages": "Spracovať obrázky",
-      "processImagesDesc": "Skonvertuje viacero obrazových súborov do jedného dokumentu PDF a potom použije technológiu OCR na extrakciu vyhľadávateľného textu z obrázkov."
+      "processImagesDesc": "Skonvertuje viacero obrazových súborov do jedného dokumentu PDF a potom použije technológiu OCR na extrakciu vyhľadávateľného textu z obrázkov.",
+      "prePublishSanitization": "Sanitizácia pred zverejnením",
+      "prePublishSanitizationDesc": "Postup, ktorý odstráni všetky skryté metaúdaje, JavaScript, vložené súbory, anotácie a zploští formuláre, aby sa zabránilo úniku dát pred zverejnením PDF online."
     }
+  },
+  "colorPicker": {
+    "title": "Vyberte farbu"
   },
   "common": {
     "previous": "Predchádzajúce",
@@ -4639,7 +4957,13 @@
     "used": "použité",
     "available": "dostupné",
     "cancel": "Zrušiť",
-    "preview": "Náhľad"
+    "preview": "Náhľad",
+    "close": "Zavrieť",
+    "done": "Hotovo",
+    "loading": "Načítava sa...",
+    "back": "Späť",
+    "continue": "Pokračovať",
+    "error": "Chyba"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "Pridať ďalšie súbory...",
     "selectedFiles": "Vybrané súbory",
     "submit": "Pridať prílohy",
+    "tooltip": {
+      "header": {
+        "title": "O nástroji Pridať prílohy"
+      },
+      "description": {
+        "title": "Čo robí"
+      }
+    },
     "results": {
       "title": "Výsledky príloh"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "Vlastná pozícia",
   "details": "Podrobnosti",
-  "downloadUnavailable": "Sťahovanie nie je pre túto položku dostupné",
   "invalidUndoData": "Nemožno vrátiť: neplatné údaje operácie",
   "margin": {
     "large": "Veľké",
@@ -4801,6 +5132,10 @@
       "maybeLater": "Možno neskôr",
       "dontShowAgain": "Viac nezobrazovať"
     },
+    "welcomeSlide": {
+      "title": "Vitajte v Stirling",
+      "body": "Stirling PDF je teraz pripravený pre tímy všetkých veľkostí. Táto aktualizácia prináša nové rozloženie, silné admin schopnosti a našu najžiadanejšiu funkciu - <strong>Upraviť text</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Vyberme nástroj <strong>Orez</strong>, aby sme ukázali, ako používať jeden z nástrojov.",
     "toolInterface": "Toto je rozhranie nástroja <strong>Orez</strong>. Ako vidíte, zatiaľ tu toho veľa nie je, pretože sme ešte nepridali žiadne súbory PDF, s ktorými by sme pracovali.",
@@ -4823,7 +5158,39 @@
     "next": "Ďalej",
     "finish": "Dokončiť",
     "startTour": "Spustiť prehliadku",
-    "startTourDescription": "Prejdite si sprievodcu kľúčovými funkciami Stirling PDF"
+    "startTourDescription": "Prejdite si sprievodcu kľúčovými funkciami Stirling PDF",
+    "buttons": {
+      "next": "Ďalej →",
+      "back": "Späť",
+      "skipForNow": "Preskočiť zatiaľ",
+      "download": "Stiahnuť →",
+      "showMeAround": "Ukážte mi to",
+      "skipTheTour": "Preskočiť prehliadku"
+    },
+    "serverLicense": {
+      "skip": "Preskočiť zatiaľ",
+      "seePlans": "Zobraziť plány →",
+      "upgrade": "Upgradovať teraz →",
+      "freeTitle": "Serverová licencia",
+      "overLimitTitle": "Potrebná serverová licencia",
+      "overLimitBody": "Naše licencovanie povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> používateľov Stirling. Ak chcete pokračovať bez prerušenia, prejdite na plán Stirling Server - <strong>neobmedzené miesta</strong>, úpravy textu PDF a plná správa pre $99/server/mo.",
+      "freeBody": "Naše licencovanie <strong>Open-Core</strong> povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Ak chcete škálovať bez prerušenia a získať skorý prístup k nášmu novému <strong>nástroju na úpravu textu PDF</strong>, odporúčame plán Stirling Server - plné úpravy a <strong>neobmedzené miesta</strong> za $99/server/mo."
+    },
+    "desktopInstall": {
+      "title": "Stiahnuť",
+      "titleWithOs": "Stiahnuť pre {{osLabel}}",
+      "body": "Stirling najlepšie funguje ako desktopová aplikácia. Môžete ju používať offline, pristupovať k dokumentom rýchlejšie a upravovať lokálne na počítači."
+    },
+    "planOverview": {
+      "adminTitle": "Prehľad pre admina",
+      "userTitle": "Prehľad plánu",
+      "adminBodyLoginEnabled": "Ako admin môžete spravovať používateľov, konfigurovať nastavenia a monitorovať stav servera. Prvých <strong>{{freeTierLimit}}</strong> ľudí na vašom serveri môže používať Stirling bezplatne.",
+      "adminBodyLoginDisabled": "Keď zapnete režim prihlásenia, môžete spravovať používateľov, konfigurovať nastavenia a monitorovať stav servera. Prvých <strong>{{freeTierLimit}}</strong> ľudí na vašom serveri môže používať Stirling bezplatne.",
+      "userBody": "Pozvite kolegov, priraďujte roly a udržujte dokumenty organizované v jednom bezpečnom pracovnom priestore. Režim prihlásenia zapnite, keď ste pripravení rásť nad sólo použitie."
+    },
+    "securityCheck": {
+      "message": "Aplikácia prešla nedávno významnými zmenami. Môže byť potrebná pozornosť vášho správcu servera. Potvrďte svoju rolu, aby ste pokračovali."
+    }
   },
   "adminOnboarding": {
     "welcome": "Vitajte v <strong>administrátorskom sprievodcovi</strong>! Poďme preskúmať výkonné podnikové funkcie a nastavenia dostupné pre systémových administrátorov.",
@@ -4852,7 +5219,10 @@
       "role": "Rola",
       "team": "Tím",
       "status": "Stav",
-      "actions": "Akcie",
+      "actions": {
+        "label": "Akcie",
+        "upgrade": "Upgradovať"
+      },
       "noMembersFound": "Nenašli sa žiadni členovia",
       "active": "Aktívny",
       "disabled": "Zakázaný",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "K dispozícii {{count}} miest pre používateľov",
         "noSlotsAvailable": "Žiadne voľné miesta",
         "currentUsage": "Aktuálne používaných {{current}} z {{max}} používateľských licencií"
-      }
+      },
+      "loginRequired": "Najprv zapnite režim prihlásenia"
     },
     "teams": {
       "title": "Tímy",
@@ -5057,6 +5428,17 @@
     "showComparison": "Porovnať všetky funkcie",
     "hideComparison": "Skryť porovnanie funkcií",
     "featureComparison": "Porovnanie funkcií",
+    "from": "Od",
+    "perMonth": "/mesiac",
+    "perSeat": "/miesto",
+    "withServer": "+ Server plán",
+    "licensedSeats": "Licencovaných: {{count}} miest",
+    "includedInCurrent": "Súčasť vášho plánu",
+    "selectPlan": "Vybrať plán",
+    "manage": "Spravovať",
+    "manageSubscription": {
+      "description": "Spravujte predplatné, fakturáciu a platobné metódy"
+    },
     "activePlan": {
       "title": "Aktívny plán",
       "subtitle": "Podrobnosti vášho aktuálneho predplatného"
@@ -5074,13 +5456,16 @@
       "upTo": "Až do"
     },
     "period": {
-      "month": "mesiac"
+      "month": "mesiac",
+      "perUserPerMonth": "/používateľ/mesiac"
     },
     "free": {
       "name": "Bezplatný",
       "highlight1": "Obmedzené používanie nástrojov za týždeň",
       "highlight2": "Prístup ku všetkým nástrojom",
-      "highlight3": "Podpora komunity"
+      "highlight3": "Podpora komunity",
+      "forever": "Navždy zadarmo",
+      "included": "Zahrnuté"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5477,9 @@
       "name": "Enterprise",
       "highlight1": "Vlastné ceny",
       "highlight2": "Vyhradená podpora",
-      "highlight3": "Najnovšie funkcie"
+      "highlight3": "Najnovšie funkcie",
+      "requiresServer": "Vyžaduje server",
+      "requiresServerMessage": "Pred prechodom na Enterprise najprv prejdite na Server plán."
     },
     "feature": {
       "title": "Funkcia",
@@ -5102,6 +5489,12 @@
       "api": "Prístup k API",
       "priority": "Prioritná podpora",
       "customPricing": "Vlastné ceny"
+    },
+    "licenseWarning": {
+      "title": "Dosiahnutý bezplatný limit self-hostingu",
+      "body": "Máte {{total}} používateľov, ale bezplatná úroveň podporuje len {{limit}} na server. Upgradujte, aby Stirling PDF bežal hladko.",
+      "overLimit": "viac než {{limit}}",
+      "cta": "Zobraziť plány"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "Spravovať fakturáciu",
     "portal": {
       "error": "Nepodarilo sa otvoriť fakturačný portál"
-    }
+    },
+    "updateSeats": "Aktualizovať miesta",
+    "updateEnterpriseSeats": "Aktualizovať miesta Enterprise",
+    "currentSeats": "Aktuálny počet miest",
+    "minimumSeats": "Minimálny počet miest",
+    "basedOnUsers": "(aktuálni používatelia)",
+    "newSeatCount": "Nový počet miest",
+    "newSeatCountDescription": "Vyberte počet miest pre vašu Enterprise licenciu",
+    "whatHappensNext": "Čo nasleduje?",
+    "stripePortalRedirect": "Budete presmerovaní do fakturačného portálu Stripe na kontrolu a potvrdenie zmeny miest. Pomerná suma bude vypočítaná automaticky.",
+    "preparingUpdate": "Pripravuje sa aktualizácia miest...",
+    "seatCountTooLow": "Počet miest musí byť aspoň {{minimum}} (aktuálny počet používateľov)",
+    "seatCountUnchanged": "Vyberte iný počet miest",
+    "seatsUpdated": "Miesta aktualizované",
+    "seatsUpdatedMessage": "Vaše miesta Enterprise boli aktualizované na {{seats}}",
+    "updateProcessing": "Prebieha aktualizácia",
+    "updateProcessingMessage": "Vaša aktualizácia miest sa spracúva. Obnovte o chvíľu.",
+    "notEnterprise": "Správa miest je dostupná len pre licencie Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Upgradovať na Server plán",
+    "message": "Využite Stirling PDF naplno s neobmedzenými používateľmi a pokročilými funkciami",
+    "upgradeButton": "Upgradovať teraz",
+    "dismiss": "Skryť banner",
+    "attentionTitle": "Tento server vyžaduje pozornosť admina",
+    "attentionBody": "Váš admin sa musí prihlásiť na zobrazenie ďalších informácií. Ihneď ho kontaktujte.",
+    "attentionBodyAdmin": "Skontrolujte licenčné požiadavky, aby tento server zostal v súlade.",
+    "seeInfo": "Zobraziť info"
   },
   "payment": {
     "preparing": "Pripravuje sa platba...",
@@ -5128,7 +5548,61 @@
     "success": "Platba bola úspešná!",
     "successMessage": "Vaše predplatné bolo úspešne aktivované. Čoskoro dostanete potvrdzujúci e-mail.",
     "autoClose": "Toto okno sa automaticky zatvorí...",
-    "error": "Chyba platby"
+    "error": "Chyba platby",
+    "upgradeSuccess": "Platba úspešná! Vaše predplatné bolo upgradované. Licencia bola aktualizovaná na vašom serveri. Čoskoro dostanete potvrdzujúci email.",
+    "paymentSuccess": "Platba úspešná! Získava sa váš licenčný kľúč...",
+    "licenseActivated": "Licencia aktivovaná! Váš licenčný kľúč bol uložený. Potvrdzujúci email bol odoslaný na vašu registrovanú adresu.",
+    "licenseDelayed": "Platba úspešná! Vaša licencia sa generuje. Čoskoro dostanete email s licenčným kľúčom. Ak ho nedostanete do 10 minút, kontaktujte podporu.",
+    "licensePollingError": "Platba úspešná, ale licenčný kľúč sa nepodarilo získať automaticky. Skontrolujte svoj email alebo kontaktujte podporu s potvrdením platby.",
+    "licenseRetrievalError": "Platba úspešná, ale získanie licencie zlyhalo. Licenčný kľúč dostanete emailom. Ak ho nedostanete do 10 minút, kontaktujte podporu.",
+    "syncError": "Platba úspešná, ale synchronizácia licencie zlyhala. Vaša licencia bude čoskoro aktualizovaná. Ak problémy pretrvávajú, kontaktujte podporu.",
+    "licenseSaveError": "Nepodarilo sa uložiť licenčný kľúč. Kontaktujte podporu a dokončite aktiváciu pomocou licenčného kľúča.",
+    "paymentCanceled": "Platba bola zrušená. K úhrade nedošlo.",
+    "syncingLicense": "Synchronizuje sa vaša aktualizovaná licencia...",
+    "generatingLicense": "Generuje sa váš licenčný kľúč...",
+    "upgradeComplete": "Upgrade dokončený",
+    "upgradeCompleteMessage": "Vaše predplatné bolo úspešne upgradované. Existujúci licenčný kľúč bol aktualizovaný.",
+    "stripeNotConfigured": "Stripe nie je nastavený",
+    "stripeNotConfiguredMessage": "Integrácia platieb Stripe nie je nastavená. Kontaktujte svojho administrátora.",
+    "monthly": "Mesačne",
+    "yearly": "Ročne",
+    "billingPeriod": "Fakturačné obdobie",
+    "enterpriseNote": "Miesta možno upraviť v pokladni (1-1000).",
+    "installationId": "ID inštalácie",
+    "licenseKey": "Váš licenčný kľúč",
+    "licenseInstructions": "Toto bolo pridané do vašej inštalácie. Kópiu dostanete aj emailom.",
+    "canCloseWindow": "Teraz môžete toto okno zavrieť.",
+    "licenseKeyProcessing": "Spracovanie licenčného kľúča",
+    "licenseDelayedMessage": "Váš licenčný kľúč sa generuje. Čoskoro si skontrolujte email alebo kontaktujte podporu.",
+    "perYear": "/rok",
+    "perMonth": "/mesiac",
+    "emailInvalid": "Zadajte platnú emailovú adresu",
+    "emailStage": {
+      "title": "Zadajte svoj email",
+      "description": "Použijeme ho na odoslanie licenčného kľúča a potvrdeniek.",
+      "emailLabel": "Emailová adresa",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Pokračovať",
+      "modalTitle": "Začíname - {{planName}}"
+    },
+    "planStage": {
+      "title": "Vyberte fakturačné obdobie",
+      "savingsNote": "Ušetrite {{percent}}% s ročnou fakturáciou",
+      "basePrice": "Základná cena",
+      "seatPrice": "Za miesto",
+      "totalForSeats": "Spolu ({{count}} miest)",
+      "selectMonthly": "Vybrať mesačne",
+      "selectYearly": "Vybrať ročne",
+      "savePercent": "Ušetriť {{percent}}%",
+      "savingsAmount": "Ušetríte {{amount}}",
+      "modalTitle": "Vyberte fakturačné obdobie - {{planName}}",
+      "billedYearly": "Fakturované ročne {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Späť na výber plánu",
+      "selectedPlan": "Vybraný plán",
+      "modalTitle": "Dokončiť platbu - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Prvé prihlásenie",
@@ -5260,8 +5734,8 @@
       }
     },
     "showing": {
-      "top10": "Top 10",
-      "top20": "Top 20",
+      "top10": "Zobrazuje sa Top 10",
+      "top20": "Zobrazuje sa Top 20",
       "all": "Všetko"
     },
     "stats": {
@@ -5287,5 +5761,281 @@
     "offline": "Backend je offline",
     "starting": "Backend sa spúšťa...",
     "wait": "Počkajte, kým sa backend úplne spustí, a skúste to znova."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Odomknite PDF na pokračovanie",
+    "title": "Odstráňte heslo na pokračovanie",
+    "description": "Toto PDF je chránené heslom. Zadajte heslo, aby ste mohli pokračovať v práci.",
+    "password": {
+      "label": "Heslo PDF",
+      "placeholder": "Zadajte heslo pre PDF"
+    },
+    "skip": "Preskočiť zatiaľ",
+    "unlock": "Odomknúť a pokračovať",
+    "incorrectPassword": "Nesprávne heslo",
+    "missingFile": "Vybraný súbor už nie je dostupný.",
+    "emptyResponse": "Odstránenie hesla nevytvorilo súbor.",
+    "required": "Zadajte heslo na pokračovanie.",
+    "successTitle": "Heslo odstránené",
+    "successBodyWithName": "Heslo odstránené zo súboru {{fileName}}",
+    "successBody": "Heslo bolo úspešne odstránené."
+  },
+  "setup": {
+    "welcome": "Vitajte v Stirling PDF",
+    "description": "Začnite výberom spôsobu používania Stirling PDF",
+    "step1": {
+      "label": "Zvoliť režim",
+      "description": "Offline alebo Server"
+    },
+    "step2": {
+      "label": "Vybrať server",
+      "description": "Self-hostovaný server"
+    },
+    "step3": {
+      "label": "Prihlásenie",
+      "description": "Zadajte prihlasovacie údaje"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Prihláste sa pomocou účtu Stirling"
+      },
+      "selfhosted": {
+        "title": "Self-hostovaný server",
+        "description": "Pripojte sa k svojmu vlastnému serveru Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Prihláste sa do Stirling",
+      "subtitle": "Prihláste sa pomocou svojho účtu Stirling"
+    },
+    "selfhosted": {
+      "title": "Prihlásiť sa na server",
+      "subtitle": "Zadajte prihlasovacie údaje k serveru"
+    },
+    "server": {
+      "title": "Pripojiť sa na server",
+      "subtitle": "Zadajte URL svojho self-hostovaného servera",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Self-hostovaný server"
+      },
+      "url": {
+        "label": "URL servera",
+        "description": "Zadajte úplnú URL svojho self-hostovaného servera Stirling PDF"
+      },
+      "error": {
+        "emptyUrl": "Zadajte URL servera",
+        "unreachable": "Nedá sa pripojiť k serveru",
+        "testFailed": "Test pripojenia zlyhal"
+      },
+      "testing": "Testuje sa pripojenie..."
+    },
+    "login": {
+      "title": "Prihlásiť sa",
+      "subtitle": "Zadajte svoje údaje na pokračovanie",
+      "connectingTo": "Pripája sa k:",
+      "username": {
+        "label": "Používateľské meno",
+        "placeholder": "Zadajte používateľské meno"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Zadajte svoj email"
+      },
+      "password": {
+        "label": "Heslo",
+        "placeholder": "Zadajte svoje heslo"
+      },
+      "error": {
+        "emptyUsername": "Prosím, zadajte svoje používateľské meno",
+        "emptyEmail": "Prosím, zadajte svoj email",
+        "emptyPassword": "Prosím, zadajte svoje heslo",
+        "oauthFailed": "Prihlásenie cez OAuth zlyhalo. Skúste znova."
+      },
+      "submit": "Prihlásiť sa",
+      "signInWith": "Prihlásiť sa cez",
+      "oauthPending": "Otvára sa prehliadač na overenie...",
+      "orContinueWith": "Alebo pokračujte emailom"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Overenie úspešné",
+      "message": "Môžete zavrieť toto okno a vrátiť sa do Stirling PDF."
+    },
+    "error": {
+      "title": "Overenie zlyhalo",
+      "message": "Overenie nebolo úspešné. Môžete zavrieť toto okno a skúsiť znova."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor JSON pre PDF",
+    "viewLabel": "Editor PDF",
+    "converting": "Prevádza sa PDF na upraviteľný formát...",
+    "conversionFailed": "Konverzia PDF zlyhala. Skúste znova.",
+    "currentFile": "Aktuálny súbor: {{name}}",
+    "pageSummary": "Strana {{number}} z {{total}}",
+    "pagePreviewAlt": "Náhľad strany",
+    "imageLabel": "Umiestnený obrázok",
+    "noTextOnPage": "Na tejto strane sa nenašiel žiadny upraviteľný text.",
+    "pageType": {
+      "paragraph": "Strana s odsekmi",
+      "sparse": "Riedky text"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Odsek",
+      "singleLine": "Jeden riadok"
+    },
+    "badges": {
+      "unsaved": "Upravené",
+      "modified": "Upravené",
+      "earlyAccess": "Skorý prístup"
+    },
+    "actions": {
+      "reset": "Resetovať zmeny",
+      "downloadJson": "Stiahnuť JSON",
+      "generatePdf": "Vygenerovať PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Automaticky prispôsobiť text do boxov",
+        "description": "Automaticky horizontálne škáluje text, aby sa zmestil do pôvodného ohraničujúceho boxu, keď sa vykresľovanie písma líši od PDF."
+      },
+      "groupingMode": {
+        "title": "Režim zoskupovania textu",
+        "autoDescription": "Automaticky rozpozná typ strany a vhodne zoskupí text.",
+        "paragraphDescription": "Zarovnané riadky zoskupí do viacriadkových odsekových textových boxov.",
+        "singleLineDescription": "Každý riadok textu PDF ponechá ako samostatný textový box."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Podržte Ctrl (Cmd) alebo Shift na viacnásobný výber textových boxov. Nad výberom sa zobrazí plávajúci panel nástrojov, kde môžete zlúčiť, zrušiť zoskupenie alebo upraviť šírky."
+      },
+      "forceSingleElement": {
+        "title": "Uzamknúť upravovaný text na jeden PDF prvok",
+        "description": "Keď je zapnuté, editor exportuje každý upravený textový box ako jeden PDF textový prvok, aby sa predišlo prekrývaniu glyfov alebo miešaniu písiem."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Zlúčiť vybrané boxy",
+      "merge": "Zlúčiť výber",
+      "ungroupTooltip": "Rozdeliť odsek späť na riadky",
+      "ungroup": "Zrušiť zoskupenie výberu",
+      "widthMenu": "Možnosti šírky",
+      "expandWidth": "Rozšíriť po okraj stránky",
+      "resetWidth": "Resetovať šírku",
+      "resizeHandle": "Upraviť šírku textu"
+    },
+    "disclaimer": {
+      "heading": "Obmedzenia náhľadu",
+      "textFocus": "Toto pracovné prostredie sa zameriava na úpravu textu a presúvanie vložených obrázkov. Zložitá grafika stránky, formulárové widgety a vrstvená grafika sa zachovajú pri exporte, ale tu nie sú plne upraviteľné.",
+      "previewVariance": "Niektoré vizuály (ako okraje tabuliek, tvary alebo vzhľady anotácií) sa nemusia v náhľade zobraziť presne. Exportované PDF si, kde je to možné, ponechá pôvodné kresliace príkazy.",
+      "alpha": "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efekty priehľadnosti a detaily rozloženia sa môžu mierne zmeniť. Pred zdieľaním prosím skontrolujte vygenerované PDF."
+    },
+    "empty": {
+      "title": "Žiadny dokument nie je načítaný",
+      "subtitle": "Načítajte súbor PDF alebo JSON a začnite upravovať textový obsah."
+    },
+    "welcomeBanner": {
+      "title": "Vitajte v PDF Text Editore (Early Access)",
+      "experimental": "Toto je experimentálna funkcia v aktívnom vývoji. Počas používania očakávajte určitú nestabilitu a problémy.",
+      "howItWorks": "Tento nástroj konvertuje váš PDF do editovateľného formátu, kde môžete upravovať text a presúvať obrázky. Zmeny sa uložia späť ako nové PDF.",
+      "bestFor": "Najlepšie pre:",
+      "bestFor1": "Jednoduché PDF s prevažne textom a obrázkami",
+      "bestFor2": "Dokumenty so štandardným formátovaním odsekov",
+      "bestFor3": "Listy, eseje, správy a základné dokumenty",
+      "notIdealFor": "Nie je ideálne pre:",
+      "notIdealFor1": "PDF so špeciálnym formátovaním ako odrážky, tabuľky alebo viacstĺpcové rozloženia",
+      "notIdealFor2": "Magazíny, brožúry alebo graficky náročné dokumenty",
+      "notIdealFor3": "Návody s komplexným rozložením",
+      "limitations": "Aktuálne obmedzenia:",
+      "limitation1": "Vykresľovanie písma sa môže mierne líšiť od pôvodného PDF",
+      "limitation2": "Zložitá grafika, formuláre a anotácie sa zachovajú, ale nie sú upraviteľné",
+      "limitation3": "Veľké súbory môžu trvať dlhšie na konverziu a spracovanie",
+      "knownIssues": "Známe problémy (opravujeme):",
+      "issue1": "Farba textu sa zatiaľ nezachováva (čoskoro pribudne)",
+      "issue2": "Režim odseku má viac problémov so zarovnaním a rozostupmi – odporúčaný je režim Jednotlivý riadok",
+      "issue3": "Zobrazenie v náhľade sa líši od exportovaného PDF – exportované PDF je bližšie originálu",
+      "issue4": "Zarovnanie otočeného textu môže vyžadovať ručné doladenie",
+      "issue5": "Efekty priehľadnosti a vrstvenia sa môžu líšiť od originálu",
+      "feedback": "Toto je funkcia v skorom prístupe. Prosím, nahláste akékoľvek problémy, aby ste nám pomohli zlepšiť sa!",
+      "gotIt": "Rozumiem",
+      "dontShowAgain": "Nezobrazovať znova"
+    },
+    "modeChange": {
+      "title": "Potvrdiť zmenu režimu",
+      "warning": "Zmena režimu zoskupovania textu resetuje všetky neuložené zmeny. Naozaj chcete pokračovať?",
+      "cancel": "Zrušiť",
+      "confirm": "Resetovať a zmeniť režim"
+    },
+    "fontAnalysis": {
+      "details": "Podrobnosti o písme",
+      "embedded": "Vložené",
+      "type": "Typ",
+      "webFormat": "Webový formát",
+      "warnings": "Upozornenia",
+      "suggestions": "Poznámky",
+      "currentPageFonts": "Písma na tejto strane",
+      "allFonts": "Všetky písma",
+      "fallback": "náhradné",
+      "missing": "chýba",
+      "perfectMessage": "Všetky písma možno reprodukovať dokonale.",
+      "warningMessage": "Niektoré písma sa nemusia vykresliť správne.",
+      "infoMessage": "K dispozícii sú informácie o reprodukcii písiem.",
+      "perfect": "dokonalé",
+      "subset": "podmnožina"
+    },
+    "errors": {
+      "invalidJson": "Nedá sa prečítať súbor JSON. Uistite sa, že bol vytvorený nástrojom PDF to JSON.",
+      "pdfConversion": "Nedá sa skonvertovať upravený JSON späť na PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Relácia vypršala",
+    "pleaseLoginAgain": "Prosím, prihláste sa znova.",
+    "accessDenied": "Prístup zamietnutý",
+    "insufficientPermissions": "Nemáte oprávnenie vykonať túto akciu."
+  },
+  "addText": {
+    "title": "Pridať text",
+    "header": "Pridať text do PDF",
+    "text": {
+      "name": "Textový obsah",
+      "placeholder": "Zadajte text, ktorý chcete pridať",
+      "fontLabel": "Písmo",
+      "fontSizeLabel": "Veľkosť písma",
+      "fontSizePlaceholder": "Zadajte alebo vyberte veľkosť písma (8-200)",
+      "colorLabel": "Farba textu"
+    },
+    "steps": {
+      "configure": "Nastaviť text"
+    },
+    "step": {
+      "createDesc": "Zadajte text, ktorý chcete pridať",
+      "place": "Umiestniť text",
+      "placeDesc": "Kliknite na PDF a pridajte text"
+    },
+    "instructions": {
+      "title": "Ako pridať text",
+      "text": "Po zadaní textu vyššie kliknite kdekoľvek na PDF, aby ste ho umiestnili.",
+      "paused": "Umiestňovanie pozastavené",
+      "resumeHint": "Pokračujte v umiestňovaní, aby ste mohli kliknúť a pridať text.",
+      "noSignature": "Zadajte text vyššie, aby bolo možné umiestňovanie."
+    },
+    "mode": {
+      "move": "Presunúť text",
+      "place": "Umiestniť text",
+      "pause": "Pozastaviť umiestňovanie",
+      "resume": "Pokračovať v umiestňovaní"
+    },
+    "results": {
+      "title": "Výsledky pridania textu"
+    },
+    "error": {
+      "failed": "Pri pridávaní textu do PDF sa vyskytla chyba."
+    },
+    "tags": "text,anotácia,štítok",
+    "applySignatures": "Použiť text"
   }
 }

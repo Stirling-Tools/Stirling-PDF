@@ -130,6 +130,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "download": "Download",
+  "downloadUnavailable": "Download unavailable for this item",
+  "saveUnavailable": "Save unavailable for this item",
   "pin": "Pin File (keep active after tool run)",
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
@@ -292,7 +294,8 @@
     "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
-    "settings": "You can change the settings for analytics in the config/settings.yml file"
+    "settings": "You can change the settings for analytics in the config/settings.yml file",
+    "privacyAssurance": "We do not track any personal information or the contents of your files."
   },
   "navbar": {
     "favorite": "Favorites",
@@ -362,6 +365,12 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
+      },
+      "logoVariant": {
+        "label": "Interface logo",
+        "description": "Override the system default logo style for this device only. Controls whether Stirling PDF uses the modern or classic logo across the interface, login header, landing page, and favicons.",
+        "modern": "Modern",
+        "classic": "Classic"
       },
       "defaultPdfEditor": "Default PDF editor",
       "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
@@ -872,7 +881,8 @@
   },
   "landing": {
     "addFiles": "Add Files",
-    "uploadFromComputer": "Upload from computer"
+    "uploadFromComputer": "Upload from computer",
+    "openFromComputer": "Open from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -3509,7 +3519,26 @@
     "unexpectedError": "Unexpected error: {{message}}",
     "accountCreatedSuccess": "Account created successfully! You can now sign in.",
     "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again.",
+    "defaultCredentials": "Default Login Credentials",
+    "changePasswordWarning": "Please change your password after logging in for the first time",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF overview",
+        "title": "Your one-stop-shop for all your PDF needs.",
+        "subtitle": "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
+      },
+      "edit": {
+        "alt": "Edit PDFs",
+        "title": "Edit PDFs to display/secure the information you want",
+        "subtitle": "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
+      },
+      "secure": {
+        "alt": "Secure PDFs",
+        "title": "Protect sensitive information in your PDFs",
+        "subtitle": "Add passwords, redact content, and manage certificates with ease."
+      }
+    }
   },
   "signup": {
     "title": "Create an account",
@@ -3880,6 +3909,7 @@
     "exportAll": "Export PDF",
     "downloadSelected": "Download Selected Files",
     "downloadAll": "Download All",
+    "saveAll": "Save All",
     "toggleTheme": "Toggle Theme",
     "toggleBookmarks": "Toggle Bookmarks",
     "language": "Language",
@@ -3968,8 +3998,16 @@
       "saved": "Settings saved successfully",
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
+      "discard": "Discard",
       "restartRequired": "Restart Required",
       "loginRequired": "Login mode must be enabled to modify admin settings",
+      "unsavedChanges": {
+        "title": "Unsaved Changes",
+        "message": "You have unsaved changes. Do you want to discard them?",
+        "cancel": "Keep Editing",
+        "discard": "Discard Changes",
+        "hint": "You have unsaved changes"
+      },
       "loginDisabled": {
         "title": "Login Mode Required",
         "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
@@ -4047,7 +4085,7 @@
         },
         "logoStyle": {
           "label": "Logo Style",
-          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "description": "Set the default logo style for all users on this server. Users can override this setting in their personal preferences.",
           "classic": "Classic",
           "modern": "Modern"
         },
@@ -4573,12 +4611,17 @@
     "or": "or",
     "dropFileHere": "Drop file here or click to upload",
     "dropFilesHere": "Drop files here or click the upload button",
+    "dropFilesHereOpen": "Drop files here or click the open button",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
     "upload": "Upload",
     "uploadFile": "Upload File",
     "uploadFiles": "Upload Files",
+    "open": "Open",
+    "openFile": "Open File",
+    "openFiles": "Open Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
+    "noFilesInStorageOpen": "No files available in storage. Open some files first.",
     "selectFromStorage": "Select from Storage",
     "backToTools": "Back to Tools",
     "addFiles": "Add Files",
@@ -4624,6 +4667,8 @@
     "myFiles": "My Files",
     "noRecentFiles": "No recent files found",
     "googleDriveNotAvailable": "Google Drive integration not available",
+    "downloadSelected": "Download Selected",
+    "saveSelected": "Save Selected",
     "openFiles": "Open Files",
     "openFile": "Open File",
     "details": "File Details",
@@ -5115,6 +5160,10 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
+    "welcomeSlide": {
+      "title": "Welcome to Stirling",
+      "body": "Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+    },
     "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
@@ -5137,7 +5186,39 @@
     "next": "Next",
     "finish": "Finish",
     "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "startTourDescription": "Take a guided tour of Stirling PDF's key features",
+    "buttons": {
+      "next": "Next →",
+      "back": "Back",
+      "skipForNow": "Skip for now",
+      "download": "Download →",
+      "showMeAround": "Show me around",
+      "skipTheTour": "Skip the tour"
+    },
+    "serverLicense": {
+      "skip": "Skip for now",
+      "seePlans": "See Plans →",
+      "upgrade": "Upgrade now →",
+      "freeTitle": "Server License",
+      "overLimitTitle": "Server License Needed",
+      "overLimitBody": "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo.",
+      "freeBody": "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+    },
+    "desktopInstall": {
+      "title": "Download",
+      "titleWithOs": "Download for {{osLabel}}",
+      "body": "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
+    },
+    "planOverview": {
+      "adminTitle": "Admin Overview",
+      "userTitle": "Plan Overview",
+      "adminBodyLoginEnabled": "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "adminBodyLoginDisabled": "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "userBody": "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
+    },
+    "securityCheck": {
+      "message": "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."
+    }
   },
   "adminOnboarding": {
     "welcome": "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
@@ -5166,7 +5247,10 @@
       "role": "Role",
       "team": "Team",
       "status": "Status",
-      "actions": "Actions",
+      "actions": {
+        "label": "Actions",
+        "upgrade": "Upgrade"
+      },
       "noMembersFound": "No members found",
       "active": "Active",
       "disabled": "Disabled",
@@ -5278,7 +5362,8 @@
         "slotsAvailable": "{{count}} user slot(s) available",
         "noSlotsAvailable": "No slots available",
         "currentUsage": "Currently using {{current}} of {{max}} user licences"
-      }
+      },
+      "loginRequired": "Enable login mode first"
     },
     "teams": {
       "title": "Teams",
@@ -5432,6 +5517,12 @@
       "api": "API Access",
       "priority": "Priority Support",
       "customPricing": "Custom Pricing"
+    },
+    "licenseWarning": {
+      "title": "Free self-hosted limit reached",
+      "body": "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly.",
+      "overLimit": "more than {{limit}}",
+      "cta": "See plans"
     }
   },
   "subscription": {
@@ -5473,10 +5564,15 @@
     "title": "Upgrade to Server Plan",
     "message": "Get the most out of Stirling PDF with unlimited users and advanced features",
     "upgradeButton": "Upgrade Now",
-    "dismiss": "Dismiss banner"
+    "dismiss": "Dismiss banner",
+    "attentionTitle": "This server needs admin attention",
+    "attentionBody": "Your admin needs to sign in to see more info. Please contact them immediately.",
+    "attentionBodyAdmin": "Review the license requirements to keep this server compliant.",
+    "seeInfo": "See info"
   },
   "payment": {
     "preparing": "Preparing your checkout...",
+    "redirecting": "Redirecting to secure checkout...",
     "upgradeTitle": "Upgrade to {{planName}}",
     "success": "Payment Successful!",
     "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
@@ -5772,15 +5868,34 @@
         "label": "Username",
         "placeholder": "Enter your username"
       },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email"
+      },
       "password": {
         "label": "Password",
         "placeholder": "Enter your password"
       },
       "error": {
         "emptyUsername": "Please enter your username",
-        "emptyPassword": "Please enter your password"
+        "emptyEmail": "Please enter your email",
+        "emptyPassword": "Please enter your password",
+        "oauthFailed": "OAuth login failed. Please try again."
       },
-      "submit": "Login"
+      "submit": "Login",
+      "signInWith": "Sign in with",
+      "oauthPending": "Opening browser for authentication...",
+      "orContinueWith": "Or continue with email"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Authentication Successful",
+      "message": "You can close this window and return to Stirling PDF."
+    },
+    "error": {
+      "title": "Authentication Failed",
+      "message": "Authentication was not successful. You can close this window and try again."
     }
   },
   "settings": {
