@@ -79,7 +79,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'welcome-next',
         type: 'button',
-        label: 'Next →',
+        label: 'onboarding.buttons.next',
         variant: 'primary',
         group: 'right',
         action: 'next',
@@ -101,7 +101,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'desktop-skip',
         type: 'button',
-        label: 'Skip for now',
+        label: 'onboarding.buttons.skipForNow',
         variant: 'secondary',
         group: 'left',
         action: 'next',
@@ -109,7 +109,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'desktop-download',
         type: 'button',
-        label: 'Download →',
+        label: 'onboarding.buttons.download',
         variant: 'primary',
         group: 'right',
         action: 'download-selected',
@@ -125,7 +125,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'security-back',
         type: 'button',
-        label: 'Back',
+        label: 'onboarding.buttons.back',
         variant: 'secondary',
         group: 'left',
         action: 'prev',
@@ -133,7 +133,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'security-next',
         type: 'button',
-        label: 'Next →',
+        label: 'onboarding.buttons.next',
         variant: 'primary',
         group: 'right',
         action: 'security-next',
@@ -157,7 +157,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'admin-show',
         type: 'button',
-        label: 'Show me around',
+        label: 'onboarding.buttons.showMeAround',
         variant: 'primary',
         group: 'right',
         action: 'launch-admin',
@@ -165,7 +165,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'admin-skip',
         type: 'button',
-        label: 'Skip the tour',
+        label: 'onboarding.buttons.skipTheTour',
         variant: 'secondary',
         group: 'left',
         action: 'skip-to-license',
@@ -180,7 +180,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'license-close',
         type: 'button',
-        label: 'Skip for now',
+        label: 'onboarding.buttons.skipForNow',
         variant: 'secondary',
         group: 'left',
         action: 'close',
@@ -188,7 +188,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'license-see-plans',
         type: 'button',
-        label: 'See Plans →',
+        label: 'onboarding.serverLicense.seePlans',
         variant: 'primary',
         group: 'right',
         action: 'see-plans',

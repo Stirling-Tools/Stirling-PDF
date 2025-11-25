@@ -8,6 +8,8 @@ import { renderButtons } from '@app/components/onboarding/InitialOnboardingModal
 import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
 import type { InitialOnboardingModalProps } from '@app/components/onboarding/InitialOnboardingModal/types';
 import { useInitialOnboardingState } from '@app/components/onboarding/InitialOnboardingModal/useInitialOnboardingState';
+import { BASE_PATH } from '@app/constants/app';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 export default function InitialOnboardingModal(props: InitialOnboardingModalProps) {
   const flow = useInitialOnboardingState(props);
@@ -32,7 +34,7 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
       return (
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
-            <img src="/branding/StirlingLogoLegacy.svg" alt="Stirling icon" className={styles.downloadIcon} />
+            <img src={`${BASE_PATH}/branding/StirlingLogoLegacy.svg`} alt="Stirling icon" className={styles.downloadIcon} />
           </div>
         </div>
       );
@@ -48,7 +50,7 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
         )}
         {slideDefinition.hero.type === 'diamond' && <DiamondOutlinedIcon sx={{ fontSize: 64, color: '#000000' }} />}
         {slideDefinition.hero.type === 'logo' && (
-          <img src="/branding/StirlingPDFLogoNoTextLightHC.svg" alt="Stirling logo" />
+          <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
         )}
       </div>
     );
@@ -63,7 +65,7 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
       size="lg"
       radius="lg"
       withCloseButton={false}
-      zIndex={1001}
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       styles={{
         body: { padding: 0 },
         content: { overflow: 'hidden', border: 'none', background: 'var(--bg-surface)' },

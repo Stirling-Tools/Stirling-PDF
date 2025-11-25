@@ -5140,6 +5140,14 @@
     "finish": "Finish",
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features",
+    "buttons": {
+      "next": "Next →",
+      "back": "Back",
+      "skipForNow": "Skip for now",
+      "download": "Download →",
+      "showMeAround": "Show me around",
+      "skipTheTour": "Skip the tour"
+    },
     "serverLicense": {
       "skip": "Skip for now",
       "seePlans": "See Plans →",

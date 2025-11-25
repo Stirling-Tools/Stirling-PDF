@@ -13,6 +13,7 @@ import type { LicenseNotice } from '@app/types/types';
 import { resolveFlow } from '@app/components/onboarding/InitialOnboardingModal/flowResolver';
 import { useServerExperience } from '@app/hooks/useServerExperience';
 import { DEFAULT_STATE, type InitialOnboardingModalProps, type OnboardingState } from '@app/components/onboarding/InitialOnboardingModal/types';
+import { DOWNLOAD_URLS } from '@app/constants/downloads';
 
 interface UseInitialOnboardingStateResult {
   state: OnboardingState;
@@ -112,14 +113,14 @@ export function useInitialOnboardingState({
   const os = useMemo(() => {
     switch (osType) {
       case 'windows':
-        return { label: 'Windows', url: 'https://files.stirlingpdf.com/win-installer.exe' };
+        return { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS };
       case 'mac-apple':
-        return { label: 'Mac (Apple Silicon)', url: 'https://files.stirlingpdf.com/mac-installer.dmg' };
+        return { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON };
       case 'mac-intel':
-        return { label: 'Mac (Intel)', url: 'https://files.stirlingpdf.com/mac-x86_64-installer.dmg' };
+        return { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL };
       case 'linux-x64':
       case 'linux-arm64':
-        return { label: 'Linux', url: 'https://docs.stirlingpdf.com/Installation/Unix%20Installation/' };
+        return { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS };
       default:
         return { label: '', url: '' };
     }
@@ -127,10 +128,10 @@ export function useInitialOnboardingState({
 
   const osOptions = useMemo(() => {
     const options = [
-      { label: 'Windows', url: 'https://files.stirlingpdf.com/win-installer.exe', value: 'windows' },
-      { label: 'Mac (Apple Silicon)', url: 'https://files.stirlingpdf.com/mac-installer.dmg', value: 'mac-apple' },
-      { label: 'Mac (Intel)', url: 'https://files.stirlingpdf.com/mac-x86_64-installer.dmg', value: 'mac-intel' },
-      { label: 'Linux', url: 'https://docs.stirlingpdf.com/Installation/Unix%20Installation/', value: 'linux' },
+      { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS, value: 'windows' },
+      { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON, value: 'mac-apple' },
+      { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL, value: 'mac-intel' },
+      { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS, value: 'linux' },
     ];
     return options.filter(opt => opt.url);
   }, []);

@@ -3,7 +3,6 @@ import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
-import { useAuth } from '@app/auth/UseSession';
 import type { LicenseNotice } from '@app/types/types';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -33,16 +32,8 @@ export function useOnboardingFlow() {
   const { config } = useAppConfig();
   const { showCookieConsent, isReady: isCookieConsentReady } = useCookieConsentContext();
   const { completeTour, tourType, isOpen } = useOnboarding();
-  let session: any = null;
-  try {
-    session = useAuth()?.session ?? null;
-  } catch {
-    session = {} as any;
-  }
-
-  const loginEnabled = !!config?.enableLogin;
-  const isAuthenticated = !!session;
-  const shouldShowIntro = !preferences.hasSeenIntroOnboarding && (!loginEnabled || isAuthenticated);
+  
+  const shouldShowIntro = !preferences.hasSeenIntroOnboarding;
   const isAdminUser = !!config?.isAdmin;
   const { hasPaidLicense } = useServerExperience();
 

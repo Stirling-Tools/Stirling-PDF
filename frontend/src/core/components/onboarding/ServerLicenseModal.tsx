@@ -5,6 +5,7 @@ import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedS
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
 import { LicenseNotice } from '@app/types/types';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { BASE_PATH } from '@app/constants/app';
 import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
 
 interface ServerLicenseModalProps {
@@ -71,7 +72,7 @@ export default function ServerLicenseModal({
           />
           <div className={styles.heroLogo}>
             <div className={styles.heroLogoCircle}>
-              <img src="/branding/StirlingPDFLogoNoTextLightHC.svg" alt="Stirling logo" />
+              <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
             </div>
           </div>
         </div>

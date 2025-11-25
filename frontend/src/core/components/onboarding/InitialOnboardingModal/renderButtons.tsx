@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Group, ActionIcon } from '@mantine/core';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { useTranslation } from 'react-i18next';
 import { ButtonDefinition, type FlowState } from '@app/components/onboarding/onboardingFlowConfig';
 import type { LicenseNotice } from '@app/types/types';
 import type { ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
@@ -16,6 +17,7 @@ interface RenderButtonsProps {
 }
 
 export function renderButtons({ slideDefinition, licenseNotice, flowState, onAction }: RenderButtonsProps) {
+  const { t } = useTranslation();
   const leftButtons = slideDefinition.buttons.filter((btn) => btn.group === 'left');
   const rightButtons = slideDefinition.buttons.filter((btn) => btn.group === 'right');
 
@@ -36,15 +38,23 @@ export function renderButtons({ slideDefinition, licenseNotice, flowState, onAct
         };
 
   const resolveButtonLabel = (button: ButtonDefinition) => {
+    // Special case: override "See Plans" with "Upgrade now" when over limit
     if (
       button.type === 'button' &&
       slideDefinition.id === 'server-license' &&
       button.action === 'see-plans' &&
       licenseNotice.isOverLimit
     ) {
-      return 'Upgrade now →';
+      return t('onboarding.serverLicense.upgrade', 'Upgrade now →');
     }
-    return button.label ?? '';
+    
+    // Translate the label (it's a translation key)
+    const label = button.label ?? '';
+    if (!label) return '';
+    
+    // Extract fallback text from translation key (e.g., 'onboarding.buttons.next' -> 'Next')
+    const fallback = label.split('.').pop() || label;
+    return t(label, fallback);
   };
 
   const renderButton = (button: ButtonDefinition) => {
