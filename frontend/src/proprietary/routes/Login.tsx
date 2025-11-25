@@ -37,7 +37,6 @@ export default function Login() {
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
-  const loginEnabled = _enableLogin === true && backendProbe.loginDisabled !== true;
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {

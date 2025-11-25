@@ -31,7 +31,6 @@ export default function Landing() {
 
   const loading = authLoading || configLoading || backendProbe.loading;
   // Only consider login enabled when explicitly true; default to disabled/anonymous when unknown
-  const loginDisabled = backendProbe.loginDisabled === true || config?.enableLogin === false;
   const loginEnabled = config?.enableLogin === true && backendProbe.loginDisabled !== true;
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
