@@ -25,6 +25,7 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     start_backend,
+    start_oauth_login,
 };
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
@@ -32,6 +33,12 @@ use utils::{add_log, get_tauri_logs};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(
+      tauri_plugin_log::Builder::new()
+        .level(log::LevelFilter::Info)
+        .build()
+    )
+    .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_http::init())
@@ -95,6 +102,7 @@ pub fn run() {
       save_user_info,
       get_user_info,
       clear_user_info,
+      start_oauth_login,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
@@ -115,6 +123,7 @@ pub fn run() {
         RunEvent::Opened { urls } => {
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let mut added_files = false;
+
           for url in urls {
             let url_str = url.as_str();
             if url_str.starts_with("file://") {
