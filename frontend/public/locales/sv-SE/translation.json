@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferenser"
+    },
+    "workspace": {
+      "title": "Arbetsyta",
+      "people": "Personer",
+      "teams": "Team"
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "systemSettings": "Systeminställningar",
+      "features": "Funktioner",
+      "endpoints": "Slutpunkter",
+      "database": "Databas",
+      "advanced": "Avancerat"
+    },
+    "securityAuth": {
+      "title": "Säkerhet och autentisering",
+      "security": "Säkerhet",
+      "connections": "Anslutningar"
+    },
+    "licensingAnalytics": {
+      "title": "Licensiering och analys",
+      "plan": "Plan",
+      "audit": "Granskning",
+      "usageAnalytics": "Användningsanalys"
+    },
+    "policiesPrivacy": {
+      "title": "Policyer och integritet",
+      "legal": "Juridik",
+      "privacy": "Integritet"
+    },
+    "developer": {
+      "title": "Utvecklare",
+      "apiKeys": "API-nycklar"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Aktivera inloggningsläge först",
+      "requiresEnterprise": "Kräver Enterprise-licens"
+    },
     "connection": {
       "title": "Anslutningsläge",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Ta bort inaktiverade konverteringsalternativ i verktyget Konvertera istället för att visa dem nedtonade."
     },
     "hotkeys": {
+      "title": "Kortkommandon",
+      "description": "Anpassa kortkommandon för snabb åtkomst till verktyg. Klicka på \"Ändra genväg\" och tryck en ny tangentkombination. Tryck Esc för att avbryta.",
       "errorConflict": "Genväg används redan av {{tool}}.",
+      "errorModifier": {
+        "mac": "Inkludera ⌘ (Command), ⌥ (Option) eller en annan modifierare i ditt kortkommando.",
+        "windows": "Inkludera Ctrl, Alt eller en annan modifierare i ditt kortkommando."
+      },
       "searchPlaceholder": "Sök bland verktyg...",
       "none": "Inte tilldelad",
       "customBadge": "Anpassad",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Tillgängliga språk",
-          "description": "Språk som användare kan välja mellan (lämna tomt för att aktivera alla språk)"
+          "description": "Språk som användare kan välja mellan (lämna tomt för att aktivera alla språk)",
+          "placeholder": "Välj språk"
         },
         "customMetadata": {
           "label": "Anpassade metadata",
@@ -4061,7 +4108,9 @@
           "label": "Logotypstil",
           "description": "Välj mellan den moderna minimalistiska logotypen eller den klassiska S-ikonen",
           "classic": "Klassisk",
-          "modern": "Modern"
+          "classicAlt": "Klassisk logotyp",
+          "modern": "Modern",
+          "modernAlt": "Modern logotyp"
         },
         "customPaths": {
           "label": "Anpassade sökvägar",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Programkonfiguration",
-      "description": "Aktuella programinställningar och konfigurationsdetaljer."
+      "description": "Aktuella programinställningar och konfigurationsdetaljer.",
+      "loading": "Läser in konfiguration...",
+      "error": "Fel",
+      "warning": "Konfigurationsvarning",
+      "sections": {
+        "basic": "Grundläggande konfiguration",
+        "security": "Säkerhetskonfiguration",
+        "system": "Systemkonfiguration",
+        "integration": "Integrationskonfiguration"
+      }
     },
     "account": {
       "overview": {
@@ -5087,7 +5145,7 @@
   "replace-color": {
     "options": {
       "fill": "Fyllningsfärg",
-      "gradient": "Gradient"
+      "gradient": "Övertoning"
     },
     "previewOverlayOpacity": "Opacitet för förhandsöverlägg",
     "previewOverlayTransparency": "Transparens för förhandsöverlägg",
@@ -5342,6 +5400,7 @@
       "description": "Hantera team och organisera arbetsytans medlemmar",
       "loading": "Laddar team...",
       "loadingDetails": "Laddar teamdetaljer...",
+      "loadError": "Det gick inte att läsa in teamets uppgifter",
       "createNewTeam": "Skapa nytt team",
       "teamName": "Teamnamn",
       "totalMembers": "Totalt antal medlemmar",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Förbereder din kassa...",
+    "redirecting": "Omdirigerar till säker kassa...",
     "upgradeTitle": "Uppgradera till {{planName}}",
     "success": "Betalning genomförd!",
     "successMessage": "Din prenumeration har aktiverats. Du får snart en bekräftelse via e-post.",

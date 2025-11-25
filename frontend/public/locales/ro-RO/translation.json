@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferințe"
+    },
+    "workspace": {
+      "title": "Spațiu de lucru",
+      "people": "Persoane",
+      "teams": "Echipe"
+    },
+    "configuration": {
+      "title": "Configurație",
+      "systemSettings": "Setări sistem",
+      "features": "Funcții",
+      "endpoints": "Endpoint-uri",
+      "database": "Bază de date",
+      "advanced": "Avansat"
+    },
+    "securityAuth": {
+      "title": "Securitate și autentificare",
+      "security": "Securitate",
+      "connections": "Conexiuni"
+    },
+    "licensingAnalytics": {
+      "title": "Licențiere și Analytics",
+      "plan": "Plan",
+      "audit": "Audit",
+      "usageAnalytics": "Analytics de utilizare"
+    },
+    "policiesPrivacy": {
+      "title": "Politici și confidențialitate",
+      "legal": "Legal",
+      "privacy": "Confidențialitate"
+    },
+    "developer": {
+      "title": "Dezvoltator",
+      "apiKeys": "Chei API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Activați mai întâi modul de login",
+      "requiresEnterprise": "Necesită licență Enterprise"
+    },
     "connection": {
       "title": "Mod de conectare",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Elimină opțiunile de conversie dezactivate în instrumentul Convert, în loc să fie afișate estompate."
     },
     "hotkeys": {
+      "title": "Scurtături de tastatură",
+      "description": "Personalizați scurtăturile de tastatură pentru acces rapid la instrumente. Faceți clic pe \"Schimbă scurtătura\" și apăsați o nouă combinație de taste. Apăsați Esc pentru a anula.",
       "errorConflict": "Scurtătura este deja utilizată de {{tool}}.",
+      "errorModifier": {
+        "mac": "Includeți ⌘ (Command), ⌥ (Option) sau un alt modificator în scurtătură.",
+        "windows": "Includeți Ctrl, Alt sau un alt modificator în scurtătură."
+      },
       "searchPlaceholder": "Căutați instrumente...",
       "none": "Neatribuit",
       "customBadge": "Personalizat",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Limbi disponibile",
-          "description": "Limbile din care utilizatorii pot alege (lăsați gol pentru a activa toate limbile)"
+          "description": "Limbile din care utilizatorii pot alege (lăsați gol pentru a activa toate limbile)",
+          "placeholder": "Selectați limbi"
         },
         "customMetadata": {
           "label": "Metadate personalizate",
@@ -4061,7 +4108,9 @@
           "label": "Stil logo",
           "description": "Alegeți între logo-ul minimalist modern sau pictograma clasică S",
           "classic": "Clasic",
-          "modern": "Modern"
+          "classicAlt": "Logo clasic",
+          "modern": "Modern",
+          "modernAlt": "Logo modern"
         },
         "customPaths": {
           "label": "Căi personalizate",
@@ -4427,7 +4476,7 @@
             "description": "Timp maxim de execuție"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF în HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configurarea aplicației",
-      "description": "Setările curente ale aplicației și detalii de configurare."
+      "description": "Setările curente ale aplicației și detalii de configurare.",
+      "loading": "Se încarcă configurația...",
+      "error": "Eroare",
+      "warning": "Avertisment configurație",
+      "sections": {
+        "basic": "Configurație de bază",
+        "security": "Configurație de securitate",
+        "system": "Configurație sistem",
+        "integration": "Configurație integrare"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gestionați echipele și organizați membrii spațiului de lucru",
       "loading": "Se încarcă echipele...",
       "loadingDetails": "Se încarcă detaliile echipei...",
+      "loadError": "Încărcarea detaliilor echipei a eșuat",
       "createNewTeam": "Creați echipă nouă",
       "teamName": "Numele echipei",
       "totalMembers": "Total membri",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Se pregătește checkout-ul...",
+    "redirecting": "Se redirecționează către checkout securizat...",
     "upgradeTitle": "Treci la {{planName}}",
     "success": "Plată reușită!",
     "successMessage": "Abonamentul dvs. a fost activat cu succes. Veți primi în curând un e-mail de confirmare.",

@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "ترجیحات"
+    },
+    "workspace": {
+      "title": "فضای کاری",
+      "people": "افراد",
+      "teams": "تیم‌ها"
+    },
+    "configuration": {
+      "title": "پیکربندی",
+      "systemSettings": "تنظیمات سیستم",
+      "features": "قابلیت‌ها",
+      "endpoints": "نقاط پایانی",
+      "database": "پایگاه داده",
+      "advanced": "پیشرفته"
+    },
+    "securityAuth": {
+      "title": "امنیت و احراز هویت",
+      "security": "امنیت",
+      "connections": "اتصالات"
+    },
+    "licensingAnalytics": {
+      "title": "مجوزها و آنالیتیکس",
+      "plan": "طرح",
+      "audit": "ممیزی",
+      "usageAnalytics": "آنالیتیکس استفاده"
+    },
+    "policiesPrivacy": {
+      "title": "سیاست‌ها و حریم خصوصی",
+      "legal": "حقوقی",
+      "privacy": "حریم خصوصی"
+    },
+    "developer": {
+      "title": "توسعه‌دهنده",
+      "apiKeys": "کلیدهای API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "ابتدا حالت ورود را فعال کنید",
+      "requiresEnterprise": "به لایسنس Enterprise نیاز دارد"
+    },
     "connection": {
       "title": "حالت اتصال",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "به‌جای نمایش خاکستری، گزینه‌های تبدیل غیرفعال در ابزار Convert را حذف می‌کند."
     },
     "hotkeys": {
+      "title": "میانبرهای صفحه‌کلید",
+      "description": "می‌توانید میانبرهای صفحه‌کلید را برای دسترسی سریع به ابزارها سفارشی کنید. روی «تغییر میانبر» کلیک کنید و ترکیب کلید جدید را فشار دهید. برای لغو، Esc را بزنید.",
       "errorConflict": "میانبر قبلاً توسط {{tool}} استفاده شده است.",
+      "errorModifier": {
+        "mac": "در میانبر خود ⌘ (Command)، ⌥ (Option) یا یک کلید اصلاحی دیگر را بگنجانید.",
+        "windows": "در میانبر خود Ctrl، Alt یا یک کلید اصلاحی دیگر را بگنجانید."
+      },
       "searchPlaceholder": "جستجوی ابزارها...",
       "none": "اختصاص نیافته",
       "customBadge": "سفارشی",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "زبان‌های در دسترس",
-          "description": "زبان‌هایی که کاربران می‌توانند انتخاب کنند (برای فعال کردن همه زبان‌ها خالی بگذارید)"
+          "description": "زبان‌هایی که کاربران می‌توانند انتخاب کنند (برای فعال کردن همه زبان‌ها خالی بگذارید)",
+          "placeholder": "زبان‌ها را انتخاب کنید"
         },
         "customMetadata": {
           "label": "فراداده سفارشی",
@@ -4061,7 +4108,9 @@
           "label": "سبک لوگو",
           "description": "بین لوگوی مدرن مینیمال یا آیکن کلاسیک S انتخاب کنید",
           "classic": "کلاسیک",
-          "modern": "مدرن"
+          "classicAlt": "لوگوی کلاسیک",
+          "modern": "مدرن",
+          "modernAlt": "لوگوی مدرن"
         },
         "customPaths": {
           "label": "مسیرهای سفارشی",
@@ -4242,7 +4291,7 @@
             "description": "ارائه‌دهنده OAuth2 برای احراز هویت"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL صادرکننده",
             "description": "Issuer URL ارائه‌دهنده OAuth2"
           },
           "clientId": {
@@ -4471,7 +4520,7 @@
           "description": "اجازه به مدیران برای دعوت کاربران از طریق ایمیل با گذرواژه‌های تولید خودکار"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
+          "label": "URL فرانت‌اند",
           "description": "URL پایه برای فرانت‌اند (مثلاً https://pdf.example.com). برای ایجاد لینک دعوت در ایمیل‌ها استفاده می‌شود. برای استفاده از URL بک‌اند خالی بگذارید."
         }
       },
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "پیکربندی برنامه",
-      "description": "تنظیمات فعلی برنامه و جزئیات پیکربندی."
+      "description": "تنظیمات فعلی برنامه و جزئیات پیکربندی.",
+      "loading": "در حال بارگذاری پیکربندی...",
+      "error": "خطا",
+      "warning": "هشدار پیکربندی",
+      "sections": {
+        "basic": "پیکربندی پایه",
+        "security": "پیکربندی امنیت",
+        "system": "پیکربندی سیستم",
+        "integration": "پیکربندی یکپارچه‌سازی"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "مدیریت تیم‌ها و سازمان‌دهی اعضای فضای کاری",
       "loading": "در حال بارگذاری تیم‌ها...",
       "loadingDetails": "در حال بارگذاری جزئیات تیم...",
+      "loadError": "بارگذاری جزئیات تیم ناموفق بود",
       "createNewTeam": "ایجاد تیم جدید",
       "teamName": "نام تیم",
       "totalMembers": "مجموع اعضا",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "در حال آماده‌سازی پرداخت شما...",
+    "redirecting": "در حال انتقال به تسویه‌حساب امن...",
     "upgradeTitle": "ارتقا به {{planName}}",
     "success": "پرداخت با موفقیت انجام شد!",
     "successMessage": "اشتراک شما با موفقیت فعال شد. به‌زودی ایمیل تأیید دریافت خواهید کرد.",

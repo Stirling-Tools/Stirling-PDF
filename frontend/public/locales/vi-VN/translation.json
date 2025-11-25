@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Tùy chọn"
+    },
+    "workspace": {
+      "title": "Không gian làm việc",
+      "people": "Thành viên",
+      "teams": "Nhóm"
+    },
+    "configuration": {
+      "title": "Cấu hình",
+      "systemSettings": "Cài đặt hệ thống",
+      "features": "Tính năng",
+      "endpoints": "Endpoints",
+      "database": "Cơ sở dữ liệu",
+      "advanced": "Nâng cao"
+    },
+    "securityAuth": {
+      "title": "Bảo mật & Xác thực",
+      "security": "Bảo mật",
+      "connections": "Kết nối"
+    },
+    "licensingAnalytics": {
+      "title": "Giấy phép & Phân tích",
+      "plan": "Gói",
+      "audit": "Audit",
+      "usageAnalytics": "Phân tích sử dụng"
+    },
+    "policiesPrivacy": {
+      "title": "Chính sách & Quyền riêng tư",
+      "legal": "Pháp lý",
+      "privacy": "Quyền riêng tư"
+    },
+    "developer": {
+      "title": "Nhà phát triển",
+      "apiKeys": "API Keys"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Bật chế độ đăng nhập trước",
+      "requiresEnterprise": "Yêu cầu giấy phép Enterprise"
+    },
     "connection": {
       "title": "Chế độ kết nối",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Loại bỏ tùy chọn chuyển đổi bị vô hiệu hóa trong công cụ Chuyển đổi thay vì hiển thị mờ."
     },
     "hotkeys": {
+      "title": "Phím tắt",
+      "description": "Tùy chỉnh phím tắt để truy cập công cụ nhanh. Nhấp \"Change shortcut\" và nhấn một tổ hợp phím mới. Nhấn Esc để hủy.",
       "errorConflict": "Phím tắt đã được dùng bởi {{tool}}.",
+      "errorModifier": {
+        "mac": "Bao gồm ⌘ (Command), ⌥ (Option), hoặc một phím bổ trợ khác trong phím tắt của bạn.",
+        "windows": "Bao gồm Ctrl, Alt, hoặc phím bổ trợ khác trong phím tắt của bạn."
+      },
       "searchPlaceholder": "Tìm công cụ...",
       "none": "Chưa gán",
       "customBadge": "Tùy chỉnh",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Ngôn ngữ khả dụng",
-          "description": "Ngôn ngữ người dùng có thể chọn (để trống để bật tất cả ngôn ngữ)"
+          "description": "Ngôn ngữ người dùng có thể chọn (để trống để bật tất cả ngôn ngữ)",
+          "placeholder": "Chọn ngôn ngữ"
         },
         "customMetadata": {
           "label": "Siêu dữ liệu tùy chỉnh",
@@ -4061,7 +4108,9 @@
           "label": "Kiểu logo",
           "description": "Chọn giữa logo tối giản hiện đại hoặc biểu tượng S cổ điển",
           "classic": "Cổ điển",
-          "modern": "Hiện đại"
+          "classicAlt": "Logo cổ điển",
+          "modern": "Hiện đại",
+          "modernAlt": "Logo hiện đại"
         },
         "customPaths": {
           "label": "Đường dẫn tùy chỉnh",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Cấu hình ứng dụng",
-      "description": "Cài đặt hiện tại và chi tiết cấu hình ứng dụng."
+      "description": "Cài đặt hiện tại và chi tiết cấu hình ứng dụng.",
+      "loading": "Đang tải cấu hình...",
+      "error": "Lỗi",
+      "warning": "Cảnh báo cấu hình",
+      "sections": {
+        "basic": "Cấu hình cơ bản",
+        "security": "Cấu hình bảo mật",
+        "system": "Cấu hình hệ thống",
+        "integration": "Cấu hình tích hợp"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Quản lý nhóm và tổ chức thành viên trong không gian làm việc",
       "loading": "Đang tải nhóm...",
       "loadingDetails": "Đang tải chi tiết nhóm...",
+      "loadError": "Không thể tải chi tiết nhóm",
       "createNewTeam": "Tạo nhóm mới",
       "teamName": "Tên nhóm",
       "totalMembers": "Tổng số thành viên",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Đang chuẩn bị thanh toán của bạn...",
+    "redirecting": "Đang chuyển đến trang thanh toán an toàn...",
     "upgradeTitle": "Nâng cấp lên {{planName}}",
     "success": "Thanh toán thành công!",
     "successMessage": "Gói đăng ký của bạn đã được kích hoạt thành công. Bạn sẽ sớm nhận được email xác nhận.",

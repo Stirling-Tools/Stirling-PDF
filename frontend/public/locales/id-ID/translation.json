@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferensi"
+    },
+    "workspace": {
+      "title": "Ruang kerja",
+      "people": "Anggota",
+      "teams": "Tim"
+    },
+    "configuration": {
+      "title": "Konfigurasi",
+      "systemSettings": "Pengaturan Sistem",
+      "features": "Fitur",
+      "endpoints": "Endpoint",
+      "database": "Database",
+      "advanced": "Lanjutan"
+    },
+    "securityAuth": {
+      "title": "Keamanan & Autentikasi",
+      "security": "Keamanan",
+      "connections": "Koneksi"
+    },
+    "licensingAnalytics": {
+      "title": "Lisensi & Analitik",
+      "plan": "Paket",
+      "audit": "Audit",
+      "usageAnalytics": "Analitik Penggunaan"
+    },
+    "policiesPrivacy": {
+      "title": "Kebijakan & Privasi",
+      "legal": "Legal",
+      "privacy": "Privasi"
+    },
+    "developer": {
+      "title": "Pengembang",
+      "apiKeys": "Kunci API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Aktifkan mode login terlebih dahulu",
+      "requiresEnterprise": "Memerlukan lisensi Enterprise"
+    },
     "connection": {
       "title": "Mode Koneksi",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Hapus opsi konversi yang dinonaktifkan di alat Convert alih-alih menampilkannya pudar."
     },
     "hotkeys": {
+      "title": "Pintasan Keyboard",
+      "description": "Sesuaikan pintasan keyboard untuk akses cepat ke alat. Klik \"Change shortcut\" dan tekan kombinasi tombol baru. Tekan Esc untuk membatalkan.",
       "errorConflict": "Pintasan sudah digunakan oleh {{tool}}.",
+      "errorModifier": {
+        "mac": "Sertakan ⌘ (Command), ⌥ (Option), atau modifier lainnya dalam pintasan Anda.",
+        "windows": "Sertakan Ctrl, Alt, atau modifier lainnya dalam pintasan Anda."
+      },
       "searchPlaceholder": "Cari alat...",
       "none": "Tidak ditetapkan",
       "customBadge": "Kustom",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Bahasa yang Tersedia",
-          "description": "Bahasa yang dapat dipilih pengguna (biarkan kosong untuk mengaktifkan semua bahasa)"
+          "description": "Bahasa yang dapat dipilih pengguna (biarkan kosong untuk mengaktifkan semua bahasa)",
+          "placeholder": "Pilih bahasa"
         },
         "customMetadata": {
           "label": "Metadata Kustom",
@@ -4061,7 +4108,9 @@
           "label": "Gaya Logo",
           "description": "Pilih antara logo minimalis modern atau ikon S klasik",
           "classic": "Klasik",
-          "modern": "Modern"
+          "classicAlt": "Logo klasik",
+          "modern": "Modern",
+          "modernAlt": "Logo modern"
         },
         "customPaths": {
           "label": "Jalur Kustom",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfigurasi Aplikasi",
-      "description": "Pengaturan dan detail konfigurasi aplikasi saat ini."
+      "description": "Pengaturan dan detail konfigurasi aplikasi saat ini.",
+      "loading": "Memuat konfigurasi...",
+      "error": "Error",
+      "warning": "Peringatan Konfigurasi",
+      "sections": {
+        "basic": "Konfigurasi Dasar",
+        "security": "Konfigurasi Keamanan",
+        "system": "Konfigurasi Sistem",
+        "integration": "Konfigurasi Integrasi"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Kelola tim dan atur anggota ruang kerja",
       "loading": "Memuat tim...",
       "loadingDetails": "Memuat rincian tim...",
+      "loadError": "Gagal memuat detail tim",
       "createNewTeam": "Buat Tim Baru",
       "teamName": "Nama Tim",
       "totalMembers": "Total Anggota",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Menyiapkan checkout Anda...",
+    "redirecting": "Mengalihkan ke checkout aman...",
     "upgradeTitle": "Tingkatkan ke {{planName}}",
     "success": "Pembayaran Berhasil!",
     "successMessage": "Langganan Anda telah berhasil diaktifkan. Anda akan segera menerima email konfirmasi.",

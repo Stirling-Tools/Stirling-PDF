@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferencje"
+    },
+    "workspace": {
+      "title": "Przestrzeń robocza",
+      "people": "Osoby",
+      "teams": "Zespoły"
+    },
+    "configuration": {
+      "title": "Konfiguracja",
+      "systemSettings": "Ustawienia systemowe",
+      "features": "Funkcje",
+      "endpoints": "Endpointy",
+      "database": "Baza danych",
+      "advanced": "Zaawansowane"
+    },
+    "securityAuth": {
+      "title": "Bezpieczeństwo i uwierzytelnianie",
+      "security": "Bezpieczeństwo",
+      "connections": "Połączenia"
+    },
+    "licensingAnalytics": {
+      "title": "Licencje i analityka",
+      "plan": "Plan",
+      "audit": "Audyt",
+      "usageAnalytics": "Analityka użycia"
+    },
+    "policiesPrivacy": {
+      "title": "Zasady i prywatność",
+      "legal": "Prawne",
+      "privacy": "Prywatność"
+    },
+    "developer": {
+      "title": "Deweloper",
+      "apiKeys": "Klucze API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Najpierw włącz tryb logowania",
+      "requiresEnterprise": "Wymaga licencji Enterprise"
+    },
     "connection": {
       "title": "Tryb połączenia",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Usuń wyłączone opcje konwersji w narzędziu Konwertuj zamiast wyświetlać je wyszarzone."
     },
     "hotkeys": {
+      "title": "Skróty klawiaturowe",
+      "description": "Dostosuj skróty klawiaturowe, aby szybko uzyskiwać dostęp do narzędzi. Kliknij \"Zmień skrót\" i naciśnij nową kombinację klawiszy. Naciśnij Esc, aby anulować.",
       "errorConflict": "Skrót już używany przez {{tool}}.",
+      "errorModifier": {
+        "mac": "Dodaj ⌘ (Command), ⌥ (Option) lub inny modyfikator do skrótu.",
+        "windows": "Dodaj Ctrl, Alt lub inny modyfikator do skrótu."
+      },
       "searchPlaceholder": "Szukaj narzędzi...",
       "none": "Nieprzypisany",
       "customBadge": "Własny",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Dostępne języki",
-          "description": "Języki, które użytkownicy mogą wybierać (pozostaw puste, aby włączyć wszystkie języki)"
+          "description": "Języki, które użytkownicy mogą wybierać (pozostaw puste, aby włączyć wszystkie języki)",
+          "placeholder": "Wybierz języki"
         },
         "customMetadata": {
           "label": "Niestandardowe metadane",
@@ -4061,7 +4108,9 @@
           "label": "Styl logo",
           "description": "Wybierz między nowoczesnym minimalistycznym logo a klasyczną ikoną S",
           "classic": "Klasyczny",
-          "modern": "Nowoczesny"
+          "classicAlt": "Klasyczne logo",
+          "modern": "Nowoczesny",
+          "modernAlt": "Nowoczesne logo"
         },
         "customPaths": {
           "label": "Niestandardowe ścieżki",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfiguracja aplikacji",
-      "description": "Bieżące ustawienia i szczegóły konfiguracji aplikacji."
+      "description": "Bieżące ustawienia i szczegóły konfiguracji aplikacji.",
+      "loading": "Ładowanie konfiguracji...",
+      "error": "Błąd",
+      "warning": "Ostrzeżenie konfiguracyjne",
+      "sections": {
+        "basic": "Podstawowa konfiguracja",
+        "security": "Konfiguracja zabezpieczeń",
+        "system": "Konfiguracja systemu",
+        "integration": "Konfiguracja integracji"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Zarządzaj zespołami i organizuj członków obszaru roboczego",
       "loading": "Wczytywanie zespołów...",
       "loadingDetails": "Wczytywanie szczegółów zespołu...",
+      "loadError": "Nie udało się wczytać szczegółów zespołu",
       "createNewTeam": "Utwórz nowy zespół",
       "teamName": "Nazwa zespołu",
       "totalMembers": "Łącznie członków",
@@ -5431,7 +5490,7 @@
     "from": "Od",
     "perMonth": "/mies.",
     "perSeat": "/miejsce",
-    "withServer": "+ Server Plan",
+    "withServer": "+ Plan serwerowy",
     "licensedSeats": "Licencjonowane: {{count}} miejsc",
     "includedInCurrent": "Wliczone w Twój plan",
     "selectPlan": "Wybierz plan",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Przygotowywanie kasy...",
+    "redirecting": "Przekierowywanie do bezpiecznej kasy...",
     "upgradeTitle": "Uaktualnij do {{planName}}",
     "success": "Płatność zakończona sukcesem!",
     "successMessage": "Twoja subskrypcja została pomyślnie aktywowana. Wkrótce otrzymasz e‑mail z potwierdzeniem.",

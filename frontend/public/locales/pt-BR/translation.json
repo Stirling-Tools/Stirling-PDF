@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferências"
+    },
+    "workspace": {
+      "title": "Espaço de trabalho",
+      "people": "Pessoas",
+      "teams": "Equipes"
+    },
+    "configuration": {
+      "title": "Configuração",
+      "systemSettings": "Configurações do sistema",
+      "features": "Recursos",
+      "endpoints": "Endpoints",
+      "database": "Banco de dados",
+      "advanced": "Avançado"
+    },
+    "securityAuth": {
+      "title": "Segurança & Autenticação",
+      "security": "Segurança",
+      "connections": "Conexões"
+    },
+    "licensingAnalytics": {
+      "title": "Licenciamento & Análises",
+      "plan": "Plano",
+      "audit": "Auditoria",
+      "usageAnalytics": "Análises de uso"
+    },
+    "policiesPrivacy": {
+      "title": "Políticas & Privacidade",
+      "legal": "Jurídico",
+      "privacy": "Privacidade"
+    },
+    "developer": {
+      "title": "Desenvolvedor",
+      "apiKeys": "Chaves de API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Ative o modo de login primeiro",
+      "requiresEnterprise": "Requer licença Enterprise"
+    },
     "connection": {
       "title": "Modo de conexão",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Remove opções de conversão desativadas na ferramenta Converter em vez de mostrá-las esmaecidas."
     },
     "hotkeys": {
+      "title": "Atalhos de teclado",
+      "description": "Personalize atalhos de teclado para acesso rápido às ferramentas. Clique em \"Alterar atalho\" e pressione uma nova combinação de teclas. Pressione Esc para cancelar.",
       "errorConflict": "Atalho já usado por {{tool}}.",
+      "errorModifier": {
+        "mac": "Inclua ⌘ (Command), ⌥ (Option) ou outro modificador no atalho.",
+        "windows": "Inclua Ctrl, Alt ou outro modificador no atalho."
+      },
       "searchPlaceholder": "Pesquisar ferramentas...",
       "none": "Não atribuído",
       "customBadge": "Personalizado",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Idiomas disponíveis",
-          "description": "Idiomas que os usuários podem selecionar (deixe em branco para habilitar todos os idiomas)"
+          "description": "Idiomas que os usuários podem selecionar (deixe em branco para habilitar todos os idiomas)",
+          "placeholder": "Selecione idiomas"
         },
         "customMetadata": {
           "label": "Metadados personalizados",
@@ -4061,7 +4108,9 @@
           "label": "Estilo do logo",
           "description": "Escolha entre o logo minimalista moderno ou o ícone S clássico",
           "classic": "Clássico",
-          "modern": "Moderno"
+          "classicAlt": "Logo clássico",
+          "modern": "Moderno",
+          "modernAlt": "Logo moderno"
         },
         "customPaths": {
           "label": "Caminhos personalizados",
@@ -4281,7 +4330,7 @@
             "description": "O nome do provedor SAML2"
           },
           "registrationId": {
-            "label": "Registration ID",
+            "label": "ID de registro",
             "description": "O identificador de registro SAML2"
           },
           "autoCreateUser": {
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configuração do aplicativo",
-      "description": "Configurações e detalhes atuais do aplicativo."
+      "description": "Configurações e detalhes atuais do aplicativo.",
+      "loading": "Carregando configuração...",
+      "error": "Erro",
+      "warning": "Aviso de configuração",
+      "sections": {
+        "basic": "Configuração básica",
+        "security": "Configuração de segurança",
+        "system": "Configuração do sistema",
+        "integration": "Configuração de integração"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gerencie equipes e organize os membros do espaço de trabalho",
       "loading": "Carregando equipes...",
       "loadingDetails": "Carregando detalhes da equipe...",
+      "loadError": "Falha ao carregar detalhes da equipe",
       "createNewTeam": "Criar nova equipe",
       "teamName": "Nome da equipe",
       "totalMembers": "Total de membros",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Preparando seu checkout...",
+    "redirecting": "Redirecionando para o checkout seguro...",
     "upgradeTitle": "Fazer upgrade para {{planName}}",
     "success": "Pagamento bem-sucedido!",
     "successMessage": "Sua assinatura foi ativada com sucesso. Você receberá um e-mail de confirmação em breve.",

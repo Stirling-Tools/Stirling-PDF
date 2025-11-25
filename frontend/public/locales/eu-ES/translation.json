@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Hobespenak"
+    },
+    "workspace": {
+      "title": "Lan-espazioa",
+      "people": "Pertsonak",
+      "teams": "Taldeak"
+    },
+    "configuration": {
+      "title": "Konfigurazioa",
+      "systemSettings": "Sistemaren ezarpenak",
+      "features": "Eginbideak",
+      "endpoints": "Endpoints",
+      "database": "Datu-basea",
+      "advanced": "Aurreratua"
+    },
+    "securityAuth": {
+      "title": "Segurtasuna eta Autentifikazioa",
+      "security": "Segurtasuna",
+      "connections": "Konexioak"
+    },
+    "licensingAnalytics": {
+      "title": "Lizentziak eta Analitika",
+      "plan": "Plana",
+      "audit": "Ikuskaritza",
+      "usageAnalytics": "Erabilera-analitika"
+    },
+    "policiesPrivacy": {
+      "title": "Politikak eta Pribatutasuna",
+      "legal": "Legal",
+      "privacy": "Pribatutasuna"
+    },
+    "developer": {
+      "title": "Garatzailea",
+      "apiKeys": "API gakoak"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Lehenik login modua gaitu",
+      "requiresEnterprise": "Enterprise lizentzia behar da"
+    },
     "connection": {
       "title": "Konexio modua",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Kendu desgaitutako bihurketa aukerak Convert tresnan gris gisa erakutsi ordez."
     },
     "hotkeys": {
+      "title": "Laster-teklak",
+      "description": "Pertsonalizatu laster-teklak tresnetara azkar sartzeko. Egin klik \"Laster-tekla aldatu\" eta sakatu tekla-konbinazio berria. Sakatu Esc ezeztatzeko.",
       "errorConflict": "Laster-tekla dagoeneko {{tool}} tresnak erabiltzen du.",
+      "errorModifier": {
+        "mac": "Sartu ⌘ (Command), ⌥ (Option) edo beste aldatzaile bat zure laster-teklean.",
+        "windows": "Sartu Ctrl, Alt edo beste aldatzaile bat zure laster-teklean."
+      },
       "searchPlaceholder": "Bilatu tresnak...",
       "none": "Esleitu gabe",
       "customBadge": "Pertsonalizatua",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Hizkuntza erabilgarriak",
-          "description": "Erabiltzaileek hauta ditzaketen hizkuntzak (utzi hutsik hizkuntza guztiak gaitzeko)"
+          "description": "Erabiltzaileek hauta ditzaketen hizkuntzak (utzi hutsik hizkuntza guztiak gaitzeko)",
+          "placeholder": "Hautatu hizkuntzak"
         },
         "customMetadata": {
           "label": "Metadatu pertsonalizatuak",
@@ -4061,7 +4108,9 @@
           "label": "Logotipoaren estiloa",
           "description": "Aukeratu logotipo moderno eta minimalisten eta S ikono klasikoaren artean",
           "classic": "Klasikoa",
-          "modern": "Modernoa"
+          "classicAlt": "Logo klasikoa",
+          "modern": "Modernoa",
+          "modernAlt": "Logo modernoa"
         },
         "customPaths": {
           "label": "Bide pertsonalizatuak",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Aplikazioaren konfigurazioa",
-      "description": "Uneko aplikazioaren ezarpenak eta konfigurazio xehetasunak."
+      "description": "Uneko aplikazioaren ezarpenak eta konfigurazio xehetasunak.",
+      "loading": "Konfigurazioa kargatzen...",
+      "error": "Errorea",
+      "warning": "Konfigurazio-abisoa",
+      "sections": {
+        "basic": "Oinarrizko konfigurazioa",
+        "security": "Segurtasun-konfigurazioa",
+        "system": "Sistema-konfigurazioa",
+        "integration": "Integrazio-konfigurazioa"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Kudeatu taldeak eta antolatu lan-espazioko kideak",
       "loading": "Taldeak kargatzen...",
       "loadingDetails": "Taldearen xehetasunak kargatzen...",
+      "loadError": "Ezin izan dira taldearen xehetasunak kargatu",
       "createNewTeam": "Sortu talde berria",
       "teamName": "Taldearen izena",
       "totalMembers": "Kideak guztira",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Zure ordainketa prestatzen...",
+    "redirecting": "Ordainketa segurura birbideratzen...",
     "upgradeTitle": "Bertsio-berritu {{planName}} planera",
     "success": "Ordainketa arrakastatsua!",
     "successMessage": "Zure harpidetza ongi aktibatu da. Laster jasoko duzu baieztapen-mezu elektronikoa.",

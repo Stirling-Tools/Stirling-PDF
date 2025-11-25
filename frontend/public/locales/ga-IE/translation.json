@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Sainroghanna"
+    },
+    "workspace": {
+      "title": "Spás Oibre",
+      "people": "Daoine",
+      "teams": "Foirne"
+    },
+    "configuration": {
+      "title": "Cumraíocht",
+      "systemSettings": "Socruithe Córais",
+      "features": "Gnéithe",
+      "endpoints": "Deirphointí",
+      "database": "Bunachar Sonraí",
+      "advanced": "Ardroghanna"
+    },
+    "securityAuth": {
+      "title": "Slándáil agus Fíordheimhniú",
+      "security": "Slándáil",
+      "connections": "Naisc"
+    },
+    "licensingAnalytics": {
+      "title": "Ceadúnú agus Anailísíocht",
+      "plan": "Plean",
+      "audit": "Iniúchadh",
+      "usageAnalytics": "Anailísíocht Úsáide"
+    },
+    "policiesPrivacy": {
+      "title": "Polasaithe agus Príobháideachas",
+      "legal": "Dlíthiúil",
+      "privacy": "Príobháideachas"
+    },
+    "developer": {
+      "title": "Forbróir",
+      "apiKeys": "Eochracha API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Cumasaigh mód logála isteach ar dtús",
+      "requiresEnterprise": "Teastaíonn ceadúnas Enterprise"
+    },
     "connection": {
       "title": "Mód Ceangail",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Bain roghanna tiontaithe díchumasaithe san uirlis Convert seachas iad a thaispeáint i liath."
     },
     "hotkeys": {
+      "title": "Aicearraí Méarchláir",
+      "description": "Saincheap aicearraí méarchláir chun rochtain thapa ar uirlisí. Cliceáil \"Athraigh aicearra\" agus brúigh teaglaim eochracha nua. Brúigh Esc chun cealú.",
       "errorConflict": "Tá an t-aicearra in úsáid cheana ag {{tool}}.",
+      "errorModifier": {
+        "mac": "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile i do aicearra.",
+        "windows": "Cuir Ctrl, Alt, nó modhnóir eile i do aicearra."
+      },
       "searchPlaceholder": "Cuardaigh uirlisí...",
       "none": "Gan sannadh",
       "customBadge": "Saincheaptha",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Teangacha ar Fáil",
-          "description": "Teangacha ar féidir le húsáideoirí a roghnú (fág folamh chun gach teanga a chumasú)"
+          "description": "Teangacha ar féidir le húsáideoirí a roghnú (fág folamh chun gach teanga a chumasú)",
+          "placeholder": "Roghnaigh teangacha"
         },
         "customMetadata": {
           "label": "Meiteashonraí Saincheaptha",
@@ -4061,7 +4108,9 @@
           "label": "Stíl Lógó",
           "description": "Roghnaigh idir an lógó nua‑aimseartha íostach nó an tsiombail S chlasaiceach",
           "classic": "Clasaiceach",
-          "modern": "Nua‑Aimseartha"
+          "classicAlt": "Lógó clasaiceach",
+          "modern": "Nua‑Aimseartha",
+          "modernAlt": "Lógó nua-aimseartha"
         },
         "customPaths": {
           "label": "Conairí Saincheaptha",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Cumraíocht an Fheidhmchláir",
-      "description": "Socruithe reatha an fheidhmchláir agus sonraí cumraíochta."
+      "description": "Socruithe reatha an fheidhmchláir agus sonraí cumraíochta.",
+      "loading": "Cumraíocht á luchtú...",
+      "error": "Earráid",
+      "warning": "Rabhadh Cumraíochta",
+      "sections": {
+        "basic": "Cumraíocht Bhunúsach",
+        "security": "Cumraíocht Slándála",
+        "system": "Cumraíocht Córais",
+        "integration": "Cumraíocht Chomhtháthaithe"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Bainistigh foirne agus eagraigh baill an spáis oibre",
       "loading": "Foirne á lódáil...",
       "loadingDetails": "Sonraí foirne á lódáil...",
+      "loadError": "Theip ar luchtú sonraí an fhoirne",
       "createNewTeam": "Cruthaigh Foireann Nua",
       "teamName": "Ainm Foirne",
       "totalMembers": "Iomlán na mBall",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Do sheiceáil amach á ullmhú...",
+    "redirecting": "Ag atreorú chuig checkout slán...",
     "upgradeTitle": "Uasghrádaigh go {{planName}}",
     "success": "D’éirigh leis an Íocaíocht!",
     "successMessage": "Gníomhachtaíodh do shíntiús go rathúil. Gheobhaidh tú ríomhphost dearbhaithe go luath.",

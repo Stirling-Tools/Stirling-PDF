@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Voorkeuren"
+    },
+    "workspace": {
+      "title": "Werkruimte",
+      "people": "Personen",
+      "teams": "Teams"
+    },
+    "configuration": {
+      "title": "Configuratie",
+      "systemSettings": "Systeeminstellingen",
+      "features": "Functies",
+      "endpoints": "Endpoints",
+      "database": "Database",
+      "advanced": "Geavanceerd"
+    },
+    "securityAuth": {
+      "title": "Beveiliging & Authenticatie",
+      "security": "Beveiliging",
+      "connections": "Verbindingen"
+    },
+    "licensingAnalytics": {
+      "title": "Licenties & Analytics",
+      "plan": "Abonnement",
+      "audit": "Audit",
+      "usageAnalytics": "Gebruiksstatistieken"
+    },
+    "policiesPrivacy": {
+      "title": "Beleid & Privacy",
+      "legal": "Juridisch",
+      "privacy": "Privacy"
+    },
+    "developer": {
+      "title": "Ontwikkelaar",
+      "apiKeys": "API-sleutels"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Schakel eerst de loginmodus in",
+      "requiresEnterprise": "Vereist Enterprise-licentie"
+    },
     "connection": {
       "title": "Verbindingsmodus",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Verwijder uitgeschakelde conversie-opties in de tool Converteren in plaats van ze grijs te tonen."
     },
     "hotkeys": {
+      "title": "Sneltoetsen",
+      "description": "Pas sneltoetsen aan voor snelle toegang tot tools. Klik op \"Sneltoets wijzigen\" en druk een nieuwe toetsencombinatie in. Druk op Esc om te annuleren.",
       "errorConflict": "Sneltoets wordt al gebruikt door {{tool}}.",
+      "errorModifier": {
+        "mac": "Neem ⌘ (Command), ⌥ (Option) of een andere modificatietoets op in je sneltoets.",
+        "windows": "Neem Ctrl, Alt of een andere modificatietoets op in je sneltoets."
+      },
       "searchPlaceholder": "Tools zoeken...",
       "none": "Niet toegewezen",
       "customBadge": "Aangepast",
@@ -853,7 +899,7 @@
       "desc": "Bekijk en bewerk Stirling PDF JSON-exporten met gegroepeerde tekstbewerking en het opnieuw genereren van PDF's"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "tekst,annotatie,label",
       "title": "Tekst toevoegen",
       "desc": "Voeg overal in je PDF aangepaste tekst toe"
     }
@@ -1125,7 +1171,7 @@
     "settings": "Instellingen",
     "conversionCompleted": "Conversie voltooid",
     "results": "Resultaten",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "geconverteerd_bestand",
     "conversionResults": "Conversieresultaten",
     "convertFrom": "Converteren van",
     "convertTo": "Converteren naar",
@@ -2204,7 +2250,7 @@
       "emptyDescription": "Teken, upload of typ hierboven een handtekening en kies vervolgens 'Opslaan in bibliotheek' om tot {{max}} favorieten paraat te hebben.",
       "type": {
         "canvas": "Tekening",
-        "image": "Upload",
+        "image": "Uploaden",
         "text": "Tekst"
       },
       "limitTitle": "Limiet bereikt",
@@ -3289,7 +3335,7 @@
     "tags": "splitsen, hoofdstukken, bookmarks, organiseren"
   },
   "validateSignature": {
-    "tags": "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate",
+    "tags": "handtekening,verifiëren,valideren,pdf,certificaat,digitale handtekening,Handtekening valideren,Certificaat valideren",
     "title": "PDF-handtekeningen valideren",
     "header": "Digitale handtekeningen valideren",
     "selectPDF": "Selecteer een ondertekend PDF-bestand",
@@ -3787,7 +3833,7 @@
     "title": "API-documentatie",
     "header": "API-documentatie",
     "desc": "Bekijk en test de Stirling PDF API-endpoints",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,documentatie,swagger,endpoints,ontwikkeling"
   },
   "cookieBanner": {
     "popUp": {
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Beschikbare talen",
-          "description": "Talen waaruit gebruikers kunnen kiezen (laat leeg om alle talen in te schakelen)"
+          "description": "Talen waaruit gebruikers kunnen kiezen (laat leeg om alle talen in te schakelen)",
+          "placeholder": "Selecteer talen"
         },
         "customMetadata": {
           "label": "Aangepaste metadata",
@@ -4061,7 +4108,9 @@
           "label": "Logostijl",
           "description": "Kies tussen het moderne minimalistische logo of het klassieke S-pictogram",
           "classic": "Klassiek",
-          "modern": "Modern"
+          "classicAlt": "Klassiek logo",
+          "modern": "Modern",
+          "modernAlt": "Modern logo"
         },
         "customPaths": {
           "label": "Aangepaste paden",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Applicatieconfiguratie",
-      "description": "Huidige applicatie-instellingen en configuratiedetails."
+      "description": "Huidige applicatie-instellingen en configuratiedetails.",
+      "loading": "Configuratie laden...",
+      "error": "Fout",
+      "warning": "Configuratiewaarschuwing",
+      "sections": {
+        "basic": "Basisconfiguratie",
+        "security": "Beveiligingsconfiguratie",
+        "system": "Systeemconfiguratie",
+        "integration": "Integratieconfiguratie"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Beheer teams en organiseer leden van de werkruimte",
       "loading": "Teams laden...",
       "loadingDetails": "Teamdetails laden...",
+      "loadError": "Teamdetails laden mislukt",
       "createNewTeam": "Nieuw team maken",
       "teamName": "Teamnaam",
       "totalMembers": "Totaal aantal leden",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Bezig met afrekenproces voorbereiden...",
+    "redirecting": "Doorsturen naar beveiligde checkout...",
     "upgradeTitle": "Upgraden naar {{planName}}",
     "success": "Betaling geslaagd!",
     "successMessage": "Uw abonnement is succesvol geactiveerd. U ontvangt binnenkort een bevestigingsmail.",

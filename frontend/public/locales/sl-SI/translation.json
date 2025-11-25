@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Nastavitve"
+    },
+    "workspace": {
+      "title": "Delovni prostor",
+      "people": "Osebe",
+      "teams": "Skupine"
+    },
+    "configuration": {
+      "title": "Konfiguracija",
+      "systemSettings": "Sistemske nastavitve",
+      "features": "Funkcije",
+      "endpoints": "Končne točke",
+      "database": "Podatkovna baza",
+      "advanced": "Napredno"
+    },
+    "securityAuth": {
+      "title": "Varnost in avtentikacija",
+      "security": "Varnost",
+      "connections": "Povezave"
+    },
+    "licensingAnalytics": {
+      "title": "Licenciranje in analitika",
+      "plan": "Načrt",
+      "audit": "Revizija",
+      "usageAnalytics": "Analitika uporabe"
+    },
+    "policiesPrivacy": {
+      "title": "Politike in zasebnost",
+      "legal": "Pravno",
+      "privacy": "Zasebnost"
+    },
+    "developer": {
+      "title": "Razvijalec",
+      "apiKeys": "API ključi"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Najprej omogočite način prijave",
+      "requiresEnterprise": "Zahteva licenco Enterprise"
+    },
     "connection": {
       "title": "Način povezave",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Odstrani onemogočene možnosti pretvorbe v orodju Pretvori, namesto da so zasivljene."
     },
     "hotkeys": {
+      "title": "Bližnjice na tipkovnici",
+      "description": "Prilagodite bližnjice na tipkovnici za hiter dostop do orodij. Kliknite \"Spremeni bližnjico\" in pritisnite novo kombinacijo tipk. Pritisnite Esc za preklic.",
       "errorConflict": "Bližnjica je že v uporabi pri {{tool}}.",
+      "errorModifier": {
+        "mac": "Vključite ⌘ (Command), ⌥ (Option) ali drug modifikator v bližnjici.",
+        "windows": "Vključite Ctrl, Alt ali drug modifikator v bližnjici."
+      },
       "searchPlaceholder": "Išči orodja...",
       "none": "Ni določeno",
       "customBadge": "Po meri",
@@ -1165,11 +1211,11 @@
     "fileFormat": "Format datoteke",
     "wordDoc": "Dokument Word",
     "wordDocExt": "Dokument Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Besedilo OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "Predstavitev OpenDocument (.odp)",
     "txtExt": "Navadno besedilo (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "Obogateno besedilo (.rtf)",
     "selectedFiles": "Izbrane datoteke",
     "noFileSelected": "Ni izbrane datoteke. Uporabite ploščo z datotekami za dodajanje.",
     "convertFiles": "Pretvori datoteke",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Razpoložljivi jeziki",
-          "description": "Jeziki, med katerimi lahko uporabniki izbirajo (pustite prazno za omogočanje vseh jezikov)"
+          "description": "Jeziki, med katerimi lahko uporabniki izbirajo (pustite prazno za omogočanje vseh jezikov)",
+          "placeholder": "Izberite jezike"
         },
         "customMetadata": {
           "label": "Metapodatki po meri",
@@ -4061,7 +4108,9 @@
           "label": "Slog logotipa",
           "description": "Izberite med modernim minimalističnim logotipom ali klasično ikono S",
           "classic": "Klasičen",
-          "modern": "Sodoben"
+          "classicAlt": "Klasični logotip",
+          "modern": "Sodoben",
+          "modernAlt": "Moderni logotip"
         },
         "customPaths": {
           "label": "Poti po meri",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfiguracija aplikacije",
-      "description": "Trenutne nastavitve aplikacije in podrobnosti konfiguracije."
+      "description": "Trenutne nastavitve aplikacije in podrobnosti konfiguracije.",
+      "loading": "Nalaganje konfiguracije...",
+      "error": "Napaka",
+      "warning": "Opozorilo konfiguracije",
+      "sections": {
+        "basic": "Osnovna konfiguracija",
+        "security": "Varnostna konfiguracija",
+        "system": "Sistemska konfiguracija",
+        "integration": "Konfiguracija integracije"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Upravljajte skupine in organizirajte člane delovnega prostora",
       "loading": "Nalaganje skupin...",
       "loadingDetails": "Nalaganje podrobnosti skupine...",
+      "loadError": "Nalaganje podrobnosti skupine ni uspelo",
       "createNewTeam": "Ustvari novo skupino",
       "teamName": "Ime skupine",
       "totalMembers": "Skupaj članov",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Pripravljamo vaš nakup...",
+    "redirecting": "Preusmerjanje na varno blagajno...",
     "upgradeTitle": "Nadgradite na {{planName}}",
     "success": "Plačilo uspešno!",
     "successMessage": "Vaša naročnina je bila uspešno aktivirana. Kmalu boste prejeli potrditveno e-pošto.",

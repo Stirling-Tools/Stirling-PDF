@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferències"
+    },
+    "workspace": {
+      "title": "Espai de treball",
+      "people": "Persones",
+      "teams": "Equips"
+    },
+    "configuration": {
+      "title": "Configuració",
+      "systemSettings": "Configuració del sistema",
+      "features": "Funcions",
+      "endpoints": "Endpoints",
+      "database": "Base de dades",
+      "advanced": "Avançat"
+    },
+    "securityAuth": {
+      "title": "Seguretat i autenticació",
+      "security": "Seguretat",
+      "connections": "Connexions"
+    },
+    "licensingAnalytics": {
+      "title": "Llicències i analítiques",
+      "plan": "Pla",
+      "audit": "Auditoria",
+      "usageAnalytics": "Analítiques d'ús"
+    },
+    "policiesPrivacy": {
+      "title": "Polítiques i privadesa",
+      "legal": "Legal",
+      "privacy": "Privadesa"
+    },
+    "developer": {
+      "title": "Desenvolupador",
+      "apiKeys": "Claus API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Activa primer el mode d'inici de sessió",
+      "requiresEnterprise": "Requereix llicència Enterprise"
+    },
     "connection": {
       "title": "Mode de connexió",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Elimina les opcions de conversió desactivades a l'eina Convertir en lloc de mostrar-les en gris."
     },
     "hotkeys": {
+      "title": "Dreceres de teclat",
+      "description": "Personalitza les dreceres de teclat per accedir ràpidament a les eines. Fes clic a \"Canvia la drecera\" i prem una nova combinació de tecles. Prem Esc per cancel·lar.",
       "errorConflict": "Drecera ja utilitzada per {{tool}}.",
+      "errorModifier": {
+        "mac": "Inclou ⌘ (Command), ⌥ (Option) o un altre modificador a la drecera.",
+        "windows": "Inclou Ctrl, Alt o un altre modificador a la drecera."
+      },
       "searchPlaceholder": "Cerca eines...",
       "none": "Sense assignar",
       "customBadge": "Personalitzada",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Idiomes disponibles",
-          "description": "Idiomes que els usuaris poden seleccionar (deixeu-ho buit per habilitar tots els idiomes)"
+          "description": "Idiomes que els usuaris poden seleccionar (deixeu-ho buit per habilitar tots els idiomes)",
+          "placeholder": "Selecciona idiomes"
         },
         "customMetadata": {
           "label": "Metadades personalitzades",
@@ -4061,7 +4108,9 @@
           "label": "Estil del logotip",
           "description": "Trieu entre el logotip modern minimalista o la icona clàssica S",
           "classic": "Clàssic",
-          "modern": "Modern"
+          "classicAlt": "Logotip clàssic",
+          "modern": "Modern",
+          "modernAlt": "Logotip modern"
         },
         "customPaths": {
           "label": "Camins personalitzats",
@@ -4499,7 +4548,7 @@
           "description": "URL o nom de fitxer de la política de galetes"
         },
         "impressum": {
-          "label": "Impressum",
+          "label": "Avís legal",
           "description": "URL o nom de fitxer de l'impressum (requerit en algunes jurisdiccions)"
         }
       },
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configuració de l’aplicació",
-      "description": "Paràmetres actuals de l’aplicació i detalls de configuració."
+      "description": "Paràmetres actuals de l’aplicació i detalls de configuració.",
+      "loading": "Carregant la configuració...",
+      "error": "Error",
+      "warning": "Avís de configuració",
+      "sections": {
+        "basic": "Configuració bàsica",
+        "security": "Configuració de seguretat",
+        "system": "Configuració del sistema",
+        "integration": "Configuració d'integració"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gestioneu equips i organitzeu els membres de l’espai de treball",
       "loading": "Carregant equips...",
       "loadingDetails": "Carregant detalls de l’equip...",
+      "loadError": "No s'han pogut carregar els detalls de l'equip",
       "createNewTeam": "Crea un equip nou",
       "teamName": "Nom de l’equip",
       "totalMembers": "Membres totals",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "S’està preparant el pagament...",
+    "redirecting": "Redirigint al pagament segur...",
     "upgradeTitle": "Actualitza a {{planName}}",
     "success": "Pagament correcte!",
     "successMessage": "La vostra subscripció s’ha activat correctament. Rebreu un correu de confirmació en breu.",

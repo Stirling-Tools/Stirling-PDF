@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferencije"
+    },
+    "workspace": {
+      "title": "Radni prostor",
+      "people": "Korisnici",
+      "teams": "Timovi"
+    },
+    "configuration": {
+      "title": "Konfiguracija",
+      "systemSettings": "Postavke sustava",
+      "features": "Značajke",
+      "endpoints": "Endpointi",
+      "database": "Baza podataka",
+      "advanced": "Napredno"
+    },
+    "securityAuth": {
+      "title": "Sigurnost i autentikacija",
+      "security": "Sigurnost",
+      "connections": "Povezivanja"
+    },
+    "licensingAnalytics": {
+      "title": "Licenciranje i analitika",
+      "plan": "Plan",
+      "audit": "Revizija",
+      "usageAnalytics": "Analitika korištenja"
+    },
+    "policiesPrivacy": {
+      "title": "Pravila i privatnost",
+      "legal": "Pravno",
+      "privacy": "Privatnost"
+    },
+    "developer": {
+      "title": "Razvoj",
+      "apiKeys": "API ključevi"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Najprije omogućite način prijave",
+      "requiresEnterprise": "Zahtijeva Enterprise licencu"
+    },
     "connection": {
       "title": "Način povezivanja",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Uklonite onemogućene opcije pretvorbe u alatu Pretvori umjesto da su zasivljene."
     },
     "hotkeys": {
+      "title": "Prečaci tipkovnice",
+      "description": "Prilagodite prečace tipkovnice za brz pristup alatima. Kliknite \"Promijeni prečac\" i pritisnite novu kombinaciju tipki. Pritisnite Esc za odustajanje.",
       "errorConflict": "Prečac već koristi {{tool}}.",
+      "errorModifier": {
+        "mac": "Uključite ⌘ (Command), ⌥ (Option) ili neki drugi modifikator u svom prečacu.",
+        "windows": "Uključite Ctrl, Alt ili neki drugi modifikator u svom prečacu."
+      },
       "searchPlaceholder": "Pretraži alate...",
       "none": "Nije dodijeljeno",
       "customBadge": "Prilagođeno",
@@ -2697,7 +2743,7 @@
     "selectPDF": "Odaberite datoteku PDF:",
     "submit": "Ukloni potpisi",
     "description": "Ovaj alat će ukloniti potpise digitalnim certifikatom iz vašeg PDF dokumenta.",
-    "filenamePrefix": "unsigned",
+    "filenamePrefix": "nepotpisano",
     "files": {
       "placeholder": "Odaberite PDF datoteku u glavnom prikazu za početak"
     },
@@ -3547,7 +3593,7 @@
     "header": "PDF u Jednu Stranicu",
     "submit": "Pretvori u Jednu Stranicu",
     "description": "Ovaj alat će spojiti sve stranice vašeg PDF-a u jednu veliku stranicu. Širina će ostati ista kao izvorna, a visina će biti zbroj visina svih stranica.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "jedna_stranica",
     "files": {
       "placeholder": "Odaberite PDF datoteku u glavnom prikazu za početak"
     },
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Dostupni jezici",
-          "description": "Jezici koje korisnici mogu odabrati (ostavite prazno za omogućavanje svih jezika)"
+          "description": "Jezici koje korisnici mogu odabrati (ostavite prazno za omogućavanje svih jezika)",
+          "placeholder": "Odaberite jezike"
         },
         "customMetadata": {
           "label": "Prilagođeni metapodaci",
@@ -4061,7 +4108,9 @@
           "label": "Stil logotipa",
           "description": "Odaberite između modernog minimalističkog logotipa ili klasične S ikone",
           "classic": "Klasični",
-          "modern": "Moderni"
+          "classicAlt": "Klasični logotip",
+          "modern": "Moderni",
+          "modernAlt": "Moderni logotip"
         },
         "customPaths": {
           "label": "Prilagođene putanje",
@@ -4246,11 +4295,11 @@
             "description": "Issuer URL OAuth2 pružatelja"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "ID klijenta",
             "description": "OAuth2 Client ID s vašeg pružatelja"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "Tajna klijenta",
             "description": "OAuth2 Client Secret s vašeg pružatelja"
           },
           "useAsUsername": {
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfiguracija aplikacije",
-      "description": "Trenutačne postavke i pojedinosti konfiguracije aplikacije."
+      "description": "Trenutačne postavke i pojedinosti konfiguracije aplikacije.",
+      "loading": "Učitavanje konfiguracije...",
+      "error": "Pogreška",
+      "warning": "Upozorenje konfiguracije",
+      "sections": {
+        "basic": "Osnovna konfiguracija",
+        "security": "Sigurnosna konfiguracija",
+        "system": "Konfiguracija sustava",
+        "integration": "Konfiguracija integracije"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Upravljajte timovima i organizirajte članove radnog prostora",
       "loading": "Učitavanje timova...",
       "loadingDetails": "Učitavanje pojedinosti o timu...",
+      "loadError": "Nije uspjelo učitavanje detalja tima",
       "createNewTeam": "Stvori novi tim",
       "teamName": "Naziv tima",
       "totalMembers": "Ukupno članova",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Priprema naplate...",
+    "redirecting": "Preusmjeravanje na sigurnu naplatu...",
     "upgradeTitle": "Nadogradi na {{planName}}",
     "success": "Plaćanje uspješno!",
     "successMessage": "Vaša je pretplata uspješno aktivirana. Uskoro ćete primiti potvrdni e-mail.",
@@ -6035,7 +6095,7 @@
     "error": {
       "failed": "Došlo je do pogreške pri dodavanju teksta u PDF."
     },
-    "tags": "text,annotation,label",
+    "tags": "tekst,bilješka,oznaka",
     "applySignatures": "Primijeni tekst"
   }
 }

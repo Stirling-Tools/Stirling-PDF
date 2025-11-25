@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Seçimlər"
+    },
+    "workspace": {
+      "title": "İş sahəsi",
+      "people": "İstifadəçilər",
+      "teams": "Komandalar"
+    },
+    "configuration": {
+      "title": "Konfiqurasiya",
+      "systemSettings": "Sistem parametrləri",
+      "features": "Funksiyalar",
+      "endpoints": "Endpointlər",
+      "database": "Məlumat bazası",
+      "advanced": "Qabaqcıl"
+    },
+    "securityAuth": {
+      "title": "Təhlükəsizlik və Autentifikasiya",
+      "security": "Təhlükəsizlik",
+      "connections": "Bağlantılar"
+    },
+    "licensingAnalytics": {
+      "title": "Lisenziyalaşdırma və Analitika",
+      "plan": "Plan",
+      "audit": "Audit",
+      "usageAnalytics": "İstifadə analitikası"
+    },
+    "policiesPrivacy": {
+      "title": "Siyasətlər və Məxfilik",
+      "legal": "Hüquqi",
+      "privacy": "Məxfilik"
+    },
+    "developer": {
+      "title": "Tərtibatçı",
+      "apiKeys": "API açarları"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Əvvəlcə login rejimini aktiv edin",
+      "requiresEnterprise": "Enterprise lisenziyası tələb olunur"
+    },
     "connection": {
       "title": "Bağlantı rejimi",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Convert alətində deaktiv edilmiş çevirmə seçimlərini boz göstərmək əvəzinə siyahıdan çıxarın."
     },
     "hotkeys": {
+      "title": "Klaviatura qısayolları",
+      "description": "Alətlərə sürətli giriş üçün klaviatura qısayollarını fərdiləşdirin. \"Qısayolu dəyiş\" düyməsini klikləyin və yeni düymə kombinasiyasını basın. Ləğv etmək üçün Esc basın.",
       "errorConflict": "Qısayol artıq {{tool}} tərəfindən istifadə olunur.",
+      "errorModifier": {
+        "mac": "Qısayolda ⌘ (Command), ⌥ (Option) və ya başqa bir modifikator daxil edin.",
+        "windows": "Qısayolda Ctrl, Alt və ya başqa bir modifikator daxil edin."
+      },
       "searchPlaceholder": "Alətlərdə axtarın...",
       "none": "Təyin edilməyib",
       "customBadge": "Fərdi",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Mövcud Dillər",
-          "description": "İstifadəçilərin seçə biləcəyi dillər (hamısını aktiv etmək üçün boş saxlayın)"
+          "description": "İstifadəçilərin seçə biləcəyi dillər (hamısını aktiv etmək üçün boş saxlayın)",
+          "placeholder": "Dilləri seçin"
         },
         "customMetadata": {
           "label": "Fərdi Metadata",
@@ -4061,7 +4108,9 @@
           "label": "Logo Üslubu",
           "description": "Müasir minimalist logo ilə klassik S ikonası arasında seçim edin",
           "classic": "Klassik",
-          "modern": "Müasir"
+          "classicAlt": "Klassik loqo",
+          "modern": "Müasir",
+          "modernAlt": "Müasir loqo"
         },
         "customPaths": {
           "label": "Fərdi Yollar",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Tətbiq Konfiqurasiyası",
-      "description": "Cari tətbiq ayarları və konfiqurasiya detalları."
+      "description": "Cari tətbiq ayarları və konfiqurasiya detalları.",
+      "loading": "Konfiqurasiya yüklənir...",
+      "error": "Xəta",
+      "warning": "Konfiqurasiya xəbərdarlığı",
+      "sections": {
+        "basic": "Əsas konfiqurasiya",
+        "security": "Təhlükəsizlik konfiqurasiyası",
+        "system": "Sistem konfiqurasiyası",
+        "integration": "Inteqrasiya konfiqurasiyası"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Komandaları idarə edin və iş sahəsi üzvlərini təşkil edin",
       "loading": "Komandalar yüklənir...",
       "loadingDetails": "Komanda detalları yüklənir...",
+      "loadError": "Komanda detalları yüklənmədi",
       "createNewTeam": "Yeni Komanda Yaradın",
       "teamName": "Komandanın adı",
       "totalMembers": "Ümumi Üzv sayı",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Ödənişiniz hazırlanır...",
+    "redirecting": "Təhlükəsiz checkout-a yönləndirilir...",
     "upgradeTitle": "{{planName}} planına yüksəldin",
     "success": "Ödəniş uğurludur!",
     "successMessage": "Abunəliyiniz uğurla aktivləşdirildi. Tezliklə təsdiq e-poçtu alacaqsınız.",

@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Einstellungen"
+    },
+    "workspace": {
+      "title": "Arbeitsbereich",
+      "people": "Personen",
+      "teams": "Teams"
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "systemSettings": "Systemeinstellungen",
+      "features": "Funktionen",
+      "endpoints": "Endpoints",
+      "database": "Datenbank",
+      "advanced": "Erweitert"
+    },
+    "securityAuth": {
+      "title": "Sicherheit & Authentifizierung",
+      "security": "Sicherheit",
+      "connections": "Verbindungen"
+    },
+    "licensingAnalytics": {
+      "title": "Lizenzierung & Analytics",
+      "plan": "Plan",
+      "audit": "Audit",
+      "usageAnalytics": "Nutzungsanalyse"
+    },
+    "policiesPrivacy": {
+      "title": "Richtlinien & Datenschutz",
+      "legal": "Rechtliches",
+      "privacy": "Datenschutz"
+    },
+    "developer": {
+      "title": "Entwickler",
+      "apiKeys": "API-Schlüssel"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Login-Modus zuerst aktivieren",
+      "requiresEnterprise": "Erfordert Enterprise-Lizenz"
+    },
     "connection": {
       "title": "Verbindungsmodus",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Deaktivierte Konvertierungsoptionen im Konvertieren-Tool ausblenden statt ausgegraut anzuzeigen."
     },
     "hotkeys": {
+      "title": "Tastenkürzel",
+      "description": "Tastenkürzel für schnellen Tool-Zugriff anpassen. Klicken Sie auf \"Shortcut ändern\" und drücken Sie eine neue Tastenkombination. Drücken Sie Esc, um abzubrechen.",
       "errorConflict": "Kürzel wird bereits von {{tool}} verwendet.",
+      "errorModifier": {
+        "mac": "Fügen Sie ⌘ (Command), ⌥ (Option) oder einen anderen Modifikator in Ihr Kürzel ein.",
+        "windows": "Fügen Sie Strg, Alt oder einen anderen Modifikator in Ihr Kürzel ein."
+      },
       "searchPlaceholder": "Tools durchsuchen...",
       "none": "Nicht zugewiesen",
       "customBadge": "Benutzerdefiniert",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Verfügbare Sprachen",
-          "description": "Sprachen, aus denen Benutzer auswählen können (leer lassen, um alle Sprachen zu aktivieren)"
+          "description": "Sprachen, aus denen Benutzer auswählen können (leer lassen, um alle Sprachen zu aktivieren)",
+          "placeholder": "Sprachen auswählen"
         },
         "customMetadata": {
           "label": "Benutzerdefinierte Metadaten",
@@ -4061,7 +4108,9 @@
           "label": "Logo-Stil",
           "description": "Zwischen modernem, minimalistischem Logo und klassischem S-Symbol wählen",
           "classic": "Klassisch",
-          "modern": "Modern"
+          "classicAlt": "Klassisches Logo",
+          "modern": "Modern",
+          "modernAlt": "Modernes Logo"
         },
         "customPaths": {
           "label": "Benutzerdefinierte Pfade",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Anwendungskonfiguration",
-      "description": "Aktuelle Anwendungseinstellungen und Konfigurationsdetails."
+      "description": "Aktuelle Anwendungseinstellungen und Konfigurationsdetails.",
+      "loading": "Konfiguration wird geladen...",
+      "error": "Fehler",
+      "warning": "Konfigurationswarnung",
+      "sections": {
+        "basic": "Grundkonfiguration",
+        "security": "Sicherheitskonfiguration",
+        "system": "Systemkonfiguration",
+        "integration": "Integrationskonfiguration"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Teams verwalten und Mitglieder des Arbeitsbereichs organisieren",
       "loading": "Teams werden geladen...",
       "loadingDetails": "Teamdetails werden geladen...",
+      "loadError": "Teamdetails konnten nicht geladen werden",
       "createNewTeam": "Neues Team erstellen",
       "teamName": "Teamname",
       "totalMembers": "Mitglieder insgesamt",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Checkout wird vorbereitet...",
+    "redirecting": "Weiterleitung zum sicheren Checkout...",
     "upgradeTitle": "Upgrade auf {{planName}}",
     "success": "Zahlung erfolgreich!",
     "successMessage": "Ihr Abonnement wurde erfolgreich aktiviert. Sie erhalten in Kürze eine Bestätigungs-E-Mail.",
