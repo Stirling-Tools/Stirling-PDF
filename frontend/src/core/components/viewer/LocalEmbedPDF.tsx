@@ -41,6 +41,7 @@ import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { isPdfFile } from '@app/utils/fileUtils';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -165,6 +166,27 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           <div style={{ fontSize: '24px' }}>📄</div>
           <Text c="dimmed" size="sm">
             No PDF provided
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  // Check if the file is actually a PDF
+  if (file && !isPdfFile(file)) {
+    const fileName = 'name' in file ? file.name : 'Unknown file';
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '48px' }}>📄</div>
+          <Text size="lg" fw={600} c="dimmed">
+            Cannot Preview File
+          </Text>
+          <Text c="dimmed" size="sm" style={{ textAlign: 'center', maxWidth: '400px' }}>
+            The viewer only supports PDF files. This file appears to be a different format.
+          </Text>
+          <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
+            {fileName}
           </Text>
         </Stack>
       </Center>
