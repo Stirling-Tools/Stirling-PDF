@@ -6,22 +6,27 @@ app: &app
   - app/(common|core|proprietary)/src/main/java/**
 
 openapi: &openapi
-  - build.gradle
-  - app/(common|core|proprietary)/build.gradle
-  - app/(common|core|proprietary)/src/main/java/**
+  - *build
+  - *app
 
-project: &project
-  - app/(common|core|proprietary)/src/(main|test)/java/**
-  - app/(common|core|proprietary)/build.gradle
-  - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
-  - exampleYmlFiles/**
-  - gradle/**
-  - libs/**
-  - 'testing/**/!(requirements*.txt|requirements*.in)*'
-  - build.gradle
+docker: &docker
   - Dockerfile
   - Dockerfile.fat
   - Dockerfile.ultra-lite
+  - ".github/workflows/build.yml"
+  - scripts/init.sh
+  - scripts/init-without-ocr.sh
+  - exampleYmlFiles/**
+
+project: &project
+  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - *build
+  - "app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - exampleYmlFiles/**
+  - gradle/**
+  - libs/**
+  - "testing/**/!(requirements*.txt|requirements*.in)*"
+  - *docker
   - gradle.properties
   - gradlew
   - gradlew.bat

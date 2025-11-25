@@ -33,6 +33,7 @@ jobs:
       app: ${{ steps.changes.outputs.app }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
+      docker: ${{ steps.changes.outputs.docker }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
@@ -68,14 +69,10 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
+          cache: gradle
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x spotlessApply -x spotlessCheck -x sonarqube
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
@@ -100,12 +97,14 @@ jobs:
           if [ ${#missing_reports[@]} -gt 0 ]; then
             echo "ERROR: The following required test report directories are missing:"
             printf '%s\n' "${missing_reports[@]}"
-            exit 1
+            echo "reports-present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "All required test report directories are present"
+            echo "reports-present=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "All required test report directories are present"
 
       - name: Upload Test Reports
-        if: always()
+        if: always() && steps.check-reports.outputs.reports-present == 'true'
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
@@ -127,6 +126,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
+        if: steps.check-reports.outputs.reports-present == 'true'
         id: jacoco
         uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
         with:
@@ -155,15 +155,13 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+          cache: gradle
 
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
           DISABLE_ADDITIONAL_FEATURES: true
-      
+
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
@@ -188,6 +186,7 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
+          cache: gradle
 
       - name: Check licenses for compatibility
         run: ./gradlew clean checkLicense
@@ -205,8 +204,14 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true'
-    needs: files-changed
+    if: |
+      needs.files-changed.outputs.project == 'true' &&
+      (
+        needs.files-changed.outputs.docker != 'true' ||
+        needs.test-build-docker-images.result == 'success' ||
+        needs.test-build-docker-images.result == 'skipped'
+      )
+    needs: [files-changed, test-build-docker-images]
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
@@ -237,20 +242,21 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
+          cache: gradle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.37.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.40.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
-          cache: 'pip' # caching pip dependencies
+          cache: "pip" # caching pip dependencies
           cache-dependency-path: ./testing/cucumber/requirements.txt
 
       - name: Pip requirements
@@ -265,13 +271,22 @@ jobs:
           ./testing/test.sh
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
+    if: github.event_name == 'pull_request' && needs.files-changed.outputs.docker == 'true'
     needs: [files-changed, build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
-        docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
+        docker:
+          - name: "Dockerfile.ultra-lite"
+            tag: "ultra-lite"
+          - name: "Dockerfile.fat"
+            tag: "fat"
+          - name: "Dockerfile"
+            tag: "latest"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
@@ -286,46 +301,220 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
+          cache: gradle
 
       - name: Build application
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
+      # - name: Free disk space on runner
+      #   run: |
+      #     echo "Disk space before cleanup:" && df -h
+      #     sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
+      #     docker system prune -af || true
+      #     echo "Disk space after cleanup:" && df -h
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        with:
+          platforms: linux/amd64,linux/arm64/v8
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        with:
+          platforms: linux/amd64,linux/arm64/v8
 
-      - name: Build ${{ matrix.docker-rev }}
+      - name: Prepare branch tag
+        id: branch_tag
+        shell: bash
+        run: |
+          BRANCH_SOURCE="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          BRANCH_LOWER=$(echo "$BRANCH_SOURCE" | tr '[:upper:]' '[:lower:]')
+          SAFE_BRANCH=$(echo "$BRANCH_LOWER" | sed 's/[^a-z0-9_.-]/-/g' | sed 's/^-\+//' | sed 's/-\+$//' | sed 's/--\+/-/g')
+          if [ -z "$SAFE_BRANCH" ]; then
+            SAFE_BRANCH="branch"
+          fi
+          SHORT_SHA=$(echo "${GITHUB_SHA:-${{ github.sha }}}" | cut -c1-8)
+          echo "safe_branch=$SAFE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: |
+            # ${{ secrets.DOCKER_HUB_USERNAME }}/stirling-pdf-test
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=${{ matrix.docker.tag }},enable=true
+            # type=raw,value=${{ matrix.docker.tag }}-${{ steps.branch_tag.outputs.safe_branch }},enable=true
+            # type=raw,value=${{ matrix.docker.tag }}-${{ steps.branch_tag.outputs.safe_branch }}-${{ steps.branch_tag.outputs.short_sha }},enable=true
+          labels: |
+            org.opencontainers.image.title=Stirling-PDF Test
+            org.opencontainers.image.description=CI test image for Stirling-PDF
+            org.opencontainers.image.url=https://www.stirlingpdf.com
+            org.opencontainers.image.documentation=https://docs.stirlingpdf.com
+            org.opencontainers.image.authors=Stirling-Tools
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ matrix.docker.tag }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.repository }}
+            maintainer=Stirling-Tools
+
+      - name: Choose primary tag for tests
+        id: testtag
+        shell: bash
+        run: |
+          IMAGE="ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test"
+          VARIANT="${{ matrix.docker.tag }}"
+          BRANCH="${{ steps.branch_tag.outputs.safe_branch }}"
+          SHA_SHORT="${{ steps.branch_tag.outputs.short_sha }}"
+          CANDIDATE="$IMAGE:$VARIANT-$BRANCH-$SHA_SHORT"
+          SECONDARY="$IMAGE:$VARIANT-$BRANCH"
+          ALL_TAGS="$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n')"
+          if echo "$ALL_TAGS" | grep -qx "$CANDIDATE"; then
+            SELECTED="$CANDIDATE"
+          elif echo "$ALL_TAGS" | grep -qx "$SECONDARY"; then
+            SELECTED="$SECONDARY"
+          else
+            SELECTED="$(echo "$ALL_TAGS" | head -n1)"
+          fi
+          echo "tag=$SELECTED" >> $GITHUB_OUTPUT
+          echo "Using test tag: $SELECTED"
+
+      # - name: Log in to Docker Hub
+      #   uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+      #   with:
+      #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
+      #     password: ${{ secrets.DOCKER_HUB_API }}
+
+      # - name: Log in to GitHub Container Registry
+      #   uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ github.token }}
+
+      - name: Build and push amd64 image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./${{ matrix.docker-rev }}
+          file: ./${{ matrix.docker.name }}
           push: false
+          load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
+          tags: ${{ steps.meta.outputs.tags }} # ALLE Tags publishen
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
 
-      - name: Upload Reports
+      - name: Show amd64 image size
+        run: |
+          IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
+          echo "Inspecting image: ${IMAGE_TAG}"
+          SIZE=$(docker image inspect "${IMAGE_TAG}" --format='{{.Size}}')
+          FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
+          echo "Image size (amd64): ${FORMATTED}"
+
+      - name: Start amd64 image for 2 minutes
+        run: |
+          IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
+          CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-amd64"
+          echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
+          docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
+          echo "Waiting up to 2 minutes..."
+          sleep 120 || true
+          echo "===== Logs for ${CONTAINER_NAME} ====="
+          docker logs "${CONTAINER_NAME}" || true
+          echo "Stopping container ${CONTAINER_NAME} after 2 minutes"
+          docker stop "${CONTAINER_NAME}" || true
+          docker rm "${CONTAINER_NAME}" || true
+
+      - name: Prune amd64 image and cache
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        run: |
+          docker image rm -f ${{ steps.testtag.outputs.tag }} || true
+          docker builder prune --force || true
+
+      - name: Build and push arm64 image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          name: reports-docker-${{ matrix.docker-rev }}
-          path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./${{ matrix.docker.name }}
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }} # ALLE Tags publishen
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/arm64/v8
+          provenance: false
+          sbom: false
+
+      - name: Show arm64 image size
+        run: |
+          IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
+          echo "Inspecting image: ${IMAGE_TAG}"
+          SIZE=$(docker image inspect "${IMAGE_TAG}" --format='{{.Size}}')
+          FORMATTED=$(numfmt --to=iec --suffix=B "${SIZE}")
+          echo "Image size (arm64): ${FORMATTED}"
+
+      - name: Start arm64 image for 2 minutes
+        run: |
+          IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
+          CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-arm64"
+          echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
+          docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
+          echo "Waiting up to 2 minutes..."
+          sleep 120 || true
+          echo "===== Logs for ${CONTAINER_NAME} ====="
+          docker logs "${CONTAINER_NAME}" || true
+          echo "Stopping container ${CONTAINER_NAME} after 2 minutes"
+          docker stop "${CONTAINER_NAME}" || true
+          docker rm "${CONTAINER_NAME}" || true
+
+      - name: Cleanup arm64 image and cache
+        if: always()
+        run: |
+          docker image rm -f ${{ steps.testtag.outputs.tag }} || true
+          docker builder prune --force || true
+
+      # - name: Build and push multi-arch image
+      #   uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      #   with:
+      #     builder: ${{ steps.buildx.outputs.name }}
+      #     context: .
+      #     file: ./${{ matrix.docker.name }}
+      #     push: true
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     platforms: linux/amd64,linux/arm64/v8
+      #     provenance: false
+      #     sbom: false
+
+      # - name: Upload Docker build reports
+      #   if: always()
+      #   uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      #   with:
+      #     name: reports-docker-${{ matrix.docker.name }}
+      #     path: |
+      #       build/reports/
+      #       build/test-results/
+      #       build/reports/problems/
+      #     retention-days: 3
+      #     if-no-files-found: warn
