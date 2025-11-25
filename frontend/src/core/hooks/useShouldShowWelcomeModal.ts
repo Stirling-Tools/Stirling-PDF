@@ -5,7 +5,8 @@ export function useShouldShowWelcomeModal(): boolean {
   const { preferences } = usePreferences();
   const isMobile = useIsMobile();
 
-  return !preferences.hasCompletedOnboarding
+  return preferences.hasSeenIntroOnboarding
+    && !preferences.hasCompletedOnboarding
     && preferences.toolPanelModePromptSeen
     && !isMobile;
 }

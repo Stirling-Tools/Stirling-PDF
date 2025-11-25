@@ -3,16 +3,31 @@ import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 import '@app/components/tools/ToolPanelModePrompt.css';
-import type { ToolPanelMode } from '@app/constants/toolPanel';
+import { type ToolPanelMode } from '@app/constants/toolPanel';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
-const ToolPanelModePrompt = () => {
+interface ToolPanelModePromptProps {
+  onComplete?: () => void;
+}
+
+const ToolPanelModePrompt = ({ onComplete }: ToolPanelModePromptProps = {}) => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const { preferences, updatePreference } = usePreferences();
+  const {
+    startTour,
+    startAfterToolModeSelection,
+    setStartAfterToolModeSelection,
+    pendingTourRequest,
+  } = useOnboarding();
   const [opened, setOpened] = useState(false);
+  const { config } = useAppConfig();
+  const isAdmin = !!config?.isAdmin;
 
-  const shouldShowPrompt = !preferences.toolPanelModePromptSeen;
+  // Only show after the new 3-slide onboarding has been completed
+  const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
 
   useEffect(() => {
     if (shouldShowPrompt) {
@@ -20,16 +35,56 @@ const ToolPanelModePrompt = () => {
     }
   }, [shouldShowPrompt]);
 
+  const resolveRequestedTourType = (): 'admin' | 'tools' => {
+    if (pendingTourRequest?.type) {
+      return pendingTourRequest.type;
+    }
+    if (pendingTourRequest?.metadata && 'selfReportedAdmin' in pendingTourRequest.metadata) {
+      return pendingTourRequest.metadata.selfReportedAdmin ? 'admin' : 'tools';
+    }
+    return isAdmin ? 'admin' : 'tools';
+  };
+
+  const resumeDeferredTour = (context?: { selection?: ToolPanelMode; dismissed?: boolean }) => {
+    if (!startAfterToolModeSelection) {
+      return;
+    }
+    setStartAfterToolModeSelection(false);
+    const targetType = resolveRequestedTourType();
+    startTour(targetType, {
+      skipToolPromptRequirement: true,
+      source: 'tool-panel-mode-prompt',
+      metadata: {
+        ...pendingTourRequest?.metadata,
+        resumedFromToolPrompt: true,
+        ...(context?.selection ? { selection: context.selection } : {}),
+        ...(context?.dismissed ? { dismissed: true } : {}),
+      },
+    });
+  };
+
   const handleSelect = (mode: ToolPanelMode) => {
     setToolPanelMode(mode);
     updatePreference('defaultToolPanelMode', mode);
     updatePreference('toolPanelModePromptSeen', true);
+    updatePreference('hasSelectedToolPanelMode', true);
     setOpened(false);
+
+    resumeDeferredTour({ selection: mode });
+    onComplete?.();
   };
 
   const handleDismiss = () => {
+    const defaultMode: ToolPanelMode = 'sidebar';
+    if (toolPanelMode !== defaultMode) {
+      setToolPanelMode(defaultMode);
+      updatePreference('defaultToolPanelMode', defaultMode);
+    }
+    updatePreference('hasSelectedToolPanelMode', true);
     updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
+    resumeDeferredTour({ dismissed: true });
+    onComplete?.();
   };
 
   return (

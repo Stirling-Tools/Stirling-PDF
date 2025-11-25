@@ -22,6 +22,7 @@ import { userManagementService } from '@app/services/userManagementService';
 import { teamService, Team } from '@app/services/teamService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useNavigate } from 'react-router-dom';
 
 interface InviteMembersModalProps {
   opened: boolean;
@@ -31,6 +32,7 @@ interface InviteMembersModalProps {
 export default function InviteMembersModal({ opened, onClose }: InviteMembersModalProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [processing, setProcessing] = useState(false);
   const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
@@ -45,6 +47,7 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
     premiumEnabled: boolean;
     totalUsers: number;
   } | null>(null);
+  const hasNoSlots = licenseInfo ? licenseInfo.availableSlots <= 0 : false;
 
   // Form state for direct invite
   const [inviteForm, setInviteForm] = useState({
@@ -242,6 +245,21 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
     onClose();
   };
 
+  const handleGoToPlan = () => {
+    handleClose();
+    navigate('/settings/adminPlan');
+  };
+
+  const handlePrimaryAction = () => {
+    if (inviteMode === 'email') {
+      handleEmailInvite();
+    } else if (inviteMode === 'link') {
+      handleGenerateInviteLink();
+    } else {
+      handleInviteUser();
+    }
+  };
+  
   return (
     <Modal
       opened={opened}
@@ -281,16 +299,23 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
           {licenseInfo && (
             <Paper withBorder p="sm" bg={licenseInfo.availableSlots === 0 ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-blue-light)'}>
               <Stack gap="xs">
-                <Group gap="xs">
-                  <LocalIcon icon={licenseInfo.availableSlots > 0 ? 'info' : 'warning'} width="1rem" height="1rem" />
-                  <Text size="sm" fw={500}>
-                    {licenseInfo.availableSlots > 0
-                      ? t('workspace.people.license.slotsAvailable', {
-                          count: licenseInfo.availableSlots,
-                          defaultValue: `${licenseInfo.availableSlots} user slot(s) available`
-                        })
-                      : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
-                  </Text>
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  <Group gap="xs" wrap="nowrap">
+                    <LocalIcon icon={licenseInfo.availableSlots > 0 ? 'info' : 'warning'} width="1rem" height="1rem" />
+                    <Text size="sm" fw={500}>
+                      {licenseInfo.availableSlots > 0
+                        ? t('workspace.people.license.slotsAvailable', {
+                            count: licenseInfo.availableSlots,
+                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`
+                          })
+                        : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+                    </Text>
+                  </Group>
+                  {licenseInfo.availableSlots === 0 && (
+                    <Button size="xs" variant="light" onClick={handleGoToPlan}>
+                      {t('workspace.people.actions.upgrade', 'Upgrade')}
+                    </Button>
+                  )}
                 </Group>
                 <Text size="xs" c="dimmed">
                   {t('workspace.people.license.currentUsage', {
@@ -495,8 +520,8 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
 
           {/* Action Button */}
           <Button
-            onClick={inviteMode === 'email' ? handleEmailInvite : inviteMode === 'link' ? handleGenerateInviteLink : handleInviteUser}
-            loading={processing}
+            onClick={handlePrimaryAction}
+            loading={!hasNoSlots && processing}
             fullWidth
             size="md"
             mt="md"

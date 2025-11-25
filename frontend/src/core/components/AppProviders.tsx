@@ -17,6 +17,7 @@ import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContex
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
+import { CookieConsentProvider } from "@app/contexts/CookieConsentContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -57,35 +58,37 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
-                <ScarfTrackingInitializer />
-                <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                  <AppInitializer />
-                  <ToolRegistryProvider>
-                    <NavigationProvider>
-                      <FilesModalProvider>
-                        <ToolWorkflowProvider>
-                          <HotkeyProvider>
-                            <SidebarProvider>
-                              <ViewerProvider>
-                                <PageEditorProvider>
-                                <SignatureProvider>
-                                  <RightRailProvider>
-                                      <TourOrchestrationProvider>
-                                        <AdminTourOrchestrationProvider>
-                                          {children}
-                                        </AdminTourOrchestrationProvider>
-                                      </TourOrchestrationProvider>
-                                  </RightRailProvider>
-                                </SignatureProvider>
-                              </PageEditorProvider>
-                              </ViewerProvider>
-                            </SidebarProvider>
-                          </HotkeyProvider>
-                        </ToolWorkflowProvider>
-                      </FilesModalProvider>
-                    </NavigationProvider>
-                  </ToolRegistryProvider>
-                </FileContextProvider>
+                <CookieConsentProvider>
+                  <ScarfTrackingInitializer />
+                  <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                    <AppInitializer />
+                    <ToolRegistryProvider>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <PageEditorProvider>
+                                    <SignatureProvider>
+                                      <RightRailProvider>
+                                        <TourOrchestrationProvider>
+                                          <AdminTourOrchestrationProvider>
+                                            {children}
+                                          </AdminTourOrchestrationProvider>
+                                        </TourOrchestrationProvider>
+                                      </RightRailProvider>
+                                    </SignatureProvider>
+                                  </PageEditorProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </ToolRegistryProvider>
+                  </FileContextProvider>
+                </CookieConsentProvider>
               </AppConfigProvider>
             </OnboardingProvider>
           </BannerProvider>

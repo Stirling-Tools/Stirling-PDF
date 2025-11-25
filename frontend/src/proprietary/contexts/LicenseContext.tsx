@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import licenseService, { LicenseInfo } from '@app/services/licenseService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { getSimulatedLicenseInfo } from '@app/testing/serverExperienceSimulations';
 
 interface LicenseContextValue {
   licenseInfo: LicenseInfo | null;
@@ -57,6 +58,14 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     console.log('[LicenseContext] Fetching license info');
 
     try {
+      const testInfo = getSimulatedLicenseInfo();
+      if (testInfo) {
+        setLicenseInfo(testInfo);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
       setLoading(true);
       setError(null);
       const info = await licenseService.getLicenseInfo();
