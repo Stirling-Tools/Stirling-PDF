@@ -133,7 +133,8 @@ export class TauriBackendService {
   async checkBackendHealth(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // For self-hosted mode, check the configured remote server
+    // Determine base URL based on mode
+    let baseUrl: string;
     if (mode === 'selfhosted') {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
@@ -141,46 +142,40 @@ export class TauriBackendService {
         this.setStatus('unhealthy');
         return false;
       }
+      baseUrl = serverConfig.url.replace(/\/$/, '');
+    } else {
+      // SaaS mode - check bundled local backend
+      if (!this.backendStarted) {
+        this.setStatus('stopped');
+        return false;
+      }
+      if (!this.backendPort) {
+        return false;
+      }
+      baseUrl = `http://localhost:${this.backendPort}`;
+    }
 
-      try {
-        const baseUrl = serverConfig.url.replace(/\/$/, '');
-        const healthUrl = `${baseUrl}/api/v1/info/status`;
-        const response = await fetch(healthUrl, {
-          method: 'GET',
-          connectTimeout: 5000,
-        });
+    // Check if backend is ready (dependencies checked)
+    try {
+      const configUrl = `${baseUrl}/api/v1/config/app-config`;
+      const response = await fetch(configUrl, {
+        method: 'GET',
+        connectTimeout: 5000,
+      });
 
-        const isHealthy = response.ok;
-        this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-        return isHealthy;
-      } catch (error) {
-        const errorStr = String(error);
-        if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-          console.error('[TauriBackendService] Self-hosted server health check failed:', error);
-        }
+      if (!response.ok) {
         this.setStatus('unhealthy');
         return false;
       }
-    }
 
-    // For SaaS mode, check the bundled local backend via Rust
-    if (!this.backendStarted) {
-      this.setStatus('stopped');
-      return false;
-    }
-
-    if (!this.backendPort) {
-      return false;
-    }
-
-    try {
-      const isHealthy = await invoke<boolean>('check_backend_health', { port: this.backendPort });
-      this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-      return isHealthy;
+      const data = await response.json();
+      const dependenciesReady = data.dependenciesReady === true;
+      this.setStatus(dependenciesReady ? 'healthy' : 'starting');
+      return dependenciesReady;
     } catch (error) {
       const errorStr = String(error);
       if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-        console.error('[TauriBackendService] Bundled backend health check failed:', error);
+        console.error('[TauriBackendService] Backend health check failed:', error);
       }
       this.setStatus('unhealthy');
       return false;
