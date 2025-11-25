@@ -4,7 +4,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import type { LicenseNotice } from '@app/types/types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ONBOARDING_SESSION_BLOCK_KEY,
   ONBOARDING_SESSION_EVENT,
@@ -12,6 +12,15 @@ import {
   type ServerLicenseRequestPayload,
 } from '@app/constants/events';
 import { useServerExperience } from '@app/hooks/useServerExperience';
+
+// Auth routes where onboarding should NOT show
+const AUTH_ROUTES = ['/login', '/signup', '/auth', '/invite'];
+
+// Check if user has an auth token (to avoid flash before redirect)
+function hasAuthToken(): boolean {
+  if (typeof window === 'undefined') return false;
+  return !!localStorage.getItem('stirling_jwt');
+}
 
 interface InitialModalHandlers {
   opened: boolean;
@@ -29,11 +38,30 @@ interface ServerLicenseModalHandlers {
 
 export function useOnboardingFlow() {
   const { preferences, updatePreference } = usePreferences();
-  const { config } = useAppConfig();
+  const { config, loading: configLoading } = useAppConfig();
   const { showCookieConsent, isReady: isCookieConsentReady } = useCookieConsentContext();
   const { completeTour, tourType, isOpen } = useOnboarding();
+  const location = useLocation();
   
-  const shouldShowIntro = !preferences.hasSeenIntroOnboarding;
+  // Check if we're on an auth route (login, signup, etc.)
+  const isOnAuthRoute = AUTH_ROUTES.some(route => location.pathname.startsWith(route));
+  
+  // Check if login is enabled but user doesn't have a token
+  // This prevents a flash of the modal before redirect to /login
+  const loginEnabled = config?.enableLogin === true;
+  const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
+  
+  // Don't show intro onboarding:
+  // 1. On explicit auth routes (/login, /signup, etc.)
+  // 2. While config is still loading
+  // 3. When login is enabled but user isn't authenticated (would redirect to /login)
+  // This ensures:
+  // - If login is enabled: user must be logged in before seeing onboarding
+  // - If login is disabled: homepage must have rendered first
+  const shouldShowIntro = !preferences.hasSeenIntroOnboarding 
+    && !isOnAuthRoute 
+    && !configLoading
+    && !isUnauthenticatedWithLoginEnabled;
   const isAdminUser = !!config?.isAdmin;
   const { hasPaidLicense } = useServerExperience();
 
