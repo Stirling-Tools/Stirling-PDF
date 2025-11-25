@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -9,19 +9,21 @@ import '@app/components/shared/AppConfigModal.css';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
+import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
 }
 
-const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('general');
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
+  const { confirmIfDirty } = useUnsavedChanges();
 
   // Extract section from URL path (e.g., /settings/people -> people)
   const getSectionFromPath = (pathname: string): NavKey | null => {
@@ -97,11 +99,22 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     return null;
   }, [configNavSections, active]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(async () => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+    
     // Navigate back to home when closing modal
     navigate('/', { replace: true });
     onClose();
-  };
+  }, [confirmIfDirty, navigate, onClose]);
+
+  const handleNavigation = useCallback(async (key: NavKey) => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+    
+    setActive(key);
+    navigate(`/settings/${key}`);
+  }, [confirmIfDirty, navigate]);
 
   return (
     <Modal
@@ -148,11 +161,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                     const navItemContent = (
                       <div
                         key={item.key}
-                        onClick={() => {
-                          // Allow navigation even when disabled - the content inside will be disabled
-                          setActive(item.key);
-                          navigate(`/settings/${item.key}`);
-                        }}
+                        onClick={() => handleNavigation(item.key)}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
@@ -223,6 +232,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         </div>
       </div>
     </Modal>
+  );
+};
+
+// Wrapper component that provides the UnsavedChangesContext
+const AppConfigModal: React.FC<AppConfigModalProps> = (props) => {
+  return (
+    <UnsavedChangesProvider>
+      <AppConfigModalInner {...props} />
+    </UnsavedChangesProvider>
   );
 };
 
