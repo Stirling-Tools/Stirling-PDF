@@ -6,7 +6,7 @@
 # ========================================
 # STAGE 1: Build Stirling-PDF with Gradle (Alpine)
 # ========================================
-FROM eclipse-temurin:21-jdk-alpine@sha256:c4799f335a65b1ecca8a31239b05522f2b0a184d6818f6349e83484ee6956198 AS build
+FROM eclipse-temurin:25-jdk-alpine@sha256:0c4c6300cc86efdf6454702336a0d60352e227f3a862e8ae9861f393f8f1ede9 AS build
 
 # Install build tools
 RUN apk add --no-cache bash unzip curl git
