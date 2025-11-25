@@ -28,7 +28,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
@@ -47,14 +47,16 @@ export default function Login() {
       const result = await backendProbe.probe();
       if (result.status === 'up') {
         await refetch();
-        navigate('/', { replace: true });
+        if (loginDisabled) {
+          navigate('/', { replace: true });
+        }
       }
     };
     const intervalId = window.setInterval(() => {
       void tick();
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, refetch, navigate]);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, refetch, navigate, loginDisabled]);
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
@@ -209,8 +211,7 @@ export default function Login() {
           }}
         >
           <p style={{ margin: '0 0 0.75rem 0', color: 'rgba(15, 23, 42, 0.8)' }}>
-            {t('backendStartup.unreachable', 'The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.') ||
-              'The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.'}
+            {t('backendStartup.unreachable')}
           </p>
           <button
             type="button"

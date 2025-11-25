@@ -42,14 +42,16 @@ export default function Landing() {
       const result = await backendProbe.probe();
       if (result.status === 'up') {
         await refetch();
-        navigate('/', { replace: true });
+        if (loginDisabled) {
+          navigate('/', { replace: true });
+        }
       }
     };
     const intervalId = window.setInterval(() => {
       void tick();
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch]);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch, loginDisabled]);
 
   // Check if user needs to change password on first login
   useEffect(() => {
@@ -138,8 +140,7 @@ export default function Landing() {
           }}
         >
           <p style={{ margin: '0 0 0.75rem 0', color: 'rgba(15, 23, 42, 0.8)' }}>
-            {t('backendStartup.unreachable', 'The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.') ||
-              'The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.'}
+            {t('backendStartup.unreachable')}
           </p>
           <button
             type="button"
