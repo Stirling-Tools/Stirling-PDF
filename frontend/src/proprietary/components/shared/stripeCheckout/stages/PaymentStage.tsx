@@ -35,10 +35,15 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
   }
 
   if (!stripePromise) {
+    // This should only happen if embedded mode was attempted without key
+    // Hosted checkout should have redirected before reaching this component
     return (
-      <Text size="sm" c="red">
-        Stripe is not configured properly.
-      </Text>
+      <Stack align="center" gap="md" style={{ padding: '2rem 0' }}>
+        <Loader size="lg" />
+        <Text size="sm" c="dimmed" mt="md">
+          {t('payment.redirecting', 'Redirecting to secure checkout...')}
+        </Text>
+      </Stack>
     );
   }
 
