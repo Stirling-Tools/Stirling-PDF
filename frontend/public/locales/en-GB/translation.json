@@ -4059,7 +4059,8 @@
         },
         "languages": {
           "label": "Available Languages",
-          "description": "Languages that users can select from (leave empty to enable all languages)"
+          "description": "Languages that users can select from (leave empty to enable all languages)",
+          "placeholder": "Select languages"
         },
         "customMetadata": {
           "label": "Custom Metadata",
@@ -4084,7 +4085,9 @@
           "label": "Logo Style",
           "description": "Set the default logo style for all users on this server. Users can override this setting in their personal preferences.",
           "classic": "Classic",
-          "modern": "Modern"
+          "classicAlt": "Classic logo",
+          "modern": "Modern",
+          "modernAlt": "Modern logo"
         },
         "customPaths": {
           "label": "Custom Paths",
@@ -4683,7 +4686,9 @@
     "download": "Download",
     "delete": "Delete",
     "unsupported": "Unsupported",
+    "active": "Active",
     "addToUpload": "Add to Upload",
+    "closeFile": "Close File",
     "deleteAll": "Delete All",
     "loadingFiles": "Loading files...",
     "noFiles": "No files available",
@@ -4992,7 +4997,16 @@
   "config": {
     "overview": {
       "title": "Application Configuration",
-      "description": "Current application settings and configuration details."
+      "description": "Current application settings and configuration details.",
+      "loading": "Loading configuration...",
+      "error": "Error",
+      "warning": "Configuration Warning",
+      "sections": {
+        "basic": "Basic Configuration",
+        "security": "Security Configuration",
+        "system": "System Configuration",
+        "integration": "Integration Configuration"
+      }
     },
     "account": {
       "overview": {
@@ -5367,6 +5381,7 @@
       "description": "Manage teams and organize workspace members",
       "loading": "Loading teams...",
       "loadingDetails": "Loading team details...",
+      "loadError": "Failed to load team details",
       "createNewTeam": "Create New Team",
       "teamName": "Team Name",
       "totalMembers": "Total Members",
@@ -5896,6 +5911,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferences"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "people": "People",
+      "teams": "Teams"
+    },
+    "configuration": {
+      "title": "Configuration",
+      "systemSettings": "System Settings",
+      "features": "Features",
+      "endpoints": "Endpoints",
+      "database": "Database",
+      "advanced": "Advanced"
+    },
+    "securityAuth": {
+      "title": "Security & Authentication",
+      "security": "Security",
+      "connections": "Connections"
+    },
+    "licensingAnalytics": {
+      "title": "Licensing & Analytics",
+      "plan": "Plan",
+      "audit": "Audit",
+      "usageAnalytics": "Usage Analytics"
+    },
+    "policiesPrivacy": {
+      "title": "Policies & Privacy",
+      "legal": "Legal",
+      "privacy": "Privacy"
+    },
+    "developer": {
+      "title": "Developer",
+      "apiKeys": "API Keys"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Enable login mode first",
+      "requiresEnterprise": "Requires Enterprise license"
+    },
     "connection": {
       "title": "Connection Mode",
       "mode": {
@@ -5952,7 +6007,13 @@
       "hideUnavailableConversionsDescription": "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
     },
     "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
       "errorConflict": "Shortcut already used by {{tool}}.",
+      "errorModifier": {
+        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
+        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+      },
       "searchPlaceholder": "Search tools...",
       "none": "Not assigned",
       "customBadge": "Custom",
