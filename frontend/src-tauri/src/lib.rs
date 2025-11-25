@@ -6,7 +6,6 @@ mod state;
 
 use commands::{
     add_opened_file,
-    check_backend_health,
     cleanup_backend,
     clear_auth_token,
     clear_opened_files,
@@ -94,7 +93,6 @@ pub fn run() {
       set_as_default_pdf_handler,
       is_first_launch,
       reset_setup_completion,
-      check_backend_health,
       login,
       save_auth_token,
       get_auth_token,

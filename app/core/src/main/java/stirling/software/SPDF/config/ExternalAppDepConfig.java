@@ -25,6 +25,7 @@ public class ExternalAppDepConfig {
     private final String weasyprintPath;
     private final String unoconvPath;
     private final Map<String, List<String>> commandToGroupMapping;
+    private volatile boolean dependenciesChecked = false;
 
     public ExternalAppDepConfig(
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
@@ -111,6 +112,10 @@ public class ExternalAppDepConfig {
         }
     }
 
+    public boolean isDependenciesChecked() {
+        return dependenciesChecked;
+    }
+
     @PostConstruct
     public void checkDependencies() {
         // Check core dependencies
@@ -162,5 +167,7 @@ public class ExternalAppDepConfig {
             }
         }
         endpointConfiguration.logDisabledEndpointsSummary();
+        dependenciesChecked = true;
+        log.info("Dependency checks completed");
     }
 }
