@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferenze"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "people": "Persone",
+      "teams": "Team"
+    },
+    "configuration": {
+      "title": "Configurazione",
+      "systemSettings": "Impostazioni di sistema",
+      "features": "Funzionalità",
+      "endpoints": "Endpoint",
+      "database": "Database",
+      "advanced": "Avanzate"
+    },
+    "securityAuth": {
+      "title": "Sicurezza e autenticazione",
+      "security": "Sicurezza",
+      "connections": "Connessioni"
+    },
+    "licensingAnalytics": {
+      "title": "Licenze e Analytics",
+      "plan": "Piano",
+      "audit": "Audit",
+      "usageAnalytics": "Analytics d'uso"
+    },
+    "policiesPrivacy": {
+      "title": "Policy e privacy",
+      "legal": "Legale",
+      "privacy": "Privacy"
+    },
+    "developer": {
+      "title": "Sviluppatore",
+      "apiKeys": "Chiavi API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Abilita prima la modalità di login",
+      "requiresEnterprise": "Richiede licenza Enterprise"
+    },
     "connection": {
       "title": "Modalità di connessione",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Rimuovi le opzioni di conversione disabilitate nello strumento Converti invece di mostrarle in grigio."
     },
     "hotkeys": {
+      "title": "Scorciatoie da tastiera",
+      "description": "Personalizza le scorciatoie da tastiera per l'accesso rapido agli strumenti. Clicca \"Cambia scorciatoia\" e premi una nuova combinazione di tasti. Premi Esc per annullare.",
       "errorConflict": "Scorciatoia già usata da {{tool}}.",
+      "errorModifier": {
+        "mac": "Includi ⌘ (Command), ⌥ (Option) o un altro modificatore nella scorciatoia.",
+        "windows": "Includi Ctrl, Alt o un altro modificatore nella scorciatoia."
+      },
       "searchPlaceholder": "Cerca strumenti...",
       "none": "Non assegnata",
       "customBadge": "Personalizzata",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Lingue disponibili",
-          "description": "Lingue selezionabili dagli utenti (lascia vuoto per abilitare tutte le lingue)"
+          "description": "Lingue selezionabili dagli utenti (lascia vuoto per abilitare tutte le lingue)",
+          "placeholder": "Seleziona lingue"
         },
         "customMetadata": {
           "label": "Metadati personalizzati",
@@ -4061,7 +4108,9 @@
           "label": "Stile logo",
           "description": "Scegli tra il logo moderno minimalista o l'icona classica S",
           "classic": "Classico",
-          "modern": "Moderno"
+          "classicAlt": "Logo classico",
+          "modern": "Moderno",
+          "modernAlt": "Logo moderno"
         },
         "customPaths": {
           "label": "Percorsi personalizzati",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configurazione applicazione",
-      "description": "Impostazioni correnti dell'applicazione e dettagli di configurazione."
+      "description": "Impostazioni correnti dell'applicazione e dettagli di configurazione.",
+      "loading": "Caricamento configurazione...",
+      "error": "Errore",
+      "warning": "Avviso configurazione",
+      "sections": {
+        "basic": "Configurazione di base",
+        "security": "Configurazione sicurezza",
+        "system": "Configurazione sistema",
+        "integration": "Configurazione integrazione"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gestisci i team e organizza i membri dello spazio di lavoro",
       "loading": "Caricamento dei team...",
       "loadingDetails": "Caricamento dei dettagli del team...",
+      "loadError": "Impossibile caricare i dettagli del team",
       "createNewTeam": "Crea nuovo team",
       "teamName": "Nome team",
       "totalMembers": "Membri totali",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Preparazione del checkout...",
+    "redirecting": "Reindirizzamento al checkout sicuro...",
     "upgradeTitle": "Aggiorna a {{planName}}",
     "success": "Pagamento riuscito!",
     "successMessage": "Il tuo abbonamento è stato attivato con successo. Riceverai a breve un'email di conferma.",

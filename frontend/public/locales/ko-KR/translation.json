@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "환경설정"
+    },
+    "workspace": {
+      "title": "워크스페이스",
+      "people": "구성원",
+      "teams": "팀"
+    },
+    "configuration": {
+      "title": "구성",
+      "systemSettings": "시스템 설정",
+      "features": "기능",
+      "endpoints": "엔드포인트",
+      "database": "데이터베이스",
+      "advanced": "고급"
+    },
+    "securityAuth": {
+      "title": "보안 및 인증",
+      "security": "보안",
+      "connections": "연결"
+    },
+    "licensingAnalytics": {
+      "title": "라이선스 및 분석",
+      "plan": "플랜",
+      "audit": "감사",
+      "usageAnalytics": "사용 분석"
+    },
+    "policiesPrivacy": {
+      "title": "정책 및 개인정보 보호",
+      "legal": "법률",
+      "privacy": "개인정보 보호"
+    },
+    "developer": {
+      "title": "개발자",
+      "apiKeys": "API 키"
+    },
+    "tooltips": {
+      "enableLoginFirst": "먼저 로그인 모드를 활성화하세요",
+      "requiresEnterprise": "Enterprise 라이선스가 필요합니다"
+    },
     "connection": {
       "title": "연결 모드",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "회색으로 표시하는 대신 변환 도구의 비활성화된 옵션을 숨깁니다."
     },
     "hotkeys": {
+      "title": "키보드 단축키",
+      "description": "빠르게 도구에 접근할 수 있도록 키보드 단축키를 사용자 지정하세요. \"단축키 변경\"을 클릭하고 새 키 조합을 누르세요. 취소하려면 Esc를 누르세요.",
       "errorConflict": "단축키가 {{tool}}에서 이미 사용 중입니다.",
+      "errorModifier": {
+        "mac": "단축키에 ⌘(Command), ⌥(Option) 또는 다른 수정 키를 포함하세요.",
+        "windows": "단축키에 Ctrl, Alt 또는 다른 수정 키를 포함하세요."
+      },
       "searchPlaceholder": "도구 검색...",
       "none": "미지정",
       "customBadge": "사용자 지정",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "사용 가능한 언어",
-          "description": "사용자가 선택할 수 있는 언어(비워두면 모든 언어 활성화)"
+          "description": "사용자가 선택할 수 있는 언어(비워두면 모든 언어 활성화)",
+          "placeholder": "언어 선택"
         },
         "customMetadata": {
           "label": "사용자 지정 메타데이터",
@@ -4061,7 +4108,9 @@
           "label": "로고 스타일",
           "description": "현대적인 미니멀 로고 또는 클래식 S 아이콘 중에서 선택",
           "classic": "클래식",
-          "modern": "모던"
+          "classicAlt": "클래식 로고",
+          "modern": "모던",
+          "modernAlt": "모던 로고"
         },
         "customPaths": {
           "label": "사용자 지정 경로",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "애플리케이션 구성",
-      "description": "현재 애플리케이션 설정 및 구성 세부 정보입니다."
+      "description": "현재 애플리케이션 설정 및 구성 세부 정보입니다.",
+      "loading": "구성을 불러오는 중...",
+      "error": "오류",
+      "warning": "구성 경고",
+      "sections": {
+        "basic": "기본 구성",
+        "security": "보안 구성",
+        "system": "시스템 구성",
+        "integration": "통합 구성"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "팀을 관리하고 워크스페이스 멤버를 구성하세요",
       "loading": "팀 불러오는 중...",
       "loadingDetails": "팀 세부 정보를 불러오는 중...",
+      "loadError": "팀 세부 정보를 불러오지 못했습니다",
       "createNewTeam": "새 팀 만들기",
       "teamName": "팀 이름",
       "totalMembers": "총 멤버 수",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "결제 준비 중...",
+    "redirecting": "보안 결제 페이지로 이동 중...",
     "upgradeTitle": "{{planName}}로 업그레이드",
     "success": "결제 성공!",
     "successMessage": "구독이 성공적으로 활성화되었습니다. 확인 이메일이 곧 발송됩니다.",
