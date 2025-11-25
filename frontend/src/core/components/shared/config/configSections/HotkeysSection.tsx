@@ -73,10 +73,7 @@ const HotkeysSection: React.FC = () => {
       const binding = eventToBinding(event as KeyboardEvent);
       if (!binding) {
         const osKey = isMac ? 'mac' : 'windows';
-        const fallbackText = isMac
-          ? 'Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.'
-          : 'Include Ctrl, Alt, or another modifier in your shortcut.';
-        setError(t(`settings.hotkeys.errorModifier.${osKey}`, fallbackText));
+        setError(t(`settings.hotkeys.errorModifier.${osKey}`));
         return;
       }
 
@@ -112,9 +109,9 @@ const HotkeysSection: React.FC = () => {
   return (
     <Stack gap="lg">
       <div>
-        <Text fw={600} size="lg">Keyboard Shortcuts</Text>
+        <Text fw={600} size="lg">{t('settings.hotkeys.title', 'Keyboard Shortcuts')}</Text>
         <Text size="sm" c="dimmed">
-          Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.
+          {t('settings.hotkeys.description', 'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.')}
         </Text>
       </div>
 
