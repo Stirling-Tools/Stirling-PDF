@@ -159,13 +159,14 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     const checkExistingLicense = async () => {
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        if (licenseInfo && licenseInfo.licenseKey) {
-          // Has existing license - skip email stage
-          console.log('Existing license detected - skipping email stage');
+        // Only skip email if license is PRO or ENTERPRISE (not NORMAL/free tier)
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
+          // Has valid premium license - skip email stage
+          console.log('Valid premium license detected - skipping email stage');
           checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey);
           checkoutState.setState({ currentStage: 'plan-selection', loading: false });
         } else {
-          // No license - start at email stage
+          // No valid premium license - start at email stage
           checkoutState.setState({ currentStage: 'email', loading: false });
         }
       } catch (error) {
