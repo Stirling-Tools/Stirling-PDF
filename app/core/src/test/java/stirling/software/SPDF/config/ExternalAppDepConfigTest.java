@@ -32,6 +32,8 @@ class ExternalAppDepConfigTest {
     void setUp() {
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/custom/weasyprint");
         when(runtimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
+        when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
+        when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
         lenient()
                 .when(endpointConfiguration.getEndpointsForGroup(anyString()))
                 .thenReturn(Set.of());
@@ -45,6 +47,8 @@ class ExternalAppDepConfigTest {
 
         assertEquals(List.of("Weasyprint"), mapping.get("/custom/weasyprint"));
         assertEquals(List.of("Unoconvert"), mapping.get("/custom/unoconvert"));
+        assertEquals(List.of("Calibre"), mapping.get("/custom/calibre"));
+        assertEquals(List.of("OCRmyPDF"), mapping.get("/custom/ocrmypdf"));
         assertEquals(List.of("Ghostscript"), mapping.get("gs"));
     }
 

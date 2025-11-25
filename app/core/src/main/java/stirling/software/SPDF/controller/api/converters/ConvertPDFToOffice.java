@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -35,6 +36,7 @@ public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final RuntimePathConfig runtimePathConfig;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @Operation(
@@ -47,7 +49,7 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
@@ -72,7 +74,7 @@ public class ConvertPDFToOffice {
                         MediaType.TEXT_PLAIN);
             }
         } else {
-            PDFToFile pdfToFile = new PDFToFile(tempFileManager);
+            PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
             return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
         }
     }
@@ -87,7 +89,7 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
@@ -100,7 +102,7 @@ public class ConvertPDFToOffice {
     public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
     }
 }
