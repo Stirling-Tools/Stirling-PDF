@@ -13,7 +13,7 @@ const languageDefinitions: LanguageDefinition[] = [
   {
     ocrCode: 'eng',
     displayName: 'English',
-    browserCodes: ['en', 'en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IE', 'en-NZ', 'en-ZA']
+    browserCodes: ['en', 'en-GB', 'en-AU', 'en-CA', 'en-IE', 'en-NZ', 'en-ZA']
   },
   
   // Spanish
