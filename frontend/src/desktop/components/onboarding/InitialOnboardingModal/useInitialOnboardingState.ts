@@ -268,7 +268,6 @@ export function useInitialOnboardingState({
 
   const handleButtonAction = useCallback(
     (action: ButtonAction) => {
-      const currentSlideIdLocal = currentSlideId;
       const isOnLastSlide = state.step >= maxIndex;
       
       // Desktop: For login-user and no-login flows, when on the last slide (welcome),
