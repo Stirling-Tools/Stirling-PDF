@@ -172,11 +172,7 @@ export class TauriBackendService {
       const dependenciesReady = data.dependenciesReady === true;
       this.setStatus(dependenciesReady ? 'healthy' : 'starting');
       return dependenciesReady;
-    } catch (error) {
-      const errorStr = String(error);
-      if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-        console.error('[TauriBackendService] Backend health check failed:', error);
-      }
+    } catch {
       this.setStatus('unhealthy');
       return false;
     }
