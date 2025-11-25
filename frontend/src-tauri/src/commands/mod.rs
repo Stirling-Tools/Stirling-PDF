@@ -21,6 +21,7 @@ pub use auth::{
     login,
     save_auth_token,
     save_user_info,
+    start_oauth_login,
 };
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
 pub use health::check_backend_health;
