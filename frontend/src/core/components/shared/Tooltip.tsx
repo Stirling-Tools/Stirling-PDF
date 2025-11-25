@@ -6,7 +6,7 @@ import { useTooltipPosition } from '@app/hooks/useTooltipPosition';
 import { TooltipTip } from '@app/types/tips';
 import { TooltipContent } from '@app/components/shared/tooltip/TooltipContent';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import styles from '@app/components/shared/tooltip/Tooltip.module.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
@@ -58,6 +58,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const { tooltipLogo } = useLogoAssets();
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -352,7 +353,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           <div className={styles['tooltip-logo']}>
             {header.logo || (
               <img
-                src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextDark.svg`}
+                src={tooltipLogo}
                 alt="Stirling PDF"
                 style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
               />

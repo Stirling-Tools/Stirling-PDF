@@ -7,8 +7,8 @@ import FullscreenToolList from '@app/components/tools/FullscreenToolList';
 import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { useFocusTrap } from '@app/hooks/useFocusTrap';
-import { BASE_PATH } from '@app/constants/app';
 import { useLogoPath } from '@app/hooks/useLogoPath';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
 import { ToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
@@ -54,9 +54,8 @@ const FullscreenToolSurface = ({
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
-  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
-    colorScheme === "dark" ? "White" : "Black"
-  }Text.svg`;
+  const { wordmark } = useLogoAssets();
+  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

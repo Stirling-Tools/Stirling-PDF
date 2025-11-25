@@ -366,6 +366,12 @@
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
       },
+      "logoVariant": {
+        "label": "Interface logo",
+        "description": "Override the system default logo style for this device only. Controls whether Stirling PDF uses the modern or classic logo across the interface, login header, landing page, and favicons.",
+        "modern": "Modern",
+        "classic": "Classic"
+      },
       "defaultPdfEditor": "Default PDF editor",
       "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
       "defaultPdfEditorInactive": "Another application is set as default",
@@ -3510,7 +3516,24 @@
     "unexpectedError": "Unexpected error: {{message}}",
     "accountCreatedSuccess": "Account created successfully! You can now sign in.",
     "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again.",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF overview",
+        "title": "Your one-stop-shop for all your PDF needs.",
+        "subtitle": "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
+      },
+      "edit": {
+        "alt": "Edit PDFs",
+        "title": "Edit PDFs to display/secure the information you want",
+        "subtitle": "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
+      },
+      "secure": {
+        "alt": "Secure PDFs",
+        "title": "Protect sensitive information in your PDFs",
+        "subtitle": "Add passwords, redact content, and manage certificates with ease."
+      }
+    }
   },
   "signup": {
     "title": "Create an account",
@@ -3970,8 +3993,16 @@
       "saved": "Settings saved successfully",
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
+      "discard": "Discard",
       "restartRequired": "Restart Required",
       "loginRequired": "Login mode must be enabled to modify admin settings",
+      "unsavedChanges": {
+        "title": "Unsaved Changes",
+        "message": "You have unsaved changes. Do you want to discard them?",
+        "cancel": "Keep Editing",
+        "discard": "Discard Changes",
+        "hint": "You have unsaved changes"
+      },
       "loginDisabled": {
         "title": "Login Mode Required",
         "message": "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server.",
@@ -4049,7 +4080,7 @@
         },
         "logoStyle": {
           "label": "Logo Style",
-          "description": "Choose between the modern minimalist logo or the classic S icon",
+          "description": "Set the default logo style for all users on this server. Users can override this setting in their personal preferences.",
           "classic": "Classic",
           "modern": "Modern"
         },
