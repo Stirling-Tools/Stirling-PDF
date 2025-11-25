@@ -43,10 +43,20 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Determine build matrix
