@@ -51,6 +51,7 @@ describe('AppConfigContext', () => {
 
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/config/app-config', {
       suppressErrorToast: true,
+      skipAuthRedirect: true,
     });
   });
 
@@ -282,6 +283,7 @@ describe('AppConfigContext', () => {
     await waitFor(() => {
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/config/app-config', {
         suppressErrorToast: true,
+        skipAuthRedirect: true,
       });
     });
   });
