@@ -7,6 +7,7 @@ import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import { useAdminTourOrchestration } from '@app/contexts/AdminTourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import TourWelcomeModal from '@app/components/onboarding/TourWelcomeModal';
 import '@app/components/onboarding/OnboardingTour.css';
@@ -70,6 +71,7 @@ export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour, tourType, isOpen } = useOnboarding();
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
+  const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
 
   // Helper to add glow to multiple elements
   const addGlowToElements = (selectors: string[]) => {
@@ -438,6 +440,7 @@ export default function OnboardingTour() {
             handleCloseTour(clickProps);
           }
         }}
+        rtl={isRTL}
         styles={{
           popover: (base) => ({
             ...base,
@@ -466,21 +469,19 @@ export default function OnboardingTour() {
         showBadge={false}
         showCloseButton={true}
         disableInteraction={true}
-        disableDotsNavigation={true}
+        disableDotsNavigation={false}
         prevButton={() => null}
         nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
           const isLast = currentStep === stepsLength - 1;
-
+          const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
           return (
             <ActionIcon
-              onClick={() => {
-                advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
-              }}
+              onClick={() => advanceTour({ setCurrentStep, currentStep, steps, setIsOpen })}
               variant="subtle"
               size="lg"
               aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
             >
-              {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
+              {isLast ? <CheckIcon /> : <ArrowIcon />}
             </ActionIcon>
           );
         }}

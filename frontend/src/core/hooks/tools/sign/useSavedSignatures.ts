@@ -97,7 +97,12 @@ const writeToStorage = (entries: SavedSignature[]) => {
   }
 };
 
-const generateId = () => crypto.randomUUID();
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `sig_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+};
 
 export const useSavedSignatures = () => {
   const [savedSignatures, setSavedSignatures] = useState<SavedSignature[]>(() => readFromStorage());

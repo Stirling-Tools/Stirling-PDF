@@ -14,14 +14,6 @@ const MIN_SIGNATURE_DIMENSION = 12;
 // This provides a good balance between visual fidelity and performance/memory usage.
 const TEXT_OVERSAMPLE_FACTOR = 2;
 
-type TextStampImageResult = {
-  dataUrl: string;
-  pixelWidth: number;
-  pixelHeight: number;
-  displayWidth: number;
-  displayHeight: number;
-};
-
 const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
   if (!value || depth > 6) return undefined;
 
@@ -56,7 +48,7 @@ const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new S
 const createTextStampImage = (
   config: SignParameters,
   displaySize?: { width: number; height: number } | null
-): TextStampImageResult | null => {
+): { dataUrl: string; pixelWidth: number; pixelHeight: number; displayWidth: number; displayHeight: number } | null => {
   const text = (config.signerName ?? '').trim();
   if (!text) {
     return null;
@@ -206,7 +198,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       console.error('Error preparing signature defaults:', error);
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
-
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -381,6 +372,60 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       }
     },
   }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
+
+  useEffect(() => {
+    if (!annotationApi?.onAnnotationEvent) {
+      return;
+    }
+
+    const unsubscribe = annotationApi.onAnnotationEvent(event => {
+      if (event.type !== 'create' && event.type !== 'update') {
+        return;
+      }
+
+      const annotation: any = event.annotation;
+      const annotationId: string | undefined = annotation?.id;
+      if (!annotationId) {
+        return;
+      }
+
+      const directData =
+        extractDataUrl(annotation.imageSrc) ||
+        extractDataUrl(annotation.imageData) ||
+        extractDataUrl(annotation.appearance) ||
+        extractDataUrl(annotation.stampData) ||
+        extractDataUrl(annotation.contents) ||
+        extractDataUrl(annotation.data) ||
+        extractDataUrl(annotation.customData) ||
+        extractDataUrl(annotation.asset);
+
+      const dataToStore = directData || lastStampImageRef.current;
+      if (dataToStore) {
+        storeImageData(annotationId, dataToStore);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [annotationApi, storeImageData]);
+
+  useEffect(() => {
+    if (!isPlacementMode) {
+      return;
+    }
+
+    let cancelled = false;
+    configureStampDefaults().catch((error) => {
+      if (!cancelled) {
+        console.error('Error updating signature defaults:', error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
 
   useEffect(() => {
     if (!annotationApi?.onAnnotationEvent) {
