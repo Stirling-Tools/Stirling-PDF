@@ -31,9 +31,9 @@ const AdminPlanSection: React.FC = () => {
 
   // Check if we should use static version
   useEffect(() => {
-    // Check if Stripe is configured
-    const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!stripeKey || !isSupabaseConfigured || error) {
+    // Only use static version if Supabase is not configured or there's an error
+    // Stripe key is not required - hosted checkout works without it
+    if (!isSupabaseConfigured || error) {
       setUseStaticVersion(true);
     }
   }, [error]);

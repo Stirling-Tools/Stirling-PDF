@@ -101,46 +101,6 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Current Plan Section */}
-      <div>
-        <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
-          {t('plan.activePlan.title', 'Active Plan')}
-        </h3>
-        <p
-          style={{
-            margin: '0.25rem 0 1rem 0',
-            color: 'var(--mantine-color-dimmed)',
-            fontSize: '0.875rem',
-          }}
-        >
-          {t('plan.activePlan.subtitle', 'Your current subscription details')}
-        </p>
-
-        <Card padding="lg" radius="md" withBorder>
-          <Group justify="space-between" align="center">
-            <Stack gap="xs">
-              <Group gap="sm">
-                <Text size="lg" fw={600}>
-                  {currentPlan.name}
-                </Text>
-                <Badge color="green" variant="light">
-                  {t('subscription.status.active', 'Active')}
-                </Badge>
-              </Group>
-              {currentLicenseInfo && (
-                <Text size="sm" c="dimmed">
-                  {t('plan.static.maxUsers', 'Max Users')}: {currentLicenseInfo.maxUsers}
-                </Text>
-              )}
-            </Stack>
-            <div style={{ textAlign: 'right' }}>
-              <Text size="xl" fw={700}>
-                {currentPlan.price === 0 ? t('plan.free.name', 'Free') : `${currentPlan.currency}${currentPlan.price}${currentPlan.period}`}
-              </Text>
-            </div>
-          </Group>
-        </Card>
-      </div>
 
       {/* Available Plans */}
       <div>

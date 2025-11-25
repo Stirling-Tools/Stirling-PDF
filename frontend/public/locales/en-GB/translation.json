@@ -5569,6 +5569,7 @@
   },
   "payment": {
     "preparing": "Preparing your checkout...",
+    "redirecting": "Redirecting to secure checkout...",
     "upgradeTitle": "Upgrade to {{planName}}",
     "success": "Payment Successful!",
     "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
