@@ -42,13 +42,14 @@ export const useCheckoutSession = (
       }
 
       // Fetch current license key for upgrades
+      // Only include if it's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
       let existingLicenseKey: string | undefined;
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        if (licenseInfo && licenseInfo.licenseKey) {
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL' && licenseInfo.licenseKey) {
           existingLicenseKey = licenseInfo.licenseKey;
           setCurrentLicenseKey(existingLicenseKey);
-          console.log('Found existing license for upgrade');
+          console.log('Found existing valid license for upgrade');
         }
       } catch (error) {
         console.warn('Could not fetch license info, proceeding as new license:', error);
