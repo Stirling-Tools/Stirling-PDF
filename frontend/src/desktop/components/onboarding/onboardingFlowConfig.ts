@@ -1,10 +1,19 @@
+/**
+ * Desktop override of onboarding flow config.
+ * 
+ * This version removes the desktop-install and security-check slides
+ * since they're not relevant when running as a desktop app.
+ * 
+ * The SlideId type still includes all values for type compatibility,
+ * but the actual FLOW_SEQUENCES don't use these slides.
+ */
+
 import WelcomeSlide from '@app/components/onboarding/slides/WelcomeSlide';
-import DesktopInstallSlide from '@app/components/onboarding/slides/DesktopInstallSlide';
-import SecurityCheckSlide from '@app/components/onboarding/slides/SecurityCheckSlide';
 import PlanOverviewSlide from '@app/components/onboarding/slides/PlanOverviewSlide';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
 import { SlideConfig, LicenseNotice } from '@app/types/types';
 
+// Keep the full type for compatibility, but these slides won't be used
 export type SlideId =
   | 'welcome'
   | 'desktop-install'
@@ -86,60 +95,19 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       },
     ],
   },
+  // Stub definitions for desktop-install and security-check - not used on desktop
+  // but kept for type compatibility with core code
   'desktop-install': {
     id: 'desktop-install',
-    createSlide: ({ osLabel, osUrl, osOptions, onDownloadUrlChange }) => DesktopInstallSlide({ osLabel, osUrl, osOptions, onDownloadUrlChange }),
+    createSlide: () => WelcomeSlide(), // Placeholder - never used
     hero: { type: 'dual-icon' },
-    buttons: [
-      {
-        key: 'desktop-back',
-        type: 'icon',
-        icon: 'chevron-left',
-        group: 'left',
-        action: 'prev',
-      },
-      {
-        key: 'desktop-skip',
-        type: 'button',
-        label: 'onboarding.buttons.skipForNow',
-        variant: 'secondary',
-        group: 'left',
-        action: 'next',
-      },
-      {
-        key: 'desktop-download',
-        type: 'button',
-        label: 'onboarding.buttons.download',
-        variant: 'primary',
-        group: 'right',
-        action: 'download-selected',
-      },
-    ],
+    buttons: [],
   },
   'security-check': {
     id: 'security-check',
-    createSlide: ({ selectedRole, onRoleSelect }) =>
-      SecurityCheckSlide({ selectedRole, onRoleSelect }),
+    createSlide: () => WelcomeSlide(), // Placeholder - never used
     hero: { type: 'shield' },
-    buttons: [
-      {
-        key: 'security-back',
-        type: 'button',
-        label: 'onboarding.buttons.back',
-        variant: 'secondary',
-        group: 'left',
-        action: 'prev',
-      },
-      {
-        key: 'security-next',
-        type: 'button',
-        label: 'onboarding.buttons.next',
-        variant: 'primary',
-        group: 'right',
-        action: 'security-next',
-        disabledWhen: (state) => !state.selectedRole,
-      },
-    ],
+    buttons: [],
   },
   'admin-overview': {
     id: 'admin-overview',
@@ -197,11 +165,14 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
 };
 
+/**
+ * Desktop flow sequences - simplified without desktop-install and security-check slides
+ * since users are already on desktop and security check is not needed.
+ */
 export const FLOW_SEQUENCES = {
-  loginAdmin: ['welcome', 'desktop-install', 'admin-overview'] as SlideId[],
-  loginUser: ['welcome', 'desktop-install'] as SlideId[],
-  noLoginBase: ['welcome', 'desktop-install', 'security-check'] as SlideId[],
+  loginAdmin: ['welcome', 'admin-overview'] as SlideId[],
+  loginUser: ['welcome'] as SlideId[],
+  noLoginBase: ['welcome'] as SlideId[],
   noLoginAdmin: ['admin-overview'] as SlideId[],
 };
-
 

@@ -71,8 +71,10 @@ export default function ServerLicenseModal({
             slideKey={slide.key}
           />
           <div className={styles.heroLogo}>
-            <div className={styles.heroLogoCircle}>
-              <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
+            <div className={styles.heroIconsContainer}>
+              <div className={styles.iconWrapper}>
+                <img src={`${BASE_PATH}/modern-logo/logo512.png`} alt="Stirling icon" className={styles.downloadIcon} />
+              </div>
             </div>
           </div>
         </div>
