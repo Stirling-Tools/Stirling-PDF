@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferencije"
+    },
+    "workspace": {
+      "title": "Radni prostor",
+      "people": "Osobe",
+      "teams": "Timovi"
+    },
+    "configuration": {
+      "title": "Konfiguracija",
+      "systemSettings": "Sistemska podešavanja",
+      "features": "Funkcije",
+      "endpoints": "Krajnje tačke",
+      "database": "Baza podataka",
+      "advanced": "Napredno"
+    },
+    "securityAuth": {
+      "title": "Bezbednost i autentikacija",
+      "security": "Bezbednost",
+      "connections": "Konekcije"
+    },
+    "licensingAnalytics": {
+      "title": "Licenciranje i analitika",
+      "plan": "Plan",
+      "audit": "Revizija",
+      "usageAnalytics": "Analitika korišćenja"
+    },
+    "policiesPrivacy": {
+      "title": "Politike i privatnost",
+      "legal": "Pravno",
+      "privacy": "Privatnost"
+    },
+    "developer": {
+      "title": "Razvoj",
+      "apiKeys": "API ključevi"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Prvo uključite režim prijave",
+      "requiresEnterprise": "Zahteva Enterprise licencu"
+    },
     "connection": {
       "title": "Režim povezivanja",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Uklonite onemogućene opcije konverzije u alatu Convert umesto da budu zasivljene."
     },
     "hotkeys": {
+      "title": "Prečice na tastaturi",
+      "description": "Prilagodite prečice na tastaturi za brz pristup alatima. Kliknite \"Promeni prečicu\" i pritisnite novu kombinaciju tastera. Pritisnite Esc za otkazivanje.",
       "errorConflict": "Prečicu već koristi {{tool}}.",
+      "errorModifier": {
+        "mac": "Uključite ⌘ (Command), ⌥ (Option) ili neki drugi modifikator u prečicu.",
+        "windows": "Uključite Ctrl, Alt ili neki drugi modifikator u prečicu."
+      },
       "searchPlaceholder": "Pretraži alate...",
       "none": "Nije dodeljeno",
       "customBadge": "Prilagođeno",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Dostupni jezici",
-          "description": "Jezici koje korisnici mogu izabrati (ostavite prazno da omogućite sve jezike)"
+          "description": "Jezici koje korisnici mogu izabrati (ostavite prazno da omogućite sve jezike)",
+          "placeholder": "Izaberite jezike"
         },
         "customMetadata": {
           "label": "Prilagođeni metapodaci",
@@ -4061,7 +4108,9 @@
           "label": "Stil logotipa",
           "description": "Izaberite između modernog minimalističkog logotipa ili klasične S ikone",
           "classic": "Klasični",
-          "modern": "Moderni"
+          "classicAlt": "Klasični logo",
+          "modern": "Moderni",
+          "modernAlt": "Moderni logo"
         },
         "customPaths": {
           "label": "Prilagođene putanje",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfiguracija aplikacije",
-      "description": "Trenutna podešavanja aplikacije i detalji konfiguracije."
+      "description": "Trenutna podešavanja aplikacije i detalji konfiguracije.",
+      "loading": "Učitavanje konfiguracije...",
+      "error": "Greška",
+      "warning": "Upozorenje o konfiguraciji",
+      "sections": {
+        "basic": "Osnovna konfiguracija",
+        "security": "Bezbednosna konfiguracija",
+        "system": "Sistemska konfiguracija",
+        "integration": "Konfiguracija integracije"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Upravljajte timovima i organizujte članove radnog prostora",
       "loading": "Učitavanje timova...",
       "loadingDetails": "Učitavanje detalja tima...",
+      "loadError": "Učitavanje detalja tima nije uspelo",
       "createNewTeam": "Kreiraj novi tim",
       "teamName": "Naziv tima",
       "totalMembers": "Ukupno članova",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Priprema vaše kupovine...",
+    "redirecting": "Preusmeravanje na sigurnu naplatu...",
     "upgradeTitle": "Nadogradi na {{planName}}",
     "success": "Plaćanje uspešno!",
     "successMessage": "Vaša pretplata je uspešno aktivirana. Uskoro ćete dobiti potvrdni email.",
@@ -5749,7 +5809,7 @@
     },
     "table": {
       "title": "Detaljna statistika",
-      "endpoint": "Endpoint",
+      "endpoint": "Krajnja tačka",
       "visits": "Posete",
       "percentage": "Procenat",
       "noData": "Nema dostupnih podataka"

@@ -29,7 +29,7 @@
       "fullscreen": "フルスクリーンモードに切り替え",
       "sidebar": "サイドバーモードに切り替え"
     },
-    "alpha": "Alpha",
+    "alpha": "アルファ",
     "premiumFeature": "プレミアム機能:",
     "comingSoon": "近日公開:"
   },
@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "環境設定"
+    },
+    "workspace": {
+      "title": "ワークスペース",
+      "people": "メンバー",
+      "teams": "チーム"
+    },
+    "configuration": {
+      "title": "構成",
+      "systemSettings": "システム設定",
+      "features": "機能",
+      "endpoints": "エンドポイント",
+      "database": "データベース",
+      "advanced": "詳細設定"
+    },
+    "securityAuth": {
+      "title": "セキュリティと認証",
+      "security": "セキュリティ",
+      "connections": "接続"
+    },
+    "licensingAnalytics": {
+      "title": "ライセンスと分析",
+      "plan": "プラン",
+      "audit": "監査",
+      "usageAnalytics": "利用分析"
+    },
+    "policiesPrivacy": {
+      "title": "ポリシーとプライバシー",
+      "legal": "法務",
+      "privacy": "プライバシー"
+    },
+    "developer": {
+      "title": "開発者",
+      "apiKeys": "APIキー"
+    },
+    "tooltips": {
+      "enableLoginFirst": "先にログインモードを有効にしてください",
+      "requiresEnterprise": "Enterpriseライセンスが必要です"
+    },
     "connection": {
       "title": "接続モード",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "グレー表示の代わりに、Convert ツールで無効な変換オプションを非表示にします。"
     },
     "hotkeys": {
+      "title": "キーボードショートカット",
+      "description": "ツールにすばやくアクセスできるようキーボードショートカットをカスタマイズします。「Change shortcut」をクリックし、新しいキーの組み合わせを押してください。Escでキャンセルします。",
       "errorConflict": "ショートカットはすでに{{tool}}で使用されています。",
+      "errorModifier": {
+        "mac": "ショートカットに⌘（Command）、⌥（Option）などの修飾キーを含めてください。",
+        "windows": "ショートカットにCtrl、Altなどの修飾キーを含めてください。"
+      },
       "searchPlaceholder": "ツールを検索...",
       "none": "未割り当て",
       "customBadge": "カスタム",
@@ -1867,7 +1913,7 @@
     },
     "trapped": {
       "label": "トラッピング状態",
-      "unknown": "Unknown",
+      "unknown": "不明",
       "true": "True",
       "false": "False"
     },
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "利用可能な言語",
-          "description": "ユーザーが選択できる言語（空にすると全言語を有効化）"
+          "description": "ユーザーが選択できる言語（空にすると全言語を有効化）",
+          "placeholder": "言語を選択"
         },
         "customMetadata": {
           "label": "カスタムメタデータ",
@@ -4061,7 +4108,9 @@
           "label": "ロゴスタイル",
           "description": "最新のミニマリストロゴかクラシックな S アイコンを選択",
           "classic": "クラシック",
-          "modern": "モダン"
+          "classicAlt": "クラシックロゴ",
+          "modern": "モダン",
+          "modernAlt": "モダンロゴ"
         },
         "customPaths": {
           "label": "カスタムパス",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "アプリケーション構成",
-      "description": "現在のアプリケーション設定と構成の詳細。"
+      "description": "現在のアプリケーション設定と構成の詳細。",
+      "loading": "構成を読み込み中...",
+      "error": "エラー",
+      "warning": "構成の警告",
+      "sections": {
+        "basic": "基本構成",
+        "security": "セキュリティ構成",
+        "system": "システム構成",
+        "integration": "統合構成"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "チームを管理し、ワークスペースのメンバーを整理します",
       "loading": "チームを読み込み中...",
       "loadingDetails": "チームの詳細を読み込み中...",
+      "loadError": "チームの詳細を読み込めませんでした",
       "createNewTeam": "新しいチームを作成",
       "teamName": "チーム名",
       "totalMembers": "メンバー総数",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "チェックアウトを準備しています...",
+    "redirecting": "安全なチェックアウトにリダイレクトしています...",
     "upgradeTitle": "{{planName}} にアップグレード",
     "success": "支払いが完了しました",
     "successMessage": "サブスクリプションが有効化されました。まもなく確認メールが届きます。",

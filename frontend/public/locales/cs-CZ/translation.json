@@ -317,11 +317,51 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Předvolby"
+    },
+    "workspace": {
+      "title": "Pracovní prostor",
+      "people": "Lidé",
+      "teams": "Týmy"
+    },
+    "configuration": {
+      "title": "Konfigurace",
+      "systemSettings": "Systémová nastavení",
+      "features": "Funkce",
+      "endpoints": "Endpoints",
+      "database": "Databáze",
+      "advanced": "Pokročilé"
+    },
+    "securityAuth": {
+      "title": "Zabezpečení a ověřování",
+      "security": "Zabezpečení",
+      "connections": "Připojení"
+    },
+    "licensingAnalytics": {
+      "title": "Licencování a analytika",
+      "plan": "Plán",
+      "audit": "Audit",
+      "usageAnalytics": "Analytika využití"
+    },
+    "policiesPrivacy": {
+      "title": "Zásady a soukromí",
+      "legal": "Právní",
+      "privacy": "Soukromí"
+    },
+    "developer": {
+      "title": "Vývojář",
+      "apiKeys": "API klíče"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Nejprve povolte režim přihlášení",
+      "requiresEnterprise": "Vyžaduje licenci Enterprise"
+    },
     "connection": {
       "title": "Režim připojení",
       "mode": {
         "saas": "Stirling Cloud",
-        "selfhosted": "Self-Hosted"
+        "selfhosted": "Vlastní hosting"
       },
       "server": "Server",
       "user": "Přihlášen jako",
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Místo šedých voleb odeberte zakázané možnosti převodu v nástroji Převod."
     },
     "hotkeys": {
+      "title": "Klávesové zkratky",
+      "description": "Přizpůsobte si klávesové zkratky pro rychlý přístup k nástrojům. Klikněte na „Změnit zkratku“ a stiskněte novou kombinaci kláves. Stisknutím Esc zrušíte.",
       "errorConflict": "Zkratku již používá {{tool}}.",
+      "errorModifier": {
+        "mac": "Do zkratky zahrňte ⌘ (Command), ⌥ (Option) nebo jiný modifikátor.",
+        "windows": "Do zkratky zahrňte Ctrl, Alt nebo jiný modifikátor."
+      },
       "searchPlaceholder": "Hledat nástroje...",
       "none": "Nepřiřazeno",
       "customBadge": "Vlastní",
@@ -1165,9 +1211,9 @@
     "fileFormat": "Formát souboru",
     "wordDoc": "Dokument Word",
     "wordDocExt": "Dokument Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Text OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "Prezentace OpenDocument (.odp)",
     "txtExt": "Prostý text (.txt)",
     "rtfExt": "Rich Text Format (.rtf)",
     "selectedFiles": "Vybrané soubory",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Dostupné jazyky",
-          "description": "Jazyky, které si mohou uživatelé vybrat (ponechte prázdné pro povolení všech jazyků)"
+          "description": "Jazyky, které si mohou uživatelé vybrat (ponechte prázdné pro povolení všech jazyků)",
+          "placeholder": "Vyberte jazyky"
         },
         "customMetadata": {
           "label": "Vlastní metadata",
@@ -4061,7 +4108,9 @@
           "label": "Styl loga",
           "description": "Vyberte mezi moderním minimalistickým logem a klasickou ikonou S",
           "classic": "Klasický",
-          "modern": "Moderní"
+          "classicAlt": "Klasické logo",
+          "modern": "Moderní",
+          "modernAlt": "Moderní logo"
         },
         "customPaths": {
           "label": "Vlastní cesty",
@@ -4504,7 +4553,7 @@
         }
       },
       "premium": {
-        "title": "Premium & Enterprise",
+        "title": "Premium a Enterprise",
         "description": "Nakonfigurujte svůj prémiový nebo enterprise licenční klíč.",
         "license": "Konfigurace licence",
         "licenseKey": {
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Konfigurace aplikace",
-      "description": "Aktuální nastavení aplikace a detaily konfigurace."
+      "description": "Aktuální nastavení aplikace a detaily konfigurace.",
+      "loading": "Načítání konfigurace...",
+      "error": "Chyba",
+      "warning": "Konfigurační varování",
+      "sections": {
+        "basic": "Základní konfigurace",
+        "security": "Bezpečnostní konfigurace",
+        "system": "Systémová konfigurace",
+        "integration": "Integrační konfigurace"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Spravujte týmy a organizujte členy pracovního prostoru",
       "loading": "Načítání týmů...",
       "loadingDetails": "Načítání detailů týmu...",
+      "loadError": "Nepodařilo se načíst detaily týmu",
       "createNewTeam": "Vytvořit nový tým",
       "teamName": "Název týmu",
       "totalMembers": "Celkem členů",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Připravujeme vaši platbu...",
+    "redirecting": "Přesměrování na zabezpečenou pokladnu...",
     "upgradeTitle": "Upgradovat na {{planName}}",
     "success": "Platba úspěšná!",
     "successMessage": "Vaše předplatné bylo úspěšně aktivováno. Brzy obdržíte potvrzující e‑mail.",
