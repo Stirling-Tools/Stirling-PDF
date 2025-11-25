@@ -27,7 +27,6 @@ COPY app/common/build.gradle common/.
 COPY app/proprietary/build.gradle proprietary/.
 
 # Warm-up Gradle dependency cache (optional but improves subsequent builds)
-RUN ./gradlew --no-daemon printVersion --quiet | tail -1 > /tmp/version_tag || true
 RUN ./gradlew --no-daemon build -x spotlessApply -x spotlessCheck -x test -x sonarqube || true
 
 # Switch to final source directory and copy full source code
@@ -121,9 +120,6 @@ COPY scripts/ /scripts/
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 COPY --from=build /app/app/core/build/libs/*.jar /app.jar
 
-# Copy version tag generated during build
-COPY --from=build /tmp/version_tag /etc/stirling_version
-
 # Optional version tag (can be passed at build time)
 ARG VERSION_TAG
 
@@ -144,6 +140,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 # Runtime environment variables
 # ==============================================================================
 ENV DISABLE_ADDITIONAL_FEATURES=true \
+    VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \

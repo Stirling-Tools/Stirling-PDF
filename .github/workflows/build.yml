@@ -309,6 +309,13 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
+      - name: Resolve VERSION_TAG
+        id: version
+        run: |
+          FILE_VERSION=$(grep '^version=' app/common/src/main/resources/version.properties | cut -d'=' -f2)
+          EFFECTIVE_VERSION="${VERSION_TAG:-$FILE_VERSION}"
+          echo "value=$EFFECTIVE_VERSION" >> "$GITHUB_OUTPUT"
+
       # - name: Free disk space on runner
       #   run: |
       #     echo "Disk space before cleanup:" && df -h
@@ -407,6 +414,8 @@ jobs:
       - name: Build and push amd64 image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
+          build-args: |
+            VERSION_TAG=${{ steps.version.outputs.value }}
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./${{ matrix.docker.name }}
@@ -433,12 +442,55 @@ jobs:
           IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
           CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-amd64"
           echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
-          docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
+          docker run -d -p 8080:8080 --platform linux/amd64 --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
           echo "Waiting up to 2 minutes..."
           sleep 120 || true
+          curl -f http://localhost:8080/api/v1/info/status || true
+          echo ""
+          echo "===== Checking version in ${CONTAINER_NAME} ====="
+          echo ""
+          echo "Java version"
+          docker exec "${CONTAINER_NAME}" java -version || true
+          echo ""
+          echo "Tesseract version"
+          docker exec "${CONTAINER_NAME}" tesseract --version || true
+          echo ""
+          echo "LibreOffice version"
+          docker exec "${CONTAINER_NAME}" soffice --version || true
+          echo ""
+          echo "Ghostscript version"
+          docker exec "${CONTAINER_NAME}" gs --version || true
+          echo ""
+          echo "calibre/ebook-convert version"
+          docker exec "${CONTAINER_NAME}" ebook-convert --version || true
+          echo ""
+          echo "WeasyPrint version"
+          docker exec "${CONTAINER_NAME}" weasyprint --version || true
+          echo ""
+          echo "ffmpeg version"
+          docker exec "${CONTAINER_NAME}" ffmpeg -version || true
+          echo ""
+          echo "qpdf version"
+          docker exec "${CONTAINER_NAME}" qpdf --version || true
+          echo ""
+          echo "ocrmypdf version"
+          docker exec "${CONTAINER_NAME}" ocrmypdf --version || true
+          echo ""
+          echo "Python version"
+          docker exec "${CONTAINER_NAME}" python --version || true
+          docker exec "${CONTAINER_NAME}" python3 --version || true
+          echo ""
+          echo "===== Checking Tesseract languages in ${CONTAINER_NAME} ====="
+          echo ""
+          echo "Checking available Tesseract languages in ${CONTAINER_NAME}"
+          docker exec "${CONTAINER_NAME}" tesseract --list-langs || true
+          echo ""
           echo "===== Logs for ${CONTAINER_NAME} ====="
+          echo ""
           docker logs "${CONTAINER_NAME}" || true
-          echo "Stopping container ${CONTAINER_NAME} after 2 minutes"
+          echo ""
+          echo "===== Stopping container ${CONTAINER_NAME} after 2 minutes ====="
+          echo ""
           docker stop "${CONTAINER_NAME}" || true
           docker rm "${CONTAINER_NAME}" || true
 
@@ -451,6 +503,8 @@ jobs:
       - name: Build and push arm64 image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
+          build-args: |
+            VERSION_TAG=${{ steps.version.outputs.value }}
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./${{ matrix.docker.name }}
@@ -477,12 +531,55 @@ jobs:
           IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
           CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-arm64"
           echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
-          docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
+          docker run -d -p 8080:8080 --platform linux/arm64/v8 --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
           echo "Waiting up to 2 minutes..."
           sleep 120 || true
+          curl -f http://localhost:8080/api/v1/info/status || true
+          echo ""
+          echo "===== Checking version in ${CONTAINER_NAME} ====="
+          echo ""
+          echo "Java version"
+          docker exec "${CONTAINER_NAME}" java -version || true
+          echo ""
+          echo "Tesseract version"
+          docker exec "${CONTAINER_NAME}" tesseract --version || true
+          echo ""
+          echo "LibreOffice version"
+          docker exec "${CONTAINER_NAME}" soffice --version || true
+          echo ""
+          echo "Ghostscript version"
+          docker exec "${CONTAINER_NAME}" gs --version || true
+          echo ""
+          echo "calibre/ebook-convert version"
+          docker exec "${CONTAINER_NAME}" ebook-convert --version || true
+          echo ""
+          echo "WeasyPrint version"
+          docker exec "${CONTAINER_NAME}" weasyprint --version || true
+          echo ""
+          echo "ffmpeg version"
+          docker exec "${CONTAINER_NAME}" ffmpeg -version || true
+          echo ""
+          echo "qpdf version"
+          docker exec "${CONTAINER_NAME}" qpdf --version || true
+          echo ""
+          echo "ocrmypdf version"
+          docker exec "${CONTAINER_NAME}" ocrmypdf --version || true
+          echo ""
+          echo "Python version"
+          docker exec "${CONTAINER_NAME}" python --version || true
+          docker exec "${CONTAINER_NAME}" python3 --version || true
+          echo ""
+          echo "===== Checking Tesseract languages in ${CONTAINER_NAME} ====="
+          echo ""
+          echo "Checking available Tesseract languages in ${CONTAINER_NAME}"
+          docker exec "${CONTAINER_NAME}" tesseract --list-langs || true
+          echo ""
           echo "===== Logs for ${CONTAINER_NAME} ====="
+          echo ""
           docker logs "${CONTAINER_NAME}" || true
-          echo "Stopping container ${CONTAINER_NAME} after 2 minutes"
+          echo ""
+          echo "===== Stopping container ${CONTAINER_NAME} after 2 minutes ====="
+          echo ""
           docker stop "${CONTAINER_NAME}" || true
           docker rm "${CONTAINER_NAME}" || true
 
