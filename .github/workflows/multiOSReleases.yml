@@ -6,7 +6,7 @@ on:
       test_mode:
         description: "Run in test mode (skip release step)"
         required: false
-        default: "false"
+        default: "true"
         type: choice
         options:
           - "true"
@@ -21,6 +21,8 @@ on:
           - windows
           - macos
           - linux
+  push:
+    branches: [main, V2, V2-demo]
   release:
     types: [created]
 
@@ -634,7 +636,7 @@ jobs:
           retention-days: 1
 
   create-release:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release'
     needs: [determine-matrix, build, sign_verify, sign_verify_jars]
     runs-on: ubuntu-latest
     permissions:
