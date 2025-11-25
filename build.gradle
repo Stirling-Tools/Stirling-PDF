@@ -10,7 +10,7 @@ plugins {
     id "com.github.jk1.dependency-license-report" version "3.0.1"
     //id "nebula.lint" version "19.0.3"
     id "org.panteleyev.jpackageplugin" version "1.7.5"
-    id "org.sonarqube" version "7.0.0.6105"
+    id "org.sonarqube" version "7.1.0.6387"
 }
 
 import com.github.jk1.license.render.*
