@@ -1,7 +1,8 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security-Fat-with-login
-    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat
+    # image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat
+    image: ghcr.io/stirling-tools/stirling-pdf-test:fat
     deploy:
       resources:
         limits:

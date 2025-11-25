@@ -16,27 +16,47 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
-# Function to check the health of the service with a timeout of 80 seconds
+# Function to check application readiness via HTTP instead of Docker's health status
 check_health() {
-    local service_name=$1
+    local container_name=$1          # real container name
     local compose_file=$2
-    local end=$((SECONDS+60))
+    local timeout=80                 # total timeout in seconds
+    local interval=3                 # poll interval in seconds
+    local end=$((SECONDS + timeout))
+    local last_code="000"
 
-    echo -n "Waiting for $service_name to become healthy..."
-    until [ "$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$service_name")" == "healthy" ] || [ $SECONDS -ge $end ]; do
-        sleep 3
-        echo -n "."
-        if [ $SECONDS -ge $end ]; then
-            echo -e "\n$service_name health check timed out after 80 seconds."
-            echo "Printing logs for $service_name:"
-            docker logs "$service_name"
-            return 1
+    echo "Waiting for $container_name to become reachable on http://localhost:8080/ (timeout ${timeout}s)..."
+    while [ $SECONDS -lt $end ]; do
+        # Optional: check if container is running at all (nice for debugging)
+        if ! docker ps --format '{{.Names}}' | grep -Fxq "$container_name"; then
+            echo "  Container $container_name not running yet (still waiting)..."
         fi
+
+        # Try simple HTTP GET on the root page
+        last_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/") || last_code="000"
+
+        # Treat any 2xx or 3xx as "ready"
+        if [ "$last_code" -ge 200 ] && [ "$last_code" -lt 400 ]; then
+            echo "$container_name is reachable over HTTP (status $last_code)."
+            echo "Printing logs for $container_name:"
+            docker logs "$container_name" || true
+            return 0
+        fi
+
+        echo "  Still waiting for HTTP readiness, current status: $last_code"
+        sleep "$interval"
     done
-    echo -e "\n$service_name is healthy!"
-    echo "Printing logs for $service_name:"
-    docker logs "$service_name"
-    return 0
+
+    echo "$container_name did not become HTTP-ready within ${timeout}s (last HTTP status: $last_code)."
+
+    # For extra debugging: show Docker health status, but DO NOT depend on it
+    local docker_health
+    docker_health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}(no healthcheck){{end}}' "$container_name" 2>/dev/null || echo "inspect failed")
+    echo "Docker-reported health status for $container_name: $docker_health"
+
+    echo "Printing logs for $container_name:"
+    docker logs "$container_name" || true
+    return 1
 }
 
 # Function to capture file list from a Docker container
@@ -48,7 +68,7 @@ capture_file_list() {
     # Get all files in one command, output directly from Docker to avoid path issues
     # Skip proc, sys, dev, and the specified LibreOffice config directory
     # Also skip PDFBox and LibreOffice temporary files
-    docker exec $container_name sh -c "find / -type f \
+    docker exec "$container_name" sh -c "find / -type f \
         -not -path '*/proc/*' \
         -not -path '*/sys/*' \
         -not -path '*/dev/*' \
@@ -69,7 +89,7 @@ capture_file_list() {
         echo "Trying alternative approach..."
 
         # Alternative simpler approach - just get paths as a fallback
-        docker exec $container_name sh -c "find / -type f \
+        docker exec "$container_name" sh -c "find / -type f \
             -not -path '*/proc/*' \
             -not -path '*/sys/*' \
             -not -path '*/dev/*' \
@@ -106,14 +126,8 @@ compare_file_lists() {
     # Check if files exist and have content
     if [ ! -s "$before_file" ] || [ ! -s "$after_file" ]; then
         echo "WARNING: One or both file lists are empty."
-
-        if [ ! -s "$before_file" ]; then
-            echo "Before file is empty: $before_file"
-        fi
-
-        if [ ! -s "$after_file" ]; then
-            echo "After file is empty: $after_file"
-        fi
+        if [ ! -s "$before_file" ]; then echo "Before file is empty: $before_file"; fi
+        if [ ! -s "$after_file" ]; then echo "After file is empty: $after_file"; fi
 
         # Create empty diff file
         > "$diff_file"
@@ -132,7 +146,6 @@ compare_file_lists() {
                 echo "No temporary files found in the after snapshot."
             fi
         fi
-
         return 0
     fi
 
@@ -169,7 +182,6 @@ compare_file_lists() {
     else
         echo "No file changes detected during test."
     fi
-
     return 0
 }
 
@@ -220,19 +232,33 @@ verify_app_version() {
 # Function to test a Docker Compose configuration
 test_compose() {
     local compose_file=$1
-    local service_name=$2
+    local test_name=$2
     local status=0
 
-    echo "Testing $compose_file configuration..."
+    echo "Testing ${compose_file} configuration..."
 
     # Start up the Docker Compose service
     docker-compose -f "$compose_file" up -d
 
-    # Wait for the service to become healthy
-    if check_health "$service_name" "$compose_file"; then
-        echo "$service_name test passed."
+    # Wait a moment for containers to appear
+    sleep 3
+
+    local container_name
+    container_name=$(docker-compose -f "$compose_file" ps --format '{{.Names}}' --filter "status=running" | head -n1)
+
+    if [[ -z "$container_name" ]]; then
+        echo "ERROR: No running container found for ${compose_file}"
+        docker-compose -f "$compose_file" ps
+        return 1
+    fi
+
+    echo "Started container: $container_name"
+
+    # Wait for the service to become healthy (HTTP-based)
+    if check_health "$container_name" "$compose_file"; then
+        echo "${test_name} test passed."
     else
-        echo "$service_name test failed."
+        echo "${test_name} test failed."
         status=1
     fi
 
@@ -246,7 +272,6 @@ declare -a failed_tests
 run_tests() {
     local test_name=$1
     local compose_file=$2
-
     if test_compose "$compose_file" "$test_name"; then
         passed_tests+=("$test_name")
     else
@@ -254,18 +279,18 @@ run_tests() {
     fi
 }
 
-
 # Main testing routine
 main() {
     SECONDS=0
-
     cd "$PROJECT_ROOT"
 
     export DOCKER_CLI_EXPERIMENTAL=enabled
     export COMPOSE_DOCKER_CLI_BUILD=0
-    export DISABLE_ADDITIONAL_FEATURES=true
 
-    # Run the gradlew build command and check if it fails
+    # ==================================================================
+    # 1. Ultra-Lite (no additional features)
+    # ==================================================================
+    export DISABLE_ADDITIONAL_FEATURES=true
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
@@ -276,11 +301,12 @@ main() {
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version: $EXPECTED_VERSION"
 
-    # Building Docker images
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
+    # Build Ultra-Lite image (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
+    docker build --build-arg VERSION_TAG=alpha \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
+        -f ./Dockerfile.ultra-lite .
 
-    # Test each configuration
+    # Test Ultra-Lite configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
 
     echo "Testing webpage accessibility..."
@@ -302,36 +328,27 @@ main() {
         echo "Version verification failed for Stirling-PDF-Ultra-Lite"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
+    docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down -v
 
-    # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
-
+    # ==================================================================
+    # 2. Full Fat + Security
+    # ==================================================================
     export DISABLE_ADDITIONAL_FEATURES=false
-    # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security enabled, exiting script."
         exit 1
     fi
 
-    # Get expected version after the security-enabled build
     echo "Getting expected version from Gradle (security enabled)..."
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version with security enabled: $EXPECTED_VERSION"
 
-    # Building Docker images with security enabled
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
+    # Build Fat (Security) image for GHCR tag used in all 'fat' compose files
+    docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
+        -f ./Dockerfile.fat .
 
-
-    # Test each configuration with security
-    # run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml" down
-    # run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
-
-
+    # Test fat + security compose
     run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
 
     echo "Testing webpage accessibility..."
@@ -362,54 +379,50 @@ main() {
         echo "Swagger endpoint tests failed"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
+    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down -v
 
+    # ==================================================================
+    # 3. Regression test with login (test_cicd.yml)
+    # ==================================================================
     run_tests "Stirling-PDF-Security-Fat-with-login" "./exampleYmlFiles/test_cicd.yml"
 
-    if [ $? -eq 0 ]; then
-        # Create directory for file snapshots if it doesn't exist
+    # Only run behave tests if the container started successfully
+    if [[ " ${passed_tests[*]} " =~ "Stirling-PDF-Security-Fat-with-login" ]]; then
+
+        CONTAINER_NAME=$(docker-compose -f "./exampleYmlFiles/test_cicd.yml" ps --format '{{.Names}}' --filter "status=running" | head -n1)
+
         SNAPSHOT_DIR="$PROJECT_ROOT/testing/file_snapshots"
         mkdir -p "$SNAPSHOT_DIR"
 
-        # Capture file list before running behave tests
         BEFORE_FILE="$SNAPSHOT_DIR/files_before_behave.txt"
         AFTER_FILE="$SNAPSHOT_DIR/files_after_behave.txt"
         DIFF_FILE="$SNAPSHOT_DIR/files_diff.txt"
-
-        # Define container name variable for consistency
-        CONTAINER_NAME="Stirling-PDF-Security-Fat-with-login"
 
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
 
         cd "testing/cucumber"
         if python -m behave; then
-            # Wait 10 seconds before capturing the file list after tests
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 
-            # Capture file list after running behave tests
             cd "$PROJECT_ROOT"
             capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
 
-            # Compare file lists
             if compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"; then
                 echo "No unexpected temporary files found."
-                passed_tests+=("Stirling-PDF-Regression")
+                passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             else
                 echo "WARNING: Unexpected temporary files detected after behave tests!"
                 failed_tests+=("Stirling-PDF-Regression-Temp-Files")
             fi
-
-            passed_tests+=("Stirling-PDF-Regression")
+            passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
         else
-            failed_tests+=("Stirling-PDF-Regression")
+            failed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             echo "Printing docker logs of failed regression"
             docker logs "$CONTAINER_NAME"
             echo "Printed docker logs of failed regression"
 
-            # Still capture file list after failure for analysis
-            # Wait 10 seconds before capturing the file list
-            echo "Waiting 5 seconds before capturing file list..."
+            echo "Waiting 10 seconds before capturing file list..."
             sleep 10
 
             cd "$PROJECT_ROOT"
@@ -417,9 +430,11 @@ main() {
             compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
         fi
     fi
+    docker-compose -f "./exampleYmlFiles/test_cicd.yml" down -v
 
-    docker-compose -f "./exampleYmlFiles/test_cicd.yml" down
-
+    # ==================================================================
+    # 4. Disabled Endpoints Test
+    # ==================================================================
     run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml"
 
     echo "Testing disabled endpoints..."
@@ -439,27 +454,27 @@ main() {
         echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down
+    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down -v
 
-    # Report results
+    # ==================================================================
+    # Final Report
+    # ==================================================================
     echo "All tests completed in $SECONDS seconds."
-
 
     if [ ${#passed_tests[@]} -ne 0 ]; then
         echo "Passed tests:"
+        for test in "${passed_tests[@]}"; do
+            echo -e "\e[32m$test\e[0m"
+        done
     fi
-    for test in "${passed_tests[@]}"; do
-        echo -e "\e[32m$test\e[0m"  # Green color for passed tests
-    done
 
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Failed tests:"
+        for test in "${failed_tests[@]}"; do
+            echo -e "\e[31m$test\e[0m"
+        done
     fi
-    for test in "${failed_tests[@]}"; do
-        echo -e "\e[31m$test\e[0m"  # Red color for failed tests
-    done
 
-    # Check if there are any failed tests and exit with an error code if so
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."
         exit 1
