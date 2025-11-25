@@ -163,7 +163,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
           // Has valid premium license - skip email stage
           console.log('Valid premium license detected - skipping email stage');
-          checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey);
+          checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
           checkoutState.setState({ currentStage: 'plan-selection', loading: false });
         } else {
           // No valid premium license - start at email stage
