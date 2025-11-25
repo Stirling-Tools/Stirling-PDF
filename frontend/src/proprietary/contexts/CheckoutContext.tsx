@@ -79,7 +79,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Check if this is an upgrade or new subscription
-        if (licenseInfo?.licenseKey) {
+        // Only treat as upgrade if there's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
           // UPGRADE: Resync existing license with Keygen
           console.log('Upgrade detected - resyncing existing license');
 

@@ -128,3 +128,44 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+/* Settings section container for sticky footer support */
+.settings-section-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  position: relative;
+}
+
+.settings-section-content {
+  flex: 1;
+  padding-bottom: 5rem; /* Space for sticky footer */
+}
+
+/* Sticky footer for save/discard buttons */
+.settings-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--modal-content-bg);
+  border-top: 1px solid var(--modal-header-border);
+  padding: 1rem 2rem;
+  margin: 0 -2rem;
+  margin-bottom: -1rem;
+  z-index: 10;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile adjustments */
+@media (max-width: 1024px) {
+  .settings-sticky-footer {
+    padding: 0.75rem 1rem;
+    margin: 0 -1rem;
+    margin-bottom: -1rem;
+  }
+  
+  .settings-section-content {
+    padding-bottom: 4rem;
+  }
+}

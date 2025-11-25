@@ -4,7 +4,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
@@ -13,6 +13,7 @@ const EmptyFilesState: React.FC = () => {
   const { colorScheme } = useMantineColorScheme();
   const { onLocalFileClick } = useFileManagerContext();
   const [isUploadHover, setIsUploadHover] = useState(false);
+  const { wordmark } = useLogoAssets();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
 
@@ -57,7 +58,7 @@ const EmptyFilesState: React.FC = () => {
         {/* Stirling PDF Logo */}
         <Group gap="xs" align="center">
           <img
-            src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
+            src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
             alt="Stirling PDF"
             style={{ height: '2.2rem', width: 'auto' }}
           />
