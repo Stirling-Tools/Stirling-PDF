@@ -17,6 +17,8 @@
       "comingSoon": "Hamarosan elérhető:",
       "favorite": "Hozzáadás a kedvencekhez",
       "favorites": "Kedvencek",
+      "unavailable": "Szerveradminisztrátor letiltotta:",
+      "unavailableDependency": "Nem érhető el – szükséges eszköz hiányzik a szerveren:",
       "heading": "Minden eszköz (teljes képernyős nézet)",
       "noResults": "Próbálja módosítani a keresést vagy kapcsolja be a leírásokat, hogy megtalálja, amit keres.",
       "recommended": "Ajánlott",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Váltás teljes képernyős módra",
       "sidebar": "Váltás oldalsáv módra"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Prémium funkció:",
+    "comingSoon": "Hamarosan:"
   },
   "unsavedChanges": "Mentetlen változtatásai vannak a PDF-en.",
   "areYouSure": "Biztosan elhagyja az oldalt?",
@@ -40,6 +45,30 @@
     "message": "Ez a ZIP {{count}} fájlt tartalmaz. Mégis kibontja?",
     "cancel": "Mégse",
     "confirm": "Kibontás"
+  },
+  "defaultApp": {
+    "title": "Beállítás alapértelmezett PDF-alkalmazásként",
+    "message": "Szeretné a Stirling PDF-et alapértelmezett PDF-szerkesztőnek beállítani?",
+    "description": "Ezt később módosíthatja a rendszerbeállításokban.",
+    "notNow": "Most nem",
+    "setDefault": "Beállítás alapértelmezettként",
+    "dismiss": "Bezárás",
+    "prompt": {
+      "title": "Beállítás alapértelmezett PDF-szerkesztőként",
+      "message": "Állítsa a Stirling PDF-et a PDF-fájlok megnyitásának alapértelmezett alkalmazásává."
+    },
+    "success": {
+      "title": "Alapértelmezett alkalmazás beállítva",
+      "message": "A Stirling PDF mostantól az alapértelmezett PDF-szerkesztő"
+    },
+    "settingsOpened": {
+      "title": "Beállítások megnyitva",
+      "message": "Válassza a rendszerbeállításokban a Stirling PDF-et"
+    },
+    "error": {
+      "title": "Hiba",
+      "message": "Nem sikerült beállítani az alapértelmezett PDF-kezelőt"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Mentés",
   "saveToBrowser": "Mentés böngészőbe",
   "download": "Letöltés",
+  "downloadUnavailable": "A letöltés nem érhető el ehhez az elemhez",
+  "saveUnavailable": "Mentés nem érhető el ehhez az elemhez",
   "pin": "Fájl rögzítése (aktív marad az eszköz futtatása után)",
   "unpin": "Rögzítés feloldása (csere az eszköz futtatása után)",
   "undoOperationTooltip": "Kattintson az utolsó művelet visszavonásához és az eredeti fájlok visszaállításához",
@@ -168,6 +199,7 @@
   },
   "edit": "Szerkesztés",
   "delete": "Törlés",
+  "never": "Soha",
   "username": "Felhasználónév",
   "password": "Jelszó",
   "welcome": "Üdvözöljük",
@@ -262,7 +294,8 @@
     "learnMore": "További információ",
     "enable": "Analitika engedélyezése",
     "disable": "Analitika letiltása",
-    "settings": "Az analitikai beállításokat a config/settings.yml fájlban módosíthatja"
+    "settings": "Az analitikai beállításokat a config/settings.yml fájlban módosíthatja",
+    "privacyAssurance": "Nem követünk semmilyen személyes adatot, és nem figyeljük a fájlok tartalmát."
   },
   "navbar": {
     "favorite": "Kedvencek",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Beállítások",
-    "update": "Frissítés elérhető",
-    "updateAvailable": "A jelenlegi telepített verzió: {0}. Új verzió ({1}) érhető el.",
-    "appVersion": "Alkalmazás verziója:",
-    "downloadOption": {
-      "title": "Letöltési beállítás (egyetlen fájl, nem tömörített letöltések esetén):",
-      "1": "Megnyitás ugyanabban az ablakban",
-      "2": "Megnyitás új ablakban",
-      "3": "Fájl letöltése"
-    },
-    "zipThreshold": "Fájlok tömörítése, ha a letöltött fájlok száma meghaladja:",
-    "signOut": "Kijelentkezés",
-    "accountSettings": "Fiókbeállítások",
-    "bored": {
-      "help": "Easter egg játék engedélyezése"
-    },
-    "cacheInputs": {
-      "name": "Űrlapmezők mentése",
-      "help": "Engedélyezése esetén menti a korábban használt értékeket a későbbi használathoz"
+    "connection": {
+      "title": "Kapcsolati mód",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Önhostolt"
+      },
+      "server": "Szerver",
+      "user": "Bejelentkezve mint",
+      "logout": "Kijelentkezés"
     },
     "general": {
       "title": "Általános",
       "description": "Általános alkalmazásbeállítások konfigurálása.",
-      "account": "Fiók",
-      "accountDescription": "Fiókbeállítások kezelése",
       "user": "Felhasználó",
-      "signedInAs": "Bejelentkezve mint",
       "logout": "Kijelentkezés",
       "enableFeatures": {
+        "dismiss": "Elvetés",
         "title": "Rendszergazdáknak",
         "intro": "Engedélyezze a felhasználói hitelesítést, csapatkezelést és munkaterület-funkciókat a szervezete számára.",
         "action": "Beállítás",
         "and": "és",
         "benefit": "Engedélyezi a felhasználói szerepköröket, csapatmunkát, adminisztrátori vezérlést és vállalati funkciókat.",
-        "learnMore": "További információ a dokumentációban",
-        "dismiss": "Elvetés"
+        "learnMore": "További információ a dokumentációban"
       },
-      "autoUnzip": "API válaszok automatikus kicsomagolása",
-      "autoUnzipDescription": "ZIP válaszokban lévő fájlok automatikus kibontása",
-      "autoUnzipTooltip": "Az API műveletek által visszaadott ZIP fájlok automatikus kibontása. Tiltsa le, ha a ZIP fájlokat érintetlenül akarja hagyni. Ez nem érinti az automatizálási munkafolyamatokat.",
-      "autoUnzipFileLimit": "Automatikus kicsomagolás fájlkorlátja",
-      "autoUnzipFileLimitDescription": "ZIP-ből kibontandó fájlok maximális száma",
-      "autoUnzipFileLimitTooltip": "Csak akkor bontsa ki, ha a ZIP legfeljebb ennyi fájlt tartalmaz. Állítsa magasabbra nagyobb ZIP-ek kibontásához.",
       "defaultToolPickerMode": "Alapértelmezett eszközválasztó mód",
       "defaultToolPickerModeDescription": "Válassza ki, hogy az eszközválasztó alapértelmezetten teljes képernyőn vagy oldalsávban nyíljon meg",
       "mode": {
-        "fullscreen": "Teljes képernyő",
-        "sidebar": "Oldalsáv"
-      }
+        "sidebar": "Oldalsáv",
+        "fullscreen": "Teljes képernyő"
+      },
+      "autoUnzipTooltip": "Az API műveletek által visszaadott ZIP fájlok automatikus kibontása. Tiltsa le, ha a ZIP fájlokat érintetlenül akarja hagyni. Ez nem érinti az automatizálási munkafolyamatokat.",
+      "autoUnzip": "API válaszok automatikus kicsomagolása",
+      "autoUnzipDescription": "ZIP válaszokban lévő fájlok automatikus kibontása",
+      "autoUnzipFileLimitTooltip": "Csak akkor bontsa ki, ha a ZIP legfeljebb ennyi fájlt tartalmaz. Állítsa magasabbra nagyobb ZIP-ek kibontásához.",
+      "autoUnzipFileLimit": "Automatikus kicsomagolás fájlkorlátja",
+      "autoUnzipFileLimitDescription": "ZIP-ből kibontandó fájlok maximális száma",
+      "defaultPdfEditor": "Alapértelmezett PDF-szerkesztő",
+      "defaultPdfEditorActive": "A Stirling PDF az alapértelmezett PDF-szerkesztő",
+      "defaultPdfEditorInactive": "Más alkalmazás van alapértelmezettként beállítva",
+      "defaultPdfEditorChecking": "Ellenőrzés...",
+      "defaultPdfEditorSet": "Már alapértelmezett",
+      "setAsDefault": "Beállítás alapértelmezettként",
+      "updates": {
+        "title": "Szoftverfrissítések",
+        "description": "Frissítések keresése és verzióinformációk megtekintése",
+        "currentVersion": "Jelenlegi verzió",
+        "latestVersion": "Legújabb verzió",
+        "checkForUpdates": "Frissítések keresése",
+        "viewDetails": "Részletek megtekintése"
+      },
+      "hideUnavailableTools": "Nem elérhető eszközök elrejtése",
+      "hideUnavailableToolsDescription": "A szerver által letiltott eszközök eltávolítása, ahelyett hogy szürkén jelenjenek meg.",
+      "hideUnavailableConversions": "Nem elérhető konverziók elrejtése",
+      "hideUnavailableConversionsDescription": "A Konvertálás eszközben a letiltott opciók eltávolítása, ahelyett hogy szürkén jelenjenek meg."
     },
     "hotkeys": {
-      "title": "Gyorsbillentyűk",
-      "description": "Vigye az egeret egy eszköz fölé a gyorsbillentyű megtekintéséhez, vagy testreszabhatja alább. Kattintson a \"Gyorsbillentyű módosítása\" gombra, majd nyomjon meg egy új billentyűkombinációt. Esc‑pel megszakíthatja.",
-      "errorModifier": {
-        "mac": "Tartalmazzon ⌘ (Command), ⌥ (Option) vagy más módosítót a gyorsbillentyűben.",
-        "windows": "Tartalmazzon Ctrl, Alt vagy más módosítót a gyorsbillentyűben."
-      },
       "errorConflict": "Ezt a gyorsbillentyűt már használja: {{tool}}.",
+      "searchPlaceholder": "Eszközök keresése...",
       "none": "Nincs hozzárendelve",
       "customBadge": "Egyéni",
       "defaultLabel": "Alapértelmezett: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Gyorsbillentyű módosítása",
       "reset": "Visszaállítás",
       "shortcut": "Gyorsbillentyű",
-      "noShortcut": "Nincs gyorsbillentyű beállítva",
-      "searchPlaceholder": "Eszközök keresése..."
+      "noShortcut": "Nincs gyorsbillentyű beállítva"
     }
+  },
+  "update": {
+    "modalTitle": "Frissítés elérhető",
+    "current": "Jelenlegi verzió",
+    "latest": "Legújabb verzió",
+    "latestStable": "Legújabb stabil",
+    "priorityLabel": "Prioritás",
+    "recommendedAction": "Javasolt lépés",
+    "breakingChangesDetected": "Inkompatibilis változások észlelve",
+    "breakingChangesMessage": "Egyes verziók inkompatibilis változásokat tartalmaznak. Frissítés előtt tekintse át az alábbi átállási útmutatókat.",
+    "migrationGuides": "Átállási útmutatók",
+    "viewGuide": "Útmutató megnyitása",
+    "loadingDetailedInfo": "Részletes információk betöltése...",
+    "close": "Bezárás",
+    "viewAllReleases": "Összes kiadás megtekintése",
+    "downloadLatest": "Legújabb letöltése",
+    "availableUpdates": "Elérhető frissítések",
+    "unableToLoadDetails": "Nem sikerült betölteni a részletes információkat.",
+    "version": "Verzió",
+    "urgentUpdateAvailable": "Sürgős frissítés",
+    "updateAvailable": "Frissítés elérhető",
+    "releaseNotes": "Kiadási megjegyzések",
+    "priority": {
+      "urgent": "Sürgős",
+      "normal": "Normál",
+      "minor": "Kisebb",
+      "low": "Alacsony"
+    },
+    "breakingChanges": "Inkompatibilis változások",
+    "breakingChangesDefault": "Ez a verzió inkompatibilis változásokat tartalmaz.",
+    "migrationGuide": "Átállási útmutató"
   },
   "changeCreds": {
     "title": "Hitelesítési adatok módosítása",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "PDF-ek egymásra helyezése egy másik PDF-en",
       "title": "PDF-ek egymásra helyezése"
+    },
+    "pdfTextEditor": {
+      "title": "PDF szövegszerkesztő",
+      "desc": "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
+    },
+    "addText": {
+      "tags": "szöveg, megjegyzés, címke",
+      "title": "Szöveg hozzáadása",
+      "desc": "Tetszőleges szöveg hozzáadása bárhová a PDF-ben"
     }
   },
   "landing": {
     "addFiles": "Fájlok hozzáadása",
-    "uploadFromComputer": "Feltöltés a számítógépről"
+    "uploadFromComputer": "Feltöltés a számítógépről",
+    "openFromComputer": "Megnyitás a gépről"
   },
   "viewPdf": {
     "tags": "megtekintés,olvasás,jegyzetelés,szöveg,kép",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Hiba történt a PDF-ek egyesítése közben."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Összefűzési beállítások áttekintése"
+      }
     }
   },
   "split": {
@@ -1091,7 +1169,7 @@
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "OpenDocument bemutató (.odp)",
     "txtExt": "Egyszerű szöveg (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "Rich Text formátum (.rtf)",
     "selectedFiles": "Kiválasztott fájlok",
     "noFileSelected": "Nincs kiválasztott fájl. Használja a fájlpanelt a fájlok hozzáadásához.",
     "convertFiles": "Fájlok konvertálása",
@@ -1182,9 +1260,43 @@
     "tags": "kép,jpg,fotó,fénykép",
     "title": "Kép hozzáadása",
     "header": "Kép hozzáadása PDF-hez",
-    "everyPage": "Minden oldalra?",
-    "upload": "Kép hozzáadása",
-    "submit": "Kép hozzáadása"
+    "image": {
+      "name": "Kép",
+      "placeholder": "Töltsön fel egy képet",
+      "label": "Képfájl"
+    },
+    "steps": {
+      "configure": "Kép beállítása"
+    },
+    "step": {
+      "createDesc": "Töltse fel a hozzáadni kívánt képet",
+      "place": "Kép elhelyezése",
+      "placeDesc": "Kattintson a PDF-re a kép hozzáadásához"
+    },
+    "instructions": {
+      "title": "Képek hozzáadása",
+      "text": "A fenti kép feltöltése után kattintson a PDF bármely pontjára az elhelyezéshez.",
+      "paused": "Elhelyezés szüneteltetve",
+      "resumeHint": "Folytassa az elhelyezést, majd kattintson a kép hozzáadásához.",
+      "noSignature": "Töltsön fel képet fent az elhelyezés engedélyezéséhez."
+    },
+    "mode": {
+      "move": "Kép mozgatása",
+      "place": "Kép elhelyezése",
+      "pause": "Elhelyezés szüneteltetése",
+      "resume": "Elhelyezés folytatása"
+    },
+    "results": {
+      "title": "Kép hozzáadásának eredménye"
+    },
+    "error": {
+      "failed": "Hiba történt a kép hozzáadásakor a PDF-hez."
+    },
+    "saved": {
+      "defaultLabel": "Kép",
+      "defaultImageLabel": "Feltöltött kép"
+    },
+    "applySignatures": "Képek alkalmazása"
   },
   "attachments": {
     "tags": "beágyazás,csatolás,fájl,csatolmány,csatolmányok",
@@ -1239,7 +1351,7 @@
       "japanese": "Japán",
       "korean": "Koreai",
       "chinese": "Kínai",
-      "thai": "Thai"
+      "thai": "thai"
     },
     "steps": {
       "type": "Vízjel típusa",
@@ -1396,6 +1508,93 @@
       "10": "Különböző formátumú nyomtatás megakadályozása"
     },
     "submit": "Módosítás"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Könyvjelzők és vázlat",
+      "replaceExisting": "Meglévő könyvjelzők cseréje (kikapcsolva hozzáfűz)",
+      "replaceExistingHint": "Kikapcsolva az új vázlat a meglévő könyvjelzők után kerül hozzáfűzésre."
+    },
+    "actions": {
+      "source": "Könyvjelzők betöltése",
+      "selectedFile": "Betöltve innen: {{file}}",
+      "noFile": "Válasszon egy PDF-et a meglévő könyvjelzők kinyeréséhez.",
+      "loadFromPdf": "Betöltés a kiválasztott PDF-ből",
+      "importJson": "JSON importálása",
+      "importClipboard": "JSON beillesztése a vágólapról",
+      "export": "Könyvjelzők exportálása",
+      "exportJson": "JSON letöltése",
+      "exportClipboard": "JSON másolása a vágólapra",
+      "clipboardUnavailable": "A vágólap-hozzáférés nem érhető el ebben a böngészőben."
+    },
+    "info": {
+      "line1": "Minden könyvjelzőhöz leíró cím és megnyitandó oldal szükséges.",
+      "line2": "Használjon alárendelt könyvjelzőket hierarchia kialakításához fejezetekhez, szakaszokhoz vagy alfejezetekhez.",
+      "line3": "Időt spórolhat a könyvjelzők importálásával a kiválasztott PDF-ből vagy egy JSON fájlból."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Nyissa meg az eszközt a szerkesztéshez",
+        "description": "Válassza a Tartalomjegyzék szerkesztése eszközt a munkaterület betöltéséhez."
+      },
+      "tabTitle": "Vázlat munkaterület",
+      "subtitle": "Importáljon könyvjelzőket, építsen hierarchiákat, és alkalmazza a vázlatot zsúfolt oldalsávok nélkül.",
+      "noFile": "Nincs kiválasztott PDF",
+      "fileLabel": "A módosítások az aktuálisan kiválasztott PDF-re lesznek alkalmazva.",
+      "filePrompt": "Válasszon PDF-et a könyvtárából vagy töltsön fel egy újat a kezdéshez.",
+      "changeFile": "PDF cseréje",
+      "selectFile": "PDF kiválasztása"
+    },
+    "editor": {
+      "heading": "Könyvjelző-szerkesztő",
+      "description": "Adjon hozzá, ágyazzon egymásba és rendezzen át könyvjelzőket a PDF vázlatához.",
+      "addTopLevel": "Felső szintű könyvjelző hozzáadása",
+      "empty": {
+        "title": "Még nincsenek könyvjelzők",
+        "description": "Importálja a meglévő könyvjelzőket, vagy kezdje az első bejegyzés hozzáadásával.",
+        "action": "Első könyvjelző hozzáadása"
+      },
+      "defaultTitle": "Új könyvjelző",
+      "defaultChildTitle": "Alárendelt könyvjelző",
+      "defaultSiblingTitle": "Új könyvjelző",
+      "untitled": "Névtelen könyvjelző",
+      "childBadge": "Alárendelt",
+      "pagePreview": "Oldal {{page}}",
+      "field": {
+        "title": "Könyvjelző címe",
+        "page": "Céloldal száma"
+      },
+      "actions": {
+        "toggle": "Alárendeltek váltása",
+        "addChild": "Alárendelt könyvjelző hozzáadása",
+        "addSibling": "Azonos szintű könyvjelző hozzáadása",
+        "remove": "Könyvjelző eltávolítása"
+      },
+      "confirmRemove": "Eltávolítja ezt a könyvjelzőt az összes alárendeltjével együtt?"
+    },
+    "messages": {
+      "loadedTitle": "Könyvjelzők kinyerve",
+      "loadedBody": "A PDF meglévő könyvjelzői betöltésre kerültek a szerkesztőbe.",
+      "noBookmarks": "Nem találhatók könyvjelzők a kiválasztott PDF-ben.",
+      "loadFailed": "Nem sikerült kinyerni a könyvjelzőket a kiválasztott PDF-ből.",
+      "imported": "Könyvjelzők importálva",
+      "importedBody": "A JSON vázlat felülírta a szerkesztő jelenlegi tartalmát.",
+      "importedClipboard": "A vágólap tartalma felülírta a jelenlegi könyvjelzőlistát.",
+      "invalidJson": "Érvénytelen JSON-struktúra",
+      "invalidJsonBody": "Adjon meg érvényes könyvjelző JSON fájlt, majd próbálja újra.",
+      "exported": "JSON letöltésre kész",
+      "copied": "Vágólapra másolva",
+      "copiedBody": "A könyvjelző JSON sikeresen másolva.",
+      "copyFailed": "Másolás sikertelen"
+    },
+    "error": {
+      "failed": "Nem sikerült frissíteni a tartalomjegyzéket"
+    },
+    "submit": "Tartalomjegyzék alkalmazása",
+    "results": {
+      "title": "Frissített PDF könyvjelzőkkel",
+      "subtitle": "Töltse le a feldolgozott fájlt, vagy vonja vissza a műveletet lent."
+    }
   },
   "removePages": {
     "tags": "Oldalak eltávolítása,oldalak törlése",
@@ -1978,13 +2177,54 @@
       "title": "Rajzolja meg az aláírását",
       "clear": "Törlés"
     },
+    "canvas": {
+      "heading": "Rajzolja meg az aláírását",
+      "clickToOpen": "Kattintson a rajzfelület megnyitásához",
+      "modalTitle": "Rajzolja meg az aláírását",
+      "colorLabel": "Szín",
+      "penSizeLabel": "Tollvastagság",
+      "penSizePlaceholder": "Méret",
+      "clear": "Vászon törlése",
+      "colorPickerTitle": "Vonal színének kiválasztása"
+    },
     "text": {
       "name": "Aláíró neve",
-      "placeholder": "Adja meg a teljes nevét"
+      "placeholder": "Adja meg a teljes nevét",
+      "fontLabel": "Betűtípus",
+      "fontSizeLabel": "Betűméret",
+      "fontSizePlaceholder": "Írja be vagy válassza ki a betűméretet (8–200)",
+      "colorLabel": "Szöveg színe"
     },
     "clear": "Törlés",
     "add": "Hozzáadás",
-    "saved": "Mentett aláírások",
+    "saved": {
+      "heading": "Mentett aláírások",
+      "description": "Használja újra a mentett aláírásokat bármikor.",
+      "emptyTitle": "Még nincs mentett aláírás",
+      "emptyDescription": "Rajzoljon, töltsön fel vagy gépeljen be egy aláírást fent, majd a „Mentés a könyvtárba” opcióval legfeljebb {{max}} kedvencet tarthat készen a használatra.",
+      "type": {
+        "canvas": "Rajz",
+        "image": "Feltöltés",
+        "text": "Szöveg"
+      },
+      "limitTitle": "Elérte a korlátot",
+      "limitDescription": "Távolítson el egy mentett aláírást új hozzáadása előtt (max. {{max}}).",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "Előző",
+      "next": "Következő",
+      "delete": "Eltávolítás",
+      "label": "Címke",
+      "defaultLabel": "Aláírás",
+      "defaultCanvasLabel": "Rajzolt aláírás",
+      "defaultImageLabel": "Feltöltött aláírás",
+      "defaultTextLabel": "Gépelt aláírás",
+      "saveButton": "Aláírás mentése",
+      "saveUnavailable": "Előbb hozzon létre egy aláírást a mentéshez.",
+      "noChanges": "Az aktuális aláírás már mentve van.",
+      "status": {
+        "saved": "Mentve"
+      }
+    },
     "save": "Aláírás mentése",
     "applySignatures": "Aláírások alkalmazása",
     "personalSigs": "Személyes aláírások",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Aláírás beállítása"
     },
+    "step": {
+      "createDesc": "Válassza ki, hogyan szeretné létrehozni az aláírást",
+      "place": "Elhelyezés és mentés",
+      "placeDesc": "Helyezze el az aláírást a PDF-en"
+    },
     "type": {
       "title": "Aláírás típusa",
       "draw": "Rajzolás",
       "canvas": "Vászon",
       "image": "Kép",
-      "text": "Szöveg"
+      "text": "Szöveg",
+      "saved": "Mentett"
     },
     "image": {
       "label": "Aláíráskép feltöltése",
@@ -2019,11 +2265,17 @@
       "title": "Hogyan adjon hozzá aláírást",
       "canvas": "Miután megrajzolta az aláírását a vásznon, zárja be a modált, majd kattintson bárhová a PDF-ben az elhelyezéshez.",
       "image": "Miután feltöltötte a fenti aláírásképet, kattintson bárhová a PDF-ben az elhelyezéshez.",
-      "text": "Miután megadta a nevét fent, kattintson bárhová a PDF-ben az aláírás elhelyezéséhez."
+      "saved": "Válasszon ki fent egy mentett aláírást, majd kattintson a PDF bármely pontjára az elhelyezéshez.",
+      "text": "Miután megadta a nevét fent, kattintson bárhová a PDF-ben az aláírás elhelyezéséhez.",
+      "paused": "Elhelyezés szüneteltetve",
+      "resumeHint": "Folytassa az elhelyezést, majd kattintson az aláírás hozzáadásához.",
+      "noSignature": "Hozzon létre fent egy aláírást az elhelyezési eszközök engedélyezéséhez."
     },
     "mode": {
       "move": "Aláírás mozgatása",
-      "place": "Aláírás elhelyezése"
+      "place": "Aláírás elhelyezése",
+      "pause": "Elhelyezés szüneteltetése",
+      "resume": "Elhelyezés folytatása"
     },
     "updateAndPlace": "Frissítés és elhelyezés",
     "activate": "Aláírás elhelyezésének aktiválása",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Megjegyzések eltávolításáról",
       "description": "Ez az eszköz eltávolítja az összes megjegyzést (kommentek, kiemelések, jegyzetek stb.) a PDF-dokumentumokból."
+    },
+    "tooltip": {
+      "header": {
+        "title": "A Megjegyzések eltávolítása funkcióról"
+      },
+      "description": {
+        "title": "Mit csinál"
+      }
     },
     "error": {
       "failed": "Hiba történt a megjegyzések eltávolítása közben."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Hogyan működik az automatikus átnevezés"
       },
+      "description": {
+        "title": "Mit csinál"
+      },
       "howItWorks": {
         "title": "Intelligens átnevezés",
         "text": "Automatikusan megkeresi a PDF tartalmából a címet, és azt használja fájlnévként.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Tiszta, érvényes fájlnevet hoz létre a felismert címből",
         "bullet3": "Megőrzi az eredeti nevet, ha nem talál megfelelő címet"
       }
+    },
+    "settings": {
+      "title": "Leírás"
     }
   },
   "adjust-contrast": {
@@ -3227,7 +3493,26 @@
     "unexpectedError": "Váratlan hiba: {{message}}",
     "accountCreatedSuccess": "A fiók sikeresen létrejött! Most már bejelentkezhet.",
     "passwordChangedSuccess": "A jelszó sikeresen megváltozott! Jelentkezzen be az új jelszavával.",
-    "credentialsUpdated": "Az adatait frissítettük. Kérjük, jelentkezzen be újra."
+    "credentialsUpdated": "Az adatait frissítettük. Kérjük, jelentkezzen be újra.",
+    "defaultCredentials": "Alapértelmezett bejelentkezési adatok",
+    "changePasswordWarning": "Kérjük, az első bejelentkezés után változtassa meg a jelszavát",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF áttekintés",
+        "title": "Az összes PDF-megoldás egy helyen.",
+        "subtitle": "Adatvédelem-központú felhőcsomag PDF-ekhez, amellyel konvertálhat, aláírhat, kitakarhat és kezelhet dokumentumokat, több mint 50 további hatékony eszközzel."
+      },
+      "edit": {
+        "alt": "PDF-ek szerkesztése",
+        "title": "PDF-ek szerkesztése a kívánt információk megjelenítéséhez/védelméhez",
+        "subtitle": "Több mint egy tucat eszközzel a PDF-ek kitakarásához, aláírásához, olvasásához és kezeléséhez biztosan megtalálja, amit keres."
+      },
+      "secure": {
+        "alt": "PDF-ek védelme",
+        "title": "Érzékeny információk védelme a PDF-ekben",
+        "subtitle": "Adjon hozzá jelszavakat, takarja ki a tartalmat, és kezelje a tanúsítványokat egyszerűen."
+      }
+    }
   },
   "signup": {
     "title": "Fiók létrehozása",
@@ -3598,7 +3883,9 @@
     "exportAll": "PDF exportálása",
     "downloadSelected": "Kijelölt fájlok letöltése",
     "downloadAll": "Összes letöltése",
+    "saveAll": "Összes mentése",
     "toggleTheme": "Téma váltása",
+    "toggleBookmarks": "Könyvjelzők megjelenítése/elrejtése",
     "language": "Nyelv",
     "search": "PDF keresése",
     "panMode": "Pásztázó mód",
@@ -3685,8 +3972,16 @@
       "saved": "A beállítások sikeresen mentve",
       "saveSuccess": "A beállítások sikeresen mentve",
       "save": "Változtatások mentése",
+      "discard": "Elvetés",
       "restartRequired": "Újraindítás szükséges",
       "loginRequired": "Az admin beállítások módosításához be kell kapcsolni a bejelentkezési módot",
+      "unsavedChanges": {
+        "title": "Nem mentett módosítások",
+        "message": "Nem mentett módosításai vannak. El szeretné vetni ezeket?",
+        "cancel": "Szerkesztés folytatása",
+        "discard": "Módosítások elvetése",
+        "hint": "Nem mentett módosításai vannak"
+      },
       "loginDisabled": {
         "title": "Bejelentkezési mód szükséges",
         "message": "Az admin beállítások módosításához be kell kapcsolni a bejelentkezési módot. Állítsa be a SECURITY_ENABLELOGIN=true értéket a környezetben, vagy a security.enableLogin: true beállítást a settings.yml fájlban, majd indítsa újra a szervert.",
@@ -4132,12 +4427,12 @@
             "description": "Maximális futási idő"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF HTML-re",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Alkalmazás telepítése",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4507,21 @@
         "title": "Prémium és Vállalati",
         "description": "Prémium vagy vállalati licenckulcs konfigurálása.",
         "license": "Licenckonfiguráció",
+        "licenseKey": {
+          "toggle": "Van licenckulcsa vagy tanúsítványfájlja?",
+          "info": "Ha közvetlen vásárlásból származó licenckulccsal vagy tanúsítványfájllal rendelkezik, itt adhatja meg a prémium vagy vállalati funkciók aktiválásához."
+        },
         "key": {
           "label": "Licenckulcs",
-          "description": "Adja meg a prémium vagy vállalati licenckulcsot"
+          "description": "Adja meg a prémium vagy vállalati licenckulcsot",
+          "success": "Licenckulcs mentve",
+          "successMessage": "A licenckulcs sikeresen aktiválva. Újraindítás nem szükséges.",
+          "overwriteWarning": {
+            "title": "⚠️ Figyelmeztetés: Meglévő licenc észlelve",
+            "line1": "A jelenlegi licenckulcs felülírása nem vonható vissza.",
+            "line2": "A korábbi licenc végleg elveszik, hacsak nem készített róla máshol biztonsági másolatot.",
+            "line3": "Fontos: Tartsa a licenckulcsokat bizalmasan és biztonságban. Soha ne ossza meg nyilvánosan."
+          }
         },
         "enabled": {
           "label": "Prémium funkciók engedélyezése",
@@ -4278,12 +4585,17 @@
     "or": "vagy",
     "dropFileHere": "Húzza ide a fájlt, vagy kattintson a feltöltéshez",
     "dropFilesHere": "Húzza ide a fájlokat, vagy kattintson a feltöltés gombra",
+    "dropFilesHereOpen": "Húzza ide a fájlokat, vagy kattintson a Megnyitás gombra",
     "pdfFilesOnly": "Csak PDF fájlok",
     "supportedFileTypes": "Támogatott fájltípusok",
     "upload": "Feltöltés",
     "uploadFile": "Fájl feltöltése",
     "uploadFiles": "Fájlok feltöltése",
+    "open": "Megnyitás",
+    "openFile": "Fájl megnyitása",
+    "openFiles": "Fájlok megnyitása",
     "noFilesInStorage": "Nem érhetők el fájlok a tárhelyen. Először töltsön fel néhány fájlt.",
+    "noFilesInStorageOpen": "Nincsenek fájlok a tárhelyen. Először nyisson meg néhány fájlt.",
     "selectFromStorage": "Kiválasztás a tárhelyről",
     "backToTools": "Vissza az eszközökhöz",
     "addFiles": "Fájlok hozzáadása",
@@ -4329,6 +4641,8 @@
     "myFiles": "Saját fájlok",
     "noRecentFiles": "Nem találhatók legutóbbi fájlok",
     "googleDriveNotAvailable": "Google Drive integráció nem érhető el",
+    "downloadSelected": "Kiválasztott letöltése",
+    "saveSelected": "Kijelöltek mentése",
     "openFiles": "Fájlok megnyitása",
     "openFile": "Fájl megnyitása",
     "details": "Fájl részletei",
@@ -4341,7 +4655,6 @@
     "selectAll": "Összes kijelölése",
     "deselectAll": "Kijelölés megszüntetése",
     "deleteSelected": "Kijelöltek törlése",
-    "downloadSelected": "Kiválasztott letöltése",
     "selectedCount": "{{count}} kiválasztva",
     "download": "Letöltés",
     "delete": "Törlés",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "Biztonsági munkafolyamat",
       "secureWorkflowDesc": "Biztonságossá teszi a PDF-eket a potenciálisan rosszindulatú tartalmak (például JavaScript és beágyazott fájlok) eltávolításával, majd jelszóvédelmet ad a jogosulatlan hozzáférés megakadályozására. Alapértelmezett jelszó: 'password'.",
       "processImages": "Képek feldolgozása",
-      "processImagesDesc": "Több képfájlt egyetlen PDF dokumentummá alakít, majd OCR technológiát alkalmaz a kereshető szöveg kinyeréséhez a képekből."
+      "processImagesDesc": "Több képfájlt egyetlen PDF dokumentummá alakít, majd OCR technológiát alkalmaz a kereshető szöveg kinyeréséhez a képekből.",
+      "prePublishSanitization": "Közzététel előtti tisztítás",
+      "prePublishSanitizationDesc": "Tisztítási folyamat, amely eltávolítja az összes rejtett metaadatot, JavaScriptet, beágyazott fájlt és megjegyzést, valamint lapítja az űrlapokat, hogy megelőzze az adatkiszivárgást a PDF-ek online közzététele előtt."
     }
+  },
+  "colorPicker": {
+    "title": "Szín kiválasztása"
   },
   "common": {
     "previous": "Előző",
@@ -4639,7 +4957,13 @@
     "used": "felhasznált",
     "available": "elérhető",
     "cancel": "Mégse",
-    "preview": "Előnézet"
+    "preview": "Előnézet",
+    "close": "Bezárás",
+    "done": "Kész",
+    "loading": "Betöltés...",
+    "back": "Vissza",
+    "continue": "Folytatás",
+    "error": "Hiba"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "További fájlok hozzáadása...",
     "selectedFiles": "Kiválasztott fájlok",
     "submit": "Mellékletek hozzáadása",
+    "tooltip": {
+      "header": {
+        "title": "A Mellékletek hozzáadása funkcióról"
+      },
+      "description": {
+        "title": "Mit csinál"
+      }
+    },
     "results": {
       "title": "Mellékletek eredményei"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "Egyéni pozíció",
   "details": "Részletek",
-  "downloadUnavailable": "A letöltés nem érhető el ehhez az elemhez",
   "invalidUndoData": "Nem lehet visszavonni: érvénytelen műveleti adatok",
   "margin": {
     "large": "Nagy",
@@ -4801,6 +5132,10 @@
       "maybeLater": "Talán később",
       "dontShowAgain": "Ne jelenjen meg újra"
     },
+    "welcomeSlide": {
+      "title": "Üdvözöljük a Stirlingben",
+      "body": "A Stirling PDF mostantól minden méretű csapat számára készen áll. Ez a frissítés új elrendezést, erőteljes új adminisztrátori képességeket és a leggyakrabban kért funkciónkat – a <strong>Szöveg szerkesztése</strong>-t tartalmazza."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Válasszuk ki a <strong>Vágás</strong> eszközt, hogy bemutassuk egy eszköz használatát.",
     "toolInterface": "Ez a <strong>Vágás</strong> eszköz felülete. Ahogy látható, még nincs itt sok minden, mert még nem adtunk hozzá PDF-fájlokat.",
@@ -4823,7 +5158,39 @@
     "next": "Következő",
     "finish": "Befejezés",
     "startTour": "Túra indítása",
-    "startTourDescription": "Vezetett túra a Stirling PDF fő funkcióiról"
+    "startTourDescription": "Vezetett túra a Stirling PDF fő funkcióiról",
+    "buttons": {
+      "next": "Tovább →",
+      "back": "Vissza",
+      "skipForNow": "Kihagyás most",
+      "download": "Letöltés →",
+      "showMeAround": "Körbevezetés",
+      "skipTheTour": "Körbevezetés kihagyása"
+    },
+    "serverLicense": {
+      "skip": "Kihagyás most",
+      "seePlans": "Csomagok megtekintése →",
+      "upgrade": "Frissítés most →",
+      "freeTitle": "Szerverlicenc",
+      "overLimitTitle": "Szerverlicenc szükséges",
+      "overLimitBody": "Licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. Önnek <strong>{{overLimitUserCopy}}</strong> Stirling felhasználója van. A zavartalan használathoz váltson a Stirling Server csomagra – <strong>korlátlan hely</strong>, PDF szövegszerkesztés és teljes adminisztrátori vezérlés $99/szerver/hó áron.",
+      "freeBody": "Az <strong>Open-Core</strong> licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. A zavartalan bővüléshez és az új <strong>PDF szövegszerkesztő eszköz</strong> korai eléréséhez a Stirling Server csomagot ajánljuk – teljes szerkesztés és <strong>korlátlan hely</strong> $99/szerver/hó áron."
+    },
+    "desktopInstall": {
+      "title": "Letöltés",
+      "titleWithOs": "Letöltés: {{osLabel}}",
+      "body": "A Stirling asztali alkalmazásként működik a legjobban. Használhatja offline, gyorsabban érheti el a dokumentumokat, és helyben szerkeszthet a gépén."
+    },
+    "planOverview": {
+      "adminTitle": "Admin áttekintés",
+      "userTitle": "Csomag áttekintése",
+      "adminBodyLoginEnabled": "Adminisztrátorként kezelheti a felhasználókat, beállításokat és figyelheti a szerver állapotát. A szerver első <strong>{{freeTierLimit}}</strong> felhasználója ingyen használhatja a Stirlinget.",
+      "adminBodyLoginDisabled": "A bejelentkezési mód engedélyezése után kezelheti a felhasználókat, beállításokat és figyelheti a szerver állapotát. A szerver első <strong>{{freeTierLimit}}</strong> felhasználója ingyen használhatja a Stirlinget.",
+      "userBody": "Hívja meg a csapattagokat, rendeljen szerepköröket, és tartsa rendezve dokumentumait egy biztonságos munkaterületen. Engedélyezze a bejelentkezési módot, amikor továbblépne az egyéni használatról."
+    },
+    "securityCheck": {
+      "message": "Az alkalmazás nemrég jelentős változásokon ment keresztül. Előfordulhat, hogy a szerver adminisztrátorának beavatkozása szükséges. A folytatáshoz erősítse meg a szerepkörét."
+    }
   },
   "adminOnboarding": {
     "welcome": "Üdvözöljük az <strong>Admin túrában</strong>! Fedezzük fel a rendszeradminisztrátorok számára elérhető, hatékony vállalati funkciókat és beállításokat.",
@@ -4852,7 +5219,10 @@
       "role": "Szerepkör",
       "team": "Csapat",
       "status": "Állapot",
-      "actions": "Műveletek",
+      "actions": {
+        "label": "Műveletek",
+        "upgrade": "Frissítés"
+      },
       "noMembersFound": "Nem találhatók tagok",
       "active": "Aktív",
       "disabled": "Letiltva",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "{{count}} felhasználói hely elérhető",
         "noSlotsAvailable": "Nincs elérhető hely",
         "currentUsage": "Jelenleg {{current}} / {{max}} felhasználói licenc használatban"
-      }
+      },
+      "loginRequired": "Előbb engedélyezze a bejelentkezési módot"
     },
     "teams": {
       "title": "Csapatok",
@@ -5057,6 +5428,17 @@
     "showComparison": "Összes funkció összehasonlítása",
     "hideComparison": "Funkció-összehasonlítás elrejtése",
     "featureComparison": "Funkció-összehasonlítás",
+    "from": "Ettől",
+    "perMonth": "/hó",
+    "perSeat": "/hely",
+    "withServer": "+ Szervercsomag",
+    "licensedSeats": "Licencelve: {{count}} hely",
+    "includedInCurrent": "Szerepel a csomagjában",
+    "selectPlan": "Csomag kiválasztása",
+    "manage": "Kezelés",
+    "manageSubscription": {
+      "description": "Kezelje előfizetését, számlázását és fizetési módjait"
+    },
     "activePlan": {
       "title": "Aktív csomag",
       "subtitle": "Jelenlegi előfizetése részletei"
@@ -5074,13 +5456,16 @@
       "upTo": "Legfeljebb"
     },
     "period": {
-      "month": "hónap"
+      "month": "hónap",
+      "perUserPerMonth": "/felhasználó/hó"
     },
     "free": {
       "name": "Ingyenes",
       "highlight1": "Korlátozott eszközhasználat hetente",
       "highlight2": "Hozzáférés minden eszközhöz",
-      "highlight3": "Közösségi támogatás"
+      "highlight3": "Közösségi támogatás",
+      "forever": "Mindig ingyenes",
+      "included": "Tartalmazza"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5477,9 @@
       "name": "Enterprise",
       "highlight1": "Egyedi árazás",
       "highlight2": "Dedikált támogatás",
-      "highlight3": "Legújabb funkciók"
+      "highlight3": "Legújabb funkciók",
+      "requiresServer": "Szerver szükséges",
+      "requiresServerMessage": "Először váltson a Server csomagra, majd frissítsen Enterprise-ra."
     },
     "feature": {
       "title": "Funkció",
@@ -5102,6 +5489,12 @@
       "api": "API-hozzáférés",
       "priority": "Elsőbbségi támogatás",
       "customPricing": "Egyedi árazás"
+    },
+    "licenseWarning": {
+      "title": "Elérte az önhostolt ingyenes korlátot",
+      "body": "{{total}} felhasználója van, de az ingyenes szint szerverenként csak {{limit}}-et támogat. Frissítsen, hogy a Stirling PDF zavartalanul működjön.",
+      "overLimit": "több mint {{limit}}",
+      "cta": "Csomagok megtekintése"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "Számlázás kezelése",
     "portal": {
       "error": "Nem sikerült megnyitni a számlázási portált"
-    }
+    },
+    "updateSeats": "Helyek frissítése",
+    "updateEnterpriseSeats": "Enterprise helyek frissítése",
+    "currentSeats": "Jelenlegi helyek",
+    "minimumSeats": "Minimum hely",
+    "basedOnUsers": "(aktuális felhasználók)",
+    "newSeatCount": "Új helyek száma",
+    "newSeatCountDescription": "Válassza ki a vállalati licenchez tartozó helyek számát",
+    "whatHappensNext": "Mi történik ezután?",
+    "stripePortalRedirect": "Átirányítjuk a Stripe számlázási portáljára a helyszám módosításának áttekintéséhez és jóváhagyásához. Az időarányos összeg automatikusan kiszámításra kerül.",
+    "preparingUpdate": "Helyfrissítés előkészítése...",
+    "seatCountTooLow": "A helyek száma legalább {{minimum}} legyen (aktuális felhasználószám)",
+    "seatCountUnchanged": "Válasszon eltérő helyszámot",
+    "seatsUpdated": "Helyek frissítve",
+    "seatsUpdatedMessage": "Az Enterprise helyek {{seats}} értékre frissültek",
+    "updateProcessing": "Frissítés feldolgozása",
+    "updateProcessingMessage": "A helyek frissítése folyamatban. Néhány pillanat múlva frissítsen.",
+    "notEnterprise": "A helyek kezelése csak Enterprise licencekhez érhető el"
+  },
+  "upgradeBanner": {
+    "title": "Váltás Server csomagra",
+    "message": "Hozza ki a legtöbbet a Stirling PDF-ből korlátlan felhasználóval és fejlett funkciókkal",
+    "upgradeButton": "Frissítés most",
+    "dismiss": "Banner bezárása",
+    "attentionTitle": "Ez a szerver adminisztrátori figyelmet igényel",
+    "attentionBody": "Az adminnak be kell jelentkeznie a részletek megtekintéséhez. Kérjük, lépjen vele azonnal kapcsolatba.",
+    "attentionBodyAdmin": "Tekintse át a licenckövetelményeket a megfelelőség fenntartásához.",
+    "seeInfo": "Infó megtekintése"
   },
   "payment": {
     "preparing": "Fizetés előkészítése...",
@@ -5128,7 +5548,61 @@
     "success": "Sikeres fizetés!",
     "successMessage": "Az előfizetése sikeresen aktiválva. Hamarosan megerősítő e-mailt kap.",
     "autoClose": "Ez az ablak automatikusan bezárul...",
-    "error": "Fizetési hiba"
+    "error": "Fizetési hiba",
+    "upgradeSuccess": "Sikeres fizetés! Az előfizetése frissült. A licenc frissítve lett a szerverén. Hamarosan visszaigazoló e-mailt kap.",
+    "paymentSuccess": "Sikeres fizetés! Licenckulcs lekérése...",
+    "licenseActivated": "Licenc aktiválva! A licenckulcs mentésre került. Visszaigazoló e-mailt küldtünk a regisztrált e-mail-címére.",
+    "licenseDelayed": "Sikeres fizetés! A licenc előállítása folyamatban. Hamarosan e-mailben megkapja a licenckulcsot. Ha 10 percen belül nem érkezik meg, lépjen kapcsolatba a támogatással.",
+    "licensePollingError": "Sikeres fizetés, de nem tudtuk automatikusan lekérni a licenckulcsot. Ellenőrizze az e-mailjeit, vagy vegye fel a kapcsolatot a támogatással a fizetési visszaigazolással.",
+    "licenseRetrievalError": "Sikeres fizetés, de a licenc lekérése nem sikerült. A licenckulcsot e-mailben kapja meg. Ha 10 percen belül nem érkezik meg, kérjük, lépjen kapcsolatba a támogatással.",
+    "syncError": "Sikeres fizetés, de a licencszinkronizálás nem sikerült. A licence hamarosan frissül. Ha a probléma fennáll, kérjük, lépjen kapcsolatba a támogatással.",
+    "licenseSaveError": "Nem sikerült menteni a licenckulcsot. Az aktiválás befejezéséhez vegye fel a kapcsolatot a támogatással, és adja meg a licenckulcsot.",
+    "paymentCanceled": "A fizetést megszakították. Terhelés nem történt.",
+    "syncingLicense": "A frissített licenc szinkronizálása...",
+    "generatingLicense": "Licenckulcs előállítása...",
+    "upgradeComplete": "Frissítés kész",
+    "upgradeCompleteMessage": "Az előfizetés sikeresen frissült. A meglévő licenckulcs frissítve lett.",
+    "stripeNotConfigured": "Stripe nincs beállítva",
+    "stripeNotConfiguredMessage": "A Stripe fizetési integráció nincs beállítva. Kérjük, lépjen kapcsolatba az adminisztrátorral.",
+    "monthly": "Havi",
+    "yearly": "Éves",
+    "billingPeriod": "Számlázási időszak",
+    "enterpriseNote": "A helyek a fizetéskor állíthatók (1–1000).",
+    "installationId": "Telepítés azonosítója",
+    "licenseKey": "Az Ön licenckulcsa",
+    "licenseInstructions": "Ez hozzáadásra került a telepítéséhez. Másolatot e-mailben is kap.",
+    "canCloseWindow": "Most bezárhatja ezt az ablakot.",
+    "licenseKeyProcessing": "Licenckulcs feldolgozása",
+    "licenseDelayedMessage": "A licenckulcs előállítása folyamatban. Hamarosan ellenőrizze az e-mailjeit, vagy lépjen kapcsolatba a támogatással.",
+    "perYear": "/év",
+    "perMonth": "/hó",
+    "emailInvalid": "Adjon meg egy érvényes e-mail-címet",
+    "emailStage": {
+      "title": "Adja meg e-mail-címét",
+      "description": "Ezt használjuk a licenckulcs és a bizonylatok elküldésére.",
+      "emailLabel": "E-mail-cím",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Folytatás",
+      "modalTitle": "Kezdés – {{planName}}"
+    },
+    "planStage": {
+      "title": "Válassza ki a számlázási időszakot",
+      "savingsNote": "Spóroljon {{percent}}%-ot éves számlázással",
+      "basePrice": "Alapár",
+      "seatPrice": "Helyenként",
+      "totalForSeats": "Összesen ({{count}} hely)",
+      "selectMonthly": "Havi kiválasztása",
+      "selectYearly": "Éves kiválasztása",
+      "savePercent": "Megtakarítás: {{percent}}%",
+      "savingsAmount": "Megtakarítás: {{amount}}",
+      "modalTitle": "Számlázási időszak kiválasztása – {{planName}}",
+      "billedYearly": "Évente számlázva: {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Vissza a csomagválasztáshoz",
+      "selectedPlan": "Kiválasztott csomag",
+      "modalTitle": "Fizetés befejezése – {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Első bejelentkezés",
@@ -5283,9 +5757,285 @@
   },
   "backendHealth": {
     "checking": "Backend állapotának ellenőrzése...",
-    "online": "Backend Online",
-    "offline": "Backend Offline",
+    "online": "Backend online",
+    "offline": "Backend offline",
     "starting": "Backend indul...",
     "wait": "Kérjük, várjon, amíg a backend befejezi az indítást, majd próbálja újra."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Feloldás a folytatáshoz",
+    "title": "Jelszó eltávolítása a folytatáshoz",
+    "description": "Ez a PDF jelszóval védett. Adja meg a jelszót a munka folytatásához.",
+    "password": {
+      "label": "PDF-jelszó",
+      "placeholder": "Adja meg a PDF-jelszót"
+    },
+    "skip": "Kihagyás most",
+    "unlock": "Feloldás és folytatás",
+    "incorrectPassword": "Helytelen jelszó",
+    "missingFile": "A kiválasztott fájl már nem érhető el.",
+    "emptyResponse": "A jelszó eltávolítása nem hozott létre fájlt.",
+    "required": "A folytatáshoz adja meg a jelszót.",
+    "successTitle": "Jelszó eltávolítva",
+    "successBodyWithName": "Jelszó eltávolítva: {{fileName}}",
+    "successBody": "A jelszó eltávolítása sikeres."
+  },
+  "setup": {
+    "welcome": "Üdvözöljük a Stirling PDF-ben",
+    "description": "Kezdésként válassza ki, hogyan szeretné használni a Stirling PDF-et",
+    "step1": {
+      "label": "Mód kiválasztása",
+      "description": "Offline vagy szerver"
+    },
+    "step2": {
+      "label": "Szerver kiválasztása",
+      "description": "Önhostolt szerver"
+    },
+    "step3": {
+      "label": "Bejelentkezés",
+      "description": "Adja meg a hitelesítő adatokat"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Jelentkezzen be Stirling-fiókjával"
+      },
+      "selfhosted": {
+        "title": "Önhostolt szerver",
+        "description": "Csatlakozás a saját Stirling PDF szerveréhez"
+      }
+    },
+    "saas": {
+      "title": "Bejelentkezés a Stirlingbe",
+      "subtitle": "Jelentkezzen be Stirling-fiókjával"
+    },
+    "selfhosted": {
+      "title": "Bejelentkezés a szerverre",
+      "subtitle": "Adja meg a szerver hitelesítő adatait"
+    },
+    "server": {
+      "title": "Csatlakozás a szerverhez",
+      "subtitle": "Adja meg az önhostolt szerver URL-jét",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Önhostolt szerver"
+      },
+      "url": {
+        "label": "Szerver URL",
+        "description": "Adja meg az önhostolt Stirling PDF szerver teljes URL-jét"
+      },
+      "error": {
+        "emptyUrl": "Adjon meg egy szerver URL-t",
+        "unreachable": "Nem sikerült kapcsolódni a szerverhez",
+        "testFailed": "A kapcsolat tesztje sikertelen"
+      },
+      "testing": "Kapcsolat tesztelése..."
+    },
+    "login": {
+      "title": "Bejelentkezés",
+      "subtitle": "A folytatáshoz adja meg a hitelesítő adatait",
+      "connectingTo": "Kapcsolódás ehhez:",
+      "username": {
+        "label": "Felhasználónév",
+        "placeholder": "Adja meg a felhasználónevét"
+      },
+      "email": {
+        "label": "E-mail",
+        "placeholder": "Adja meg e-mail-címét"
+      },
+      "password": {
+        "label": "Jelszó",
+        "placeholder": "Adja meg jelszavát"
+      },
+      "error": {
+        "emptyUsername": "Adja meg a felhasználónevét",
+        "emptyEmail": "Adja meg e-mail-címét",
+        "emptyPassword": "Adja meg jelszavát",
+        "oauthFailed": "OAuth bejelentkezés sikertelen. Kérjük, próbálja újra."
+      },
+      "submit": "Bejelentkezés",
+      "signInWith": "Bejelentkezés ezzel",
+      "oauthPending": "Böngésző megnyitása hitelesítéshez...",
+      "orContinueWith": "Vagy folytassa e-maillel"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Sikeres hitelesítés",
+      "message": "Bezárhatja ezt az ablakot, és visszatérhet a Stirling PDF-hez."
+    },
+    "error": {
+      "title": "Sikertelen hitelesítés",
+      "message": "A hitelesítés nem volt sikeres. Bezárhatja ezt az ablakot, és megpróbálhatja újra."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON-szerkesztő",
+    "viewLabel": "PDF-szerkesztő",
+    "converting": "PDF konvertálása szerkeszthető formátumba...",
+    "conversionFailed": "Nem sikerült konvertálni a PDF-et. Kérjük, próbálja újra.",
+    "currentFile": "Jelenlegi fájl: {{name}}",
+    "pageSummary": "{{number}} / {{total}} oldal",
+    "pagePreviewAlt": "Oldal előnézete",
+    "imageLabel": "Elhelyezett kép",
+    "noTextOnPage": "Ezen az oldalon nem található szerkeszthető szöveg.",
+    "pageType": {
+      "paragraph": "Bekezdéses oldal",
+      "sparse": "Ritka szöveg"
+    },
+    "groupingMode": {
+      "auto": "Automatikus",
+      "paragraph": "Bekezdés",
+      "singleLine": "Egy sor"
+    },
+    "badges": {
+      "unsaved": "Mentetlen",
+      "modified": "Szerkesztve",
+      "earlyAccess": "Korai hozzáférés"
+    },
+    "actions": {
+      "reset": "Módosítások visszaállítása",
+      "downloadJson": "JSON letöltése",
+      "generatePdf": "PDF generálása"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Szöveg automatikus méretezése a dobozokhoz",
+        "description": "Vízszintesen automatikusan méretezi a szöveget az eredeti határolódobozhoz, ha a betűmegjelenítés eltér a PDF-től."
+      },
+      "groupingMode": {
+        "title": "Szövegcsoportosítás módja",
+        "autoDescription": "Automatikusan felismeri az oldaltípust és ennek megfelelően csoportosítja a szöveget.",
+        "paragraphDescription": "Az igazított sorokat több soros bekezdéses szövegdobozokba csoportosítja.",
+        "singleLineDescription": "Minden PDF szövegsort külön szövegdobozként tart meg."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tipp: Tartsa lenyomva a Ctrl (Cmd) vagy a Shift billentyűt több szövegdoboz kijelöléséhez. A kijelölés felett lebegő eszköztár jelenik meg, ahol egyesíthet, bontást végezhet vagy szélességet állíthat."
+      },
+      "forceSingleElement": {
+        "title": "Szerkesztett szöveg rögzítése egyetlen PDF-elemhez",
+        "description": "Bekapcsolva a szerkesztő minden szerkesztett szövegdobozt egy PDF szövegelemként exportál, elkerülve az átfedő glifákat vagy kevert betűtípusokat."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Kijelölt dobozok egyesítése",
+      "merge": "Kijelölés egyesítése",
+      "ungroupTooltip": "Bekezdés szétbontása sorokra",
+      "ungroup": "Kijelölés bontása",
+      "widthMenu": "Szélesség beállításai",
+      "expandWidth": "Kiterjesztés az oldal széléig",
+      "resetWidth": "Szélesség visszaállítása",
+      "resizeHandle": "Szöveg szélességének beállítása"
+    },
+    "disclaimer": {
+      "heading": "Előnézet korlátai",
+      "textFocus": "Ez a munkaterület a szöveg szerkesztésére és a beágyazott képek áthelyezésére összpontosít. Az összetett oldalgrafikák, űrlap-widgetek és rétegzett grafikák exportáláskor megőrzésre kerülnek, de itt nem szerkeszthetők teljes mértékben.",
+      "previewVariance": "Egyes vizuális elemek (például táblázatszegélyek, alakzatok vagy jegyzetek megjelenése) az előnézetben nem biztos, hogy pontosan látszanak. Az exportált PDF lehetőség szerint megőrzi az eredeti rajzolási parancsokat.",
+      "alpha": "Ez az alfa néző még fejlődik—bizonyos betűtípusok, színek, átlátszósági effektusok és elrendezési részletek kissé eltérhetnek. Kérjük, ellenőrizze a létrehozott PDF-et megosztás előtt."
+    },
+    "empty": {
+      "title": "Nincs dokumentum betöltve",
+      "subtitle": "Töltsön be egy PDF- vagy JSON-fájlt a szövegtartalom szerkesztésének megkezdéséhez."
+    },
+    "welcomeBanner": {
+      "title": "Üdvözöljük a PDF Text Editorben (korai hozzáférés)",
+      "experimental": "Ez egy kísérleti funkció, aktív fejlesztés alatt. Számítson némi instabilitásra és problémákra használat közben.",
+      "howItWorks": "Ez az eszköz a PDF-et szerkeszthető formátumra alakítja, ahol módosíthatja a szövegtartalmat és áthelyezheti a képeket. A módosítások új PDF-ként kerülnek mentésre.",
+      "bestFor": "Legjobban működik:",
+      "bestFor1": "Egyszerű PDF-ek, főként szöveggel és képekkel",
+      "bestFor2": "Dokumentumok szabványos bekezdésformázással",
+      "bestFor3": "Levelek, esszék, jelentések és alap dokumentumok",
+      "notIdealFor": "Nem ideális:",
+      "notIdealFor1": "Speciális formázású PDF-ek, például felsorolások, táblázatok vagy többhasábos elrendezés",
+      "notIdealFor2": "Magazinok, brosúrák vagy erősen megtervezett dokumentumok",
+      "notIdealFor3": "Használati útmutatók és kézikönyvek összetett elrendezéssel",
+      "limitations": "Jelenlegi korlátok:",
+      "limitation1": "A betűtípus-megjelenítés kissé eltérhet az eredeti PDF-től",
+      "limitation2": "Az összetett grafikák, űrlapmezők és jegyzetek megmaradnak, de nem szerkeszthetők",
+      "limitation3": "A nagy fájlok konvertálása és feldolgozása időbe telhet",
+      "knownIssues": "Ismert problémák (javítás alatt):",
+      "issue1": "A szöveg színe jelenleg nem marad meg (hamarosan hozzáadjuk)",
+      "issue2": "A Bekezdés módnál több igazítási és térköz probléma fordul elő – a Single Line mód ajánlott",
+      "issue3": "Az előnézeti megjelenítés eltér az exportált PDF-től – az exportált PDF-ek közelebb állnak az eredetihez",
+      "issue4": "A forgatott szöveg igazítása kézi beállítást igényelhet",
+      "issue5": "Az átlátszóság és a rétegzés effektusai eltérhetnek az eredetitől",
+      "feedback": "Ez egy korai hozzáférésű funkció. Kérjük, jelezzen minden észlelt problémát, hogy fejleszthessünk!",
+      "gotIt": "Rendben",
+      "dontShowAgain": "Ne jelenjen meg újra"
+    },
+    "modeChange": {
+      "title": "Módváltás megerősítése",
+      "warning": "A szövegcsoportosítási mód megváltoztatása minden nem mentett módosítást visszaállít. Biztosan folytatja?",
+      "cancel": "Mégse",
+      "confirm": "Visszaállítás és módváltás"
+    },
+    "fontAnalysis": {
+      "details": "Betűtípus részletei",
+      "embedded": "Beágyazott",
+      "type": "Típus",
+      "webFormat": "Webformátum",
+      "warnings": "Figyelmeztetések",
+      "suggestions": "Megjegyzések",
+      "currentPageFonts": "Betűtípusok ezen az oldalon",
+      "allFonts": "Összes betűtípus",
+      "fallback": "helyettesítő",
+      "missing": "hiányzik",
+      "perfectMessage": "Minden betűtípus tökéletesen visszaadható.",
+      "warningMessage": "Néhány betűtípus nem biztos, hogy helyesen jelenik meg.",
+      "infoMessage": "Információ a betűtípusok visszaadásáról elérhető.",
+      "perfect": "tökéletes",
+      "subset": "részhalmaz"
+    },
+    "errors": {
+      "invalidJson": "Nem sikerült beolvasni a JSON fájlt. Kérjük, győződjön meg róla, hogy a PDF to JSON eszköz generálta.",
+      "pdfConversion": "A szerkesztett JSON nem alakítható vissza PDF-be."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Munkamenet lejárt",
+    "pleaseLoginAgain": "Kérjük, jelentkezzen be újra.",
+    "accessDenied": "Hozzáférés megtagadva",
+    "insufficientPermissions": "Nincs jogosultsága a művelet végrehajtásához."
+  },
+  "addText": {
+    "title": "Szöveg hozzáadása",
+    "header": "Szöveg hozzáadása PDF-ekhez",
+    "text": {
+      "name": "Szöveg tartalma",
+      "placeholder": "Adja meg a hozzáadni kívánt szöveget",
+      "fontLabel": "Betűtípus",
+      "fontSizeLabel": "Betűméret",
+      "fontSizePlaceholder": "Írja be vagy válassza ki a betűméretet (8-200)",
+      "colorLabel": "Szöveg színe"
+    },
+    "steps": {
+      "configure": "Szöveg beállítása"
+    },
+    "step": {
+      "createDesc": "Adja meg a hozzáadni kívánt szöveget",
+      "place": "Szöveg elhelyezése",
+      "placeDesc": "Kattintson a PDF-re a szöveg hozzáadásához"
+    },
+    "instructions": {
+      "title": "Hogyan adjon hozzá szöveget",
+      "text": "A fenti szöveg megadása után kattintson a PDF-re az elhelyezéshez.",
+      "paused": "Elhelyezés szüneteltetve",
+      "resumeHint": "Folytassa az elhelyezést, majd kattintson a szöveg hozzáadásához.",
+      "noSignature": "Adjon meg szöveget fent az elhelyezés engedélyezéséhez."
+    },
+    "mode": {
+      "move": "Szöveg mozgatása",
+      "place": "Szöveg elhelyezése",
+      "pause": "Elhelyezés szüneteltetése",
+      "resume": "Elhelyezés folytatása"
+    },
+    "results": {
+      "title": "Szöveg hozzáadásának eredménye"
+    },
+    "error": {
+      "failed": "Hiba történt szöveg hozzáadásakor a PDF-hez."
+    },
+    "tags": "szöveg,megjegyzés,címke",
+    "applySignatures": "Szöveg alkalmazása"
   }
 }

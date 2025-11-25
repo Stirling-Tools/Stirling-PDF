@@ -17,6 +17,8 @@
       "comingSoon": "Kmalu na voljo:",
       "favorite": "Dodaj med priljubljene",
       "favorites": "Priljubljene",
+      "unavailable": "Onemogočeno s strani skrbnika strežnika:",
+      "unavailableDependency": "Ni na voljo – na strežniku manjka zahtevano orodje:",
       "heading": "Vsa orodja (celozaslonski pogled)",
       "noResults": "Poskusite prilagoditi iskanje ali preklopiti opise, da najdete, kar potrebujete.",
       "recommended": "Priporočeno",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Preklopi na celozaslonski način",
       "sidebar": "Preklopi na način stranske vrstice"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Premium funkcija:",
+    "comingSoon": "Kmalu na voljo:"
   },
   "unsavedChanges": "Imate neshranjene spremembe v vašem PDF.",
   "areYouSure": "Ali ste prepričani, da želite oditi?",
@@ -40,6 +45,30 @@
     "message": "Ta ZIP vsebuje {{count}} datotek. Vseeno razpakiram?",
     "cancel": "Prekliči",
     "confirm": "Razpakiraj"
+  },
+  "defaultApp": {
+    "title": "Nastavi kot privzeto aplikacijo za PDF",
+    "message": "Želite nastaviti Stirling PDF kot privzeti urejevalnik PDF?",
+    "description": "To lahko kasneje spremenite v sistemskih nastavitvah.",
+    "notNow": "Ne zdaj",
+    "setDefault": "Nastavi kot privzeto",
+    "dismiss": "Zapri",
+    "prompt": {
+      "title": "Nastavi kot privzeti urejevalnik PDF",
+      "message": "Nastavite Stirling PDF kot privzeto aplikacijo za odpiranje datotek PDF."
+    },
+    "success": {
+      "title": "Privzeta aplikacija nastavljena",
+      "message": "Stirling PDF je zdaj vaš privzeti urejevalnik PDF"
+    },
+    "settingsOpened": {
+      "title": "Nastavitve odprte",
+      "message": "V sistemskih nastavitvah izberite Stirling PDF"
+    },
+    "error": {
+      "title": "Napaka",
+      "message": "Privzetega upravljalnika PDF ni bilo mogoče nastaviti"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Shrani",
   "saveToBrowser": "Shrani v brskalnik",
   "download": "Prenos",
+  "downloadUnavailable": "Prenos za ta element ni na voljo",
+  "saveUnavailable": "Shranjevanje za ta element ni na voljo",
   "pin": "Pripni datoteko (ostane aktivna po zagonu orodja)",
   "unpin": "Odpni datoteko (zamenjaj po zagonu orodja)",
   "undoOperationTooltip": "Kliknite za razveljavitev zadnje operacije in obnovitev izvirnih datotek",
@@ -168,6 +199,7 @@
   },
   "edit": "Uredi",
   "delete": "Izbriši",
+  "never": "Nikoli",
   "username": "Uporabniško ime",
   "password": "Geslo",
   "welcome": "Dobrodošli",
@@ -262,7 +294,8 @@
     "learnMore": "Izvedite več",
     "enable": "Omogoči analitiko",
     "disable": "Onemogoči analitiko",
-    "settings": "Nastavitve za analitiko lahko spremenite v datoteki config/settings.yml"
+    "settings": "Nastavitve za analitiko lahko spremenite v datoteki config/settings.yml",
+    "privacyAssurance": "Ne spremljamo osebnih podatkov ali vsebine vaših datotek."
   },
   "navbar": {
     "favorite": "Priljubljene",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Nastavitve",
-    "update": "Na voljo je posodobitev",
-    "updateAvailable": "{0} je trenutno nameščena različica. Na voljo je nova različica ({1}).",
-    "appVersion": "Različica aplikacije:",
-    "downloadOption": {
-      "title": "Izberi možnost prenosa (za prenose ene datoteke brez zip):",
-      "1": "Odpri v istem oknu",
-      "2": "Odpri v novem oknu",
-      "3": "Prenesi datoteko"
-    },
-    "zipThreshold": "Zip datoteke, ko preseže število prenesenih datotek",
-    "signOut": "Odjava",
-    "accountSettings": "Nastavitve računa",
-    "bored": {
-      "help": "Omogoči igro velikonočnih jajc"
-    },
-    "cacheInputs": {
-      "name": "Shrani vnose obrazca",
-      "help": "Omogoči shranjevanje predhodno uporabljenih vnosov za prihodnje zagone"
+    "connection": {
+      "title": "Način povezave",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Samogostovano"
+      },
+      "server": "Strežnik",
+      "user": "Prijavljeni kot",
+      "logout": "Odjava"
     },
     "general": {
       "title": "Splošno",
       "description": "Konfigurirajte splošne nastavitve aplikacije.",
-      "account": "Račun",
-      "accountDescription": "Upravljajte nastavitve računa",
       "user": "Uporabnik",
-      "signedInAs": "Prijavljeni kot",
       "logout": "Odjava",
       "enableFeatures": {
+        "dismiss": "Opusti",
         "title": "Za skrbnike sistema",
         "intro": "Omogočite preverjanje pristnosti uporabnikov, upravljanje ekip in funkcije delovnega prostora za vašo organizacijo.",
         "action": "Nastavi",
         "and": "in",
         "benefit": "Omogoča uporabniške vloge, timsko sodelovanje, skrbniške kontrole in funkcije za podjetja.",
-        "learnMore": "Več v dokumentaciji",
-        "dismiss": "Opusti"
+        "learnMore": "Več v dokumentaciji"
       },
-      "autoUnzip": "Samodejno razpakiranje odgovorov API",
-      "autoUnzipDescription": "Samodejno razpakiraj datoteke iz ZIP odgovorov",
-      "autoUnzipTooltip": "Samodejno razpakira ZIP datoteke, vrnjene iz operacij API. Onemogočite, da ohranite ZIP datoteke nedotaknjene. To ne vpliva na avtomatizirane poteke.",
-      "autoUnzipFileLimit": "Omejitev samodejnega razpakiranja datotek",
-      "autoUnzipFileLimitDescription": "Največje število datotek za razpakiranje iz ZIP",
-      "autoUnzipFileLimitTooltip": "Razpakiraj samo, če ZIP vsebuje toliko ali manj datotek. Nastavite višje za razpakiranje večjih ZIP-ov.",
       "defaultToolPickerMode": "Privzeti način izbirnika orodij",
       "defaultToolPickerModeDescription": "Izberite, ali se izbirnik orodij privzeto odpre v celozaslonskem ali stranskem načinu",
       "mode": {
-        "fullscreen": "Celozaslonski",
-        "sidebar": "Stranska vrstica"
-      }
+        "sidebar": "Stranska vrstica",
+        "fullscreen": "Celozaslonski"
+      },
+      "autoUnzipTooltip": "Samodejno razpakira ZIP datoteke, vrnjene iz operacij API. Onemogočite, da ohranite ZIP datoteke nedotaknjene. To ne vpliva na avtomatizirane poteke.",
+      "autoUnzip": "Samodejno razpakiranje odgovorov API",
+      "autoUnzipDescription": "Samodejno razpakiraj datoteke iz ZIP odgovorov",
+      "autoUnzipFileLimitTooltip": "Razpakiraj samo, če ZIP vsebuje toliko ali manj datotek. Nastavite višje za razpakiranje večjih ZIP-ov.",
+      "autoUnzipFileLimit": "Omejitev samodejnega razpakiranja datotek",
+      "autoUnzipFileLimitDescription": "Največje število datotek za razpakiranje iz ZIP",
+      "defaultPdfEditor": "Privzeti urejevalnik PDF",
+      "defaultPdfEditorActive": "Stirling PDF je vaš privzeti urejevalnik PDF",
+      "defaultPdfEditorInactive": "Druga aplikacija je nastavljena kot privzeta",
+      "defaultPdfEditorChecking": "Preverjanje...",
+      "defaultPdfEditorSet": "Že privzeto",
+      "setAsDefault": "Nastavi kot privzeto",
+      "updates": {
+        "title": "Posodobitve programske opreme",
+        "description": "Preverite posodobitve in glejte informacije o različici",
+        "currentVersion": "Trenutna različica",
+        "latestVersion": "Najnovejša različica",
+        "checkForUpdates": "Preveri posodobitve",
+        "viewDetails": "Poglej podrobnosti"
+      },
+      "hideUnavailableTools": "Skrij nedosegljiva orodja",
+      "hideUnavailableToolsDescription": "Odstrani orodja, ki jih je strežnik onemogočil, namesto da so zasivljena.",
+      "hideUnavailableConversions": "Skrij nedosegljive pretvorbe",
+      "hideUnavailableConversionsDescription": "Odstrani onemogočene možnosti pretvorbe v orodju Pretvori, namesto da so zasivljene."
     },
     "hotkeys": {
-      "title": "Bližnjice na tipkovnici",
-      "description": "Z miško pojdite nad orodje, da vidite njegovo bližnjico, ali jo spodaj prilagodite. Kliknite \"Spremeni bližnjico\" in pritisnite novo kombinacijo tipk. Pritisnite Esc za preklic.",
-      "errorModifier": {
-        "mac": "Vključite ⌘ (Command), ⌥ (Option) ali drug modifikator v vaši bližnjici.",
-        "windows": "Vključite Ctrl, Alt ali drug modifikator v vaši bližnjici."
-      },
       "errorConflict": "Bližnjica je že v uporabi pri {{tool}}.",
+      "searchPlaceholder": "Išči orodja...",
       "none": "Ni določeno",
       "customBadge": "Po meri",
       "defaultLabel": "Privzeto: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Spremeni bližnjico",
       "reset": "Ponastavi",
       "shortcut": "Bližnjica",
-      "noShortcut": "Bližnjica ni nastavljena",
-      "searchPlaceholder": "Išči orodja..."
+      "noShortcut": "Bližnjica ni nastavljena"
     }
+  },
+  "update": {
+    "modalTitle": "Na voljo je posodobitev",
+    "current": "Trenutna različica",
+    "latest": "Najnovejša različica",
+    "latestStable": "Najnovejša stabilna",
+    "priorityLabel": "Prednost",
+    "recommendedAction": "Priporočeno dejanje",
+    "breakingChangesDetected": "Zaznane prelomne spremembe",
+    "breakingChangesMessage": "Nekatere različice vsebujejo prelomne spremembe. Pred posodobitvijo preglejte spodnje vodiče za migracijo.",
+    "migrationGuides": "Vodiči za migracijo",
+    "viewGuide": "Poglej vodič",
+    "loadingDetailedInfo": "Nalaganje podrobnih informacij...",
+    "close": "Zapri",
+    "viewAllReleases": "Poglej vse izdaje",
+    "downloadLatest": "Prenesi najnovejše",
+    "availableUpdates": "Razpoložljive posodobitve",
+    "unableToLoadDetails": "Podrobnih informacij ni mogoče naložiti.",
+    "version": "Različica",
+    "urgentUpdateAvailable": "Nujna posodobitev",
+    "updateAvailable": "Na voljo je posodobitev",
+    "releaseNotes": "Opombe ob izdaji",
+    "priority": {
+      "urgent": "Nujno",
+      "normal": "Običajno",
+      "minor": "Manjše",
+      "low": "Nizka"
+    },
+    "breakingChanges": "Prelomne spremembe",
+    "breakingChangesDefault": "Ta različica vsebuje prelomne spremembe.",
+    "migrationGuide": "Vodič za migracijo"
   },
   "changeCreds": {
     "title": "Spremeni poverilnice",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Prekriva PDF-je na vrhu drugega PDF-ja",
       "title": "Prekrivanje PDF-jev"
+    },
+    "pdfTextEditor": {
+      "title": "Urejevalnik besedila PDF",
+      "desc": "Pregledujte in urejajte Stirling PDF JSON izvoze z urejanjem združenega besedila in ponovnim ustvarjanjem PDF"
+    },
+    "addText": {
+      "tags": "besedilo,pripomba,oznaka",
+      "title": "Dodaj besedilo",
+      "desc": "Dodajte poljubno besedilo kjer koli v svoj PDF"
     }
   },
   "landing": {
     "addFiles": "Dodaj datoteke",
-    "uploadFromComputer": "Naloži z računalnika"
+    "uploadFromComputer": "Naloži z računalnika",
+    "openFromComputer": "Odpri iz računalnika"
   },
   "viewPdf": {
     "tags": "ogled, branje, opomba, besedilo, slika",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Pri združevanju PDF-jev je prišlo do napake."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Pregled nastavitev združevanja"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,slika,fotografija",
     "title": "Dodaj sliko",
     "header": "Dodaj sliko v PDF",
-    "everyPage": "Vsaka stran?",
-    "upload": "Dodaj sliko",
-    "submit": "Dodaj sliko"
+    "image": {
+      "name": "Slika",
+      "placeholder": "Naložite sliko",
+      "label": "Slikovna datoteka"
+    },
+    "steps": {
+      "configure": "Nastavi sliko"
+    },
+    "step": {
+      "createDesc": "Naložite sliko, ki jo želite dodati",
+      "place": "Postavi sliko",
+      "placeDesc": "Kliknite na PDF, da dodate svojo sliko"
+    },
+    "instructions": {
+      "title": "Kako dodati slike",
+      "text": "Ko zgoraj naložite sliko, kliknite kjer koli na PDF-ju, da jo postavite.",
+      "paused": "Postavljanje začasno ustavljeno",
+      "resumeHint": "Nadaljujte postavljanje, da kliknete in dodate sliko.",
+      "noSignature": "Zgoraj naložite sliko, da omogočite postavljanje."
+    },
+    "mode": {
+      "move": "Premakni sliko",
+      "place": "Postavi sliko",
+      "pause": "Začasno ustavi postavljanje",
+      "resume": "Nadaljuj postavljanje"
+    },
+    "results": {
+      "title": "Rezultati dodajanja slike"
+    },
+    "error": {
+      "failed": "Pri dodajanju slike v PDF je prišlo do napake."
+    },
+    "saved": {
+      "defaultLabel": "Slika",
+      "defaultImageLabel": "Naložena slika"
+    },
+    "applySignatures": "Uporabi slike"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1200,7 +1312,7 @@
     "desc": "Dodajte besedilne ali slikovne vodne žige v PDF datoteke",
     "completed": "Vodni žig dodan",
     "submit": "Dodaj vodni žig",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "z_vodnim_žigom",
     "error": {
       "failed": "Pri dodajanju vodnega žiga v PDF je prišlo do napake."
     },
@@ -1396,6 +1508,93 @@
       "10": "Prepreči tiskanje različnih formatov"
     },
     "submit": "Spremeni"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Zaznamki in oris",
+      "replaceExisting": "Zamenjaj obstoječe zaznamke (odkljukajte za dodajanje)",
+      "replaceExistingHint": "Ko je onemogočeno, se nov oris doda za trenutnimi zaznamki."
+    },
+    "actions": {
+      "source": "Naloži zaznamke",
+      "selectedFile": "Naloženo iz {{file}}",
+      "noFile": "Izberite PDF za izvlek obstoječih zaznamkov.",
+      "loadFromPdf": "Naloži iz izbranega PDF",
+      "importJson": "Uvozi JSON",
+      "importClipboard": "Prilepi JSON iz odložišča",
+      "export": "Izvozi zaznamke",
+      "exportJson": "Prenesi JSON",
+      "exportClipboard": "Kopiraj JSON v odložišče",
+      "clipboardUnavailable": "Dostop do odložišča v tem brskalniku ni na voljo."
+    },
+    "info": {
+      "line1": "Vsak zaznamek potrebuje opisni naslov in stran, ki naj se odpre.",
+      "line2": "Uporabite podzaznamke za gradnjo hierarhije poglavij, razdelkov ali podrazdelkov.",
+      "line3": "Uvozite zaznamke iz izbranega PDF ali JSON datoteke za prihranek časa."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Odprite orodje za začetek urejanja",
+        "description": "Izberite orodje Uredi kazalo za nalaganje delovnega prostora."
+      },
+      "tabTitle": "Delovni prostor orisa",
+      "subtitle": "Uvažajte zaznamke, gradite hierarhije in uporabite oris brez utesnjenih stranskih plošč.",
+      "noFile": "PDF ni izbran",
+      "fileLabel": "Spremembe bodo uporabljene na trenutno izbranem PDF-ju.",
+      "filePrompt": "Izberite PDF iz knjižnice ali naložite novega za začetek.",
+      "changeFile": "Zamenjaj PDF",
+      "selectFile": "Izberi PDF"
+    },
+    "editor": {
+      "heading": "Urejevalnik zaznamkov",
+      "description": "Dodajajte, ugnezdujte in preurejajte zaznamke za oblikovanje orisa PDF-ja.",
+      "addTopLevel": "Dodaj zaznamek na najvišji ravni",
+      "empty": {
+        "title": "Še ni zaznamkov",
+        "description": "Uvozite obstoječe zaznamke ali začnite z dodajanjem prvega vnosa.",
+        "action": "Dodaj prvi zaznamek"
+      },
+      "defaultTitle": "Nov zaznamek",
+      "defaultChildTitle": "Podzaznamek",
+      "defaultSiblingTitle": "Nov zaznamek",
+      "untitled": "Neimenovan zaznamek",
+      "childBadge": "Podrejen",
+      "pagePreview": "Stran {{page}}",
+      "field": {
+        "title": "Naslov zaznamka",
+        "page": "Ciljna številka strani"
+      },
+      "actions": {
+        "toggle": "Preklopi podrejene",
+        "addChild": "Dodaj podzaznamek",
+        "addSibling": "Dodaj vzporedni zaznamek",
+        "remove": "Odstrani zaznamek"
+      },
+      "confirmRemove": "Odstranim ta zaznamek in vse njegove podrejene?"
+    },
+    "messages": {
+      "loadedTitle": "Zaznamki izvlečeni",
+      "loadedBody": "Obstoječi zaznamki iz PDF-ja so bili naloženi v urejevalnik.",
+      "noBookmarks": "V izbranem PDF-ju ni zaznamkov.",
+      "loadFailed": "Z izbranega PDF-ja ni bilo mogoče izvleči zaznamkov.",
+      "imported": "Zaznamki uvoženi",
+      "importedBody": "Vaš JSON oris je zamenjal trenutno vsebino urejevalnika.",
+      "importedClipboard": "Podatki iz odložišča so zamenjali trenutni seznam zaznamkov.",
+      "invalidJson": "Neveljavna struktura JSON",
+      "invalidJsonBody": "Navedite veljavno JSON datoteko zaznamkov in poskusite znova.",
+      "exported": "Prenos JSON je pripravljen",
+      "copied": "Kopirano v odložišče",
+      "copiedBody": "JSON zaznamkov je bil uspešno kopiran.",
+      "copyFailed": "Kopiranje ni uspelo"
+    },
+    "error": {
+      "failed": "Kazala ni bilo mogoče posodobiti"
+    },
+    "submit": "Uveljavi kazalo",
+    "results": {
+      "title": "Posodobljen PDF z zaznamki",
+      "subtitle": "Prenesite obdelano datoteko ali spodaj razveljavite operacijo."
+    }
   },
   "removePages": {
     "tags": "Odstrani strani, izbriši strani",
@@ -1978,13 +2177,54 @@
       "title": "Narišite svoj podpis",
       "clear": "Počisti"
     },
+    "canvas": {
+      "heading": "Narišite svoj podpis",
+      "clickToOpen": "Kliknite za odprtje platna za risanje",
+      "modalTitle": "Narišite svoj podpis",
+      "colorLabel": "Barva",
+      "penSizeLabel": "Debelina peresa",
+      "penSizePlaceholder": "Velikost",
+      "clear": "Počisti platno",
+      "colorPickerTitle": "Izberite barvo poteze"
+    },
     "text": {
       "name": "Ime podpisnika",
-      "placeholder": "Vnesite svoje polno ime"
+      "placeholder": "Vnesite svoje polno ime",
+      "fontLabel": "Pisava",
+      "fontSizeLabel": "Velikost pisave",
+      "fontSizePlaceholder": "Vpišite ali izberite velikost pisave (8–200)",
+      "colorLabel": "Barva besedila"
     },
     "clear": "Počisti",
     "add": "Dodaj",
-    "saved": "Shranjeni podpisi",
+    "saved": {
+      "heading": "Shranjeni podpisi",
+      "description": "Shranjene podpise lahko znova uporabite kadar koli.",
+      "emptyTitle": "Ni še shranjenih podpisov",
+      "emptyDescription": "Zgoraj narišite, naložite ali vpišite podpis, nato uporabite »Shrani v knjižnico«, da hranite do {{max}} priljubljenih pripravljenih za uporabo.",
+      "type": {
+        "canvas": "Risba",
+        "image": "Naloženo",
+        "text": "Besedilo"
+      },
+      "limitTitle": "Dosežena omejitev",
+      "limitDescription": "Odstranite shranjen podpis pred dodajanjem novih (največ {{max}}).",
+      "carouselPosition": "{{current}} od {{total}}",
+      "prev": "Prejšnji",
+      "next": "Naslednji",
+      "delete": "Odstrani",
+      "label": "Oznaka",
+      "defaultLabel": "Podpis",
+      "defaultCanvasLabel": "Narisan podpis",
+      "defaultImageLabel": "Naložen podpis",
+      "defaultTextLabel": "Vpisan podpis",
+      "saveButton": "Shrani podpis",
+      "saveUnavailable": "Najprej ustvarite podpis, da ga lahko shranite.",
+      "noChanges": "Trenutni podpis je že shranjen.",
+      "status": {
+        "saved": "Shranjeno"
+      }
+    },
     "save": "Shrani podpis",
     "applySignatures": "Uporabi podpise",
     "personalSigs": "Osebni podpisi",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Nastavitev podpisa"
     },
+    "step": {
+      "createDesc": "Izberite, kako želite ustvariti podpis",
+      "place": "Postavi in shrani",
+      "placeDesc": "Postavite podpis na svoj PDF"
+    },
     "type": {
       "title": "Vrsta podpisa",
       "draw": "Riši",
       "canvas": "Platno",
       "image": "Slika",
-      "text": "Besedilo"
+      "text": "Besedilo",
+      "saved": "Shranjeno"
     },
     "image": {
       "label": "Naložite sliko podpisa",
@@ -2019,11 +2265,17 @@
       "title": "Kako dodati podpis",
       "canvas": "Ko narišete svoj podpis na platno, zaprite modalno okno in nato kliknite kjerkoli v PDF, da ga postavite.",
       "image": "Ko zgoraj naložite sliko podpisa, kliknite kjerkoli v PDF, da jo postavite.",
-      "text": "Ko zgoraj vnesete svoje ime, kliknite kjerkoli v PDF, da postavite podpis."
+      "saved": "Zgoraj izberite shranjen podpis, nato kliknite kjer koli na PDF-ju, da ga postavite.",
+      "text": "Ko zgoraj vnesete svoje ime, kliknite kjerkoli v PDF, da postavite podpis.",
+      "paused": "Postavljanje začasno ustavljeno",
+      "resumeHint": "Nadaljujte postavljanje, da kliknete in dodate svoj podpis.",
+      "noSignature": "Ustvarite podpis zgoraj, da omogočite orodja za postavljanje."
     },
     "mode": {
       "move": "Premakni podpis",
-      "place": "Postavi podpis"
+      "place": "Postavi podpis",
+      "pause": "Začasno ustavi postavljanje",
+      "resume": "Nadaljuj postavljanje"
     },
     "updateAndPlace": "Posodobi in postavi",
     "activate": "Aktiviraj postavljanje podpisa",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "O odstranitvi pripomb",
       "description": "To orodje bo odstranilo vse pripombe (komentarje, poudarke, opombe itd.) iz vaših dokumentov PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "O odstranitvi pripomb"
+      },
+      "description": {
+        "title": "Kaj počne"
+      }
     },
     "error": {
       "failed": "Pri odstranjevanju pripomb iz PDF je prišlo do napake."
@@ -2437,7 +2697,7 @@
     "selectPDF": "Izberite datoteko PDF:",
     "submit": "Odstrani podpis",
     "description": "To orodje bo iz vašega dokumenta PDF odstranilo digitalne podpise potrdil.",
-    "filenamePrefix": "unsigned",
+    "filenamePrefix": "nepodpisano",
     "files": {
       "placeholder": "Za začetek v glavnem pogledu izberite datoteko PDF"
     },
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Kako deluje samodejno preimenovanje"
       },
+      "description": {
+        "title": "Kaj počne"
+      },
       "howItWorks": {
         "title": "Pametno preimenovanje",
         "text": "Samodejno najde naslov iz vsebine vašega PDF-ja in ga uporabi kot ime datoteke.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Ustvari čisto, veljavno ime datoteke iz zaznanega naslova",
         "bullet3": "Ohrani izvirno ime, če primernega naslova ne najde"
       }
+    },
+    "settings": {
+      "title": "O tem"
     }
   },
   "adjust-contrast": {
@@ -3227,7 +3493,26 @@
     "unexpectedError": "Nepričakovana napaka: {{message}}",
     "accountCreatedSuccess": "Račun je uspešno ustvarjen! Zdaj se lahko prijavite.",
     "passwordChangedSuccess": "Geslo je uspešno spremenjeno! Prijavite se z novim geslom.",
-    "credentialsUpdated": "Vaše poverilnice so posodobljene. Prosimo, prijavite se znova."
+    "credentialsUpdated": "Vaše poverilnice so posodobljene. Prosimo, prijavite se znova.",
+    "defaultCredentials": "Privzeti prijavni podatki",
+    "changePasswordWarning": "Prosimo, po prvi prijavi spremenite geslo",
+    "slides": {
+      "overview": {
+        "alt": "Pregled Stirling PDF",
+        "title": "Vse na enem mestu za vse vaše potrebe s PDF",
+        "subtitle": "Paket v oblaku, ki postavlja zasebnost na prvo mesto: pretvarjajte, podpisujte, začrnjajte in upravljajte dokumente ter uporabite več kot 50 drugih zmogljivih orodij."
+      },
+      "edit": {
+        "alt": "Urejanje PDF-jev",
+        "title": "Uredite PDF-je za prikaz ali zaščito želenih informacij",
+        "subtitle": "Z več kot ducatom orodij za začrnjevanje, podpisovanje, branje in obdelavo PDF-jev boste gotovo našli, kar potrebujete."
+      },
+      "secure": {
+        "alt": "Zavarovanje PDF-jev",
+        "title": "Zaščitite občutljive podatke v svojih PDF-jih",
+        "subtitle": "Preprosto dodajte gesla, začrnite vsebino in upravljajte potrdila."
+      }
+    }
   },
   "signup": {
     "title": "Ustvarite račun",
@@ -3262,7 +3547,7 @@
     "header": "PDF na eno stran",
     "submit": "Pretvori v eno stran",
     "description": "To orodje bo vse strani vašega PDF-ja združilo v eno veliko enojno stran. Širina bo ostala enaka kot pri izvirnih straneh, višina pa bo vsota vseh višin strani.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "ena_stran",
     "files": {
       "placeholder": "Za začetek v glavnem pogledu izberite datoteko PDF"
     },
@@ -3598,7 +3883,9 @@
     "exportAll": "Izvozi PDF",
     "downloadSelected": "Prenesi izbrane datoteke",
     "downloadAll": "Prenesi vse",
+    "saveAll": "Shrani vse",
     "toggleTheme": "Preklopi temo",
+    "toggleBookmarks": "Preklopi zaznamke",
     "language": "Jezik",
     "search": "Išči v PDF",
     "panMode": "Način premikanja",
@@ -3685,8 +3972,16 @@
       "saved": "Nastavitve uspešno shranjene",
       "saveSuccess": "Nastavitve uspešno shranjene",
       "save": "Shrani spremembe",
+      "discard": "Zavrzi",
       "restartRequired": "Potreben je ponovni zagon",
       "loginRequired": "Za spreminjanje skrbniških nastavitev mora biti omogočen način prijave",
+      "unsavedChanges": {
+        "title": "Neshranjene spremembe",
+        "message": "Imate neshranjene spremembe. Ali jih želite zavreči?",
+        "cancel": "Nadaljujte z urejanjem",
+        "discard": "Zavrzite spremembe",
+        "hint": "Imate neshranjene spremembe"
+      },
       "loginDisabled": {
         "title": "Zahtevan način prijave",
         "message": "Za spreminjanje skrbniških nastavitev mora biti omogočen način prijave. Nastavite SECURITY_ENABLELOGIN=true v okolju ali security.enableLogin: true v settings.yml, nato znova zaženite strežnik.",
@@ -4132,12 +4427,12 @@
             "description": "Najdaljši čas izvajanja"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF v HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Namesti aplikacijo",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4507,21 @@
         "title": "Premium in Enterprise",
         "description": "Konfigurirajte svoj ključ licence Premium ali Enterprise.",
         "license": "Konfiguracija licence",
+        "licenseKey": {
+          "toggle": "Imate licenčni ključ ali potrdilno datoteko?",
+          "info": "Če imate licenčni ključ ali potrdilno datoteko iz neposrednega nakupa, jo lahko vnesete tukaj za aktivacijo premium ali enterprise funkcij."
+        },
         "key": {
           "label": "Licenčni ključ",
-          "description": "Vnesite svoj licenčni ključ Premium ali Enterprise"
+          "description": "Vnesite svoj licenčni ključ Premium ali Enterprise",
+          "success": "Licenčni ključ shranjen",
+          "successMessage": "Vaš licenčni ključ je bil uspešno aktiviran. Ponovni zagon ni potreben.",
+          "overwriteWarning": {
+            "title": "⚠️ Opozorilo: Zaznana obstoječa licenca",
+            "line1": "Prepis trenutnega licenčnega ključa ni mogoče razveljaviti.",
+            "line2": "Prejšnja licenca bo trajno izgubljena, razen če ste jo varnostno kopirali drugje.",
+            "line3": "Pomembno: Licenčne ključe hranite zasebno in varno. Nikoli jih ne delite javno."
+          }
         },
         "enabled": {
           "label": "Omogoči funkcije Premium",
@@ -4278,12 +4585,17 @@
     "or": "ali",
     "dropFileHere": "Spustite datoteko sem ali kliknite za nalaganje",
     "dropFilesHere": "Spustite datoteke sem ali kliknite gumb za nalaganje",
+    "dropFilesHereOpen": "Spustite datoteke sem ali kliknite gumb Odpri",
     "pdfFilesOnly": "Samo datoteke PDF",
     "supportedFileTypes": "Podprte vrste datotek",
     "upload": "Naloži",
     "uploadFile": "Naloži datoteko",
     "uploadFiles": "Naloži datoteke",
+    "open": "Odpri",
+    "openFile": "Odpri datoteko",
+    "openFiles": "Odpri datoteke",
     "noFilesInStorage": "V shrambi ni datotek. Najprej naložite nekaj datotek.",
+    "noFilesInStorageOpen": "V shrambi ni datotek. Najprej odprite nekaj datotek.",
     "selectFromStorage": "Izberi iz shrambe",
     "backToTools": "Nazaj na orodja",
     "addFiles": "Dodaj datoteke",
@@ -4329,6 +4641,8 @@
     "myFiles": "Moje datoteke",
     "noRecentFiles": "Ni najdenih nedavnih datotek",
     "googleDriveNotAvailable": "Integracija z Google Drive ni na voljo",
+    "downloadSelected": "Prenesi izbrano",
+    "saveSelected": "Shrani izbrano",
     "openFiles": "Odpri datoteke",
     "openFile": "Odpri datoteko",
     "details": "Podrobnosti datoteke",
@@ -4341,7 +4655,6 @@
     "selectAll": "Izberi vse",
     "deselectAll": "Prekliči izbor vseh",
     "deleteSelected": "Izbriši izbrano",
-    "downloadSelected": "Prenesi izbrano",
     "selectedCount": "{{count}} izbranih",
     "download": "Prenos",
     "delete": "Izbriši",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "Varnostni potek dela",
       "secureWorkflowDesc": "Zavaruje PDF dokumente tako, da odstrani potencialno zlonamerno vsebino, kot sta JavaScript in vdelane datoteke, nato doda zaščito z geslom za preprečitev nepooblaščenega dostopa. Geslo je privzeto nastavljeno na 'password'.",
       "processImages": "Obdelaj slike",
-      "processImagesDesc": "Pretvori več slikovnih datotek v en sam PDF dokument, nato uporabi tehnologijo OCR za izvlek iskalnega besedila iz slik."
+      "processImagesDesc": "Pretvori več slikovnih datotek v en sam PDF dokument, nato uporabi tehnologijo OCR za izvlek iskalnega besedila iz slik.",
+      "prePublishSanitization": "Čiščenje pred objavo",
+      "prePublishSanitizationDesc": "Postopek čiščenja, ki odstrani vse skrite metapodatke, JavaScript, vdelane datoteke, pripombe in splošči obrazce, da prepreči uhajanje podatkov pred objavo PDF-jev na spletu."
     }
+  },
+  "colorPicker": {
+    "title": "Izberite barvo"
   },
   "common": {
     "previous": "Prejšnje",
@@ -4639,7 +4957,13 @@
     "used": "porabljeno",
     "available": "na voljo",
     "cancel": "Prekliči",
-    "preview": "Predogled"
+    "preview": "Predogled",
+    "close": "Zapri",
+    "done": "Končano",
+    "loading": "Nalaganje...",
+    "back": "Nazaj",
+    "continue": "Nadaljuj",
+    "error": "Napaka"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "Dodaj še datoteke...",
     "selectedFiles": "Izbrane datoteke",
     "submit": "Dodaj priloge",
+    "tooltip": {
+      "header": {
+        "title": "O dodajanju prilog"
+      },
+      "description": {
+        "title": "Kaj počne"
+      }
+    },
     "results": {
       "title": "Rezultati prilog"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "Poljubni položaj",
   "details": "Podrobnosti",
-  "downloadUnavailable": "Prenos za ta element ni na voljo",
   "invalidUndoData": "Razveljavitev ni mogoča: neveljavni podatki o operaciji",
   "margin": {
     "large": "Velika",
@@ -4801,6 +5132,10 @@
       "maybeLater": "Morda kasneje",
       "dontShowAgain": "Ne prikazuj več"
     },
+    "welcomeSlide": {
+      "title": "Dobrodošli v Stirling",
+      "body": "Stirling PDF je zdaj pripravljen za ekipe vseh velikosti. Ta posodobitev vključuje novo postavitev, zmogljive nove skrbniške zmožnosti in našo najbolj zahtevano funkcijo – <strong>Uredi besedilo</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Izberimo orodje <strong>Obreži</strong>, da pokažemo, kako uporabiti eno izmed orodij.",
     "toolInterface": "To je vmesnik orodja <strong>Obreži</strong>. Kot vidite, ni veliko prikazanega, ker še nismo dodali nobenih PDF datotek za delo.",
@@ -4823,7 +5158,39 @@
     "next": "Naslednje",
     "finish": "Dokončaj",
     "startTour": "Začni vodnik",
-    "startTourDescription": "Opravite voden ogled ključnih funkcij Stirling PDF"
+    "startTourDescription": "Opravite voden ogled ključnih funkcij Stirling PDF",
+    "buttons": {
+      "next": "Naprej →",
+      "back": "Nazaj",
+      "skipForNow": "Preskoči za zdaj",
+      "download": "Prenesi →",
+      "showMeAround": "Predstavi okolje",
+      "skipTheTour": "Preskoči ogled"
+    },
+    "serverLicense": {
+      "skip": "Preskoči za zdaj",
+      "seePlans": "Poglej načrte →",
+      "upgrade": "Nadgradi zdaj →",
+      "freeTitle": "Licenca strežnika",
+      "overLimitTitle": "Potrebna licenca strežnika",
+      "overLimitBody": "Naše licenciranje brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Imate <strong>{{overLimitUserCopy}}</strong> uporabnikov Stirling. Za nemoteno uporabo nadgradite na načrt Stirling Server – <strong>neomejena mesta</strong>, urejanje besedila PDF in popoln skrbniški nadzor za $99/strežnik/mesec.",
+      "freeBody": "Naše licenciranje <strong>Open-Core</strong> brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Za nemoteno rast in zgodnji dostop do našega novega <strong>orodja za urejanje besedila PDF</strong> priporočamo načrt Stirling Server – polno urejanje in <strong>neomejena mesta</strong> za $99/strežnik/mesec."
+    },
+    "desktopInstall": {
+      "title": "Prenesi",
+      "titleWithOs": "Prenesi za {{osLabel}}",
+      "body": "Stirling najbolje deluje kot namizna aplikacija. Uporabljate ga lahko brez povezave, hitreje dostopate do dokumentov in urejate lokalno na računalniku."
+    },
+    "planOverview": {
+      "adminTitle": "Pregled skrbnika",
+      "userTitle": "Pregled načrta",
+      "adminBodyLoginEnabled": "Kot skrbnik lahko upravljate uporabnike, nastavite možnosti in spremljate stanje strežnika. Prvih <strong>{{freeTierLimit}}</strong> oseb na vašem strežniku lahko Stirling uporablja brezplačno.",
+      "adminBodyLoginDisabled": "Ko omogočite način prijave, lahko upravljate uporabnike, nastavite možnosti in spremljate stanje strežnika. Prvih <strong>{{freeTierLimit}}</strong> oseb na vašem strežniku lahko Stirling uporablja brezplačno.",
+      "userBody": "Povabite sodelavce, dodelite vloge in ohranite dokumente organizirane v enem varnem delovnem prostoru. Omogočite način prijave, ko ste pripravljeni prerasti samostojno rabo."
+    },
+    "securityCheck": {
+      "message": "Aplikacija je nedavno doživela pomembne spremembe. Morda bo potrebna pozornost skrbnika strežnika. Za nadaljevanje potrdite svojo vlogo."
+    }
   },
   "adminOnboarding": {
     "welcome": "Dobrodošli v <strong>skrbniškem vodniku</strong>! Raziščimo napredne poslovne funkcije in nastavitve, ki so na voljo sistemskim skrbnikom.",
@@ -4852,7 +5219,10 @@
       "role": "Vloga",
       "team": "Skupina",
       "status": "Stanje",
-      "actions": "Dejanja",
+      "actions": {
+        "label": "Dejanja",
+        "upgrade": "Nadgradi"
+      },
       "noMembersFound": "Ni najdenih članov",
       "active": "Aktiven",
       "disabled": "Onemogočen",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "{{count}} prostih mest za uporabnike",
         "noSlotsAvailable": "Ni prostih mest",
         "currentUsage": "Trenutno uporabljate {{current}} od {{max}} uporabniških licenc"
-      }
+      },
+      "loginRequired": "Najprej omogočite način prijave"
     },
     "teams": {
       "title": "Skupine",
@@ -5057,6 +5428,17 @@
     "showComparison": "Primerjaj vse funkcije",
     "hideComparison": "Skrij primerjavo funkcij",
     "featureComparison": "Primerjava funkcij",
+    "from": "Od",
+    "perMonth": "/mesec",
+    "perSeat": "/mesto",
+    "withServer": "+ Načrt strežnika",
+    "licensedSeats": "Licencirano: {{count}} mest",
+    "includedInCurrent": "Vključeno v vaš načrt",
+    "selectPlan": "Izberi načrt",
+    "manage": "Upravljaj",
+    "manageSubscription": {
+      "description": "Upravljajte naročnino, obračun in načine plačila"
+    },
     "activePlan": {
       "title": "Aktivni paket",
       "subtitle": "Podrobnosti vaše trenutne naročnine"
@@ -5074,13 +5456,16 @@
       "upTo": "Do"
     },
     "period": {
-      "month": "mesec"
+      "month": "mesec",
+      "perUserPerMonth": "/uporabnik/mesec"
     },
     "free": {
       "name": "Brezplačni",
       "highlight1": "Omejena uporaba orodij na teden",
       "highlight2": "Dostop do vseh orodij",
-      "highlight3": "Skupnostna podpora"
+      "highlight3": "Skupnostna podpora",
+      "forever": "Za vedno brezplačno",
+      "included": "Vključeno"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5477,9 @@
       "name": "Enterprise",
       "highlight1": "Cenik po meri",
       "highlight2": "Namenska podpora",
-      "highlight3": "Najnovejše funkcije"
+      "highlight3": "Najnovejše funkcije",
+      "requiresServer": "Zahteva strežnik",
+      "requiresServerMessage": "Najprej nadgradite na načrt Server, nato na Enterprise."
     },
     "feature": {
       "title": "Funkcija",
@@ -5102,6 +5489,12 @@
       "api": "Dostop do API",
       "priority": "Prednostna podpora",
       "customPricing": "Cenik po meri"
+    },
+    "licenseWarning": {
+      "title": "Dosežena brezplačna omejitev samogostovanja",
+      "body": "Imate {{total}} uporabnikov, vendar brezplačni nivo podpira le {{limit}} na strežnik. Nadgradite, da bo Stirling PDF deloval nemoteno.",
+      "overLimit": "več kot {{limit}}",
+      "cta": "Poglej načrte"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "Upravljaj obračunavanje",
     "portal": {
       "error": "Ni bilo mogoče odpreti portala za obračunavanje"
-    }
+    },
+    "updateSeats": "Posodobi mesta",
+    "updateEnterpriseSeats": "Posodobi mesta Enterprise",
+    "currentSeats": "Trenutna mesta",
+    "minimumSeats": "Najmanjše število mest",
+    "basedOnUsers": "(trenutni uporabniki)",
+    "newSeatCount": "Novo število mest",
+    "newSeatCountDescription": "Izberite število mest za svojo licenco Enterprise",
+    "whatHappensNext": "Kaj sledi?",
+    "stripePortalRedirect": "Preusmerjeni boste na obračunski portal Stripe, kjer pregledate in potrdite spremembo mest. Sorazmerni znesek bo izračunan samodejno.",
+    "preparingUpdate": "Priprava posodobitve mest...",
+    "seatCountTooLow": "Število mest mora biti vsaj {{minimum}} (trenutno število uporabnikov)",
+    "seatCountUnchanged": "Izberite drugačno število mest",
+    "seatsUpdated": "Mesta posodobljena",
+    "seatsUpdatedMessage": "Vaša mesta Enterprise so posodobljena na {{seats}}",
+    "updateProcessing": "Obdelava posodobitve",
+    "updateProcessingMessage": "Vaša posodobitev mest se obdeluje. Osvežite čez nekaj trenutkov.",
+    "notEnterprise": "Upravljanje mest je na voljo le za licence Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Nadgradite na načrt Server",
+    "message": "Izkoristite Stirling PDF z neomejenimi uporabniki in naprednimi funkcijami",
+    "upgradeButton": "Nadgradi zdaj",
+    "dismiss": "Skrij pasico",
+    "attentionTitle": "Ta strežnik potrebuje pozornost skrbnika",
+    "attentionBody": "Vaš skrbnik se mora prijaviti za več informacij. Prosimo, kontaktirajte ga takoj.",
+    "attentionBodyAdmin": "Preglejte licenčne zahteve, da bo ta strežnik v skladu.",
+    "seeInfo": "Poglej informacije"
   },
   "payment": {
     "preparing": "Pripravljamo vaš nakup...",
@@ -5128,7 +5548,61 @@
     "success": "Plačilo uspešno!",
     "successMessage": "Vaša naročnina je bila uspešno aktivirana. Kmalu boste prejeli potrditveno e-pošto.",
     "autoClose": "To okno se bo samodejno zaprlo...",
-    "error": "Napaka pri plačilu"
+    "error": "Napaka pri plačilu",
+    "upgradeSuccess": "Plačilo uspešno! Vaša naročnina je nadgrajena. Licenca na vašem strežniku je posodobljena. Kmalu boste prejeli potrditveno e-pošto.",
+    "paymentSuccess": "Plačilo uspešno! Pridobivanje vašega licenčnega ključa...",
+    "licenseActivated": "Licenca aktivirana! Vaš licenčni ključ je shranjen. Potrditveno e-pošto smo poslali na vaš registriran e-poštni naslov.",
+    "licenseDelayed": "Plačilo uspešno! Vaša licenca se ustvarja. Kmalu boste prejeli e-pošto z licenčnim ključem. Če je ne prejmete v 10 minutah, kontaktirajte podporo.",
+    "licensePollingError": "Plačilo uspešno, vendar vašega licenčnega ključa nismo mogli pridobiti samodejno. Preverite e-pošto ali kontaktirajte podporo s potrditvijo plačila.",
+    "licenseRetrievalError": "Plačilo uspešno, vendar pridobivanje licence ni uspelo. Licenčni ključ boste prejeli po e-pošti. Če ga ne prejmete v 10 minutah, kontaktirajte podporo.",
+    "syncError": "Plačilo uspešno, vendar sinhronizacija licence ni uspela. Vaša licenca bo kmalu posodobljena. Če težave ostanejo, kontaktirajte podporo.",
+    "licenseSaveError": "Shranjevanje licenčnega ključa ni uspelo. Kontaktirajte podporo z licenčnim ključem za dokončanje aktivacije.",
+    "paymentCanceled": "Plačilo je bilo preklicano. Brez bremenitev.",
+    "syncingLicense": "Sinhronizacija vaše nadgrajene licence...",
+    "generatingLicense": "Ustvarjanje vašega licenčnega ključa...",
+    "upgradeComplete": "Nadgradnja zaključena",
+    "upgradeCompleteMessage": "Vaša naročnina je bila uspešno nadgrajena. Vaš obstoječi licenčni ključ je posodobljen.",
+    "stripeNotConfigured": "Stripe ni konfiguriran",
+    "stripeNotConfiguredMessage": "Integracija plačil Stripe ni konfigurirana. Kontaktirajte svojega skrbnika.",
+    "monthly": "Mesečno",
+    "yearly": "Letno",
+    "billingPeriod": "Obračunsko obdobje",
+    "enterpriseNote": "Število mest lahko prilagodite ob zaključku nakupa (1–1000).",
+    "installationId": "ID namestitve",
+    "licenseKey": "Vaš licenčni ključ",
+    "licenseInstructions": "To je bilo dodano vaši namestitvi. Kopijo boste prejeli tudi po e-pošti.",
+    "canCloseWindow": "Zdaj lahko zaprete to okno.",
+    "licenseKeyProcessing": "Obdelava licenčnega ključa",
+    "licenseDelayedMessage": "Vaš licenčni ključ se ustvarja. Kmalu preverite e-pošto ali kontaktirajte podporo.",
+    "perYear": "/leto",
+    "perMonth": "/mesec",
+    "emailInvalid": "Vnesite veljaven e-poštni naslov",
+    "emailStage": {
+      "title": "Vnesite svoj e-poštni naslov",
+      "description": "Uporabili ga bomo za pošiljanje licenčnega ključa in računov.",
+      "emailLabel": "E-poštni naslov",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Nadaljuj",
+      "modalTitle": "Začnite – {{planName}}"
+    },
+    "planStage": {
+      "title": "Izberite obračunsko obdobje",
+      "savingsNote": "Pri letnem obračunu prihranite {{percent}}%",
+      "basePrice": "Osnovna cena",
+      "seatPrice": "Na mesto",
+      "totalForSeats": "Skupaj ({{count}} mest)",
+      "selectMonthly": "Izberi mesečno",
+      "selectYearly": "Izberi letno",
+      "savePercent": "Prihranite {{percent}}%",
+      "savingsAmount": "Prihranite {{amount}}",
+      "modalTitle": "Izberite obračunsko obdobje – {{planName}}",
+      "billedYearly": "Zaračunano letno po {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Nazaj na izbor načrta",
+      "selectedPlan": "Izbrani načrt",
+      "modalTitle": "Zaključite plačilo – {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Prva prijava",
@@ -5287,5 +5761,281 @@
     "offline": "Zaledje je nedosegljivo",
     "starting": "Zaledje se zaganja...",
     "wait": "Počakajte, da se zaledje zažene, nato poskusite znova."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Odklenite PDF za nadaljevanje",
+    "title": "Odstranite geslo za nadaljevanje",
+    "description": "Ta PDF je zaščiten z geslom. Vnesite geslo, da lahko nadaljujete z delom.",
+    "password": {
+      "label": "Geslo PDF",
+      "placeholder": "Vnesite geslo za PDF"
+    },
+    "skip": "Preskoči za zdaj",
+    "unlock": "Odkleni in nadaljuj",
+    "incorrectPassword": "Napačno geslo",
+    "missingFile": "Izbrana datoteka ni več na voljo.",
+    "emptyResponse": "Odstranitev gesla ni ustvarila datoteke.",
+    "required": "Vnesite geslo za nadaljevanje.",
+    "successTitle": "Geslo odstranjeno",
+    "successBodyWithName": "Geslo odstranjeno iz {{fileName}}",
+    "successBody": "Geslo uspešno odstranjeno."
+  },
+  "setup": {
+    "welcome": "Dobrodošli v Stirling PDF",
+    "description": "Začnite z izbiro načina uporabe Stirling PDF",
+    "step1": {
+      "label": "Izberite način",
+      "description": "Brez povezave ali strežnik"
+    },
+    "step2": {
+      "label": "Izberite strežnik",
+      "description": "Samogostovani strežnik"
+    },
+    "step3": {
+      "label": "Prijava",
+      "description": "Vnesite poverilnice"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Prijavite se s svojim računom Stirling"
+      },
+      "selfhosted": {
+        "title": "Samogostovani strežnik",
+        "description": "Povežite se s svojim strežnikom Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Prijavite se v Stirling",
+      "subtitle": "Prijavite se s svojim računom Stirling"
+    },
+    "selfhosted": {
+      "title": "Prijavite se v strežnik",
+      "subtitle": "Vnesite poverilnice strežnika"
+    },
+    "server": {
+      "title": "Poveži se s strežnikom",
+      "subtitle": "Vnesite URL svojega samogostovanega strežnika",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Samogostovani strežnik"
+      },
+      "url": {
+        "label": "URL strežnika",
+        "description": "Vnesite celoten URL svojega samogostovanega strežnika Stirling PDF"
+      },
+      "error": {
+        "emptyUrl": "Vnesite URL strežnika",
+        "unreachable": "Povezava s strežnikom ni uspela",
+        "testFailed": "Preizkus povezave ni uspel"
+      },
+      "testing": "Preverjanje povezave..."
+    },
+    "login": {
+      "title": "Prijava",
+      "subtitle": "Za nadaljevanje vnesite svoje poverilnice",
+      "connectingTo": "Povezovanje z:",
+      "username": {
+        "label": "Uporabniško ime",
+        "placeholder": "Vnesite uporabniško ime"
+      },
+      "email": {
+        "label": "E-pošta",
+        "placeholder": "Vnesite e-pošto"
+      },
+      "password": {
+        "label": "Geslo",
+        "placeholder": "Vnesite geslo"
+      },
+      "error": {
+        "emptyUsername": "Vnesite uporabniško ime",
+        "emptyEmail": "Vnesite e-pošto",
+        "emptyPassword": "Vnesite geslo",
+        "oauthFailed": "Prijava OAuth ni uspela. Poskusite znova."
+      },
+      "submit": "Prijava",
+      "signInWith": "Prijavite se z",
+      "oauthPending": "Odpiranje brskalnika za overjanje...",
+      "orContinueWith": "Ali nadaljujte z e-pošto"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Overjanje uspešno",
+      "message": "To okno lahko zaprete in se vrnete v Stirling PDF."
+    },
+    "error": {
+      "title": "Overjanje ni uspelo",
+      "message": "Overjanje ni bilo uspešno. Okno lahko zaprete in poskusite znova."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Urejevalnik PDF JSON",
+    "viewLabel": "Urejevalnik PDF",
+    "converting": "Pretvarjanje PDF v obliko za urejanje...",
+    "conversionFailed": "Pretvorba PDF ni uspela. Poskusite znova.",
+    "currentFile": "Trenutna datoteka: {{name}}",
+    "pageSummary": "Stran {{number}} od {{total}}",
+    "pagePreviewAlt": "Predogled strani",
+    "imageLabel": "Postavljena slika",
+    "noTextOnPage": "Na tej strani ni bilo zaznanega besedila za urejanje.",
+    "pageType": {
+      "paragraph": "Stran z odstavki",
+      "sparse": "Redko besedilo"
+    },
+    "groupingMode": {
+      "auto": "Samodejno",
+      "paragraph": "Odstavek",
+      "singleLine": "Enovrstično"
+    },
+    "badges": {
+      "unsaved": "Urejeno",
+      "modified": "Urejeno",
+      "earlyAccess": "Zgodnji dostop"
+    },
+    "actions": {
+      "reset": "Ponastavi spremembe",
+      "downloadJson": "Prenesi JSON",
+      "generatePdf": "Ustvari PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Samodejno prilagodi besedilo okvirjem",
+        "description": "Samodejno vodoravno prilagodi besedilo, da se prilega prvotnemu okvirju, ko se izris pisave razlikuje od PDF-ja."
+      },
+      "groupingMode": {
+        "title": "Način združevanja besedila",
+        "autoDescription": "Samodejno zazna vrsto strani in ustrezno združi besedilo.",
+        "paragraphDescription": "Poravnane vrstice združi v večvrstične odstavčne okvirje.",
+        "singleLineDescription": "Vsako vrstico besedila PDF ohrani kot ločen besedilni okvir."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Namig: Držite Ctrl (Cmd) ali Shift za večkratni izbor besedilnih okvirjev. Nad izborom se prikaže lebdeča orodna vrstica, kjer lahko združite, razdružite ali prilagodite širine."
+      },
+      "forceSingleElement": {
+        "title": "Zakleni urejeno besedilo na en sam element PDF",
+        "description": "Ko je omogočeno, urejevalnik izvozi vsak urejen besedilni okvir kot en element besedila PDF, da se izogne prekrivanju znakov ali mešanim pisavam."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Združi izbrane okvirje",
+      "merge": "Združi izbor",
+      "ungroupTooltip": "Razdruži odstavek nazaj v vrstice",
+      "ungroup": "Razdruži izbor",
+      "widthMenu": "Možnosti širine",
+      "expandWidth": "Razširi do roba strani",
+      "resetWidth": "Ponastavi širino",
+      "resizeHandle": "Prilagodi širino besedila"
+    },
+    "disclaimer": {
+      "heading": "Omejitve predogleda",
+      "textFocus": "Ta delovni prostor je osredotočen na urejanje besedila in prestavljanje vdelanih slik. Zapletena grafika strani, gradniki obrazcev in slojne grafike se ohranijo za izvoz, vendar tukaj niso v celoti urejljive.",
+      "previewVariance": "Nekateri vizualni elementi (kot so obrobe tabel, oblike ali videz pripomb) se morda v predogledu ne prikazujejo natančno. Izvoženi PDF, kadar je mogoče, ohrani izvorne risalne ukaze.",
+      "alpha": "Ta alfa pregledovalnik se še razvija — nekatere pisave, barve, učinki prosojnosti in podrobnosti postavitve se lahko rahlo spremenijo. Pred deljenjem še enkrat preverite ustvarjeni PDF."
+    },
+    "empty": {
+      "title": "Ni naloženega dokumenta",
+      "subtitle": "Naložite datoteko PDF ali JSON, da začnete urejati besedilo."
+    },
+    "welcomeBanner": {
+      "title": "Dobrodošli v PDF Text Editor (zgodnji dostop)",
+      "experimental": "To je eksperimentalna funkcija v aktivnem razvoju. Med uporabo pričakujte nekaj nestabilnosti in težav.",
+      "howItWorks": "Orodje pretvori vaš PDF v ureljiv format, kjer lahko spreminjate besedilo in premikate slike. Spremembe se shranijo kot nov PDF.",
+      "bestFor": "Najbolje deluje z:",
+      "bestFor1": "Preprosti PDF-ji z večinoma besedilom in slikami",
+      "bestFor2": "Dokumenti s standardnim oblikovanjem odstavkov",
+      "bestFor3": "Pisma, eseji, poročila in osnovni dokumenti",
+      "notIdealFor": "Ni idealno za:",
+      "notIdealFor1": "PDF-je s posebnim oblikovanjem, kot so alineje, tabele ali večstolpčne postavitve",
+      "notIdealFor2": "Revije, brošure ali močno oblikovani dokumenti",
+      "notIdealFor3": "Priročniki z zapleteno postavitvijo",
+      "limitations": "Trenutne omejitve:",
+      "limitation1": "Prikaz pisav se lahko nekoliko razlikuje od izvirnega PDF-ja",
+      "limitation2": "Zapletene grafike, polja obrazcev in opombe se ohranijo, vendar niso urejljive",
+      "limitation3": "Pretvorba in obdelava velikih datotek lahko traja dlje",
+      "knownIssues": "Znane težave (v odpravljanju):",
+      "issue1": "Barva besedila trenutno ni ohranjena (kmalu bo dodana)",
+      "issue2": "Način odstavka ima več težav s poravnavo in razmiki – priporočen je način posamezne vrstice",
+      "issue3": "Predogled se razlikuje od izvoženega PDF-ja – izvoženi PDF-ji so bližje izvirniku",
+      "issue4": "Poravnavo rotiranega besedila bo morda treba ročno prilagoditi",
+      "issue5": "Učinki prosojnosti in slojev se lahko razlikujejo od izvirnika",
+      "feedback": "To je funkcija zgodnjega dostopa. Sporočite morebitne težave, da nam pomagate izboljšati!",
+      "gotIt": "Razumem",
+      "dontShowAgain": "Ne prikaži več"
+    },
+    "modeChange": {
+      "title": "Potrdite spremembo načina",
+      "warning": "Sprememba načina združevanja besedila bo ponastavila vse neshranjene spremembe. Ali ste prepričani, da želite nadaljevati?",
+      "cancel": "Prekliči",
+      "confirm": "Ponastavi in spremeni način"
+    },
+    "fontAnalysis": {
+      "details": "Podrobnosti pisave",
+      "embedded": "Vdelana",
+      "type": "Vrsta",
+      "webFormat": "Spletni format",
+      "warnings": "Opozorila",
+      "suggestions": "Opombe",
+      "currentPageFonts": "Pisave na tej strani",
+      "allFonts": "Vse pisave",
+      "fallback": "nadomestna",
+      "missing": "manjka",
+      "perfectMessage": "Vse pisave je mogoče popolnoma reproducirati.",
+      "warningMessage": "Nekatere pisave se morda ne bodo pravilno prikazale.",
+      "infoMessage": "Na voljo so informacije o reprodukciji pisav.",
+      "perfect": "popolno",
+      "subset": "podmnožica"
+    },
+    "errors": {
+      "invalidJson": "Datoteke JSON ni mogoče prebrati. Preverite, ali je bila ustvarjena z orodjem PDF v JSON.",
+      "pdfConversion": "Urejenega JSON-a ni mogoče pretvoriti nazaj v PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Seja je potekla",
+    "pleaseLoginAgain": "Prijavite se znova.",
+    "accessDenied": "Dostop zavrnjen",
+    "insufficientPermissions": "Nimate dovoljenja za izvedbo tega dejanja."
+  },
+  "addText": {
+    "title": "Dodaj besedilo",
+    "header": "Dodaj besedilo v PDF-je",
+    "text": {
+      "name": "Vsebina besedila",
+      "placeholder": "Vnesite besedilo, ki ga želite dodati",
+      "fontLabel": "Pisava",
+      "fontSizeLabel": "Velikost pisave",
+      "fontSizePlaceholder": "Vnesite ali izberite velikost pisave (8–200)",
+      "colorLabel": "Barva besedila"
+    },
+    "steps": {
+      "configure": "Nastavi besedilo"
+    },
+    "step": {
+      "createDesc": "Vnesite besedilo, ki ga želite dodati",
+      "place": "Postavi besedilo",
+      "placeDesc": "Kliknite v PDF, da dodate besedilo"
+    },
+    "instructions": {
+      "title": "Kako dodati besedilo",
+      "text": "Po vnosu besedila zgoraj kliknite kjer koli v PDF-ju, da ga postavite.",
+      "paused": "Postavljanje začasno ustavljeno",
+      "resumeHint": "Nadaljujte postavljanje, da kliknete in dodate besedilo.",
+      "noSignature": "Vnesite besedilo zgoraj, da omogočite postavljanje."
+    },
+    "mode": {
+      "move": "Premakni besedilo",
+      "place": "Postavi besedilo",
+      "pause": "Začasno ustavi postavljanje",
+      "resume": "Nadaljuj postavljanje"
+    },
+    "results": {
+      "title": "Rezultati dodajanja besedila"
+    },
+    "error": {
+      "failed": "Pri dodajanju besedila v PDF je prišlo do napake."
+    },
+    "tags": "besedilo,opomba,oznaka",
+    "applySignatures": "Uporabi besedilo"
   }
 }

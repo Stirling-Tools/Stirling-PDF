@@ -17,6 +17,8 @@
       "comingSoon": "即将推出：",
       "favorite": "添加到收藏",
       "favorites": "收藏",
+      "unavailable": "由服务器管理员禁用：",
+      "unavailableDependency": "不可用 - 服务器缺少所需工具：",
       "heading": "所有工具（全屏视图）",
       "noResults": "尝试调整搜索或切换描述显示以找到所需内容。",
       "recommended": "推荐",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "切换到全屏模式",
       "sidebar": "切换到侧边栏模式"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "高级功能：",
+    "comingSoon": "即将推出："
   },
   "unsavedChanges": "您的 PDF 有未保存的更改。您想做什么?",
   "areYouSure": "确定要离开吗？",
@@ -40,6 +45,30 @@
     "message": "此 ZIP 包含 {{count}} 个文件。仍要解压？",
     "cancel": "取消",
     "confirm": "解压"
+  },
+  "defaultApp": {
+    "title": "设为默认 PDF 应用",
+    "message": "是否将 Stirling PDF 设为默认 PDF 编辑器？",
+    "description": "您可稍后在系统设置中更改。",
+    "notNow": "暂不",
+    "setDefault": "设为默认",
+    "dismiss": "忽略",
+    "prompt": {
+      "title": "设为默认 PDF 编辑器",
+      "message": "将 Stirling PDF 设为打开 PDF 文件的默认应用。"
+    },
+    "success": {
+      "title": "已设为默认应用",
+      "message": "Stirling PDF 现为您的默认 PDF 编辑器"
+    },
+    "settingsOpened": {
+      "title": "已打开设置",
+      "message": "请在系统设置中选择 Stirling PDF"
+    },
+    "error": {
+      "title": "错误",
+      "message": "设置默认 PDF 处理程序失败"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "保存",
   "saveToBrowser": "保存到浏览器",
   "download": "下载",
+  "downloadUnavailable": "此项不支持下载",
+  "saveUnavailable": "此项目无法保存",
   "pin": "固定文件（在工具运行后保持激活）",
   "unpin": "取消固定文件（在工具运行后替换）",
   "undoOperationTooltip": "点击撤销上一次操作并还原原始文件",
@@ -168,6 +199,7 @@
   },
   "edit": "编辑",
   "delete": "删除",
+  "never": "从不",
   "username": "用户名",
   "password": "密码",
   "welcome": "欢迎",
@@ -262,7 +294,8 @@
     "learnMore": "了解详情",
     "enable": "启用分析功能",
     "disable": "禁用分析功能",
-    "settings": "您可以在 config/settings.yml 文件中变更分析功能的设定"
+    "settings": "您可以在 config/settings.yml 文件中变更分析功能的设定",
+    "privacyAssurance": "我们不会跟踪任何个人信息或您的文件内容。"
   },
   "navbar": {
     "favorite": "收藏",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "设置",
-    "update": "有可用的更新",
-    "updateAvailable": "当前版本为 {0}，新版本 ({1}) 可用。",
-    "appVersion": "应用程序版本：",
-    "downloadOption": {
-      "title": "选择下载选项（单个文件非压缩文件）：",
-      "1": "在同一窗口打开",
-      "2": "在新窗口中打开",
-      "3": "下载文件"
-    },
-    "zipThreshold": "当下载的文件数量超过限制时，将文件压缩。",
-    "signOut": "登出",
-    "accountSettings": "账号设定",
-    "bored": {
-      "help": "启用彩蛋游戏"
-    },
-    "cacheInputs": {
-      "name": "保存表单输入",
-      "help": "保存先前输入以供日后使用"
+    "connection": {
+      "title": "连接模式",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "自托管"
+      },
+      "server": "服务器",
+      "user": "登录身份",
+      "logout": "退出登录"
     },
     "general": {
       "title": "通用",
       "description": "配置通用应用偏好。",
-      "account": "账户",
-      "accountDescription": "管理您的账户设置",
       "user": "用户",
-      "signedInAs": "登录身份",
       "logout": "退出登录",
       "enableFeatures": {
+        "dismiss": "关闭",
         "title": "面向系统管理员",
         "intro": "为您的组织启用用户认证、团队管理和工作区功能。",
         "action": "配置",
         "and": "和",
         "benefit": "启用用户角色、团队协作、管理员控制和企业功能。",
-        "learnMore": "在文档中了解更多",
-        "dismiss": "关闭"
+        "learnMore": "在文档中了解更多"
       },
-      "autoUnzip": "自动解压 API 响应",
-      "autoUnzipDescription": "自动从 ZIP 响应中提取文件",
-      "autoUnzipTooltip": "自动解压 API 操作返回的 ZIP 文件。禁用以保持 ZIP 文件不变。这不会影响自动化工作流。",
-      "autoUnzipFileLimit": "自动解压文件数量上限",
-      "autoUnzipFileLimitDescription": "从 ZIP 中提取的最大文件数",
-      "autoUnzipFileLimitTooltip": "仅当 ZIP 包含不超过此数量的文件时才解压。调高以提取更大的 ZIP。",
       "defaultToolPickerMode": "默认工具选择器模式",
       "defaultToolPickerModeDescription": "选择工具选择器默认以全屏或侧边栏打开",
       "mode": {
-        "fullscreen": "全屏",
-        "sidebar": "侧边栏"
-      }
+        "sidebar": "侧边栏",
+        "fullscreen": "全屏"
+      },
+      "autoUnzipTooltip": "自动解压 API 操作返回的 ZIP 文件。禁用以保持 ZIP 文件不变。这不会影响自动化工作流。",
+      "autoUnzip": "自动解压 API 响应",
+      "autoUnzipDescription": "自动从 ZIP 响应中提取文件",
+      "autoUnzipFileLimitTooltip": "仅当 ZIP 包含不超过此数量的文件时才解压。调高以提取更大的 ZIP。",
+      "autoUnzipFileLimit": "自动解压文件数量上限",
+      "autoUnzipFileLimitDescription": "从 ZIP 中提取的最大文件数",
+      "defaultPdfEditor": "默认 PDF 编辑器",
+      "defaultPdfEditorActive": "Stirling PDF 是您的默认 PDF 编辑器",
+      "defaultPdfEditorInactive": "其他应用被设为默认",
+      "defaultPdfEditorChecking": "正在检查...",
+      "defaultPdfEditorSet": "已为默认",
+      "setAsDefault": "设为默认",
+      "updates": {
+        "title": "软件更新",
+        "description": "检查更新并查看版本信息",
+        "currentVersion": "当前版本",
+        "latestVersion": "最新版本",
+        "checkForUpdates": "检查更新",
+        "viewDetails": "查看详情"
+      },
+      "hideUnavailableTools": "隐藏不可用工具",
+      "hideUnavailableToolsDescription": "将服务器禁用的工具从列表中移除，而非灰显显示。",
+      "hideUnavailableConversions": "隐藏不可用转换",
+      "hideUnavailableConversionsDescription": "在“转换”工具中移除已禁用的转换选项，而非灰显显示。"
     },
     "hotkeys": {
-      "title": "键盘快捷键",
-      "description": "将鼠标悬停在工具上查看其快捷键，或在下方自定义。点击“更改快捷键”，然后按新的组合键。按 Esc 取消。",
-      "errorModifier": {
-        "mac": "请在快捷键中包含 ⌘（Command）、⌥（Option）或其他修饰键。",
-        "windows": "请在快捷键中包含 Ctrl、Alt 或其他修饰键。"
-      },
       "errorConflict": "快捷键已被 {{tool}} 使用。",
+      "searchPlaceholder": "搜索工具...",
       "none": "未分配",
       "customBadge": "自定义",
       "defaultLabel": "默认：{{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "更改快捷键",
       "reset": "重置",
       "shortcut": "快捷键",
-      "noShortcut": "未设置快捷键",
-      "searchPlaceholder": "搜索工具..."
+      "noShortcut": "未设置快捷键"
     }
+  },
+  "update": {
+    "modalTitle": "有可用更新",
+    "current": "当前版本",
+    "latest": "最新版本",
+    "latestStable": "最新稳定版",
+    "priorityLabel": "优先级",
+    "recommendedAction": "建议操作",
+    "breakingChangesDetected": "检测到重大变更",
+    "breakingChangesMessage": "某些版本包含重大变更。请在更新前查看下方迁移指南。",
+    "migrationGuides": "迁移指南",
+    "viewGuide": "查看指南",
+    "loadingDetailedInfo": "正在加载详细信息...",
+    "close": "关闭",
+    "viewAllReleases": "查看所有版本",
+    "downloadLatest": "下载最新",
+    "availableUpdates": "可用更新",
+    "unableToLoadDetails": "无法加载详细信息。",
+    "version": "版本",
+    "urgentUpdateAvailable": "紧急更新",
+    "updateAvailable": "有可用更新",
+    "releaseNotes": "发行说明",
+    "priority": {
+      "urgent": "紧急",
+      "normal": "正常",
+      "minor": "次要",
+      "low": "低"
+    },
+    "breakingChanges": "重大变更",
+    "breakingChangesDefault": "此版本包含重大变更。",
+    "migrationGuide": "迁移指南"
   },
   "changeCreds": {
     "title": "更改凭证",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "将一个 PDF 叠加在另一个之上",
       "title": "叠加 PDF"
+    },
+    "pdfTextEditor": {
+      "title": "PDF 文本编辑器",
+      "desc": "审阅并编辑 Stirling PDF 导出的 JSON，支持分组文本编辑并重新生成 PDF"
+    },
+    "addText": {
+      "tags": "文本,注释,标签",
+      "title": "添加文本",
+      "desc": "在 PDF 任意位置添加自定义文本"
     }
   },
   "landing": {
     "addFiles": "添加文件",
-    "uploadFromComputer": "从电脑上传"
+    "uploadFromComputer": "从电脑上传",
+    "openFromComputer": "从电脑打开"
   },
   "viewPdf": {
     "tags": "浏览、阅读、注释、文本、图像",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "合并 PDF 时发生错误。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "合并设置概览"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "图像、JPG、图片、照片",
     "title": "添加图像",
     "header": "添加图片到 PDF",
-    "everyPage": "每一页？",
-    "upload": "添加图片",
-    "submit": "添加图片"
+    "image": {
+      "name": "图片",
+      "placeholder": "上传图片",
+      "label": "图片文件"
+    },
+    "steps": {
+      "configure": "配置图片"
+    },
+    "step": {
+      "createDesc": "上传要添加的图片",
+      "place": "放置图片",
+      "placeDesc": "在 PDF 上点击以添加图片"
+    },
+    "instructions": {
+      "title": "如何添加图片",
+      "text": "在上方上传图片后，点击 PDF 任意位置进行放置。",
+      "paused": "放置已暂停",
+      "resumeHint": "继续放置后点击添加图片。",
+      "noSignature": "请先在上方上传图片以启用放置。"
+    },
+    "mode": {
+      "move": "移动图片",
+      "place": "放置图片",
+      "pause": "暂停放置",
+      "resume": "继续放置"
+    },
+    "results": {
+      "title": "添加图片结果"
+    },
+    "error": {
+      "failed": "向 PDF 添加图片时发生错误。"
+    },
+    "saved": {
+      "defaultLabel": "图片",
+      "defaultImageLabel": "已上传图片"
+    },
+    "applySignatures": "应用图片"
   },
   "attachments": {
     "tags": "嵌入、附件、文件、附加",
@@ -1396,6 +1508,93 @@
       "10": "防止打印不同的格式"
     },
     "submit": "改变"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "书签与大纲",
+      "replaceExisting": "替换现有书签（取消勾选则追加）",
+      "replaceExistingHint": "禁用时，新大纲将追加在当前书签之后。"
+    },
+    "actions": {
+      "source": "加载书签",
+      "selectedFile": "已从 {{file}} 加载",
+      "noFile": "选择一个 PDF 以提取现有书签。",
+      "loadFromPdf": "从所选 PDF 加载",
+      "importJson": "导入 JSON",
+      "importClipboard": "从剪贴板粘贴 JSON",
+      "export": "导出书签",
+      "exportJson": "下载 JSON",
+      "exportClipboard": "复制 JSON 到剪贴板",
+      "clipboardUnavailable": "此浏览器不支持访问剪贴板。"
+    },
+    "info": {
+      "line1": "每个书签需要描述性标题和打开的目标页。",
+      "line2": "使用子书签为章、节或小节构建层级结构。",
+      "line3": "从所选 PDF 或 JSON 文件导入书签以节省时间。"
+    },
+    "workbench": {
+      "empty": {
+        "title": "打开工具开始编辑",
+        "description": "选择“编辑目录”工具以加载其工作区。"
+      },
+      "tabTitle": "大纲工作区",
+      "subtitle": "导入书签、构建层级，并在无需狭窄侧栏的情况下应用大纲。",
+      "noFile": "未选择 PDF",
+      "fileLabel": "更改将应用于当前选中的 PDF。",
+      "filePrompt": "从库中选择 PDF 或上传新文件开始。",
+      "changeFile": "更换 PDF",
+      "selectFile": "选择 PDF"
+    },
+    "editor": {
+      "heading": "书签编辑器",
+      "description": "添加、嵌套并重排书签，以创建 PDF 大纲。",
+      "addTopLevel": "添加顶级书签",
+      "empty": {
+        "title": "尚无书签",
+        "description": "导入现有书签或从添加首个条目开始。",
+        "action": "添加首个书签"
+      },
+      "defaultTitle": "新书签",
+      "defaultChildTitle": "子书签",
+      "defaultSiblingTitle": "新书签",
+      "untitled": "未命名书签",
+      "childBadge": "子项",
+      "pagePreview": "第 {{page}} 页",
+      "field": {
+        "title": "书签标题",
+        "page": "目标页码"
+      },
+      "actions": {
+        "toggle": "切换子项",
+        "addChild": "添加子书签",
+        "addSibling": "添加同级书签",
+        "remove": "移除书签"
+      },
+      "confirmRemove": "移除此书签及其所有子项？"
+    },
+    "messages": {
+      "loadedTitle": "已提取书签",
+      "loadedBody": "已将 PDF 中的现有书签到编辑器中。",
+      "noBookmarks": "所选 PDF 中未找到书签。",
+      "loadFailed": "无法从所选 PDF 提取书签。",
+      "imported": "已导入书签",
+      "importedBody": "您的 JSON 大纲已替换当前编辑器内容。",
+      "importedClipboard": "剪贴板数据已替换当前书签列表。",
+      "invalidJson": "无效的 JSON 结构",
+      "invalidJsonBody": "请提供有效的书签 JSON 文件并重试。",
+      "exported": "JSON 下载就绪",
+      "copied": "已复制到剪贴板",
+      "copiedBody": "书签 JSON 复制成功。",
+      "copyFailed": "复制失败"
+    },
+    "error": {
+      "failed": "更新目录失败"
+    },
+    "submit": "应用目录",
+    "results": {
+      "title": "已更新含书签的 PDF",
+      "subtitle": "在下方下载处理后的文件或撤销操作。"
+    }
   },
   "removePages": {
     "tags": "删除页面、删除",
@@ -1669,8 +1868,8 @@
     "trapped": {
       "label": "陷印状态",
       "unknown": "未知",
-      "true": "True",
-      "false": "False"
+      "true": "是",
+      "false": "否"
     },
     "advanced": {
       "title": "高级选项"
@@ -1978,13 +2177,54 @@
       "title": "绘制您的签名",
       "clear": "清除"
     },
+    "canvas": {
+      "heading": "绘制您的签名",
+      "clickToOpen": "点击打开绘制画布",
+      "modalTitle": "绘制您的签名",
+      "colorLabel": "颜色",
+      "penSizeLabel": "笔粗",
+      "penSizePlaceholder": "大小",
+      "clear": "清空画布",
+      "colorPickerTitle": "选择笔画颜色"
+    },
     "text": {
       "name": "签署人姓名",
-      "placeholder": "输入您的全名"
+      "placeholder": "输入您的全名",
+      "fontLabel": "字体",
+      "fontSizeLabel": "字号",
+      "fontSizePlaceholder": "输入或选择字号 (8-200)",
+      "colorLabel": "文本颜色"
     },
     "clear": "清除",
     "add": "添加",
-    "saved": "已保存签名",
+    "saved": {
+      "heading": "已保存的签名",
+      "description": "随时复用已保存的签名。",
+      "emptyTitle": "暂无已保存签名",
+      "emptyDescription": "在上方手写、上传或输入签名，然后使用“保存到库”以保留最多 {{max}} 个常用项以便使用。",
+      "type": {
+        "canvas": "手写",
+        "image": "上传",
+        "text": "文本"
+      },
+      "limitTitle": "已达上限",
+      "limitDescription": "添加新签名前请先删除一个已保存的签名（最多 {{max}} 个）。",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "上一项",
+      "next": "下一项",
+      "delete": "移除",
+      "label": "标签",
+      "defaultLabel": "签名",
+      "defaultCanvasLabel": "手写签名",
+      "defaultImageLabel": "已上传签名",
+      "defaultTextLabel": "键入签名",
+      "saveButton": "保存签名",
+      "saveUnavailable": "请先创建签名再保存。",
+      "noChanges": "当前签名已保存。",
+      "status": {
+        "saved": "已保存"
+      }
+    },
     "save": "保存签名",
     "applySignatures": "应用签名",
     "personalSigs": "个人签名",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "配置签名"
     },
+    "step": {
+      "createDesc": "选择创建签名的方式",
+      "place": "放置并保存",
+      "placeDesc": "将签名放置到 PDF 上"
+    },
     "type": {
       "title": "签名类型",
       "draw": "绘制",
       "canvas": "画布",
       "image": "图像",
-      "text": "文本"
+      "text": "文本",
+      "saved": "已保存"
     },
     "image": {
       "label": "上传签名图像",
@@ -2019,11 +2265,17 @@
       "title": "如何添加签名",
       "canvas": "在画布中绘制签名后，关闭弹窗，然后在 PDF 上任意位置点击以放置。",
       "image": "在上方上传您的签名图像后，在 PDF 上任意位置点击以放置。",
-      "text": "在上方输入您的姓名后，在 PDF 上任意位置点击以放置签名。"
+      "saved": "在上方选择一个已保存的签名，然后在 PDF 任意位置点击以放置。",
+      "text": "在上方输入您的姓名后，在 PDF 上任意位置点击以放置签名。",
+      "paused": "放置已暂停",
+      "resumeHint": "继续放置后点击添加签名。",
+      "noSignature": "请先在上方创建签名以启用放置工具。"
     },
     "mode": {
       "move": "移动签名",
-      "place": "放置签名"
+      "place": "放置签名",
+      "pause": "暂停放置",
+      "resume": "继续放置"
     },
     "updateAndPlace": "更新并放置",
     "activate": "激活签名放置",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "关于删除注释",
       "description": "此工具将从您的 PDF 文档中删除所有注释(评论、高亮、笔记等)。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "关于移除注释"
+      },
+      "description": {
+        "title": "功能说明"
+      }
     },
     "error": {
       "failed": "从 PDF 删除注释时发生错误。"
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "自动重命名原理"
       },
+      "description": {
+        "title": "功能说明"
+      },
       "howItWorks": {
         "title": "智能重命名",
         "text": "自动从 PDF 内容中查找标题，并将其用作文件名。",
@@ -2634,6 +2897,9 @@
         "bullet2": "根据检测到的标题创建干净、合法的文件名",
         "bullet3": "若未找到合适标题，则保留原文件名"
       }
+    },
+    "settings": {
+      "title": "关于"
     }
   },
   "adjust-contrast": {
@@ -3227,7 +3493,26 @@
     "unexpectedError": "意外错误：{{message}}",
     "accountCreatedSuccess": "账户创建成功！现在可以登录。",
     "passwordChangedSuccess": "密码修改成功！请使用新密码登录。",
-    "credentialsUpdated": "您的凭据已更新。请重新登录。"
+    "credentialsUpdated": "您的凭据已更新。请重新登录。",
+    "defaultCredentials": "默认登录凭据",
+    "changePasswordWarning": "首次登录后请更改密码",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF 概览",
+        "title": "满足您全部 PDF 需求的一站式平台。",
+        "subtitle": "面向隐私优先的 PDF 云套件，支持转换、签名、涂黑与管理文档，并提供 50+ 个其他强大工具。"
+      },
+      "edit": {
+        "alt": "编辑 PDF",
+        "title": "编辑 PDF，以展示/保护您所需的信息",
+        "subtitle": "拥有十余种工具，助您涂黑、签名、阅读并处理 PDF，定能满足您的需求。"
+      },
+      "secure": {
+        "alt": "保护 PDF",
+        "title": "保护 PDF 中的敏感信息",
+        "subtitle": "轻松添加密码、涂黑内容并管理证书。"
+      }
+    }
   },
   "signup": {
     "title": "创建账户",
@@ -3598,7 +3883,9 @@
     "exportAll": "导出 PDF",
     "downloadSelected": "下载所选文件",
     "downloadAll": "全部下载",
+    "saveAll": "全部保存",
     "toggleTheme": "切换主题",
+    "toggleBookmarks": "切换书签",
     "language": "语言",
     "search": "搜索 PDF",
     "panMode": "平移模式",
@@ -3685,8 +3972,16 @@
       "saved": "设置保存成功",
       "saveSuccess": "设置保存成功",
       "save": "保存更改",
+      "discard": "丢弃",
       "restartRequired": "需要重启",
       "loginRequired": "必须启用登录模式才能修改管理设置",
+      "unsavedChanges": {
+        "title": "未保存的更改",
+        "message": "您有未保存的更改。要丢弃吗？",
+        "cancel": "继续编辑",
+        "discard": "丢弃更改",
+        "hint": "您有未保存的更改"
+      },
       "loginDisabled": {
         "title": "需要登录模式",
         "message": "必须启用登录模式才能修改管理设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。",
@@ -4132,12 +4427,12 @@
             "description": "最大执行时间"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF 转 HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "安装应用",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4204,7 +4499,7 @@
           "description": "Cookie 政策的 URL 或文件名"
         },
         "impressum": {
-          "label": "Impressum",
+          "label": "法律声明",
           "description": "Impressum 的 URL 或文件名（某些司法辖区要求）"
         }
       },
@@ -4212,9 +4507,21 @@
         "title": "高级版与企业版",
         "description": "配置您的高级版或企业版许可证密钥。",
         "license": "许可证配置",
+        "licenseKey": {
+          "toggle": "有许可证密钥或证书文件吗？",
+          "info": "如果您从直接购买获得了许可证密钥或证书文件，可在此输入以激活高级或企业功能。"
+        },
         "key": {
           "label": "许可证密钥",
-          "description": "输入您的高级版或企业版许可证密钥"
+          "description": "输入您的高级版或企业版许可证密钥",
+          "success": "许可证密钥已保存",
+          "successMessage": "您的许可证密钥已成功激活。无需重启。",
+          "overwriteWarning": {
+            "title": "⚠️ 警告：检测到现有许可证",
+            "line1": "覆盖当前许可证密钥后将无法撤销。",
+            "line2": "除非已在其他位置备份，否则您之前的许可证将被永久丢失。",
+            "line3": "重要：请妥善保管许可证密钥，切勿公开分享。"
+          }
         },
         "enabled": {
           "label": "启用高级功能",
@@ -4278,12 +4585,17 @@
     "or": "或",
     "dropFileHere": "将文件拖到此处或点击上传",
     "dropFilesHere": "将文件拖到此处或点击上传按钮",
+    "dropFilesHereOpen": "将文件拖到此处或点击打开按钮",
     "pdfFilesOnly": "仅限 PDF 文件",
     "supportedFileTypes": "支持的文件类型",
     "upload": "上传",
     "uploadFile": "上传文件",
     "uploadFiles": "上传文件",
+    "open": "打开",
+    "openFile": "打开文件",
+    "openFiles": "打开文件",
     "noFilesInStorage": "存储中没有可用文件。请先上传。",
+    "noFilesInStorageOpen": "存储中无可用文件。请先打开一些文件。",
     "selectFromStorage": "从存储中选择",
     "backToTools": "返回工具",
     "addFiles": "添加文件",
@@ -4329,6 +4641,8 @@
     "myFiles": "我的文件",
     "noRecentFiles": "未找到最近文件",
     "googleDriveNotAvailable": "不可使用 Google 云端硬盘集成",
+    "downloadSelected": "下载所选",
+    "saveSelected": "保存已选",
     "openFiles": "打开文件",
     "openFile": "打开文件",
     "details": "文件详情",
@@ -4341,7 +4655,6 @@
     "selectAll": "选择所有",
     "deselectAll": "取消选择所有",
     "deleteSelected": "删除已选",
-    "downloadSelected": "下载所选",
     "selectedCount": "已选 {{count}}",
     "download": "下载",
     "delete": "删除",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "安全工作流",
       "secureWorkflowDesc": "通过移除可能的恶意内容（如 JavaScript 和嵌入文件），再添加密码保护来保护 PDF。默认密码为“password”。",
       "processImages": "处理图像",
-      "processImagesDesc": "将多个图像文件合并为一个 PDF，然后应用 OCR 技术从图像中提取可搜索文本。"
+      "processImagesDesc": "将多个图像文件合并为一个 PDF，然后应用 OCR 技术从图像中提取可搜索文本。",
+      "prePublishSanitization": "发布前清理",
+      "prePublishSanitizationDesc": "清理流程将在上线前移除所有隐藏的元数据、JavaScript、嵌入文件、注释，并扁平化表单以防止在线发布 PDF 时的数据泄露。"
     }
+  },
+  "colorPicker": {
+    "title": "选择颜色"
   },
   "common": {
     "previous": "上一页",
@@ -4639,7 +4957,13 @@
     "used": "已用",
     "available": "可用",
     "cancel": "取消",
-    "preview": "预览"
+    "preview": "预览",
+    "close": "关闭",
+    "done": "完成",
+    "loading": "正在加载...",
+    "back": "返回",
+    "continue": "继续",
+    "error": "错误"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "添加更多文件...",
     "selectedFiles": "已选择的文件",
     "submit": "添加附件",
+    "tooltip": {
+      "header": {
+        "title": "关于添加附件"
+      },
+      "description": {
+        "title": "功能说明"
+      }
+    },
     "results": {
       "title": "附件结果"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "自定义位置",
   "details": "详情",
-  "downloadUnavailable": "此项不支持下载",
   "invalidUndoData": "无法撤销：操作数据无效",
   "margin": {
     "large": "大",
@@ -4801,6 +5132,10 @@
       "maybeLater": "稍后再说",
       "dontShowAgain": "不再显示"
     },
+    "welcomeSlide": {
+      "title": "欢迎使用 Stirling",
+      "body": "Stirling PDF 现已准备好为各类规模的团队服务。本次更新包含全新布局、强大的新管理功能，以及呼声最高的功能 - <strong>编辑文本</strong>。"
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "让我们选择 <strong>裁剪</strong> 工具，演示如何使用其中一个工具。",
     "toolInterface": "这是 <strong>裁剪</strong> 工具界面。正如您所见，目前内容不多，因为我们还没有添加可处理的 PDF 文件。",
@@ -4823,7 +5158,39 @@
     "next": "下一步",
     "finish": "完成",
     "startTour": "开始导览",
-    "startTourDescription": "查看 Stirling PDF 的关键功能导览"
+    "startTourDescription": "查看 Stirling PDF 的关键功能导览",
+    "buttons": {
+      "next": "下一步 →",
+      "back": "返回",
+      "skipForNow": "暂时跳过",
+      "download": "下载 →",
+      "showMeAround": "带我看看",
+      "skipTheTour": "跳过导览"
+    },
+    "serverLicense": {
+      "skip": "暂时跳过",
+      "seePlans": "查看方案 →",
+      "upgrade": "立即升级 →",
+      "freeTitle": "服务器许可证",
+      "overLimitTitle": "需要服务器许可证",
+      "overLimitBody": "我们的许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。您有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为不间断使用，请升级至 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及 $99/server/mo 的完整管理员控制。",
+      "freeBody": "我们的 <strong>Open-Core</strong> 许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。为无缝扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/server/mo。"
+    },
+    "desktopInstall": {
+      "title": "下载",
+      "titleWithOs": "为 {{osLabel}} 下载",
+      "body": "Stirling 作为桌面应用效果最佳。可离线使用、更快访问文档，并在电脑本地进行编辑。"
+    },
+    "planOverview": {
+      "adminTitle": "管理员概览",
+      "userTitle": "方案概览",
+      "adminBodyLoginEnabled": "作为管理员，您可以管理用户、配置设置并监控服务器健康。服务器上的前 <strong>{{freeTierLimit}}</strong> 位用户可免费使用 Stirling。",
+      "adminBodyLoginDisabled": "启用登录模式后，您可以管理用户、配置设置并监控服务器健康。服务器上的前 <strong>{{freeTierLimit}}</strong> 位用户可免费使用 Stirling。",
+      "userBody": "邀请队友、分配角色，并在一个安全的工作区中整理文档。准备好从单人使用扩展时，可随时启用登录模式。"
+    },
+    "securityCheck": {
+      "message": "应用近期发生重大变更。可能需要您的服务器管理员关注。请确认您的角色以继续。"
+    }
   },
   "adminOnboarding": {
     "welcome": "欢迎使用 <strong>管理员引导</strong>！让我们一起探索提供给系统管理员的强大企业功能和设置。",
@@ -4852,7 +5219,10 @@
       "role": "角色",
       "team": "团队",
       "status": "状态",
-      "actions": "操作",
+      "actions": {
+        "label": "操作",
+        "upgrade": "升级"
+      },
       "noMembersFound": "未找到成员",
       "active": "启用",
       "disabled": "已禁用",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "{{count}} 个用户名额可用",
         "noSlotsAvailable": "没有可用名额",
         "currentUsage": "当前已使用 {{current}} / {{max}} 个用户许可证"
-      }
+      },
+      "loginRequired": "请先启用登录模式"
     },
     "teams": {
       "title": "团队",
@@ -5057,6 +5428,17 @@
     "showComparison": "比较全部功能",
     "hideComparison": "隐藏功能对比",
     "featureComparison": "功能对比",
+    "from": "起",
+    "perMonth": "/月",
+    "perSeat": "/席位",
+    "withServer": "+ 服务器方案",
+    "licensedSeats": "许可：{{count}} 席位",
+    "includedInCurrent": "您的方案已包含",
+    "selectPlan": "选择方案",
+    "manage": "管理",
+    "manageSubscription": {
+      "description": "管理您的订阅、账单与支付方式"
+    },
     "activePlan": {
       "title": "当前套餐",
       "subtitle": "您当前的订阅详情"
@@ -5074,13 +5456,16 @@
       "upTo": "最多"
     },
     "period": {
-      "month": "月"
+      "month": "月",
+      "perUserPerMonth": "/用户/月"
     },
     "free": {
       "name": "免费",
       "highlight1": "每周工具使用次数有限",
       "highlight2": "可使用所有工具",
-      "highlight3": "社区支持"
+      "highlight3": "社区支持",
+      "forever": "永久免费",
+      "included": "已包含"
     },
     "pro": {
       "name": "专业版",
@@ -5092,7 +5477,9 @@
       "name": "企业版",
       "highlight1": "自定义定价",
       "highlight2": "专属支持",
-      "highlight3": "最新功能"
+      "highlight3": "最新功能",
+      "requiresServer": "需服务器",
+      "requiresServerMessage": "请先升级到服务器方案，再升级到企业版。"
     },
     "feature": {
       "title": "功能",
@@ -5102,6 +5489,12 @@
       "api": "API 访问",
       "priority": "优先支持",
       "customPricing": "自定义定价"
+    },
+    "licenseWarning": {
+      "title": "已达自托管免费上限",
+      "body": "您有 {{total}} 位用户，但免费层每台服务器仅支持 {{limit}} 位。升级以保持 Stirling PDF 顺畅运行。",
+      "overLimit": "超过 {{limit}}",
+      "cta": "查看方案"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "管理账单",
     "portal": {
       "error": "无法打开计费门户"
-    }
+    },
+    "updateSeats": "更新席位数",
+    "updateEnterpriseSeats": "更新企业席位数",
+    "currentSeats": "当前席位数",
+    "minimumSeats": "最少席位数",
+    "basedOnUsers": "（当前用户数）",
+    "newSeatCount": "新席位数",
+    "newSeatCountDescription": "选择您的企业许可证席位数量",
+    "whatHappensNext": "接下来会怎样？",
+    "stripePortalRedirect": "将跳转至 Stripe 账单门户以审核并确认席位更改。按比例金额将自动计算。",
+    "preparingUpdate": "正在准备席位更新...",
+    "seatCountTooLow": "席位数至少为 {{minimum}}（当前用户数）",
+    "seatCountUnchanged": "请选择不同的席位数",
+    "seatsUpdated": "席位数已更新",
+    "seatsUpdatedMessage": "您的企业席位数已更新为 {{seats}}",
+    "updateProcessing": "正在更新",
+    "updateProcessingMessage": "您的席位更新正在处理中。请稍后刷新。",
+    "notEnterprise": "仅企业许可证可管理席位"
+  },
+  "upgradeBanner": {
+    "title": "升级到服务器方案",
+    "message": "充分利用 Stirling PDF，享受无限用户与高级功能",
+    "upgradeButton": "立即升级",
+    "dismiss": "关闭横幅",
+    "attentionTitle": "此服务器需要管理员关注",
+    "attentionBody": "您的管理员需要登录以查看更多信息。请立即联系他们。",
+    "attentionBodyAdmin": "审核许可要求以保持此服务器合规。",
+    "seeInfo": "查看信息"
   },
   "payment": {
     "preparing": "正在准备结账...",
@@ -5128,7 +5548,61 @@
     "success": "支付成功！",
     "successMessage": "您的订阅已成功激活。您将很快收到确认邮件。",
     "autoClose": "此窗口将自动关闭...",
-    "error": "支付错误"
+    "error": "支付错误",
+    "upgradeSuccess": "支付成功！您的订阅已升级。服务器上的许可证已更新。您将很快收到确认 Email。",
+    "paymentSuccess": "支付成功！正在获取您的许可证密钥...",
+    "licenseActivated": "许可证已激活！您的许可证密钥已保存。确认 Email 已发送到您的注册邮箱。",
+    "licenseDelayed": "支付成功！正在生成您的许可证。您将很快收到包含许可证密钥的 Email。如 10 分钟内未收到，请联系支持。",
+    "licensePollingError": "支付成功，但我们未能自动获取您的许可证密钥。请检查 Email 或携带支付确认联系支持。",
+    "licenseRetrievalError": "支付成功，但获取许可证失败。您将通过 Email 收到许可证密钥。如 10 分钟内未收到，请联系支持。",
+    "syncError": "支付成功，但许可证同步失败。您的许可证将很快更新。如问题持续，请联系支持。",
+    "licenseSaveError": "保存许可证密钥失败。请使用您的许可证密钥联系支持以完成激活。",
+    "paymentCanceled": "支付已取消，未产生费用。",
+    "syncingLicense": "正在同步已升级的许可证...",
+    "generatingLicense": "正在生成您的许可证密钥...",
+    "upgradeComplete": "升级完成",
+    "upgradeCompleteMessage": "您的订阅已成功升级。现有许可证密钥已更新。",
+    "stripeNotConfigured": "未配置 Stripe",
+    "stripeNotConfiguredMessage": "未配置 Stripe 支付集成。请联系您的管理员。",
+    "monthly": "按月",
+    "yearly": "按年",
+    "billingPeriod": "计费周期",
+    "enterpriseNote": "可在结账时调整席位数（1-1000）。",
+    "installationId": "安装 ID",
+    "licenseKey": "您的许可证密钥",
+    "licenseInstructions": "已添加到您的安装中。您也会在 Email 中收到一份副本。",
+    "canCloseWindow": "您现在可以关闭此窗口。",
+    "licenseKeyProcessing": "许可证密钥处理中",
+    "licenseDelayedMessage": "正在生成您的许可证密钥。请稍后检查 Email 或联系支持。",
+    "perYear": "/年",
+    "perMonth": "/月",
+    "emailInvalid": "请输入有效的 Email 地址",
+    "emailStage": {
+      "title": "输入您的 Email",
+      "description": "我们将用其发送您的许可证密钥与收据。",
+      "emailLabel": "Email 地址",
+      "emailPlaceholder": "your@email.com",
+      "continue": "继续",
+      "modalTitle": "开始 - {{planName}}"
+    },
+    "planStage": {
+      "title": "选择您的计费周期",
+      "savingsNote": "按年计费可节省 {{percent}}%",
+      "basePrice": "基础价格",
+      "seatPrice": "每席位",
+      "totalForSeats": "合计（{{count}} 席位）",
+      "selectMonthly": "选择按月",
+      "selectYearly": "选择按年",
+      "savePercent": "节省 {{percent}}%",
+      "savingsAmount": "您共节省 {{amount}}",
+      "modalTitle": "选择计费周期 - {{planName}}",
+      "billedYearly": "按年计费：{{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "返回方案选择",
+      "selectedPlan": "已选方案",
+      "modalTitle": "完成支付 - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "首次登录",
@@ -5287,5 +5761,281 @@
     "offline": "后端离线",
     "starting": "后端正在启动...",
     "wait": "请等待后端完成启动后再试。"
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "解锁 PDF 以继续",
+    "title": "移除密码以继续",
+    "description": "此 PDF 受密码保护。请输入密码以继续处理。",
+    "password": {
+      "label": "PDF 密码",
+      "placeholder": "输入 PDF 密码"
+    },
+    "skip": "暂时跳过",
+    "unlock": "解锁并继续",
+    "incorrectPassword": "密码错误",
+    "missingFile": "所选文件已不可用。",
+    "emptyResponse": "移除密码未生成文件。",
+    "required": "请输入密码以继续。",
+    "successTitle": "已移除密码",
+    "successBodyWithName": "已从 {{fileName}} 移除密码",
+    "successBody": "已成功移除密码。"
+  },
+  "setup": {
+    "welcome": "欢迎使用 Stirling PDF",
+    "description": "选择您希望使用 Stirling PDF 的方式开始",
+    "step1": {
+      "label": "选择模式",
+      "description": "离线或服务器"
+    },
+    "step2": {
+      "label": "选择服务器",
+      "description": "自托管服务器"
+    },
+    "step3": {
+      "label": "登录",
+      "description": "输入凭据"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "使用您的 Stirling 账户登录"
+      },
+      "selfhosted": {
+        "title": "自托管服务器",
+        "description": "连接到您自己的 Stirling PDF 服务器"
+      }
+    },
+    "saas": {
+      "title": "登录 Stirling",
+      "subtitle": "使用您的 Stirling 账户登录"
+    },
+    "selfhosted": {
+      "title": "登录到服务器",
+      "subtitle": "输入您的服务器凭据"
+    },
+    "server": {
+      "title": "连接到服务器",
+      "subtitle": "输入您的自托管服务器 URL",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "自托管服务器"
+      },
+      "url": {
+        "label": "服务器 URL",
+        "description": "输入您自托管 Stirling PDF 服务器的完整 URL"
+      },
+      "error": {
+        "emptyUrl": "请输入服务器 URL",
+        "unreachable": "无法连接到服务器",
+        "testFailed": "连接测试失败"
+      },
+      "testing": "正在测试连接..."
+    },
+    "login": {
+      "title": "登录",
+      "subtitle": "输入凭据以继续",
+      "connectingTo": "正在连接到：",
+      "username": {
+        "label": "用户名",
+        "placeholder": "输入用户名"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "输入 Email"
+      },
+      "password": {
+        "label": "密码",
+        "placeholder": "输入密码"
+      },
+      "error": {
+        "emptyUsername": "请输入用户名",
+        "emptyEmail": "请输入 Email",
+        "emptyPassword": "请输入密码",
+        "oauthFailed": "OAuth 登录失败。请重试。"
+      },
+      "submit": "登录",
+      "signInWith": "使用以下方式登录",
+      "oauthPending": "正在打开浏览器进行认证...",
+      "orContinueWith": "或使用 Email 继续"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "认证成功",
+      "message": "您可以关闭此窗口并返回 Stirling PDF。"
+    },
+    "error": {
+      "title": "认证失败",
+      "message": "认证未成功。您可以关闭此窗口后重试。"
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON 编辑器",
+    "viewLabel": "PDF 编辑器",
+    "converting": "正在将 PDF 转换为可编辑格式...",
+    "conversionFailed": "PDF 转换失败。请重试。",
+    "currentFile": "当前文件：{{name}}",
+    "pageSummary": "第 {{number}}/{{total}} 页",
+    "pagePreviewAlt": "页面预览",
+    "imageLabel": "已放置的图片",
+    "noTextOnPage": "此页未检测到可编辑文本。",
+    "pageType": {
+      "paragraph": "段落页",
+      "sparse": "稀疏文本"
+    },
+    "groupingMode": {
+      "auto": "自动",
+      "paragraph": "段落",
+      "singleLine": "单行"
+    },
+    "badges": {
+      "unsaved": "已编辑",
+      "modified": "已编辑",
+      "earlyAccess": "抢先体验"
+    },
+    "actions": {
+      "reset": "重置更改",
+      "downloadJson": "下载 JSON",
+      "generatePdf": "生成 PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "自动缩放文本以适配框体",
+        "description": "当字体渲染与 PDF 不同时，自动水平缩放文本以适配其原始边界框。"
+      },
+      "groupingMode": {
+        "title": "文本分组模式",
+        "autoDescription": "自动检测页面类型并进行合适的分组。",
+        "paragraphDescription": "将对齐的行分组成多行段落文本框。",
+        "singleLineDescription": "将每一行 PDF 文本保留为独立文本框。"
+      },
+      "manualGrouping": {
+        "descriptionInline": "提示：按住 Ctrl（Cmd）或 Shift 可多选文本框。选区上方会出现浮动工具栏，便于合并、取消分组或调整宽度。"
+      },
+      "forceSingleElement": {
+        "title": "将已编辑文本锁定为单个 PDF 元素",
+        "description": "启用后，编辑器会将每个已编辑文本框导出为一个 PDF 文本元素，以避免字形重叠或混合字体。"
+      }
+    },
+    "manual": {
+      "mergeTooltip": "合并所选框",
+      "merge": "合并所选",
+      "ungroupTooltip": "将段落拆分为行",
+      "ungroup": "取消分组所选",
+      "widthMenu": "宽度选项",
+      "expandWidth": "扩展到页面边缘",
+      "resetWidth": "重置宽度",
+      "resizeHandle": "调整文本宽度"
+    },
+    "disclaimer": {
+      "heading": "预览限制",
+      "textFocus": "该工作区专注于编辑文本与重新定位嵌入图片。复杂页面艺术、表单控件与分层图形会在导出时保留，但此处不可完全编辑。",
+      "previewVariance": "某些视觉元素（如表格边框、形状或注释外观）在预览中可能显示不完全准确。导出的 PDF 会尽可能保留原始绘图指令。",
+      "alpha": "此 Alpha 预览器仍在演进中——某些字体、颜色、透明效果和布局细节可能略有偏差。分享前请再次检查生成的 PDF。"
+    },
+    "empty": {
+      "title": "未加载文档",
+      "subtitle": "加载 PDF 或 JSON 文件以开始编辑文本内容。"
+    },
+    "welcomeBanner": {
+      "title": "欢迎使用 PDF 文本编辑器（抢先体验）",
+      "experimental": "这是一个仍在积极开发中的实验性功能，使用过程中可能存在不稳定与问题。",
+      "howItWorks": "此工具会将您的 PDF 转换为可编辑格式，您可修改文本内容并重新定位图片。更改将另存为新的 PDF。",
+      "bestFor": "最佳适用：",
+      "bestFor1": "以文本和图片为主的简单 PDF",
+      "bestFor2": "使用标准段落格式的文档",
+      "bestFor3": "信件、论文、报告和基础文档",
+      "notIdealFor": "不适用于：",
+      "notIdealFor1": "包含项目符号、表格或多栏布局等特殊格式的 PDF",
+      "notIdealFor2": "杂志、宣传册或重设计的文档",
+      "notIdealFor3": "布局复杂的说明手册",
+      "limitations": "当前限制：",
+      "limitation1": "字体渲染可能与原PDF略有差异",
+      "limitation2": "复杂图形、表单域和注释会被保留，但不可编辑",
+      "limitation3": "大文件的转换和处理可能需要时间",
+      "knownIssues": "已知问题（修复中）：",
+      "issue1": "目前不会保留文本颜色（即将支持）",
+      "issue2": "段落模式存在更多对齐和间距问题—建议使用单行模式",
+      "issue3": "预览与导出的PDF显示不同—导出的PDF更接近原文件",
+      "issue4": "旋转文本的对齐可能需要手动调整",
+      "issue5": "透明度和分层效果可能与原件不同",
+      "feedback": "这是早期体验功能。请反馈遇到的问题以帮助我们改进！",
+      "gotIt": "知道了",
+      "dontShowAgain": "不再显示"
+    },
+    "modeChange": {
+      "title": "确认更改模式",
+      "warning": "更改文本分组模式将重置所有未保存的更改。确定要继续吗？",
+      "cancel": "取消",
+      "confirm": "重置并更改模式"
+    },
+    "fontAnalysis": {
+      "details": "字体详情",
+      "embedded": "已嵌入",
+      "type": "类型",
+      "webFormat": "Web 格式",
+      "warnings": "警告",
+      "suggestions": "说明",
+      "currentPageFonts": "本页字体",
+      "allFonts": "所有字体",
+      "fallback": "后备",
+      "missing": "缺失",
+      "perfectMessage": "所有字体都可完美复现。",
+      "warningMessage": "某些字体可能无法正确渲染。",
+      "infoMessage": "提供字体还原信息。",
+      "perfect": "完美",
+      "subset": "子集"
+    },
+    "errors": {
+      "invalidJson": "无法读取JSON文件。请确保它由PDF转JSON工具生成。",
+      "pdfConversion": "无法将已编辑的JSON转换回PDF。"
+    }
+  },
+  "auth": {
+    "sessionExpired": "会话已过期",
+    "pleaseLoginAgain": "请重新登录。",
+    "accessDenied": "拒绝访问",
+    "insufficientPermissions": "您没有执行此操作的权限。"
+  },
+  "addText": {
+    "title": "添加文本",
+    "header": "向PDF添加文本",
+    "text": {
+      "name": "文本内容",
+      "placeholder": "输入要添加的文本",
+      "fontLabel": "字体",
+      "fontSizeLabel": "字体大小",
+      "fontSizePlaceholder": "输入或选择字体大小（8-200）",
+      "colorLabel": "文本颜色"
+    },
+    "steps": {
+      "configure": "配置文本"
+    },
+    "step": {
+      "createDesc": "输入要添加的文本",
+      "place": "放置文本",
+      "placeDesc": "在PDF上点击以添加文本"
+    },
+    "instructions": {
+      "title": "如何添加文本",
+      "text": "在上方输入文本后，点击PDF任意位置进行放置。",
+      "paused": "放置已暂停",
+      "resumeHint": "恢复放置以点击并添加文本。",
+      "noSignature": "先在上方输入文本以启用放置。"
+    },
+    "mode": {
+      "move": "移动文本",
+      "place": "放置文本",
+      "pause": "暂停放置",
+      "resume": "恢复放置"
+    },
+    "results": {
+      "title": "添加文本结果"
+    },
+    "error": {
+      "failed": "向PDF添加文本时发生错误。"
+    },
+    "tags": "文本,注释,标签",
+    "applySignatures": "应用文本"
   }
 }

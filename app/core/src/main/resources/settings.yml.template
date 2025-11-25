@@ -11,7 +11,7 @@
 #############################################################################################################
 
 security:
-  enableLogin: false # set to 'true' to enable login
+  enableLogin: true # set to 'true' to enable login
   csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
