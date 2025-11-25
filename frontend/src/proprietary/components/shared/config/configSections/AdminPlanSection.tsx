@@ -87,8 +87,13 @@ const AdminPlanSection: React.FC = () => {
 
   const handleManageClick = useCallback(async () => {
     try {
+      // Only allow PRO or ENTERPRISE licenses to access billing portal
+      if (!licenseInfo?.licenseType || licenseInfo.licenseType === 'NORMAL') {
+        throw new Error('No valid license found. Please purchase a license before accessing the billing portal.');
+      }
+
       if (!licenseInfo?.licenseKey) {
-        throw new Error('No license key found. Please activate a license first.');
+        throw new Error('License key missing. Please contact support.');
       }
 
       // Create billing portal session with license key
