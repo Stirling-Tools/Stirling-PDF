@@ -33,6 +33,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 ### 50+ PDF Operations
 
 #### Organise
+- **PDF Multi Tool**: Access merge, rotate, rearrange, split and delete actions from a single dashboard
 - **Merge**: Combine multiple PDFs into one
 - **Split**: Divide PDFs into multiple files
 - **Extract page(s)**: Extract specific pages from PDF
@@ -47,6 +48,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 #### Convert to PDF
 - **Image to PDF**: Convert images to PDF format
 - **Convert file to PDF**: Convert various common file types to PDF
+- **URL/Website to PDF**: Capture live webpages as PDFs
 - **HTML to PDF**: Transform HTML documents to PDF
 - **Markdown to PDF**: Convert Markdown files to PDF
 - **CBZ to PDF**: Convert comic book archives
@@ -68,6 +70,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to CBZ**: Convert to comic book archive
 - **PDF to CBR**: Convert to comic book rar archive
 - **PDF to Vector Image**: Convert PDF to vector image (EPS, PS, PCL, XPS) format
+- **PDF to Video Slideshow**: Export pages as an automated video presentation
 
 #### Sign & Security
 - **Sign**: Add digital signatures
@@ -87,6 +90,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **OCR / Cleanup scans**: Optical Character Recognition
 - **Add Image**: Insert images into PDF
 - **Extract Images**: Extract embedded images
+- **Extract Attachments**: Retrieve embedded attachments
 - **Change Metadata**: Edit PDF metadata
 - **Get ALL Info on PDF**: Comprehensive PDF analysis
 - **Advanced Colour options**: Colour manipulation (various options for colour inversion, CMYK conversion)
