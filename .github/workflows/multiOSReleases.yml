@@ -56,7 +56,10 @@ jobs:
       - name: Get version number
         id: versionNumber
         run: |
+          echo "Running gradlew printVersion..."
+          ./gradlew printVersion --quiet
           VERSION=$(./gradlew printVersion --quiet | tail -1)
+          echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Determine build matrix
@@ -119,6 +122,9 @@ jobs:
 
       - name: Rename JAR
         run: |
+          echo "Version from determine-matrix: ${{ needs.determine-matrix.outputs.version }}"
+          echo "Looking for: app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar"
+          ls -la app/core/build/libs/
           mkdir -p ./jar-dist
           cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.file_suffix }}.jar
 
