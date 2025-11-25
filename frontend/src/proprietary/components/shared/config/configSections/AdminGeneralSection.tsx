@@ -54,6 +54,7 @@ export default function AdminGeneralSection() {
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
   const [isDirty, setLocalIsDirty] = useState(false);
   const isInitialLoad = useRef(true);
+  const justSavedRef = useRef(false);
 
   const {
     settings,
@@ -158,9 +159,12 @@ export default function AdminGeneralSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
-  // Snapshot original settings after initial load and sync local preference with server
+  // Snapshot original settings after initial load OR after successful save (when refetch completes)
   useEffect(() => {
-    if (!loading && isInitialLoad.current && Object.keys(settings).length > 0) {
+    if (loading || Object.keys(settings).length === 0) return;
+    
+    // After initial load: set snapshot and sync preference
+    if (isInitialLoad.current) {
       setOriginalSettingsSnapshot(JSON.stringify(settings));
       
       // Sync local preference with server setting on initial load to ensure they're in sync
@@ -170,8 +174,17 @@ export default function AdminGeneralSection() {
       }
       
       isInitialLoad.current = false;
+      return;
     }
-  }, [loading, settings, loginEnabled, updatePreference]);
+    
+    // After save: update snapshot to new server state so dirty tracking is accurate
+    if (justSavedRef.current) {
+      setOriginalSettingsSnapshot(JSON.stringify(settings));
+      setLocalIsDirty(false);
+      setIsDirty(false);
+      justSavedRef.current = false;
+    }
+  }, [loading, settings, loginEnabled, updatePreference, setIsDirty]);
 
   // Track dirty state by comparing current settings to snapshot
   useEffect(() => {
@@ -238,6 +251,9 @@ export default function AdminGeneralSection() {
     }
 
     try {
+      // Mark that we just saved - the snapshot will be updated when refetch completes
+      justSavedRef.current = true;
+      
       await saveSettings();
       
       // Update local preference after successful save so the app reflects the saved logo style
@@ -245,12 +261,12 @@ export default function AdminGeneralSection() {
         updatePreference('logoVariant', settings.ui.logoStyle);
       }
       
-      // Update snapshot to current settings after successful save
-      setOriginalSettingsSnapshot(JSON.stringify(settings));
+      // Clear dirty state immediately (snapshot will be updated by effect when refetch completes)
       setLocalIsDirty(false);
       markClean();
       showRestartModal();
     } catch (_error) {
+      justSavedRef.current = false;
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
@@ -320,7 +336,7 @@ export default function AdminGeneralSection() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
                         src="/classic-logo/favicon.ico"
-                        alt="Classic logo"
+                        alt={t('admin.settings.general.logoStyle.classicAlt', 'Classic logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
                       <span>{t('admin.settings.general.logoStyle.classic', 'Classic')}</span>
@@ -333,7 +349,7 @@ export default function AdminGeneralSection() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
                         src="/modern-logo/StirlingPDFLogoNoTextLight.svg"
-                        alt="Modern logo"
+                        alt={t('admin.settings.general.logoStyle.modernAlt', 'Modern logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
                       <span>{t('admin.settings.general.logoStyle.modern', 'Modern')}</span>
@@ -369,7 +385,7 @@ export default function AdminGeneralSection() {
               ]}
               searchable
               clearable
-              placeholder="Select languages"
+              placeholder={t('admin.settings.general.languages.placeholder', 'Select languages')}
               comboboxProps={{ zIndex: 1400 }}
               disabled={!loginEnabled}
             />

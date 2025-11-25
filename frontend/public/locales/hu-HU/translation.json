@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Beállítások"
+    },
+    "workspace": {
+      "title": "Munkaterület",
+      "people": "Felhasználók",
+      "teams": "Csapatok"
+    },
+    "configuration": {
+      "title": "Konfiguráció",
+      "systemSettings": "Rendszerbeállítások",
+      "features": "Funkciók",
+      "endpoints": "Végpontok",
+      "database": "Adatbázis",
+      "advanced": "Speciális"
+    },
+    "securityAuth": {
+      "title": "Biztonság és hitelesítés",
+      "security": "Biztonság",
+      "connections": "Kapcsolatok"
+    },
+    "licensingAnalytics": {
+      "title": "Licencelés és analitika",
+      "plan": "Csomag",
+      "audit": "Audit",
+      "usageAnalytics": "Használati analitika"
+    },
+    "policiesPrivacy": {
+      "title": "Irányelvek és adatvédelem",
+      "legal": "Jogi",
+      "privacy": "Adatvédelem"
+    },
+    "developer": {
+      "title": "Fejlesztő",
+      "apiKeys": "API-kulcsok"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Először engedélyezze a bejelentkezési módot",
+      "requiresEnterprise": "Enterprise licenc szükséges"
+    },
     "connection": {
       "title": "Kapcsolati mód",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "A Konvertálás eszközben a letiltott opciók eltávolítása, ahelyett hogy szürkén jelenjenek meg."
     },
     "hotkeys": {
+      "title": "Billentyűparancsok",
+      "description": "Testreszabhatja a billentyűparancsokat az eszközök gyors eléréséhez. Kattintson a \"Billentyűparancs módosítása\" gombra, és nyomjon meg egy új billentyűkombinációt. A megszakításhoz nyomja meg az Esc billentyűt.",
       "errorConflict": "Ezt a gyorsbillentyűt már használja: {{tool}}.",
+      "errorModifier": {
+        "mac": "A billentyűparancs tartalmazzon ⌘ (Command), ⌥ (Option) vagy más módosítóbillentyűt.",
+        "windows": "A billentyűparancs tartalmazzon Ctrl, Alt vagy más módosítóbillentyűt."
+      },
       "searchPlaceholder": "Eszközök keresése...",
       "none": "Nincs hozzárendelve",
       "customBadge": "Egyéni",
@@ -1125,7 +1171,7 @@
     "settings": "Beállítások",
     "conversionCompleted": "Átalakítás befejezve",
     "results": "Eredmények",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "konvertalt_fajl",
     "conversionResults": "Átalakítás eredménye",
     "convertFrom": "Átalakítás erről",
     "convertTo": "Átalakítás erre",
@@ -3547,7 +3593,7 @@
     "header": "PDF egyoldalassá alakítása",
     "submit": "Konvertálás egyoldalassá",
     "description": "Ez az eszköz a PDF összes oldalát egy nagy, egyetlen oldallá egyesíti. A szélesség megegyezik az eredeti oldalakéval, a magasság pedig az összes oldalmagasság összege lesz.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "egyetlen_oldal",
     "files": {
       "placeholder": "A kezdéshez válasszon ki egy PDF-fájlt a fő nézetben"
     },
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Elérhető nyelvek",
-          "description": "A felhasználók által választható nyelvek (hagyja üresen az összes nyelv engedélyezéséhez)"
+          "description": "A felhasználók által választható nyelvek (hagyja üresen az összes nyelv engedélyezéséhez)",
+          "placeholder": "Válasszon nyelveket"
         },
         "customMetadata": {
           "label": "Egyéni metaadatok",
@@ -4061,7 +4108,9 @@
           "label": "Logó stílusa",
           "description": "Válasszon a modern minimalista logó és a klasszikus S ikon között",
           "classic": "Klasszikus",
-          "modern": "Modern"
+          "classicAlt": "Klasszikus logó",
+          "modern": "Modern",
+          "modernAlt": "Modern logó"
         },
         "customPaths": {
           "label": "Egyéni elérési utak",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Alkalmazás konfigurációja",
-      "description": "Az alkalmazás aktuális beállításai és konfigurációs részletei."
+      "description": "Az alkalmazás aktuális beállításai és konfigurációs részletei.",
+      "loading": "Konfiguráció betöltése...",
+      "error": "Hiba",
+      "warning": "Konfigurációs figyelmeztetés",
+      "sections": {
+        "basic": "Alapkonfiguráció",
+        "security": "Biztonsági konfiguráció",
+        "system": "Rendszerkonfiguráció",
+        "integration": "Integrációs konfiguráció"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Csapatok kezelése és a munkaterület tagjainak rendszerezése",
       "loading": "Csapatok betöltése...",
       "loadingDetails": "Csapat részleteinek betöltése...",
+      "loadError": "Nem sikerült betölteni a csapat adatait",
       "createNewTeam": "Új csapat létrehozása",
       "teamName": "Csapat neve",
       "totalMembers": "Tagok összesen",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Fizetés előkészítése...",
+    "redirecting": "Átirányítás a biztonságos pénztárhoz...",
     "upgradeTitle": "Frissítés erre: {{planName}}",
     "success": "Sikeres fizetés!",
     "successMessage": "Az előfizetése sikeresen aktiválva. Hamarosan megerősítő e-mailt kap.",

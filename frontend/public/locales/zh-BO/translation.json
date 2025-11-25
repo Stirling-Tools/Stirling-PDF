@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "首选项"
+    },
+    "workspace": {
+      "title": "工作区",
+      "people": "成员",
+      "teams": "团队"
+    },
+    "configuration": {
+      "title": "配置",
+      "systemSettings": "系统设置",
+      "features": "功能",
+      "endpoints": "端点",
+      "database": "数据库",
+      "advanced": "高级"
+    },
+    "securityAuth": {
+      "title": "安全与认证",
+      "security": "安全",
+      "connections": "连接"
+    },
+    "licensingAnalytics": {
+      "title": "许可与分析",
+      "plan": "方案",
+      "audit": "审计",
+      "usageAnalytics": "使用分析"
+    },
+    "policiesPrivacy": {
+      "title": "政策与隐私",
+      "legal": "法律",
+      "privacy": "隐私"
+    },
+    "developer": {
+      "title": "开发者",
+      "apiKeys": "API 密钥"
+    },
+    "tooltips": {
+      "enableLoginFirst": "请先启用登录模式",
+      "requiresEnterprise": "需要企业版许可"
+    },
     "connection": {
       "title": "连接模式",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "在转换工具中移除已禁用的选项，而不是以灰色显示。"
     },
     "hotkeys": {
+      "title": "键盘快捷键",
+      "description": "自定义键盘快捷键以快速访问工具。点击“更改快捷键”，然后按下新的组合键。按 Esc 取消。",
       "errorConflict": "快捷键已被 {{tool}} 使用。",
+      "errorModifier": {
+        "mac": "快捷键需包含 ⌘（Command）、⌥（Option）或其他修饰键。",
+        "windows": "快捷键需包含 Ctrl、Alt 或其他修饰键。"
+      },
       "searchPlaceholder": "搜索工具...",
       "none": "未分配",
       "customBadge": "自定义",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "可用语言",
-          "description": "用户可选择的语言（留空以启用所有语言）"
+          "description": "用户可选择的语言（留空以启用所有语言）",
+          "placeholder": "选择语言"
         },
         "customMetadata": {
           "label": "自定义元数据",
@@ -4061,7 +4108,9 @@
           "label": "Logo 样式",
           "description": "选择现代极简 Logo 或经典 S 图标",
           "classic": "经典",
-          "modern": "现代"
+          "classicAlt": "经典 Logo",
+          "modern": "现代",
+          "modernAlt": "现代 Logo"
         },
         "customPaths": {
           "label": "自定义路径",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "应用配置",
-      "description": "当前应用设置和配置信息。"
+      "description": "当前应用设置和配置信息。",
+      "loading": "正在加载配置...",
+      "error": "错误",
+      "warning": "配置警告",
+      "sections": {
+        "basic": "基础配置",
+        "security": "安全配置",
+        "system": "系统配置",
+        "integration": "集成配置"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "管理团队并组织工作区成员",
       "loading": "正在加载团队...",
       "loadingDetails": "正在加载团队详情...",
+      "loadError": "无法加载团队详情",
       "createNewTeam": "创建新团队",
       "teamName": "团队名称",
       "totalMembers": "成员总数",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "正在准备结账...",
+    "redirecting": "正在跳转到安全结账...",
     "upgradeTitle": "升级到 {{planName}}",
     "success": "支付成功！",
     "successMessage": "您的订阅已成功激活。您很快会收到确认邮件。",

@@ -88,8 +88,7 @@ export function useEndpointEnabled(endpoint: string): {
     try {
       setError(null);
 
-      const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
-        params: { endpoint },
+      const response = await apiClient.get<boolean>(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`, {
         suppressErrorToast: true,
       });
 
