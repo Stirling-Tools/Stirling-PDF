@@ -87,7 +87,6 @@ export function useAdminSettings<T = any>(
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionName]);
 
   const saveSettings = async () => {
