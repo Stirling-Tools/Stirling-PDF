@@ -5,9 +5,7 @@ import Backend from 'i18next-http-backend';
 
 // Define supported languages (based on your existing translations)
 export const supportedLanguages = {
-  'en': 'English',
-  'en-GB': 'English (UK)',
-  'en-US': 'English (US)',
+  'en-GB': 'English',
   'ar-AR': 'العربية',
   'az-AZ': 'Azərbaycan Dili',
   'bg-BG': 'Български',
@@ -72,8 +70,7 @@ i18n
 
     backend: {
       loadPath: (lngs: string[], namespaces: string[]) => {
-        // Map 'en' to 'en-GB' for loading translations
-        const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
+        const lng = lngs[0];
         const basePath = import.meta.env.BASE_URL || '/';
         const cleanBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
         return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
@@ -83,7 +80,11 @@ i18n
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
-      convertDetectedLanguage: (lng: string) => lng === 'en' ? 'en-GB' : lng,
+      convertDetectedLanguage: (lng: string) => {
+        // Map en and en-US to en-GB
+        if (lng === 'en' || lng === 'en-US') return 'en-GB';
+        return lng;
+      },
     },
 
     react: {
