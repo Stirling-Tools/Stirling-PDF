@@ -736,12 +736,13 @@ public class UserService implements UserServiceInterface {
     }
 
     /**
-     * Counts the number of OAuth/SAML users (users with SSO provider set).
+     * Counts the number of OAuth/SAML users. Includes users with sso_provider set OR
+     * authenticationType is sso/oauth2/saml2 (catches V1 users who never signed in).
      *
      * @return Count of OAuth users
      */
     public long countOAuthUsers() {
-        return userRepository.countBySsoProviderIsNotNull();
+        return userRepository.countSsoUsers();
     }
 
     /**
@@ -761,10 +762,10 @@ public class UserService implements UserServiceInterface {
      */
     @Transactional
     public int grandfatherAllOAuthUsers() {
-        List<User> oauthUsers = userRepository.findAllBySsoProviderIsNotNull();
+        List<User> ssoUsers = userRepository.findAllSsoUsers();
         int updated = 0;
 
-        for (User user : oauthUsers) {
+        for (User user : ssoUsers) {
             if (!user.isOauthGrandfathered()) {
                 user.setOauthGrandfathered(true);
                 updated++;
@@ -772,7 +773,7 @@ public class UserService implements UserServiceInterface {
         }
 
         if (updated > 0) {
-            userRepository.saveAll(oauthUsers);
+            userRepository.saveAll(ssoUsers);
         }
 
         return updated;

@@ -46,4 +46,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByOauthGrandfatheredTrue();
 
     List<User> findAllBySsoProviderIsNotNull();
+
+    /**
+     * Finds all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
+     * This catches V1 users who were created via SSO but never signed in (sso_provider is null).
+     */
+    @Query(
+            "SELECT u FROM User u WHERE u.ssoProvider IS NOT NULL "
+                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
+    List<User> findAllSsoUsers();
+
+    /**
+     * Counts all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
+     */
+    @Query(
+            "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
+                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
+    long countSsoUsers();
 }
