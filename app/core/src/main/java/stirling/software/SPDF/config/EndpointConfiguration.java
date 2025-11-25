@@ -258,6 +258,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "url-to-pdf");
         addEndpointToGroup("Convert", "markdown-to-pdf");
         addEndpointToGroup("Convert", "ebook-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-epub");
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
@@ -449,6 +450,7 @@ public class EndpointConfiguration {
 
         // Calibre dependent endpoints
         addEndpointToGroup("Calibre", "ebook-to-pdf");
+        addEndpointToGroup("Calibre", "pdf-to-epub");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
