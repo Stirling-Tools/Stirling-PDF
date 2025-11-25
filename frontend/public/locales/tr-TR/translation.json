@@ -3493,7 +3493,26 @@
     "unexpectedError": "Beklenmeyen hata: {{message}}",
     "accountCreatedSuccess": "Hesap başarıyla oluşturuldu! Artık giriş yapabilirsiniz.",
     "passwordChangedSuccess": "Şifre başarıyla değiştirildi! Lütfen yeni şifrenizle giriş yapın.",
-    "credentialsUpdated": "Kimlik bilgileriniz güncellendi. Lütfen tekrar giriş yapın."
+    "credentialsUpdated": "Kimlik bilgileriniz güncellendi. Lütfen tekrar giriş yapın.",
+    "defaultCredentials": "Varsayılan Giriş Bilgileri",
+    "changePasswordWarning": "İlk kez giriş yaptıktan sonra lütfen parolanızı değiştirin",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF genel bakış",
+        "title": "PDF ihtiyaçlarınızın tümü için tek adresiniz.",
+        "subtitle": "PDF'ler için gizlilik odaklı bir bulut paketi; belgeleri dönüştürmenize, imzalamanıza, sansürlemenize ve yönetmenize olanak tanır, ayrıca 50+ başka güçlü araçla birlikte gelir."
+      },
+      "edit": {
+        "alt": "PDF'leri düzenle",
+        "title": "İstediğiniz bilgiyi göstermek/korumak için PDF'leri düzenleyin",
+        "subtitle": "PDF'leri sansürlemek, imzalamak, okumak ve işlemek için bir düzineden fazla araçla aradığınızı bulacaksınız."
+      },
+      "secure": {
+        "alt": "PDF'leri güvenli hale getirin",
+        "title": "PDF'lerinizdeki hassas bilgileri koruyun",
+        "subtitle": "Parola ekleyin, içeriği sansürleyin ve sertifikaları kolayca yönetin."
+      }
+    }
   },
   "signup": {
     "title": "Hesap oluşturun",
@@ -3953,8 +3972,16 @@
       "saved": "Ayarlar başarıyla kaydedildi",
       "saveSuccess": "Ayarlar başarıyla kaydedildi",
       "save": "Değişiklikleri Kaydet",
+      "discard": "Vazgeç",
       "restartRequired": "Yeniden Başlatma Gerekiyor",
       "loginRequired": "Yönetici ayarlarını değiştirmek için giriş modu etkin olmalıdır",
+      "unsavedChanges": {
+        "title": "Kaydedilmemiş Değişiklikler",
+        "message": "Kaydedilmemiş değişiklikleriniz var. Vazgeçmek istiyor musunuz?",
+        "cancel": "Düzenlemeye Devam Et",
+        "discard": "Değişikliklerden Vazgeç",
+        "hint": "Kaydedilmemiş değişiklikleriniz var"
+      },
       "loginDisabled": {
         "title": "Giriş Modu Gerekli",
         "message": "Yönetici ayarlarını değiştirmek için giriş modu etkin olmalıdır. Lütfen ortamınızda SECURITY_ENABLELOGIN=true veya settings.yml içinde security.enableLogin: true olarak ayarlayın ve ardından sunucuyu yeniden başlatın.",
@@ -5976,7 +6003,7 @@
     "text": {
       "name": "Metin içeriği",
       "placeholder": "Ekleyeceğiniz metni girin",
-      "fontLabel": "Font",
+      "fontLabel": "Yazı tipi",
       "fontSizeLabel": "Font boyutu",
       "fontSizePlaceholder": "Font boyutunu yazın veya seçin (8-200)",
       "colorLabel": "Metin rengi"
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "PDF'ye metin eklenirken bir hata oluştu."
     },
-    "tags": "text,annotation,label",
+    "tags": "metin,açıklama,etiket",
     "applySignatures": "Metni Uygula"
   }
 }

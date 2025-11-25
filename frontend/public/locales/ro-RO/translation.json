@@ -853,7 +853,7 @@
       "desc": "Revizuiește și editează exporturile JSON Stirling PDF cu editare de text grupată și regenerare PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "text,anotare,etichetă",
       "title": "Adaugă text",
       "desc": "Adaugă text personalizat oriunde în PDF-ul tău"
     }
@@ -1125,7 +1125,7 @@
     "settings": "Setări",
     "conversionCompleted": "Conversie finalizată",
     "results": "Rezultate",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "fișier_convertit",
     "conversionResults": "Rezultatele conversiei",
     "convertFrom": "Convertește din",
     "convertTo": "Convertește în",
@@ -1800,7 +1800,7 @@
     "tags": "comprimă,mic,minuscul"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "eliminare,ștergere,formular,câmp,doar citire",
     "title": "Elimină 'Doar citire' din câmpurile formularului",
     "header": "Deblochează formularele PDF",
     "submit": "Remove",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Eroare neașteptată: {{message}}",
     "accountCreatedSuccess": "Cont creat cu succes! Acum vă puteți autentifica.",
     "passwordChangedSuccess": "Parola a fost schimbată cu succes! Autentificați-vă cu noua parolă.",
-    "credentialsUpdated": "Datele de autentificare au fost actualizate. Vă rugăm să vă autentificați din nou."
+    "credentialsUpdated": "Datele de autentificare au fost actualizate. Vă rugăm să vă autentificați din nou.",
+    "defaultCredentials": "Date de autentificare implicite",
+    "changePasswordWarning": "Vă rugăm să vă schimbați parola după prima autentificare",
+    "slides": {
+      "overview": {
+        "alt": "Prezentare generală Stirling PDF",
+        "title": "Un centru unic pentru toate nevoile PDF.",
+        "subtitle": "O suită cloud axată pe confidențialitate pentru PDF-uri, care vă permite să convertiți, semnați, redactați și gestionați documente, plus peste 50 de alte instrumente puternice."
+      },
+      "edit": {
+        "alt": "Editați PDF-uri",
+        "title": "Editați PDF-uri pentru a afișa/proteja informațiile dorite",
+        "subtitle": "Cu peste o duzină de instrumente pentru a redacta, semna, citi și manipula PDF-uri, veți găsi cu siguranță ceea ce căutați."
+      },
+      "secure": {
+        "alt": "Securizați PDF-uri",
+        "title": "Protejați informațiile sensibile din PDF-urile dvs.",
+        "subtitle": "Adăugați parole, redactați conținut și gestionați certificate cu ușurință."
+      }
+    }
   },
   "signup": {
     "title": "Creați un cont",
@@ -3768,7 +3787,7 @@
     "title": "Documentație API",
     "header": "Documentație API",
     "desc": "Vizualizați și testați endpoint-urile API Stirling PDF",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,documentație,swagger,endpoint-uri,dezvoltare"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Setările au fost salvate cu succes",
       "saveSuccess": "Setările au fost salvate cu succes",
       "save": "Salvați modificările",
+      "discard": "Renunță",
       "restartRequired": "Este necesară repornirea",
       "loginRequired": "Modul de autentificare trebuie activat pentru a modifica setările de administrator",
+      "unsavedChanges": {
+        "title": "Modificări nesalvate",
+        "message": "Aveți modificări nesalvate. Doriți să renunțați la ele?",
+        "cancel": "Continuă editarea",
+        "discard": "Renunță la modificări",
+        "hint": "Aveți modificări nesalvate"
+      },
       "loginDisabled": {
         "title": "Este necesar modul de autentificare",
         "message": "Modul de autentificare trebuie activat pentru a modifica setările de administrator. Setați SECURITY_ENABLELOGIN=true în mediul dvs. sau security.enableLogin: true în settings.yml, apoi reporniți serverul.",
@@ -5765,7 +5792,7 @@
       "description": "Server găzduit local"
     },
     "step3": {
-      "label": "Login",
+      "label": "Autentificare",
       "description": "Introdu acreditările"
     },
     "mode": {
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "A apărut o eroare la adăugarea textului în PDF."
     },
-    "tags": "text,annotation,label",
+    "tags": "text,anotare,etichetă",
     "applySignatures": "Aplicați textul"
   }
 }

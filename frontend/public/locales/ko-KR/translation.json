@@ -29,7 +29,7 @@
       "fullscreen": "전체 화면 모드로 전환",
       "sidebar": "사이드바 모드로 전환"
     },
-    "alpha": "Alpha",
+    "alpha": "알파",
     "premiumFeature": "프리미엄 기능:",
     "comingSoon": "곧 제공:"
   },
@@ -765,7 +765,7 @@
       "desc": "PDF 문서의 디지털 서명과 인증서 검증"
     },
     "swagger": {
-      "tags": "API,documentation,test",
+      "tags": "API,문서,테스트",
       "title": "API 문서",
       "desc": "API 문서를 보고 엔드포인트를 테스트합니다."
     },
@@ -814,7 +814,7 @@
       "desc": "PDF 문서의 색상을 교체하거나 반전합니다."
     },
     "devApi": {
-      "tags": "API,development,documentation",
+      "tags": "API,개발,문서",
       "title": "API",
       "desc": "API 문서로 이동"
     },
@@ -853,7 +853,7 @@
       "desc": "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "텍스트,주석,레이블",
       "title": "텍스트 추가",
       "desc": "PDF 어디에나 사용자 텍스트를 추가합니다"
     }
@@ -1125,7 +1125,7 @@
     "settings": "설정",
     "conversionCompleted": "변환 완료",
     "results": "결과",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "변환된_파일",
     "conversionResults": "변환 결과",
     "convertFrom": "다음에서 변환",
     "convertTo": "다음으로 변환",
@@ -1604,7 +1604,7 @@
       "placeholder": "예: 1,3,5-8,10",
       "error": "잘못된 페이지 번호 형식입니다. 숫자, 범위(1-5) 또는 수학식(2n+1)을 사용하세요."
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "페이지_제거됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -1800,12 +1800,12 @@
     "tags": "압축,작게,매우 작게"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "제거,삭제,양식,필드,읽기 전용",
     "title": "양식 필드의 읽기 전용 제거",
     "header": "PDF 양식 잠금 해제",
     "submit": "Remove",
     "description": "이 도구는 PDF 양식 필드의 읽기 전용 제한을 제거하여 편집 및 입력 가능하도록 만듭니다.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "잠금해제된_양식",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -1819,7 +1819,7 @@
   "changeMetadata": {
     "header": "메타데이터 변경",
     "submit": "변경",
-    "filenamePrefix": "metadata",
+    "filenamePrefix": "메타데이터",
     "settings": {
       "title": "메타데이터 설정"
     },
@@ -2292,7 +2292,7 @@
     "header": "PDF 평면화",
     "flattenOnlyForms": "양식만 평면화",
     "submit": "평면화",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "평탄화됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -2342,7 +2342,7 @@
     "header": "PDF 복구",
     "submit": "복구",
     "description": "손상되었거나 오류가 있는 PDF 파일을 복구 시도합니다. 추가 설정은 필요하지 않습니다.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "복구됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -2553,7 +2553,7 @@
   "certSign": {
     "tags": "인증,PEM,P12,공식,암호화",
     "title": "인증서 서명",
-    "filenamePrefix": "signed",
+    "filenamePrefix": "서명됨",
     "signMode": {
       "stepTitle": "서명 모드",
       "tooltip": {
@@ -2727,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "소책자,쇄배열,인쇄,제본,접지,시그니처",
     "title": "소책자 면배열",
     "header": "소책자 면배열",
     "submit": "소책자 생성",
@@ -2828,7 +2828,7 @@
     "submit": "제출"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "크기 조정,수정,치수,맞춤",
     "title": "페이지 배율 조정",
     "header": "페이지 배율 조정",
     "scaleFactor": {
@@ -3390,7 +3390,7 @@
     "totalSignatures": "총 서명 수"
   },
   "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side",
+    "tags": "색상 교체,페이지 작업,백엔드,서버 측",
     "labels": {
       "settings": "설정",
       "colourOperation": "색상 작업"
@@ -3493,7 +3493,26 @@
     "unexpectedError": "예기치 않은 오류: {{message}}",
     "accountCreatedSuccess": "계정이 성공적으로 생성되었습니다! 이제 로그인할 수 있습니다.",
     "passwordChangedSuccess": "비밀번호가 성공적으로 변경되었습니다! 새 비밀번호로 로그인하세요.",
-    "credentialsUpdated": "자격 증명이 업데이트되었습니다. 다시 로그인하세요."
+    "credentialsUpdated": "자격 증명이 업데이트되었습니다. 다시 로그인하세요.",
+    "defaultCredentials": "기본 로그인 정보",
+    "changePasswordWarning": "첫 로그인 후 비밀번호를 변경하세요",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF 개요",
+        "title": "모든 PDF 작업을 한곳에서",
+        "subtitle": "개인정보 보호를 최우선으로 하는 PDF 클라우드 제품군으로, 변환, 서명, 가리기, 문서 관리 등 50개 이상의 강력한 도구를 제공합니다."
+      },
+      "edit": {
+        "alt": "PDF 편집",
+        "title": "원하는 정보를 표시/보호하도록 PDF를 편집하세요",
+        "subtitle": "PDF 가리기, 서명, 읽기 및 처리에 도움이 되는 십여 개 이상의 도구로 원하는 기능을 찾을 수 있습니다."
+      },
+      "secure": {
+        "alt": "PDF 보호",
+        "title": "PDF의 민감한 정보를 보호하세요",
+        "subtitle": "비밀번호 추가, 콘텐츠 가리기, 인증서 관리를 손쉽게."
+      }
+    }
   },
   "signup": {
     "title": "계정 만들기",
@@ -3768,7 +3787,7 @@
     "title": "API 문서",
     "header": "API 문서",
     "desc": "Stirling PDF API 엔드포인트를 조회하고 테스트하세요",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,문서,swagger,엔드포인트,개발"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "설정이 성공적으로 저장되었습니다",
       "saveSuccess": "설정이 성공적으로 저장되었습니다",
       "save": "변경 사항 저장",
+      "discard": "버리기",
       "restartRequired": "재시작 필요",
       "loginRequired": "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다",
+      "unsavedChanges": {
+        "title": "저장되지 않은 변경 사항",
+        "message": "저장되지 않은 변경 사항이 있습니다. 버리시겠습니까?",
+        "cancel": "계속 편집",
+        "discard": "변경 사항 버리기",
+        "hint": "저장되지 않은 변경 사항이 있습니다"
+      },
       "loginDisabled": {
         "title": "로그인 모드 필요",
         "message": "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다. 환경 변수에서 SECURITY_ENABLELOGIN=true 또는 settings.yml에서 security.enableLogin: true 로 설정한 다음 서버를 재시작하세요.",
@@ -4219,11 +4246,11 @@
             "description": "OAuth2 제공자의 발급자 URL"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "클라이언트 ID",
             "description": "제공자에서 발급받은 OAuth2 Client ID"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "클라이언트 시크릿",
             "description": "제공자에서 발급받은 OAuth2 Client Secret"
           },
           "useAsUsername": {
@@ -4405,7 +4432,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "앱 설치",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4610,7 +4637,7 @@
     "recent": "최근",
     "localFiles": "로컬 파일",
     "googleDrive": "Google Drive",
-    "googleDriveShort": "Drive",
+    "googleDriveShort": "드라이브",
     "myFiles": "내 파일",
     "noRecentFiles": "최근 파일이 없습니다",
     "googleDriveNotAvailable": "Google Drive 통합을 사용할 수 없습니다",
@@ -4981,7 +5008,7 @@
       "nextReset": "다음 초기화",
       "lastApiUse": "마지막 API 사용",
       "overlayMessage": "크레딧과 사용 가능 크레딧을 보려면 키를 생성하세요",
-      "label": "API Key",
+      "label": "API 키",
       "guestInfo": "게스트 사용자는 API 키를 받을 수 없습니다. 애플리케이션에서 사용할 수 있는 API 키를 받으려면 계정을 생성하세요.",
       "goToAccount": "계정으로 이동",
       "refreshModal": {
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "PDF에 텍스트를 추가하는 중 오류가 발생했습니다."
     },
-    "tags": "text,annotation,label",
+    "tags": "텍스트,주석,레이블",
     "applySignatures": "텍스트 적용"
   }
 }

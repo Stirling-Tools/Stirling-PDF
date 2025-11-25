@@ -1125,7 +1125,7 @@
     "settings": "إعدادات",
     "conversionCompleted": "اكتمل التحويل",
     "results": "النتائج",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "ملف_محول",
     "conversionResults": "نتائج التحويل",
     "convertFrom": "التحويل من",
     "convertTo": "التحويل إلى",
@@ -1169,7 +1169,7 @@
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "عرض OpenDocument (.odp)",
     "txtExt": "نص عادي (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "تنسيق نص منسق (.rtf)",
     "selectedFiles": "الملفات المحددة",
     "noFileSelected": "لا يوجد ملف محدد. استخدم لوحة الملفات لإضافة ملفات.",
     "convertFiles": "تحويل الملفات",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "خطأ غير متوقع: {{message}}",
     "accountCreatedSuccess": "تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.",
     "passwordChangedSuccess": "تم تغيير كلمة المرور بنجاح! يرجى تسجيل الدخول بكلمة المرور الجديدة.",
-    "credentialsUpdated": "تم تحديث بيانات الاعتماد الخاصة بك. يرجى تسجيل الدخول مجددًا."
+    "credentialsUpdated": "تم تحديث بيانات الاعتماد الخاصة بك. يرجى تسجيل الدخول مجددًا.",
+    "defaultCredentials": "بيانات اعتماد تسجيل الدخول الافتراضية",
+    "changePasswordWarning": "يرجى تغيير كلمة المرور بعد تسجيل الدخول لأول مرة",
+    "slides": {
+      "overview": {
+        "alt": "نظرة عامة على Stirling PDF",
+        "title": "كل ما تحتاجه لـ PDF في مكان واحد.",
+        "subtitle": "حزمة سحابية تضع الخصوصية أولاً لملفات PDF تتيح لك تحويل المستندات وتوقيعها وتنقيحها وإدارتها، إلى جانب أكثر من 50 أداة قوية أخرى."
+      },
+      "edit": {
+        "alt": "تحرير ملفات PDF",
+        "title": "حرّر ملفات PDF لعرض/تأمين المعلومات التي تريدها",
+        "subtitle": "مع أكثر من 12 أداة تساعدك على تنقيح ملفات PDF وتوقيعها وقراءتها ومعالجتها، ستجد بالتأكيد ما تبحث عنه."
+      },
+      "secure": {
+        "alt": "حماية ملفات PDF",
+        "title": "احمِ المعلومات الحساسة في ملفات PDF الخاصة بك",
+        "subtitle": "أضِف كلمات مرور، ونقّح المحتوى، وأدر الشهادات بسهولة."
+      }
+    }
   },
   "signup": {
     "title": "إنشاء حساب",
@@ -3953,8 +3972,16 @@
       "saved": "تم حفظ الإعدادات بنجاح",
       "saveSuccess": "تم حفظ الإعدادات بنجاح",
       "save": "حفظ التغييرات",
+      "discard": "تجاهل",
       "restartRequired": "مطلوب إعادة تشغيل",
       "loginRequired": "يجب تمكين وضع تسجيل الدخول لتعديل إعدادات المسؤول",
+      "unsavedChanges": {
+        "title": "تغييرات غير محفوظة",
+        "message": "لديك تغييرات غير محفوظة. هل تريد تجاهلها؟",
+        "cancel": "متابعة التحرير",
+        "discard": "تجاهل التغييرات",
+        "hint": "لديك تغييرات غير محفوظة"
+      },
       "loginDisabled": {
         "title": "مطلوب وضع تسجيل الدخول",
         "message": "يجب تمكين وضع تسجيل الدخول لتعديل إعدادات المسؤول. يرجى ضبط SECURITY_ENABLELOGIN=true في بيئتك أو security.enableLogin: true في settings.yml، ثم أعد تشغيل الخادم.",
@@ -4814,7 +4841,7 @@
       "placeholder": "أدخل كلمة المرور الحالية",
       "completed": "تم إعداد كلمة المرور"
     },
-    "filenamePrefix": "decrypted",
+    "filenamePrefix": "غير_مشفر",
     "error": {
       "failed": "حدث خطأ أثناء إزالة كلمة المرور من PDF."
     },

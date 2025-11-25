@@ -853,7 +853,7 @@
       "desc": "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "tekst,adnotacja,etykieta",
       "title": "Dodaj tekst",
       "desc": "Dodaj własny tekst w dowolnym miejscu w PDF"
     }
@@ -1520,7 +1520,7 @@
       "selectedFile": "Wczytano z {{file}}",
       "noFile": "Wybierz PDF, aby wyodrębnić istniejące zakładki.",
       "loadFromPdf": "Wczytaj z wybranego PDF",
-      "importJson": "Import JSON",
+      "importJson": "Importuj JSON",
       "importClipboard": "Wklej JSON ze schowka",
       "export": "Eksportuj zakładki",
       "exportJson": "Pobierz JSON",
@@ -1800,7 +1800,7 @@
     "tags": "zgniatać,mały,malutki"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "usuń,skasuj,formularz,pole,tylko do odczytu",
     "title": "Usuń tryb tylko do odczytu z pól formularza",
     "header": "Odblokuj formularze PDF",
     "submit": "Remove",
@@ -2727,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "broszura,impozycja,druk,oprawa,zginanie,składka",
     "title": "Impozycja broszury",
     "header": "Impozycja broszury",
     "submit": "Utwórz broszurę",
@@ -2828,7 +2828,7 @@
     "submit": "Wykonaj"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "zmień rozmiar,modyfikuj,wymiary,dopasuj",
     "title": "Dostosuj skalę strony",
     "header": "Dostosuj skalę strony",
     "scaleFactor": {
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Nieoczekiwany błąd: {{message}}",
     "accountCreatedSuccess": "Konto zostało utworzone! Teraz możesz się zalogować.",
     "passwordChangedSuccess": "Hasło zostało zmienione! Zaloguj się nowym hasłem.",
-    "credentialsUpdated": "Dane logowania zostały zaktualizowane. Zaloguj się ponownie."
+    "credentialsUpdated": "Dane logowania zostały zaktualizowane. Zaloguj się ponownie.",
+    "defaultCredentials": "Domyślne dane logowania",
+    "changePasswordWarning": "Zmień hasło po pierwszym zalogowaniu.",
+    "slides": {
+      "overview": {
+        "alt": "Przegląd Stirling PDF",
+        "title": "Jedno miejsce na wszystkie potrzeby związane z PDF.",
+        "subtitle": "Pakiet chmurowy z priorytetem prywatności do pracy z PDF: konwertuj, podpisuj, zaczerniaj i zarządzaj dokumentami oraz korzystaj z 50+ innych narzędzi."
+      },
+      "edit": {
+        "alt": "Edytuj PDF",
+        "title": "Edytuj PDF, aby wyświetlać i zabezpieczać potrzebne informacje",
+        "subtitle": "Ponad kilkanaście narzędzi do zaczerniania, podpisywania, czytania i modyfikowania PDF – znajdziesz to, czego potrzebujesz."
+      },
+      "secure": {
+        "alt": "Zabezpiecz PDF",
+        "title": "Chroń wrażliwe informacje w plikach PDF",
+        "subtitle": "Dodawaj hasła, zaczerniaj treść i zarządzaj certyfikatami z łatwością."
+      }
+    }
   },
   "signup": {
     "title": "Utwórz konto",
@@ -3768,7 +3787,7 @@
     "title": "Dokumentacja API",
     "header": "Dokumentacja API",
     "desc": "Przeglądaj i testuj endpointy API Stirling PDF",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,dokumentacja,swagger,endpointy,rozwój"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Ustawienia zapisano pomyślnie",
       "saveSuccess": "Ustawienia zapisano pomyślnie",
       "save": "Zapisz zmiany",
+      "discard": "Odrzuć",
       "restartRequired": "Wymagane ponowne uruchomienie",
       "loginRequired": "Tryb logowania musi być włączony, aby modyfikować ustawienia administratora",
+      "unsavedChanges": {
+        "title": "Niezapisane zmiany",
+        "message": "Masz niezapisane zmiany. Czy chcesz je odrzucić?",
+        "cancel": "Kontynuuj edycję",
+        "discard": "Odrzuć zmiany",
+        "hint": "Masz niezapisane zmiany"
+      },
       "loginDisabled": {
         "title": "Wymagany tryb logowania",
         "message": "Tryb logowania musi być włączony, aby modyfikować ustawienia administratora. Ustaw SECURITY_ENABLELOGIN=true w środowisku lub security.enableLogin: true w settings.yml, a następnie uruchom ponownie serwer.",
@@ -4400,7 +4427,7 @@
             "description": "Maksymalny czas wykonania"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF do HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",

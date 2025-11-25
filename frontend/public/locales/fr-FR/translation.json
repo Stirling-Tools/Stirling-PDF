@@ -3493,7 +3493,26 @@
     "unexpectedError": "Erreur inattendue : {{message}}",
     "accountCreatedSuccess": "Compte créé avec succès ! Vous pouvez maintenant vous connecter.",
     "passwordChangedSuccess": "Mot de passe modifié avec succès ! Veuillez vous connecter avec votre nouveau mot de passe.",
-    "credentialsUpdated": "Vos identifiants ont été mis à jour. Veuillez vous reconnecter."
+    "credentialsUpdated": "Vos identifiants ont été mis à jour. Veuillez vous reconnecter.",
+    "defaultCredentials": "Identifiants de connexion par défaut",
+    "changePasswordWarning": "Veuillez changer votre mot de passe après votre première connexion",
+    "slides": {
+      "overview": {
+        "alt": "Aperçu de Stirling PDF",
+        "title": "Votre solution tout-en-un pour tous vos besoins PDF.",
+        "subtitle": "Une suite cloud axée sur la confidentialité pour les PDF, qui vous permet de convertir, signer, caviarder et gérer des documents, avec plus de 50 autres outils puissants."
+      },
+      "edit": {
+        "alt": "Modifier des PDF",
+        "title": "Modifiez des PDF pour afficher/sécuriser les informations que vous souhaitez",
+        "subtitle": "Avec plus d’une douzaine d’outils pour caviarder, signer, lire et manipuler des PDF, vous trouverez forcément ce que vous cherchez."
+      },
+      "secure": {
+        "alt": "Sécuriser des PDF",
+        "title": "Protégez les informations sensibles de vos PDF",
+        "subtitle": "Ajoutez des mots de passe, caviardez du contenu et gérez des certificats en toute simplicité."
+      }
+    }
   },
   "signup": {
     "title": "Créer un compte",
@@ -3953,8 +3972,16 @@
       "saved": "Paramètres enregistrés avec succès",
       "saveSuccess": "Paramètres enregistrés avec succès",
       "save": "Enregistrer les modifications",
+      "discard": "Ignorer",
       "restartRequired": "Redémarrage requis",
       "loginRequired": "Le mode de connexion doit être activé pour modifier les paramètres d’administration",
+      "unsavedChanges": {
+        "title": "Modifications non enregistrées",
+        "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?",
+        "cancel": "Continuer l’édition",
+        "discard": "Ignorer les modifications",
+        "hint": "Vous avez des modifications non enregistrées"
+      },
       "loginDisabled": {
         "title": "Mode de connexion requis",
         "message": "Le mode de connexion doit être activé pour modifier les paramètres d’administration. Veuillez définir SECURITY_ENABLELOGIN=true dans votre environnement ou security.enableLogin: true dans settings.yml, puis redémarrer le serveur.",

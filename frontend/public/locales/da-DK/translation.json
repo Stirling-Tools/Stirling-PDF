@@ -3493,7 +3493,26 @@
     "unexpectedError": "Uventet fejl: {{message}}",
     "accountCreatedSuccess": "Konto oprettet! Du kan nu logge ind.",
     "passwordChangedSuccess": "Adgangskoden blev ændret! Log ind med din nye adgangskode.",
-    "credentialsUpdated": "Dine legitimationsoplysninger er opdateret. Log ind igen."
+    "credentialsUpdated": "Dine legitimationsoplysninger er opdateret. Log ind igen.",
+    "defaultCredentials": "Standard loginoplysninger",
+    "changePasswordWarning": "Skift din adgangskode efter du har logget ind første gang",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF oversigt",
+        "title": "Din alt-i-en-løsning til alle dine PDF-behov.",
+        "subtitle": "En privacy-first cloud suite til PDF'er, der lader dig konvertere, signere, redigere og administrere dokumenter samt 50+ andre kraftfulde værktøjer."
+      },
+      "edit": {
+        "alt": "Rediger PDF'er",
+        "title": "Rediger PDF'er for at vise/beskytte de oplysninger, du ønsker",
+        "subtitle": "Med over et dusin værktøjer til at redigere, signere, læse og manipulere PDF'er skal du nok finde det, du leder efter."
+      },
+      "secure": {
+        "alt": "Sikr PDF'er",
+        "title": "Beskyt følsomme oplysninger i dine PDF'er",
+        "subtitle": "Tilføj adgangskoder, slør indhold, og håndter certifikater nemt."
+      }
+    }
   },
   "signup": {
     "title": "Opret en konto",
@@ -3953,8 +3972,16 @@
       "saved": "Indstillinger gemt",
       "saveSuccess": "Indstillinger gemt",
       "save": "Gem ændringer",
+      "discard": "Kassér",
       "restartRequired": "Genstart påkrævet",
       "loginRequired": "Login-tilstand skal være aktiveret for at ændre adminindstillinger",
+      "unsavedChanges": {
+        "title": "Ugemte ændringer",
+        "message": "Du har ugemte ændringer. Vil du kassere dem?",
+        "cancel": "Fortsæt redigering",
+        "discard": "Kassér ændringer",
+        "hint": "Du har ugemte ændringer"
+      },
       "loginDisabled": {
         "title": "Login-tilstand påkrævet",
         "message": "Login-tilstand skal være aktiveret for at ændre adminindstillinger. Angiv SECURITY_ENABLELOGIN=true i dit miljø eller security.enableLogin: true i settings.yml, og genstart derefter serveren.",
@@ -5864,7 +5891,7 @@
     "badges": {
       "unsaved": "Redigeret",
       "modified": "Redigeret",
-      "earlyAccess": "Early Access"
+      "earlyAccess": "Tidlig adgang"
     },
     "actions": {
       "reset": "Nulstil ændringer",

@@ -377,7 +377,7 @@
       "searchPlaceholder": "Cari alat...",
       "none": "Tidak ditetapkan",
       "customBadge": "Kustom",
-      "defaultLabel": "Default: {{shortcut}}",
+      "defaultLabel": "Bawaan: {{shortcut}}",
       "capturing": "Tekan tombol… (Esc untuk membatalkan)",
       "change": "Ubah pintasan",
       "reset": "Atur Ulang",
@@ -1165,10 +1165,10 @@
     "fileFormat": "Format File",
     "wordDoc": "Dokumen Word",
     "wordDocExt": "Dokumen Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Teks OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
-    "txtExt": "Plain Text (.txt)",
+    "odpExt": "Presentasi OpenDocument (.odp)",
+    "txtExt": "Teks Biasa (.txt)",
     "rtfExt": "Rich Text Format (.rtf)",
     "selectedFiles": "File terpilih",
     "noFileSelected": "Tidak ada file yang dipilih. Gunakan panel file untuk menambahkan file.",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Kesalahan tak terduga: {{message}}",
     "accountCreatedSuccess": "Akun berhasil dibuat! Anda sekarang dapat masuk.",
     "passwordChangedSuccess": "Kata sandi berhasil diubah! Silakan masuk dengan kata sandi baru Anda.",
-    "credentialsUpdated": "Kredensial Anda telah diperbarui. Silakan masuk lagi."
+    "credentialsUpdated": "Kredensial Anda telah diperbarui. Silakan masuk lagi.",
+    "defaultCredentials": "Kredensial Login Bawaan",
+    "changePasswordWarning": "Harap ganti kata sandi Anda setelah login untuk pertama kalinya",
+    "slides": {
+      "overview": {
+        "alt": "Sekilas Stirling PDF",
+        "title": "Satu tempat untuk semua kebutuhan PDF Anda.",
+        "subtitle": "Suite cloud berfokus privasi untuk PDF yang memungkinkan Anda mengonversi, menandatangani, menyensor, dan mengelola dokumen, ditambah 50+ alat hebat lainnya."
+      },
+      "edit": {
+        "alt": "Edit PDF",
+        "title": "Edit PDF untuk menampilkan/mengamankan informasi yang Anda inginkan",
+        "subtitle": "Dengan lebih dari selusin alat untuk membantu Anda menyensor, menandatangani, membaca, dan memanipulasi PDF, Anda pasti menemukan yang Anda cari."
+      },
+      "secure": {
+        "alt": "Amankan PDF",
+        "title": "Lindungi informasi sensitif di PDF Anda",
+        "subtitle": "Tambahkan kata sandi, sensor konten, dan kelola sertifikat dengan mudah."
+      }
+    }
   },
   "signup": {
     "title": "Buat akun",
@@ -3953,8 +3972,16 @@
       "saved": "Pengaturan berhasil disimpan",
       "saveSuccess": "Pengaturan berhasil disimpan",
       "save": "Simpan Perubahan",
+      "discard": "Buang",
       "restartRequired": "Perlu Mulai Ulang",
       "loginRequired": "Mode login harus diaktifkan untuk mengubah pengaturan admin",
+      "unsavedChanges": {
+        "title": "Perubahan Belum Disimpan",
+        "message": "Anda memiliki perubahan yang belum disimpan. Apakah Anda ingin membuangnya?",
+        "cancel": "Lanjutkan Mengedit",
+        "discard": "Buang Perubahan",
+        "hint": "Anda memiliki perubahan yang belum disimpan"
+      },
       "loginDisabled": {
         "title": "Mode Login Diperlukan",
         "message": "Mode login harus diaktifkan untuk mengubah pengaturan admin. Harap set SECURITY_ENABLELOGIN=true di lingkungan Anda atau security.enableLogin: true di settings.yml, lalu mulai ulang server.",
@@ -4239,7 +4266,7 @@
             "description": "Cegah pendaftaran pengguna baru melalui OAuth2"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
+            "label": "Scope OAuth2",
             "description": "Daftar OAuth2 scopes yang dipisahkan koma (mis., openid, profile, email)"
           }
         },
@@ -4405,7 +4432,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Instal Aplikasi",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -5774,7 +5801,7 @@
         "description": "Masuk dengan akun Stirling Anda"
       },
       "selfhosted": {
-        "title": "Self-Hosted Server",
+        "title": "Server Self-Hosted",
         "description": "Sambungkan ke server Stirling PDF Anda sendiri"
       }
     },

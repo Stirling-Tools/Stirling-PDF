@@ -3493,7 +3493,26 @@
     "unexpectedError": "Neočakávaná chyba: {{message}}",
     "accountCreatedSuccess": "Účet bol úspešne vytvorený! Teraz sa môžete prihlásiť.",
     "passwordChangedSuccess": "Heslo bolo úspešne zmenené! Prihláste sa novým heslom.",
-    "credentialsUpdated": "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova."
+    "credentialsUpdated": "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova.",
+    "defaultCredentials": "Predvolené prihlasovacie údaje",
+    "changePasswordWarning": "Zmeňte si heslo po prvom prihlásení",
+    "slides": {
+      "overview": {
+        "alt": "Prehľad Stirling PDF",
+        "title": "Všetko pre vaše PDF na jednom mieste.",
+        "subtitle": "Cloudová sada s dôrazom na súkromie pre PDF: konvertovanie, podpisovanie, začierňovanie a správa dokumentov, a 50+ ďalších výkonných nástrojov."
+      },
+      "edit": {
+        "alt": "Úprava PDF",
+        "title": "Upravujte PDF na zobrazenie/ochranu požadovaných informácií",
+        "subtitle": "S viac než tuctom nástrojov na začierňovanie, podpisovanie, čítanie a prácu s PDF určite nájdete, čo hľadáte."
+      },
+      "secure": {
+        "alt": "Zabezpečenie PDF",
+        "title": "Chráňte citlivé informácie v PDF",
+        "subtitle": "Jednoducho pridávajte heslá, začierňujte obsah a spravujte certifikáty."
+      }
+    }
   },
   "signup": {
     "title": "Vytvoriť účet",
@@ -3953,8 +3972,16 @@
       "saved": "Nastavenia boli úspešne uložené",
       "saveSuccess": "Nastavenia boli úspešne uložené",
       "save": "Uložiť zmeny",
+      "discard": "Zahodiť",
       "restartRequired": "Vyžaduje sa reštart",
       "loginRequired": "Na úpravu administrátorských nastavení musí byť povolené prihlásenie",
+      "unsavedChanges": {
+        "title": "Neuložené zmeny",
+        "message": "Máte neuložené zmeny. Chcete ich zahodiť?",
+        "cancel": "Pokračovať v úpravách",
+        "discard": "Zahodiť zmeny",
+        "hint": "Máte neuložené zmeny"
+      },
       "loginDisabled": {
         "title": "Vyžaduje sa režim prihlásenia",
         "message": "Na úpravu administrátorských nastavení musí byť povolený režim prihlásenia. Nastavte SECURITY_ENABLELOGIN=true vo vašom prostredí alebo security.enableLogin: true v settings.yml, potom reštartujte server.",
@@ -4215,7 +4242,7 @@
             "description": "Poskytovateľ OAuth2 použitý pre overenie"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL vydavateľa",
             "description": "Adresa URL vydavateľa poskytovateľa OAuth2"
           },
           "clientId": {

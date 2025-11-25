@@ -1520,7 +1520,7 @@
       "selectedFile": "Načteno z {{file}}",
       "noFile": "Vyberte PDF pro extrakci stávajících záložek.",
       "loadFromPdf": "Načíst z vybraného PDF",
-      "importJson": "Import JSON",
+      "importJson": "Importovat JSON",
       "importClipboard": "Vložit JSON ze schránky",
       "export": "Exportovat záložky",
       "exportJson": "Stáhnout JSON",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Neočekávaná chyba: {{message}}",
     "accountCreatedSuccess": "Účet byl úspěšně vytvořen! Nyní se můžete přihlásit.",
     "passwordChangedSuccess": "Heslo bylo úspěšně změněno! Přihlaste se novým heslem.",
-    "credentialsUpdated": "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu."
+    "credentialsUpdated": "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu.",
+    "defaultCredentials": "Výchozí přihlašovací údaje",
+    "changePasswordWarning": "Po prvním přihlášení si prosím změňte heslo",
+    "slides": {
+      "overview": {
+        "alt": "Přehled Stirling PDF",
+        "title": "Vše pro práci s PDF na jednom místě.",
+        "subtitle": "Cloudová sada s důrazem na soukromí pro práci s PDF, která umožňuje konvertovat, podepisovat, začerňovat a spravovat dokumenty, a nabízí přes 50 dalších užitečných nástrojů."
+      },
+      "edit": {
+        "alt": "Úprava PDF",
+        "title": "Upravujte PDF pro zobrazení/ochranu požadovaných informací",
+        "subtitle": "Více než desítka nástrojů pro začerňování, podepisování, čtení a manipulaci s PDF — najdete, co potřebujete."
+      },
+      "secure": {
+        "alt": "Zabezpečení PDF",
+        "title": "Chraňte citlivé informace ve svých PDF",
+        "subtitle": "Snadno přidávejte hesla, začerňujte obsah a spravujte certifikáty."
+      }
+    }
   },
   "signup": {
     "title": "Vytvořit účet",
@@ -3953,8 +3972,16 @@
       "saved": "Nastavení byla úspěšně uložena",
       "saveSuccess": "Nastavení byla úspěšně uložena",
       "save": "Uložit změny",
+      "discard": "Zahodit",
       "restartRequired": "Vyžadován restart",
       "loginRequired": "Režim přihlášení musí být povolen, abyste mohli upravovat nastavení správce",
+      "unsavedChanges": {
+        "title": "Neuložené změny",
+        "message": "Máte neuložené změny. Chcete je zahodit?",
+        "cancel": "Pokračovat v úpravách",
+        "discard": "Zahodit změny",
+        "hint": "Máte neuložené změny"
+      },
       "loginDisabled": {
         "title": "Vyžadován režim přihlášení",
         "message": "Režim přihlášení musí být povolen, abyste mohli upravovat nastavení správce. Nastavte prosím SECURITY_ENABLELOGIN=true ve vašem prostředí nebo security.enableLogin: true v souboru settings.yml a poté restartujte server.",
@@ -4219,11 +4246,11 @@
             "description": "Issuer URL poskytovatele OAuth2"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "ID klienta",
             "description": "Client ID OAuth2 od vašeho poskytovatele"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "Tajný kód klienta",
             "description": "Client Secret OAuth2 od vašeho poskytovatele"
           },
           "useAsUsername": {
@@ -4400,7 +4427,7 @@
             "description": "Maximální doba běhu"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF do HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
@@ -4444,7 +4471,7 @@
           "description": "Umožnit správcům zvát uživatele e-mailem s automaticky generovanými hesly"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
+          "label": "URL frontendu",
           "description": "Základní URL pro frontend (např. https://pdf.example.com). Používá se pro generování odkazů na pozvánky v e-mailech. Ponechte prázdné pro použití backend URL."
         }
       },
@@ -5976,7 +6003,7 @@
     "text": {
       "name": "Text",
       "placeholder": "Zadejte text, který chcete přidat",
-      "fontLabel": "Font",
+      "fontLabel": "Písmo",
       "fontSizeLabel": "Velikost fontu",
       "fontSizePlaceholder": "Zadejte nebo vyberte velikost fontu (8–200)",
       "colorLabel": "Barva textu"
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "Při přidávání textu do PDF došlo k chybě."
     },
-    "tags": "text,annotation,label",
+    "tags": "text,anotace,štítek",
     "applySignatures": "Použít text"
   }
 }

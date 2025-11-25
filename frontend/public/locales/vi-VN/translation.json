@@ -323,7 +323,7 @@
         "saas": "Stirling Cloud",
         "selfhosted": "Tự lưu trữ"
       },
-      "server": "Server",
+      "server": "Máy chủ",
       "user": "Đăng nhập với tư cách",
       "logout": "Đăng xuất"
     },
@@ -853,7 +853,7 @@
       "desc": "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "văn bản,chú thích,nhãn",
       "title": "Thêm văn bản",
       "desc": "Thêm văn bản tùy chỉnh ở bất kỳ đâu trong PDF"
     }
@@ -1800,7 +1800,7 @@
     "tags": "ép,nhỏ,nhỏ gọn"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "xóa,xóa,biểu mẫu,trường,chỉ đọc",
     "title": "Gỡ chế độ chỉ đọc khỏi các trường biểu mẫu",
     "header": "Mở khóa biểu mẫu PDF",
     "submit": "Remove",
@@ -2190,7 +2190,7 @@
     "text": {
       "name": "Tên người ký",
       "placeholder": "Nhập họ tên đầy đủ",
-      "fontLabel": "Font",
+      "fontLabel": "Phông chữ",
       "fontSizeLabel": "Cỡ chữ",
       "fontSizePlaceholder": "Nhập hoặc chọn cỡ chữ (8-200)",
       "colorLabel": "Màu chữ"
@@ -2727,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "tập sách,dàn trang,in,đóng gáy,gấp,tay sách",
     "title": "Dàn trang sổ",
     "header": "Dàn trang sổ",
     "submit": "Tạo booklet",
@@ -2828,7 +2828,7 @@
     "submit": "Gửi"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "đổi kích thước,chỉnh sửa,kích thước,thích ứng",
     "title": "Điều chỉnh tỷ lệ trang",
     "header": "Điều chỉnh tỷ lệ trang",
     "scaleFactor": {
@@ -3283,13 +3283,13 @@
     }
   },
   "removeImagePdf": {
-    "tags": "Remove Image,Page operations,Back end,server side"
+    "tags": "Xóa ảnh,Thao tác trang,Back end,phía máy chủ"
   },
   "splitPdfByChapters": {
-    "tags": "split,chapters,bookmarks,organize"
+    "tags": "tách,chương,dấu trang,sắp xếp"
   },
   "validateSignature": {
-    "tags": "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate",
+    "tags": "chữ ký,xác minh,xác thực,pdf,chứng chỉ,chữ ký số,Xác thực chữ ký,Xác thực chứng chỉ",
     "title": "Xác thực chữ ký PDF",
     "header": "Xác thực chữ ký số",
     "selectPDF": "Chọn tệp PDF đã ký",
@@ -3390,7 +3390,7 @@
     "totalSignatures": "Tổng số chữ ký"
   },
   "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side",
+    "tags": "Thay màu,Thao tác trang,Back end,phía máy chủ",
     "labels": {
       "settings": "Thiết lập",
       "colourOperation": "Thao tác màu"
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Lỗi không mong muốn: {{message}}",
     "accountCreatedSuccess": "Tạo tài khoản thành công! Bạn có thể đăng nhập.",
     "passwordChangedSuccess": "Đổi mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.",
-    "credentialsUpdated": "Thông tin xác thực của bạn đã được cập nhật. Vui lòng đăng nhập lại."
+    "credentialsUpdated": "Thông tin xác thực của bạn đã được cập nhật. Vui lòng đăng nhập lại.",
+    "defaultCredentials": "Thông tin đăng nhập mặc định",
+    "changePasswordWarning": "Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu",
+    "slides": {
+      "overview": {
+        "alt": "Tổng quan Stirling PDF",
+        "title": "Giải pháp tất cả trong một cho mọi nhu cầu PDF của bạn.",
+        "subtitle": "Bộ công cụ đám mây ưu tiên quyền riêng tư cho PDF cho phép bạn chuyển đổi, ký, ẩn/xóa thông tin và quản lý tài liệu, cùng hơn 50 công cụ mạnh mẽ khác."
+      },
+      "edit": {
+        "alt": "Chỉnh sửa PDF",
+        "title": "Chỉnh sửa PDF để hiển thị/bảo vệ thông tin bạn muốn",
+        "subtitle": "Với hơn chục công cụ giúp bạn ẩn/xóa, ký, đọc và thao tác với PDF, bạn chắc chắn sẽ tìm được thứ mình cần."
+      },
+      "secure": {
+        "alt": "Bảo mật PDF",
+        "title": "Bảo vệ thông tin nhạy cảm trong PDF của bạn",
+        "subtitle": "Thêm mật khẩu, che nội dung và quản lý chứng chỉ dễ dàng."
+      }
+    }
   },
   "signup": {
     "title": "Tạo tài khoản",
@@ -3953,8 +3972,16 @@
       "saved": "Lưu cài đặt thành công",
       "saveSuccess": "Lưu cài đặt thành công",
       "save": "Lưu thay đổi",
+      "discard": "Bỏ",
       "restartRequired": "Cần khởi động lại",
       "loginRequired": "Phải bật chế độ đăng nhập để chỉnh sửa cài đặt quản trị",
+      "unsavedChanges": {
+        "title": "Thay đổi chưa lưu",
+        "message": "Bạn có thay đổi chưa lưu. Bạn có muốn bỏ chúng không?",
+        "cancel": "Tiếp tục chỉnh sửa",
+        "discard": "Bỏ thay đổi",
+        "hint": "Bạn có thay đổi chưa lưu"
+      },
       "loginDisabled": {
         "title": "Yêu cầu chế độ đăng nhập",
         "message": "Phải bật chế độ đăng nhập để chỉnh sửa cài đặt quản trị. Vui lòng đặt SECURITY_ENABLELOGIN=true trong môi trường của bạn hoặc security.enableLogin: true trong settings.yml, sau đó khởi động lại máy chủ.",
@@ -4215,7 +4242,7 @@
             "description": "Nhà cung cấp OAuth2 dùng cho xác thực"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL Issuer",
             "description": "URL nhà phát hành của nhà cung cấp OAuth2"
           },
           "clientId": {
@@ -4400,7 +4427,7 @@
             "description": "Thời gian thực thi tối đa"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF sang HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
@@ -4444,7 +4471,7 @@
           "description": "Cho phép quản trị viên mời người dùng qua email với mật khẩu tự tạo"
         },
         "frontendUrl": {
-          "label": "Frontend URL",
+          "label": "URL Frontend",
           "description": "URL cơ sở cho Frontend (ví dụ https://pdf.example.com). Dùng để tạo liên kết mời trong email. Để trống để dùng URL backend."
         }
       },
@@ -5541,7 +5568,7 @@
     "yearly": "Theo năm",
     "billingPeriod": "Chu kỳ thanh toán",
     "enterpriseNote": "Có thể điều chỉnh số ghế khi thanh toán (1-1000).",
-    "installationId": "Installation ID",
+    "installationId": "ID cài đặt",
     "licenseKey": "License key của bạn",
     "licenseInstructions": "Khóa đã được thêm vào cài đặt của bạn. Bạn cũng sẽ nhận một bản qua email.",
     "canCloseWindow": "Bạn có thể đóng cửa sổ này.",
@@ -5976,7 +6003,7 @@
     "text": {
       "name": "Nội dung văn bản",
       "placeholder": "Nhập văn bản bạn muốn thêm",
-      "fontLabel": "Font",
+      "fontLabel": "Phông chữ",
       "fontSizeLabel": "Cỡ chữ",
       "fontSizePlaceholder": "Nhập hoặc chọn cỡ chữ (8-200)",
       "colorLabel": "Màu văn bản"

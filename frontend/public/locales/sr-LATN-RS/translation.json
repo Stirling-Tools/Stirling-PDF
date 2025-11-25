@@ -29,7 +29,7 @@
       "fullscreen": "Prebaci na režim celog ekrana",
       "sidebar": "Prebaci na režim bočne trake"
     },
-    "alpha": "Alpha",
+    "alpha": "Alfa",
     "premiumFeature": "Premium funkcija:",
     "comingSoon": "Uskoro:"
   },
@@ -545,7 +545,7 @@
     "globalPopularity": "Globalna popularnost",
     "sortBy": "Sortiranje:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo",
+      "brandAlt": "logo Stirling PDF",
       "openFiles": "Otvori datoteke",
       "swipeHint": "Prevucite levo ili desno da biste promenili prikaz",
       "tools": "Alati",
@@ -853,7 +853,7 @@
       "desc": "Pregledajte i uređujte Stirling PDF JSON izvoze uz grupisano uređivanje teksta i ponovno generisanje PDF-a"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "tekst,anotacija,oznaka",
       "title": "Dodaj tekst",
       "desc": "Dodajte prilagođeni tekst bilo gde u PDF"
     }
@@ -1168,7 +1168,7 @@
     "odtExt": "OpenDocument Text (.odt)",
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "OpenDocument Presentation (.odp)",
-    "txtExt": "Plain Text (.txt)",
+    "txtExt": "Običan tekst (.txt)",
     "rtfExt": "Rich Text Format (.rtf)",
     "selectedFiles": "Izabrane datoteke",
     "noFileSelected": "Nije izabrana nijedna datoteka. Koristite panel datoteka da dodate datoteke.",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Neočekivana greška: {{message}}",
     "accountCreatedSuccess": "Nalog je uspešno kreiran! Sada se možete prijaviti.",
     "passwordChangedSuccess": "Lozinka je uspešno promenjena! Prijavite se novom lozinkom.",
-    "credentialsUpdated": "Vaši prijavni podaci su ažurirani. Prijavite se ponovo."
+    "credentialsUpdated": "Vaši prijavni podaci su ažurirani. Prijavite se ponovo.",
+    "defaultCredentials": "Podrazumevani podaci za prijavu",
+    "changePasswordWarning": "Promenite lozinku nakon prve prijave",
+    "slides": {
+      "overview": {
+        "alt": "Pregled Stirling PDF",
+        "title": "Sve na jednom mestu za sve vaše PDF potrebe.",
+        "subtitle": "Cloud paket sa privatnošću na prvom mestu za PDF dokumente koji omogućava konvertovanje, potpisivanje, zatamnjivanje i upravljanje dokumentima, uz 50+ drugih moćnih alata."
+      },
+      "edit": {
+        "alt": "Uređivanje PDF dokumenata",
+        "title": "Uredite PDF dokumente da prikažete/zaštitite informacije koje želite",
+        "subtitle": "Uz više od desetak alata za zatamnjivanje, potpisivanje, čitanje i manipulaciju PDF dokumentima, sigurno ćete naći šta tražite."
+      },
+      "secure": {
+        "alt": "Zaštita PDF",
+        "title": "Zaštitite osetljive informacije u vašim PDF dokumentima",
+        "subtitle": "Dodajte lozinke, zatamnite sadržaj i lako upravljajte sertifikatima."
+      }
+    }
   },
   "signup": {
     "title": "Kreirajte nalog",
@@ -3953,8 +3972,16 @@
       "saved": "Podešavanja uspešno sačuvana",
       "saveSuccess": "Podešavanja uspešno sačuvana",
       "save": "Sačuvaj izmene",
+      "discard": "Odbaci",
       "restartRequired": "Potreban je restart",
       "loginRequired": "Režim prijave mora biti omogućen da biste menjali admin podešavanja",
+      "unsavedChanges": {
+        "title": "Nesačuvane promene",
+        "message": "Imate nesačuvane promene. Želite li da ih odbacite?",
+        "cancel": "Nastavi uređivanje",
+        "discard": "Odbaci promene",
+        "hint": "Imate nesačuvane promene"
+      },
       "loginDisabled": {
         "title": "Potreban je režim prijave",
         "message": "Režim prijave mora biti omogućen da biste menjali admin podešavanja. Postavite SECURITY_ENABLELOGIN=true u svom okruženju ili security.enableLogin: true u settings.yml, zatim restartujte server.",
@@ -4405,7 +4432,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Instaliraj aplikaciju",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "Došlo je do greške pri dodavanju teksta u PDF."
     },
-    "tags": "text,annotation,label",
+    "tags": "tekst,anotacija,oznaka",
     "applySignatures": "Primeni tekst"
   }
 }

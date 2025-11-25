@@ -29,7 +29,7 @@
       "fullscreen": "Prebaci na način cijelog zaslona",
       "sidebar": "Prebaci na način bočne trake"
     },
-    "alpha": "Alpha",
+    "alpha": "Alfa",
     "premiumFeature": "Premium značajka:",
     "comingSoon": "Uskoro:"
   },
@@ -1165,9 +1165,9 @@
     "fileFormat": "Format datoteke",
     "wordDoc": "Word dokument",
     "wordDocExt": "Word dokument (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "OpenDocument tekst (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "OpenDocument prezentacija (.odp)",
     "txtExt": "Običan tekst (.txt)",
     "rtfExt": "Rich Text Format (.rtf)",
     "selectedFiles": "Odabrane datoteke",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Neočekivana pogreška: {{message}}",
     "accountCreatedSuccess": "Račun je uspješno stvoren! Sada se možete prijaviti.",
     "passwordChangedSuccess": "Lozinka je uspješno promijenjena! Prijavite se novom lozinkom.",
-    "credentialsUpdated": "Vaše vjerodajnice su ažurirane. Prijavite se ponovno."
+    "credentialsUpdated": "Vaše vjerodajnice su ažurirane. Prijavite se ponovno.",
+    "defaultCredentials": "Zadane vjerodajnice za prijavu",
+    "changePasswordWarning": "Promijenite lozinku nakon prve prijave",
+    "slides": {
+      "overview": {
+        "alt": "Pregled Stirling PDF-a",
+        "title": "Sve za PDF na jednom mjestu.",
+        "subtitle": "Cloud paket s fokusom na privatnost za PDF-ove koji omogućuje pretvaranje, potpisivanje, redaktiranje i upravljanje dokumentima, uz 50+ drugih moćnih alata."
+      },
+      "edit": {
+        "alt": "Uređivanje PDF-ova",
+        "title": "Uredite PDF-ove kako biste prikazali/zaštitili željene informacije",
+        "subtitle": "S više od desetak alata za redaktiranje, potpisivanje, čitanje i obradu PDF-ova, sigurno ćete naći što tražite."
+      },
+      "secure": {
+        "alt": "Zaštita PDF-ova",
+        "title": "Zaštitite osjetljive informacije u svojim PDF-ovima",
+        "subtitle": "Dodajte lozinke, redaktirajte sadržaj i lako upravljajte certifikatima."
+      }
+    }
   },
   "signup": {
     "title": "Stvorite račun",
@@ -3953,8 +3972,16 @@
       "saved": "Postavke su uspješno spremljene",
       "saveSuccess": "Postavke su uspješno spremljene",
       "save": "Spremi promjene",
+      "discard": "Odbaci",
       "restartRequired": "Potrebno ponovno pokretanje",
       "loginRequired": "Način prijave mora biti omogućen za izmjenu administratorskih postavki",
+      "unsavedChanges": {
+        "title": "Nespremljene promjene",
+        "message": "Imate nespremljene promjene. Želite li ih odbaciti?",
+        "cancel": "Nastavi uređivati",
+        "discard": "Odbaci promjene",
+        "hint": "Imate nespremljene promjene"
+      },
       "loginDisabled": {
         "title": "Potreban je način prijave",
         "message": "Način prijave mora biti omogućen za izmjenu administratorskih postavki. Postavite SECURITY_ENABLELOGIN=true u svom okruženju ili security.enableLogin: true u settings.yml, zatim ponovno pokrenite poslužitelj.",

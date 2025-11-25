@@ -853,7 +853,7 @@
       "desc": "Revise e edite exportações JSON do Stirling PDF com edição de texto agrupado e regeneração de PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "texto,anotação,etiqueta",
       "title": "Adicionar texto",
       "desc": "Adicione texto personalizado em qualquer lugar do seu PDF"
     }
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Erro inesperado: {{message}}",
     "accountCreatedSuccess": "Conta criada com sucesso! Já pode iniciar sessão.",
     "passwordChangedSuccess": "Palavra-passe alterada com sucesso! Inicie sessão com a sua nova palavra-passe.",
-    "credentialsUpdated": "As suas credenciais foram atualizadas. Inicie sessão novamente."
+    "credentialsUpdated": "As suas credenciais foram atualizadas. Inicie sessão novamente.",
+    "defaultCredentials": "Credenciais de Login predefinidas",
+    "changePasswordWarning": "Altere a sua palavra-passe após iniciar sessão pela primeira vez",
+    "slides": {
+      "overview": {
+        "alt": "Visão geral do Stirling PDF",
+        "title": "A sua solução tudo-em-um para todas as suas necessidades de PDF.",
+        "subtitle": "Uma suite cloud com foco na privacidade para PDFs que permite converter, assinar, ocultar e gerir documentos, juntamente com mais de 50 outras ferramentas poderosas."
+      },
+      "edit": {
+        "alt": "Editar PDFs",
+        "title": "Edite PDFs para mostrar/proteger a informação que pretende",
+        "subtitle": "Com mais de uma dúzia de ferramentas para o ajudar a ocultar, assinar, ler e manipular PDFs, encontrará certamente o que procura."
+      },
+      "secure": {
+        "alt": "Proteger PDFs",
+        "title": "Proteja informações sensíveis nos seus PDFs",
+        "subtitle": "Adicione palavras-passe, oculte conteúdo e gere certificados com facilidade."
+      }
+    }
   },
   "signup": {
     "title": "Criar uma conta",
@@ -3953,8 +3972,16 @@
       "saved": "Definições guardadas com êxito",
       "saveSuccess": "Definições guardadas com êxito",
       "save": "Guardar alterações",
+      "discard": "Descartar",
       "restartRequired": "É necessário reiniciar",
       "loginRequired": "O modo de início de sessão deve estar ativado para modificar as definições de administrador",
+      "unsavedChanges": {
+        "title": "Alterações por guardar",
+        "message": "Tem alterações por guardar. Pretende descartá-las?",
+        "cancel": "Continuar a editar",
+        "discard": "Descartar alterações",
+        "hint": "Tem alterações por guardar"
+      },
       "loginDisabled": {
         "title": "Modo de início de sessão necessário",
         "message": "O modo de início de sessão deve estar ativado para modificar as definições de administrador. Defina SECURITY_ENABLELOGIN=true no seu ambiente ou security.enableLogin: true em settings.yml e depois reinicie o servidor.",

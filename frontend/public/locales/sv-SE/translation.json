@@ -29,7 +29,7 @@
       "fullscreen": "Byt till helskärmsläge",
       "sidebar": "Byt till sidopanelläge"
     },
-    "alpha": "Alpha",
+    "alpha": "Alfa",
     "premiumFeature": "Premiumfunktion:",
     "comingSoon": "Kommer snart:"
   },
@@ -853,7 +853,7 @@
       "desc": "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "text,kommentar,etikett",
       "title": "Lägg till text",
       "desc": "Lägg till egen text var som helst i din PDF"
     }
@@ -1125,7 +1125,7 @@
     "settings": "Inställningar",
     "conversionCompleted": "Konvertering slutförd",
     "results": "Resultat",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "konverterad_fil",
     "conversionResults": "Konverteringsresultat",
     "convertFrom": "Konvertera från",
     "convertTo": "Konvertera till",
@@ -2727,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "häfte,utläggning,utskrift,bindning,vikning,signatur",
     "title": "Häftesuppställning",
     "header": "Häftesuppställning",
     "submit": "Skapa häfte",
@@ -2828,7 +2828,7 @@
     "submit": "Skicka"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "ändra storlek,ändra,dimension,anpassa",
     "title": "Justera sidskalning",
     "header": "Justera sidskalning",
     "scaleFactor": {
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Oväntat fel: {{message}}",
     "accountCreatedSuccess": "Kontot har skapats! Du kan nu logga in.",
     "passwordChangedSuccess": "Lösenordet har ändrats. Logga in med ditt nya lösenord.",
-    "credentialsUpdated": "Dina uppgifter har uppdaterats. Logga in igen."
+    "credentialsUpdated": "Dina uppgifter har uppdaterats. Logga in igen.",
+    "defaultCredentials": "Standardinloggningsuppgifter",
+    "changePasswordWarning": "Byt ditt lösenord efter att du loggat in första gången",
+    "slides": {
+      "overview": {
+        "alt": "Översikt över Stirling PDF",
+        "title": "Din allt-i-ett-lösning för alla dina PDF-behov.",
+        "subtitle": "En integritetsfokuserad molnsuite för PDF som låter dig konvertera, signera, maskera och hantera dokument, plus 50+ andra kraftfulla verktyg."
+      },
+      "edit": {
+        "alt": "Redigera PDF-filer",
+        "title": "Redigera PDF-filer för att visa/säkra den information du vill",
+        "subtitle": "Med över ett dussin verktyg för att maskera, signera, läsa och manipulera PDF-filer hittar du garanterat det du söker."
+      },
+      "secure": {
+        "alt": "Säkra PDF-filer",
+        "title": "Skydda känslig information i dina PDF-filer",
+        "subtitle": "Lägg till lösenord, maskera innehåll och hantera certifikat enkelt."
+      }
+    }
   },
   "signup": {
     "title": "Skapa ett konto",
@@ -3768,7 +3787,7 @@
     "title": "API-dokumentation",
     "header": "API-dokumentation",
     "desc": "Visa och testa Stirling PDF API-slutpunkter",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,dokumentation,swagger,ändpunkter,utveckling"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Inställningarna sparades",
       "saveSuccess": "Inställningarna sparades",
       "save": "Spara ändringar",
+      "discard": "Förkasta",
       "restartRequired": "Omstart krävs",
       "loginRequired": "Inloggningsläge måste vara aktiverat för att ändra admininställningar",
+      "unsavedChanges": {
+        "title": "Osparade ändringar",
+        "message": "Du har osparade ändringar. Vill du förkasta dem?",
+        "cancel": "Fortsätt redigera",
+        "discard": "Förkasta ändringar",
+        "hint": "Du har osparade ändringar"
+      },
       "loginDisabled": {
         "title": "Inloggningsläge krävs",
         "message": "Inloggningsläge måste vara aktiverat för att ändra admininställningar. Ställ in SECURITY_ENABLELOGIN=true i din miljö eller security.enableLogin: true i settings.yml och starta sedan om servern.",
@@ -4219,11 +4246,11 @@
             "description": "OAuth2-leverantörens issuer-URL"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "Klient-ID",
             "description": "OAuth2 Client ID från din leverantör"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "Klienthemlighet",
             "description": "OAuth2 Client Secret från din leverantör"
           },
           "useAsUsername": {
@@ -4725,7 +4752,7 @@
       "keyLength": {
         "label": "Längd på krypteringsnyckel",
         "40bit": "40-bit (Låg)",
-        "128bit": "128-bit (Standard)",
+        "128bit": "128-bit (standard)",
         "256bit": "256-bit (Hög)"
       }
     },
@@ -5951,7 +5978,7 @@
       "suggestions": "Anteckningar",
       "currentPageFonts": "Typsnitt på denna sida",
       "allFonts": "Alla typsnitt",
-      "fallback": "fallback",
+      "fallback": "reserv",
       "missing": "saknas",
       "perfectMessage": "Alla typsnitt kan återskapas perfekt.",
       "warningMessage": "Vissa typsnitt kanske inte återges korrekt.",

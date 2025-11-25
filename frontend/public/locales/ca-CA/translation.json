@@ -1125,7 +1125,7 @@
     "settings": "Opcions",
     "conversionCompleted": "Conversió completada",
     "results": "Resultats",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "fitxer_convertit",
     "conversionResults": "Resultats de la conversió",
     "convertFrom": "Converteix de",
     "convertTo": "Converteix a",
@@ -1312,7 +1312,7 @@
     "desc": "Afegeix marques d'aigua de text o d'imatge als fitxers PDF",
     "completed": "Marca d'aigua afegida",
     "submit": "Afegir Marca d'Aigua",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "amb_marca_d_aigua",
     "error": {
       "failed": "S'ha produït un error en afegir la marca d'aigua al PDF."
     },
@@ -2837,7 +2837,7 @@
     "pageSize": {
       "label": "Mida de pàgina de destinació",
       "keep": "Mantén la mida original",
-      "letter": "Letter",
+      "letter": "Carta",
       "legal": "Legal"
     },
     "submit": "Ajusta l'escala de pàgina",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Error inesperat: {{message}}",
     "accountCreatedSuccess": "Compte creat correctament! Ara podeu iniciar sessió.",
     "passwordChangedSuccess": "Contrasenya canviada correctament! Inicieu sessió amb la nova contrasenya.",
-    "credentialsUpdated": "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
+    "credentialsUpdated": "S'han actualitzat les vostres credencials. Torneu a iniciar sessió.",
+    "defaultCredentials": "Credencials d'inici de sessió predeterminades",
+    "changePasswordWarning": "Canvia la contrasenya després d'iniciar sessió per primera vegada",
+    "slides": {
+      "overview": {
+        "alt": "Visió general de Stirling PDF",
+        "title": "Tot el que necessites per als teus PDF en un sol lloc.",
+        "subtitle": "Una suite al núvol centrada en la privadesa per a PDF que et permet convertir, signar, censurar i gestionar documents, amb més de 50 eines potents."
+      },
+      "edit": {
+        "alt": "Edita PDF",
+        "title": "Edita PDF per mostrar/protegir la informació que vulguis",
+        "subtitle": "Amb més d'una dotzena d'eines per censurar, signar, llegir i manipular PDF, segur que hi trobaràs el que busques."
+      },
+      "secure": {
+        "alt": "Protegeix PDF",
+        "title": "Protegeix la informació sensible dels teus PDF",
+        "subtitle": "Afegeix contrasenyes, censura contingut i gestiona certificats amb facilitat."
+      }
+    }
   },
   "signup": {
     "title": "Crea un compte",
@@ -3953,8 +3972,16 @@
       "saved": "Configuració desada correctament",
       "saveSuccess": "Configuració desada correctament",
       "save": "Desa els canvis",
+      "discard": "Descarta",
       "restartRequired": "Cal reiniciar",
       "loginRequired": "Heu d'activar el mode d'inici de sessió per modificar la configuració d'administració",
+      "unsavedChanges": {
+        "title": "Canvis no desats",
+        "message": "Tens canvis no desats. Vols descartar-los?",
+        "cancel": "Continua editant",
+        "discard": "Descarta els canvis",
+        "hint": "Tens canvis no desats"
+      },
       "loginDisabled": {
         "title": "Cal el mode d'inici de sessió",
         "message": "S'ha d'activar el mode d'inici de sessió per modificar la configuració d'administració. Si us plau, establiu SECURITY_ENABLELOGIN=true al vostre entorn o security.enableLogin: true a settings.yml, i després reinicieu el servidor.",

@@ -321,7 +321,7 @@
       "title": "Режим подключения",
       "mode": {
         "saas": "Stirling Cloud",
-        "selfhosted": "Self-Hosted"
+        "selfhosted": "Самохостинг"
       },
       "server": "Сервер",
       "user": "Вы вошли как",
@@ -1125,7 +1125,7 @@
     "settings": "Настройки",
     "conversionCompleted": "Преобразование завершено",
     "results": "Результаты",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "преобразованный_файл",
     "conversionResults": "Результаты преобразования",
     "convertFrom": "Преобразовать из",
     "convertTo": "Преобразовать в",
@@ -1165,11 +1165,11 @@
     "fileFormat": "Формат файла",
     "wordDoc": "Документ Word",
     "wordDocExt": "Документ Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Текст OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "Презентация OpenDocument (.odp)",
     "txtExt": "Простой текст (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "Формат Rich Text (.rtf)",
     "selectedFiles": "Выбранные файлы",
     "noFileSelected": "Файл не выбран. Используйте панель файлов, чтобы добавить файлы.",
     "convertFiles": "Преобразовать файлы",
@@ -1312,7 +1312,7 @@
     "desc": "Добавляйте текстовые или графические водяные знаки в PDF-файлы",
     "completed": "Водяной знак добавлен",
     "submit": "Добавить водяной знак",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "с_водяным_знаком",
     "error": {
       "failed": "Произошла ошибка при добавлении водяного знака в PDF."
     },
@@ -1604,7 +1604,7 @@
       "placeholder": "напр., 1,3,5-8,10",
       "error": "Недопустимый формат номеров страниц. Используйте числа, диапазоны (1-5) или математические выражения (2n+1)"
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "страницы_удалены",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -1805,7 +1805,7 @@
     "header": "Разблокировать PDF-формы",
     "submit": "Remove",
     "description": "Этот инструмент снимет режим «только чтение» с полей PDF-форм, сделав их редактируемыми и заполняемыми.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "формы_разблокированы",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -1819,7 +1819,7 @@
   "changeMetadata": {
     "header": "Изменить метаданные",
     "submit": "Изменить",
-    "filenamePrefix": "metadata",
+    "filenamePrefix": "метаданные",
     "settings": {
       "title": "Настройки метаданных"
     },
@@ -2292,7 +2292,7 @@
     "header": "Сведение PDF",
     "flattenOnlyForms": "Свести только формы",
     "submit": "Свести",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "сплющено",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -2342,7 +2342,7 @@
     "header": "Восстановление PDF",
     "submit": "Восстановить",
     "description": "Этот инструмент попытается восстановить повреждённые или испорченные PDF-файлы. Дополнительные настройки не требуются.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "восстановлено",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -2553,7 +2553,7 @@
   "certSign": {
     "tags": "аутентификация,PEM,P12,официальный,шифрование",
     "title": "Подписание сертификатом",
-    "filenamePrefix": "signed",
+    "filenamePrefix": "подписано",
     "signMode": {
       "stepTitle": "Режим подписи",
       "tooltip": {
@@ -2697,7 +2697,7 @@
     "selectPDF": "Выберите PDF-файл:",
     "submit": "Удалить подпись",
     "description": "Этот инструмент удалит цифровые подписи сертификатов из вашего PDF-документа.",
-    "filenamePrefix": "unsigned",
+    "filenamePrefix": "неподписано",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Непредвиденная ошибка: {{message}}",
     "accountCreatedSuccess": "Учетная запись успешно создана! Теперь вы можете войти.",
     "passwordChangedSuccess": "Пароль успешно изменен! Пожалуйста, войдите с новым паролем.",
-    "credentialsUpdated": "Ваши учетные данные обновлены. Пожалуйста, войдите снова."
+    "credentialsUpdated": "Ваши учетные данные обновлены. Пожалуйста, войдите снова.",
+    "defaultCredentials": "Данные входа по умолчанию",
+    "changePasswordWarning": "Пожалуйста, смените пароль после первого входа",
+    "slides": {
+      "overview": {
+        "alt": "Обзор Stirling PDF",
+        "title": "Всё для работы с PDF в одном месте.",
+        "subtitle": "Облачный набор с приоритетом приватности для работы с PDF: конвертируйте, подписывайте, скрывайте данные и управляйте документами, а также 50+ других мощных инструментов."
+      },
+      "edit": {
+        "alt": "Редактирование PDF",
+        "title": "Редактируйте PDF, чтобы показывать и защищать нужную информацию",
+        "subtitle": "С более чем дюжиной инструментов для скрытия данных, подписания, чтения и обработки PDF вы точно найдёте нужное."
+      },
+      "secure": {
+        "alt": "Защита PDF",
+        "title": "Защитите конфиденциальные данные в ваших PDF",
+        "subtitle": "Легко добавляйте пароли, скрывайте содержание и управляйте сертификатами."
+      }
+    }
   },
   "signup": {
     "title": "Создать аккаунт",
@@ -3528,7 +3547,7 @@
     "header": "PDF в одну страницу",
     "submit": "Преобразовать в одну страницу",
     "description": "Этот инструмент объединит все страницы вашего PDF в одну большую страницу. Ширина останется как у исходных страниц, а высота будет равна сумме высот всех страниц.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "одна_страница",
     "files": {
       "placeholder": "Выберите PDF-файл в главном окне, чтобы начать"
     },
@@ -3953,8 +3972,16 @@
       "saved": "Настройки успешно сохранены",
       "saveSuccess": "Настройки успешно сохранены",
       "save": "Сохранить изменения",
+      "discard": "Отменить",
       "restartRequired": "Требуется перезапуск",
       "loginRequired": "Для изменения настроек администратора должен быть включен режим входа",
+      "unsavedChanges": {
+        "title": "Несохранённые изменения",
+        "message": "У вас есть несохранённые изменения. Отменить их?",
+        "cancel": "Продолжить редактирование",
+        "discard": "Отменить изменения",
+        "hint": "У вас есть несохранённые изменения"
+      },
       "loginDisabled": {
         "title": "Требуется режим входа",
         "message": "Для изменения настроек администратора должен быть включен режим входа. Установите SECURITY_ENABLELOGIN=true в окружении или security.enableLogin: true в settings.yml, затем перезапустите сервер.",
@@ -4137,7 +4164,7 @@
           },
           "level": {
             "label": "Уровень аудита",
-            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+            "description": "0=ВЫКЛ, 1=БАЗОВЫЙ, 2=СТАНДАРТНЫЙ, 3=ПОДРОБНЫЙ"
           },
           "retentionDays": {
             "label": "Срок хранения аудита (дни)",
@@ -4400,12 +4427,12 @@
             "description": "Максимальное время выполнения"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF в HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Установить приложение",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"

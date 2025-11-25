@@ -1868,8 +1868,8 @@
     "trapped": {
       "label": "陷印状态",
       "unknown": "未知",
-      "true": "True",
-      "false": "False"
+      "true": "是",
+      "false": "否"
     },
     "advanced": {
       "title": "高级选项"
@@ -3493,7 +3493,26 @@
     "unexpectedError": "意外错误：{{message}}",
     "accountCreatedSuccess": "账户创建成功！现在可以登录。",
     "passwordChangedSuccess": "密码修改成功！请使用新密码登录。",
-    "credentialsUpdated": "您的凭据已更新。请重新登录。"
+    "credentialsUpdated": "您的凭据已更新。请重新登录。",
+    "defaultCredentials": "默认登录凭据",
+    "changePasswordWarning": "首次登录后请更改密码",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF 概览",
+        "title": "满足您全部 PDF 需求的一站式平台。",
+        "subtitle": "面向隐私优先的 PDF 云套件，支持转换、签名、涂黑与管理文档，并提供 50+ 个其他强大工具。"
+      },
+      "edit": {
+        "alt": "编辑 PDF",
+        "title": "编辑 PDF，以展示/保护您所需的信息",
+        "subtitle": "拥有十余种工具，助您涂黑、签名、阅读并处理 PDF，定能满足您的需求。"
+      },
+      "secure": {
+        "alt": "保护 PDF",
+        "title": "保护 PDF 中的敏感信息",
+        "subtitle": "轻松添加密码、涂黑内容并管理证书。"
+      }
+    }
   },
   "signup": {
     "title": "创建账户",
@@ -3953,8 +3972,16 @@
       "saved": "设置保存成功",
       "saveSuccess": "设置保存成功",
       "save": "保存更改",
+      "discard": "丢弃",
       "restartRequired": "需要重启",
       "loginRequired": "必须启用登录模式才能修改管理设置",
+      "unsavedChanges": {
+        "title": "未保存的更改",
+        "message": "您有未保存的更改。要丢弃吗？",
+        "cancel": "继续编辑",
+        "discard": "丢弃更改",
+        "hint": "您有未保存的更改"
+      },
       "loginDisabled": {
         "title": "需要登录模式",
         "message": "必须启用登录模式才能修改管理设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。",
@@ -4400,7 +4427,7 @@
             "description": "最大执行时间"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF 转 HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",

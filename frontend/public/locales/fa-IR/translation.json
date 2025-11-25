@@ -1125,7 +1125,7 @@
     "settings": "تنظیمات",
     "conversionCompleted": "تبدیل انجام شد",
     "results": "نتایج",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "فایل_تبدیل‌شده",
     "conversionResults": "نتایج تبدیل",
     "convertFrom": "تبدیل از",
     "convertTo": "تبدیل به",
@@ -1165,11 +1165,11 @@
     "fileFormat": "قالب فایل",
     "wordDoc": "سند Word",
     "wordDocExt": "سند Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "متن OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "ارائه OpenDocument (.odp)",
     "txtExt": "متن ساده (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "قالب متن غنی (.rtf)",
     "selectedFiles": "فایل‌های انتخاب‌شده",
     "noFileSelected": "هیچ فایلی انتخاب نشده. از پنل فایل‌ها برای افزودن فایل استفاده کنید.",
     "convertFiles": "تبدیل فایل‌ها",
@@ -1312,7 +1312,7 @@
     "desc": "افزودن واترمارک متنی یا تصویری به فایل‌های PDF",
     "completed": "واترمارک افزوده شد",
     "submit": "افزودن واترمارک",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "واترمارک‌شده",
     "error": {
       "failed": "هنگام افزودن واترمارک به PDF خطایی رخ داد."
     },
@@ -3493,7 +3493,26 @@
     "unexpectedError": "خطای غیرمنتظره: {{message}}",
     "accountCreatedSuccess": "حساب با موفقیت ایجاد شد! اکنون می‌توانید وارد شوید.",
     "passwordChangedSuccess": "گذرواژه با موفقیت تغییر کرد! لطفاً با گذرواژه جدید خود وارد شوید.",
-    "credentialsUpdated": "اطلاعات ورود شما به‌روزرسانی شد. لطفاً دوباره وارد شوید."
+    "credentialsUpdated": "اطلاعات ورود شما به‌روزرسانی شد. لطفاً دوباره وارد شوید.",
+    "defaultCredentials": "مشخصات ورود پیش‌فرض",
+    "changePasswordWarning": "لطفاً پس از اولین ورود، گذرواژه خود را تغییر دهید",
+    "slides": {
+      "overview": {
+        "alt": "نمای کلی Stirling PDF",
+        "title": "همه نیازهای PDF شما در یک‌جا.",
+        "subtitle": "یک مجموعه ابری با اولویت حریم خصوصی برای PDFها که امکان تبدیل، امضا، پنهان‌سازی و مدیریت اسناد را به‌همراه 50+ ابزار قدرتمند دیگر فراهم می‌کند."
+      },
+      "edit": {
+        "alt": "ویرایش PDFها",
+        "title": "ویرایش PDFها برای نمایش/ایمن‌سازی اطلاعات موردنظر شما",
+        "subtitle": "با بیش از دوازده ابزار برای پنهان‌سازی، امضا، خواندن و دستکاری PDFها، مطمئناً آنچه می‌خواهید را پیدا می‌کنید."
+      },
+      "secure": {
+        "alt": "ایمن‌سازی PDFها",
+        "title": "از اطلاعات حساس در PDFهای خود محافظت کنید",
+        "subtitle": "به‌سادگی گذرواژه اضافه کنید، محتوا را پنهان‌سازی کنید و گواهی‌ها را مدیریت کنید."
+      }
+    }
   },
   "signup": {
     "title": "ایجاد حساب",
@@ -3953,8 +3972,16 @@
       "saved": "تنظیمات با موفقیت ذخیره شد",
       "saveSuccess": "تنظیمات با موفقیت ذخیره شد",
       "save": "ذخیره تغییرات",
+      "discard": "نادیده گرفتن",
       "restartRequired": "نیاز به راه‌اندازی مجدد",
       "loginRequired": "برای تغییر تنظیمات مدیر باید حالت ورود فعال باشد",
+      "unsavedChanges": {
+        "title": "تغییرات ذخیره‌نشده",
+        "message": "تغییرات ذخیره‌نشده دارید. می‌خواهید آن‌ها را نادیده بگیرید؟",
+        "cancel": "ادامه ویرایش",
+        "discard": "نادیده گرفتن تغییرات",
+        "hint": "تغییرات ذخیره‌نشده دارید"
+      },
       "loginDisabled": {
         "title": "نیاز به حالت ورود",
         "message": "برای تغییر تنظیمات مدیر باید حالت ورود فعال باشد. لطفاً SECURITY_ENABLELOGIN=true را در محیط خود یا security.enableLogin: true را در settings.yml تنظیم کرده و سپس سرور را راه‌اندازی مجدد کنید.",

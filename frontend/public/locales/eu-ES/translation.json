@@ -853,7 +853,7 @@
       "desc": "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "testua,anotazioa,etiketa",
       "title": "Testua gehitu",
       "desc": "Gehitu testu pertsonalizatua zure PDFan edonon"
     }
@@ -1210,7 +1210,7 @@
     "placeholder": "(adib. 1,2,8 edo 4,7,12-16 edo 2n-1)"
   },
   "pdfOrganiser": {
-    "tags": "duplex,even,odd,sort,move",
+    "tags": "duplex,even,odd,ordenatu,mugitu",
     "title": "Orrialdeen antolatzailea",
     "header": "PDF orrialdeen antolatzailea",
     "submit": "Antolatu orrialdeak",
@@ -1257,7 +1257,7 @@
     "placeholder": "(adib. 1,3,2 edo 4-8,2,10-12 edo 2n-1)"
   },
   "addImage": {
-    "tags": "img,jpg,picture,photo",
+    "tags": "img,jpg,irudi,argazki",
     "title": "Gehitu irudia",
     "header": "Gehitu PDF-irudia",
     "image": {
@@ -1491,7 +1491,7 @@
     }
   },
   "permissions": {
-    "tags": "read,write,edit,print",
+    "tags": "irakurri,idatzi,editatu,inprimatu",
     "title": "Aldatu baimenak",
     "header": "Aldatu baimenak",
     "warning": "Oharra: baimen hauek aldatzea ezinezkoa izan dadin, gomendatzen da pasahitz batekin konfiguratzea pasahitza aldatzeko orriaren bitartez",
@@ -1597,7 +1597,7 @@
     }
   },
   "removePages": {
-    "tags": "Remove pages,delete pages",
+    "tags": "orrialdeak kendu,orrialdeak ezabatu",
     "title": "Ezabatu",
     "pageNumbers": {
       "label": "Kendu beharreko orrialdeak",
@@ -1797,10 +1797,10 @@
     }
   },
   "compressPdfs": {
-    "tags": "squish,small,tiny"
+    "tags": "estutu,txiki,oso-txiki"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "kendu,ezabatu,formulario,eremu,irakurtzeko-bakarrik",
     "title": "Kendu irakurtzeko‑soilik inprimaki‑eremuetatik",
     "header": "Desblokeatu PDF inprimakiak",
     "submit": "Remove",
@@ -1940,7 +1940,7 @@
     }
   },
   "fileToPDF": {
-    "tags": "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint",
+    "tags": "eraldaketa,formatua,dokumentua,irudia,diapositiba,testua,bihurketa,office,docs,word,excel,powerpoint",
     "title": "Fitxategia PDF bihurtu",
     "header": "Edozein fitxategi PDF bihurtu",
     "credit": "Zerbitzu honek LibreOffice eta Unoconv erabiltzen ditu fitxategiak bihurtzeko",
@@ -1949,7 +1949,7 @@
     "submit": "PDF bihurtu"
   },
   "ocr": {
-    "tags": "recognition,text,image,scan,read,identify,detection,editable",
+    "tags": "ezagutzea,testua,irudia,eskaneatu,irakurri,identifikatu,detekzioa,editagarria",
     "title": "OCR / Garbiketa-eskaneatzea",
     "desc": "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa",
     "header": "Garbiketa-eskaneatzea / OCR (Karaktere-ezagutze optikoa)",
@@ -2056,7 +2056,7 @@
     }
   },
   "extractImages": {
-    "tags": "picture,photo,save,archive,zip,capture,grab",
+    "tags": "irudi,argazki,gorde,artxibatu,zip,harrapatu,eskuratu",
     "title": "Atera irudiak",
     "header": "Atera irudiak",
     "selectText": "Hautatu irudi-formatua ateratako irudiak bihurtzeko",
@@ -2070,7 +2070,7 @@
     }
   },
   "pdfToPDFA": {
-    "tags": "archive,long-term,standard,conversion,storage,preservation",
+    "tags": "artxibo,epe-luze,estandar,bihurketa,biltegiratzea,kontserbazioa",
     "title": "PDFa PDF/A bihurtu",
     "header": "PDFa PDF/A bihurtu",
     "credit": "Zerbitzu honek libreoffice erabiltzen du PDFak PDF/A bihurtzeko",
@@ -2080,7 +2080,7 @@
     "pdfWithDigitalSignature": "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
   },
   "PDFToWord": {
-    "tags": "doc,docx,odt,word,transformation,format,conversion,office,microsoft,docfile",
+    "tags": "doc,docx,odt,word,eraldaketa,formatua,bihurketa,office,microsoft,doc-fitxategia",
     "title": "PDFa Word bihurtu",
     "header": "PDFa Word bihurtu",
     "selectText": {
@@ -2090,7 +2090,7 @@
     "submit": "Bihurtu"
   },
   "PDFToPresentation": {
-    "tags": "slides,show,office,microsoft",
+    "tags": "diapositibak,aurkezpena,office,microsoft",
     "title": "PDFa aurkezpen bihurtu",
     "header": "PDFa aurkezpen bihurtu",
     "selectText": {
@@ -2100,7 +2100,7 @@
     "submit": "Bihurtu"
   },
   "PDFToText": {
-    "tags": "richformat,richtextformat,rich text format",
+    "tags": "formatuaberatsa,testuformatuaberatsa,testu formatu aberatsa",
     "title": "PDFa TXT/RTF bihurtu",
     "header": "PDFa TXT/RTF bihurtu",
     "selectText": {
@@ -2110,21 +2110,21 @@
     "submit": "Bihurtu"
   },
   "PDFToHTML": {
-    "tags": "web content,browser friendly",
+    "tags": "web edukia,nabigatzaile-egokia",
     "title": "PDFa HTML bihurtu",
     "header": "PDFa HTML bihurtu",
     "credit": "Zerbitzu honek pdftohtml erabiltzen du fitxategiak bihurtzeko",
     "submit": "Bihurtu"
   },
   "PDFToXML": {
-    "tags": "data-extraction,structured-content,interop,transformation,convert",
+    "tags": "datu-erauzketa,eduki-egituratua,interop,eraldaketa,bihurtu",
     "title": "PDFa XML bihurtu",
     "header": "PDFa XML bihurtu",
     "credit": "Zerbitzu honek LibreOffice erabiltzen du fitxategiak bihurtzeko",
     "submit": "Bihurtu"
   },
   "ScannerImageSplit": {
-    "tags": "separate,auto-detect,scans,multi-photo,organize",
+    "tags": "banatu,auto-atzeman,eskaneoak,multi-argazki,antolatu",
     "selectText": {
       "1": "Angeluaren gutxieneko balioa:",
       "2": "Ezarri eskatutako gutxieneko angelu absolutua irudia biratzeko (lehenetsia: 10).",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Ustekabeko errorea: {{message}}",
     "accountCreatedSuccess": "Kontua ongi sortu da! Orain saioa hasi dezakezu.",
     "passwordChangedSuccess": "Pasahitza ongi aldatu da! Hasi saioa pasahitz berriarekin.",
-    "credentialsUpdated": "Zure kredentzialak eguneratu dira. Hasi saioa berriro."
+    "credentialsUpdated": "Zure kredentzialak eguneratu dira. Hasi saioa berriro.",
+    "defaultCredentials": "Saio-hasierako kredentzial lehenetsiak",
+    "changePasswordWarning": "Mesedez, aldatu pasahitza lehen aldiz saioa hasi ondoren",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF ikuspegi orokorra",
+        "title": "Zure PDF behar guztietarako gune bakarra.",
+        "subtitle": "Pribatutasuna lehenesten duen hodeiko suitea, PDFak bihurtu, sinatu, zentsuratu eta kudeatzeko, eta 50+ tresna indartsu gehiagorekin."
+      },
+      "edit": {
+        "alt": "PDFak editatu",
+        "title": "Editatu PDFak nahi duzun informazioa bistaratu edo babesteko",
+        "subtitle": "Dozenaka tresnarekin PDFak zentsuratu, sinatu, irakurri eta manipulatzeko, bilatzen ari zarena aurkituko duzu."
+      },
+      "secure": {
+        "alt": "PDFak segurtatu",
+        "title": "Babestu informazio sentikorra zure PDFetan",
+        "subtitle": "Gehitu pasahitzak, zentsuratu edukia eta kudeatu ziurtagiriak erraz."
+      }
+    }
   },
   "signup": {
     "title": "Sortu kontu bat",
@@ -3768,7 +3787,7 @@
     "title": "API Dokumentazioa",
     "header": "API Dokumentazioa",
     "desc": "Ikusi eta probatu Stirling PDF APIko amaiera-puntuak",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,dokumentazioa,swagger,endpointak,garapena"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Ezarpenak ongi gorde dira",
       "saveSuccess": "Ezarpenak ongi gorde dira",
       "save": "Aldaketak gorde",
+      "discard": "Baztertu",
       "restartRequired": "Berrabiarazi behar da",
       "loginRequired": "Saio-hasiera modua gaitu behar da admin ezarpenak aldatzeko",
+      "unsavedChanges": {
+        "title": "Gorde gabeko aldaketak",
+        "message": "Gorde gabeko aldaketak dituzu. Baztertu nahi dituzu?",
+        "cancel": "Editatzen jarraitu",
+        "discard": "Aldaketak baztertu",
+        "hint": "Gorde gabeko aldaketak dituzu"
+      },
       "loginDisabled": {
         "title": "Saio-hasiera modua beharrezkoa da",
         "message": "Saio-hasiera modua gaitu behar da admin ezarpenak aldatzeko. Ezarri SECURITY_ENABLELOGIN=true zure ingurunean edo security.enableLogin: true settings.yml, eta berrabiarazi zerbitzaria.",
@@ -5951,13 +5978,13 @@
       "suggestions": "Oharrak",
       "currentPageFonts": "Orrialde honetan dauden letra-tipoak",
       "allFonts": "Letra-tipo guztiak",
-      "fallback": "fallback",
-      "missing": "missing",
+      "fallback": "ordezko",
+      "missing": "falta",
       "perfectMessage": "Letra-tipo guztiak perfektuki erreproduzi daitezke.",
       "warningMessage": "Zenbait letra-tipo agian ez dira behar bezala errendatuko.",
       "infoMessage": "Letra-tipoen erreprodukzioari buruzko informazioa eskuragarri.",
-      "perfect": "perfect",
-      "subset": "subset"
+      "perfect": "perfektua",
+      "subset": "azpimultzoa"
     },
     "errors": {
       "invalidJson": "Ezin da JSON fitxategia irakurri. Ziurtatu PDF to JSON tresnarekin sortua dela.",
@@ -6008,7 +6035,7 @@
     "error": {
       "failed": "Errore bat gertatu da testua PDFari gehitzean."
     },
-    "tags": "text,annotation,label",
+    "tags": "testua,anotazioa,etiketa",
     "applySignatures": "Testua aplikatu"
   }
 }

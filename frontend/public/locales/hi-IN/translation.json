@@ -1164,7 +1164,7 @@
     "pdfaDigitalSignatureWarning": "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।",
     "fileFormat": "फ़ाइल फ़ॉर्मेट",
     "wordDoc": "Word दस्तावेज़",
-    "wordDocExt": "Word Document (.docx)",
+    "wordDocExt": "Word दस्तावेज़ (.docx)",
     "odtExt": "OpenDocument Text (.odt)",
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "OpenDocument Presentation (.odp)",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "अप्रत्याशित त्रुटि: {{message}}",
     "accountCreatedSuccess": "खाता सफलतापूर्वक बनाया गया! अब आप साइन इन कर सकते हैं।",
     "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदला गया! कृपया नए पासवर्ड से साइन इन करें।",
-    "credentialsUpdated": "आपके क्रेडेंशियल अपडेट कर दिए गए हैं। कृपया फिर से साइन इन करें।"
+    "credentialsUpdated": "आपके क्रेडेंशियल अपडेट कर दिए गए हैं। कृपया फिर से साइन इन करें।",
+    "defaultCredentials": "डिफ़ॉल्ट लॉगिन क्रेडेंशियल्स",
+    "changePasswordWarning": "पहली बार लॉगिन करने के बाद कृपया अपना पासवर्ड बदलें",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF ओवरव्यू",
+        "title": "आपकी सभी PDF जरूरतों के लिए एक स्थान",
+        "subtitle": "प्राइवेसी-फर्स्ट क्लाउड सूट जो PDF को convert, sign, redact और manage करने देता है, साथ ही 50+ शक्तिशाली टूल्स।"
+      },
+      "edit": {
+        "alt": "PDF संपादित करें",
+        "title": "अपनी मनचाही जानकारी दिखाने/सुरक्षित करने के लिए PDF संपादित करें",
+        "subtitle": "redact, sign, पढ़ने और संशोधित करने में मदद करने वाले दर्जनभर से अधिक टूल्स के साथ, आपको जो चाहिए वह जरूर मिलेगा।"
+      },
+      "secure": {
+        "alt": "PDF सुरक्षित करें",
+        "title": "अपने PDF में संवेदनशील जानकारी सुरक्षित रखें",
+        "subtitle": "पासवर्ड जोड़ें, कंटेंट redact करें, और सर्टिफिकेट्स आसानी से मैनेज करें।"
+      }
+    }
   },
   "signup": {
     "title": "खाता बनाएँ",
@@ -3953,8 +3972,16 @@
       "saved": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
       "saveSuccess": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
       "save": "परिवर्तनों को सहेजें",
+      "discard": "त्यागें",
       "restartRequired": "रीस्टार्ट आवश्यक",
       "loginRequired": "एडमिन सेटिंग्स बदलने के लिए लॉगिन मोड सक्षम होना चाहिए",
+      "unsavedChanges": {
+        "title": "असहेजे परिवर्तन",
+        "message": "आपके कुछ परिवर्तन सहेजे नहीं गए हैं। क्या आप उन्हें त्यागना चाहते हैं?",
+        "cancel": "संपादन जारी रखें",
+        "discard": "परिवर्तन त्यागें",
+        "hint": "आपके कुछ परिवर्तन सहेजे नहीं गए हैं"
+      },
       "loginDisabled": {
         "title": "लॉगिन मोड आवश्यक",
         "message": "एडमिन सेटिंग्स बदलने के लिए लॉगिन मोड सक्षम होना चाहिए। कृपया अपने एनवायरनमेंट में SECURITY_ENABLELOGIN=true या settings.yml में security.enableLogin: true सेट करें, फिर सर्वर रीस्टार्ट करें।",
@@ -5402,8 +5429,8 @@
     "hideComparison": "फ़ीचर तुलना छिपाएँ",
     "featureComparison": "फ़ीचर तुलना",
     "from": "से",
-    "perMonth": "/month",
-    "perSeat": "/seat",
+    "perMonth": "/माह",
+    "perSeat": "/सीट",
     "withServer": "+ सर्वर प्लान",
     "licensedSeats": "लाइसेंस प्राप्त: {{count}} सीटें",
     "includedInCurrent": "आपके प्लान में शामिल",
@@ -5430,7 +5457,7 @@
     },
     "period": {
       "month": "माह",
-      "perUserPerMonth": "/user/month"
+      "perUserPerMonth": "/उपयोगकर्ता/माह"
     },
     "free": {
       "name": "फ्री",
@@ -5547,8 +5574,8 @@
     "canCloseWindow": "अब आप यह विंडो बंद कर सकते हैं।",
     "licenseKeyProcessing": "लाइसेंस की प्रोसेसिंग",
     "licenseDelayedMessage": "आपकी लाइसेंस की जेनरेट हो रही है। कृपया जल्द ही अपना ईमेल देखें या सपोर्ट से संपर्क करें।",
-    "perYear": "/year",
-    "perMonth": "/month",
+    "perYear": "/वर्ष",
+    "perMonth": "/माह",
     "emailInvalid": "कृपया मान्य ईमेल पता दर्ज करें",
     "emailStage": {
       "title": "अपना ईमेल दर्ज करें",

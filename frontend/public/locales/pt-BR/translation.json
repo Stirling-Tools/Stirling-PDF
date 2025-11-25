@@ -321,7 +321,7 @@
       "title": "Modo de conexão",
       "mode": {
         "saas": "Stirling Cloud",
-        "selfhosted": "Self-Hosted"
+        "selfhosted": "Auto-hospedado"
       },
       "server": "Servidor",
       "user": "Logado como",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Erro inesperado: {{message}}",
     "accountCreatedSuccess": "Conta criada com sucesso! Você já pode entrar.",
     "passwordChangedSuccess": "Senha alterada com sucesso! Faça login com sua nova senha.",
-    "credentialsUpdated": "Suas credenciais foram atualizadas. Faça login novamente."
+    "credentialsUpdated": "Suas credenciais foram atualizadas. Faça login novamente.",
+    "defaultCredentials": "Credenciais de Login Padrão",
+    "changePasswordWarning": "Altere sua senha após fazer login pela primeira vez",
+    "slides": {
+      "overview": {
+        "alt": "Visão geral do Stirling PDF",
+        "title": "Tudo o que você precisa para PDFs em um só lugar.",
+        "subtitle": "Uma suíte em nuvem com foco em privacidade para PDFs que permite converter, assinar, ocultar e gerenciar documentos, além de 50+ outras ferramentas poderosas."
+      },
+      "edit": {
+        "alt": "Editar PDFs",
+        "title": "Edite PDFs para exibir/proteger as informações que você deseja",
+        "subtitle": "Com mais de uma dúzia de ferramentas para ajudar a ocultar, assinar, ler e manipular PDFs, você certamente encontrará o que precisa."
+      },
+      "secure": {
+        "alt": "Proteger PDFs",
+        "title": "Proteja informações sensíveis em seus PDFs",
+        "subtitle": "Adicione senhas, oculte conteúdo e gerencie certificados com facilidade."
+      }
+    }
   },
   "signup": {
     "title": "Criar uma conta",
@@ -3953,8 +3972,16 @@
       "saved": "Configurações salvas com sucesso",
       "saveSuccess": "Configurações salvas com sucesso",
       "save": "Salvar alterações",
+      "discard": "Descartar",
       "restartRequired": "Reinicialização necessária",
       "loginRequired": "O modo de login deve estar habilitado para modificar as configurações de administrador",
+      "unsavedChanges": {
+        "title": "Alterações não salvas",
+        "message": "Você tem alterações não salvas. Deseja descartá-las?",
+        "cancel": "Continuar editando",
+        "discard": "Descartar alterações",
+        "hint": "Você tem alterações não salvas"
+      },
       "loginDisabled": {
         "title": "Modo de login necessário",
         "message": "O modo de login deve estar habilitado para modificar as configurações de administrador. Defina SECURITY_ENABLELOGIN=true em seu ambiente ou security.enableLogin: true em settings.yml e reinicie o servidor.",

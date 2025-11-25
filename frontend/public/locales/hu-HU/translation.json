@@ -853,7 +853,7 @@
       "desc": "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "szöveg, megjegyzés, címke",
       "title": "Szöveg hozzáadása",
       "desc": "Tetszőleges szöveg hozzáadása bárhová a PDF-ben"
     }
@@ -1169,7 +1169,7 @@
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "OpenDocument bemutató (.odp)",
     "txtExt": "Egyszerű szöveg (.txt)",
-    "rtfExt": "Rich Text Format (.rtf)",
+    "rtfExt": "Rich Text formátum (.rtf)",
     "selectedFiles": "Kiválasztott fájlok",
     "noFileSelected": "Nincs kiválasztott fájl. Használja a fájlpanelt a fájlok hozzáadásához.",
     "convertFiles": "Fájlok konvertálása",
@@ -1351,7 +1351,7 @@
       "japanese": "Japán",
       "korean": "Koreai",
       "chinese": "Kínai",
-      "thai": "Thai"
+      "thai": "thai"
     },
     "steps": {
       "type": "Vízjel típusa",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Váratlan hiba: {{message}}",
     "accountCreatedSuccess": "A fiók sikeresen létrejött! Most már bejelentkezhet.",
     "passwordChangedSuccess": "A jelszó sikeresen megváltozott! Jelentkezzen be az új jelszavával.",
-    "credentialsUpdated": "Az adatait frissítettük. Kérjük, jelentkezzen be újra."
+    "credentialsUpdated": "Az adatait frissítettük. Kérjük, jelentkezzen be újra.",
+    "defaultCredentials": "Alapértelmezett bejelentkezési adatok",
+    "changePasswordWarning": "Kérjük, az első bejelentkezés után változtassa meg a jelszavát",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF áttekintés",
+        "title": "Az összes PDF-megoldás egy helyen.",
+        "subtitle": "Adatvédelem-központú felhőcsomag PDF-ekhez, amellyel konvertálhat, aláírhat, kitakarhat és kezelhet dokumentumokat, több mint 50 további hatékony eszközzel."
+      },
+      "edit": {
+        "alt": "PDF-ek szerkesztése",
+        "title": "PDF-ek szerkesztése a kívánt információk megjelenítéséhez/védelméhez",
+        "subtitle": "Több mint egy tucat eszközzel a PDF-ek kitakarásához, aláírásához, olvasásához és kezeléséhez biztosan megtalálja, amit keres."
+      },
+      "secure": {
+        "alt": "PDF-ek védelme",
+        "title": "Érzékeny információk védelme a PDF-ekben",
+        "subtitle": "Adjon hozzá jelszavakat, takarja ki a tartalmat, és kezelje a tanúsítványokat egyszerűen."
+      }
+    }
   },
   "signup": {
     "title": "Fiók létrehozása",
@@ -3953,8 +3972,16 @@
       "saved": "A beállítások sikeresen mentve",
       "saveSuccess": "A beállítások sikeresen mentve",
       "save": "Változtatások mentése",
+      "discard": "Elvetés",
       "restartRequired": "Újraindítás szükséges",
       "loginRequired": "Az admin beállítások módosításához be kell kapcsolni a bejelentkezési módot",
+      "unsavedChanges": {
+        "title": "Nem mentett módosítások",
+        "message": "Nem mentett módosításai vannak. El szeretné vetni ezeket?",
+        "cancel": "Szerkesztés folytatása",
+        "discard": "Módosítások elvetése",
+        "hint": "Nem mentett módosításai vannak"
+      },
       "loginDisabled": {
         "title": "Bejelentkezési mód szükséges",
         "message": "Az admin beállítások módosításához be kell kapcsolni a bejelentkezési módot. Állítsa be a SECURITY_ENABLELOGIN=true értéket a környezetben, vagy a security.enableLogin: true beállítást a settings.yml fájlban, majd indítsa újra a szervert.",
@@ -4400,7 +4427,7 @@
             "description": "Maximális futási idő"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF HTML-re",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",

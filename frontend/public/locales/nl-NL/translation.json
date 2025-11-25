@@ -3493,7 +3493,26 @@
     "unexpectedError": "Onverwachte fout: {{message}}",
     "accountCreatedSuccess": "Account succesvol aangemaakt! U kunt nu inloggen.",
     "passwordChangedSuccess": "Wachtwoord succesvol gewijzigd! Log in met uw nieuwe wachtwoord.",
-    "credentialsUpdated": "Uw inloggegevens zijn bijgewerkt. Log opnieuw in."
+    "credentialsUpdated": "Uw inloggegevens zijn bijgewerkt. Log opnieuw in.",
+    "defaultCredentials": "Standaard inloggegevens",
+    "changePasswordWarning": "Wijzig uw wachtwoord nadat u voor het eerst bent ingelogd",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF-overzicht",
+        "title": "Uw alles-in-één oplossing voor al uw PDF-behoeften.",
+        "subtitle": "Een privacy-first cloud suite voor PDF's waarmee u documenten kunt converteren, ondertekenen, anonimiseren en beheren, plus 50+ andere krachtige tools."
+      },
+      "edit": {
+        "alt": "PDF's bewerken",
+        "title": "Bewerk PDF's om de gewenste informatie te tonen/beveiligen",
+        "subtitle": "Met meer dan een dozijn tools om PDF's te anonimiseren, ondertekenen, lezen en bewerken vindt u zeker wat u zoekt."
+      },
+      "secure": {
+        "alt": "PDF's beveiligen",
+        "title": "Bescherm gevoelige informatie in uw PDF's",
+        "subtitle": "Voeg wachtwoorden toe, anonimiseer inhoud en beheer certificaten met gemak."
+      }
+    }
   },
   "signup": {
     "title": "Account aanmaken",
@@ -3953,8 +3972,16 @@
       "saved": "Instellingen succesvol opgeslagen",
       "saveSuccess": "Instellingen succesvol opgeslagen",
       "save": "Wijzigingen opslaan",
+      "discard": "Verwerpen",
       "restartRequired": "Herstart vereist",
       "loginRequired": "Inlogmodus moet zijn ingeschakeld om beheerinstellingen te wijzigen",
+      "unsavedChanges": {
+        "title": "Niet-opgeslagen wijzigingen",
+        "message": "U hebt niet-opgeslagen wijzigingen. Wilt u deze verwerpen?",
+        "cancel": "Verder bewerken",
+        "discard": "Wijzigingen verwerpen",
+        "hint": "U hebt niet-opgeslagen wijzigingen"
+      },
       "loginDisabled": {
         "title": "Inlogmodus vereist",
         "message": "Inlogmodus moet zijn ingeschakeld om beheerinstellingen te wijzigen. Stel SECURITY_ENABLELOGIN=true in je omgeving of security.enableLogin: true in settings.yml in, start daarna de server opnieuw.",
@@ -5762,7 +5789,7 @@
     },
     "step2": {
       "label": "Server selecteren",
-      "description": "Self-hosted server"
+      "description": "Zelfgehoste server"
     },
     "step3": {
       "label": "Inloggen",
@@ -5791,7 +5818,7 @@
       "subtitle": "Vul de URL van je self-hosted server in",
       "type": {
         "saas": "Stirling PDF SaaS",
-        "selfhosted": "Self-hosted server"
+        "selfhosted": "Zelfgehoste server"
       },
       "url": {
         "label": "Server-URL",
@@ -5864,7 +5891,7 @@
     "badges": {
       "unsaved": "Bewerkt",
       "modified": "Bewerkt",
-      "earlyAccess": "Early Access"
+      "earlyAccess": "Vroege toegang"
     },
     "actions": {
       "reset": "Wijzigingen resetten",

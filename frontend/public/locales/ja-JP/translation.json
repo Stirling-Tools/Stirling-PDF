@@ -853,7 +853,7 @@
       "desc": "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "テキスト,注釈,ラベル",
       "title": "テキストを追加",
       "desc": "PDFの任意の場所にテキストを追加"
     }
@@ -3372,7 +3372,7 @@
         "signatureDate": "署名日時"
       },
       "filesEvaluated": "{{count}} 件のファイルを評価",
-      "footer": "Validated via Stirling PDF",
+      "footer": "Stirling PDF で検証済み",
       "generatedAt": "生成日時",
       "noPdf": "検証が成功すると PDF レポートが利用可能になります。",
       "page": "ページ",
@@ -3493,7 +3493,26 @@
     "unexpectedError": "予期しないエラー：{{message}}",
     "accountCreatedSuccess": "アカウントが作成されました。今すぐサインインできます。",
     "passwordChangedSuccess": "パスワードを変更しました。新しいパスワードでサインインしてください。",
-    "credentialsUpdated": "認証情報を更新しました。もう一度サインインしてください。"
+    "credentialsUpdated": "認証情報を更新しました。もう一度サインインしてください。",
+    "defaultCredentials": "デフォルトのログイン資格情報",
+    "changePasswordWarning": "初回ログイン後にパスワードを変更してください",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF の概要",
+        "title": "PDF のためのワンストップソリューション",
+        "subtitle": "プライバシー最優先の PDF 向けクラウドスイート。変換、署名、墨消し、文書管理に加え、50 以上の強力なツールを提供。"
+      },
+      "edit": {
+        "alt": "PDF を編集",
+        "title": "必要な情報を表示・保護するために PDF を編集",
+        "subtitle": "墨消し、署名、閲覧、操作のための十数種のツールを備え、求める機能が必ず見つかります。"
+      },
+      "secure": {
+        "alt": "PDF を保護",
+        "title": "PDF の機密情報を保護",
+        "subtitle": "パスワード追加、墨消し、証明書管理を簡単に。"
+      }
+    }
   },
   "signup": {
     "title": "アカウントを作成",
@@ -3953,8 +3972,16 @@
       "saved": "設定を正常に保存しました",
       "saveSuccess": "設定を正常に保存しました",
       "save": "変更を保存",
+      "discard": "破棄",
       "restartRequired": "再起動が必要",
       "loginRequired": "管理者設定を変更するにはログインモードを有効にする必要があります",
+      "unsavedChanges": {
+        "title": "未保存の変更",
+        "message": "未保存の変更があります。破棄しますか？",
+        "cancel": "編集を続ける",
+        "discard": "変更を破棄",
+        "hint": "未保存の変更があります"
+      },
       "loginDisabled": {
         "title": "ログインモードが必要です",
         "message": "管理者設定を変更するにはログインモードを有効にする必要があります。環境変数で SECURITY_ENABLELOGIN=true を設定するか、settings.yml の security.enableLogin: true を設定し、サーバーを再起動してください。",

@@ -3493,7 +3493,26 @@
     "unexpectedError": "Uventet feil: {{message}}",
     "accountCreatedSuccess": "Konto opprettet! Du kan nå logge inn.",
     "passwordChangedSuccess": "Passord endret! Logg inn med det nye passordet.",
-    "credentialsUpdated": "Innloggingsinformasjonen din er oppdatert. Logg inn på nytt."
+    "credentialsUpdated": "Innloggingsinformasjonen din er oppdatert. Logg inn på nytt.",
+    "defaultCredentials": "Standard påloggingsopplysninger",
+    "changePasswordWarning": "Endre passordet ditt etter at du har logget inn for første gang",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF-oversikt",
+        "title": "Alt du trenger for PDF på ett sted.",
+        "subtitle": "En skyløsning for PDF med personvern i fokus som lar deg konvertere, signere, sladde og administrere dokumenter, samt 50+ andre kraftige verktøy."
+      },
+      "edit": {
+        "alt": "Rediger PDF-er",
+        "title": "Rediger PDF-er for å vise/sikre informasjonen du ønsker",
+        "subtitle": "Med over et dusin verktøy for å sladde, signere, lese og manipulere PDF-er finner du garantert det du trenger."
+      },
+      "secure": {
+        "alt": "Sikre PDF-er",
+        "title": "Beskytt sensitiv informasjon i PDF-ene dine",
+        "subtitle": "Legg til passord, sladd innhold og administrer sertifikater enkelt."
+      }
+    }
   },
   "signup": {
     "title": "Opprett en konto",
@@ -3953,8 +3972,16 @@
       "saved": "Innstillinger lagret",
       "saveSuccess": "Innstillinger lagret",
       "save": "Lagre endringer",
+      "discard": "Forkast",
       "restartRequired": "Omstart kreves",
       "loginRequired": "Innloggingsmodus må være aktivert for å endre admin-innstillinger",
+      "unsavedChanges": {
+        "title": "Ulagrede endringer",
+        "message": "Du har ulagrede endringer. Vil du forkaste dem?",
+        "cancel": "Fortsett redigering",
+        "discard": "Forkast endringer",
+        "hint": "Du har ulagrede endringer"
+      },
       "loginDisabled": {
         "title": "Innloggingsmodus påkrevd",
         "message": "Innloggingsmodus må være aktivert for å endre admin-innstillinger. Angi SECURITY_ENABLELOGIN=true i miljøet ditt eller security.enableLogin: true i settings.yml, og start deretter serveren på nytt.",

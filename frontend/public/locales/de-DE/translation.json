@@ -3493,7 +3493,26 @@
     "unexpectedError": "Unerwarteter Fehler: {{message}}",
     "accountCreatedSuccess": "Konto erfolgreich erstellt! Sie können sich jetzt anmelden.",
     "passwordChangedSuccess": "Passwort erfolgreich geändert! Bitte melden Sie sich mit Ihrem neuen Passwort an.",
-    "credentialsUpdated": "Ihre Anmeldedaten wurden aktualisiert. Bitte melden Sie sich erneut an."
+    "credentialsUpdated": "Ihre Anmeldedaten wurden aktualisiert. Bitte melden Sie sich erneut an.",
+    "defaultCredentials": "Standard-Login-Daten",
+    "changePasswordWarning": "Bitte ändern Sie Ihr Passwort nach dem ersten Login.",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF Übersicht",
+        "title": "Ihr One-Stop-Shop für alle PDF-Anforderungen.",
+        "subtitle": "Eine Privacy-First-Cloud-Suite für PDFs, mit der Sie Dokumente konvertieren, signieren, schwärzen und verwalten – plus 50+ weitere leistungsstarke Tools."
+      },
+      "edit": {
+        "alt": "PDFs bearbeiten",
+        "title": "PDFs bearbeiten, um gewünschte Informationen anzuzeigen/zu schützen",
+        "subtitle": "Mit über einem Dutzend Tools zum Schwärzen, Signieren, Lesen und Bearbeiten von PDFs finden Sie sicher, was Sie suchen."
+      },
+      "secure": {
+        "alt": "PDFs schützen",
+        "title": "Schützen Sie sensible Informationen in Ihren PDFs",
+        "subtitle": "Fügen Sie Passwörter hinzu, schwärzen Sie Inhalte und verwalten Sie Zertifikate mühelos."
+      }
+    }
   },
   "signup": {
     "title": "Konto erstellen",
@@ -3953,8 +3972,16 @@
       "saved": "Einstellungen erfolgreich gespeichert",
       "saveSuccess": "Einstellungen erfolgreich gespeichert",
       "save": "Änderungen speichern",
+      "discard": "Verwerfen",
       "restartRequired": "Neustart erforderlich",
       "loginRequired": "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu ändern",
+      "unsavedChanges": {
+        "title": "Ungespeicherte Änderungen",
+        "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?",
+        "cancel": "Weiter bearbeiten",
+        "discard": "Änderungen verwerfen",
+        "hint": "Sie haben ungespeicherte Änderungen"
+      },
       "loginDisabled": {
         "title": "Anmeldemodus erforderlich",
         "message": "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu ändern. Bitte setzen Sie SECURITY_ENABLELOGIN=true in Ihrer Umgebung oder security.enableLogin: true in settings.yml und starten Sie dann den Server neu.",

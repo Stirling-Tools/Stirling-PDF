@@ -29,7 +29,7 @@
       "fullscreen": "Cambiar a modo pantalla completa",
       "sidebar": "Cambiar a modo barra lateral"
     },
-    "alpha": "Alpha",
+    "alpha": "Alfa",
     "premiumFeature": "Función Premium:",
     "comingSoon": "Próximamente:"
   },
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Error inesperado: {{message}}",
     "accountCreatedSuccess": "¡Cuenta creada correctamente! Ya puedes iniciar sesión.",
     "passwordChangedSuccess": "¡Contraseña cambiada correctamente! Inicia sesión con tu nueva contraseña.",
-    "credentialsUpdated": "Tus credenciales se han actualizado. Vuelve a iniciar sesión."
+    "credentialsUpdated": "Tus credenciales se han actualizado. Vuelve a iniciar sesión.",
+    "defaultCredentials": "Credenciales de inicio de sesión predeterminadas",
+    "changePasswordWarning": "Cambie su contraseña tras iniciar sesión por primera vez",
+    "slides": {
+      "overview": {
+        "alt": "Vista general de Stirling PDF",
+        "title": "Su solución integral para todas sus necesidades de PDF.",
+        "subtitle": "Una suite en la nube centrada en la privacidad para PDF que le permite convertir, firmar, ocultar y gestionar documentos, junto con 50+ herramientas potentes."
+      },
+      "edit": {
+        "alt": "Editar PDFs",
+        "title": "Edite PDFs para mostrar/proteger la información que quiera",
+        "subtitle": "Con más de una docena de herramientas para ocultar, firmar, leer y manipular PDFs, seguro que encuentra lo que busca."
+      },
+      "secure": {
+        "alt": "Proteger PDFs",
+        "title": "Proteja la información sensible en sus PDFs",
+        "subtitle": "Añada contraseñas, oculte contenido y gestione certificados con facilidad."
+      }
+    }
   },
   "signup": {
     "title": "Crear una cuenta",
@@ -3953,8 +3972,16 @@
       "saved": "Configuración guardada correctamente",
       "saveSuccess": "Configuración guardada correctamente",
       "save": "Guardar cambios",
+      "discard": "Descartar",
       "restartRequired": "Se requiere reiniciar",
       "loginRequired": "El modo de inicio de sesión debe estar habilitado para modificar la configuración de administración",
+      "unsavedChanges": {
+        "title": "Cambios sin guardar",
+        "message": "Tiene cambios sin guardar. ¿Desea descartarlos?",
+        "cancel": "Seguir editando",
+        "discard": "Descartar cambios",
+        "hint": "Tiene cambios sin guardar"
+      },
       "loginDisabled": {
         "title": "Se requiere modo de inicio de sesión",
         "message": "El modo de inicio de sesión debe estar habilitado para modificar la configuración de administración. Establece SECURITY_ENABLELOGIN=true en tu entorno o security.enableLogin: true en settings.yml y reinicia el servidor.",
@@ -4472,7 +4499,7 @@
           "description": "URL o nombre de archivo de la política de cookies"
         },
         "impressum": {
-          "label": "Impressum",
+          "label": "Aviso legal",
           "description": "URL o nombre de archivo del impressum (requerido en algunas jurisdicciones)"
         }
       },

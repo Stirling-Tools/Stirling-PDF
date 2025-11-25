@@ -1800,7 +1800,7 @@
     "tags": "squish, beag, beag bídeach"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "bain,scrios,foirm,réimse,readonly",
     "title": "Bain Léamh-Amháin ó Réimsí Foirme",
     "header": "Díghlasáil Foirmeacha PDF",
     "submit": "Remove",
@@ -2525,7 +2525,7 @@
       "body": "Tá an chomparáid seo ag tógáil níos faide ná mar is gnách. Is féidir leat ligean di leanúint ar aghaidh nó í a chealú.",
       "cancel": "Cealaigh comparáid"
     },
-    "newLine": "new-line",
+    "newLine": "líne nua",
     "complex": {
       "message": "Is comhaid mhóra ceann amháin nó an dá cheann de na doiciméid a soláthraíodh, d'fhéadfaí cruinneas na comparáide a laghdú"
     },
@@ -2727,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "leabhrán,imposition,priontáil,ceangal,fillte,síniú",
     "title": "Leagan Amach Leabhráin",
     "header": "Leagan Amach Leabhráin",
     "submit": "Cruthaigh Leabhrán",
@@ -2828,7 +2828,7 @@
     "submit": "Cuir isteach"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "athraigh méid,mionathraigh,toise,oiriúnaigh",
     "title": "Coigeartaigh Scála Leathanaigh",
     "header": "Coigeartaigh Scála Leathanaigh",
     "scaleFactor": {
@@ -3390,7 +3390,7 @@
     "totalSignatures": "Iomlán Sínithe"
   },
   "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side",
+    "tags": "Ionadaigh Dath,Oibríochtaí Leathanaigh,Back end,server side",
     "labels": {
       "settings": "Socruithe",
       "colourOperation": "Oibríocht Datha"
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Earráid gan choinne: {{message}}",
     "accountCreatedSuccess": "Cruthaíodh an cuntas go rathúil! Is féidir leat logáil isteach anois.",
     "passwordChangedSuccess": "Athraíodh an focal faire go rathúil! Logáil isteach le do fhocal faire nua, le do thoil.",
-    "credentialsUpdated": "Nuashonraíodh do dhintiúir. Logáil isteach arís, le do thoil."
+    "credentialsUpdated": "Nuashonraíodh do dhintiúir. Logáil isteach arís, le do thoil.",
+    "defaultCredentials": "Dintiúir logála isteach réamhshocraithe",
+    "changePasswordWarning": "Athraigh do fhocal faire tar éis duit logáil isteach don chéad uair",
+    "slides": {
+      "overview": {
+        "alt": "Forbhreathnú Stirling PDF",
+        "title": "Do shiopa aon-stad do gach riachtanas PDF.",
+        "subtitle": "Sraith néal-bhunaithe le príobháideachas ar dtús do PDFanna a ligeann duit tiontú, síniú, dubhú agus bainistiú a dhéanamh ar cháipéisí, móide 50+ uirlis chumhachtach eile."
+      },
+      "edit": {
+        "alt": "Cuir PDFanna in eagar",
+        "title": "Cuir PDFanna in eagar chun an t-eolas is mian leat a thaispeáint nó a dhaingniú",
+        "subtitle": "Le breis agus dosaen uirlis chun cabhrú leat PDFanna a dhubhú, a shíniú, a léamh agus a ionramháil, gheobhaidh tú go cinnte an rud atá uait."
+      },
+      "secure": {
+        "alt": "Daingnigh PDFanna",
+        "title": "Cosain eolas íogair i do PDFanna",
+        "subtitle": "Cuir focail fhaire leis, dubhaigh ábhar, agus bainistigh teastais go héasca."
+      }
+    }
   },
   "signup": {
     "title": "Cruthaigh cuntas",
@@ -3768,7 +3787,7 @@
     "title": "Doiciméadú API",
     "header": "Doiciméadú API",
     "desc": "Féach agus tástáil na hionaidchríocha API Stirling PDF",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,doiciméadú,swagger,críochphointí,forbairt"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Sábháladh na socruithe go rathúil",
       "saveSuccess": "Sábháladh na socruithe go rathúil",
       "save": "Sábháil Athruithe",
+      "discard": "Cuir i leataobh",
       "restartRequired": "Athtosú de dhíth",
       "loginRequired": "Ní mór mód logála isteach a bheith cumasaithe chun socruithe riarthóra a athrú",
+      "unsavedChanges": {
+        "title": "Athruithe gan sábháil",
+        "message": "Tá athruithe gan sábháil agat. Ar mhaith leat iad a chur i leataobh?",
+        "cancel": "Lean ar eagarthóireacht",
+        "discard": "Cuir athruithe i leataobh",
+        "hint": "Tá athruithe gan sábháil agat"
+      },
       "loginDisabled": {
         "title": "Mód Logála Isteach de Dhíth",
         "message": "Ní mór mód logála isteach a bheith cumasaithe chun socruithe riarthóra a athrú. Socraigh SECURITY_ENABLELOGIN=true i do thimpeallacht nó security.enableLogin: true i settings.yml, agus atosaigh an freastalaí ansin.",

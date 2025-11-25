@@ -3493,7 +3493,26 @@
     "unexpectedError": "Errore imprevisto: {{message}}",
     "accountCreatedSuccess": "Account creato con successo! Ora puoi accedere.",
     "passwordChangedSuccess": "Password modificata con successo! Accedi con la nuova password.",
-    "credentialsUpdated": "Le tue credenziali sono state aggiornate. Accedi di nuovo."
+    "credentialsUpdated": "Le tue credenziali sono state aggiornate. Accedi di nuovo.",
+    "defaultCredentials": "Credenziali di accesso predefinite",
+    "changePasswordWarning": "Modifica la password dopo il primo accesso",
+    "slides": {
+      "overview": {
+        "alt": "Panoramica di Stirling PDF",
+        "title": "La soluzione unica per tutte le tue esigenze PDF.",
+        "subtitle": "Suite cloud incentrata sulla privacy per PDF che ti permette di convertire, firmare, oscurare e gestire documenti, con oltre 50 strumenti potenti."
+      },
+      "edit": {
+        "alt": "Modifica PDF",
+        "title": "Modifica i PDF per mostrare/proteggere le informazioni che desideri",
+        "subtitle": "Con oltre una dozzina di strumenti per oscurare, firmare, leggere e manipolare i PDF, troverai sicuramente ciò che cerchi."
+      },
+      "secure": {
+        "alt": "Proteggi i PDF",
+        "title": "Proteggi le informazioni sensibili nei tuoi PDF",
+        "subtitle": "Aggiungi password, oscura contenuti e gestisci i certificati con facilità."
+      }
+    }
   },
   "signup": {
     "title": "Crea un account",
@@ -3953,8 +3972,16 @@
       "saved": "Impostazioni salvate con successo",
       "saveSuccess": "Impostazioni salvate con successo",
       "save": "Salva modifiche",
+      "discard": "Scarta",
       "restartRequired": "Riavvio richiesto",
       "loginRequired": "La modalità di accesso deve essere abilitata per modificare le impostazioni di amministrazione",
+      "unsavedChanges": {
+        "title": "Modifiche non salvate",
+        "message": "Hai modifiche non salvate. Vuoi scartarle?",
+        "cancel": "Continua a modificare",
+        "discard": "Scarta modifiche",
+        "hint": "Hai modifiche non salvate"
+      },
       "loginDisabled": {
         "title": "Modalità di accesso richiesta",
         "message": "La modalità di accesso deve essere abilitata per modificare le impostazioni di amministrazione. Imposta SECURITY_ENABLELOGIN=true nel tuo ambiente o security.enableLogin: true in settings.yml, quindi riavvia il server.",
@@ -4215,7 +4242,7 @@
             "description": "Il provider OAuth2 da utilizzare per l'autenticazione"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL dell'Issuer",
             "description": "L'URL emittente del provider OAuth2"
           },
           "clientId": {
@@ -4254,7 +4281,7 @@
             "description": "Il nome del provider SAML2"
           },
           "registrationId": {
-            "label": "Registration ID",
+            "label": "ID di registrazione",
             "description": "L'identificatore di registrazione SAML2"
           },
           "autoCreateUser": {

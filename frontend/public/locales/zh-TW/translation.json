@@ -853,7 +853,7 @@
       "desc": "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "文字,註解,標籤",
       "title": "新增文字",
       "desc": "在 PDF 的任意位置新增自訂文字"
     }
@@ -3493,7 +3493,26 @@
     "unexpectedError": "未預期的錯誤：{{message}}",
     "accountCreatedSuccess": "帳號建立成功！您現在可以登入。",
     "passwordChangedSuccess": "密碼變更成功！請使用新密碼登入。",
-    "credentialsUpdated": "您的認證資訊已更新。請重新登入。"
+    "credentialsUpdated": "您的認證資訊已更新。請重新登入。",
+    "defaultCredentials": "預設登入憑證",
+    "changePasswordWarning": "首次登入後請更改您的密碼",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF 概覽",
+        "title": "滿足您所有 PDF 需求的一站式平台。",
+        "subtitle": "以隱私為先的 PDF 雲端套件，讓您轉換、簽署、遮蔽與管理文件，並提供 50+ 種強大工具。"
+      },
+      "edit": {
+        "alt": "編輯 PDF",
+        "title": "編輯 PDF 以顯示/保護您想要的資訊",
+        "subtitle": "提供十多種工具，協助您遮蔽、簽署、閱讀與處理 PDF，滿足您的各種需求。"
+      },
+      "secure": {
+        "alt": "保護 PDF",
+        "title": "保護 PDF 中的敏感資訊",
+        "subtitle": "輕鬆新增密碼、遮蔽內容並管理憑證。"
+      }
+    }
   },
   "signup": {
     "title": "建立帳號",
@@ -3953,8 +3972,16 @@
       "saved": "設定已成功儲存",
       "saveSuccess": "設定已成功儲存",
       "save": "儲存變更",
+      "discard": "捨棄",
       "restartRequired": "需要重新啟動",
       "loginRequired": "必須啟用登入模式才能修改管理設定",
+      "unsavedChanges": {
+        "title": "未儲存的變更",
+        "message": "您有未儲存的變更。要捨棄嗎？",
+        "cancel": "繼續編輯",
+        "discard": "捨棄變更",
+        "hint": "您有未儲存的變更"
+      },
       "loginDisabled": {
         "title": "需要登入模式",
         "message": "必須啟用登入模式才能修改管理設定。請在環境中設定 SECURITY_ENABLELOGIN=true 或在 settings.yml 設定 security.enableLogin: true，然後重新啟動伺服器。",
@@ -4400,7 +4427,7 @@
             "description": "最長執行時間"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF 轉 HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
@@ -4472,7 +4499,7 @@
           "description": "Cookie 政策的 URL 或檔名"
         },
         "impressum": {
-          "label": "Impressum",
+          "label": "法律資訊",
           "description": "Impressum 的 URL 或檔名（某些司法管轄區要求提供）"
         }
       },

@@ -853,7 +853,7 @@
       "desc": "Преглеждайте и редактирайте JSON експорти на Stirling PDF с групово редактиране на текст и повторно генериране на PDF"
     },
     "addText": {
-      "tags": "text,annotation,label",
+      "tags": "текст,анотация,етикет",
       "title": "Добави текст",
       "desc": "Добавете собствен текст навсякъде в PDF"
     }
@@ -1125,7 +1125,7 @@
     "settings": "Настройки",
     "conversionCompleted": "Конвертирането завърши",
     "results": "Резултати",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "преобразуван_файл",
     "conversionResults": "Резултати от конвертиране",
     "convertFrom": "Конвертиране от",
     "convertTo": "Конвертиране към",
@@ -1165,9 +1165,9 @@
     "fileFormat": "Файлов формат",
     "wordDoc": "Word документ",
     "wordDocExt": "Word документ (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Текст OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "Презентация OpenDocument (.odp)",
     "txtExt": "Обикновен текст (.txt)",
     "rtfExt": "Формат Rich Text (.rtf)",
     "selectedFiles": "Избрани файлове",
@@ -1312,7 +1312,7 @@
     "desc": "Добавяне на текстови или изображени водни знаци към PDF файлове",
     "completed": "Добавен е воден знак",
     "submit": "Добавяне на воден знак",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "воден_знак",
     "error": {
       "failed": "Възникна грешка при добавяне на воден знак към PDF."
     },
@@ -1604,7 +1604,7 @@
       "placeholder": "напр., 1,3,5-8,10",
       "error": "Невалиден формат на номера на страници. Използвайте числа, диапазони (1-5) или математически изрази (2n+1)"
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "страници_премахнати",
     "files": {
       "placeholder": "Изберете PDF файл в основния изглед, за да започнете"
     },
@@ -1800,12 +1800,12 @@
     "tags": "мачкам,малък,мъничък"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "премахване,изтриване,формуляр,поле,само_за_четене",
     "title": "Премахване на „само за четене“ от полета на формуляри",
     "header": "Отключване на PDF формуляри",
     "submit": "Remove",
     "description": "Този инструмент ще премахне ограниченията „само за четене“ от полетата във PDF формуляри, за да станат редактируеми и попълваеми.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "отключени_формуляри",
     "files": {
       "placeholder": "Изберете PDF файл в основния изглед, за да започнете"
     },
@@ -1819,7 +1819,7 @@
   "changeMetadata": {
     "header": "Промени метаданните",
     "submit": "Промени",
-    "filenamePrefix": "metadata",
+    "filenamePrefix": "метаданни",
     "settings": {
       "title": "Настройки на метаданни"
     },
@@ -2292,7 +2292,7 @@
     "header": "Изравнете PDF-и",
     "flattenOnlyForms": "Изравнете само форми",
     "submit": "Изравнете",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "сплескан",
     "files": {
       "placeholder": "Изберете PDF файл в основния изглед, за да започнете"
     },
@@ -2342,7 +2342,7 @@
     "header": "Поправи PDF-и",
     "submit": "Поправи",
     "description": "Този инструмент ще се опита да поправи повредени или увредени PDF файлове. Не са необходими допълнителни настройки.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "поправен",
     "files": {
       "placeholder": "Изберете PDF файл в основния изглед, за да започнете"
     },
@@ -2553,7 +2553,7 @@
   "certSign": {
     "tags": "удостоверяване,PEM,P12,официален,шифроване",
     "title": "Подписване със сертификат",
-    "filenamePrefix": "signed",
+    "filenamePrefix": "подписан",
     "signMode": {
       "stepTitle": "Режим на подписване",
       "tooltip": {
@@ -2828,7 +2828,7 @@
     "submit": "Подайте"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "преоразмеряване,промяна,размер,адаптиране",
     "title": "Настройка на мащаба на страницата",
     "header": "Настройка на мащаба на страницата",
     "scaleFactor": {
@@ -3390,7 +3390,7 @@
     "totalSignatures": "Общо подписи"
   },
   "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side",
+    "tags": "Смяна на цвят,Операции със страници,бекенд,сървърна страна",
     "labels": {
       "settings": "Настройки",
       "colourOperation": "Операция за цвят"
@@ -3493,7 +3493,26 @@
     "unexpectedError": "Неочаквана грешка: {{message}}",
     "accountCreatedSuccess": "Акаунтът е създаден успешно! Сега можете да влезете.",
     "passwordChangedSuccess": "Паролата е променена успешно! Моля, влезте с новата парола.",
-    "credentialsUpdated": "Данните ви за вход бяха обновени. Моля, влезте отново."
+    "credentialsUpdated": "Данните ви за вход бяха обновени. Моля, влезте отново.",
+    "defaultCredentials": "Данни за вход по подразбиране",
+    "changePasswordWarning": "Моля, сменете паролата си след първото влизане",
+    "slides": {
+      "overview": {
+        "alt": "Преглед на Stirling PDF",
+        "title": "Всичко за PDF на едно място.",
+        "subtitle": "Облачна платформа с приоритет на поверителността за PDF, която позволява да конвертирате, подписвате, зачертавате и управлявате документи, плюс 50+ други мощни инструменти."
+      },
+      "edit": {
+        "alt": "Редактиране на PDF",
+        "title": "Редактирайте PDF, за да показвате/защитавате желаната информация",
+        "subtitle": "С над дузина инструменти за зачертаване, подписване, четене и обработка на PDF, със сигурност ще намерите това, което търсите."
+      },
+      "secure": {
+        "alt": "Защита на PDF",
+        "title": "Защитете чувствителна информация в PDF файловете си",
+        "subtitle": "Добавяйте пароли, зачертавайте съдържание и управлявайте сертификати с лекота."
+      }
+    }
   },
   "signup": {
     "title": "Създайте акаунт",
@@ -3768,7 +3787,7 @@
     "title": "API документация",
     "header": "API документация",
     "desc": "Преглед и тестване на API крайните точки на Stirling PDF",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,документация,swagger,крайни точки,разработка"
   },
   "cookieBanner": {
     "popUp": {
@@ -3953,8 +3972,16 @@
       "saved": "Настройките са запазени успешно",
       "saveSuccess": "Настройките са запазени успешно",
       "save": "Запази промените",
+      "discard": "Отхвърли",
       "restartRequired": "Изисква се рестарт",
       "loginRequired": "Режимът за вход трябва да е активиран, за да променяте административните настройки",
+      "unsavedChanges": {
+        "title": "Незаписани промени",
+        "message": "Имате незаписани промени. Искате ли да ги отхвърлите?",
+        "cancel": "Продължи редактирането",
+        "discard": "Отхвърли промените",
+        "hint": "Имате незаписани промени"
+      },
       "loginDisabled": {
         "title": "Необходим е режим за вход",
         "message": "Режимът за вход трябва да е активиран, за да променяте административните настройки. Моля, задайте SECURITY_ENABLELOGIN=true във вашата среда или security.enableLogin: true в settings.yml, след което рестартирайте сървъра.",
