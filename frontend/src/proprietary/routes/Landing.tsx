@@ -30,8 +30,27 @@ export default function Landing() {
   const [username, setUsername] = useState('');
 
   const loading = authLoading || configLoading || backendProbe.loading;
-  const loginDisabled = backendProbe.loginDisabled || config?.enableLogin === false;
-  const loginEnabled = !loginDisabled;
+  // Only consider login enabled when explicitly true; default to disabled/anonymous when unknown
+  const loginDisabled = backendProbe.loginDisabled === true || config?.enableLogin === false;
+  const loginEnabled = config?.enableLogin === true && backendProbe.loginDisabled !== true;
+
+  // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
+  useEffect(() => {
+    if (backendProbe.status === 'up' || backendProbe.loginDisabled) {
+      return;
+    }
+    const tick = async () => {
+      const result = await backendProbe.probe();
+      if (result.status === 'up') {
+        await refetch();
+        navigate('/', { replace: true });
+      }
+    };
+    const intervalId = window.setInterval(() => {
+      void tick();
+    }, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch]);
 
   // Check if user needs to change password on first login
   useEffect(() => {

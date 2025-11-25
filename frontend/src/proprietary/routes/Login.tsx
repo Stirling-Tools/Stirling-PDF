@@ -33,6 +33,26 @@ export default function Login() {
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
+  const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+  const loginEnabled = _enableLogin === true && backendProbe.loginDisabled !== true;
+
+  // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
+  useEffect(() => {
+    if (backendProbe.status === 'up' || backendProbe.loginDisabled) {
+      return;
+    }
+    const tick = async () => {
+      const result = await backendProbe.probe();
+      if (result.status === 'up') {
+        await refetch();
+        navigate('/', { replace: true });
+      }
+    };
+    const intervalId = window.setInterval(() => {
+      void tick();
+    }, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, refetch, navigate]);
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
@@ -150,7 +170,7 @@ export default function Login() {
   });
 
   // If login is disabled, short-circuit to home (avoids rendering the form after retry)
-  if (backendProbe.loginDisabled) {
+  if (loginDisabled) {
     return <Navigate to="/" replace />;
   }
 
@@ -160,7 +180,7 @@ export default function Login() {
   }
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form
-  if (backendProbe.status !== 'up' && !backendProbe.loginDisabled) {
+  if (backendProbe.status !== 'up' && !loginDisabled) {
     const backendTitle = t('backendStartup.notFoundTitle', 'Backend not found');
     const handleRetry = async () => {
       const result = await backendProbe.probe();
