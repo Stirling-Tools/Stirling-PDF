@@ -22,7 +22,7 @@ on:
           - macos
           - linux
   push:
-    branches: [main, V2, V2-demo]
+    branches: [main, V2, V2-demo, V2-master]
   release:
     types: [created]
 
@@ -257,7 +257,7 @@ jobs:
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.event_name == 'release' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
         uses: digicert/ssm-code-signing@v1.1.0
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -267,7 +267,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.event_name == 'release' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -302,7 +302,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.event_name == 'release' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -333,7 +333,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && github.event_name == 'release'
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -354,7 +354,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && github.event_name == 'release'
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -380,8 +380,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          # Only enable Windows signing in Tauri when on release
-          SIGN: ${{ github.event_name == 'release' && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          # Only enable Windows signing in Tauri when on release or V2-master
+          SIGN: ${{ (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
@@ -390,7 +390,7 @@ jobs:
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.event_name == 'release' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
           Write-Host "=== DigiCert KeyLocker Signing ==="
@@ -506,154 +506,9 @@ jobs:
           path: ./dist/*
           retention-days: 1
 
-  sign_verify_jars:
-    needs: build-jars
-    runs-on: ubuntu-latest
-    if: success()
-    strategy:
-      matrix:
-        disable_security: [true, false]
-        include:
-          - disable_security: false
-            file_suffix: "-with-login"
-          - disable_security: true
-            file_suffix: ""
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Download JAR artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: jar${{ matrix.file_suffix }}
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
-
-      - name: Generate key pair
-        run: cosign generate-key-pair
-
-      - name: Sign and generate attestations for JAR
-        shell: bash
-        run: |
-          for file in *.jar; do
-            if [ -f "$file" ]; then
-              echo "Signing: $file"
-
-              # Sign the artifact
-              cosign sign-blob \
-                --key ./cosign.key \
-                --yes \
-                --output-signature "${file}.sig" \
-                "$file"
-
-              # Generate attestation
-              cosign attest-blob \
-                --predicate - \
-                --key ./cosign.key \
-                --yes \
-                --output-attestation "${file}.intoto.jsonl" \
-                "$file"
-
-              # Verify the signature
-              cosign verify-blob \
-                --key ./cosign.pub \
-                --signature "${file}.sig" \
-                "$file"
-
-              echo "✅ Signed and verified: $file"
-            fi
-          done
-
-      - name: Upload signed JAR artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: jar${{ matrix.file_suffix }}-signed
-          path: |
-            *
-            !cosign.key
-            !cosign.pub
-          retention-days: 1
-
-  sign_verify:
-    needs: build
-    runs-on: ubuntu-latest
-    if: success()
-    strategy:
-      fail-fast: false
-      matrix:
-        name: [windows-x86_64, macos-aarch64, macos-x86_64, linux-x86_64]
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: Stirling-PDF-${{ matrix.name }}
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
-
-      - name: Generate key pair
-        run: cosign generate-key-pair
-
-      - name: Sign and generate attestations
-        shell: bash
-        run: |
-          # Sign all artifacts for this platform
-          for file in *; do
-            if [ -f "$file" ] && [[ ! "$file" =~ \.(sig|intoto\.jsonl)$ ]]; then
-              echo "Signing: $file"
-
-              # Sign the artifact
-              cosign sign-blob \
-                --key ./cosign.key \
-                --yes \
-                --output-signature "${file}.sig" \
-                "$file"
-
-              # Generate attestation
-              cosign attest-blob \
-                --predicate - \
-                --key ./cosign.key \
-                --yes \
-                --output-attestation "${file}.intoto.jsonl" \
-                "$file"
-
-              # Verify the signature
-              cosign verify-blob \
-                --key ./cosign.pub \
-                --signature "${file}.sig" \
-                "$file"
-
-              echo "✅ Signed and verified: $file"
-            fi
-          done
-
-      - name: Upload signed artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: Stirling-PDF-${{ matrix.name }}-signed
-          path: |
-            *
-            !cosign.key
-            !cosign.pub
-          retention-days: 1
-
   create-release:
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release'
-    needs: [determine-matrix, build, sign_verify, sign_verify_jars]
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
+    needs: [determine-matrix, build, build-jars]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -663,27 +518,37 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Download all signed Tauri artifacts
+      - name: Download all Tauri artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          pattern: Stirling-PDF-*-signed
-          path: ./artifacts
+          pattern: Stirling-PDF-*
+          path: ./artifacts/tauri
 
-      - name: Download all signed JAR artifacts
+      - name: Download JAR artifact (no login)
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          pattern: jar*-signed
+          name: jar
+          path: ./artifacts/jars
+
+      - name: Download JAR artifact (with login)
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: jar-with-login
           path: ./artifacts/jars
 
       - name: Display structure of downloaded files
         run: ls -R ./artifacts
 
-      - name: Upload binaries, attestations and signatures to Release
+      - name: Upload binaries to Release
         uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
           files: |
-            ./artifacts/**/*
+            ./artifacts/**/*.jar
+            ./artifacts/**/*.msi
+            ./artifacts/**/*.dmg
+            ./artifacts/**/*.deb
+            ./artifacts/**/*.AppImage
           draft: false
           prerelease: false

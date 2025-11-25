@@ -6,7 +6,7 @@ services:
     container_name: Stirling-PDF-Backend
     build:
       context: ../..
-      dockerfile: docker/
+      dockerfile: docker/Dockerfile.unified
     ports:
       - "8081:8080"
     volumes:
@@ -37,7 +37,7 @@ services:
     container_name: Stirling-PDF-Frontend
     build:
       context: ../..
-      dockerfile: docker/
+      dockerfile: docker/Dockerfile.unified
     ports:
       - "8080:8080"
     environment:

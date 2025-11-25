@@ -6,7 +6,7 @@ services:
     container_name: Stirling-PDF-Unified-Both
     build:
       context: ../..
-      dockerfile: docker/
+      dockerfile: docker/Dockerfile.unified
     ports:
       - "8080:8080"
     volumes:

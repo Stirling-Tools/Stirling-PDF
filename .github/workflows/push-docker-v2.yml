@@ -6,6 +6,7 @@ on:
     branches:
       - V2
       - V2-demo
+      - V2-master
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -54,6 +55,18 @@ jobs:
         id: versionNumber
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
+      - name: Install cosign
+        if: github.ref == 'refs/heads/V2-master'
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        with:
+          cosign-release: "v2.4.1"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
@@ -64,9 +77,28 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
-      - name: Generate tags for latest
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Generate tags for latest (V2-master branch - production)
         id: meta
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-master'
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}
+            type=raw,value=latest
+
+      - name: Generate tags for latest (V2-demo branch - test)
+        id: meta-test
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-demo'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -84,16 +116,45 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ github.ref == 'refs/heads/V2-master' && steps.meta.outputs.tags || steps.meta-test.outputs.tags }}
+          labels: ${{ github.ref == 'refs/heads/V2-master' && steps.meta.outputs.labels || steps.meta-test.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
 
-      - name: Generate tags for latest-fat
+      - name: Sign regular images
+        if: github.ref == 'refs/heads/V2-master'
+        env:
+          DIGEST: ${{ steps.build-push-latest.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --yes \
+              --key env://COSIGN_PRIVATE_KEY \
+              "${tag}@${DIGEST}"
+          done
+
+      - name: Generate tags for latest-fat (V2-master branch - production)
         id: meta-fat
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-master'
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat
+            type=raw,value=latest-fat
+
+      - name: Generate tags for latest-fat (V2-demo branch - test)
+        id: meta-fat-test
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-demo'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -111,16 +172,43 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ${{ steps.meta-fat.outputs.tags }}
-          labels: ${{ steps.meta-fat.outputs.labels }}
+          tags: ${{ github.ref == 'refs/heads/V2-master' && steps.meta-fat.outputs.tags || steps.meta-fat-test.outputs.tags }}
+          labels: ${{ github.ref == 'refs/heads/V2-master' && steps.meta-fat.outputs.labels || steps.meta-fat-test.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
 
-      - name: Generate tags for ultra-lite
+      - name: Sign fat images
+        if: github.ref == 'refs/heads/V2-master'
+        env:
+          DIGEST: ${{ steps.build-push-fat.outputs.digest }}
+          TAGS: ${{ steps.meta-fat.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+          done
+
+      - name: Generate tags for ultra-lite (V2-master branch - production)
         id: meta-lite
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-master'
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite
+            type=raw,value=latest-ultra-lite
+
+      - name: Generate tags for ultra-lite (V2-demo branch - test)
+        id: meta-lite-test
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        if: github.ref == 'refs/heads/V2-demo'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -138,9 +226,21 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ${{ steps.meta-lite.outputs.tags }}
-          labels: ${{ steps.meta-lite.outputs.labels }}
+          tags: ${{ github.ref == 'refs/heads/V2-master' && steps.meta-lite.outputs.tags || steps.meta-lite-test.outputs.tags }}
+          labels: ${{ github.ref == 'refs/heads/V2-master' && steps.meta-lite.outputs.labels || steps.meta-lite-test.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
+
+      - name: Sign ultra-lite images
+        if: github.ref == 'refs/heads/V2-master'
+        env:
+          DIGEST: ${{ steps.build-push-lite.outputs.digest }}
+          TAGS: ${{ steps.meta-lite.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+          done
