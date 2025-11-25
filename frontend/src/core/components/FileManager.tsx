@@ -12,6 +12,7 @@ import { FileManagerProvider } from '@app/contexts/FileManagerContext';
 import { Z_INDEX_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { isGoogleDriveConfigured } from '@app/services/googleDrivePickerService';
 import { loadScript } from '@app/utils/scriptLoader';
+import { useAllFiles } from '@app/contexts/FileContext';
 
 interface FileManagerProps {
   selectedTool?: Tool | null;
@@ -24,6 +25,9 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   const { loadRecentFiles, handleRemoveFile, loading } = useFileManager();
+
+  // Get active file IDs from FileContext to show which files are already loaded
+  const { fileIds: activeFileIds } = useAllFiles();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -175,6 +179,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             modalHeight={modalHeight}
             refreshRecentFiles={refreshRecentFiles}
             isLoading={loading}
+            activeFileIds={activeFileIds}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
           </FileManagerProvider>

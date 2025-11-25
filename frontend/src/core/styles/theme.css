@@ -12,6 +12,12 @@
   /* Inline highlights in summary */
   --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
   --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+
+  /* File Manager active file colors */
+  --file-active-bg: rgba(59, 130, 246, 0.1); /* Transparent blue for active file background */
+  --file-active-badge-bg: rgba(34, 197, 94, 0.15); /* Transparent green for active badge */
+  --file-active-badge-fg: #15803d; /* Green text for active badge */
+  --file-active-badge-border: rgba(34, 197, 94, 0.3); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */

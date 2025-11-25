@@ -30,6 +30,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     onDownloadSingle,
     isFileSupported,
     isLoading,
+    activeFileIds,
   } = useFileManagerContext();
   const { t } = useTranslation();
 
@@ -55,6 +56,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
               // All files in filteredFiles are now leaf files only
               const historyFiles = loadedHistoryFiles.get(file.id) || [];
               const isExpanded = expandedFileIds.has(file.id);
+              const isActive = activeFileIds.includes(file.id);
 
               return (
                 <React.Fragment key={file.id}>
@@ -68,6 +70,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                     onDoubleClick={() => onFileDoubleClick(file)}
                     isHistoryFile={false} // All files here are leaf files
                     isLatestVersion={true} // All files here are the latest versions
+                    isActive={isActive}
                   />
 
                   <FileHistoryGroup

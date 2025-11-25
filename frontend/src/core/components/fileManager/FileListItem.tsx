@@ -6,6 +6,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '@app/utils/fileUtils';
 import { FileId, StirlingFileStub } from '@app/types/fileContext';
@@ -14,6 +15,7 @@ import { zipFileService } from '@app/services/zipFileService';
 import ToolChain from '@app/components/shared/ToolChain';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useFileManagement } from '@app/contexts/FileContext';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -26,6 +28,7 @@ interface FileListItemProps {
   isLast?: boolean;
   isHistoryFile?: boolean; // Whether this is a history file (indented)
   isLatestVersion?: boolean; // Whether this is the latest version (shows chevron)
+  isActive?: boolean; // Whether this file is currently loaded in FileContext
 }
 
 const FileListItem: React.FC<FileListItemProps> = ({
@@ -37,12 +40,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
   onDownload,
   onDoubleClick,
   isHistoryFile = false,
-  isLatestVersion = false
+  isLatestVersion = false,
+  isActive = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
   const {expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
+  const { removeFiles } = useFileManagement();
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -61,8 +66,10 @@ const FileListItem: React.FC<FileListItemProps> = ({
       <Box
         p="sm"
         style={{
-          cursor: isHistoryFile ? 'default' : 'pointer',
-          backgroundColor:  isSelected
+          cursor: isHistoryFile || isActive ? 'default' : 'pointer',
+          backgroundColor: isActive
+              ? 'var(--file-active-bg)'
+              : isSelected
               ? 'var(--mantine-color-gray-1)'
               : (shouldShowHovered ? 'var(--mantine-color-gray-1)' : 'var(--bg-file-list)'),
           opacity: isSupported ? 1 : 0.5,
@@ -74,7 +81,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
           paddingLeft: isHistoryFile ? '2rem' : '0.75rem', // Indent history files
           borderLeft: isHistoryFile ? '3px solid var(--mantine-color-blue-4)' : 'none' // Visual indicator for history
         }}
-        onClick={isHistoryFile ? undefined : (e) => onSelect(e.shiftKey)}
+        onClick={isHistoryFile || isActive ? undefined : (e) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -84,14 +91,16 @@ const FileListItem: React.FC<FileListItemProps> = ({
             <Box>
               {/* Checkbox for regular files only */}
               <Checkbox
-                checked={isSelected}
+                checked={isActive || isSelected}
                 onChange={() => {}} // Handled by parent onClick
                 size="sm"
                 pl="sm"
                 pr="xs"
+                disabled={isActive}
+                color={isActive ? "green" : undefined}
                 styles={{
                   input: {
-                    cursor: 'pointer'
+                    cursor: isActive ? 'not-allowed' : 'pointer'
                   }
                 }}
               />
@@ -103,6 +112,19 @@ const FileListItem: React.FC<FileListItemProps> = ({
               <Text size="sm" fw={500} truncate style={{ flex: 1 }}>
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
+              {isActive && (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  style={{
+                    backgroundColor: 'var(--file-active-badge-bg)',
+                    color: 'var(--file-active-badge-fg)',
+                    border: '1px solid var(--file-active-badge-border)'
+                  }}
+                >
+                  {t('fileManager.active', 'Active')}
+                </Badge>
+              )}
               <Badge size="xs" variant="light" color={"blue"}>
                 v{currentVersion}
               </Badge>
@@ -151,6 +173,22 @@ const FileListItem: React.FC<FileListItemProps> = ({
             </Menu.Target>
 
             <Menu.Dropdown>
+              {/* Close file option for active files */}
+              {isActive && (
+                <>
+                  <Menu.Item
+                    leftSection={<CloseIcon style={{ fontSize: 16 }} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFiles([file.id]);
+                    }}
+                  >
+                    {t('fileManager.closeFile', 'Close File')}
+                  </Menu.Item>
+                  <Menu.Divider />
+                </>
+              )}
+
               {onDownload && (
                 <Menu.Item
                   leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
