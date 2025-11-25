@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
