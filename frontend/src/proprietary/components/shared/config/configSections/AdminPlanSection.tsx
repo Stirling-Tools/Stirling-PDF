@@ -222,6 +222,7 @@ const AdminPlanSection: React.FC = () => {
           buttonColor="orange.7"
         />
       )}
+
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}

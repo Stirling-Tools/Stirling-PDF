@@ -34,7 +34,7 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
       return (
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
-            <img src={`${BASE_PATH}/branding/StirlingLogoLegacy.svg`} alt="Stirling icon" className={styles.downloadIcon} />
+            <img src={`${BASE_PATH}/modern-logo/logo512.png`} alt="Stirling icon" className={styles.downloadIcon} />
           </div>
         </div>
       );
