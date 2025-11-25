@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { Modal, Text, Alert, Stack, Button, Group, ActionIcon } from '@mantine/core';
+import { Modal, Text, Group, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { loadStripe } from '@stripe/stripe-js';
 import licenseService from '@app/services/licenseService';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
@@ -36,8 +35,6 @@ if (STRIPE_KEY && !STRIPE_KEY.startsWith('pk_')) {
     `Expected key starting with 'pk_', got: ${STRIPE_KEY.substring(0, 10)}...`
   );
 }
-
-const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   opened,
@@ -192,25 +189,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   // Render stage content
   const renderContent = () => {
-    // Check if Stripe is configured
-    if (!stripePromise) {
-      return (
-        <Alert color="red" title={t('payment.stripeNotConfigured', 'Stripe Not Configured')}>
-          <Stack gap="md">
-            <Text size="sm">
-              {t(
-                'payment.stripeNotConfiguredMessage',
-                'Stripe payment integration is not configured. Please contact your administrator.'
-              )}
-            </Text>
-            <Button variant="outline" onClick={handleClose}>
-              {t('common.close', 'Close')}
-            </Button>
-          </Stack>
-        </Alert>
-      );
-    }
-
+    // Don't block checkout - hosted mode works without publishable key
+    // The checkout will automatically redirect to Stripe hosted page if key is missing
     switch (checkoutState.state.currentStage) {
       case 'email':
         return (
