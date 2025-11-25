@@ -45,6 +45,7 @@ import { ToolOperation } from '@app/types/file';
 import { handlePasswordError } from '@app/utils/toolErrorHandler';
 
 const DEBUG = process.env.NODE_ENV === 'development';
+const SESSION_STORAGE_KEY = 'stirling:lastSessionFileIds';
 
 
 // Inner provider component that has access to IndexedDB
@@ -82,6 +83,8 @@ function FileContextInner({
   const [isUnlocking, setIsUnlocking] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
+  const hasRestoredFromPersistenceRef = useRef(false);
+  const lastSavedSessionRef = useRef<string | null>(null);
 
   const enqueueEncryptedFiles = useCallback((fileIds: FileId[]) => {
     if (fileIds.length === 0) return;
@@ -406,12 +409,77 @@ function FileContextInner({
   const activeEncryptedStub = activeEncryptedFileId ? state.files.byId[activeEncryptedFileId] : undefined;
   const isUnlockModalOpen = Boolean(activeEncryptedFileId && activeEncryptedStub);
 
-  // Persistence loading disabled - files only loaded on explicit user action
-  // useEffect(() => {
-  //   if (!enablePersistence || !indexedDB) return;
-  //   const loadFromPersistence = async () => { /* loading logic removed */ };
-  //   loadFromPersistence();
-  // }, [enablePersistence, indexedDB]);
+  // Auto-restore last session files (only those that were in the workbench) on initial load
+  useEffect(() => {
+    if (!enablePersistence || !indexedDB) return;
+    if (hasRestoredFromPersistenceRef.current) return;
+    if (stateRef.current.files.ids.length > 0) return;
+    hasRestoredFromPersistenceRef.current = true;
+
+    const restorePersistedFiles = async () => {
+      try {
+        const storedIdsRaw = typeof localStorage !== 'undefined'
+          ? localStorage.getItem(SESSION_STORAGE_KEY)
+          : null;
+        const storedIds: FileId[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : [];
+        if (!Array.isArray(storedIds) || storedIds.length === 0) return;
+
+        // De-dupe, cap to avoid loading huge sets on slow devices
+        const uniqueIds = Array.from(new Set(storedIds)).slice(0, 20);
+
+        const stubs = await Promise.all(
+          uniqueIds.map(async (id) => {
+            try {
+              return await indexedDB.loadMetadata(id);
+            } catch (err) {
+              if (DEBUG) console.warn('Failed to load metadata for id', id, err);
+              return null;
+            }
+          })
+        );
+
+        const validStubs = stubs.filter((s): s is StirlingFileStub => Boolean(s));
+        if (validStubs.length === 0) return;
+
+        // Keep ordering by lastModified (newest first) for a predictable layout
+        const sortedStubs = [...validStubs].sort(
+          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)
+        );
+
+        await actions.addStirlingFileStubs(sortedStubs, { selectFiles: false });
+      } catch (error) {
+        console.error('Failed to restore files from persistence:', error);
+      }
+    };
+
+    restorePersistedFiles();
+  }, [actions.addStirlingFileStubs, enablePersistence, indexedDB]);
+
+  // Persist current session file IDs (ordered by recency) so we only restore what was open
+  useEffect(() => {
+    if (!enablePersistence) return;
+    if (typeof localStorage === 'undefined') return;
+
+    const ids = state.files.ids;
+    if (ids.length === 0) {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      lastSavedSessionRef.current = null;
+      return;
+    }
+
+    // Order by lastModified to keep newest-first when restoring
+    const sortedByRecency = [...ids]
+      .map((id) => stateRef.current.files.byId[id])
+      .filter(Boolean)
+      .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
+      .map((stub) => stub.id);
+
+    const json = JSON.stringify(sortedByRecency);
+    if (lastSavedSessionRef.current === json) return; // Avoid redundant writes
+
+    localStorage.setItem(SESSION_STORAGE_KEY, json);
+    lastSavedSessionRef.current = json;
+  }, [enablePersistence, state.files.ids]);
 
   // Cleanup on unmount
   useEffect(() => {

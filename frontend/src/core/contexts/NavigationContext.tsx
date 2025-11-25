@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { WorkbenchType, getDefaultWorkbench } from '@app/types/workbench';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
+import { WorkbenchType, getDefaultWorkbench, isValidWorkbench } from '@app/types/workbench';
 import { ToolId, isValidToolId } from '@app/types/toolId';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
 
@@ -10,6 +10,8 @@ import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
  * and breadcrumb/history navigation. Separated from FileContext to
  * maintain clear separation of concerns.
  */
+
+const NAVIGATION_STORAGE_KEY = 'stirling:lastNavigation';
 
 // Navigation state
 interface NavigationContextState {
@@ -109,6 +111,9 @@ export const NavigationProvider: React.FC<{
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const { allTools: toolRegistry } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
+  // Track persistence to avoid redundant writes/loads
+  const lastSavedNavRef = useRef<string | null>(null);
+  const hasRestoredNavRef = useRef(false);
 
   const actions: NavigationContextActions = {
     setWorkbench: useCallback((workbench: WorkbenchType) => {
@@ -250,6 +255,47 @@ export const NavigationProvider: React.FC<{
       dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
     }, [toolRegistry])
   };
+
+  // Restore last navigation state (workbench/tool) on first load
+  useEffect(() => {
+    if (hasRestoredNavRef.current) return;
+    if (typeof localStorage === 'undefined') return;
+
+    hasRestoredNavRef.current = true;
+
+    try {
+      const raw = localStorage.getItem(NAVIGATION_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as { workbench?: string; selectedTool?: string | null };
+      const parsedWorkbench = parsed.workbench;
+      const parsedTool = parsed.selectedTool;
+
+      const workbench = parsedWorkbench && isValidWorkbench(parsedWorkbench)
+        ? parsedWorkbench
+        : getDefaultWorkbench();
+      const toolId = parsedTool && isValidToolId(parsedTool) ? parsedTool : null;
+
+      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
+    } catch (error) {
+      console.error('[NavigationContext] Failed to restore navigation state:', error);
+    }
+  }, []);
+
+  // Persist navigation state so we can return to the same view after refresh
+  useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+
+    const payload = {
+      workbench: state.workbench,
+      selectedTool: state.selectedTool
+    };
+    const serialized = JSON.stringify(payload);
+    if (lastSavedNavRef.current === serialized) return;
+
+    localStorage.setItem(NAVIGATION_STORAGE_KEY, serialized);
+    lastSavedNavRef.current = serialized;
+  }, [state.workbench, state.selectedTool]);
 
   const stateValue: NavigationContextStateValue = {
     workbench: state.workbench,
