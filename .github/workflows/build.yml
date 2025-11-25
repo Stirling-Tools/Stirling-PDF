@@ -204,7 +204,9 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    needs: ${{ needs.files-changed.outputs.docker == 'true' && ['files-changed', 'test-build-docker-images'] || ['files-changed'] }}
+    needs:
+      - files-changed
+      - ${{ needs.files-changed.outputs.docker == 'true' && 'test-build-docker-images' }}
     if: ${{ 
       needs.files-changed.outputs.project == 'true' &&
       (
