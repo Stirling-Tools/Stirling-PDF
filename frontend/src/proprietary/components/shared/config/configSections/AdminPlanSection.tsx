@@ -9,7 +9,6 @@ import AvailablePlansSection from '@app/components/shared/config/configSections/
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
@@ -223,18 +222,6 @@ const AdminPlanSection: React.FC = () => {
           buttonColor="orange.7"
         />
       )}
-      {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-      {licenseInfo?.licenseKey && isSupabaseConfigured && (
-        <Paper withBorder p="md" radius="md">
-          <Group justify="space-between" align="center">
-            <Text size="sm" c="dimmed">
-              {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-            </Text>
-            <ManageBillingButton />
-          </Group>
-        </Paper>
-      )}
-
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}
