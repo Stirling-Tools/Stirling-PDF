@@ -17,6 +17,8 @@
       "comingSoon": "Již brzy:",
       "favorite": "Přidat do oblíbených",
       "favorites": "Oblíbené",
+      "unavailable": "Zakázáno správcem serveru:",
+      "unavailableDependency": "Nedostupné – na serveru chybí požadovaný nástroj:",
       "heading": "Všechny nástroje (zobrazení na celou obrazovku)",
       "noResults": "Zkuste upravit hledání nebo přepnout popisy, abyste našli, co potřebujete.",
       "recommended": "Doporučeno",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Přepnout na režim na celou obrazovku",
       "sidebar": "Přepnout na režim postranního panelu"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Prémiová funkce:",
+    "comingSoon": "Již brzy:"
   },
   "unsavedChanges": "Máte neuložené změny v PDF.",
   "areYouSure": "Opravdu chcete odejít?",
@@ -40,6 +45,30 @@
     "message": "Tento ZIP obsahuje {{count}} souborů. Přesto rozbalit?",
     "cancel": "Zrušit",
     "confirm": "Rozbalit"
+  },
+  "defaultApp": {
+    "title": "Nastavit jako výchozí aplikaci pro PDF",
+    "message": "Chcete nastavit Stirling PDF jako výchozí editor PDF?",
+    "description": "Později to můžete změnit v nastavení systému.",
+    "notNow": "Teď ne",
+    "setDefault": "Nastavit jako výchozí",
+    "dismiss": "Zavřít",
+    "prompt": {
+      "title": "Nastavit jako výchozí editor PDF",
+      "message": "Nastavte Stirling PDF jako výchozí aplikaci pro otevírání souborů PDF."
+    },
+    "success": {
+      "title": "Výchozí aplikace nastavena",
+      "message": "Stirling PDF je nyní váš výchozí editor PDF"
+    },
+    "settingsOpened": {
+      "title": "Otevřeno nastavení",
+      "message": "Vyberte prosím v nastavení systému Stirling PDF"
+    },
+    "error": {
+      "title": "Chyba",
+      "message": "Nepodařilo se nastavit výchozí aplikaci pro PDF"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Uložit",
   "saveToBrowser": "Uložit do prohlížeče",
   "download": "Stáhnout",
+  "downloadUnavailable": "Stažení pro tuto položku není k dispozici",
+  "saveUnavailable": "Uložení pro tuto položku není k dispozici",
   "pin": "Připnout soubor (ponechat aktivní po spuštění nástroje)",
   "unpin": "Odepnout soubor (nahradit po spuštění nástroje)",
   "undoOperationTooltip": "Kliknutím vrátíte poslední operaci a obnovíte původní soubory",
@@ -168,6 +199,7 @@
   },
   "edit": "Upravit",
   "delete": "Smazat",
+  "never": "Nikdy",
   "username": "Uživatelské jméno",
   "password": "Heslo",
   "welcome": "Vítejte",
@@ -262,7 +294,8 @@
     "learnMore": "Více informací",
     "enable": "Povolit analytiku",
     "disable": "Zakázat analytiku",
-    "settings": "Nastavení analytiky můžete změnit v souboru config/settings.yml"
+    "settings": "Nastavení analytiky můžete změnit v souboru config/settings.yml",
+    "privacyAssurance": "Nesledujeme žádné osobní údaje ani obsah vašich souborů."
   },
   "navbar": {
     "favorite": "Oblíbené",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Nastavení",
-    "update": "K dispozici je aktualizace",
-    "updateAvailable": "{0} je aktuálně nainstalovaná verze. Je k dispozici nová verze ({1}).",
-    "appVersion": "Verze aplikace:",
-    "downloadOption": {
-      "title": "Vyberte možnost stahování (Pro stahování jednoho souboru bez zipu):",
-      "1": "Otevřít ve stejném okně",
-      "2": "Otevřít v novém okně",
-      "3": "Stáhnout soubor"
-    },
-    "zipThreshold": "Zazipovat soubory, když počet stahovaných souborů přesáhne",
-    "signOut": "Odhlásit se",
-    "accountSettings": "Nastavení účtu",
-    "bored": {
-      "help": "Povolí velikonoční vajíčko hry"
-    },
-    "cacheInputs": {
-      "name": "Ukládat vstupy formulářů",
-      "help": "Povolí ukládání dříve použitých vstupů pro budoucí použití"
+    "connection": {
+      "title": "Režim připojení",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-Hosted"
+      },
+      "server": "Server",
+      "user": "Přihlášen jako",
+      "logout": "Odhlásit se"
     },
     "general": {
       "title": "Obecné",
       "description": "Nastavte obecné předvolby aplikace.",
-      "account": "Účet",
-      "accountDescription": "Spravujte nastavení účtu",
       "user": "Uživatel",
-      "signedInAs": "Přihlášen jako",
       "logout": "Odhlásit se",
       "enableFeatures": {
+        "dismiss": "Zavřít",
         "title": "Pro správce systému",
         "intro": "Povolte ověřování uživatelů, správu týmů a funkce pracovního prostoru pro vaši organizaci.",
         "action": "Nastavit",
         "and": "a",
         "benefit": "Umožňuje uživatelské role, týmovou spolupráci, administrační ovládací prvky a podnikové funkce.",
-        "learnMore": "Více v dokumentaci",
-        "dismiss": "Zavřít"
+        "learnMore": "Více v dokumentaci"
       },
-      "autoUnzip": "Automaticky rozbalovat odpovědi API",
-      "autoUnzipDescription": "Automaticky extrahovat soubory ze ZIP odpovědí",
-      "autoUnzipTooltip": "Automaticky extrahuje ZIP soubory vrácené z operací API. Vypněte pro zachování ZIP souborů. Toto neovlivňuje automatizační workflow.",
-      "autoUnzipFileLimit": "Limit pro automatické rozbalení",
-      "autoUnzipFileLimitDescription": "Maximální počet souborů k extrahování ze ZIP",
-      "autoUnzipFileLimitTooltip": "Rozbalit pouze, pokud ZIP obsahuje tolik nebo méně souborů. Nastavte vyšší hodnotu pro rozbalení větších ZIP archivů.",
       "defaultToolPickerMode": "Výchozí režim výběru nástrojů",
       "defaultToolPickerModeDescription": "Zvolte, zda se výběr nástrojů otevře ve výchozím nastavení na celou obrazovku nebo v postranním panelu",
       "mode": {
-        "fullscreen": "Celá obrazovka",
-        "sidebar": "Postranní panel"
-      }
+        "sidebar": "Postranní panel",
+        "fullscreen": "Celá obrazovka"
+      },
+      "autoUnzipTooltip": "Automaticky extrahuje ZIP soubory vrácené z operací API. Vypněte pro zachování ZIP souborů. Toto neovlivňuje automatizační workflow.",
+      "autoUnzip": "Automaticky rozbalovat odpovědi API",
+      "autoUnzipDescription": "Automaticky extrahovat soubory ze ZIP odpovědí",
+      "autoUnzipFileLimitTooltip": "Rozbalit pouze, pokud ZIP obsahuje tolik nebo méně souborů. Nastavte vyšší hodnotu pro rozbalení větších ZIP archivů.",
+      "autoUnzipFileLimit": "Limit pro automatické rozbalení",
+      "autoUnzipFileLimitDescription": "Maximální počet souborů k extrahování ze ZIP",
+      "defaultPdfEditor": "Výchozí editor PDF",
+      "defaultPdfEditorActive": "Stirling PDF je váš výchozí editor PDF",
+      "defaultPdfEditorInactive": "Jiná aplikace je nastavena jako výchozí",
+      "defaultPdfEditorChecking": "Kontrola...",
+      "defaultPdfEditorSet": "Již výchozí",
+      "setAsDefault": "Nastavit jako výchozí",
+      "updates": {
+        "title": "Aktualizace softwaru",
+        "description": "Zkontrolujte aktualizace a zobrazte informace o verzi",
+        "currentVersion": "Aktuální verze",
+        "latestVersion": "Nejnovější verze",
+        "checkForUpdates": "Zkontrolovat aktualizace",
+        "viewDetails": "Zobrazit podrobnosti"
+      },
+      "hideUnavailableTools": "Skrýt nedostupné nástroje",
+      "hideUnavailableToolsDescription": "Místo šedých ikon odeberte nástroje, které váš server zakázal.",
+      "hideUnavailableConversions": "Skrýt nedostupné konverze",
+      "hideUnavailableConversionsDescription": "Místo šedých voleb odeberte zakázané možnosti převodu v nástroji Převod."
     },
     "hotkeys": {
-      "title": "Klávesové zkratky",
-      "description": "Najetím myší na nástroj uvidíte jeho zkratku nebo ji níže upravte. Klikněte na \"Změnit zkratku\" a stiskněte novou kombinaci kláves. Esc pro zrušení.",
-      "errorModifier": {
-        "mac": "Do zkratky zahrňte ⌘ (Command), ⌥ (Option) nebo jiný modifikátor.",
-        "windows": "Do zkratky zahrňte Ctrl, Alt nebo jiný modifikátor."
-      },
       "errorConflict": "Zkratku již používá {{tool}}.",
+      "searchPlaceholder": "Hledat nástroje...",
       "none": "Nepřiřazeno",
       "customBadge": "Vlastní",
       "defaultLabel": "Výchozí: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Změnit zkratku",
       "reset": "Obnovit",
       "shortcut": "Zkratka",
-      "noShortcut": "Není nastavena žádná zkratka",
-      "searchPlaceholder": "Hledat nástroje..."
+      "noShortcut": "Není nastavena žádná zkratka"
     }
+  },
+  "update": {
+    "modalTitle": "Dostupná aktualizace",
+    "current": "Aktuální verze",
+    "latest": "Nejnovější verze",
+    "latestStable": "Nejnovější stabilní",
+    "priorityLabel": "Priorita",
+    "recommendedAction": "Doporučený postup",
+    "breakingChangesDetected": "Zjištěny nekompatibilní změny",
+    "breakingChangesMessage": "Některé verze obsahují nekompatibilní změny. Před aktualizací si prosím prostudujte migrační průvodce níže.",
+    "migrationGuides": "Migrační průvodci",
+    "viewGuide": "Zobrazit průvodce",
+    "loadingDetailedInfo": "Načítání podrobných informací...",
+    "close": "Zavřít",
+    "viewAllReleases": "Zobrazit všechna vydání",
+    "downloadLatest": "Stáhnout nejnovější",
+    "availableUpdates": "Dostupné aktualizace",
+    "unableToLoadDetails": "Nelze načíst podrobné informace.",
+    "version": "Verze",
+    "urgentUpdateAvailable": "Naléhavá aktualizace",
+    "updateAvailable": "Dostupná aktualizace",
+    "releaseNotes": "Poznámky k vydání",
+    "priority": {
+      "urgent": "Naléhavá",
+      "normal": "Normální",
+      "minor": "Menší",
+      "low": "Nízká"
+    },
+    "breakingChanges": "Nekompatibilní změny",
+    "breakingChangesDefault": "Tato verze obsahuje nekompatibilní změny.",
+    "migrationGuide": "Migrační průvodce"
   },
   "changeCreds": {
     "title": "Změnit přihlašovací údaje",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Překryje PDF nad jiným PDF",
       "title": "Překrýt PDF"
+    },
+    "pdfTextEditor": {
+      "title": "Editor textu PDF",
+      "desc": "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
+    },
+    "addText": {
+      "tags": "text,anotace,štítek",
+      "title": "Přidat text",
+      "desc": "Přidejte libovolný text kamkoli do PDF"
     }
   },
   "landing": {
     "addFiles": "Přidat soubory",
-    "uploadFromComputer": "Nahrát z počítače"
+    "uploadFromComputer": "Nahrát z počítače",
+    "openFromComputer": "Otevřít z počítače"
   },
   "viewPdf": {
     "tags": "zobrazit,číst,anotovat,text,obrázek",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Při slučování PDF došlo k chybě."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Přehled nastavení sloučení"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,obrázek,fotka",
     "title": "Přidat obrázek",
     "header": "Přidat obrázek do PDF",
-    "everyPage": "Každá stránka?",
-    "upload": "Přidat obrázek",
-    "submit": "Přidat obrázek"
+    "image": {
+      "name": "Obrázek",
+      "placeholder": "Nahrajte obrázek",
+      "label": "Soubor obrázku"
+    },
+    "steps": {
+      "configure": "Nastavit obrázek"
+    },
+    "step": {
+      "createDesc": "Nahrajte obrázek, který chcete přidat",
+      "place": "Umístit obrázek",
+      "placeDesc": "Kliknutím do PDF přidáte obrázek"
+    },
+    "instructions": {
+      "title": "Jak přidat obrázky",
+      "text": "Po nahrání obrázku výše klikněte kamkoli do PDF a umístěte ho.",
+      "paused": "Umisťování pozastaveno",
+      "resumeHint": "Obnovte umisťování a kliknutím přidejte obrázek.",
+      "noSignature": "Nahrajte výše obrázek, aby bylo možné umisťovat."
+    },
+    "mode": {
+      "move": "Přesunout obrázek",
+      "place": "Umístit obrázek",
+      "pause": "Pozastavit umisťování",
+      "resume": "Obnovit umisťování"
+    },
+    "results": {
+      "title": "Výsledky přidání obrázku"
+    },
+    "error": {
+      "failed": "Při přidávání obrázku do PDF došlo k chybě."
+    },
+    "saved": {
+      "defaultLabel": "Obrázek",
+      "defaultImageLabel": "Nahraný obrázek"
+    },
+    "applySignatures": "Použít obrázky"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1397,6 +1509,93 @@
     },
     "submit": "Změnit"
   },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Záložky a osnova",
+      "replaceExisting": "Nahradit stávající záložky (zrušte zaškrtnutí pro připojení)",
+      "replaceExistingHint": "Když je vypnuto, nová osnova se přidá za stávající záložky."
+    },
+    "actions": {
+      "source": "Načíst záložky",
+      "selectedFile": "Načteno z {{file}}",
+      "noFile": "Vyberte PDF pro extrakci stávajících záložek.",
+      "loadFromPdf": "Načíst z vybraného PDF",
+      "importJson": "Import JSON",
+      "importClipboard": "Vložit JSON ze schránky",
+      "export": "Exportovat záložky",
+      "exportJson": "Stáhnout JSON",
+      "exportClipboard": "Zkopírovat JSON do schránky",
+      "clipboardUnavailable": "V tomto prohlížeči není k dispozici přístup ke schránce."
+    },
+    "info": {
+      "line1": "Každá záložka potřebuje popisný název a stránku, kterou má otevřít.",
+      "line2": "Použijte podřízené záložky k vytvoření hierarchie kapitol, sekcí nebo podsekcí.",
+      "line3": "Pro úsporu času importujte záložky z vybraného PDF nebo ze souboru JSON."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Otevřete nástroj a začněte upravovat",
+        "description": "Vyberte nástroj Upravit obsah pro načtení pracovního prostoru."
+      },
+      "tabTitle": "Pracovní prostor osnovy",
+      "subtitle": "Importujte záložky, vytvářejte hierarchie a aplikujte osnovu bez stísněných postranních panelů.",
+      "noFile": "Není vybráno žádné PDF",
+      "fileLabel": "Změny budou aplikovány na aktuálně vybrané PDF.",
+      "filePrompt": "Vyberte PDF z knihovny nebo nahrajte nové a začněte.",
+      "changeFile": "Změnit PDF",
+      "selectFile": "Vybrat PDF"
+    },
+    "editor": {
+      "heading": "Editor záložek",
+      "description": "Přidávejte, vnořujte a přeuspořádávejte záložky pro tvorbu osnovy PDF.",
+      "addTopLevel": "Přidat záložku nejvyšší úrovně",
+      "empty": {
+        "title": "Zatím žádné záložky",
+        "description": "Importujte stávající záložky nebo začněte přidáním první položky.",
+        "action": "Přidat první záložku"
+      },
+      "defaultTitle": "Nová záložka",
+      "defaultChildTitle": "Podřízená záložka",
+      "defaultSiblingTitle": "Nová záložka",
+      "untitled": "Nepojmenovaná záložka",
+      "childBadge": "Podřízená",
+      "pagePreview": "Strana {{page}}",
+      "field": {
+        "title": "Název záložky",
+        "page": "Cílové číslo strany"
+      },
+      "actions": {
+        "toggle": "Přepnout podřízené",
+        "addChild": "Přidat podřízenou záložku",
+        "addSibling": "Přidat záložku stejné úrovně",
+        "remove": "Odstranit záložku"
+      },
+      "confirmRemove": "Odstranit tuto záložku a všechny její podřízené?"
+    },
+    "messages": {
+      "loadedTitle": "Záložky byly extrahovány",
+      "loadedBody": "Stávající záložky z PDF byly načteny do editoru.",
+      "noBookmarks": "Ve vybraném PDF nebyly nalezeny žádné záložky.",
+      "loadFailed": "Nelze extrahovat záložky z vybraného PDF.",
+      "imported": "Záložky byly importovány",
+      "importedBody": "Osnova z JSON nahradila aktuální obsah editoru.",
+      "importedClipboard": "Data ze schránky nahradila aktuální seznam záložek.",
+      "invalidJson": "Neplatná struktura JSON",
+      "invalidJsonBody": "Zadejte platný soubor JSON se záložkami a zkuste to znovu.",
+      "exported": "Stahování JSON připraveno",
+      "copied": "Zkopírováno do schránky",
+      "copiedBody": "JSON se záložkami byl úspěšně zkopírován.",
+      "copyFailed": "Kopírování selhalo"
+    },
+    "error": {
+      "failed": "Nepodařilo se aktualizovat obsah"
+    },
+    "submit": "Použít obsah",
+    "results": {
+      "title": "Aktualizované PDF se záložkami",
+      "subtitle": "Stáhněte zpracovaný soubor nebo níže akci vraťte."
+    }
+  },
   "removePages": {
     "tags": "Odstranit stránky,smazat stránky",
     "title": "Odstranit",
@@ -1601,7 +1800,7 @@
     "tags": "stlačit,malý,drobný"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "odebrat,smazat,formulář,pole,jen pro čtení",
     "title": "Odstranit režim jen pro čtení z formulářových polí",
     "header": "Odemknout PDF formuláře",
     "submit": "Remove",
@@ -1978,13 +2177,54 @@
       "title": "Nakreslete svůj podpis",
       "clear": "Vymazat"
     },
+    "canvas": {
+      "heading": "Nakreslete svůj podpis",
+      "clickToOpen": "Kliknutím otevřete kreslicí plátno",
+      "modalTitle": "Nakreslete svůj podpis",
+      "colorLabel": "Barva",
+      "penSizeLabel": "Tloušťka pera",
+      "penSizePlaceholder": "Velikost",
+      "clear": "Vyčistit plátno",
+      "colorPickerTitle": "Zvolte barvu tahu"
+    },
     "text": {
       "name": "Jméno podepisujícího",
-      "placeholder": "Zadejte své celé jméno"
+      "placeholder": "Zadejte své celé jméno",
+      "fontLabel": "Písmo",
+      "fontSizeLabel": "Velikost písma",
+      "fontSizePlaceholder": "Zadejte nebo vyberte velikost písma (8–200)",
+      "colorLabel": "Barva textu"
     },
     "clear": "Vymazat",
     "add": "Přidat",
-    "saved": "Uložené podpisy",
+    "saved": {
+      "heading": "Uložené podpisy",
+      "description": "Uložené podpisy můžete kdykoli znovu použít.",
+      "emptyTitle": "Zatím žádné uložené podpisy",
+      "emptyDescription": "Nakreslete, nahrajte nebo napište podpis výše a poté použijte „Uložit do knihovny“ a mějte připraveno až {{max}} oblíbených.",
+      "type": {
+        "canvas": "Kresba",
+        "image": "Nahrání",
+        "text": "Text"
+      },
+      "limitTitle": "Dosažen limit",
+      "limitDescription": "Před přidáním nových nejprve odstraňte uložený podpis (max. {{max}}).",
+      "carouselPosition": "{{current}} z {{total}}",
+      "prev": "Předchozí",
+      "next": "Další",
+      "delete": "Odstranit",
+      "label": "Štítek",
+      "defaultLabel": "Podpis",
+      "defaultCanvasLabel": "Nakreslený podpis",
+      "defaultImageLabel": "Nahraný podpis",
+      "defaultTextLabel": "Napsaný podpis",
+      "saveButton": "Uložit podpis",
+      "saveUnavailable": "Nejprve vytvořte podpis, abyste jej mohli uložit.",
+      "noChanges": "Aktuální podpis je již uložen.",
+      "status": {
+        "saved": "Uloženo"
+      }
+    },
     "save": "Uložit podpis",
     "applySignatures": "Použít podpisy",
     "personalSigs": "Osobní podpisy",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Nastavit podpis"
     },
+    "step": {
+      "createDesc": "Vyberte, jak chcete podpis vytvořit",
+      "place": "Umístit a uložit",
+      "placeDesc": "Umístěte podpis do PDF"
+    },
     "type": {
       "title": "Typ podpisu",
       "draw": "Kreslit",
       "canvas": "Plátno",
       "image": "Obrázek",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Uložené"
     },
     "image": {
       "label": "Nahrát obrázek podpisu",
@@ -2019,11 +2265,17 @@
       "title": "Jak přidat podpis",
       "canvas": "Po nakreslení podpisu na plátně zavřete okno a poté klikněte kamkoli do PDF pro umístění.",
       "image": "Po nahrání obrázku podpisu výše klikněte kamkoli do PDF pro jeho umístění.",
-      "text": "Po zadání jména výše klikněte kamkoli do PDF pro umístění podpisu."
+      "saved": "Vyberte výše uložený podpis a poté klikněte kamkoli do PDF pro jeho umístění.",
+      "text": "Po zadání jména výše klikněte kamkoli do PDF pro umístění podpisu.",
+      "paused": "Umisťování pozastaveno",
+      "resumeHint": "Obnovte umisťování a kliknutím přidejte podpis.",
+      "noSignature": "Vytvořte výše podpis, aby se zpřístupnily nástroje pro umisťování."
     },
     "mode": {
       "move": "Přesunout podpis",
-      "place": "Umístit podpis"
+      "place": "Umístit podpis",
+      "pause": "Pozastavit umisťování",
+      "resume": "Obnovit umisťování"
     },
     "updateAndPlace": "Aktualizovat a umístit",
     "activate": "Aktivovat umisťování podpisu",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "O nástroji Odstranit anotace",
       "description": "Tento nástroj odstraní všechny anotace (komentáře, zvýraznění, poznámky atd.) z vašich PDF dokumentů."
+    },
+    "tooltip": {
+      "header": {
+        "title": "O nástroji Odebrat anotace"
+      },
+      "description": {
+        "title": "Co dělá"
+      }
     },
     "error": {
       "failed": "Při odstraňování anotací z PDF došlo k chybě."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Jak funguje automatické přejmenování"
       },
+      "description": {
+        "title": "Co dělá"
+      },
       "howItWorks": {
         "title": "Chytré přejmenování",
         "text": "Automaticky najde název z obsahu vašeho PDF a použije jej jako název souboru.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Vytvoří čistý, platný název souboru z nalezeného názvu",
         "bullet3": "Ponechá původní název, pokud se nenajde vhodný název"
       }
+    },
+    "settings": {
+      "title": "O nástroji"
     }
   },
   "adjust-contrast": {
@@ -3174,11 +3440,12 @@
     "title": "Přihlášení",
     "header": "Přihlášení",
     "signin": "Přihlásit se",
-    "signInWith": "Sign in with",
-    "signInAnonymously": "Sign Up as a Guest",
+    "signInWith": "Přihlásit se pomocí",
+    "signInAnonymously": "Přihlásit se jako host",
     "rememberme": "Zapamatovat si mě",
     "invalid": "Neplatné uživatelské jméno nebo heslo.",
     "locked": "Váš účet byl uzamčen.",
+    "sessionExpired": "Relace vypršela. Přihlaste se prosím znovu.",
     "signinTitle": "Prosím přihlaste se",
     "ssoSignIn": "Přihlásit se přes Single Sign-on",
     "oAuth2AutoCreateDisabled": "Automatické vytváření OAUTH2 uživatelů je zakázáno",
@@ -3194,82 +3461,82 @@
     "alreadyLoggedIn": "Již jste přihlášeni na",
     "alreadyLoggedIn2": "zařízeních. Odhlaste se prosím z těchto zařízení a zkuste to znovu.",
     "toManySessions": "Máte příliš mnoho aktivních relací",
-    "logoutMessage": "You have been logged out.",
-    "youAreLoggedIn": "You are logged in!",
-    "email": "Email",
-    "password": "Password",
-    "enterEmail": "Enter your email",
-    "enterPassword": "Enter your password",
-    "loggingIn": "Logging In...",
-    "username": "Username",
-    "enterUsername": "Enter username",
-    "useEmailInstead": "Login with email",
-    "forgotPassword": "Forgot your password?",
-    "logIn": "Log In",
-    "signingIn": "Signing in...",
-    "login": "Login",
-    "or": "Or",
-    "useMagicLink": "Use magic link instead",
-    "enterEmailForMagicLink": "Enter your email for magic link",
-    "sending": "Sending…",
-    "sendMagicLink": "Send Magic Link",
-    "cancel": "Cancel",
-    "dontHaveAccount": "Don't have an account? Sign up",
-    "home": "Home",
-    "debug": "Debug",
-    "signOut": "Sign Out",
-    "pleaseEnterBoth": "Please enter both email and password",
-    "pleaseEnterEmail": "Please enter your email address",
-    "magicLinkSent": "Magic link sent to {{email}}! Check your email and click the link to sign in.",
-    "passwordResetSent": "Password reset link sent to {{email}}! Check your email and follow the instructions.",
-    "failedToSignIn": "Failed to sign in with {{provider}}: {{message}}",
-    "unexpectedError": "Unexpected error: {{message}}",
-    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
-    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "logoutMessage": "Byli jste odhlášeni.",
+    "youAreLoggedIn": "Jste přihlášeni!",
+    "email": "E-mail",
+    "password": "Heslo",
+    "enterEmail": "Zadejte svůj e-mail",
+    "enterPassword": "Zadejte své heslo",
+    "loggingIn": "Přihlašování...",
+    "username": "Uživatelské jméno",
+    "enterUsername": "Zadejte uživatelské jméno",
+    "useEmailInstead": "Přihlásit pomocí e-mailu",
+    "forgotPassword": "Zapomněli jste heslo?",
+    "logIn": "Přihlásit se",
+    "signingIn": "Přihlašování...",
+    "login": "Přihlášení",
+    "or": "Nebo",
+    "useMagicLink": "Použít místo toho magický odkaz",
+    "enterEmailForMagicLink": "Zadejte e-mail pro magický odkaz",
+    "sending": "Odesílání…",
+    "sendMagicLink": "Odeslat magický odkaz",
+    "cancel": "Zrušit",
+    "dontHaveAccount": "Nemáte účet? Zaregistrujte se",
+    "home": "Domů",
+    "debug": "Ladění",
+    "signOut": "Odhlásit se",
+    "pleaseEnterBoth": "Zadejte prosím e-mail i heslo",
+    "pleaseEnterEmail": "Zadejte prosím svou e-mailovou adresu",
+    "magicLinkSent": "Magický odkaz byl odeslán na {{email}}! Zkontrolujte e-mail a kliknutím na odkaz se přihlaste.",
+    "passwordResetSent": "Odkaz na reset hesla byl odeslán na {{email}}! Zkontrolujte e-mail a postupujte podle pokynů.",
+    "failedToSignIn": "Nepodařilo se přihlásit pomocí {{provider}}: {{message}}",
+    "unexpectedError": "Neočekávaná chyba: {{message}}",
+    "accountCreatedSuccess": "Účet byl úspěšně vytvořen! Nyní se můžete přihlásit.",
+    "passwordChangedSuccess": "Heslo bylo úspěšně změněno! Přihlaste se novým heslem.",
+    "credentialsUpdated": "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu."
   },
   "signup": {
-    "title": "Create an account",
-    "subtitle": "Join Stirling PDF to get started",
-    "name": "Name",
-    "email": "Email",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "enterName": "Enter your name",
-    "enterEmail": "Enter your email",
-    "enterPassword": "Enter your password",
-    "confirmPasswordPlaceholder": "Confirm password",
-    "or": "or",
-    "creatingAccount": "Creating Account...",
-    "signUp": "Sign Up",
-    "alreadyHaveAccount": "Already have an account? Sign in",
-    "pleaseFillAllFields": "Please fill in all fields",
-    "passwordsDoNotMatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters long",
-    "invalidEmail": "Please enter a valid email address",
-    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
-    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
-    "unexpectedError": "Unexpected error: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
+    "title": "Vytvořit účet",
+    "subtitle": "Připojte se ke Stirling PDF a začněte",
+    "name": "Jméno",
+    "email": "E-mail",
+    "password": "Heslo",
+    "confirmPassword": "Potvrďte heslo",
+    "enterName": "Zadejte své jméno",
+    "enterEmail": "Zadejte svůj e-mail",
+    "enterPassword": "Zadejte své heslo",
+    "confirmPasswordPlaceholder": "Potvrďte heslo",
+    "or": "nebo",
+    "creatingAccount": "Vytváření účtu...",
+    "signUp": "Zaregistrovat se",
+    "alreadyHaveAccount": "Už máte účet? Přihlaste se",
+    "pleaseFillAllFields": "Vyplňte prosím všechna pole",
+    "passwordsDoNotMatch": "Hesla se neshodují",
+    "passwordTooShort": "Heslo musí mít alespoň 6 znaků",
+    "invalidEmail": "Zadejte prosím platnou e-mailovou adresu",
+    "checkEmailConfirmation": "Zkontrolujte e-mail s potvrzovacím odkazem pro dokončení registrace.",
+    "accountCreatedSuccessfully": "Účet byl úspěšně vytvořen! Nyní se můžete přihlásit.",
+    "unexpectedError": "Neočekávaná chyba: {{message}}",
+    "useEmailInstead": "Použít místo toho e-mail",
+    "nameRequired": "Jméno je povinné",
+    "emailRequired": "E-mail je povinný",
+    "passwordRequired": "Heslo je povinné",
+    "confirmPasswordRequired": "Potvrďte prosím své heslo"
   },
   "pdfToSinglePage": {
     "title": "PDF na jednu stránku",
     "header": "PDF na jednu stránku",
     "submit": "Převést na jednu stránku",
-    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "description": "Tento nástroj sloučí všechny stránky vašeho PDF do jedné velké stránky. Šířka zůstane stejná jako u původních stránek, výška bude součtem výšek všech stránek.",
     "filenamePrefix": "single_page",
     "files": {
-      "placeholder": "Select a PDF file in the main view to get started"
+      "placeholder": "Chcete-li začít, vyberte v hlavním zobrazení soubor PDF"
     },
     "error": {
-      "failed": "An error occurred whilst converting to single page."
+      "failed": "Při převodu na jednu stránku došlo k chybě."
     },
     "results": {
-      "title": "Single Page Results"
+      "title": "Výsledky jedné stránky"
     }
   },
   "pageExtracter": {
@@ -3284,32 +3551,32 @@
     "selectText": {
       "1": "Odstranit JavaScript akce",
       "2": "Odstranit vložené soubory",
-      "3": "Remove XMP metadata",
+      "3": "Odstranit metadata XMP",
       "4": "Odstranit odkazy",
       "5": "Odstranit písma",
-      "6": "Remove Document Info Metadata"
+      "6": "Odstranit metadata informací o dokumentu"
     },
     "submit": "Sanitizovat PDF"
   },
   "adjustContrast": {
     "title": "Upravit kontrast",
     "header": "Upravit kontrast",
-    "basic": "Basic Adjustments",
+    "basic": "Základní úpravy",
     "contrast": "Kontrast:",
     "brightness": "Jas:",
     "saturation": "Sytost:",
     "download": "Stáhnout",
-    "adjustColors": "Adjust Colors",
-    "blue": "Blue",
-    "confirm": "Confirm",
+    "adjustColors": "Upravit barvy",
+    "blue": "Modrá",
+    "confirm": "Potvrdit",
     "error": {
-      "failed": "Failed to adjust colors/contrast"
+      "failed": "Nepodařilo se upravit barvy/kontrast"
     },
-    "green": "Green",
-    "noPreview": "Select a PDF to preview",
-    "red": "Red",
+    "green": "Zelená",
+    "noPreview": "Vyberte PDF pro náhled",
+    "red": "Červená",
     "results": {
-      "title": "Adjusted PDF"
+      "title": "Upravené PDF"
     }
   },
   "compress": {
@@ -3501,7 +3768,7 @@
     "title": "API Dokumentace",
     "header": "API Dokumentace",
     "desc": "Zobrazte a otestujte endpointy API Stirling PDF",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,dokumentace,swagger,endpointy,vývoj"
   },
   "cookieBanner": {
     "popUp": {
@@ -3597,7 +3864,9 @@
     "exportAll": "Exportovat PDF",
     "downloadSelected": "Stáhnout vybrané soubory",
     "downloadAll": "Stáhnout vše",
+    "saveAll": "Uložit vše",
     "toggleTheme": "Přepnout motiv",
+    "toggleBookmarks": "Přepnout záložky",
     "language": "Jazyk",
     "search": "Hledat v PDF",
     "panMode": "Režim posunu",
@@ -3946,7 +4215,7 @@
             "description": "Poskytovatel OAuth2 použitý pro autentizaci"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "URL vydavatele",
             "description": "Issuer URL poskytovatele OAuth2"
           },
           "clientId": {
@@ -4136,7 +4405,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Nainstalovat aplikaci",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4211,9 +4480,21 @@
         "title": "Premium & Enterprise",
         "description": "Nakonfigurujte svůj prémiový nebo enterprise licenční klíč.",
         "license": "Konfigurace licence",
+        "licenseKey": {
+          "toggle": "Máte licenční klíč nebo certifikační soubor?",
+          "info": "Máte-li licenční klíč nebo certifikační soubor z přímého nákupu, můžete jej zde zadat a aktivovat prémiové či enterprise funkce."
+        },
         "key": {
           "label": "Licenční klíč",
-          "description": "Zadejte svůj prémiový nebo enterprise licenční klíč"
+          "description": "Zadejte svůj prémiový nebo enterprise licenční klíč",
+          "success": "Licenční klíč uložen",
+          "successMessage": "Váš licenční klíč byl úspěšně aktivován. Restart není potřeba.",
+          "overwriteWarning": {
+            "title": "⚠️ Varování: Zjištěna stávající licence",
+            "line1": "Přepsání aktuálního licenčního klíče nelze vrátit zpět.",
+            "line2": "Předchozí licence bude trvale ztracena, pokud ji nemáte zálohovanou jinde.",
+            "line3": "Důležité: Uchovávejte licenční klíče v soukromí a v bezpečí. Nikdy je nesdílejte veřejně."
+          }
         },
         "enabled": {
           "label": "Povolit prémiové funkce",
@@ -4277,12 +4558,17 @@
     "or": "nebo",
     "dropFileHere": "Přetáhněte soubor sem nebo klikněte pro nahrání",
     "dropFilesHere": "Přetáhněte soubory sem nebo klikněte na tlačítko Nahrát",
+    "dropFilesHereOpen": "Přetáhněte sem soubory nebo klikněte na tlačítko Otevřít",
     "pdfFilesOnly": "Pouze soubory PDF",
     "supportedFileTypes": "Podporované typy souborů",
     "upload": "Nahrát",
     "uploadFile": "Nahrát soubor",
     "uploadFiles": "Nahrát soubory",
+    "open": "Otevřít",
+    "openFile": "Otevřít soubor",
+    "openFiles": "Otevřít soubory",
     "noFilesInStorage": "V úložišti nejsou žádné soubory. Nejprve nahrajte nějaké soubory.",
+    "noFilesInStorageOpen": "V úložišti nejsou k dispozici žádné soubory. Nejprve otevřete nějaké soubory.",
     "selectFromStorage": "Vybrat z úložiště",
     "backToTools": "Zpět k nástrojům",
     "addFiles": "Přidat soubory",
@@ -4328,6 +4614,8 @@
     "myFiles": "Moje soubory",
     "noRecentFiles": "Nebyly nalezeny žádné nedávné soubory",
     "googleDriveNotAvailable": "Integrace s Google Drive není dostupná",
+    "downloadSelected": "Stáhnout vybrané",
+    "saveSelected": "Uložit vybrané",
     "openFiles": "Otevřít soubory",
     "openFile": "Otevřít soubor",
     "details": "Podrobnosti",
@@ -4340,7 +4628,6 @@
     "selectAll": "Vybrat vše",
     "deselectAll": "Zrušit výběr všeho",
     "deleteSelected": "Smazat vybrané",
-    "downloadSelected": "Stáhnout vybrané",
     "selectedCount": "{{count}} vybráno",
     "download": "Stáhnout",
     "delete": "Smazat",
@@ -4620,8 +4907,13 @@
       "secureWorkflow": "Bezpečnostní pracovní postup",
       "secureWorkflowDesc": "Zabezpečí PDF dokumenty odstraněním potenciálně škodlivého obsahu, jako je JavaScript a vložené soubory, a poté přidá ochranu heslem, aby se zabránilo neoprávněnému přístupu. Výchozí heslo je 'password'.",
       "processImages": "Zpracování obrázků",
-      "processImagesDesc": "Převede více obrazových souborů do jednoho PDF dokumentu a poté použije technologii OCR k extrakci vyhledatelného textu z obrázků."
+      "processImagesDesc": "Převede více obrazových souborů do jednoho PDF dokumentu a poté použije technologii OCR k extrakci vyhledatelného textu z obrázků.",
+      "prePublishSanitization": "Sanitizace před publikováním",
+      "prePublishSanitizationDesc": "Postup sanitizace, který před zveřejněním PDF online odstraní veškerá skrytá metadata, JavaScript, vložené soubory, anotace a zploští formuláře, aby se zabránilo úniku dat."
     }
+  },
+  "colorPicker": {
+    "title": "Zvolte barvu"
   },
   "common": {
     "previous": "Předchozí",
@@ -4638,7 +4930,13 @@
     "used": "využito",
     "available": "k dispozici",
     "cancel": "Zrušit",
-    "preview": "Náhled"
+    "preview": "Náhled",
+    "close": "Zavřít",
+    "done": "Hotovo",
+    "loading": "Načítání...",
+    "back": "Zpět",
+    "continue": "Pokračovat",
+    "error": "Chyba"
   },
   "config": {
     "overview": {
@@ -4670,7 +4968,7 @@
       "docsTitle": "API dokumentace",
       "docsDescription": "Zjistěte více o integraci se Stirling PDF:",
       "docsLink": "API dokumentace",
-      "schemaLink": "API Schema Reference",
+      "schemaLink": "Reference schématu API",
       "usage": "Zahrňte tento klíč do hlavičky X-API-KEY u všech API požadavků.",
       "description": "Váš API klíč pro přístup k sadě PDF nástrojů Stirlingu. Zkopírujte si ho do projektu nebo obnovte pro vygenerování nového.",
       "publicKeyAriaLabel": "Veřejný API klíč",
@@ -4704,6 +5002,14 @@
     "addMoreFiles": "Přidat další soubory...",
     "selectedFiles": "Vybrané soubory",
     "submit": "Přidat přílohy",
+    "tooltip": {
+      "header": {
+        "title": "O nástroji Přidat přílohy"
+      },
+      "description": {
+        "title": "Co dělá"
+      }
+    },
     "results": {
       "title": "Výsledky příloh"
     },
@@ -4723,7 +5029,6 @@
   },
   "customPosition": "Vlastní umístění",
   "details": "Podrobnosti",
-  "downloadUnavailable": "Stažení pro tuto položku není k dispozici",
   "invalidUndoData": "Nelze vrátit: neplatná data operace",
   "margin": {
     "large": "Velké",
@@ -4800,6 +5105,10 @@
       "maybeLater": "Možná později",
       "dontShowAgain": "Znovu nezobrazovat"
     },
+    "welcomeSlide": {
+      "title": "Vítejte ve Stirling",
+      "body": "Stirling PDF je nyní připraven pro týmy všech velikostí. Tato aktualizace přináší nové rozvržení, výkonné nové funkce pro správce a naši nejžádanější funkci – <strong>Úpravy textu</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Vyberme nástroj <strong>Oříznout</strong>, abychom ukázali, jak nástroje používat.",
     "toolInterface": "Toto je rozhraní nástroje <strong>Oříznout</strong>. Jak vidíte, zatím tu toho moc není, protože jsme ještě nepřidali žádné PDF k úpravám.",
@@ -4822,7 +5131,39 @@
     "next": "Další",
     "finish": "Dokončit",
     "startTour": "Spustit prohlídku",
-    "startTourDescription": "Vydejte se na průvodce hlavními funkcemi Stirling PDF"
+    "startTourDescription": "Vydejte se na průvodce hlavními funkcemi Stirling PDF",
+    "buttons": {
+      "next": "Další →",
+      "back": "Zpět",
+      "skipForNow": "Zatím přeskočit",
+      "download": "Stáhnout →",
+      "showMeAround": "Proveďte mě",
+      "skipTheTour": "Přeskočit průvodce"
+    },
+    "serverLicense": {
+      "skip": "Zatím přeskočit",
+      "seePlans": "Zobrazit plány →",
+      "upgrade": "Upgradovat nyní →",
+      "freeTitle": "Serverová licence",
+      "overLimitTitle": "Vyžadována serverová licence",
+      "overLimitBody": "Naše licencování umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> uživatelů Stirling. Pro nepřerušené používání přejděte na plán Stirling Server – <strong>neomezený počet míst</strong>, úpravy textu PDF a plná správa za 99 $/server/měsíc.",
+      "freeBody": "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušený růst a přednostní přístup k našemu novému <strong>nástroji pro úpravu textu PDF</strong> doporučujeme plán Stirling Server – plné úpravy a <strong>neomezený počet míst</strong> za 99 $/server/měsíc."
+    },
+    "desktopInstall": {
+      "title": "Stáhnout",
+      "titleWithOs": "Stáhnout pro {{osLabel}}",
+      "body": "Stirling nejlépe funguje jako desktopová aplikace. Můžete ji používat offline, rychleji přistupovat k dokumentům a provádět úpravy lokálně ve svém počítači."
+    },
+    "planOverview": {
+      "adminTitle": "Přehled pro správce",
+      "userTitle": "Přehled plánu",
+      "adminBodyLoginEnabled": "Jako správce můžete spravovat uživatele, konfigurovat nastavení a sledovat stav serveru. Prvních <strong>{{freeTierLimit}}</strong> uživatelů na vašem serveru může Stirling používat zdarma.",
+      "adminBodyLoginDisabled": "Po povolení režimu přihlášení můžete spravovat uživatele, konfigurovat nastavení a sledovat stav serveru. Prvních <strong>{{freeTierLimit}}</strong> uživatelů na vašem serveru může Stirling používat zdarma.",
+      "userBody": "Pozvěte kolegy, přiřazujte role a udržujte dokumenty uspořádané v jednom zabezpečeném prostoru. Režim přihlášení zapněte, jakmile budete chtít růst nad rámec sólo použití."
+    },
+    "securityCheck": {
+      "message": "Aplikace nedávno prošla významnými změnami. Může být nutný zásah správce serveru. Pro pokračování prosím potvrďte svou roli."
+    }
   },
   "adminOnboarding": {
     "welcome": "Vítejte v <strong>Prohlídce pro administrátory</strong>! Prozkoumejme výkonné podnikové funkce a nastavení dostupné správcům systému.",
@@ -4851,7 +5192,10 @@
       "role": "Role",
       "team": "Tým",
       "status": "Stav",
-      "actions": "Akce",
+      "actions": {
+        "label": "Akce",
+        "upgrade": "Upgradovat"
+      },
       "noMembersFound": "Nebyli nalezeni žádní členové",
       "active": "Aktivní",
       "disabled": "Deaktivován",
@@ -4963,7 +5307,8 @@
         "slotsAvailable": "{{count}} míst pro uživatele k dispozici",
         "noSlotsAvailable": "Žádná volná místa",
         "currentUsage": "Aktuálně používáte {{current}} z {{max}} uživatelských licencí"
-      }
+      },
+      "loginRequired": "Nejprve povolte režim přihlášení"
     },
     "teams": {
       "title": "Týmy",
@@ -5056,6 +5401,17 @@
     "showComparison": "Porovnat všechny funkce",
     "hideComparison": "Skrýt porovnání funkcí",
     "featureComparison": "Srovnání funkcí",
+    "from": "Od",
+    "perMonth": "/měsíc",
+    "perSeat": "/místo",
+    "withServer": "+ Serverový plán",
+    "licensedSeats": "Licencováno: {{count}} míst",
+    "includedInCurrent": "Součást vašeho plánu",
+    "selectPlan": "Vybrat plán",
+    "manage": "Spravovat",
+    "manageSubscription": {
+      "description": "Spravujte své předplatné, fakturaci a platební metody"
+    },
     "activePlan": {
       "title": "Aktivní plán",
       "subtitle": "Podrobnosti vašeho aktuálního předplatného"
@@ -5073,13 +5429,16 @@
       "upTo": "Až"
     },
     "period": {
-      "month": "měsíc"
+      "month": "měsíc",
+      "perUserPerMonth": "/uživatel/měsíc"
     },
     "free": {
       "name": "Zdarma",
       "highlight1": "Omezené používání nástrojů týdně",
       "highlight2": "Přístup ke všem nástrojům",
-      "highlight3": "Komunitní podpora"
+      "highlight3": "Komunitní podpora",
+      "forever": "Navždy zdarma",
+      "included": "Zahrnuto"
     },
     "pro": {
       "name": "Pro",
@@ -5091,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Vlastní ceny",
       "highlight2": "Vyhrazená podpora",
-      "highlight3": "Nejnovější funkce"
+      "highlight3": "Nejnovější funkce",
+      "requiresServer": "Vyžaduje Server",
+      "requiresServerMessage": "Nejprve prosím přejděte na plán Server a teprve poté na Enterprise."
     },
     "feature": {
       "title": "Funkce",
@@ -5101,6 +5462,12 @@
       "api": "Přístup k API",
       "priority": "Prioritní podpora",
       "customPricing": "Vlastní ceny"
+    },
+    "licenseWarning": {
+      "title": "Dosažen limit bezplatné self-hosted verze",
+      "body": "Máte {{total}} uživatelů, ale bezplatná úroveň podporuje pouze {{limit}} na server. Upgradujte, aby Stirling PDF běžel hladce.",
+      "overLimit": "více než {{limit}}",
+      "cta": "Zobrazit plány"
     }
   },
   "subscription": {
@@ -5119,7 +5486,34 @@
     "manageBilling": "Spravovat fakturaci",
     "portal": {
       "error": "Nepodařilo se otevřít fakturační portál"
-    }
+    },
+    "updateSeats": "Aktualizovat místa",
+    "updateEnterpriseSeats": "Aktualizovat místa Enterprise",
+    "currentSeats": "Aktuální počet míst",
+    "minimumSeats": "Minimální počet míst",
+    "basedOnUsers": "(aktuální uživatelé)",
+    "newSeatCount": "Nový počet míst",
+    "newSeatCountDescription": "Zvolte počet míst pro svou enterprise licenci",
+    "whatHappensNext": "Co bude dál?",
+    "stripePortalRedirect": "Budete přesměrováni do fakturačního portálu Stripe k přezkoumání a potvrzení změny počtu míst. Poměrná částka bude vypočtena automaticky.",
+    "preparingUpdate": "Příprava aktualizace míst...",
+    "seatCountTooLow": "Počet míst musí být alespoň {{minimum}} (aktuální počet uživatelů)",
+    "seatCountUnchanged": "Vyberte prosím jiný počet míst",
+    "seatsUpdated": "Místa aktualizována",
+    "seatsUpdatedMessage": "Počet vašich enterprise míst byl aktualizován na {{seats}}",
+    "updateProcessing": "Aktualizace se zpracovává",
+    "updateProcessingMessage": "Vaše změna počtu míst se zpracovává. Za chvíli prosím obnovte.",
+    "notEnterprise": "Správa míst je dostupná pouze pro enterprise licence"
+  },
+  "upgradeBanner": {
+    "title": "Přejděte na Serverový plán",
+    "message": "Využijte Stirling PDF naplno s neomezeným počtem uživatelů a pokročilými funkcemi",
+    "upgradeButton": "Upgradovat nyní",
+    "dismiss": "Skrýt banner",
+    "attentionTitle": "Tento server vyžaduje zásah správce",
+    "attentionBody": "Váš správce se musí přihlásit, aby zobrazil další informace. Kontaktujte jej prosím co nejdříve.",
+    "attentionBodyAdmin": "Zkontrolujte licenční požadavky, aby byl tento server v souladu.",
+    "seeInfo": "Zobrazit informace"
   },
   "payment": {
     "preparing": "Připravujeme vaši platbu...",
@@ -5127,7 +5521,61 @@
     "success": "Platba úspěšná!",
     "successMessage": "Vaše předplatné bylo úspěšně aktivováno. Brzy obdržíte potvrzující e‑mail.",
     "autoClose": "Toto okno se zavře automaticky...",
-    "error": "Chyba platby"
+    "error": "Chyba platby",
+    "upgradeSuccess": "Platba proběhla úspěšně! Vaše předplatné bylo upgradováno. Licence na vašem serveru byla aktualizována. Brzy obdržíte potvrzovací e-mail.",
+    "paymentSuccess": "Platba proběhla úspěšně! Získává se váš licenční klíč...",
+    "licenseActivated": "Licence aktivována! Váš licenční klíč byl uložen. Na registrovaný e-mail byl odeslán potvrzovací e-mail.",
+    "licenseDelayed": "Platba proběhla úspěšně! Vaše licence se generuje. Brzy obdržíte e-mail s licenčním klíčem. Pokud jej nedostanete do 10 minut, kontaktujte podporu.",
+    "licensePollingError": "Platba proběhla úspěšně, ale nepodařilo se automaticky získat licenční klíč. Zkontrolujte prosím e-mail nebo kontaktujte podporu s potvrzením platby.",
+    "licenseRetrievalError": "Platba proběhla úspěšně, ale získání licence selhalo. Licenční klíč obdržíte e-mailem. Pokud jej nedostanete do 10 minut, kontaktujte podporu.",
+    "syncError": "Platba proběhla úspěšně, ale synchronizace licence selhala. Vaše licence bude brzy aktualizována. Pokud problém přetrvá, kontaktujte podporu.",
+    "licenseSaveError": "Nepodařilo se uložit licenční klíč. Dokončení aktivace vyřešíte kontaktováním podpory a zasláním licenčního klíče.",
+    "paymentCanceled": "Platba byla zrušena. Nic vám nebylo účtováno.",
+    "syncingLicense": "Synchronizuje se vaše upgradovaná licence...",
+    "generatingLicense": "Generuje se váš licenční klíč...",
+    "upgradeComplete": "Upgrade dokončen",
+    "upgradeCompleteMessage": "Vaše předplatné bylo úspěšně upgradováno. Váš stávající licenční klíč byl aktualizován.",
+    "stripeNotConfigured": "Stripe není nastaven",
+    "stripeNotConfiguredMessage": "Integrace plateb Stripe není nakonfigurována. Kontaktujte prosím svého správce.",
+    "monthly": "Měsíčně",
+    "yearly": "Ročně",
+    "billingPeriod": "Fakturační období",
+    "enterpriseNote": "Počet míst lze upravit při platbě (1–1000).",
+    "installationId": "ID instalace",
+    "licenseKey": "Váš licenční klíč",
+    "licenseInstructions": "Bylo přidáno do vaší instalace. Kopii obdržíte také e-mailem.",
+    "canCloseWindow": "Toto okno můžete nyní zavřít.",
+    "licenseKeyProcessing": "Zpracování licenčního klíče",
+    "licenseDelayedMessage": "Váš licenční klíč se generuje. Brzy zkontrolujte e-mail nebo kontaktujte podporu.",
+    "perYear": "/rok",
+    "perMonth": "/měsíc",
+    "emailInvalid": "Zadejte prosím platnou e-mailovou adresu",
+    "emailStage": {
+      "title": "Zadejte svůj e-mail",
+      "description": "Použijeme jej k zaslání vašeho licenčního klíče a potvrzení.",
+      "emailLabel": "E-mailová adresa",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Pokračovat",
+      "modalTitle": "Začínáme – {{planName}}"
+    },
+    "planStage": {
+      "title": "Zvolte fakturační období",
+      "savingsNote": "Ušetřete {{percent}} % s roční fakturací",
+      "basePrice": "Základní cena",
+      "seatPrice": "Za místo",
+      "totalForSeats": "Celkem ({{count}} míst)",
+      "selectMonthly": "Zvolit měsíčně",
+      "selectYearly": "Zvolit ročně",
+      "savePercent": "Ušetříte {{percent}} %",
+      "savingsAmount": "Ušetříte {{amount}}",
+      "modalTitle": "Vyberte fakturační období – {{planName}}",
+      "billedYearly": "Fakturováno ročně {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Zpět k výběru plánu",
+      "selectedPlan": "Vybraný plán",
+      "modalTitle": "Dokončit platbu – {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "První přihlášení",
@@ -5286,5 +5734,281 @@
     "offline": "Backend offline",
     "starting": "Backend se spouští...",
     "wait": "Počkejte, až backend dokončí spouštění, a zkuste to znovu."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Odemkněte PDF pro pokračování",
+    "title": "Odstraňte heslo pro pokračování",
+    "description": "Toto PDF je chráněno heslem. Zadejte heslo, abyste mohli pokračovat v práci.",
+    "password": {
+      "label": "Heslo k PDF",
+      "placeholder": "Zadejte heslo k PDF"
+    },
+    "skip": "Zatím přeskočit",
+    "unlock": "Odemknout a pokračovat",
+    "incorrectPassword": "Nesprávné heslo",
+    "missingFile": "Vybraný soubor již není k dispozici.",
+    "emptyResponse": "Odstranění hesla nevytvořilo soubor.",
+    "required": "Zadejte heslo pro pokračování.",
+    "successTitle": "Heslo odstraněno",
+    "successBodyWithName": "Heslo odstraněno ze souboru {{fileName}}",
+    "successBody": "Heslo bylo úspěšně odstraněno."
+  },
+  "setup": {
+    "welcome": "Vítejte ve Stirling PDF",
+    "description": "Začněte výběrem způsobu používání Stirling PDF",
+    "step1": {
+      "label": "Zvolte režim",
+      "description": "Offline nebo server"
+    },
+    "step2": {
+      "label": "Vyberte server",
+      "description": "Samohostovaný server"
+    },
+    "step3": {
+      "label": "Přihlášení",
+      "description": "Zadejte přihlašovací údaje"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Přihlaste se svým účtem Stirling"
+      },
+      "selfhosted": {
+        "title": "Samohostovaný server",
+        "description": "Připojte se ke svému serveru Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Přihlásit se do Stirling",
+      "subtitle": "Přihlaste se svým účtem Stirling"
+    },
+    "selfhosted": {
+      "title": "Přihlásit se k serveru",
+      "subtitle": "Zadejte přihlašovací údaje k vašemu serveru"
+    },
+    "server": {
+      "title": "Připojit k serveru",
+      "subtitle": "Zadejte URL vašeho samohostovaného serveru",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Samohostovaný server"
+      },
+      "url": {
+        "label": "URL serveru",
+        "description": "Zadejte úplnou URL vašeho samohostovaného serveru Stirling PDF"
+      },
+      "error": {
+        "emptyUrl": "Zadejte URL serveru",
+        "unreachable": "Nelze se připojit k serveru",
+        "testFailed": "Test připojení selhal"
+      },
+      "testing": "Testuji připojení..."
+    },
+    "login": {
+      "title": "Přihlášení",
+      "subtitle": "Zadejte přihlašovací údaje pro pokračování",
+      "connectingTo": "Připojuji se k:",
+      "username": {
+        "label": "Uživatelské jméno",
+        "placeholder": "Zadejte své uživatelské jméno"
+      },
+      "email": {
+        "label": "E-mail",
+        "placeholder": "Zadejte svůj e-mail"
+      },
+      "password": {
+        "label": "Heslo",
+        "placeholder": "Zadejte své heslo"
+      },
+      "error": {
+        "emptyUsername": "Zadejte své uživatelské jméno",
+        "emptyEmail": "Zadejte svůj e-mail",
+        "emptyPassword": "Zadejte své heslo",
+        "oauthFailed": "Přihlášení přes OAuth selhalo. Zkuste to znovu."
+      },
+      "submit": "Přihlásit se",
+      "signInWith": "Přihlásit se pomocí",
+      "oauthPending": "Otevírám prohlížeč pro ověření...",
+      "orContinueWith": "Nebo pokračovat e-mailem"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Ověření úspěšné",
+      "message": "Toto okno můžete zavřít a vrátit se do Stirling PDF."
+    },
+    "error": {
+      "title": "Ověření selhalo",
+      "message": "Ověření nebylo úspěšné. Toto okno můžete zavřít a zkusit to znovu."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor PDF JSON",
+    "viewLabel": "Editor PDF",
+    "converting": "Převádím PDF do editovatelného formátu...",
+    "conversionFailed": "Nepodařilo se převést PDF. Zkuste to znovu.",
+    "currentFile": "Aktuální soubor: {{name}}",
+    "pageSummary": "Strana {{number}} z {{total}}",
+    "pagePreviewAlt": "Náhled stránky",
+    "imageLabel": "Vložený obrázek",
+    "noTextOnPage": "Na této stránce nebyl zjištěn žádný editovatelný text.",
+    "pageType": {
+      "paragraph": "Odstavcová stránka",
+      "sparse": "Řídký text"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Odstavec",
+      "singleLine": "Jeden řádek"
+    },
+    "badges": {
+      "unsaved": "Upraveno",
+      "modified": "Upraveno",
+      "earlyAccess": "Předběžný přístup"
+    },
+    "actions": {
+      "reset": "Obnovit změny",
+      "downloadJson": "Stáhnout JSON",
+      "generatePdf": "Vytvořit PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Automaticky přizpůsobit text rámečkům",
+        "description": "Automaticky vodorovně škáluje text, aby se vešel do původního ohraničujícího rámečku, když se vykreslení fontu liší od PDF."
+      },
+      "groupingMode": {
+        "title": "Režim seskupení textu",
+        "autoDescription": "Automaticky detekuje typ stránky a vhodně seskupí text.",
+        "paragraphDescription": "Seskupí zarovnané řádky do vícerádkových textových rámečků.",
+        "singleLineDescription": "Ponechá každý řádek textu PDF jako samostatný textový rámeček."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Podržením Ctrl (Cmd) nebo Shift vyberete více textových rámečků. Nad výběrem se zobrazí plovoucí panel nástrojů, kde můžete slučovat, rozdělovat nebo upravovat šířky."
+      },
+      "forceSingleElement": {
+        "title": "Uzamknout upravený text do jednoho prvku PDF",
+        "description": "Při zapnutí editor exportuje každý upravený textový rámeček jako jeden textový prvek PDF, aby se předešlo překrývání znaků nebo míchání fontů."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Sloučit vybrané rámečky",
+      "merge": "Sloučit výběr",
+      "ungroupTooltip": "Rozdělit odstavec zpět na řádky",
+      "ungroup": "Zrušit seskupení",
+      "widthMenu": "Možnosti šířky",
+      "expandWidth": "Roztáhnout k okraji stránky",
+      "resetWidth": "Obnovit šířku",
+      "resizeHandle": "Upravit šířku textu"
+    },
+    "disclaimer": {
+      "heading": "Omezení náhledu",
+      "textFocus": "Toto pracovní prostředí se zaměřuje na úpravu textu a přesouvání vložených obrázků. Složitá grafika stránky, formulářové prvky a vrstvená grafika jsou zachovány pro export, ale zde nejsou plně editovatelné.",
+      "previewVariance": "Některé vizuální prvky (např. okraje tabulek, tvary nebo vzhledy anotací) se v náhledu nemusí zobrazit přesně. Exportované PDF si kde je to možné zachovává původní kreslicí příkazy.",
+      "alpha": "Tento alfa prohlížeč se stále vyvíjí — některé fonty, barvy, efekty průhlednosti a detaily rozvržení se mohou mírně lišit. Před sdílením prosím zkontrolujte vygenerované PDF."
+    },
+    "empty": {
+      "title": "Není načten žádný dokument",
+      "subtitle": "Načtěte soubor PDF nebo JSON a začněte upravovat text."
+    },
+    "welcomeBanner": {
+      "title": "Vítejte v editoru textu PDF (předběžný přístup)",
+      "experimental": "Jde o experimentální funkci ve vývoji. Během používání můžete narazit na nestabilitu a problémy.",
+      "howItWorks": "Tento nástroj převede vaše PDF do editovatelného formátu, kde můžete upravovat text a přesouvat obrázky. Změny se uloží zpět jako nové PDF.",
+      "bestFor": "Nejlépe funguje s:",
+      "bestFor1": "Jednodušší PDF obsahující hlavně text a obrázky",
+      "bestFor2": "Dokumenty se standardním odstavcovým formátováním",
+      "bestFor3": "Dopisy, eseje, zprávy a základní dokumenty",
+      "notIdealFor": "Nevhodné pro:",
+      "notIdealFor1": "PDF se speciálním formátováním jako odrážky, tabulky nebo vícesloupcové rozvržení",
+      "notIdealFor2": "Magazíny, brožury nebo graficky náročné dokumenty",
+      "notIdealFor3": "Příručky se složitým rozvržením",
+      "limitations": "Aktuální omezení:",
+      "limitation1": "Vykreslení fontů se může mírně lišit od původního PDF",
+      "limitation2": "Složitá grafika, formulářová pole a anotace jsou zachovány, ale nelze je upravovat",
+      "limitation3": "Převod a zpracování velkých souborů může chvíli trvat",
+      "knownIssues": "Známé problémy (probíhá oprava):",
+      "issue1": "Barva textu se zatím nezachovává (brzy bude přidáno)",
+      "issue2": "Režim Odstavec má více problémů se zarovnáním a rozestupy – doporučen režim Jeden řádek",
+      "issue3": "Zobrazení náhledu se liší od exportovaného PDF – exportované PDF je bližší originálu",
+      "issue4": "Zarovnání otočeného textu může vyžadovat ruční úpravu",
+      "issue5": "Efekty průhlednosti a vrstvení se mohou lišit od originálu",
+      "feedback": "Toto je funkce v režimu předběžného přístupu. Prosíme, hlaste jakékoli problémy, abychom ji mohli zlepšit!",
+      "gotIt": "Rozumím",
+      "dontShowAgain": "Příště nezobrazovat"
+    },
+    "modeChange": {
+      "title": "Potvrdit změnu režimu",
+      "warning": "Změna režimu seskupení textu resetuje všechny neuložené změny. Opravdu chcete pokračovat?",
+      "cancel": "Zrušit",
+      "confirm": "Resetovat a změnit režim"
+    },
+    "fontAnalysis": {
+      "details": "Detaily fontu",
+      "embedded": "Vložené",
+      "type": "Typ",
+      "webFormat": "Webový formát",
+      "warnings": "Varování",
+      "suggestions": "Poznámky",
+      "currentPageFonts": "Fonty na této stránce",
+      "allFonts": "Všechny fonty",
+      "fallback": "fallback",
+      "missing": "chybí",
+      "perfectMessage": "Všechny fonty lze reprodukovat dokonale.",
+      "warningMessage": "Některé fonty se nemusí vykreslit správně.",
+      "infoMessage": "K dispozici jsou informace o reprodukci fontů.",
+      "perfect": "perfect",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Nelze přečíst soubor JSON. Ujistěte se, že byl vytvořen nástrojem PDF to JSON.",
+      "pdfConversion": "Nelze převést upravený JSON zpět na PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Relace vypršela",
+    "pleaseLoginAgain": "Přihlaste se prosím znovu.",
+    "accessDenied": "Přístup odepřen",
+    "insufficientPermissions": "Nemáte oprávnění k provedení této akce."
+  },
+  "addText": {
+    "title": "Přidat text",
+    "header": "Přidat text do PDF",
+    "text": {
+      "name": "Text",
+      "placeholder": "Zadejte text, který chcete přidat",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Velikost fontu",
+      "fontSizePlaceholder": "Zadejte nebo vyberte velikost fontu (8–200)",
+      "colorLabel": "Barva textu"
+    },
+    "steps": {
+      "configure": "Nastavit text"
+    },
+    "step": {
+      "createDesc": "Zadejte text, který chcete přidat",
+      "place": "Umístit text",
+      "placeDesc": "Kliknutím do PDF přidáte text"
+    },
+    "instructions": {
+      "title": "Jak přidat text",
+      "text": "Po zadání textu výše klikněte kdekoli do PDF pro jeho umístění.",
+      "paused": "Umisťování pozastaveno",
+      "resumeHint": "Obnovením umisťování budete moci kliknout a přidat text.",
+      "noSignature": "Zadejte výše text pro povolení umisťování."
+    },
+    "mode": {
+      "move": "Přesunout text",
+      "place": "Umístit text",
+      "pause": "Pozastavit umisťování",
+      "resume": "Obnovit umisťování"
+    },
+    "results": {
+      "title": "Výsledky přidání textu"
+    },
+    "error": {
+      "failed": "Při přidávání textu do PDF došlo k chybě."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Použít text"
   }
 }

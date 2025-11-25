@@ -17,6 +17,8 @@
       "comingSoon": "Segera hadir:",
       "favorite": "Tambahkan ke Favorit",
       "favorites": "Favorit",
+      "unavailable": "Dinonaktifkan oleh admin server:",
+      "unavailableDependency": "Tidak tersedia - alat yang diperlukan tidak ada di server:",
       "heading": "Semua alat (tampilan layar penuh)",
       "noResults": "Coba sesuaikan pencarian Anda atau aktifkan deskripsi untuk menemukan yang Anda butuhkan.",
       "recommended": "Direkomendasikan",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Beralih ke mode layar penuh",
       "sidebar": "Beralih ke mode bilah sisi"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Fitur premium:",
+    "comingSoon": "Segera hadir:"
   },
   "unsavedChanges": "Anda memiliki perubahan yang belum disimpan pada PDF Anda.",
   "areYouSure": "Apakah Anda yakin ingin keluar?",
@@ -40,6 +45,30 @@
     "message": "ZIP ini berisi {{count}} file. Tetap ekstrak?",
     "cancel": "Batal",
     "confirm": "Ekstrak"
+  },
+  "defaultApp": {
+    "title": "Jadikan Aplikasi PDF Default",
+    "message": "Ingin menjadikan Stirling PDF sebagai editor PDF default Anda?",
+    "description": "Anda dapat mengubahnya nanti di pengaturan sistem.",
+    "notNow": "Jangan Sekarang",
+    "setDefault": "Jadikan Default",
+    "dismiss": "Tutup",
+    "prompt": {
+      "title": "Jadikan Editor PDF Default",
+      "message": "Jadikan Stirling PDF aplikasi default untuk membuka file PDF."
+    },
+    "success": {
+      "title": "Aplikasi Default Disetel",
+      "message": "Stirling PDF sekarang adalah editor PDF default Anda"
+    },
+    "settingsOpened": {
+      "title": "Pengaturan Dibuka",
+      "message": "Silakan pilih Stirling PDF di pengaturan sistem Anda"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Gagal menyetel penangan PDF default"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Simpan",
   "saveToBrowser": "Simpan ke Peramban",
   "download": "Unduh",
+  "downloadUnavailable": "Unduhan tidak tersedia untuk item ini",
+  "saveUnavailable": "Simpan tidak tersedia untuk item ini",
   "pin": "Sematkan File (tetap aktif setelah alat dijalankan)",
   "unpin": "Lepas Sematan File (ganti setelah alat dijalankan)",
   "undoOperationTooltip": "Klik untuk membatalkan operasi terakhir dan memulihkan file asli",
@@ -168,6 +199,7 @@
   },
   "edit": "Edit",
   "delete": "Hapus",
+  "never": "Tidak pernah",
   "username": "Nama pengguna",
   "password": "Kata sandi",
   "welcome": "Selamat Datang",
@@ -262,7 +294,8 @@
     "learnMore": "Pelajari lebih lanjut",
     "enable": "Aktifkan analitik",
     "disable": "Nonaktifkan analitik",
-    "settings": "Anda dapat mengubah pengaturan untuk analitik di berkas config/settings.yml"
+    "settings": "Anda dapat mengubah pengaturan untuk analitik di berkas config/settings.yml",
+    "privacyAssurance": "Kami tidak melacak info pribadi atau konten file Anda."
   },
   "navbar": {
     "favorite": "Favorit",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Pengaturan",
-    "update": "Pembaruan tersedia",
-    "updateAvailable": "{0} adalah versi yang terpasang saat ini. Versi baru ({1}) tersedia.",
-    "appVersion": "Versi Aplikasi:",
-    "downloadOption": {
-      "title": "Pilih opsi unduhan (Untuk unduhan berkas tunggal non zip):",
-      "1": "Buka di jendela yang sama",
-      "2": "Buka di jendela baru",
-      "3": "Unduh berkas"
-    },
-    "zipThreshold": "Berkas zip ketika jumlah berkas yang diunduh melebihi",
-    "signOut": "Keluar",
-    "accountSettings": "Pengaturan Akun",
-    "bored": {
-      "help": "Mengaktifkan permainan telur paskah"
-    },
-    "cacheInputs": {
-      "name": "Simpan input formulir",
-      "help": "Aktifkan untuk menyimpan input yang pernah digunakan untuk menjalankan di masa depan"
+    "connection": {
+      "title": "Mode Koneksi",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-Hosted"
+      },
+      "server": "Server",
+      "user": "Masuk sebagai",
+      "logout": "Keluar"
     },
     "general": {
       "title": "Umum",
       "description": "Konfigurasikan preferensi aplikasi umum.",
-      "account": "Akun",
-      "accountDescription": "Kelola pengaturan akun Anda",
       "user": "Pengguna",
-      "signedInAs": "Masuk sebagai",
       "logout": "Keluar",
       "enableFeatures": {
+        "dismiss": "Abaikan",
         "title": "Untuk Administrator Sistem",
         "intro": "Aktifkan autentikasi pengguna, manajemen tim, dan fitur ruang kerja untuk organisasi Anda.",
         "action": "Konfigurasikan",
         "and": "dan",
         "benefit": "Mengaktifkan peran pengguna, kolaborasi tim, kontrol admin, dan fitur enterprise.",
-        "learnMore": "Pelajari lebih lanjut di dokumentasi",
-        "dismiss": "Abaikan"
+        "learnMore": "Pelajari lebih lanjut di dokumentasi"
       },
-      "autoUnzip": "Auto-unzip respons API",
-      "autoUnzipDescription": "Secara otomatis mengekstrak file dari respons ZIP",
-      "autoUnzipTooltip": "Secara otomatis mengekstrak file ZIP yang dikembalikan dari operasi API. Nonaktifkan untuk menjaga file ZIP tetap utuh. Ini tidak memengaruhi alur otomasi.",
-      "autoUnzipFileLimit": "Batas file auto-unzip",
-      "autoUnzipFileLimitDescription": "Jumlah maksimum file yang diekstrak dari ZIP",
-      "autoUnzipFileLimitTooltip": "Hanya unzip jika ZIP berisi sebanyak ini atau lebih sedikit. Atur lebih tinggi untuk mengekstrak ZIP yang lebih besar.",
       "defaultToolPickerMode": "Mode pemilih alat default",
       "defaultToolPickerModeDescription": "Pilih apakah pemilih alat dibuka dalam layar penuh atau bilah sisi secara default",
       "mode": {
-        "fullscreen": "Layar penuh",
-        "sidebar": "Bilah sisi"
-      }
+        "sidebar": "Bilah sisi",
+        "fullscreen": "Layar penuh"
+      },
+      "autoUnzipTooltip": "Secara otomatis mengekstrak file ZIP yang dikembalikan dari operasi API. Nonaktifkan untuk menjaga file ZIP tetap utuh. Ini tidak memengaruhi alur otomasi.",
+      "autoUnzip": "Auto-unzip respons API",
+      "autoUnzipDescription": "Secara otomatis mengekstrak file dari respons ZIP",
+      "autoUnzipFileLimitTooltip": "Hanya unzip jika ZIP berisi sebanyak ini atau lebih sedikit. Atur lebih tinggi untuk mengekstrak ZIP yang lebih besar.",
+      "autoUnzipFileLimit": "Batas file auto-unzip",
+      "autoUnzipFileLimitDescription": "Jumlah maksimum file yang diekstrak dari ZIP",
+      "defaultPdfEditor": "Editor PDF default",
+      "defaultPdfEditorActive": "Stirling PDF adalah editor PDF default Anda",
+      "defaultPdfEditorInactive": "Aplikasi lain disetel sebagai default",
+      "defaultPdfEditorChecking": "Memeriksa...",
+      "defaultPdfEditorSet": "Sudah Default",
+      "setAsDefault": "Jadikan Default",
+      "updates": {
+        "title": "Pembaruan Software",
+        "description": "Periksa pembaruan dan lihat informasi versi",
+        "currentVersion": "Versi Saat Ini",
+        "latestVersion": "Versi Terbaru",
+        "checkForUpdates": "Periksa Pembaruan",
+        "viewDetails": "Lihat Detail"
+      },
+      "hideUnavailableTools": "Sembunyikan alat yang tidak tersedia",
+      "hideUnavailableToolsDescription": "Hapus alat yang dinonaktifkan oleh server Anda alih-alih menampilkannya pudar.",
+      "hideUnavailableConversions": "Sembunyikan konversi yang tidak tersedia",
+      "hideUnavailableConversionsDescription": "Hapus opsi konversi yang dinonaktifkan di alat Convert alih-alih menampilkannya pudar."
     },
     "hotkeys": {
-      "title": "Pintasan Keyboard",
-      "description": "Arahkan kursor ke alat untuk melihat pintasannya atau sesuaikan di bawah. Klik \"Ubah pintasan\" dan tekan kombinasi tombol baru. Tekan Esc untuk membatalkan.",
-      "errorModifier": {
-        "mac": "Sertakan ⌘ (Command), ⌥ (Option), atau pengubah lainnya dalam pintasan Anda.",
-        "windows": "Sertakan Ctrl, Alt, atau pengubah lainnya dalam pintasan Anda."
-      },
       "errorConflict": "Pintasan sudah digunakan oleh {{tool}}.",
+      "searchPlaceholder": "Cari alat...",
       "none": "Tidak ditetapkan",
       "customBadge": "Kustom",
       "defaultLabel": "Default: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Ubah pintasan",
       "reset": "Atur Ulang",
       "shortcut": "Pintasan",
-      "noShortcut": "Tidak ada pintasan yang ditetapkan",
-      "searchPlaceholder": "Cari alat..."
+      "noShortcut": "Tidak ada pintasan yang ditetapkan"
     }
+  },
+  "update": {
+    "modalTitle": "Pembaruan Tersedia",
+    "current": "Versi Saat Ini",
+    "latest": "Versi Terbaru",
+    "latestStable": "Stabil Terbaru",
+    "priorityLabel": "Prioritas",
+    "recommendedAction": "Tindakan yang Disarankan",
+    "breakingChangesDetected": "Perubahan Signifikan Terdeteksi",
+    "breakingChangesMessage": "Beberapa versi berisi perubahan yang memutus kompatibilitas. Harap tinjau panduan migrasi di bawah sebelum memperbarui.",
+    "migrationGuides": "Panduan Migrasi",
+    "viewGuide": "Lihat Panduan",
+    "loadingDetailedInfo": "Memuat informasi detail...",
+    "close": "Tutup",
+    "viewAllReleases": "Lihat Semua Rilis",
+    "downloadLatest": "Unduh Terbaru",
+    "availableUpdates": "Pembaruan Tersedia",
+    "unableToLoadDetails": "Tidak dapat memuat informasi detail.",
+    "version": "Versi",
+    "urgentUpdateAvailable": "Pembaruan Mendesak",
+    "updateAvailable": "Pembaruan Tersedia",
+    "releaseNotes": "Catatan Rilis",
+    "priority": {
+      "urgent": "Mendesak",
+      "normal": "Normal",
+      "minor": "Minor",
+      "low": "Rendah"
+    },
+    "breakingChanges": "Perubahan Signifikan",
+    "breakingChangesDefault": "Versi ini berisi perubahan yang memutus kompatibilitas.",
+    "migrationGuide": "Panduan Migrasi"
   },
   "changeCreds": {
     "title": "Ubah Kredensial",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Menumpuk PDF di atas PDF lain",
       "title": "Tumpuk PDF"
+    },
+    "pdfTextEditor": {
+      "title": "Editor Teks PDF",
+      "desc": "Tinjau dan edit ekspor Stirling PDF JSON dengan pengeditan teks terkelompok dan pembuatan ulang PDF"
+    },
+    "addText": {
+      "tags": "teks,anotasi,label",
+      "title": "Tambah Teks",
+      "desc": "Tambahkan teks kustom di mana saja di PDF Anda"
     }
   },
   "landing": {
     "addFiles": "Tambahkan File",
-    "uploadFromComputer": "Unggah dari komputer"
+    "uploadFromComputer": "Unggah dari komputer",
+    "openFromComputer": "Buka dari komputer"
   },
   "viewPdf": {
     "tags": "melihat,membaca,membuat anotasi,teks,gambar",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Terjadi kesalahan saat menggabungkan PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Ringkasan Pengaturan Gabung"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,gambar,foto",
     "title": "Tambahkan Gambar",
     "header": "Tambahkan Gambar ke PDF",
-    "everyPage": "Setiap Halaman?",
-    "upload": "Tambahkan Gambar",
-    "submit": "Tambahkan Gambar"
+    "image": {
+      "name": "Gambar",
+      "placeholder": "Unggah gambar",
+      "label": "File gambar"
+    },
+    "steps": {
+      "configure": "Konfigurasi Gambar"
+    },
+    "step": {
+      "createDesc": "Unggah gambar yang ingin Anda tambahkan",
+      "place": "Tempatkan gambar",
+      "placeDesc": "Klik pada PDF untuk menambahkan gambar Anda"
+    },
+    "instructions": {
+      "title": "Cara menambahkan gambar",
+      "text": "Setelah mengunggah gambar di atas, klik di mana saja pada PDF untuk menempatkannya.",
+      "paused": "Penempatan dijeda",
+      "resumeHint": "Lanjutkan penempatan untuk mengklik dan menambahkan gambar Anda.",
+      "noSignature": "Unggah gambar di atas untuk mengaktifkan penempatan."
+    },
+    "mode": {
+      "move": "Pindahkan Gambar",
+      "place": "Tempatkan Gambar",
+      "pause": "Jeda penempatan",
+      "resume": "Lanjutkan penempatan"
+    },
+    "results": {
+      "title": "Hasil Tambah Gambar"
+    },
+    "error": {
+      "failed": "Terjadi error saat menambahkan gambar ke PDF."
+    },
+    "saved": {
+      "defaultLabel": "Gambar",
+      "defaultImageLabel": "Gambar terunggah"
+    },
+    "applySignatures": "Terapkan Gambar"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Pencegahan untuk mencetak format yang berbeda"
     },
     "submit": "Ganti"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bookmark & outline",
+      "replaceExisting": "Ganti bookmark yang ada (hapus centang untuk menambahkan)",
+      "replaceExistingHint": "Saat dinonaktifkan, outline baru ditambahkan setelah bookmark saat ini."
+    },
+    "actions": {
+      "source": "Muat bookmark",
+      "selectedFile": "Dimuat dari {{file}}",
+      "noFile": "Pilih PDF untuk mengekstrak bookmark yang ada.",
+      "loadFromPdf": "Muat dari PDF terpilih",
+      "importJson": "Impor JSON",
+      "importClipboard": "Tempel JSON dari clipboard",
+      "export": "Ekspor bookmark",
+      "exportJson": "Unduh JSON",
+      "exportClipboard": "Salin JSON ke clipboard",
+      "clipboardUnavailable": "Akses clipboard tidak tersedia di browser ini."
+    },
+    "info": {
+      "line1": "Setiap bookmark perlu judul deskriptif dan halaman yang akan dibuka.",
+      "line2": "Gunakan bookmark anak untuk membangun hierarki bab, bagian, atau subbagian.",
+      "line3": "Impor bookmark dari PDF terpilih atau dari file JSON untuk menghemat waktu."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Buka alat untuk mulai mengedit",
+        "description": "Pilih alat Edit Table of Contents untuk memuat ruang kerjanya."
+      },
+      "tabTitle": "Workspace outline",
+      "subtitle": "Impor bookmark, bangun hierarki, dan terapkan outline tanpa panel samping yang sempit.",
+      "noFile": "Tidak ada PDF yang dipilih",
+      "fileLabel": "Perubahan akan diterapkan ke PDF yang saat ini dipilih.",
+      "filePrompt": "Pilih PDF dari pustaka Anda atau unggah yang baru untuk memulai.",
+      "changeFile": "Ganti PDF",
+      "selectFile": "Pilih PDF"
+    },
+    "editor": {
+      "heading": "Editor bookmark",
+      "description": "Tambahkan, sarangkan, dan ubah urutan bookmark untuk menyusun outline PDF Anda.",
+      "addTopLevel": "Tambah bookmark level atas",
+      "empty": {
+        "title": "Belum ada bookmark",
+        "description": "Impor bookmark yang ada atau mulai dengan menambahkan entri pertama Anda.",
+        "action": "Tambah bookmark pertama"
+      },
+      "defaultTitle": "Bookmark baru",
+      "defaultChildTitle": "Bookmark anak",
+      "defaultSiblingTitle": "Bookmark baru",
+      "untitled": "Bookmark tanpa judul",
+      "childBadge": "Anak",
+      "pagePreview": "Halaman {{page}}",
+      "field": {
+        "title": "Judul bookmark",
+        "page": "Nomor halaman tujuan"
+      },
+      "actions": {
+        "toggle": "Tampilkan/sembunyikan anak",
+        "addChild": "Tambah bookmark anak",
+        "addSibling": "Tambah bookmark sejajar",
+        "remove": "Hapus bookmark"
+      },
+      "confirmRemove": "Hapus bookmark ini dan semua anaknya?"
+    },
+    "messages": {
+      "loadedTitle": "Bookmark diekstrak",
+      "loadedBody": "Bookmark yang ada dari PDF dimuat ke editor.",
+      "noBookmarks": "Tidak ditemukan bookmark di PDF terpilih.",
+      "loadFailed": "Tidak dapat mengekstrak bookmark dari PDF terpilih.",
+      "imported": "Bookmark diimpor",
+      "importedBody": "Outline JSON Anda menggantikan konten editor saat ini.",
+      "importedClipboard": "Data clipboard menggantikan daftar bookmark saat ini.",
+      "invalidJson": "Struktur JSON tidak valid",
+      "invalidJsonBody": "Harap berikan file JSON bookmark yang valid lalu coba lagi.",
+      "exported": "Unduhan JSON siap",
+      "copied": "Disalin ke clipboard",
+      "copiedBody": "JSON bookmark berhasil disalin.",
+      "copyFailed": "Gagal menyalin"
+    },
+    "error": {
+      "failed": "Gagal memperbarui table of contents"
+    },
+    "submit": "Terapkan table of contents",
+    "results": {
+      "title": "PDF diperbarui dengan bookmark",
+      "subtitle": "Unduh file yang diproses atau batalkan operasi di bawah."
+    }
   },
   "removePages": {
     "tags": "Menghapus halaman,menghapus halaman",
@@ -1978,13 +2177,54 @@
       "title": "Gambar tanda tangan Anda",
       "clear": "Bersihkan"
     },
+    "canvas": {
+      "heading": "Gambar tanda tangan Anda",
+      "clickToOpen": "Klik untuk membuka kanvas gambar",
+      "modalTitle": "Gambar tanda tangan Anda",
+      "colorLabel": "Warna",
+      "penSizeLabel": "Ukuran pena",
+      "penSizePlaceholder": "Ukuran",
+      "clear": "Bersihkan kanvas",
+      "colorPickerTitle": "Pilih warna garis"
+    },
     "text": {
       "name": "Nama Penandatangan",
-      "placeholder": "Masukkan nama lengkap Anda"
+      "placeholder": "Masukkan nama lengkap Anda",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Ukuran font",
+      "fontSizePlaceholder": "Ketik atau pilih ukuran font (8-200)",
+      "colorLabel": "Warna teks"
     },
     "clear": "Hapus",
     "add": "Tambah",
-    "saved": "Tanda Tangan Disimpan",
+    "saved": {
+      "heading": "Tanda tangan tersimpan",
+      "description": "Gunakan ulang tanda tangan yang disimpan kapan saja.",
+      "emptyTitle": "Belum ada tanda tangan tersimpan",
+      "emptyDescription": "Gambar, unggah, atau ketik tanda tangan di atas, lalu gunakan \"Simpan ke pustaka\" untuk menyimpan hingga {{max}} favorit siap pakai.",
+      "type": {
+        "canvas": "Gambar",
+        "image": "Unggah",
+        "text": "Teks"
+      },
+      "limitTitle": "Batas tercapai",
+      "limitDescription": "Hapus tanda tangan tersimpan sebelum menambahkan yang baru (maks {{max}}).",
+      "carouselPosition": "{{current}} dari {{total}}",
+      "prev": "Sebelumnya",
+      "next": "Berikutnya",
+      "delete": "Hapus",
+      "label": "Label",
+      "defaultLabel": "Tanda tangan",
+      "defaultCanvasLabel": "Tanda tangan gambar",
+      "defaultImageLabel": "Tanda tangan terunggah",
+      "defaultTextLabel": "Tanda tangan ketik",
+      "saveButton": "Simpan tanda tangan",
+      "saveUnavailable": "Buat tanda tangan terlebih dahulu untuk menyimpannya.",
+      "noChanges": "Tanda tangan saat ini sudah disimpan.",
+      "status": {
+        "saved": "Tersimpan"
+      }
+    },
     "save": "Simpan Tanda Tangan",
     "applySignatures": "Terapkan Tanda Tangan",
     "personalSigs": "Tanda Tangan Pribadi",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Konfigurasikan Tanda Tangan"
     },
+    "step": {
+      "createDesc": "Pilih cara membuat tanda tangan",
+      "place": "Tempatkan & simpan",
+      "placeDesc": "Posisikan tanda tangan di PDF Anda"
+    },
     "type": {
       "title": "Jenis Tanda Tangan",
       "draw": "Gambar",
       "canvas": "Kanvas",
       "image": "Gambar",
-      "text": "Teks"
+      "text": "Teks",
+      "saved": "Tersimpan"
     },
     "image": {
       "label": "Unggah gambar tanda tangan",
@@ -2019,11 +2265,17 @@
       "title": "Cara menambahkan tanda tangan",
       "canvas": "Setelah menggambar tanda tangan Anda di kanvas, tutup modal lalu klik di mana saja pada PDF untuk menempatkannya.",
       "image": "Setelah mengunggah gambar tanda tangan Anda di atas, klik di mana saja pada PDF untuk menempatkannya.",
-      "text": "Setelah memasukkan nama Anda di atas, klik di mana saja pada PDF untuk menempatkan tanda tangan Anda."
+      "saved": "Pilih tanda tangan tersimpan di atas, lalu klik di mana saja pada PDF untuk menempatkannya.",
+      "text": "Setelah memasukkan nama Anda di atas, klik di mana saja pada PDF untuk menempatkan tanda tangan Anda.",
+      "paused": "Penempatan dijeda",
+      "resumeHint": "Lanjutkan penempatan untuk mengklik dan menambahkan tanda tangan Anda.",
+      "noSignature": "Buat tanda tangan di atas untuk mengaktifkan alat penempatan."
     },
     "mode": {
       "move": "Pindahkan Tanda Tangan",
-      "place": "Tempatkan Tanda Tangan"
+      "place": "Tempatkan Tanda Tangan",
+      "pause": "Jeda penempatan",
+      "resume": "Lanjutkan penempatan"
     },
     "updateAndPlace": "Perbarui dan Tempatkan",
     "activate": "Aktifkan Penempatan Tanda Tangan",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Tentang Hapus Anotasi",
       "description": "Alat ini akan menghapus semua anotasi (komentar, sorotan, catatan, dll.) dari dokumen PDF Anda."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Tentang Hapus Anotasi"
+      },
+      "description": {
+        "title": "Fungsinya"
+      }
     },
     "error": {
       "failed": "Terjadi kesalahan saat menghapus anotasi dari PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Cara Kerja Ganti Nama Otomatis"
       },
+      "description": {
+        "title": "Fungsinya"
+      },
       "howItWorks": {
         "title": "Penggantian Nama Cerdas",
         "text": "Secara otomatis menemukan judul dari konten PDF Anda dan menggunakannya sebagai nama file.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Membuat nama file yang bersih dan valid dari judul yang terdeteksi",
         "bullet3": "Mempertahankan nama asli jika tidak ditemukan judul yang sesuai"
       }
+    },
+    "settings": {
+      "title": "Tentang"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "Ekspor PDF",
     "downloadSelected": "Unduh File Terpilih",
     "downloadAll": "Unduh Semua",
+    "saveAll": "Simpan Semua",
     "toggleTheme": "Alihkan Tema",
+    "toggleBookmarks": "Tampilkan/Sembunyikan Bookmark",
     "language": "Bahasa",
     "search": "Cari PDF",
     "panMode": "Mode Geser",
@@ -4212,9 +4480,21 @@
         "title": "Premium & Enterprise",
         "description": "Konfigurasikan kunci lisensi premium atau enterprise Anda.",
         "license": "Konfigurasi Lisensi",
+        "licenseKey": {
+          "toggle": "Punya kunci lisensi atau file sertifikat?",
+          "info": "Jika Anda memiliki kunci lisensi atau file sertifikat dari pembelian langsung, Anda dapat memasukkannya di sini untuk mengaktifkan fitur premium atau enterprise."
+        },
         "key": {
           "label": "Kunci Lisensi",
-          "description": "Masukkan kunci lisensi premium atau enterprise Anda"
+          "description": "Masukkan kunci lisensi premium atau enterprise Anda",
+          "success": "Kunci Lisensi Disimpan",
+          "successMessage": "Kunci lisensi Anda telah diaktifkan dengan sukses. Tidak perlu restart.",
+          "overwriteWarning": {
+            "title": "⚠️ Peringatan: Lisensi yang Ada Terdeteksi",
+            "line1": "Menimpa kunci lisensi Anda saat ini tidak dapat dibatalkan.",
+            "line2": "Lisensi sebelumnya akan hilang permanen kecuali Anda mencadangkannya di tempat lain.",
+            "line3": "Penting: Jaga kunci lisensi tetap privat dan aman. Jangan pernah membagikannya secara publik."
+          }
         },
         "enabled": {
           "label": "Aktifkan Fitur Premium",
@@ -4278,12 +4558,17 @@
     "or": "atau",
     "dropFileHere": "Lepaskan file di sini atau klik untuk mengunggah",
     "dropFilesHere": "Lepaskan file di sini atau klik tombol unggah",
+    "dropFilesHereOpen": "Jatuhkan file di sini atau klik tombol buka",
     "pdfFilesOnly": "Hanya file PDF",
     "supportedFileTypes": "Jenis file yang didukung",
     "upload": "Unggah",
     "uploadFile": "Unggah File",
     "uploadFiles": "Unggah File",
+    "open": "Buka",
+    "openFile": "Buka File",
+    "openFiles": "Buka File",
     "noFilesInStorage": "Tidak ada file di penyimpanan. Unggah beberapa file terlebih dahulu.",
+    "noFilesInStorageOpen": "Tidak ada file di penyimpanan. Buka beberapa file terlebih dahulu.",
     "selectFromStorage": "Pilih dari Penyimpanan",
     "backToTools": "Kembali ke Alat",
     "addFiles": "Tambahkan File",
@@ -4329,6 +4614,8 @@
     "myFiles": "File Saya",
     "noRecentFiles": "Tidak ada file terbaru",
     "googleDriveNotAvailable": "Integrasi Google Drive tidak tersedia",
+    "downloadSelected": "Unduh yang Dipilih",
+    "saveSelected": "Simpan Terpilih",
     "openFiles": "Buka File",
     "openFile": "Buka File",
     "details": "Detail File",
@@ -4341,7 +4628,6 @@
     "selectAll": "Pilih Semua",
     "deselectAll": "Batalkan Semua Pilihan",
     "deleteSelected": "Hapus yang Dipilih",
-    "downloadSelected": "Unduh yang Dipilih",
     "selectedCount": "{{count}} dipilih",
     "download": "Unduh",
     "delete": "Hapus",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Alur Kerja Keamanan",
       "secureWorkflowDesc": "Mengamankan dokumen PDF dengan menghapus konten berpotensi berbahaya seperti JavaScript dan file tersemat, lalu menambahkan perlindungan kata sandi untuk mencegah akses tidak sah. Kata sandi diatur ke 'password' secara default.",
       "processImages": "Proses Gambar",
-      "processImagesDesc": "Mengonversi beberapa file gambar menjadi satu dokumen PDF, lalu menerapkan teknologi OCR untuk mengekstrak teks yang dapat dicari dari gambar."
+      "processImagesDesc": "Mengonversi beberapa file gambar menjadi satu dokumen PDF, lalu menerapkan teknologi OCR untuk mengekstrak teks yang dapat dicari dari gambar.",
+      "prePublishSanitization": "Sanitisasi Pra-publikasi",
+      "prePublishSanitizationDesc": "Alur sanitisasi yang menghapus semua metadata tersembunyi, JavaScript, file tersemat, anotasi, dan meratakan formulir untuk mencegah kebocoran data sebelum menerbitkan PDF online."
     }
+  },
+  "colorPicker": {
+    "title": "Pilih warna"
   },
   "common": {
     "previous": "Sebelumnya",
@@ -4639,7 +4930,13 @@
     "used": "terpakai",
     "available": "tersedia",
     "cancel": "Batal",
-    "preview": "Pratinjau"
+    "preview": "Pratinjau",
+    "close": "Tutup",
+    "done": "Selesai",
+    "loading": "Memuat...",
+    "back": "Kembali",
+    "continue": "Lanjut",
+    "error": "Error"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Tambah file lagi...",
     "selectedFiles": "File Terpilih",
     "submit": "Tambahkan Lampiran",
+    "tooltip": {
+      "header": {
+        "title": "Tentang Tambah Lampiran"
+      },
+      "description": {
+        "title": "Fungsinya"
+      }
+    },
     "results": {
       "title": "Hasil Lampiran"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Posisi Kustom",
   "details": "Detail",
-  "downloadUnavailable": "Unduhan tidak tersedia untuk item ini",
   "invalidUndoData": "Tidak dapat membatalkan: data operasi tidak valid",
   "margin": {
     "large": "Besar",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Mungkin Nanti",
       "dontShowAgain": "Jangan Tampilkan Lagi"
     },
+    "welcomeSlide": {
+      "title": "Selamat datang di Stirling",
+      "body": "Stirling PDF kini siap untuk tim dari semua ukuran. Pembaruan ini mencakup tata letak baru, kemampuan admin yang kuat, dan fitur paling banyak diminta - <strong>Edit Text</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Mari pilih alat <strong>Crop</strong> untuk mendemonstrasikan cara menggunakan salah satu alat.",
     "toolInterface": "Ini adalah antarmuka alat <strong>Crop</strong>. Seperti yang Anda lihat, belum banyak karena kita belum menambahkan file PDF untuk dikerjakan.",
@@ -4823,7 +5131,39 @@
     "next": "Berikutnya",
     "finish": "Selesai",
     "startTour": "Mulai Tur",
-    "startTourDescription": "Ikuti tur terpandu tentang fitur utama Stirling PDF"
+    "startTourDescription": "Ikuti tur terpandu tentang fitur utama Stirling PDF",
+    "buttons": {
+      "next": "Berikutnya →",
+      "back": "Kembali",
+      "skipForNow": "Lewati dulu",
+      "download": "Unduh →",
+      "showMeAround": "Tunjukkan saya",
+      "skipTheTour": "Lewati tur"
+    },
+    "serverLicense": {
+      "skip": "Lewati dulu",
+      "seePlans": "Lihat Paket →",
+      "upgrade": "Upgrade sekarang →",
+      "freeTitle": "Lisensi Server",
+      "overLimitTitle": "Perlu Lisensi Server",
+      "overLimitBody": "Lisensi kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Anda memiliki <strong>{{overLimitUserCopy}}</strong> pengguna Stirling. Untuk terus berjalan tanpa gangguan, upgrade ke paket Stirling Server - <strong>kursi tanpa batas</strong>, pengeditan teks PDF, dan kontrol admin penuh seharga $99/server/bulan.",
+      "freeBody": "Lisensi <strong>Open-Core</strong> kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Untuk skala tanpa hambatan dan mendapatkan akses awal ke <strong>alat pengeditan teks PDF</strong> baru kami, kami sarankan paket Stirling Server - pengeditan penuh dan <strong>kursi tanpa batas</strong> seharga $99/server/bulan."
+    },
+    "desktopInstall": {
+      "title": "Unduh",
+      "titleWithOs": "Unduh untuk {{osLabel}}",
+      "body": "Stirling paling baik digunakan sebagai aplikasi desktop. Anda dapat menggunakannya offline, mengakses dokumen lebih cepat, dan mengedit secara lokal di komputer Anda."
+    },
+    "planOverview": {
+      "adminTitle": "Ringkasan Admin",
+      "userTitle": "Ringkasan Paket",
+      "adminBodyLoginEnabled": "Sebagai admin, Anda dapat mengelola pengguna, mengonfigurasi pengaturan, dan memantau kesehatan server. <strong>{{freeTierLimit}}</strong> orang pertama di server Anda dapat menggunakan Stirling gratis.",
+      "adminBodyLoginDisabled": "Setelah Anda mengaktifkan mode login, Anda dapat mengelola pengguna, mengonfigurasi pengaturan, dan memantau kesehatan server. <strong>{{freeTierLimit}}</strong> orang pertama di server Anda dapat menggunakan Stirling gratis.",
+      "userBody": "Undang rekan, tetapkan peran, dan jaga dokumen Anda tetap teratur dalam satu workspace yang aman. Aktifkan mode login kapan pun Anda siap berkembang dari penggunaan solo."
+    },
+    "securityCheck": {
+      "message": "Aplikasi telah mengalami perubahan signifikan baru-baru ini. Perhatian admin server Anda mungkin diperlukan. Harap konfirmasi peran Anda untuk melanjutkan."
+    }
   },
   "adminOnboarding": {
     "welcome": "Selamat datang di <strong>Tur Admin</strong>! Mari jelajahi fitur dan pengaturan enterprise yang kuat yang tersedia untuk administrator sistem.",
@@ -4852,7 +5192,10 @@
       "role": "Peran",
       "team": "Tim",
       "status": "Status",
-      "actions": "Tindakan",
+      "actions": {
+        "label": "Tindakan",
+        "upgrade": "Upgrade"
+      },
       "noMembersFound": "Tidak ada anggota ditemukan",
       "active": "Aktif",
       "disabled": "Dinonaktifkan",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} slot pengguna tersedia",
         "noSlotsAvailable": "Tidak ada slot tersedia",
         "currentUsage": "Saat ini menggunakan {{current}} dari {{max}} lisensi pengguna"
-      }
+      },
+      "loginRequired": "Aktifkan mode login terlebih dahulu"
     },
     "teams": {
       "title": "Tim",
@@ -5057,6 +5401,17 @@
     "showComparison": "Bandingkan Semua Fitur",
     "hideComparison": "Sembunyikan Perbandingan Fitur",
     "featureComparison": "Perbandingan Fitur",
+    "from": "Mulai",
+    "perMonth": "/bulan",
+    "perSeat": "/seat",
+    "withServer": "+ Paket Server",
+    "licensedSeats": "Berlisensi: {{count}} seat",
+    "includedInCurrent": "Termasuk dalam Paket Anda",
+    "selectPlan": "Pilih Paket",
+    "manage": "Kelola",
+    "manageSubscription": {
+      "description": "Kelola langganan, penagihan, dan metode pembayaran Anda"
+    },
     "activePlan": {
       "title": "Paket Aktif",
       "subtitle": "Detail langganan Anda saat ini"
@@ -5074,13 +5429,16 @@
       "upTo": "Hingga"
     },
     "period": {
-      "month": "bulan"
+      "month": "bulan",
+      "perUserPerMonth": "/pengguna/bulan"
     },
     "free": {
       "name": "Gratis",
       "highlight1": "Penggunaan Alat Terbatas per minggu",
       "highlight2": "Akses ke semua alat",
-      "highlight3": "Dukungan komunitas"
+      "highlight3": "Dukungan komunitas",
+      "forever": "Gratis selamanya",
+      "included": "Termasuk"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Harga kustom",
       "highlight2": "Dukungan khusus",
-      "highlight3": "Fitur terbaru"
+      "highlight3": "Fitur terbaru",
+      "requiresServer": "Memerlukan Server",
+      "requiresServerMessage": "Harap upgrade ke paket Server terlebih dahulu sebelum upgrade ke Enterprise."
     },
     "feature": {
       "title": "Fitur",
@@ -5102,6 +5462,12 @@
       "api": "Akses API",
       "priority": "Dukungan Prioritas",
       "customPricing": "Harga Khusus"
+    },
+    "licenseWarning": {
+      "title": "Batas gratis self-hosted tercapai",
+      "body": "Anda memiliki {{total}} pengguna tetapi level gratis hanya mendukung {{limit}} per server. Upgrade agar Stirling PDF tetap berjalan lancar.",
+      "overLimit": "lebih dari {{limit}}",
+      "cta": "Lihat paket"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Kelola Penagihan",
     "portal": {
       "error": "Gagal membuka portal penagihan"
-    }
+    },
+    "updateSeats": "Perbarui Seat",
+    "updateEnterpriseSeats": "Perbarui Seat Enterprise",
+    "currentSeats": "Seat Saat Ini",
+    "minimumSeats": "Seat Minimum",
+    "basedOnUsers": "(pengguna saat ini)",
+    "newSeatCount": "Jumlah Seat Baru",
+    "newSeatCountDescription": "Pilih jumlah seat untuk lisensi enterprise Anda",
+    "whatHappensNext": "Apa selanjutnya?",
+    "stripePortalRedirect": "Anda akan diarahkan ke portal penagihan Stripe untuk meninjau dan mengonfirmasi perubahan seat. Jumlah prorata akan dihitung otomatis.",
+    "preparingUpdate": "Menyiapkan pembaruan seat...",
+    "seatCountTooLow": "Jumlah seat harus setidaknya {{minimum}} (jumlah pengguna saat ini)",
+    "seatCountUnchanged": "Silakan pilih jumlah seat yang berbeda",
+    "seatsUpdated": "Seat Diperbarui",
+    "seatsUpdatedMessage": "Seat enterprise Anda telah diperbarui menjadi {{seats}}",
+    "updateProcessing": "Memproses Pembaruan",
+    "updateProcessingMessage": "Pembaruan seat sedang diproses. Harap segarkan beberapa saat lagi.",
+    "notEnterprise": "Manajemen seat hanya tersedia untuk lisensi enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Upgrade ke Paket Server",
+    "message": "Dapatkan manfaat maksimal Stirling PDF dengan pengguna tak terbatas dan fitur lanjutan",
+    "upgradeButton": "Upgrade Sekarang",
+    "dismiss": "Tutup banner",
+    "attentionTitle": "Server ini memerlukan perhatian admin",
+    "attentionBody": "Admin Anda perlu masuk untuk melihat info lebih lanjut. Harap hubungi mereka segera.",
+    "attentionBodyAdmin": "Tinjau persyaratan lisensi untuk menjaga kepatuhan server ini.",
+    "seeInfo": "Lihat info"
   },
   "payment": {
     "preparing": "Menyiapkan checkout Anda...",
@@ -5128,7 +5521,61 @@
     "success": "Pembayaran Berhasil!",
     "successMessage": "Langganan Anda telah berhasil diaktifkan. Anda akan segera menerima email konfirmasi.",
     "autoClose": "Jendela ini akan tertutup secara otomatis...",
-    "error": "Kesalahan Pembayaran"
+    "error": "Kesalahan Pembayaran",
+    "upgradeSuccess": "Pembayaran berhasil! Langganan Anda telah diupgrade. Lisensi telah diperbarui di server Anda. Anda akan menerima email konfirmasi segera.",
+    "paymentSuccess": "Pembayaran berhasil! Mengambil kunci lisensi Anda...",
+    "licenseActivated": "Lisensi aktif! Kunci lisensi Anda telah disimpan. Email konfirmasi telah dikirim ke alamat email terdaftar Anda.",
+    "licenseDelayed": "Pembayaran berhasil! Lisensi Anda sedang dibuat. Anda akan menerima email dengan kunci lisensi segera. Jika tidak menerima dalam 10 menit, harap hubungi dukungan.",
+    "licensePollingError": "Pembayaran berhasil tetapi kami tidak dapat mengambil kunci lisensi Anda secara otomatis. Silakan periksa email Anda atau hubungi dukungan dengan konfirmasi pembayaran Anda.",
+    "licenseRetrievalError": "Pembayaran berhasil tetapi pengambilan lisensi gagal. Anda akan menerima kunci lisensi melalui email. Hubungi dukungan jika tidak menerimanya dalam 10 menit.",
+    "syncError": "Pembayaran berhasil tetapi sinkronisasi lisensi gagal. Lisensi Anda akan diperbarui segera. Hubungi dukungan jika masalah berlanjut.",
+    "licenseSaveError": "Gagal menyimpan kunci lisensi. Silakan hubungi dukungan dengan kunci lisensi Anda untuk menyelesaikan aktivasi.",
+    "paymentCanceled": "Pembayaran dibatalkan. Tidak ada biaya yang dikenakan.",
+    "syncingLicense": "Menyinkronkan lisensi yang diupgrade...",
+    "generatingLicense": "Membuat kunci lisensi...",
+    "upgradeComplete": "Upgrade Selesai",
+    "upgradeCompleteMessage": "Langganan Anda telah diupgrade dengan sukses. Kunci lisensi yang ada telah diperbarui.",
+    "stripeNotConfigured": "Stripe Tidak Dikonfigurasi",
+    "stripeNotConfiguredMessage": "Integrasi pembayaran Stripe tidak dikonfigurasi. Silakan hubungi administrator Anda.",
+    "monthly": "Bulanan",
+    "yearly": "Tahunan",
+    "billingPeriod": "Periode Penagihan",
+    "enterpriseNote": "Seat dapat disesuaikan saat checkout (1–1000).",
+    "installationId": "ID Instalasi",
+    "licenseKey": "Kunci Lisensi Anda",
+    "licenseInstructions": "Ini telah ditambahkan ke instalasi Anda. Anda juga akan menerima salinannya melalui email.",
+    "canCloseWindow": "Anda bisa menutup jendela ini sekarang.",
+    "licenseKeyProcessing": "Pemrosesan Kunci Lisensi",
+    "licenseDelayedMessage": "Kunci lisensi Anda sedang dibuat. Harap periksa email Anda sebentar lagi atau hubungi dukungan.",
+    "perYear": "/tahun",
+    "perMonth": "/bulan",
+    "emailInvalid": "Masukkan alamat email yang valid",
+    "emailStage": {
+      "title": "Masukkan Email Anda",
+      "description": "Kami akan menggunakannya untuk mengirim kunci lisensi dan tanda terima Anda.",
+      "emailLabel": "Alamat Email",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Lanjut",
+      "modalTitle": "Mulai - {{planName}}"
+    },
+    "planStage": {
+      "title": "Pilih Periode Penagihan",
+      "savingsNote": "Hemat {{percent}}% dengan penagihan tahunan",
+      "basePrice": "Harga Dasar",
+      "seatPrice": "Per Seat",
+      "totalForSeats": "Total ({{count}} seat)",
+      "selectMonthly": "Pilih Bulanan",
+      "selectYearly": "Pilih Tahunan",
+      "savePercent": "Hemat {{percent}}%",
+      "savingsAmount": "Anda menghemat {{amount}}",
+      "modalTitle": "Pilih Periode Penagihan - {{planName}}",
+      "billedYearly": "Ditagih tahunan sebesar {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Kembali ke Pilihan Paket",
+      "selectedPlan": "Paket Terpilih",
+      "modalTitle": "Selesaikan Pembayaran - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Login Pertama Kali",
@@ -5287,5 +5734,281 @@
     "offline": "Backend Offline",
     "starting": "Backend sedang memulai...",
     "wait": "Harap tunggu hingga backend selesai memulai lalu coba lagi."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Buka kunci PDF untuk melanjutkan",
+    "title": "Hapus sandi untuk melanjutkan",
+    "description": "PDF ini dilindungi sandi. Masukkan sandi agar Anda dapat melanjutkan bekerja dengannya.",
+    "password": {
+      "label": "Sandi PDF",
+      "placeholder": "Masukkan sandi PDF"
+    },
+    "skip": "Lewati dulu",
+    "unlock": "Buka & Lanjutkan",
+    "incorrectPassword": "Sandi salah",
+    "missingFile": "File yang dipilih tidak lagi tersedia.",
+    "emptyResponse": "Penghapusan sandi tidak menghasilkan file.",
+    "required": "Masukkan sandi untuk melanjutkan.",
+    "successTitle": "Sandi dihapus",
+    "successBodyWithName": "Sandi dihapus dari {{fileName}}",
+    "successBody": "Sandi berhasil dihapus."
+  },
+  "setup": {
+    "welcome": "Selamat datang di Stirling PDF",
+    "description": "Mulai dengan memilih cara Anda ingin menggunakan Stirling PDF",
+    "step1": {
+      "label": "Pilih Mode",
+      "description": "Offline atau Server"
+    },
+    "step2": {
+      "label": "Pilih Server",
+      "description": "Server self-hosted"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Masukkan kredensial"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Masuk dengan akun Stirling Anda"
+      },
+      "selfhosted": {
+        "title": "Self-Hosted Server",
+        "description": "Sambungkan ke server Stirling PDF Anda sendiri"
+      }
+    },
+    "saas": {
+      "title": "Masuk ke Stirling",
+      "subtitle": "Masuk dengan akun Stirling Anda"
+    },
+    "selfhosted": {
+      "title": "Masuk ke Server",
+      "subtitle": "Masukkan kredensial server Anda"
+    },
+    "server": {
+      "title": "Sambungkan ke Server",
+      "subtitle": "Masukkan URL server self-hosted Anda",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Server self-hosted"
+      },
+      "url": {
+        "label": "URL Server",
+        "description": "Masukkan URL lengkap server Stirling PDF self-hosted Anda"
+      },
+      "error": {
+        "emptyUrl": "Masukkan URL server",
+        "unreachable": "Tidak dapat terhubung ke server",
+        "testFailed": "Tes koneksi gagal"
+      },
+      "testing": "Menguji koneksi..."
+    },
+    "login": {
+      "title": "Masuk",
+      "subtitle": "Masukkan kredensial Anda untuk melanjutkan",
+      "connectingTo": "Menghubungkan ke:",
+      "username": {
+        "label": "Nama pengguna",
+        "placeholder": "Masukkan nama pengguna"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Masukkan email Anda"
+      },
+      "password": {
+        "label": "Kata sandi",
+        "placeholder": "Masukkan kata sandi Anda"
+      },
+      "error": {
+        "emptyUsername": "Masukkan nama pengguna Anda",
+        "emptyEmail": "Masukkan email Anda",
+        "emptyPassword": "Masukkan kata sandi Anda",
+        "oauthFailed": "Login OAuth gagal. Silakan coba lagi."
+      },
+      "submit": "Login",
+      "signInWith": "Masuk dengan",
+      "oauthPending": "Membuka browser untuk autentikasi...",
+      "orContinueWith": "Atau lanjut dengan email"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Autentikasi Berhasil",
+      "message": "Anda dapat menutup jendela ini dan kembali ke Stirling PDF."
+    },
+    "error": {
+      "title": "Autentikasi Gagal",
+      "message": "Autentikasi tidak berhasil. Anda dapat menutup jendela ini dan mencoba lagi."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor JSON PDF",
+    "viewLabel": "Editor PDF",
+    "converting": "Mengonversi PDF ke format yang dapat diedit...",
+    "conversionFailed": "Gagal mengonversi PDF. Coba lagi.",
+    "currentFile": "File saat ini: {{name}}",
+    "pageSummary": "Halaman {{number}} dari {{total}}",
+    "pagePreviewAlt": "Pratinjau halaman",
+    "imageLabel": "Gambar ditempatkan",
+    "noTextOnPage": "Tidak ada teks yang dapat diedit ditemukan di halaman ini.",
+    "pageType": {
+      "paragraph": "Halaman paragraf",
+      "sparse": "Teks tersebar"
+    },
+    "groupingMode": {
+      "auto": "Otomatis",
+      "paragraph": "Paragraf",
+      "singleLine": "Satu Baris"
+    },
+    "badges": {
+      "unsaved": "Diedit",
+      "modified": "Diedit",
+      "earlyAccess": "Akses Awal"
+    },
+    "actions": {
+      "reset": "Reset Perubahan",
+      "downloadJson": "Unduh JSON",
+      "generatePdf": "Buat PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Sesuaikan teks otomatis ke kotak",
+        "description": "Secara otomatis menskalakan teks secara horizontal agar pas dalam kotak pembatas aslinya saat perenderan font berbeda dari PDF."
+      },
+      "groupingMode": {
+        "title": "Mode Pengelompokan Teks",
+        "autoDescription": "Secara otomatis mendeteksi jenis halaman dan mengelompokkan teks dengan tepat.",
+        "paragraphDescription": "Mengelompokkan baris yang sejajar menjadi kotak teks paragraf multi-baris.",
+        "singleLineDescription": "Membiarkan setiap baris teks PDF sebagai kotak teks terpisah."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tips: Tahan Ctrl (Cmd) atau Shift untuk memilih beberapa kotak teks. Bilah alat mengambang akan muncul di atas pilihan sehingga Anda bisa menggabungkan, melepas grup, atau menyesuaikan lebar."
+      },
+      "forceSingleElement": {
+        "title": "Kunci teks yang diedit ke satu elemen PDF",
+        "description": "Saat diaktifkan, editor mengekspor setiap kotak teks yang diedit sebagai satu elemen teks PDF untuk menghindari glif yang saling tumpang tindih atau font campuran."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Gabungkan kotak yang dipilih",
+      "merge": "Gabungkan pilihan",
+      "ungroupTooltip": "Pecah paragraf kembali menjadi baris",
+      "ungroup": "Lepas grup pilihan",
+      "widthMenu": "Opsi lebar",
+      "expandWidth": "Perluas hingga tepi halaman",
+      "resetWidth": "Reset lebar",
+      "resizeHandle": "Sesuaikan lebar teks"
+    },
+    "disclaimer": {
+      "heading": "Batasan Pratinjau",
+      "textFocus": "Ruang kerja ini berfokus pada pengeditan teks dan memosisikan ulang gambar tertanam. Grafik halaman yang kompleks, widget formulir, dan grafis berlapis dipertahankan untuk ekspor tetapi tidak sepenuhnya dapat diedit di sini.",
+      "previewVariance": "Beberapa visual (seperti batas tabel, bentuk, atau tampilan anotasi) mungkin tidak tampil persis pada pratinjau. PDF yang diekspor mempertahankan perintah gambar asli bila memungkinkan.",
+      "alpha": "Penampil alpha ini masih berkembang—beberapa font, warna, efek transparansi, dan detail tata letak mungkin sedikit bergeser. Harap periksa kembali PDF yang dihasilkan sebelum dibagikan."
+    },
+    "empty": {
+      "title": "Tidak ada dokumen dimuat",
+      "subtitle": "Muat file PDF atau JSON untuk mulai mengedit konten teks."
+    },
+    "welcomeBanner": {
+      "title": "Selamat datang di PDF Text Editor (Akses Awal)",
+      "experimental": "Ini adalah fitur eksperimental yang sedang aktif dikembangkan. Harap maklum, mungkin ada ketidakstabilan dan masalah saat digunakan.",
+      "howItWorks": "Alat ini mengonversi PDF Anda ke format yang dapat diedit di mana Anda dapat mengubah konten teks dan memosisikan ulang gambar. Perubahan disimpan kembali sebagai PDF baru.",
+      "bestFor": "Paling cocok untuk:",
+      "bestFor1": "PDF sederhana yang berisi terutama teks dan gambar",
+      "bestFor2": "Dokumen dengan pemformatan paragraf standar",
+      "bestFor3": "Surat, esai, laporan, dan dokumen dasar",
+      "notIdealFor": "Kurang ideal untuk:",
+      "notIdealFor1": "PDF dengan pemformatan khusus seperti bullet, tabel, atau tata letak multi-kolom",
+      "notIdealFor2": "Majalah, brosur, atau dokumen dengan desain kompleks",
+      "notIdealFor3": "Manual instruksi dengan tata letak kompleks",
+      "limitations": "Batasan saat ini:",
+      "limitation1": "Perenderan font mungkin sedikit berbeda dari PDF asli",
+      "limitation2": "Grafik kompleks, bidang formulir, dan anotasi dipertahankan tetapi tidak dapat diedit",
+      "limitation3": "File besar mungkin memerlukan waktu untuk dikonversi dan diproses",
+      "knownIssues": "Masalah yang Diketahui (Sedang Diperbaiki):",
+      "issue1": "Warna teks saat ini belum dipertahankan (akan segera ditambahkan)",
+      "issue2": "Mode Paragraf memiliki lebih banyak masalah perataan dan spasi - Mode Satu Baris direkomendasikan",
+      "issue3": "Tampilan pratinjau berbeda dari PDF yang diekspor - PDF yang diekspor lebih mendekati aslinya",
+      "issue4": "Perataan teks yang diputar mungkin perlu penyesuaian manual",
+      "issue5": "Efek transparansi dan pelapisan mungkin berbeda dari aslinya",
+      "feedback": "Ini adalah fitur akses awal. Harap laporkan masalah apa pun yang Anda temui untuk membantu kami meningkatkan!",
+      "gotIt": "Mengerti",
+      "dontShowAgain": "Jangan tampilkan lagi"
+    },
+    "modeChange": {
+      "title": "Konfirmasi Perubahan Mode",
+      "warning": "Mengubah mode pengelompokan teks akan mereset semua perubahan yang belum disimpan. Anda yakin ingin melanjutkan?",
+      "cancel": "Batal",
+      "confirm": "Reset dan Ubah Mode"
+    },
+    "fontAnalysis": {
+      "details": "Detail Font",
+      "embedded": "Tertanam",
+      "type": "Tipe",
+      "webFormat": "Format Web",
+      "warnings": "Peringatan",
+      "suggestions": "Catatan",
+      "currentPageFonts": "Font pada halaman ini",
+      "allFonts": "Semua font",
+      "fallback": "fallback",
+      "missing": "hilang",
+      "perfectMessage": "Semua font dapat direproduksi dengan sempurna.",
+      "warningMessage": "Beberapa font mungkin tidak dirender dengan benar.",
+      "infoMessage": "Informasi reproduksi font tersedia.",
+      "perfect": "sempurna",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Tidak dapat membaca file JSON. Pastikan file tersebut dihasilkan oleh alat PDF ke JSON.",
+      "pdfConversion": "Tidak dapat mengonversi JSON yang diedit kembali menjadi PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sesi berakhir",
+    "pleaseLoginAgain": "Silakan login lagi.",
+    "accessDenied": "Akses Ditolak",
+    "insufficientPermissions": "Anda tidak memiliki izin untuk melakukan tindakan ini."
+  },
+  "addText": {
+    "title": "Tambah Teks",
+    "header": "Tambahkan teks ke PDF",
+    "text": {
+      "name": "Konten teks",
+      "placeholder": "Masukkan teks yang ingin Anda tambahkan",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Ukuran font",
+      "fontSizePlaceholder": "Ketik atau pilih ukuran font (8-200)",
+      "colorLabel": "Warna teks"
+    },
+    "steps": {
+      "configure": "Atur Teks"
+    },
+    "step": {
+      "createDesc": "Masukkan teks yang ingin Anda tambahkan",
+      "place": "Tempatkan teks",
+      "placeDesc": "Klik pada PDF untuk menambahkan teks Anda"
+    },
+    "instructions": {
+      "title": "Cara menambahkan teks",
+      "text": "Setelah memasukkan teks di atas, klik di mana saja pada PDF untuk menempatkannya.",
+      "paused": "Penempatan dijeda",
+      "resumeHint": "Lanjutkan penempatan lalu klik untuk menambahkan teks Anda.",
+      "noSignature": "Masukkan teks di atas untuk mengaktifkan penempatan."
+    },
+    "mode": {
+      "move": "Pindahkan Teks",
+      "place": "Tempatkan Teks",
+      "pause": "Jeda penempatan",
+      "resume": "Lanjutkan penempatan"
+    },
+    "results": {
+      "title": "Hasil Tambah Teks"
+    },
+    "error": {
+      "failed": "Terjadi kesalahan saat menambahkan teks ke PDF."
+    },
+    "tags": "teks, anotasi, label",
+    "applySignatures": "Terapkan Teks"
   }
 }

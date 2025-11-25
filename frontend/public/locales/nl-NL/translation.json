@@ -17,6 +17,8 @@
       "comingSoon": "Binnenkort:",
       "favorite": "Toevoegen aan favorieten",
       "favorites": "Favorieten",
+      "unavailable": "Uitgeschakeld door serverbeheerder:",
+      "unavailableDependency": "Niet beschikbaar - vereiste tool ontbreekt op server:",
       "heading": "Alle tools (volledig scherm)",
       "noResults": "Pas je zoekopdracht aan of schakel beschrijvingen om te vinden wat je nodig hebt.",
       "recommended": "Aanbevolen",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Overschakelen naar volledig scherm",
       "sidebar": "Overschakelen naar zijbalkmodus"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Premiumfunctie:",
+    "comingSoon": "Binnenkort beschikbaar:"
   },
   "unsavedChanges": "Je hebt niet-opgeslagen wijzigingen in je PDF.",
   "areYouSure": "Weet je zeker dat je wilt vertrekken?",
@@ -40,6 +45,30 @@
     "message": "Dit ZIP-bestand bevat {{count}} bestanden. Toch uitpakken?",
     "cancel": "Annuleren",
     "confirm": "Uitpakken"
+  },
+  "defaultApp": {
+    "title": "Instellen als standaard PDF-app",
+    "message": "Wil je Stirling PDF instellen als je standaard PDF-editor?",
+    "description": "Je kunt dit later wijzigen in je systeeminstellingen.",
+    "notNow": "Niet nu",
+    "setDefault": "Als standaard instellen",
+    "dismiss": "Sluiten",
+    "prompt": {
+      "title": "Instellen als standaard PDF-editor",
+      "message": "Maak Stirling PDF je standaardapp voor het openen van PDF-bestanden."
+    },
+    "success": {
+      "title": "Standaardapp ingesteld",
+      "message": "Stirling PDF is nu je standaard PDF-editor"
+    },
+    "settingsOpened": {
+      "title": "Instellingen geopend",
+      "message": "Selecteer Stirling PDF in je systeeminstellingen"
+    },
+    "error": {
+      "title": "Fout",
+      "message": "Standaard PDF-verwerker instellen mislukt"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Opslaan",
   "saveToBrowser": "Opslaan in browser",
   "download": "Downloaden",
+  "downloadUnavailable": "Download niet beschikbaar voor dit item",
+  "saveUnavailable": "Opslaan niet beschikbaar voor dit item",
   "pin": "Bestand vastzetten (actief houden na tooluitvoering)",
   "unpin": "Bestand losmaken (vervangen na tooluitvoering)",
   "undoOperationTooltip": "Klik om de laatste bewerking ongedaan te maken en de oorspronkelijke bestanden te herstellen",
@@ -168,6 +199,7 @@
   },
   "edit": "Bewerken",
   "delete": "Verwijderen",
+  "never": "Nooit",
   "username": "Gebruikersnaam",
   "password": "Wachtwoord",
   "welcome": "Welkom",
@@ -262,7 +294,8 @@
     "learnMore": "Meer informatie",
     "enable": "Analyses inschakelen",
     "disable": "Analyses uitschakelen",
-    "settings": "Je kunt de instellingen voor analyses wijzigen in het bestand config/settings.yml"
+    "settings": "Je kunt de instellingen voor analyses wijzigen in het bestand config/settings.yml",
+    "privacyAssurance": "We volgen geen persoonlijke informatie of de inhoud van je bestanden."
   },
   "navbar": {
     "favorite": "Favorieten",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Instellingen",
-    "update": "Update beschikbaar",
-    "updateAvailable": "{0} is de huidig geïnstalleerde versie. Een nieuwe versie ({1}) is beschikbaar.",
-    "appVersion": "App versie:",
-    "downloadOption": {
-      "title": "Kies download optie (Voor enkelvoudige bestanddownloads zonder zip):",
-      "1": "Open in hetzelfde venster",
-      "2": "Open in nieuw venster",
-      "3": "Download bestand"
-    },
-    "zipThreshold": "Bestanden zippen wanneer het aantal gedownloade bestanden meer is dan",
-    "signOut": "Uitloggen",
-    "accountSettings": "Account instellingen",
-    "bored": {
-      "help": "Schakelt geheim spelletje in"
-    },
-    "cacheInputs": {
-      "name": "Sla invoer in formulieren op",
-      "help": "Schakel in om eerdere invoeren op te slaan voor toekomstige uitvoeren"
+    "connection": {
+      "title": "Verbindingsmodus",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-hosted"
+      },
+      "server": "Server",
+      "user": "Ingelogd als",
+      "logout": "Uitloggen"
     },
     "general": {
       "title": "Algemeen",
       "description": "Configureer algemene app-voorkeuren.",
-      "account": "Account",
-      "accountDescription": "Beheer je accountinstellingen",
       "user": "Gebruiker",
-      "signedInAs": "Aangemeld als",
       "logout": "Afmelden",
       "enableFeatures": {
+        "dismiss": "Sluiten",
         "title": "Voor systeembeheerders",
         "intro": "Schakel gebruikersauthenticatie, teambeheer en werkruimtefuncties in voor je organisatie.",
         "action": "Configureren",
         "and": "en",
         "benefit": "Schakelt gebruikersrollen, teamsamenwerking, beheerdersfuncties en enterprise-functies in.",
-        "learnMore": "Meer info in de documentatie",
-        "dismiss": "Sluiten"
+        "learnMore": "Meer info in de documentatie"
       },
-      "autoUnzip": "API-antwoorden automatisch uitpakken",
-      "autoUnzipDescription": "Automatisch bestanden uit ZIP-antwoorden halen",
-      "autoUnzipTooltip": "ZIP-bestanden die door API-bewerkingen worden teruggegeven automatisch uitpakken. Uitschakelen om ZIP-bestanden intact te laten. Dit heeft geen invloed op automatiseringsworkflows.",
-      "autoUnzipFileLimit": "Limiet automatisch uitpakken",
-      "autoUnzipFileLimitDescription": "Maximaal aantal bestanden om uit ZIP te halen",
-      "autoUnzipFileLimitTooltip": "Alleen uitpakken als de ZIP dit aantal bestanden of minder bevat. Stel hoger in om grotere ZIP's te extraheren.",
       "defaultToolPickerMode": "Standaard toolkiezer-modus",
       "defaultToolPickerModeDescription": "Kies of de toolkiezer standaard in volledig scherm of zijbalk opent",
       "mode": {
-        "fullscreen": "Volledig scherm",
-        "sidebar": "Zijbalk"
-      }
+        "sidebar": "Zijbalk",
+        "fullscreen": "Volledig scherm"
+      },
+      "autoUnzipTooltip": "ZIP-bestanden die door API-bewerkingen worden teruggegeven automatisch uitpakken. Uitschakelen om ZIP-bestanden intact te laten. Dit heeft geen invloed op automatiseringsworkflows.",
+      "autoUnzip": "API-antwoorden automatisch uitpakken",
+      "autoUnzipDescription": "Automatisch bestanden uit ZIP-antwoorden halen",
+      "autoUnzipFileLimitTooltip": "Alleen uitpakken als de ZIP dit aantal bestanden of minder bevat. Stel hoger in om grotere ZIP's te extraheren.",
+      "autoUnzipFileLimit": "Limiet automatisch uitpakken",
+      "autoUnzipFileLimitDescription": "Maximaal aantal bestanden om uit ZIP te halen",
+      "defaultPdfEditor": "Standaard PDF-editor",
+      "defaultPdfEditorActive": "Stirling PDF is je standaard PDF-editor",
+      "defaultPdfEditorInactive": "Een andere app is als standaard ingesteld",
+      "defaultPdfEditorChecking": "Controleren...",
+      "defaultPdfEditorSet": "Al standaard",
+      "setAsDefault": "Als standaard instellen",
+      "updates": {
+        "title": "Software-updates",
+        "description": "Controleer op updates en bekijk versie-informatie",
+        "currentVersion": "Huidige versie",
+        "latestVersion": "Laatste versie",
+        "checkForUpdates": "Op updates controleren",
+        "viewDetails": "Details bekijken"
+      },
+      "hideUnavailableTools": "Niet-beschikbare tools verbergen",
+      "hideUnavailableToolsDescription": "Verwijder tools die door je server zijn uitgeschakeld in plaats van ze grijs te tonen.",
+      "hideUnavailableConversions": "Niet-beschikbare conversies verbergen",
+      "hideUnavailableConversionsDescription": "Verwijder uitgeschakelde conversie-opties in de tool Converteren in plaats van ze grijs te tonen."
     },
     "hotkeys": {
-      "title": "Sneltoetsen",
-      "description": "Beweeg over een tool om de sneltoets te zien of pas deze hieronder aan. Klik op \"Sneltoets wijzigen\" en druk een nieuwe toetsencombinatie in. Druk op Esc om te annuleren.",
-      "errorModifier": {
-        "mac": "Neem ⌘ (Command), ⌥ (Option) of een andere modifier op in je sneltoets.",
-        "windows": "Neem Ctrl, Alt of een andere modifier op in je sneltoets."
-      },
       "errorConflict": "Sneltoets wordt al gebruikt door {{tool}}.",
+      "searchPlaceholder": "Tools zoeken...",
       "none": "Niet toegewezen",
       "customBadge": "Aangepast",
       "defaultLabel": "Standaard: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Sneltoets wijzigen",
       "reset": "Reset",
       "shortcut": "Sneltoets",
-      "noShortcut": "Geen sneltoets ingesteld",
-      "searchPlaceholder": "Tools zoeken..."
+      "noShortcut": "Geen sneltoets ingesteld"
     }
+  },
+  "update": {
+    "modalTitle": "Update beschikbaar",
+    "current": "Huidige versie",
+    "latest": "Laatste versie",
+    "latestStable": "Laatste stabiele",
+    "priorityLabel": "Prioriteit",
+    "recommendedAction": "Aanbevolen actie",
+    "breakingChangesDetected": "Incompatibele wijzigingen gedetecteerd",
+    "breakingChangesMessage": "Sommige versies bevatten incompatibele wijzigingen. Bekijk onderstaande migratiehandleidingen voordat je update.",
+    "migrationGuides": "Migratiehandleidingen",
+    "viewGuide": "Handleiding bekijken",
+    "loadingDetailedInfo": "Gedetailleerde informatie laden...",
+    "close": "Sluiten",
+    "viewAllReleases": "Alle releases bekijken",
+    "downloadLatest": "Nieuwste downloaden",
+    "availableUpdates": "Beschikbare updates",
+    "unableToLoadDetails": "Kan gedetailleerde informatie niet laden.",
+    "version": "Versie",
+    "urgentUpdateAvailable": "Dringende update",
+    "updateAvailable": "Update beschikbaar",
+    "releaseNotes": "Release-opmerkingen",
+    "priority": {
+      "urgent": "Dringend",
+      "normal": "Normaal",
+      "minor": "Klein",
+      "low": "Laag"
+    },
+    "breakingChanges": "Incompatibele wijzigingen",
+    "breakingChangesDefault": "Deze versie bevat incompatibele wijzigingen.",
+    "migrationGuide": "Migratiehandleiding"
   },
   "changeCreds": {
     "title": "Inloggegevens wijzigen",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Plaatst PDF's over een andere PDF heen",
       "title": "PDF's overlappen"
+    },
+    "pdfTextEditor": {
+      "title": "PDF-teksteditor",
+      "desc": "Bekijk en bewerk Stirling PDF JSON-exporten met gegroepeerde tekstbewerking en het opnieuw genereren van PDF's"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Tekst toevoegen",
+      "desc": "Voeg overal in je PDF aangepaste tekst toe"
     }
   },
   "landing": {
     "addFiles": "Bestanden toevoegen",
-    "uploadFromComputer": "Uploaden vanaf computer"
+    "uploadFromComputer": "Uploaden vanaf computer",
+    "openFromComputer": "Openen vanaf computer"
   },
   "viewPdf": {
     "tags": "bekijken,lezen,annoteren,tekst,afbeelding",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Er is een fout opgetreden bij het samenvoegen van de PDF's."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overzicht instellingen samenvoegen"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,foto",
     "title": "Afbeelding toevoegen",
     "header": "Afbeelding aan PDF toevoegen",
-    "everyPage": "Elke pagina?",
-    "upload": "Afbeelding toevoegen",
-    "submit": "Afbeelding toevoegen"
+    "image": {
+      "name": "Afbeelding",
+      "placeholder": "Upload een afbeelding",
+      "label": "Afbeeldingsbestand"
+    },
+    "steps": {
+      "configure": "Afbeelding configureren"
+    },
+    "step": {
+      "createDesc": "Upload de afbeelding die je wilt toevoegen",
+      "place": "Afbeelding plaatsen",
+      "placeDesc": "Klik op de PDF om je afbeelding toe te voegen"
+    },
+    "instructions": {
+      "title": "Afbeeldingen toevoegen",
+      "text": "Klik na het uploaden van je afbeelding ergens op de PDF om deze te plaatsen.",
+      "paused": "Plaatsing gepauzeerd",
+      "resumeHint": "Hervat de plaatsing om te klikken en je afbeelding toe te voegen.",
+      "noSignature": "Upload hierboven een afbeelding om te kunnen plaatsen."
+    },
+    "mode": {
+      "move": "Afbeelding verplaatsen",
+      "place": "Afbeelding plaatsen",
+      "pause": "Plaatsing pauzeren",
+      "resume": "Plaatsing hervatten"
+    },
+    "results": {
+      "title": "Resultaat afbeelding toevoegen"
+    },
+    "error": {
+      "failed": "Er is een fout opgetreden bij het toevoegen van de afbeelding aan de PDF."
+    },
+    "saved": {
+      "defaultLabel": "Afbeelding",
+      "defaultImageLabel": "Geüploade afbeelding"
+    },
+    "applySignatures": "Afbeeldingen toepassen"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Voorkom afdrukken in verschillende formaten"
     },
     "submit": "Wijzigen"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bladwijzers & inhoud",
+      "replaceExisting": "Bestaande bladwijzers vervangen (uitvinken om toe te voegen)",
+      "replaceExistingHint": "Wanneer uitgeschakeld, wordt de nieuwe inhoud na de huidige bladwijzers toegevoegd."
+    },
+    "actions": {
+      "source": "Bladwijzers laden",
+      "selectedFile": "Geladen uit {{file}}",
+      "noFile": "Selecteer een PDF om bestaande bladwijzers te extraheren.",
+      "loadFromPdf": "Laden uit geselecteerde PDF",
+      "importJson": "JSON importeren",
+      "importClipboard": "JSON vanaf klembord plakken",
+      "export": "Bladwijzers exporteren",
+      "exportJson": "JSON downloaden",
+      "exportClipboard": "JSON naar klembord kopiëren",
+      "clipboardUnavailable": "Klembordtoegang is niet beschikbaar in deze browser."
+    },
+    "info": {
+      "line1": "Elke bladwijzer heeft een beschrijvende titel en de pagina nodig die moet worden geopend.",
+      "line2": "Gebruik onderliggende bladwijzers om een hiërarchie te maken voor hoofdstukken, secties of subsecties.",
+      "line3": "Importeer bladwijzers uit de geselecteerde PDF of uit een JSON-bestand om tijd te besparen."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Open de tool om te beginnen met bewerken",
+        "description": "Selecteer de tool Inhoudsopgave bewerken om de werkruimte te laden."
+      },
+      "tabTitle": "Werkruimte inhoud",
+      "subtitle": "Importeer bladwijzers, bouw hiërarchieën en pas de inhoud toe zonder krappe zijpanelen.",
+      "noFile": "Geen PDF geselecteerd",
+      "fileLabel": "Wijzigingen worden toegepast op de momenteel geselecteerde PDF.",
+      "filePrompt": "Selecteer een PDF uit je bibliotheek of upload een nieuwe om te beginnen.",
+      "changeFile": "PDF wijzigen",
+      "selectFile": "PDF selecteren"
+    },
+    "editor": {
+      "heading": "Bladwijzer-editor",
+      "description": "Voeg bladwijzers toe, nestel ze en wijzig de volgorde om je PDF-inhoud te maken.",
+      "addTopLevel": "Bladwijzer op hoogste niveau toevoegen",
+      "empty": {
+        "title": "Nog geen bladwijzers",
+        "description": "Importeer bestaande bladwijzers of begin met je eerste item toe te voegen.",
+        "action": "Eerste bladwijzer toevoegen"
+      },
+      "defaultTitle": "Nieuwe bladwijzer",
+      "defaultChildTitle": "Onderliggende bladwijzer",
+      "defaultSiblingTitle": "Nieuwe bladwijzer",
+      "untitled": "Naamloze bladwijzer",
+      "childBadge": "Onderliggend",
+      "pagePreview": "Pagina {{page}}",
+      "field": {
+        "title": "Titel bladwijzer",
+        "page": "Doelpaginanummer"
+      },
+      "actions": {
+        "toggle": "Onderliggende tonen/verbergen",
+        "addChild": "Onderliggende bladwijzer toevoegen",
+        "addSibling": "Bladwijzer op hetzelfde niveau toevoegen",
+        "remove": "Bladwijzer verwijderen"
+      },
+      "confirmRemove": "Deze bladwijzer en alle onderliggende verwijderen?"
+    },
+    "messages": {
+      "loadedTitle": "Bladwijzers geëxtraheerd",
+      "loadedBody": "Bestaande bladwijzers uit de PDF zijn in de editor geladen.",
+      "noBookmarks": "Geen bladwijzers gevonden in de geselecteerde PDF.",
+      "loadFailed": "Kan geen bladwijzers uit de geselecteerde PDF extraheren.",
+      "imported": "Bladwijzers geïmporteerd",
+      "importedBody": "Je JSON-inhoud heeft de huidige editorinhoud vervangen.",
+      "importedClipboard": "Klembordgegevens hebben de huidige bladwijzerlijst vervangen.",
+      "invalidJson": "Ongeldige JSON-structuur",
+      "invalidJsonBody": "Geef een geldig bladwijzer-JSON-bestand op en probeer het opnieuw.",
+      "exported": "JSON-download gereed",
+      "copied": "Gekopieerd naar klembord",
+      "copiedBody": "Bladwijzer-JSON succesvol gekopieerd.",
+      "copyFailed": "Kopiëren mislukt"
+    },
+    "error": {
+      "failed": "Bijwerken van de inhoudsopgave mislukt"
+    },
+    "submit": "Inhoudsopgave toepassen",
+    "results": {
+      "title": "Bijgewerkte PDF met bladwijzers",
+      "subtitle": "Download het verwerkte bestand of maak de bewerking hieronder ongedaan."
+    }
   },
   "removePages": {
     "tags": "Pagina's verwijderen",
@@ -1978,13 +2177,54 @@
       "title": "Teken uw handtekening",
       "clear": "Wissen"
     },
+    "canvas": {
+      "heading": "Teken je handtekening",
+      "clickToOpen": "Klik om het tekenvenster te openen",
+      "modalTitle": "Teken je handtekening",
+      "colorLabel": "Kleur",
+      "penSizeLabel": "Pendikte",
+      "penSizePlaceholder": "Grootte",
+      "clear": "Tekenvenster wissen",
+      "colorPickerTitle": "Kies lijnkleur"
+    },
     "text": {
       "name": "Naam ondertekenaar",
-      "placeholder": "Voer uw volledige naam in"
+      "placeholder": "Voer uw volledige naam in",
+      "fontLabel": "Lettertype",
+      "fontSizeLabel": "Lettergrootte",
+      "fontSizePlaceholder": "Typ of kies een lettergrootte (8-200)",
+      "colorLabel": "Tekstkleur"
     },
     "clear": "Wissen",
     "add": "Toevoegen",
-    "saved": "Gesleutelde handtekeningen opgeslagen",
+    "saved": {
+      "heading": "Opgeslagen handtekeningen",
+      "description": "Gebruik opgeslagen handtekeningen op elk moment opnieuw.",
+      "emptyTitle": "Nog geen opgeslagen handtekeningen",
+      "emptyDescription": "Teken, upload of typ hierboven een handtekening en kies vervolgens 'Opslaan in bibliotheek' om tot {{max}} favorieten paraat te hebben.",
+      "type": {
+        "canvas": "Tekening",
+        "image": "Upload",
+        "text": "Tekst"
+      },
+      "limitTitle": "Limiet bereikt",
+      "limitDescription": "Verwijder een opgeslagen handtekening voordat je nieuwe toevoegt (max. {{max}}).",
+      "carouselPosition": "{{current}} van {{total}}",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "delete": "Verwijderen",
+      "label": "Label",
+      "defaultLabel": "Handtekening",
+      "defaultCanvasLabel": "Getekende handtekening",
+      "defaultImageLabel": "Geüploade handtekening",
+      "defaultTextLabel": "Getypte handtekening",
+      "saveButton": "Handtekening opslaan",
+      "saveUnavailable": "Maak eerst een handtekening om deze op te slaan.",
+      "noChanges": "De huidige handtekening is al opgeslagen.",
+      "status": {
+        "saved": "Opgeslagen"
+      }
+    },
     "save": "Opslaan Signatuur",
     "applySignatures": "Handtekeningen toepassen",
     "personalSigs": "Persoonlijke Signatuuren",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Handtekening configureren"
     },
+    "step": {
+      "createDesc": "Kies hoe je de handtekening wilt maken",
+      "place": "Plaatsen en opslaan",
+      "placeDesc": "Plaats de handtekening op je PDF"
+    },
     "type": {
       "title": "Type handtekening",
       "draw": "Tekenen",
       "canvas": "Canvas",
       "image": "Afbeelding",
-      "text": "Tekst"
+      "text": "Tekst",
+      "saved": "Opgeslagen"
     },
     "image": {
       "label": "Handtekeningafbeelding uploaden",
@@ -2019,11 +2265,17 @@
       "title": "Hoe een handtekening toevoegen",
       "canvas": "Na het tekenen van uw handtekening in het canvas, sluit het venster en klik vervolgens ergens op de PDF om deze te plaatsen.",
       "image": "Na het uploaden van uw handtekeningafbeelding hierboven, klik ergens op de PDF om deze te plaatsen.",
-      "text": "Na het invoeren van uw naam hierboven, klik ergens op de PDF om uw handtekening te plaatsen."
+      "saved": "Selecteer hierboven een opgeslagen handtekening en klik vervolgens ergens op de PDF om deze te plaatsen.",
+      "text": "Na het invoeren van uw naam hierboven, klik ergens op de PDF om uw handtekening te plaatsen.",
+      "paused": "Plaatsing gepauzeerd",
+      "resumeHint": "Hervat de plaatsing om te klikken en je handtekening toe te voegen.",
+      "noSignature": "Maak hierboven een handtekening om de plaatsingstools in te schakelen."
     },
     "mode": {
       "move": "Handtekening verplaatsen",
-      "place": "Handtekening plaatsen"
+      "place": "Handtekening plaatsen",
+      "pause": "Plaatsing pauzeren",
+      "resume": "Plaatsing hervatten"
     },
     "updateAndPlace": "Bijwerken en plaatsen",
     "activate": "Plaatsing van handtekening activeren",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Over 'Aantekeningen verwijderen'",
       "description": "Deze tool verwijdert alle aantekeningen (opmerkingen, markeringen, notities, enz.) uit uw PDF-documenten."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Over Aantekeningen verwijderen"
+      },
+      "description": {
+        "title": "Wat het doet"
+      }
     },
     "error": {
       "failed": "Er is een fout opgetreden bij het verwijderen van aantekeningen uit de PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Hoe automatisch hernoemen werkt"
       },
+      "description": {
+        "title": "Wat het doet"
+      },
       "howItWorks": {
         "title": "Slim hernoemen",
         "text": "Zoekt automatisch de titel in uw PDF-inhoud en gebruikt deze als bestandsnaam.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Maakt een schone, geldige bestandsnaam van de gedetecteerde titel",
         "bullet3": "Behoudt de oorspronkelijke naam als er geen geschikte titel wordt gevonden"
       }
+    },
+    "settings": {
+      "title": "Over"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "PDF exporteren",
     "downloadSelected": "Geselecteerde bestanden downloaden",
     "downloadAll": "Alles downloaden",
+    "saveAll": "Alles opslaan",
     "toggleTheme": "Thema wisselen",
+    "toggleBookmarks": "Bladwijzers tonen/verbergen",
     "language": "Taal",
     "search": "PDF doorzoeken",
     "panMode": "Pan-modus",
@@ -3656,7 +3924,7 @@
     "activity": "Logboek",
     "help": "Help",
     "account": "Account",
-    "config": "Config",
+    "config": "Configuratie",
     "settings": "Opties",
     "adminSettings": "Beheer",
     "allTools": "All Tools",
@@ -4212,9 +4480,21 @@
         "title": "Premium & Enterprise",
         "description": "Configureer je premium- of enterprise-licentiesleutel.",
         "license": "Licentieconfiguratie",
+        "licenseKey": {
+          "toggle": "Heb je een licentiesleutel of certificaatbestand?",
+          "info": "Als je een licentiesleutel of certificaatbestand hebt van een directe aankoop, kun je die hier invoeren om premium- of enterprisefuncties te activeren."
+        },
         "key": {
           "label": "Licentiesleutel",
-          "description": "Voer je premium- of enterprise-licentiesleutel in"
+          "description": "Voer je premium- of enterprise-licentiesleutel in",
+          "success": "Licentiesleutel opgeslagen",
+          "successMessage": "Je licentiesleutel is succesvol geactiveerd. Herstart is niet nodig.",
+          "overwriteWarning": {
+            "title": "⚠️ Waarschuwing: Bestaande licentie gedetecteerd",
+            "line1": "Het overschrijven van je huidige licentiesleutel kan niet ongedaan worden gemaakt.",
+            "line2": "Je vorige licentie gaat permanent verloren, tenzij je er elders een back-up van hebt.",
+            "line3": "Belangrijk: houd licentiesleutels privé en veilig. Deel ze nooit openbaar."
+          }
         },
         "enabled": {
           "label": "Premiumfuncties inschakelen",
@@ -4278,12 +4558,17 @@
     "or": "of",
     "dropFileHere": "Zet bestand hier neer of klik om te uploaden",
     "dropFilesHere": "Zet bestanden hier neer of klik op de uploadknop",
+    "dropFilesHereOpen": "Zet bestanden hier neer of klik op de knop Openen",
     "pdfFilesOnly": "Alleen PDF-bestanden",
     "supportedFileTypes": "Ondersteunde bestandstypen",
     "upload": "Uploaden",
     "uploadFile": "Bestand uploaden",
     "uploadFiles": "Bestanden uploaden",
+    "open": "Openen",
+    "openFile": "Bestand openen",
+    "openFiles": "Bestanden openen",
     "noFilesInStorage": "Geen bestanden beschikbaar in opslag. Upload eerst enkele bestanden.",
+    "noFilesInStorageOpen": "Geen bestanden beschikbaar in opslag. Open eerst enkele bestanden.",
     "selectFromStorage": "Selecteren uit opslag",
     "backToTools": "Terug naar tools",
     "addFiles": "Bestanden toevoegen",
@@ -4329,6 +4614,8 @@
     "myFiles": "Mijn bestanden",
     "noRecentFiles": "Geen recente bestanden gevonden",
     "googleDriveNotAvailable": "Google Drive-integratie niet beschikbaar",
+    "downloadSelected": "Geselecteerde downloaden",
+    "saveSelected": "Selectie opslaan",
     "openFiles": "Bestanden openen",
     "openFile": "Bestand openen",
     "details": "Bestandsdetails",
@@ -4341,7 +4628,6 @@
     "selectAll": "Alles selecteren",
     "deselectAll": "Alles deselecteren",
     "deleteSelected": "Geselecteerde verwijderen",
-    "downloadSelected": "Geselecteerde downloaden",
     "selectedCount": "{{count}} geselecteerd",
     "download": "Downloaden",
     "delete": "Verwijderen",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Beveiligingsworkflow",
       "secureWorkflowDesc": "Beveiligt PDF-documenten door mogelijk kwaadaardige inhoud zoals JavaScript en ingesloten bestanden te verwijderen, en voegt vervolgens wachtwoordbeveiliging toe om ongeautoriseerde toegang te voorkomen. Wachtwoord is standaard ingesteld op 'password'.",
       "processImages": "Afbeeldingen verwerken",
-      "processImagesDesc": "Converteert meerdere afbeeldingsbestanden naar één PDF-document en past vervolgens OCR toe om doorzoekbare tekst uit de afbeeldingen te extraheren."
+      "processImagesDesc": "Converteert meerdere afbeeldingsbestanden naar één PDF-document en past vervolgens OCR toe om doorzoekbare tekst uit de afbeeldingen te extraheren.",
+      "prePublishSanitization": "Opschonen vóór publicatie",
+      "prePublishSanitizationDesc": "Opschoonworkflow die alle verborgen metadata, JavaScript, ingesloten bestanden en aantekeningen verwijdert en formulieren afvlakt om datalekken te voorkomen voordat PDF's online worden gepubliceerd."
     }
+  },
+  "colorPicker": {
+    "title": "Kies kleur"
   },
   "common": {
     "previous": "Vorige",
@@ -4639,7 +4930,13 @@
     "used": "gebruikt",
     "available": "beschikbaar",
     "cancel": "Annuleren",
-    "preview": "Voorbeeld"
+    "preview": "Voorbeeld",
+    "close": "Sluiten",
+    "done": "Gereed",
+    "loading": "Laden...",
+    "back": "Terug",
+    "continue": "Doorgaan",
+    "error": "Fout"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Meer bestanden toevoegen...",
     "selectedFiles": "Geselecteerde bestanden",
     "submit": "Bijlagen toevoegen",
+    "tooltip": {
+      "header": {
+        "title": "Over Bijlagen toevoegen"
+      },
+      "description": {
+        "title": "Wat het doet"
+      }
+    },
     "results": {
       "title": "Resultaten bijlagen"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Aangepaste positie",
   "details": "Details",
-  "downloadUnavailable": "Download niet beschikbaar voor dit item",
   "invalidUndoData": "Kan niet ongedaan maken: ongeldige bewerkingsgegevens",
   "margin": {
     "large": "Groot",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Misschien later",
       "dontShowAgain": "Niet meer tonen"
     },
+    "welcomeSlide": {
+      "title": "Welkom bij Stirling",
+      "body": "Stirling PDF is nu klaar voor teams van elke grootte. Deze update bevat een nieuwe lay-out, krachtige nieuwe admintools en onze meeste gevraagde functie - <strong>Tekst bewerken</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Laten we de tool <strong>Bijsnijden</strong> selecteren om te laten zien hoe je een van de tools gebruikt.",
     "toolInterface": "Dit is de interface van de tool <strong>Bijsnijden</strong>. Zoals je ziet is er nog niet veel, omdat we nog geen PDF-bestanden hebben toegevoegd om mee te werken.",
@@ -4823,7 +5131,39 @@
     "next": "Volgende",
     "finish": "Voltooien",
     "startTour": "Rondleiding starten",
-    "startTourDescription": "Volg een rondleiding langs de belangrijkste functies van Stirling PDF"
+    "startTourDescription": "Volg een rondleiding langs de belangrijkste functies van Stirling PDF",
+    "buttons": {
+      "next": "Volgende →",
+      "back": "Terug",
+      "skipForNow": "Voor nu overslaan",
+      "download": "Downloaden →",
+      "showMeAround": "Geef me een rondleiding",
+      "skipTheTour": "Rondleiding overslaan"
+    },
+    "serverLicense": {
+      "skip": "Voor nu overslaan",
+      "seePlans": "Plannen bekijken →",
+      "upgrade": "Nu upgraden →",
+      "freeTitle": "Serverlicentie",
+      "overLimitTitle": "Serverlicentie vereist",
+      "overLimitBody": "Onze licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Je hebt <strong>{{overLimitUserCopy}}</strong> Stirling-gebruikers. Om zonder onderbreking door te gaan, upgrade naar het Stirling Server-plan - <strong>onbeperkte plaatsen</strong>, PDF-tekstbewerking en volledige admincontrole voor $99/server/maand.",
+      "freeBody": "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Om ononderbroken te schalen en vroege toegang te krijgen tot onze nieuwe <strong>PDF-tekstbewerkingstool</strong>, raden we het Stirling Server-plan aan - volledige bewerking en <strong>onbeperkte plaatsen</strong> voor $99/server/maand."
+    },
+    "desktopInstall": {
+      "title": "Downloaden",
+      "titleWithOs": "Downloaden voor {{osLabel}}",
+      "body": "Stirling werkt het best als desktopapp. Je kunt het offline gebruiken, sneller documenten openen en lokaal op je computer bewerken."
+    },
+    "planOverview": {
+      "adminTitle": "Admin-overzicht",
+      "userTitle": "Planoverzicht",
+      "adminBodyLoginEnabled": "Als admin kun je gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op je server gebruiken Stirling gratis.",
+      "adminBodyLoginDisabled": "Zodra je de loginmodus inschakelt, kun je gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op je server gebruiken Stirling gratis.",
+      "userBody": "Nodig teamgenoten uit, wijs rollen toe en houd je documenten georganiseerd in één veilige werkruimte. Schakel de loginmodus in wanneer je klaar bent om verder te groeien dan solo-gebruik."
+    },
+    "securityCheck": {
+      "message": "De applicatie heeft recent belangrijke wijzigingen ondergaan. De aandacht van je serveradmin kan nodig zijn. Bevestig je rol om door te gaan."
+    }
   },
   "adminOnboarding": {
     "welcome": "Welkom bij de <strong>Beheerdersrondleiding</strong>! Laten we de krachtige enterprise-functies en instellingen voor systeembeheerders verkennen.",
@@ -4852,7 +5192,10 @@
       "role": "Rol",
       "team": "Team",
       "status": "Status",
-      "actions": "Acties",
+      "actions": {
+        "label": "Acties",
+        "upgrade": "Upgraden"
+      },
       "noMembersFound": "Geen leden gevonden",
       "active": "Actief",
       "disabled": "Uitgeschakeld",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} gebruikersplaats(en) beschikbaar",
         "noSlotsAvailable": "Geen plaatsen beschikbaar",
         "currentUsage": "Momenteel {{current}} van {{max}} gebruikerslicenties in gebruik"
-      }
+      },
+      "loginRequired": "Schakel eerst de loginmodus in"
     },
     "teams": {
       "title": "Teams",
@@ -5057,6 +5401,17 @@
     "showComparison": "Alle functies vergelijken",
     "hideComparison": "Functievergelijking verbergen",
     "featureComparison": "Functievergelijking",
+    "from": "Vanaf",
+    "perMonth": "/maand",
+    "perSeat": "/plaats",
+    "withServer": "+ Server-plan",
+    "licensedSeats": "Gelicenseerd: {{count}} plaatsen",
+    "includedInCurrent": "Inbegrepen in je plan",
+    "selectPlan": "Plan selecteren",
+    "manage": "Beheren",
+    "manageSubscription": {
+      "description": "Beheer je abonnement, facturatie en betaalmethoden"
+    },
     "activePlan": {
       "title": "Actief abonnement",
       "subtitle": "Details van je huidige abonnement"
@@ -5074,13 +5429,16 @@
       "upTo": "Tot"
     },
     "period": {
-      "month": "maand"
+      "month": "maand",
+      "perUserPerMonth": "/gebruiker/maand"
     },
     "free": {
       "name": "Gratis",
       "highlight1": "Beperkt gebruik van tools per week",
       "highlight2": "Toegang tot alle tools",
-      "highlight3": "Community-ondersteuning"
+      "highlight3": "Community-ondersteuning",
+      "forever": "Voor altijd gratis",
+      "included": "Inbegrepen"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Aangepaste prijzen",
       "highlight2": "Toegewijde ondersteuning",
-      "highlight3": "Nieuwste functies"
+      "highlight3": "Nieuwste functies",
+      "requiresServer": "Server vereist",
+      "requiresServerMessage": "Upgrade eerst naar het Server-plan voordat je naar Enterprise upgradet."
     },
     "feature": {
       "title": "Functie",
@@ -5102,6 +5462,12 @@
       "api": "API-toegang",
       "priority": "Prioritaire ondersteuning",
       "customPricing": "Aangepaste prijzen"
+    },
+    "licenseWarning": {
+      "title": "Gratis self-hosted limiet bereikt",
+      "body": "Je hebt {{total}} gebruikers, maar de gratis laag ondersteunt slechts {{limit}} per server. Upgrade om Stirling PDF soepel te laten draaien.",
+      "overLimit": "meer dan {{limit}}",
+      "cta": "Plannen bekijken"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Facturatie beheren",
     "portal": {
       "error": "Kon facturatieportaal niet openen"
-    }
+    },
+    "updateSeats": "Plaatsen bijwerken",
+    "updateEnterpriseSeats": "Enterprise-plaatsen bijwerken",
+    "currentSeats": "Huidige plaatsen",
+    "minimumSeats": "Minimum aantal plaatsen",
+    "basedOnUsers": "(huidige gebruikers)",
+    "newSeatCount": "Nieuw aantal plaatsen",
+    "newSeatCountDescription": "Selecteer het aantal plaatsen voor je enterpriselicentie",
+    "whatHappensNext": "Wat gebeurt er daarna?",
+    "stripePortalRedirect": "Je wordt doorgestuurd naar de Stripe-facturatieportal om de wijziging in plaatsen te bekijken en te bevestigen. Het naar rato bedrag wordt automatisch berekend.",
+    "preparingUpdate": "Plaatsupdate voorbereiden...",
+    "seatCountTooLow": "Het aantal plaatsen moet minimaal {{minimum}} zijn (huidig aantal gebruikers)",
+    "seatCountUnchanged": "Selecteer een ander aantal plaatsen",
+    "seatsUpdated": "Plaatsen bijgewerkt",
+    "seatsUpdatedMessage": "Je enterprise-plaatsen zijn bijgewerkt naar {{seats}}",
+    "updateProcessing": "Update verwerken",
+    "updateProcessingMessage": "Je plaatsupdate wordt verwerkt. Vernieuw over enkele ogenblikken.",
+    "notEnterprise": "Plaatsbeheer is alleen beschikbaar voor enterpriselicenties"
+  },
+  "upgradeBanner": {
+    "title": "Upgraden naar Server-plan",
+    "message": "Haal het meeste uit Stirling PDF met onbeperkte gebruikers en geavanceerde functies",
+    "upgradeButton": "Nu upgraden",
+    "dismiss": "Banner sluiten",
+    "attentionTitle": "Deze server heeft aandacht van een admin nodig",
+    "attentionBody": "Je admin moet inloggen om meer info te zien. Neem direct contact met hen op.",
+    "attentionBodyAdmin": "Controleer de licentievereisten om deze server compliant te houden.",
+    "seeInfo": "Info bekijken"
   },
   "payment": {
     "preparing": "Bezig met afrekenproces voorbereiden...",
@@ -5128,7 +5521,61 @@
     "success": "Betaling geslaagd!",
     "successMessage": "Uw abonnement is succesvol geactiveerd. U ontvangt binnenkort een bevestigingsmail.",
     "autoClose": "Dit venster wordt automatisch gesloten...",
-    "error": "Betalingsfout"
+    "error": "Betalingsfout",
+    "upgradeSuccess": "Betaling geslaagd! Je abonnement is geüpgraded. De licentie is op je server bijgewerkt. Je ontvangt binnenkort een bevestigingsmail.",
+    "paymentSuccess": "Betaling geslaagd! Licentiesleutel ophalen...",
+    "licenseActivated": "Licentie geactiveerd! Je licentiesleutel is opgeslagen. Er is een bevestigingsmail verzonden naar je geregistreerde e-mailadres.",
+    "licenseDelayed": "Betaling geslaagd! Je licentie wordt gegenereerd. Je ontvangt binnenkort een e-mail met je licentiesleutel. Als je deze niet binnen 10 minuten ontvangt, neem dan contact op met support.",
+    "licensePollingError": "Betaling geslaagd, maar we konden je licentiesleutel niet automatisch ophalen. Controleer je e-mail of neem contact op met support met je betalingsbevestiging.",
+    "licenseRetrievalError": "Betaling geslaagd, maar het ophalen van de licentie is mislukt. Je ontvangt je licentiesleutel via e-mail. Neem contact op met support als je deze niet binnen 10 minuten ontvangt.",
+    "syncError": "Betaling geslaagd, maar licentiesynchronisatie is mislukt. Je licentie wordt binnenkort bijgewerkt. Neem contact op met support als het probleem blijft.",
+    "licenseSaveError": "Opslaan van licentiesleutel mislukt. Neem contact op met support met je licentiesleutel om de activatie te voltooien.",
+    "paymentCanceled": "Betaling geannuleerd. Er zijn geen kosten in rekening gebracht.",
+    "syncingLicense": "Je geüpgradede licentie synchroniseren...",
+    "generatingLicense": "Je licentiesleutel genereren...",
+    "upgradeComplete": "Upgrade voltooid",
+    "upgradeCompleteMessage": "Je abonnement is succesvol geüpgraded. Je bestaande licentiesleutel is bijgewerkt.",
+    "stripeNotConfigured": "Stripe niet geconfigureerd",
+    "stripeNotConfiguredMessage": "Stripe-betalintegratie is niet geconfigureerd. Neem contact op met je beheerder.",
+    "monthly": "Maandelijks",
+    "yearly": "Jaarlijks",
+    "billingPeriod": "Facturatieperiode",
+    "enterpriseNote": "Plaatsen kunnen worden aangepast bij het afrekenen (1-1000).",
+    "installationId": "Installatie-ID",
+    "licenseKey": "Je licentiesleutel",
+    "licenseInstructions": "Dit is toegevoegd aan je installatie. Je ontvangt ook een kopie per e-mail.",
+    "canCloseWindow": "Je kunt dit venster nu sluiten.",
+    "licenseKeyProcessing": "Licentiesleutel verwerken",
+    "licenseDelayedMessage": "Je licentiesleutel wordt gegenereerd. Controleer binnenkort je e-mail of neem contact op met support.",
+    "perYear": "/jaar",
+    "perMonth": "/maand",
+    "emailInvalid": "Voer een geldig e-mailadres in",
+    "emailStage": {
+      "title": "Vul je e-mailadres in",
+      "description": "We gebruiken dit om je licentiesleutel en kwitanties te sturen.",
+      "emailLabel": "E-mailadres",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Doorgaan",
+      "modalTitle": "Aan de slag - {{planName}}"
+    },
+    "planStage": {
+      "title": "Kies je facturatieperiode",
+      "savingsNote": "Bespaar {{percent}}% met jaarlijkse facturatie",
+      "basePrice": "Basistarief",
+      "seatPrice": "Per plaats",
+      "totalForSeats": "Totaal ({{count}} plaatsen)",
+      "selectMonthly": "Maandelijks selecteren",
+      "selectYearly": "Jaarlijks selecteren",
+      "savePercent": "Bespaar {{percent}}%",
+      "savingsAmount": "Je bespaart {{amount}}",
+      "modalTitle": "Selecteer facturatieperiode - {{planName}}",
+      "billedYearly": "Jaarlijks gefactureerd à {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Terug naar planselectie",
+      "selectedPlan": "Geselecteerd plan",
+      "modalTitle": "Betaling voltooien - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Eerste keer inloggen",
@@ -5287,5 +5734,281 @@
     "offline": "Backend offline",
     "starting": "Backend wordt gestart...",
     "wait": "Wacht tot de backend is opgestart en probeer het opnieuw."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Ontgrendel PDF om door te gaan",
+    "title": "Verwijder wachtwoord om door te gaan",
+    "description": "Deze PDF is met een wachtwoord beveiligd. Voer het wachtwoord in om verder te werken.",
+    "password": {
+      "label": "PDF-wachtwoord",
+      "placeholder": "Voer het PDF-wachtwoord in"
+    },
+    "skip": "Voor nu overslaan",
+    "unlock": "Ontgrendelen en doorgaan",
+    "incorrectPassword": "Onjuist wachtwoord",
+    "missingFile": "Het geselecteerde bestand is niet meer beschikbaar.",
+    "emptyResponse": "Wachtwoord verwijderen leverde geen bestand op.",
+    "required": "Voer het wachtwoord in om door te gaan.",
+    "successTitle": "Wachtwoord verwijderd",
+    "successBodyWithName": "Wachtwoord verwijderd uit {{fileName}}",
+    "successBody": "Wachtwoord succesvol verwijderd."
+  },
+  "setup": {
+    "welcome": "Welkom bij Stirling PDF",
+    "description": "Begin door te kiezen hoe je Stirling PDF wilt gebruiken",
+    "step1": {
+      "label": "Kies modus",
+      "description": "Offline of server"
+    },
+    "step2": {
+      "label": "Server selecteren",
+      "description": "Self-hosted server"
+    },
+    "step3": {
+      "label": "Inloggen",
+      "description": "Vul je gegevens in"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Log in met je Stirling-account"
+      },
+      "selfhosted": {
+        "title": "Self-hosted server",
+        "description": "Verbind met je eigen Stirling PDF-server"
+      }
+    },
+    "saas": {
+      "title": "Inloggen bij Stirling",
+      "subtitle": "Log in met je Stirling-account"
+    },
+    "selfhosted": {
+      "title": "Inloggen bij server",
+      "subtitle": "Vul je servergegevens in"
+    },
+    "server": {
+      "title": "Verbinden met server",
+      "subtitle": "Vul de URL van je self-hosted server in",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Self-hosted server"
+      },
+      "url": {
+        "label": "Server-URL",
+        "description": "Voer de volledige URL van je self-hosted Stirling PDF-server in"
+      },
+      "error": {
+        "emptyUrl": "Voer een server-URL in",
+        "unreachable": "Kan geen verbinding maken met server",
+        "testFailed": "Verbindingstest mislukt"
+      },
+      "testing": "Verbinding testen..."
+    },
+    "login": {
+      "title": "Inloggen",
+      "subtitle": "Vul je gegevens in om door te gaan",
+      "connectingTo": "Verbinden met:",
+      "username": {
+        "label": "Gebruikersnaam",
+        "placeholder": "Voer je gebruikersnaam in"
+      },
+      "email": {
+        "label": "E-mail",
+        "placeholder": "Voer je e-mailadres in"
+      },
+      "password": {
+        "label": "Wachtwoord",
+        "placeholder": "Voer je wachtwoord in"
+      },
+      "error": {
+        "emptyUsername": "Vul je gebruikersnaam in",
+        "emptyEmail": "Vul je e-mailadres in",
+        "emptyPassword": "Vul je wachtwoord in",
+        "oauthFailed": "OAuth-login mislukt. Probeer het opnieuw."
+      },
+      "submit": "Inloggen",
+      "signInWith": "Inloggen met",
+      "oauthPending": "Browser wordt geopend voor authenticatie...",
+      "orContinueWith": "Of ga verder met e-mail"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Authenticatie geslaagd",
+      "message": "U kunt dit venster sluiten en terugkeren naar Stirling PDF."
+    },
+    "error": {
+      "title": "Authenticatie mislukt",
+      "message": "Authenticatie is niet geslaagd. U kunt dit venster sluiten en het opnieuw proberen."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON-editor",
+    "viewLabel": "PDF-editor",
+    "converting": "PDF naar bewerkbaar formaat converteren...",
+    "conversionFailed": "PDF converteren mislukt. Probeer het opnieuw.",
+    "currentFile": "Huidig bestand: {{name}}",
+    "pageSummary": "Pagina {{number}} van {{total}}",
+    "pagePreviewAlt": "Paginavoorbeeld",
+    "imageLabel": "Geplaatste afbeelding",
+    "noTextOnPage": "Geen bewerkbare tekst op deze pagina gevonden.",
+    "pageType": {
+      "paragraph": "Alineapagina",
+      "sparse": "Weinig tekst"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Alinea",
+      "singleLine": "Enkele regel"
+    },
+    "badges": {
+      "unsaved": "Bewerkt",
+      "modified": "Bewerkt",
+      "earlyAccess": "Early Access"
+    },
+    "actions": {
+      "reset": "Wijzigingen resetten",
+      "downloadJson": "JSON downloaden",
+      "generatePdf": "PDF genereren"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Tekst automatisch schalen zodat deze in vakken past",
+        "description": "Schaalt tekst horizontaal automatisch zodat deze binnen het oorspronkelijke begrenzingsvak past wanneer de weergave van lettertypen afwijkt van de PDF."
+      },
+      "groupingMode": {
+        "title": "Tekstgroepering",
+        "autoDescription": "Detecteert automatisch het paginatype en groepeert tekst passend.",
+        "paragraphDescription": "Groepeert uitgelijnde regels tot meerregelige alinea-tekstvakken.",
+        "singleLineDescription": "Houdt elke PDF-tekstregel als apart tekstvak."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Houd Ctrl (Cmd) of Shift ingedrukt om meerdere tekstvakken te selecteren. Boven de selectie verschijnt een zwevende werkbalk waarmee u kunt samenvoegen, degroeperen of breedtes aanpassen."
+      },
+      "forceSingleElement": {
+        "title": "Bewerkte tekst vastzetten op één PDF‑element",
+        "description": "Wanneer ingeschakeld, exporteert de editor elk bewerkt tekstvak als één PDF-tekstelement om overlappende glyphen of gemengde lettertypen te voorkomen."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Geselecteerde vakken samenvoegen",
+      "merge": "Selectie samenvoegen",
+      "ungroupTooltip": "Alinea weer in regels splitsen",
+      "ungroup": "Selectie degroeperen",
+      "widthMenu": "Breedte-opties",
+      "expandWidth": "Uitvouwen tot paginarand",
+      "resetWidth": "Breedte resetten",
+      "resizeHandle": "Tekstbreedte aanpassen"
+    },
+    "disclaimer": {
+      "heading": "Voorbeeldbeperkingen",
+      "textFocus": "Deze werkruimte richt zich op het bewerken van tekst en het herpositioneren van ingesloten afbeeldingen. Complexe pagina-illustraties, formuliervelden en gelaagde grafische elementen worden behouden voor export maar zijn hier niet volledig bewerkbaar.",
+      "previewVariance": "Sommige visuele elementen (zoals tabelranden, vormen of de weergave van annotaties) worden mogelijk niet exact in het voorbeeld getoond. De geëxporteerde PDF behoudt waar mogelijk de oorspronkelijke tekenopdrachten.",
+      "alpha": "Deze alpha-viewer is nog in ontwikkeling—bepaalde lettertypen, kleuren, transparantie-effecten en lay-outdetails kunnen licht afwijken. Controleer de gegenereerde PDF voordat u deze deelt."
+    },
+    "empty": {
+      "title": "Geen document geladen",
+      "subtitle": "Laad een PDF- of JSON-bestand om tekst te bewerken."
+    },
+    "welcomeBanner": {
+      "title": "Welkom bij PDF-teksteditor (Early Access)",
+      "experimental": "Dit is een experimentele functie in actieve ontwikkeling. Reken op enige instabiliteit en problemen tijdens het gebruik.",
+      "howItWorks": "Deze tool zet uw PDF om naar een bewerkbaar formaat waarin u tekst kunt wijzigen en afbeeldingen kunt herpositioneren. Wijzigingen worden opgeslagen als een nieuwe PDF.",
+      "bestFor": "Werkt het best met:",
+      "bestFor1": "Eenvoudige PDF's met vooral tekst en afbeeldingen",
+      "bestFor2": "Documenten met standaard alineavormatting",
+      "bestFor3": "Brieven, essays, rapporten en eenvoudige documenten",
+      "notIdealFor": "Niet ideaal voor:",
+      "notIdealFor1": "PDF's met speciale opmaak zoals opsommingstekens, tabellen of lay-outs met meerdere kolommen",
+      "notIdealFor2": "Magazines, brochures of sterk vormgegeven documenten",
+      "notIdealFor3": "Handleidingen met complexe lay-outs",
+      "limitations": "Huidige beperkingen:",
+      "limitation1": "Weergave van lettertypen kan iets afwijken van de oorspronkelijke PDF",
+      "limitation2": "Complexe grafische elementen, formuliervelden en annotaties worden behouden maar zijn niet bewerkbaar",
+      "limitation3": "Grote bestanden kunnen tijd kosten om te converteren en te verwerken",
+      "knownIssues": "Bekende problemen (worden verholpen):",
+      "issue1": "Tekstkleur wordt momenteel niet behouden (wordt binnenkort toegevoegd)",
+      "issue2": "Alineamodus heeft meer problemen met uitlijning en afstand - Enkele-regelmodus aanbevolen",
+      "issue3": "Het voorbeeld wijkt af van de geëxporteerde PDF - geëxporteerde PDF's liggen dichter bij het origineel",
+      "issue4": "Uitlijning van gedraaide tekst kan handmatige aanpassing vereisen",
+      "issue5": "Transparantie- en laageffecten kunnen afwijken van het origineel",
+      "feedback": "Dit is een functie in vroege toegang. Meld eventuele problemen zodat we kunnen verbeteren!",
+      "gotIt": "Begrepen",
+      "dontShowAgain": "Niet meer tonen"
+    },
+    "modeChange": {
+      "title": "Moduswijziging bevestigen",
+      "warning": "Het wijzigen van de tekstgroepering zet alle niet-opgeslagen wijzigingen terug. Weet u zeker dat u wilt doorgaan?",
+      "cancel": "Annuleren",
+      "confirm": "Resetten en modus wijzigen"
+    },
+    "fontAnalysis": {
+      "details": "Lettertypedetails",
+      "embedded": "Ingesloten",
+      "type": "Type",
+      "webFormat": "Webindeling",
+      "warnings": "Waarschuwingen",
+      "suggestions": "Opmerkingen",
+      "currentPageFonts": "Lettertypen op deze pagina",
+      "allFonts": "Alle lettertypen",
+      "fallback": "fallback",
+      "missing": "ontbrekend",
+      "perfectMessage": "Alle lettertypen kunnen perfect worden gereproduceerd.",
+      "warningMessage": "Sommige lettertypen worden mogelijk niet correct weergegeven.",
+      "infoMessage": "Informatie over lettertypereproductie beschikbaar.",
+      "perfect": "perfect",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Kan het JSON-bestand niet lezen. Zorg ervoor dat het is gemaakt met de tool PDF naar JSON.",
+      "pdfConversion": "Kan de bewerkte JSON niet terugconverteren naar een PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sessie verlopen",
+    "pleaseLoginAgain": "Log alstublieft opnieuw in.",
+    "accessDenied": "Toegang geweigerd",
+    "insufficientPermissions": "U hebt geen toestemming om deze actie uit te voeren."
+  },
+  "addText": {
+    "title": "Tekst toevoegen",
+    "header": "Tekst toevoegen aan PDF's",
+    "text": {
+      "name": "Tekstinhoud",
+      "placeholder": "Voer de tekst in die u wilt toevoegen",
+      "fontLabel": "Lettertype",
+      "fontSizeLabel": "Lettergrootte",
+      "fontSizePlaceholder": "Typ of selecteer lettergrootte (8-200)",
+      "colorLabel": "Tekstkleur"
+    },
+    "steps": {
+      "configure": "Tekst configureren"
+    },
+    "step": {
+      "createDesc": "Voer de tekst in die u wilt toevoegen",
+      "place": "Tekst plaatsen",
+      "placeDesc": "Klik op de PDF om uw tekst toe te voegen"
+    },
+    "instructions": {
+      "title": "Zo voegt u tekst toe",
+      "text": "Nadat u hierboven tekst hebt ingevoerd, klikt u ergens op de PDF om deze te plaatsen.",
+      "paused": "Plaatsing gepauzeerd",
+      "resumeHint": "Hervat de plaatsing om te klikken en uw tekst toe te voegen.",
+      "noSignature": "Voer hierboven tekst in om te kunnen plaatsen."
+    },
+    "mode": {
+      "move": "Tekst verplaatsen",
+      "place": "Tekst plaatsen",
+      "pause": "Plaatsing pauzeren",
+      "resume": "Plaatsing hervatten"
+    },
+    "results": {
+      "title": "Resultaten van tekst toevoegen"
+    },
+    "error": {
+      "failed": "Er is een fout opgetreden bij het toevoegen van tekst aan de PDF."
+    },
+    "tags": "tekst,annotatie,label",
+    "applySignatures": "Tekst toepassen"
   }
 }

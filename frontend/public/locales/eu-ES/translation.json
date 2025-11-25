@@ -17,6 +17,8 @@
       "comingSoon": "Laster:",
       "favorite": "Gehitu gogokoetan",
       "favorites": "Gogokoak",
+      "unavailable": "Zerbitzariaren administratzaileak desgaituta:",
+      "unavailableDependency": "Ez dago eskuragarri - beharrezko tresna falta da zerbitzarian:",
       "heading": "Tresna guztiak (pantaila osoko ikuspegia)",
       "noResults": "Saiatu bilaketa moldatzen edo deskribapenak txandakatzen behar duzuna aurkitzeko.",
       "recommended": "Gomendatua",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Aldatu pantaila osoko modura",
       "sidebar": "Aldatu alboko barra modura"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Premium ezaugarria:",
+    "comingSoon": "Laster eskuragarri:"
   },
   "unsavedChanges": "Gorde gabeko aldaketak dituzu zure PDFan.",
   "areYouSure": "Ziur zaude irten nahi duzula?",
@@ -40,6 +45,30 @@
     "message": "ZIP honek {{count}} fitxategi ditu. Erauzi hala ere?",
     "cancel": "Utzi",
     "confirm": "Erauzi"
+  },
+  "defaultApp": {
+    "title": "Ezarri PDF aplikazio lehenetsi gisa",
+    "message": "Nahi duzu Stirling PDF zure PDF editore lehenetsi gisa ezartzea?",
+    "description": "Geroago alda dezakezu sistemaren ezarpenetan.",
+    "notNow": "Orain ez",
+    "setDefault": "Ezarri lehenetsia",
+    "dismiss": "Baztertu",
+    "prompt": {
+      "title": "Ezarri PDF editore lehenetsi gisa",
+      "message": "Egin Stirling PDF PDF fitxategiak irekitzeko zure aplikazio lehenetsia."
+    },
+    "success": {
+      "title": "Aplikazio lehenetsia ezarrita",
+      "message": "Stirling PDF orain zure PDF editore lehenetsia da"
+    },
+    "settingsOpened": {
+      "title": "Ezarpenak ireki dira",
+      "message": "Hautatu Stirling PDF sistemaren ezarpenetan, mesedez"
+    },
+    "error": {
+      "title": "Errorea",
+      "message": "Ezin izan da PDF kudeatzaile lehenetsia ezarri"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Gorde",
   "saveToBrowser": "Gorde nabigatzailean",
   "download": "Distira",
+  "downloadUnavailable": "Ezin da deskargatu elementu honetarako",
+  "saveUnavailable": "Ezin da gorde elementu honetarako",
   "pin": "Ainguratu fitxategia (aktibo mantendu tresna exekutatu ondoren)",
   "unpin": "Kendu aingura fitxategiari (ordeztu tresna exekutatu ondoren)",
   "undoOperationTooltip": "Egin klik azken eragiketa desegiteko eta jatorrizko fitxategiak leheneratzeko",
@@ -168,6 +199,7 @@
   },
   "edit": "Editatu",
   "delete": "ezabatu",
+  "never": "Inoiz ez",
   "username": "Erabiltzaile izena",
   "password": "Pasahitza",
   "welcome": "Ongi etorria",
@@ -262,7 +294,8 @@
     "learnMore": "Argibide gehiago",
     "enable": "Gaitu analitika",
     "disable": "Desgaitu analitika",
-    "settings": "Analitikaren ezarpenak alda ditzakezu config/settings.yml fitxategian"
+    "settings": "Analitikaren ezarpenak alda ditzakezu config/settings.yml fitxategian",
+    "privacyAssurance": "Ez dugu jarraitzen datu pertsonalik ezta zure fitxategien edukirik ere."
   },
   "navbar": {
     "favorite": "Gogokoak",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Ezarpenak",
-    "update": "Eguneratze eskuragarria",
-    "updateAvailable": "{0} da unean instalatutako bertsioa. Bertsio berria ({1}) erabilgarri dago.",
-    "appVersion": "Aplikazioaren bertsioa:",
-    "downloadOption": {
-      "title": "Hautatu deskargatzeko aukera (fitxategi bakarra deskargatzeko ZIP gabe):",
-      "1": "Ireki leiho berean",
-      "2": "Ireki leiho berrian",
-      "3": "Deskargatu fitxategia"
-    },
-    "zipThreshold": "ZIP fitxategiak deskargatutako fitxategi kopurua gainditzen denean",
-    "signOut": "Saioa itxi",
-    "accountSettings": "Kontuaren ezarpenak",
-    "bored": {
-      "help": "Ezkutuko joko bat gaitzen du"
-    },
-    "cacheInputs": {
-      "name": "Gorde inprimaki-sarrerak",
-      "help": "Gaitu aurrez erabilitako sarrerak gordetzeko etorkizuneko exekuzioetarako"
+    "connection": {
+      "title": "Konexio modua",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Auto-ostatua"
+      },
+      "server": "Zerbitzaria",
+      "user": "Saioa hasita:",
+      "logout": "Saioa amaitu"
     },
     "general": {
       "title": "Orokorra",
       "description": "Konfiguratu aplikazioaren hobespen orokorrak.",
-      "account": "Kontua",
-      "accountDescription": "Kudeatu zure kontuaren ezarpenak",
       "user": "Erabiltzailea",
-      "signedInAs": "Saioa hasita honela",
       "logout": "Amaitu saioa",
       "enableFeatures": {
+        "dismiss": "Itxi",
         "title": "Sistemako administratzaileentzat",
         "intro": "Gaitu erabiltzaileen autentifikazioa, talde-kudeaketa eta lan-eremuaren ezaugarriak zure erakundearentzat.",
         "action": "Konfiguratu",
         "and": "eta",
         "benefit": "Erabiltzaile-rolak, talde-lana, administrazio-kontrolak eta enpresa-ezaugarriak gaitzen ditu.",
-        "learnMore": "Ikasi gehiago dokumentazioan",
-        "dismiss": "Itxi"
+        "learnMore": "Ikasi gehiago dokumentazioan"
       },
-      "autoUnzip": "Automatikoki deskonprimitu API erantzunak",
-      "autoUnzipDescription": "Automatikoki atera fitxategiak ZIP erantzunetatik",
-      "autoUnzipTooltip": "Automatikoki deskonprimitu API eragiketek itzultzen dituzten ZIP fitxategiak. Desgaitu ZIP fitxategiak bere horretan mantentzeko. Honek ez du eraginik automatizazio-fluxuetan.",
-      "autoUnzipFileLimit": "Auto-deskonprimitze fitxategi-muga",
-      "autoUnzipFileLimitDescription": "Gehienez zenbat fitxategi atera ZIPetik",
-      "autoUnzipFileLimitTooltip": "Deskonprimitu soilik ZIPak hainbeste fitxategi edo gutxiago baditu. Ezarri handiagoa ZIP handiagoak erauzteko.",
       "defaultToolPickerMode": "Lehenetsitako tresna-hautatzailearen modua",
       "defaultToolPickerModeDescription": "Aukeratu tresna-hautatzailea lehenespenez pantaila osoan edo alboko barran irekitzen den",
       "mode": {
-        "fullscreen": "Pantaila osoa",
-        "sidebar": "Alboko barra"
-      }
+        "sidebar": "Alboko barra",
+        "fullscreen": "Pantaila osoa"
+      },
+      "autoUnzipTooltip": "Automatikoki deskonprimitu API eragiketek itzultzen dituzten ZIP fitxategiak. Desgaitu ZIP fitxategiak bere horretan mantentzeko. Honek ez du eraginik automatizazio-fluxuetan.",
+      "autoUnzip": "Automatikoki deskonprimitu API erantzunak",
+      "autoUnzipDescription": "Automatikoki atera fitxategiak ZIP erantzunetatik",
+      "autoUnzipFileLimitTooltip": "Deskonprimitu soilik ZIPak hainbeste fitxategi edo gutxiago baditu. Ezarri handiagoa ZIP handiagoak erauzteko.",
+      "autoUnzipFileLimit": "Auto-deskonprimitze fitxategi-muga",
+      "autoUnzipFileLimitDescription": "Gehienez zenbat fitxategi atera ZIPetik",
+      "defaultPdfEditor": "PDF editore lehenetsia",
+      "defaultPdfEditorActive": "Stirling PDF zure PDF editore lehenetsia da",
+      "defaultPdfEditorInactive": "Beste aplikazio bat dago lehenetsi gisa",
+      "defaultPdfEditorChecking": "Egiaztatzen...",
+      "defaultPdfEditorSet": "Dagoeneko lehenetsia",
+      "setAsDefault": "Ezarri lehenetsia",
+      "updates": {
+        "title": "Software eguneratzeak",
+        "description": "Egiaztatu eguneratzeak eta ikusi bertsio-informazioa",
+        "currentVersion": "Uneko bertsioa",
+        "latestVersion": "Azken bertsioa",
+        "checkForUpdates": "Egiaztatu eguneratzeak",
+        "viewDetails": "Xehetasunak ikusi"
+      },
+      "hideUnavailableTools": "Eskura ez dauden tresnak ezkutatu",
+      "hideUnavailableToolsDescription": "Kendu zure zerbitzariak desgaitu dituen tresnak gris gisa erakutsi ordez.",
+      "hideUnavailableConversions": "Eskura ez dauden bihurketak ezkutatu",
+      "hideUnavailableConversionsDescription": "Kendu desgaitutako bihurketa aukerak Convert tresnan gris gisa erakutsi ordez."
     },
     "hotkeys": {
-      "title": "Laster-teklak",
-      "description": "Eraman kurtsorea tresna baten gainera bere laster-tekla ikusteko edo pertsonalizatu behean. Egin klik \"Aldatu laster-tekla\" eta sakatu konbinazio berria. Sakatu Esc bertan behera uzteko.",
-      "errorModifier": {
-        "mac": "Sartu ⌘ (Command), ⌥ (Option) edo beste aldatzaile bat zure laster-teklan.",
-        "windows": "Sartu Ctrl, Alt edo beste aldatzaile bat zure laster-teklan."
-      },
       "errorConflict": "Laster-tekla dagoeneko {{tool}} tresnak erabiltzen du.",
+      "searchPlaceholder": "Bilatu tresnak...",
       "none": "Esleitu gabe",
       "customBadge": "Pertsonalizatua",
       "defaultLabel": "Lehenetsia: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Aldatu laster-tekla",
       "reset": "Berrezarri",
       "shortcut": "Laster-tekla",
-      "noShortcut": "Ez da laster-teklarik ezarri",
-      "searchPlaceholder": "Bilatu tresnak..."
+      "noShortcut": "Ez da laster-teklarik ezarri"
     }
+  },
+  "update": {
+    "modalTitle": "Eguneratzea eskuragarri",
+    "current": "Uneko bertsioa",
+    "latest": "Azken bertsioa",
+    "latestStable": "Azken egonkorra",
+    "priorityLabel": "Lehentasuna",
+    "recommendedAction": "Gomendatutako ekintza",
+    "breakingChangesDetected": "Bateragarritasuna hausten duten aldaketak atzeman dira",
+    "breakingChangesMessage": "Bertsio batzuek bateragarritasuna hausten duten aldaketak dituzte. Irakurri beheko migrazio-gidak eguneratu aurretik.",
+    "migrationGuides": "Migrazio-gidak",
+    "viewGuide": "Gida ikusi",
+    "loadingDetailedInfo": "Informazio zehatza kargatzen...",
+    "close": "Itxi",
+    "viewAllReleases": "Argitalpen guztiak ikusi",
+    "downloadLatest": "Azkena deskargatu",
+    "availableUpdates": "Eskuragarri dauden eguneratzeak",
+    "unableToLoadDetails": "Ezin izan da informazio zehatza kargatu.",
+    "version": "Bertsioa",
+    "urgentUpdateAvailable": "Eguneratze premiazkoa",
+    "updateAvailable": "Eguneratzea eskuragarri",
+    "releaseNotes": "Argitalpen-oharrak",
+    "priority": {
+      "urgent": "Premiazko",
+      "normal": "Arrunta",
+      "minor": "Txikia",
+      "low": "Baxua"
+    },
+    "breakingChanges": "Aldaketa haustzaileak",
+    "breakingChangesDefault": "Bertsio honek aldaketa haustzaileak ditu.",
+    "migrationGuide": "Migrazio-gida"
   },
   "changeCreds": {
     "title": "Aldatu kredentzialak",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Overlays PDFs on-top of another PDF",
       "title": "Gainjarri PDFak"
+    },
+    "pdfTextEditor": {
+      "title": "PDF testu-editorea",
+      "desc": "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Testua gehitu",
+      "desc": "Gehitu testu pertsonalizatua zure PDFan edonon"
     }
   },
   "landing": {
     "addFiles": "Gehitu fitxategiak",
-    "uploadFromComputer": "Igo ordenagailutik"
+    "uploadFromComputer": "Igo ordenagailutik",
+    "openFromComputer": "Ireki ordenagailutik"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Errore bat gertatu da PDFak batzean."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Bateratze ezarpenen ikuspegi orokorra"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,picture,photo",
     "title": "Gehitu irudia",
     "header": "Gehitu PDF-irudia",
-    "everyPage": "Orrialde guztiak?",
-    "upload": "Gehitu irudia",
-    "submit": "Gehitu irudia"
+    "image": {
+      "name": "Irudia",
+      "placeholder": "Igo irudi bat",
+      "label": "Irudi fitxategia"
+    },
+    "steps": {
+      "configure": "Irudia konfiguratu"
+    },
+    "step": {
+      "createDesc": "Gehitu nahi duzun irudia igo",
+      "place": "Irudia kokatu",
+      "placeDesc": "Egin klik PDFan zure irudia gehitzeko"
+    },
+    "instructions": {
+      "title": "Nola gehitu irudiak",
+      "text": "Goian zure irudia igo ondoren, egin klik PDFan edozein lekutan kokatzeko.",
+      "paused": "Kokatzea pausatuta",
+      "resumeHint": "Berrekin kokatzeari klik egin eta zure irudia gehitzeko.",
+      "noSignature": "Igo goian irudi bat kokapena gaitzeko."
+    },
+    "mode": {
+      "move": "Irudia mugitu",
+      "place": "Irudia kokatu",
+      "pause": "Kokatzea pausatu",
+      "resume": "Berrekin kokatzeari"
+    },
+    "results": {
+      "title": "Irudia gehitzearen emaitzak"
+    },
+    "error": {
+      "failed": "Errore bat gertatu da irudia PDFari gehitzean."
+    },
+    "saved": {
+      "defaultLabel": "Irudia",
+      "defaultImageLabel": "Igotako irudia"
+    },
+    "applySignatures": "Aplikatu irudiak"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Galarazi zenbait formatu inprimatzea"
     },
     "submit": "Aldatu"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Laster-markak eta eskema",
+      "replaceExisting": "Dauden laster-markak ordeztu (kenduta gehitzeko)",
+      "replaceExistingHint": "Desgaituta dagoenean, eskema berria uneko laster-marken ondoren gehituko da."
+    },
+    "actions": {
+      "source": "Kargatu laster-markak",
+      "selectedFile": "Hemendik kargatuta: {{file}}",
+      "noFile": "Aukeratu PDF bat dauden laster-markak erauzteko.",
+      "loadFromPdf": "Kargatu hautatutako PDFtik",
+      "importJson": "JSON inportatu",
+      "importClipboard": "Itsatsi JSONa arbeletik",
+      "export": "Esportatu laster-markak",
+      "exportJson": "JSON deskargatu",
+      "exportClipboard": "Kopiatu JSONa arbelean",
+      "clipboardUnavailable": "Arbelerako sarbidea ez dago eskuragarri nabigatzaile honetan."
+    },
+    "info": {
+      "line1": "Laster-marka bakoitzak deskribapen-izenburu bat eta irekiko duen orria behar ditu.",
+      "line2": "Erabili haur laster-markak kapitulu, atalak edo azpiatalak hierarkikoki antolatzeko.",
+      "line3": "Inportatu laster-markak hautatutako PDFtik edo JSON fitxategi batetik denbora aurrezteko."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Ireki tresna editatzen hasteko",
+        "description": "Hautatu Aurkibidea editatu tresna lan-espazioa kargatzeko."
+      },
+      "tabTitle": "Eskema lan-espazioa",
+      "subtitle": "Inportatu laster-markak, eraiki hierarkiak, eta aplikatu eskema alboko panel esturik gabe.",
+      "noFile": "Ez da PDFrik hautatu",
+      "fileLabel": "Aldaketak unean hautatutako PDFari aplikatuko zaizkio.",
+      "filePrompt": "Hautatu zure liburutegiko PDF bat edo igo berri bat hasteko.",
+      "changeFile": "Aldatu PDFa",
+      "selectFile": "Hautatu PDFa"
+    },
+    "editor": {
+      "heading": "Laster-marken editorea",
+      "description": "Gehitu, habiaratu eta berrantolatu laster-markak zure PDFaren eskema sortzeko.",
+      "addTopLevel": "Gehitu goi-mailako laster-marka",
+      "empty": {
+        "title": "Oraindik ez dago laster-markarik",
+        "description": "Inportatu dauden laster-markak edo hasi lehen sarrera gehituz.",
+        "action": "Gehitu lehen laster-marka"
+      },
+      "defaultTitle": "Laster-marka berria",
+      "defaultChildTitle": "Haur laster-marka",
+      "defaultSiblingTitle": "Laster-marka berria",
+      "untitled": "Izenik gabeko laster-marka",
+      "childBadge": "Haurra",
+      "pagePreview": "Orri {{page}}",
+      "field": {
+        "title": "Laster-markaren izenburua",
+        "page": "Helburuko orri-zenbakia"
+      },
+      "actions": {
+        "toggle": "Haurrak txandakatu",
+        "addChild": "Gehitu haur laster-marka",
+        "addSibling": "Gehitu senide laster-marka",
+        "remove": "Kendu laster-marka"
+      },
+      "confirmRemove": "Kendu laster-marka hau eta bere haur guztiak?"
+    },
+    "messages": {
+      "loadedTitle": "Laster-markak erauzi dira",
+      "loadedBody": "PDFko dauden laster-markak editorean kargatu dira.",
+      "noBookmarks": "Ez da laster-markarik aurkitu hautatutako PDFan.",
+      "loadFailed": "Ezin izan dira laster-markak erauzi hautatutako PDFtik.",
+      "imported": "Laster-markak inportatu dira",
+      "importedBody": "Zure JSON eskemak uneko editorearen edukia ordezkatu du.",
+      "importedClipboard": "Arbeleko datuek uneko laster-marka zerrenda ordezkatu dute.",
+      "invalidJson": "JSON egitura baliogabea",
+      "invalidJsonBody": "Eman baliozko laster-marka JSON fitxategi bat eta saiatu berriro.",
+      "exported": "JSON deskarga prest",
+      "copied": "Arbelera kopiatuta",
+      "copiedBody": "Laster-marken JSONa ondo kopiatu da.",
+      "copyFailed": "Kopiak huts egin du"
+    },
+    "error": {
+      "failed": "Ezin izan da edukien taula eguneratu"
+    },
+    "submit": "Aplikatu edukien taula",
+    "results": {
+      "title": "Laster-markadun PDF eguneratua",
+      "subtitle": "Deskargatu prozesatutako fitxategia edo desegin eragiketa behean."
+    }
   },
   "removePages": {
     "tags": "Remove pages,delete pages",
@@ -1978,13 +2177,54 @@
       "title": "Marraztu zure sinadura",
       "clear": "Garbitu"
     },
+    "canvas": {
+      "heading": "Zure sinadura marraztu",
+      "clickToOpen": "Egin klik marrazketa-oihala irekitzeko",
+      "modalTitle": "Zure sinadura marraztu",
+      "colorLabel": "Kolorea",
+      "penSizeLabel": "Lumaren tamaina",
+      "penSizePlaceholder": "Tamaina",
+      "clear": "Oihala garbitu",
+      "colorPickerTitle": "Aukeratu trazatuaren kolorea"
+    },
     "text": {
       "name": "Sinatzailearen izena",
-      "placeholder": "Sartu zure izen-abizenak"
+      "placeholder": "Sartu zure izen-abizenak",
+      "fontLabel": "Letra-tipoa",
+      "fontSizeLabel": "Letra-tamainua",
+      "fontSizePlaceholder": "Idatzi edo aukeratu letra-tamaina (8-200)",
+      "colorLabel": "Testu kolorea"
     },
     "clear": "Garbitu",
     "add": "Gehitu",
-    "saved": "Gordetako sinadurak",
+    "saved": {
+      "heading": "Gordetako sinadurak",
+      "description": "Erabili gordetako sinadurak edozein unetan.",
+      "emptyTitle": "Ez dago oraindik gordetako sinadurarik",
+      "emptyDescription": "Marraztu, igo edo idatzi sinadura bat goian, ondoren erabili \"Gorde liburutegian\" gehienez {{max}} gogoko prest edukitzeko.",
+      "type": {
+        "canvas": "Marrazkia",
+        "image": "Igo",
+        "text": "Testua"
+      },
+      "limitTitle": "Muga gaindituta",
+      "limitDescription": "Kendu gordetako sinadura bat berriak gehitu aurretik (gehienez {{max}}).",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "Aurrekoa",
+      "next": "Hurrengoa",
+      "delete": "Kendu",
+      "label": "Etiketa",
+      "defaultLabel": "Sinadura",
+      "defaultCanvasLabel": "Marrazketa sinadura",
+      "defaultImageLabel": "Igotako sinadura",
+      "defaultTextLabel": "Idatzitako sinadura",
+      "saveButton": "Gorde sinadura",
+      "saveUnavailable": "Lehenik sortu sinadura bat gordetzeko.",
+      "noChanges": "Uneko sinadura dagoeneko gorde da.",
+      "status": {
+        "saved": "Gordeta"
+      }
+    },
     "save": "Gorde sinadura",
     "applySignatures": "Aplikatu sinadurak",
     "personalSigs": "Sinadura pertsonalak",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Konfiguratu sinadura"
     },
+    "step": {
+      "createDesc": "Aukeratu nola sortu nahi duzun sinadura",
+      "place": "Kokatu eta gorde",
+      "placeDesc": "Kokatu sinadura zure PDFan"
+    },
     "type": {
       "title": "Sinadura mota",
       "draw": "Marraztu",
-      "canvas": "Canvas",
+      "canvas": "Marrazkia",
       "image": "Irudia",
-      "text": "Testua"
+      "text": "Testua",
+      "saved": "Gordeta"
     },
     "image": {
       "label": "Igo sinaduraren irudia",
@@ -2019,11 +2265,17 @@
       "title": "Nola gehitu sinadura",
       "canvas": "Kanvas-ean sinadura marraztu ondoren, itxi modala eta egin klik PDFn edonon kokatzeko.",
       "image": "Goian zure sinaduraren irudia igo ondoren, egin klik PDFn edonon kokatzeko.",
-      "text": "Goian zure izena sartu ondoren, egin klik PDFn edonon zure sinadura kokatzeko."
+      "saved": "Hautatu goiko gordetako sinadura, ondoren egin klik PDFan edozein lekutan kokatzeko.",
+      "text": "Goian zure izena sartu ondoren, egin klik PDFn edonon zure sinadura kokatzeko.",
+      "paused": "Kokatzea pausatuta",
+      "resumeHint": "Berrekin kokatzeari klik egin eta zure sinadura gehitzeko.",
+      "noSignature": "Sortu sinadura bat goian kokapen-tresnak gaitzeko."
     },
     "mode": {
       "move": "Mugitu sinadura",
-      "place": "Kokatu sinadura"
+      "place": "Kokatu sinadura",
+      "pause": "Kokatzea pausatu",
+      "resume": "Berrekin kokatzeari"
     },
     "updateAndPlace": "Eguneratu eta kokatu",
     "activate": "Aktibatu sinadura kokatzea",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Anotazioak kentzeari buruz",
       "description": "Tresna honek anotazio guztiak (iruzkinak, nabarmentzeak, oharrak, etab.) kenduko ditu zure PDF dokumentuetatik."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Oharpenak kentzeari buruz"
+      },
+      "description": {
+        "title": "Zer egiten duen"
+      }
     },
     "error": {
       "failed": "Errore bat gertatu da anotazioak PDFtik kentzean."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Nola funtzionatzen duen Berriz-izendatze automatikoak"
       },
+      "description": {
+        "title": "Zer egiten duen"
+      },
       "howItWorks": {
         "title": "Berriz-izendatze adimenduna",
         "text": "Automatikoki aurkitzen du zure PDF edukitik titulua eta fitxategi-izen gisa erabiltzen du.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Detektatutako tituluarekin fitxategi-izen garbi eta balioduna sortzen du",
         "bullet3": "Izen egokirik aurkitzen ez bada, jatorrizkoa mantentzen du"
       }
+    },
+    "settings": {
+      "title": "Honi buruz"
     }
   },
   "adjust-contrast": {
@@ -3536,7 +3802,7 @@
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
+        "title": "Analitika",
         "description": "Cookie hauek gure tresnak nola erabiltzen diren ulertzen laguntzen digute, gure komunitateak baloratzen dituen ezaugarriak eraikitzera bideratu ahal izateko. Ziur egon—Stirling PDFk ezin du eta ez du inoiz jarraituko lantzen dituzun dokumentuen edukia."
       }
     },
@@ -3598,7 +3864,9 @@
     "exportAll": "Esportatu PDFa",
     "downloadSelected": "Deskargatu hautatutako fitxategiak",
     "downloadAll": "Deskargatu dena",
+    "saveAll": "Gorde dena",
     "toggleTheme": "Gaia txandakatu",
+    "toggleBookmarks": "Laster-markak txandakatu",
     "language": "Hizkuntza",
     "search": "Bilatu PDF",
     "panMode": "Pan modua",
@@ -4212,9 +4480,21 @@
         "title": "Premium eta Enterprise",
         "description": "Konfiguratu zure premium edo enterprise lizentzia-gakoa.",
         "license": "Lizentziaren konfigurazioa",
+        "licenseKey": {
+          "toggle": "Lizentzia-gakoa edo ziurtagiri-fitxategia duzu?",
+          "info": "Erosketa zuzenetik lizentzia-gakoa edo ziurtagiri-fitxategia baduzu, hemen sartu dezakezu premium edo enterprise eginbideak aktibatzeko."
+        },
         "key": {
           "label": "Lizentzia-gakoa",
-          "description": "Sartu zure premium edo enterprise lizentzia-gakoa"
+          "description": "Sartu zure premium edo enterprise lizentzia-gakoa",
+          "success": "Lizentzia-gakoa gordeta",
+          "successMessage": "Zure lizentzia-gakoa behar bezala aktibatu da. Ez da berrabiarazi behar.",
+          "overwriteWarning": {
+            "title": "⚠️ Abisua: Aurrezko lizentzia atzemanda",
+            "line1": "Uneko lizentzia-gakoa gainidaztea ezin da desegin.",
+            "line2": "Aurreko lizentzia betiko galduko da beste nonbait babestu ezean.",
+            "line3": "Garrantzitsua: Mantendu lizentzia-gakoak pribatu eta seguru. Ez partekatu publikoki inoiz."
+          }
         },
         "enabled": {
           "label": "Premium eginbideak gaitu",
@@ -4278,12 +4558,17 @@
     "or": "edo",
     "dropFileHere": "Jaregin fitxategia hemen edo egin klik igotzeko",
     "dropFilesHere": "Jaregin fitxategiak hemen edo egin klik igo botoian",
+    "dropFilesHereOpen": "Jaregin fitxategiak hemen edo egin klik irekitze-botoian",
     "pdfFilesOnly": "PDF fitxategiak soilik",
     "supportedFileTypes": "Onartutako fitxategi motak",
     "upload": "Igo",
     "uploadFile": "Fitxategia igo",
     "uploadFiles": "Fitxategiak igo",
+    "open": "Ireki",
+    "openFile": "Fitxategia ireki",
+    "openFiles": "Fitxategiak ireki",
     "noFilesInStorage": "Ez dago fitxategirik biltegian. Igo batzuk lehenik.",
+    "noFilesInStorageOpen": "Ez dago fitxategirik biltegian. Ireki lehenik fitxategi batzuk.",
     "selectFromStorage": "Biltegitik hautatu",
     "backToTools": "Itzuli tresnetara",
     "addFiles": "Fitxategiak gehitu",
@@ -4329,6 +4614,8 @@
     "myFiles": "Nire fitxategiak",
     "noRecentFiles": "Ez da azken fitxategirik aurkitu",
     "googleDriveNotAvailable": "Google Drive integrazioa ez dago erabilgarri",
+    "downloadSelected": "Deskargatu hautatutakoak",
+    "saveSelected": "Hautatutakoa gorde",
     "openFiles": "Ireki fitxategiak",
     "openFile": "Ireki fitxategia",
     "details": "Fitxategiaren xehetasunak",
@@ -4341,7 +4628,6 @@
     "selectAll": "Hautatu dena",
     "deselectAll": "Desautatu dena",
     "deleteSelected": "Ezabatu hautatutakoak",
-    "downloadSelected": "Deskargatu hautatutakoak",
     "selectedCount": "{{count}} hautatuta",
     "download": "Distira",
     "delete": "ezabatu",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Segurtasun lan-fluxua",
       "secureWorkflowDesc": "PDF dokumentuak seguru bihurtzen ditu eduki gaizto potentziala kentzen (JavaScript eta txertatutako fitxategiak, adibidez), eta ondoren pasahitz-babesa gehitzen du baimenik gabeko sarbidea saihesteko. Lehenespenez pasahitza 'password' da.",
       "processImages": "Irudiak prozesatu",
-      "processImagesDesc": "Hainbat irudi-fitxategi PDF dokumentu bakarrean bihurtzen ditu, eta gero OCR teknologia aplikatzen du irudietatik bilatua daitekeen testua erauzteko."
+      "processImagesDesc": "Hainbat irudi-fitxategi PDF dokumentu bakarrean bihurtzen ditu, eta gero OCR teknologia aplikatzen du irudietatik bilatua daitekeen testua erauzteko.",
+      "prePublishSanitization": "Argitaratu aurreko saneamendua",
+      "prePublishSanitizationDesc": "Saneamendu-fluxua: ezkutuko metadatuak, JavaScript, txertatutako fitxategiak eta oharpenak kentzen ditu, eta inprimakiak lautu egiten ditu PDFak sarean argitaratu aurretik datu-ihesak saihesteko."
     }
+  },
+  "colorPicker": {
+    "title": "Aukeratu kolorea"
   },
   "common": {
     "previous": "Aurrekoa",
@@ -4639,7 +4930,13 @@
     "used": "erabilita",
     "available": "eskuragarri",
     "cancel": "Utzi",
-    "preview": "Aurrebista"
+    "preview": "Aurrebista",
+    "close": "Itxi",
+    "done": "Eginda",
+    "loading": "Kargatzen...",
+    "back": "Atzera",
+    "continue": "Jarraitu",
+    "error": "Errorea"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Gehitu fitxategi gehiago...",
     "selectedFiles": "Hautatutako fitxategiak",
     "submit": "Gehitu eranskinak",
+    "tooltip": {
+      "header": {
+        "title": "Eranskinak gehitzeari buruz"
+      },
+      "description": {
+        "title": "Zer egiten duen"
+      }
+    },
     "results": {
       "title": "Eranskinen emaitzak"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Posizio pertsonalizatua",
   "details": "Xehetasunak",
-  "downloadUnavailable": "Ezin da deskargatu elementu honetarako",
   "invalidUndoData": "Ezin da desegin: eragiketaren datuak baliogabeak dira",
   "margin": {
     "large": "Handia",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Agian geroago",
       "dontShowAgain": "Ez berriz erakutsi"
     },
+    "welcomeSlide": {
+      "title": "Ongi etorri Stirlingera",
+      "body": "Stirling PDF orain tamaina guztietako taldeentzat prest dago. Eguneratze honek diseinu berria, admin gaitasun indartsu berriak, eta eskatuen izan den eginbidea dakar - <strong>Testua editatu</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Hauta dezagun <strong>Moztu</strong> tresna tresnetako bat nola erabili erakusteko.",
     "toolInterface": "Hau da <strong>Moztu</strong> tresnaren interfazea. Ikusten duzunez, ez dago asko oraindik, lantzeko PDF fitxategirik ez dugulako gehitu.",
@@ -4823,7 +5131,39 @@
     "next": "Hurrengoa",
     "finish": "Amaitu",
     "startTour": "Hasi bira",
-    "startTourDescription": "Stirling PDFren ezaugarri nagusien gida-bira"
+    "startTourDescription": "Stirling PDFren ezaugarri nagusien gida-bira",
+    "buttons": {
+      "next": "Hurrengoa →",
+      "back": "Atzera",
+      "skipForNow": "Utzi oraingoz",
+      "download": "Deskargatu →",
+      "showMeAround": "Erakutsi ingurunea",
+      "skipTheTour": "Utzi bisita gidatua"
+    },
+    "serverLicense": {
+      "skip": "Utzi oraingoz",
+      "seePlans": "Ikusi planak →",
+      "upgrade": "Eguneratu orain →",
+      "freeTitle": "Zerbitzari-lizentzia",
+      "overLimitTitle": "Beharrezkoa da zerbitzari-lizentzia",
+      "overLimitBody": "Gure lizentziak baimentzen ditu <strong>{{freeTierLimit}}</strong> erabiltzaile doan zerbitzari bakoitzeko. <strong>{{overLimitUserCopy}}</strong> Stirling erabiltzaile dituzu. Jarraitzeko etenik gabe, eguneratu Stirling Server planera - <strong>eserleku mugagabeak</strong>, PDF testu-edizioa, eta admin kontrol osoa $99/zerbitzari/hilean.",
+      "freeBody": "Gure <strong>Open-Core</strong> lizentziak <strong>{{freeTierLimit}}</strong> erabiltzaile arte baimentzen ditu doan zerbitzari bakoitzeko. Etenik gabe eskalatzeko eta gure <strong>PDF testu-edizio tresna</strong> berrirako sarbide goiztiarra lortzeko, gomendatzen dugu Stirling Server plana - edizio osoa eta <strong>eserleku mugagabeak</strong> $99/zerbitzari/hilean."
+    },
+    "desktopInstall": {
+      "title": "Deskargatu",
+      "titleWithOs": "Deskargatu {{osLabel}}-rako",
+      "body": "Stirling hobekien funtzionatzen du mahaigaineko aplikazio gisa. Offline erabil dezakezu, dokumentuak azkarrago atzitu, eta editatu tokian bertan zure ordenagailuan."
+    },
+    "planOverview": {
+      "adminTitle": "Admin ikuspegi orokorra",
+      "userTitle": "Planaren ikuspegi orokorra",
+      "adminBodyLoginEnabled": "Admin gisa, erabiltzaileak kudeatu, ezarpenak konfiguratu eta zerbitzariaren osasuna monitorizatu ditzakezu. Zure zerbitzariko lehen <strong>{{freeTierLimit}}</strong> pertsonak doan erabil dezakete Stirling.",
+      "adminBodyLoginDisabled": "Saio-hasiera modua gaitzen duzunean, erabiltzaileak kudeatu, ezarpenak konfiguratu eta zerbitzariaren osasuna monitorizatu ahal izango dituzu. Zure zerbitzariko lehen <strong>{{freeTierLimit}}</strong> pertsonek doan erabil dezakete Stirling.",
+      "userBody": "Gonbidatu taldekideak, esleitu rolak eta mantendu dokumentuak antolatuta lan-espazio seguruan. Gaitu saio-hasiera modua bakarkako erabileratik harago hazteko prest zaudenean."
+    },
+    "securityCheck": {
+      "message": "Aplikazioak aldaketa handiak izan ditu azkenaldian. Zure zerbitzariaren administratzailearen arreta behar izan daiteke. Mesedez, berretsi zure rola jarraitzeko."
+    }
   },
   "adminOnboarding": {
     "welcome": "Ongi etorri <strong>Administrazio-birara</strong>! Azter ditzagun sistema-administratzaileentzako ezaugarri eta ezarpen boteretsuak.",
@@ -4852,7 +5192,10 @@
       "role": "Rola",
       "team": "Taldea",
       "status": "Egoera",
-      "actions": "Ekintzak",
+      "actions": {
+        "label": "Ekintzak",
+        "upgrade": "Eguneratu"
+      },
       "noMembersFound": "Ez da kiderik aurkitu",
       "active": "Aktibo",
       "disabled": "Desgaituta",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} erabiltzaile-slot erabilgarri",
         "noSlotsAvailable": "Ez dago slot erabilgarririk",
         "currentUsage": "Une honetan {{current}}/{{max}} erabiltzaile-lizentzia erabiltzen"
-      }
+      },
+      "loginRequired": "Gaitu saio-hasiera modua lehenik"
     },
     "teams": {
       "title": "Taldeak",
@@ -5057,6 +5401,17 @@
     "showComparison": "Alderatu ezaugarri guztiak",
     "hideComparison": "Ezkutatu ezaugarrien konparazioa",
     "featureComparison": "Ezaugarrien konparazioa",
+    "from": "Hasita",
+    "perMonth": "/hilean",
+    "perSeat": "/eserleku",
+    "withServer": "+ Zerbitzari-plana",
+    "licensedSeats": "Lizentziadunak: {{count}} eserleku",
+    "includedInCurrent": "Zure planean sartuta",
+    "selectPlan": "Aukeratu plana",
+    "manage": "Kudeatu",
+    "manageSubscription": {
+      "description": "Kudeatu zure harpidetza, fakturazioa eta ordainketa-metodoak"
+    },
     "activePlan": {
       "title": "Plan aktiboa",
       "subtitle": "Zure uneko harpidetzaren xehetasunak"
@@ -5074,13 +5429,16 @@
       "upTo": "Gehienez"
     },
     "period": {
-      "month": "hilabete"
+      "month": "hilabete",
+      "perUserPerMonth": "/erabiltzaile/hilean"
     },
     "free": {
       "name": "Doakoa",
       "highlight1": "Astean tresnen erabilera mugatua",
       "highlight2": "Tresna guztietarako sarbidea",
-      "highlight3": "Komunitatearen laguntza"
+      "highlight3": "Komunitatearen laguntza",
+      "forever": "Betiko doan",
+      "included": "Sartuta"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enpresa",
       "highlight1": "Prezio pertsonalizatua",
       "highlight2": "Laguntza espezializatua",
-      "highlight3": "Azken ezaugarriak"
+      "highlight3": "Azken ezaugarriak",
+      "requiresServer": "Zerbitzaria behar du",
+      "requiresServerMessage": "Mesedez, eguneratu lehenik Zerbitzari planera Enpresara eguneratu aurretik."
     },
     "feature": {
       "title": "Ezaugarria",
@@ -5102,6 +5462,12 @@
       "api": "API sarbidea",
       "priority": "Lehentasunezko laguntza",
       "customPricing": "Prezio pertsonalizatua"
+    },
+    "licenseWarning": {
+      "title": "Doako auto-ostatu muga gaindituta",
+      "body": "{{total}} erabiltzaile dituzu baina maila doakoak {{limit}} soilik onartzen ditu zerbitzari bakoitzeko. Eguneratu Stirling PDF ondo ibil dadin.",
+      "overLimit": "{{limit}} baino gehiago",
+      "cta": "Ikusi planak"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Kudeatu fakturazioa",
     "portal": {
       "error": "Ezin izan da fakturazio ataria ireki"
-    }
+    },
+    "updateSeats": "Eguneratu eserlekuak",
+    "updateEnterpriseSeats": "Eguneratu Enterprise eserlekuak",
+    "currentSeats": "Uneko eserlekuak",
+    "minimumSeats": "Gutxieneko eserlekuak",
+    "basedOnUsers": "(uneko erabiltzaileak)",
+    "newSeatCount": "Eserleku kopuru berria",
+    "newSeatCountDescription": "Hautatu enpresa-lizentziarako eserleku kopurua",
+    "whatHappensNext": "Zer dator orain?",
+    "stripePortalRedirect": "Stripe-ren fakturazio portalera birbideratuko zaituzte eserleku aldaketa berrikusi eta berresteko. Proportzionatutako zenbatekoa automatikoki kalkulatuko da.",
+    "preparingUpdate": "Eserleku eguneraketa prestatzen...",
+    "seatCountTooLow": "Eserleku kopuruak gutxienez {{minimum}} izan behar du (uneko erabiltzaile kopurua)",
+    "seatCountUnchanged": "Aukeratu beste eserleku kopuru bat",
+    "seatsUpdated": "Eserlekuak eguneratuta",
+    "seatsUpdatedMessage": "Zure enpresa eserlekuak {{seats}}-ra eguneratu dira",
+    "updateProcessing": "Eguneratzea prozesatzen",
+    "updateProcessingMessage": "Zure eserleku eguneraketa prozesatzen ari da. Mesedez, freskatu une batzuen buruan.",
+    "notEnterprise": "Eserleku kudeaketa enpresa-lizentzietarako soilik dago erabilgarri"
+  },
+  "upgradeBanner": {
+    "title": "Eguneratu Zerbitzari Planera",
+    "message": "Atera etekinik handiena Stirling PDF-i erabiltzaile mugagabeekin eta funtzio aurreratuekin",
+    "upgradeButton": "Eguneratu orain",
+    "dismiss": "Baztertu bannerra",
+    "attentionTitle": "Zerbitzari honek admin arreta behar du",
+    "attentionBody": "Zure administratzaileak saioa hasi behar du informazio gehiago ikusteko. Jarri harekin harremanetan berehala.",
+    "attentionBodyAdmin": "Berrikusi lizentzia-eskakizunak zerbitzari hau betean mantentzeko.",
+    "seeInfo": "Ikusi informazioa"
   },
   "payment": {
     "preparing": "Zure ordainketa prestatzen...",
@@ -5128,7 +5521,61 @@
     "success": "Ordainketa arrakastatsua!",
     "successMessage": "Zure harpidetza ongi aktibatu da. Laster jasoko duzu baieztapen-mezu elektronikoa.",
     "autoClose": "Leiho hau automatikoki itxiko da...",
-    "error": "Ordainketa-errorea"
+    "error": "Ordainketa-errorea",
+    "upgradeSuccess": "Ordainketa arrakastatsua! Zure harpidetza eguneratu da. Lizentzia zure zerbitzarian eguneratu da. Laster jasoko duzu berrespen email bat.",
+    "paymentSuccess": "Ordainketa arrakastatsua! Zure lizentzia-gakoa eskuratzen...",
+    "licenseActivated": "Lizentzia aktibatuta! Zure lizentzia-gakoa gorde da. Berrespen email bat bidali da zure erregistratutako helbide elektronikora.",
+    "licenseDelayed": "Ordainketa arrakastatsua! Zure lizentzia sortzen ari da. Laster jasoko duzu email bat zure lizentzia-gakoarekin. 10 minututan jasotzen ez baduzu, jarri harremanetan laguntzarekin.",
+    "licensePollingError": "Ordainketa arrakastatsua baina ezin izan dugu zure lizentzia-gakoa automatikoki eskuratu. Egiaztatu zure emaila edo jarri harremanetan laguntzarekin ordainketa berrespenarekin.",
+    "licenseRetrievalError": "Ordainketa arrakastatsua baina lizentzia eskuratzeak huts egin du. Zure lizentzia-gakoa email bidez jasoko duzu. 10 minututan jasotzen ez baduzu, jarri harremanetan laguntzarekin.",
+    "syncError": "Ordainketa arrakastatsua baina lizentzia sinkronizazioak huts egin du. Zure lizentzia laster eguneratuko da. Arazoek jarraitzen badute, jarri harremanetan laguntzarekin.",
+    "licenseSaveError": "Ezin izan da lizentzia-gakoa gorde. Jarri harremanetan laguntzarekin aktibazioa osatzeko zure lizentzia-gakoarekin.",
+    "paymentCanceled": "Ordainketa bertan behera utzi da. Ez da kobratu.",
+    "syncingLicense": "Zure lizentzia eguneratua sinkronizatzen...",
+    "generatingLicense": "Zure lizentzia-gakoa sortzen...",
+    "upgradeComplete": "Eguneratzea osatuta",
+    "upgradeCompleteMessage": "Zure harpidetza behar bezala eguneratu da. Zure oraingo lizentzia-gakoa eguneratu da.",
+    "stripeNotConfigured": "Stripe ez dago konfiguratuta",
+    "stripeNotConfiguredMessage": "Stripe ordainketa integrazioa ez dago konfiguratuta. Jarri harremanetan zure administratzailearekin.",
+    "monthly": "Hilero",
+    "yearly": "Urtero",
+    "billingPeriod": "Fakturazio epea",
+    "enterpriseNote": "Eserlekuak checkout-ean doi daitezke (1-1000).",
+    "installationId": "Instalazioaren IDa",
+    "licenseKey": "Zure lizentzia-gakoa",
+    "licenseInstructions": "Hau zure instalazioan gehitu da. Zure emailera ere kopia bat bidaliko da.",
+    "canCloseWindow": "Orain leiho hau itxi dezakezu.",
+    "licenseKeyProcessing": "Lizentzia-gakoa prozesatzen",
+    "licenseDelayedMessage": "Zure lizentzia-gakoa sortzen ari da. Egiaztatu zure emaila laster edo jarri harremanetan laguntzarekin.",
+    "perYear": "/urte",
+    "perMonth": "/hilean",
+    "emailInvalid": "Sartu baliozko helbide elektroniko bat",
+    "emailStage": {
+      "title": "Sartu zure emaila",
+      "description": "Lizentzia-gakoa eta ordainagiriak bidaltzeko erabiliko dugu.",
+      "emailLabel": "Helbide elektronikoa",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Jarraitu",
+      "modalTitle": "Hasi - {{planName}}"
+    },
+    "planStage": {
+      "title": "Aukeratu fakturazio epea",
+      "savingsNote": "Aurreztu {{percent}}% urteko fakturazioarekin",
+      "basePrice": "Oinarrizko prezioa",
+      "seatPrice": "Eserleku bakoitzeko",
+      "totalForSeats": "Guztira ({{count}} eserleku)",
+      "selectMonthly": "Aukeratu hilero",
+      "selectYearly": "Aukeratu urtero",
+      "savePercent": "Aurreztu {{percent}}%",
+      "savingsAmount": "Aurreztu {{amount}}",
+      "modalTitle": "Hautatu fakturazio epea - {{planName}}",
+      "billedYearly": "Urtero fakturatuta: {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Itzuli plan aukerara",
+      "selectedPlan": "Hautatutako plana",
+      "modalTitle": "Osatu ordainketa - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Lehen aldiko saio-hasiera",
@@ -5260,8 +5707,8 @@
       }
     },
     "showing": {
-      "top10": "Top 10",
-      "top20": "Top 20",
+      "top10": "Top 10 erakusten",
+      "top20": "Top 20 erakusten",
       "all": "Guztiak"
     },
     "stats": {
@@ -5287,5 +5734,281 @@
     "offline": "Backend lineaz kanpo",
     "starting": "Backend abiarazten...",
     "wait": "Itxaron backenda abiarazten amaitu arte eta saiatu berriro."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Desblokeatu PDFa jarraitzeko",
+    "title": "Kendu pasahitza jarraitzeko",
+    "description": "PDF hau pasahitzarekin babestuta dago. Sartu pasahitza lanean jarraitu ahal izateko.",
+    "password": {
+      "label": "PDF pasahitza",
+      "placeholder": "Sartu PDFaren pasahitza"
+    },
+    "skip": "Utzi oraingoz",
+    "unlock": "Desblokeatu eta jarraitu",
+    "incorrectPassword": "Pasahitz okerra",
+    "missingFile": "Hautatutako fitxategia ez dago gehiago eskuragarri.",
+    "emptyResponse": "Pasahitza kentzeak ez du fitxategirik sortu.",
+    "required": "Sartu pasahitza jarraitzeko.",
+    "successTitle": "Pasahitza kenduta",
+    "successBodyWithName": "Pasahitza {{fileName}}-tik kendu da",
+    "successBody": "Pasahitza ondo kendu da."
+  },
+  "setup": {
+    "welcome": "Ongi etorri Stirling PDF-era",
+    "description": "Hasi Stirling PDF nola erabili nahi duzun aukeratuz",
+    "step1": {
+      "label": "Aukeratu modua",
+      "description": "Offline edo Zerbitzaria"
+    },
+    "step2": {
+      "label": "Hautatu zerbitzaria",
+      "description": "Auto-ostatuko zerbitzaria"
+    },
+    "step3": {
+      "label": "Hasi saioa",
+      "description": "Sartu kredentzialak"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Hasi saioa zure Stirling kontuarekin"
+      },
+      "selfhosted": {
+        "title": "Auto-ostatuko zerbitzaria",
+        "description": "Konektatu zure Stirling PDF zerbitzarira"
+      }
+    },
+    "saas": {
+      "title": "Hasi saioa Stirlingen",
+      "subtitle": "Hasi saioa zure Stirling kontuarekin"
+    },
+    "selfhosted": {
+      "title": "Hasi saioa zerbitzarian",
+      "subtitle": "Sartu zure zerbitzariaren kredentzialak"
+    },
+    "server": {
+      "title": "Konektatu zerbitzarira",
+      "subtitle": "Sartu zure auto-ostatuko zerbitzariaren URLa",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Auto-ostatuko zerbitzaria"
+      },
+      "url": {
+        "label": "Zerbitzariaren URLa",
+        "description": "Sartu zure auto-ostatuko Stirling PDF zerbitzariaren URLa osoa"
+      },
+      "error": {
+        "emptyUrl": "Sartu zerbitzari baten URLa",
+        "unreachable": "Ezin izan da zerbitzarira konektatu",
+        "testFailed": "Konexio proba huts egin du"
+      },
+      "testing": "Konexioa probatzen..."
+    },
+    "login": {
+      "title": "Hasi saioa",
+      "subtitle": "Sartu zure kredentzialak jarraitzeko",
+      "connectingTo": "Hona konektatzen:",
+      "username": {
+        "label": "Erabiltzaile-izena",
+        "placeholder": "Sartu zure erabiltzaile-izena"
+      },
+      "email": {
+        "label": "Emaila",
+        "placeholder": "Sartu zure emaila"
+      },
+      "password": {
+        "label": "Pasahitza",
+        "placeholder": "Sartu zure pasahitza"
+      },
+      "error": {
+        "emptyUsername": "Sartu zure erabiltzaile-izena",
+        "emptyEmail": "Sartu zure emaila",
+        "emptyPassword": "Sartu zure pasahitza",
+        "oauthFailed": "OAuth saio-hasierak huts egin du. Saiatu berriro."
+      },
+      "submit": "Hasi saioa",
+      "signInWith": "Hasi saioa honekin",
+      "oauthPending": "Nabigatzailea irekitzen autentifikaziorako...",
+      "orContinueWith": "Edo jarraitu emailarekin"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Autentifikazioa ongi burutu da",
+      "message": "Leiho hau itxi eta Stirling PDF-era itzul zaitezke."
+    },
+    "error": {
+      "title": "Autentifikazioak huts egin du",
+      "message": "Autentifikazioa ez da ongi burutu. Leiho hau itxi eta saiatu berriro."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON editorea",
+    "viewLabel": "PDF Editorea",
+    "converting": "PDFa editagarri bihurtzen...",
+    "conversionFailed": "Ezin izan da PDFa bihurtu. Saiatu berriro.",
+    "currentFile": "Uneko fitxategia: {{name}}",
+    "pageSummary": "{{number}} / {{total}} orri",
+    "pagePreviewAlt": "Orriaren aurrebista",
+    "imageLabel": "Kokatutako irudia",
+    "noTextOnPage": "Ez da testu editagarririk detektatu orri honetan.",
+    "pageType": {
+      "paragraph": "Paragrafo orria",
+      "sparse": "Testu sakabanatua"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Paragrafoa",
+      "singleLine": "Lerro bakarra"
+    },
+    "badges": {
+      "unsaved": "Editatuta",
+      "modified": "Editatuta",
+      "earlyAccess": "Sarbide goiztiarra"
+    },
+    "actions": {
+      "reset": "Aldaketak berrezarri",
+      "downloadJson": "JSON deskargatu",
+      "generatePdf": "PDF sortu"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Testua automatikoki eskalatu kutxetara egokitzeko",
+        "description": "Letra-tipoen errendatzea PDFarekiko desberdina denean, testua horizontalki automatikoki eskalatzen du jatorrizko mugaketa-kutxan sartzeko."
+      },
+      "groupingMode": {
+        "title": "Testu taldekatzeko modua",
+        "autoDescription": "Orrialde mota automatikoki detektatu eta testua egoki taldekatu.",
+        "paragraphDescription": "Lerro lerrokatuak lerro anitzeko paragrafo-testu kutxetan taldekatzen ditu.",
+        "singleLineDescription": "PDFko testu-lerro bakoitza testu-kutxa bereizi gisa mantentzen du."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Aholkua: Eutsi sakatuta Ctrl (Cmd) edo Shift testu-kutxa anitz hautatzeko. Hautapenaren gainean tresna-barra mugikor bat agertuko da, batzea, banantzea edo zabalera doitzea egin dezazun."
+      },
+      "forceSingleElement": {
+        "title": "Editatutako testua PDF elementu bakarrera lotu",
+        "description": "Gaituta dagoenean, editoreak editatutako testu-kutxa bakoitza PDFko testu-elementu bakar gisa esportatzen du, glifoen gainjartzeak edo letra-tipo nahasiak saihesteko."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Hautatutako kutxak batu",
+      "merge": "Hautapena batu",
+      "ungroupTooltip": "Paragrafoa berriro lerrotan zatitu",
+      "ungroup": "Hautapena banandu",
+      "widthMenu": "Zabalera-aukerak",
+      "expandWidth": "Hedatu orriaren ertzeraino",
+      "resetWidth": "Zabalera berrezarri",
+      "resizeHandle": "Testuaren zabalera doitu"
+    },
+    "disclaimer": {
+      "heading": "Aurrebistaren mugak",
+      "textFocus": "Lan-espazio honek testua editatzea eta txertatutako irudiak birkokatzea ditu ardatz. Orrialdeko arte konplexua, inprimaki widget-ak eta geruzatutako grafikoak esportatzeko gordetzen dira, baina ez dira guztiz editagarriak hemen.",
+      "previewVariance": "Zenbait ikusmen-elementu (adibidez, taulen ertzak, formak edo anotazioen itxura) agian ez dira zehatz erakutsiko aurrebistan. Esportatutako PDFak jatorrizko marrazketa-aginduak mantentzen ditu ahal denean.",
+      "alpha": "Ikusle alfa hau oraindik eboluzioan dago—zenbait letra-tipo, kolore, gardentasun-efektu eta diseinu xehetasun apur bat alda daitezke. Mesedez, egiaztatu sortutako PDFa partekatu aurretik."
+    },
+    "empty": {
+      "title": "Ez da dokumenturik kargatu",
+      "subtitle": "Kargatu PDF edo JSON fitxategi bat testu-edukia editatzen hasteko."
+    },
+    "welcomeBanner": {
+      "title": "Ongi etorri PDF Text Editor-era (Sarbide goiztiarra)",
+      "experimental": "Hau garapen aktiboan dagoen ezaugarri esperimentala da. Espero ezegonkortasuna eta erabileran arazo batzuk.",
+      "howItWorks": "Tresna honek zure PDFa formatu editagarri bihurtzen du, testua aldatzeko eta irudiak birkokatzeko. Aldaketak PDF berri gisa gordetzen dira.",
+      "bestFor": "Hobeto funtzionatzen du honekin:",
+      "bestFor1": "Testua eta irudiak nagusi dituzten PDF sinpleak",
+      "bestFor2": "Paragrafo formatu estandarra duten dokumentuak",
+      "bestFor3": "Gutunak, saiakerak, txostenak eta oinarrizko dokumentuak",
+      "notIdealFor": "Ez da egokiena honetarako:",
+      "notIdealFor1": "Bala-zerrendak, taulak edo zutabe anitzeko diseinuak dituzten PDFak",
+      "notIdealFor2": "Aldizkariak, eskuorriak edo diseinu kargadun dokumentuak",
+      "notIdealFor3": "Diseinu konplexua duten eskuliburuak",
+      "limitations": "Uneko murriztapenak:",
+      "limitation1": "Letra-tipoen errendatzea pixka bat desberdina izan daiteke jatorrizko PDFarekiko",
+      "limitation2": "Grafiko konplexuak, inprimaki-eremuak eta anotazioak gordetzen dira baina ez dira editagarriak",
+      "limitation3": "Fitxategi handiek denbora behar dezakete bihurtu eta prozesatzeko",
+      "knownIssues": "Arazo ezagunak (konpontzen ari gara):",
+      "issue1": "Testuaren kolorea oraindik ez da mantentzen (laster gehituko da)",
+      "issue2": "Paragrafo moduak lerrokadura eta tarte arazo gehiago ditu - Gomendatua: Lerro Bakar modua",
+      "issue3": "Aurrebistaren bistaratzea esportatutako PDFarekiko desberdina da - esportatutako PDFak jatorrizkoarekiko hurbilago daude",
+      "issue4": "Biratutako testuaren lerrokadurak eskuzko doikuntza beharra izan dezake",
+      "issue5": "Gardentasun eta geruzatze-efektuak jatorrizkotik alda daitezke",
+      "feedback": "Hau sarbide goiztiarreko ezaugarria da. Mesedez, jakinarazi aurkitzen dituzun arazoak hobetzen laguntzeko!",
+      "gotIt": "Ulertuta",
+      "dontShowAgain": "Ez erakutsi berriro"
+    },
+    "modeChange": {
+      "title": "Modu aldaketa baieztatu",
+      "warning": "Testu taldekatzeko modua aldatzeak gorde gabeko aldaketa guztiak berrezarriko ditu. Ziur jarraitu nahi duzula?",
+      "cancel": "Ezeztatu",
+      "confirm": "Berrezarri eta aldatu modua"
+    },
+    "fontAnalysis": {
+      "details": "Letra-tipoaren xehetasunak",
+      "embedded": "Txertatuta",
+      "type": "Mota",
+      "webFormat": "Web formatua",
+      "warnings": "Abisuak",
+      "suggestions": "Oharrak",
+      "currentPageFonts": "Orrialde honetan dauden letra-tipoak",
+      "allFonts": "Letra-tipo guztiak",
+      "fallback": "fallback",
+      "missing": "missing",
+      "perfectMessage": "Letra-tipo guztiak perfektuki erreproduzi daitezke.",
+      "warningMessage": "Zenbait letra-tipo agian ez dira behar bezala errendatuko.",
+      "infoMessage": "Letra-tipoen erreprodukzioari buruzko informazioa eskuragarri.",
+      "perfect": "perfect",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Ezin da JSON fitxategia irakurri. Ziurtatu PDF to JSON tresnarekin sortua dela.",
+      "pdfConversion": "Ezin da editatutako JSONa berriz PDF bihurtu."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Saioa iraungi da",
+    "pleaseLoginAgain": "Hasi saioa berriro, mesedez.",
+    "accessDenied": "Sarbidea ukatuta",
+    "insufficientPermissions": "Ez duzu ekintza hau egiteko baimenik."
+  },
+  "addText": {
+    "title": "Testua gehitu",
+    "header": "Testua gehitu PDFetara",
+    "text": {
+      "name": "Testu-edukia",
+      "placeholder": "Sartu gehitu nahi duzun testua",
+      "fontLabel": "Letra-tipoa",
+      "fontSizeLabel": "Letra-tamainoa",
+      "fontSizePlaceholder": "Idatzi edo hautatu letra-tamainoa (8-200)",
+      "colorLabel": "Testuaren kolorea"
+    },
+    "steps": {
+      "configure": "Testua konfiguratu"
+    },
+    "step": {
+      "createDesc": "Sartu gehitu nahi duzun testua",
+      "place": "Testua kokatu",
+      "placeDesc": "Egin klik PDFan zure testua gehitzeko"
+    },
+    "instructions": {
+      "title": "Nola gehitu testua",
+      "text": "Goian zure testua sartu ondoren, egin klik PDFan edonon kokatzeko.",
+      "paused": "Kokatzea pausatuta",
+      "resumeHint": "Berrekin kokatzeari testua gehitzeko.",
+      "noSignature": "Sartu goian testua kokatzea gaitzeko."
+    },
+    "mode": {
+      "move": "Testua mugitu",
+      "place": "Testua kokatu",
+      "pause": "Kokatzea pausatu",
+      "resume": "Kokatzea berrekin"
+    },
+    "results": {
+      "title": "Testua gehitzearen emaitzak"
+    },
+    "error": {
+      "failed": "Errore bat gertatu da testua PDFari gehitzean."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Testua aplikatu"
   }
 }

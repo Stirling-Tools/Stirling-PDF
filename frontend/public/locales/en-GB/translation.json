@@ -3510,7 +3510,9 @@
     "unexpectedError": "Unexpected error: {{message}}",
     "accountCreatedSuccess": "Account created successfully! You can now sign in.",
     "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
-    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again.",
+    "defaultCredentials": "Default Login Credentials",
+    "changePasswordWarning": "Please change your password after logging in for the first time"
   },
   "signup": {
     "title": "Create an account",

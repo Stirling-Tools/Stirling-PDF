@@ -17,6 +17,8 @@
       "comingSoon": "Yakında:",
       "favorite": "Favorilere ekle",
       "favorites": "Favoriler",
+      "unavailable": "Sunucu yöneticisi tarafından devre dışı bırakıldı:",
+      "unavailableDependency": "Kullanılamıyor - sunucuda gerekli araç eksik:",
       "heading": "Tüm araçlar (tam ekran görünüm)",
       "noResults": "Aramanızı ayarlamayı deneyin veya ihtiyacınızı bulmak için açıklamaları aç/kapatın.",
       "recommended": "Önerilen",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Tam ekran moduna geç",
       "sidebar": "Kenar çubuğu moduna geç"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Premium özellik:",
+    "comingSoon": "Yakında:"
   },
   "unsavedChanges": "PDF'inizde kaydedilmemiş değişiklikler var.",
   "areYouSure": "Ayrılmak istediğinizden emin misiniz?",
@@ -40,6 +45,30 @@
     "message": "Bu ZIP {{count}} dosya içeriyor. Yine de çıkartılsın mı?",
     "cancel": "İptal",
     "confirm": "Çıkart"
+  },
+  "defaultApp": {
+    "title": "Varsayılan PDF Uygulaması Olarak Ayarla",
+    "message": "Stirling PDF'yi varsayılan PDF düzenleyiciniz olarak ayarlamak ister misiniz?",
+    "description": "Bunu daha sonra sistem ayarlarından değiştirebilirsiniz.",
+    "notNow": "Şimdi Değil",
+    "setDefault": "Varsayılan Yap",
+    "dismiss": "Kapat",
+    "prompt": {
+      "title": "Varsayılan PDF Düzenleyici Olarak Ayarla",
+      "message": "PDF dosyalarını açmak için varsayılan uygulamanız Stirling PDF olsun."
+    },
+    "success": {
+      "title": "Varsayılan Uygulama Ayarlandı",
+      "message": "Stirling PDF artık varsayılan PDF düzenleyiciniz"
+    },
+    "settingsOpened": {
+      "title": "Ayarlar Açıldı",
+      "message": "Lütfen sistem ayarlarınızda Stirling PDF'yi seçin"
+    },
+    "error": {
+      "title": "Hata",
+      "message": "Varsayılan PDF işleyicisi ayarlanamadı"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Kaydet",
   "saveToBrowser": "Tarayıcıya Kaydet",
   "download": "İndir",
+  "downloadUnavailable": "Bu öğe için indirme kullanılamıyor",
+  "saveUnavailable": "Bu öğe için kaydetme kullanılamıyor",
   "pin": "Dosyayı Sabitle (araç çalıştıktan sonra etkin tut)",
   "unpin": "Dosya Sabitlemesini Kaldır (araç çalıştıktan sonra değiştir)",
   "undoOperationTooltip": "Son işlemi geri almak ve orijinal dosyaları geri yüklemek için tıklayın",
@@ -168,6 +199,7 @@
   },
   "edit": "Düzenle",
   "delete": "Sil",
+  "never": "Asla",
   "username": "Kullanıcı Adı",
   "password": "Parola",
   "welcome": "Hoş geldiniz",
@@ -262,7 +294,8 @@
     "learnMore": "Daha fazla bilgi edinin",
     "enable": "Analizi Etkinleştir",
     "disable": "Analizi Devre Dışı Bırak",
-    "settings": "Analiz ayarlarını config/settings.yml dosyasından değiştirebilirsiniz"
+    "settings": "Analiz ayarlarını config/settings.yml dosyasından değiştirebilirsiniz",
+    "privacyAssurance": "Herhangi bir kişisel bilgiyi veya dosyalarınızın içeriğini takip etmiyoruz."
   },
   "navbar": {
     "favorite": "Favoriler",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Ayarlar",
-    "update": "Güncelleme mevcut",
-    "updateAvailable": "{0} mevcut kurulu sürümdür. Yeni bir sürüm ({1}) mevcuttur.",
-    "appVersion": "Uygulama Sürümü:",
-    "downloadOption": {
-      "title": "İndirme seçeneği seçin (Zip olmayan tek dosya indirmeler için):",
-      "1": "Aynı pencerede aç",
-      "2": "Yeni pencerede aç",
-      "3": "Dosyayı indir"
-    },
-    "zipThreshold": "İndirilen dosya sayısı şu değeri aştığında zip dosyası oluştur:",
-    "signOut": "Çıkış Yap",
-    "accountSettings": "Hesap Ayarları",
-    "bored": {
-      "help": "Paskalya yumurtası oyunu etkinleştirir"
-    },
-    "cacheInputs": {
-      "name": "Form girdilerini kaydet",
-      "help": "Gelecekteki çalıştırmalar için önceden kullanılan girdileri saklamayı etkinleştirin"
+    "connection": {
+      "title": "Bağlantı Modu",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Öz Barındırılan"
+      },
+      "server": "Sunucu",
+      "user": "Şu olarak oturum açıldı",
+      "logout": "Çıkış Yap"
     },
     "general": {
       "title": "Genel",
       "description": "Genel uygulama tercihlerini yapılandırın.",
-      "account": "Hesap",
-      "accountDescription": "Hesap ayarlarınızı yönetin",
       "user": "Kullanıcı",
-      "signedInAs": "Şu kullanıcı olarak oturum açıldı",
       "logout": "Oturumu kapat",
       "enableFeatures": {
+        "dismiss": "Kapat",
         "title": "Sistem Yöneticileri için",
         "intro": "Kuruluşunuz için kullanıcı kimlik doğrulaması, ekip yönetimi ve çalışma alanı özelliklerini etkinleştirin.",
         "action": "Yapılandır",
         "and": "ve",
         "benefit": "Kullanıcı rolleri, ekip işbirliği, yönetici kontrolleri ve kurumsal özellikleri etkinleştirir.",
-        "learnMore": "Belgelerde daha fazla bilgi edinin",
-        "dismiss": "Kapat"
+        "learnMore": "Belgelerde daha fazla bilgi edinin"
       },
-      "autoUnzip": "API yanıtlarını otomatik ZIP'ten çıkar",
-      "autoUnzipDescription": "ZIP yanıtlarındaki dosyaları otomatik olarak çıkar",
-      "autoUnzipTooltip": "API işlemlerinden dönen ZIP dosyalarını otomatik olarak çıkarır. ZIP dosyalarını olduğu gibi tutmak için devre dışı bırakın. Bu, otomasyon iş akışlarını etkilemez.",
-      "autoUnzipFileLimit": "Otomatik zip açma dosya sınırı",
-      "autoUnzipFileLimitDescription": "ZIP'ten çıkarılacak azami dosya sayısı",
-      "autoUnzipFileLimitTooltip": "Yalnızca ZIP bu kadar ya da daha az dosya içeriyorsa çıkar. Daha büyük ZIP'leri çıkarmak için daha yüksek ayarlayın.",
       "defaultToolPickerMode": "Varsayılan araç seçici modu",
       "defaultToolPickerModeDescription": "Araç seçicinin varsayılan olarak tam ekranda mı yoksa kenar çubuğunda mı açılacağını seçin",
       "mode": {
-        "fullscreen": "Tam ekran",
-        "sidebar": "Kenar çubuğu"
-      }
+        "sidebar": "Kenar çubuğu",
+        "fullscreen": "Tam ekran"
+      },
+      "autoUnzipTooltip": "API işlemlerinden dönen ZIP dosyalarını otomatik olarak çıkarır. ZIP dosyalarını olduğu gibi tutmak için devre dışı bırakın. Bu, otomasyon iş akışlarını etkilemez.",
+      "autoUnzip": "API yanıtlarını otomatik ZIP'ten çıkar",
+      "autoUnzipDescription": "ZIP yanıtlarındaki dosyaları otomatik olarak çıkar",
+      "autoUnzipFileLimitTooltip": "Yalnızca ZIP bu kadar ya da daha az dosya içeriyorsa çıkar. Daha büyük ZIP'leri çıkarmak için daha yüksek ayarlayın.",
+      "autoUnzipFileLimit": "Otomatik zip açma dosya sınırı",
+      "autoUnzipFileLimitDescription": "ZIP'ten çıkarılacak azami dosya sayısı",
+      "defaultPdfEditor": "Varsayılan PDF düzenleyici",
+      "defaultPdfEditorActive": "Stirling PDF varsayılan PDF düzenleyiciniz",
+      "defaultPdfEditorInactive": "Varsayılan olarak başka bir uygulama ayarlı",
+      "defaultPdfEditorChecking": "Kontrol ediliyor...",
+      "defaultPdfEditorSet": "Zaten Varsayılan",
+      "setAsDefault": "Varsayılan Yap",
+      "updates": {
+        "title": "Yazılım Güncellemeleri",
+        "description": "Güncellemeleri kontrol edin ve sürüm bilgilerini görüntüleyin",
+        "currentVersion": "Geçerli Sürüm",
+        "latestVersion": "En Son Sürüm",
+        "checkForUpdates": "Güncellemeleri Kontrol Et",
+        "viewDetails": "Ayrıntıları Görüntüle"
+      },
+      "hideUnavailableTools": "Kullanılamayan araçları gizle",
+      "hideUnavailableToolsDescription": "Gri gösterilmek yerine sunucunuz tarafından devre dışı bırakılan araçları kaldırın.",
+      "hideUnavailableConversions": "Kullanılamayan dönüşümleri gizle",
+      "hideUnavailableConversionsDescription": "Gri gösterilmek yerine Dönüştür aracındaki devre dışı seçenekleri kaldırın."
     },
     "hotkeys": {
-      "title": "Klavye Kısayolları",
-      "description": "Bir aracın üzerine gelerek kısayolunu görün veya aşağıdan özelleştirin. \"Kısayolu değiştir\"e tıklayın ve yeni bir tuş kombinasyonuna basın. İptal için Esc'ye basın.",
-      "errorModifier": {
-        "mac": "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin.",
-        "windows": "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
-      },
       "errorConflict": "Kısayol zaten {{tool}} tarafından kullanılıyor.",
+      "searchPlaceholder": "Araçlarda ara...",
       "none": "Atanmadı",
       "customBadge": "Özel",
       "defaultLabel": "Varsayılan: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Kısayolu değiştir",
       "reset": "Sıfırla",
       "shortcut": "Kısayol",
-      "noShortcut": "Kısayol ayarlanmamış",
-      "searchPlaceholder": "Araçlarda ara..."
+      "noShortcut": "Kısayol ayarlanmamış"
     }
+  },
+  "update": {
+    "modalTitle": "Güncelleme Mevcut",
+    "current": "Geçerli Sürüm",
+    "latest": "En Son Sürüm",
+    "latestStable": "En Son Kararlı",
+    "priorityLabel": "Öncelik",
+    "recommendedAction": "Önerilen Eylem",
+    "breakingChangesDetected": "Kırıcı Değişiklikler Tespit Edildi",
+    "breakingChangesMessage": "Bazı sürümler kırıcı değişiklikler içerir. Lütfen güncellemeden önce aşağıdaki geçiş kılavuzlarını inceleyin.",
+    "migrationGuides": "Geçiş Kılavuzları",
+    "viewGuide": "Kılavuzu Görüntüle",
+    "loadingDetailedInfo": "Ayrıntılı bilgiler yükleniyor...",
+    "close": "Kapat",
+    "viewAllReleases": "Tüm Sürümleri Görüntüle",
+    "downloadLatest": "En Sonu İndir",
+    "availableUpdates": "Kullanılabilir Güncellemeler",
+    "unableToLoadDetails": "Ayrıntılı bilgiler yüklenemedi.",
+    "version": "Sürüm",
+    "urgentUpdateAvailable": "Acil Güncelleme",
+    "updateAvailable": "Güncelleme Mevcut",
+    "releaseNotes": "Sürüm Notları",
+    "priority": {
+      "urgent": "Acil",
+      "normal": "Normal",
+      "minor": "Küçük",
+      "low": "Düşük"
+    },
+    "breakingChanges": "Kırıcı Değişiklikler",
+    "breakingChangesDefault": "Bu sürüm kırıcı değişiklikler içeriyor.",
+    "migrationGuide": "Geçiş Kılavuzu"
   },
   "changeCreds": {
     "title": "Giriş Bilgilerini Değiştir",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "PDF'leri başka bir PDF'nin üzerine bindirir",
       "title": "PDF'leri Bindirme"
+    },
+    "pdfTextEditor": {
+      "title": "PDF Metin Düzenleyici",
+      "desc": "Gruplu metin düzenleme ve PDF yeniden oluşturma ile Stirling PDF JSON dışa aktarımlarını gözden geçirin ve düzenleyin"
+    },
+    "addText": {
+      "tags": "metin,ek açıklama,etiket",
+      "title": "Metin Ekle",
+      "desc": "PDF'inize istediğiniz yere özel metin ekleyin"
     }
   },
   "landing": {
     "addFiles": "Dosya Ekle",
-    "uploadFromComputer": "Bilgisayardan yükle"
+    "uploadFromComputer": "Bilgisayardan yükle",
+    "openFromComputer": "Bilgisayardan aç"
   },
   "viewPdf": {
     "tags": "görüntüle,oku,açıklama ekle,metin,görüntü",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "PDF'ler birleştirilirken bir hata oluştu."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Birleştirme Ayarlarına Genel Bakış"
+      }
     }
   },
   "split": {
@@ -1047,7 +1125,7 @@
     "settings": "Ayarlar",
     "conversionCompleted": "Dönüştürme tamamlandı",
     "results": "Sonuçlar",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "donusturulmus_dosya",
     "conversionResults": "Dönüştürme Sonuçları",
     "convertFrom": "Şuradan dönüştür",
     "convertTo": "Şuna dönüştür",
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,fotoğraf,resim",
     "title": "Resim Ekle",
     "header": "PDF'e resim ekle",
-    "everyPage": "Her Sayfa mı?",
-    "upload": "Resim ekle",
-    "submit": "Resim ekle"
+    "image": {
+      "name": "Resim",
+      "placeholder": "Bir resim yükleyin",
+      "label": "Resim dosyası"
+    },
+    "steps": {
+      "configure": "Resmi Yapılandır"
+    },
+    "step": {
+      "createDesc": "Eklemek istediğiniz resmi yükleyin",
+      "place": "Resmi yerleştir",
+      "placeDesc": "Resminizi eklemek için PDF'e tıklayın"
+    },
+    "instructions": {
+      "title": "Resimler nasıl eklenir",
+      "text": "Resminizi yukarıdan yükledikten sonra, PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
+      "paused": "Yerleştirme duraklatıldı",
+      "resumeHint": "Resminizi eklemek için yerleştirmeyi sürdürün.",
+      "noSignature": "Yerleştirmeyi etkinleştirmek için yukarıya bir resim yükleyin."
+    },
+    "mode": {
+      "move": "Resmi Taşı",
+      "place": "Resmi Yerleştir",
+      "pause": "Yerleştirmeyi duraklat",
+      "resume": "Yerleştirmeyi sürdür"
+    },
+    "results": {
+      "title": "Resim Ekleme Sonuçları"
+    },
+    "error": {
+      "failed": "Resim PDF'e eklenirken bir hata oluştu."
+    },
+    "saved": {
+      "defaultLabel": "Resim",
+      "defaultImageLabel": "Yüklenen resim"
+    },
+    "applySignatures": "Resimleri Uygula"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1200,7 +1312,7 @@
     "desc": "PDF dosyalarına metin veya resim filigranları ekleyin",
     "completed": "Filigran eklendi",
     "submit": "Filigran Ekle",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "filigranlı",
     "error": {
       "failed": "PDF'ye filigran eklenirken bir hata oluştu."
     },
@@ -1396,6 +1508,93 @@
       "10": "Farklı formatlarda yazdırmayı önle"
     },
     "submit": "Değiştir"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Yer imleri ve ana hat",
+      "replaceExisting": "Mevcut yer imlerini değiştir (eklemek için işareti kaldırın)",
+      "replaceExistingHint": "Devre dışı bırakıldığında, yeni ana hat mevcut yer imlerinin sonuna eklenir."
+    },
+    "actions": {
+      "source": "Yer imlerini yükle",
+      "selectedFile": "Şuradan yüklendi: {{file}}",
+      "noFile": "Mevcut yer imlerini çıkarmak için bir PDF seçin.",
+      "loadFromPdf": "Seçilen PDF'den yükle",
+      "importJson": "JSON İçeri Al",
+      "importClipboard": "Panodan JSON yapıştır",
+      "export": "Yer imlerini dışa aktar",
+      "exportJson": "JSON İndir",
+      "exportClipboard": "JSON'u panoya kopyala",
+      "clipboardUnavailable": "Bu tarayıcıda pano erişimi mevcut değil."
+    },
+    "info": {
+      "line1": "Her yer imi için açıklayıcı bir başlık ve açılacağı sayfa gerekir.",
+      "line2": "Bölümler ve alt bölümler için hiyerarşi oluşturmak üzere alt yer imlerini kullanın.",
+      "line3": "Zaman kazanmak için yer imlerini seçili PDF'den veya bir JSON dosyasından içe aktarın."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Düzenlemeye başlamak için aracı açın",
+        "description": "Çalışma alanını yüklemek için İçindekileri Düzenle aracını seçin."
+      },
+      "tabTitle": "Ana hat çalışma alanı",
+      "subtitle": "Yer imlerini içe aktarın, hiyerarşiler oluşturun ve dar yan paneller olmadan ana hattı uygulayın.",
+      "noFile": "PDF seçilmedi",
+      "fileLabel": "Değişiklikler şu anda seçili PDF'ye uygulanacak.",
+      "filePrompt": "Başlamak için kitaplığınızdan bir PDF seçin veya yeni bir tane yükleyin.",
+      "changeFile": "PDF'yi Değiştir",
+      "selectFile": "PDF Seç"
+    },
+    "editor": {
+      "heading": "Yer imi düzenleyici",
+      "description": "PDF ana hattınızı oluşturmak için yer imleri ekleyin, iç içe yerleştirin ve yeniden sıralayın.",
+      "addTopLevel": "Üst düzey yer imi ekle",
+      "empty": {
+        "title": "Henüz yer imi yok",
+        "description": "Mevcut yer imlerini içe aktarın veya ilk girdinizi ekleyerek başlayın.",
+        "action": "İlk yer imini ekle"
+      },
+      "defaultTitle": "Yeni yer imi",
+      "defaultChildTitle": "Alt yer imi",
+      "defaultSiblingTitle": "Yeni yer imi",
+      "untitled": "Adsız yer imi",
+      "childBadge": "Alt",
+      "pagePreview": "Sayfa {{page}}",
+      "field": {
+        "title": "Yer imi başlığı",
+        "page": "Hedef sayfa numarası"
+      },
+      "actions": {
+        "toggle": "Alt öğeleri aç/kapat",
+        "addChild": "Alt yer imi ekle",
+        "addSibling": "Kardeş yer imi ekle",
+        "remove": "Yer imini kaldır"
+      },
+      "confirmRemove": "Bu yer imini ve tüm alt öğelerini kaldır?"
+    },
+    "messages": {
+      "loadedTitle": "Yer imleri çıkarıldı",
+      "loadedBody": "PDF'deki mevcut yer imleri editöre yüklendi.",
+      "noBookmarks": "Seçilen PDF'de yer imi bulunamadı.",
+      "loadFailed": "Seçilen PDF'den yer imleri çıkarılamadı.",
+      "imported": "Yer imleri içe aktarıldı",
+      "importedBody": "JSON ana hattınız mevcut editör içeriğinin yerini aldı.",
+      "importedClipboard": "Pano verileri mevcut yer imi listesinin yerini aldı.",
+      "invalidJson": "Geçersiz JSON yapısı",
+      "invalidJsonBody": "Lütfen geçerli bir yer imi JSON dosyası sağlayın ve tekrar deneyin.",
+      "exported": "JSON indirmeye hazır",
+      "copied": "Panoya kopyalandı",
+      "copiedBody": "Yer imi JSON'u başarıyla kopyalandı.",
+      "copyFailed": "Kopyalama başarısız"
+    },
+    "error": {
+      "failed": "İçindekiler güncellenemedi"
+    },
+    "submit": "İçindekileri uygula",
+    "results": {
+      "title": "Yer imleriyle güncellenmiş PDF",
+      "subtitle": "İşlenen dosyayı indirin veya aşağıdan işlemi geri alın."
+    }
   },
   "removePages": {
     "tags": "Sayfaları kaldır,sayfaları sil",
@@ -1978,13 +2177,54 @@
       "title": "İmzanızı çizin",
       "clear": "Temizle"
     },
+    "canvas": {
+      "heading": "İmzanızı çizin",
+      "clickToOpen": "Çizim tuvalini açmak için tıklayın",
+      "modalTitle": "İmzanızı çizin",
+      "colorLabel": "Renk",
+      "penSizeLabel": "Kalem boyutu",
+      "penSizePlaceholder": "Boyut",
+      "clear": "Tuvali temizle",
+      "colorPickerTitle": "Çizgi rengini seç"
+    },
     "text": {
       "name": "İmzalayan Adı",
-      "placeholder": "Tam adınızı girin"
+      "placeholder": "Tam adınızı girin",
+      "fontLabel": "Yazı tipi",
+      "fontSizeLabel": "Yazı tipi boyutu",
+      "fontSizePlaceholder": "Yazı tipi boyutunu yazın veya seçin (8-200)",
+      "colorLabel": "Metin rengi"
     },
     "clear": "Temizle",
     "add": "Ekle",
-    "saved": "Kaydedilmiş İmzalar",
+    "saved": {
+      "heading": "Kaydedilen imzalar",
+      "description": "Kaydedilen imzaları istediğiniz zaman yeniden kullanın.",
+      "emptyTitle": "Henüz kaydedilmiş imza yok",
+      "emptyDescription": "Yukarıda bir imza çizin, yükleyin veya yazın, sonra \"Kitaplığa kaydet\" seçeneğini kullanarak en fazla {{max}} favoriyi hazır tutun.",
+      "type": {
+        "canvas": "Çizim",
+        "image": "Yükleme",
+        "text": "Metin"
+      },
+      "limitTitle": "Sınır aşıldı",
+      "limitDescription": "Yenisini eklemeden önce bir kaydedilmiş imzayı kaldırın (maks {{max}}).",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "Önceki",
+      "next": "Sonraki",
+      "delete": "Kaldır",
+      "label": "Etiket",
+      "defaultLabel": "İmza",
+      "defaultCanvasLabel": "Çizim imzası",
+      "defaultImageLabel": "Yüklenen imza",
+      "defaultTextLabel": "Yazılmış imza",
+      "saveButton": "İmzayı kaydet",
+      "saveUnavailable": "Kaydetmek için önce bir imza oluşturun.",
+      "noChanges": "Geçerli imza zaten kaydedildi.",
+      "status": {
+        "saved": "Kaydedildi"
+      }
+    },
     "save": "İmzayı Kaydet",
     "applySignatures": "İmzaları Uygula",
     "personalSigs": "Kişisel İmzalar",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "İmzayı Yapılandır"
     },
+    "step": {
+      "createDesc": "İmzayı nasıl oluşturmak istediğinizi seçin",
+      "place": "Yerleştir ve kaydet",
+      "placeDesc": "İmzayı PDF'iniz üzerinde konumlandırın"
+    },
     "type": {
       "title": "İmza Türü",
       "draw": "Çiz",
-      "canvas": "Canvas",
+      "canvas": "Tuval",
       "image": "Görüntü",
-      "text": "Metin"
+      "text": "Metin",
+      "saved": "Kaydedildi"
     },
     "image": {
       "label": "İmza görseli yükle",
@@ -2019,11 +2265,17 @@
       "title": "İmza nasıl eklenir",
       "canvas": "Canvas üzerinde imzanızı çizdikten sonra modali kapatın ve PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
       "image": "Yukarıya imza görselinizi yükledikten sonra, PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
-      "text": "Adınızı yukarıya girdikten sonra, imzanızı PDF üzerinde herhangi bir yere tıklayarak yerleştirin."
+      "saved": "Yukarıdan kaydedilmiş bir imza seçin, ardından PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
+      "text": "Adınızı yukarıya girdikten sonra, imzanızı PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
+      "paused": "Yerleştirme duraklatıldı",
+      "resumeHint": "İmzanızı eklemek için yerleştirmeyi sürdürün.",
+      "noSignature": "Yerleştirme araçlarını etkinleştirmek için yukarıda bir imza oluşturun."
     },
     "mode": {
       "move": "İmzayı Taşı",
-      "place": "İmza Yerleştir"
+      "place": "İmza Yerleştir",
+      "pause": "Yerleştirmeyi duraklat",
+      "resume": "Yerleştirmeyi sürdür"
     },
     "updateAndPlace": "Güncelle ve Yerleştir",
     "activate": "İmza Yerleştirmeyi Etkinleştir",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Açıklamaları Kaldır Hakkında",
       "description": "Bu araç, PDF belgelerinizden tüm açıklamaları (yorumlar, vurgular, notlar vb.) kaldırır."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Ek Açıklamaları Kaldır Hakkında"
+      },
+      "description": {
+        "title": "Ne yapar"
+      }
     },
     "error": {
       "failed": "PDF'den açıklamalar kaldırılırken bir hata oluştu."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Otomatik Yeniden Adlandırma Nasıl Çalışır"
       },
+      "description": {
+        "title": "Ne yapar"
+      },
       "howItWorks": {
         "title": "Akıllı Yeniden Adlandırma",
         "text": "PDF içeriğinizden başlığı otomatik olarak bulur ve dosya adı olarak kullanır.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Tespit edilen başlıktan temiz ve geçerli bir dosya adı oluşturur",
         "bullet3": "Uygun bir başlık bulunmazsa orijinal adı korur"
       }
+    },
+    "settings": {
+      "title": "Hakkında"
     }
   },
   "adjust-contrast": {
@@ -3262,7 +3528,7 @@
     "header": "PDF'i Tek Sayfaya",
     "submit": "Tek Sayfaya Dönüştür",
     "description": "Bu araç, PDF'inizdeki tüm sayfaları tek bir büyük sayfada birleştirir. Genişlik orijinal sayfalarla aynı kalır, ancak yükseklik tüm sayfa yüksekliklerinin toplamı olur.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "tek_sayfa",
     "files": {
       "placeholder": "Başlamak için ana görünümden bir PDF seçin"
     },
@@ -3598,7 +3864,9 @@
     "exportAll": "PDF'yi Dışa Aktar",
     "downloadSelected": "Seçilen Dosyaları İndir",
     "downloadAll": "Tümünü İndir",
+    "saveAll": "Tümünü Kaydet",
     "toggleTheme": "Temayı Değiştir",
+    "toggleBookmarks": "Yer imlerini aç/kapat",
     "language": "Dil",
     "search": "PDF Ara",
     "panMode": "Kaydırma Modu",
@@ -4212,9 +4480,21 @@
         "title": "Premium ve Kurumsal",
         "description": "Premium veya kurumsal lisans anahtarınızı yapılandırın.",
         "license": "Lisans Yapılandırması",
+        "licenseKey": {
+          "toggle": "Lisans anahtarınız veya sertifika dosyanız mı var?",
+          "info": "Doğrudan satın alma ile bir lisans anahtarı veya sertifika dosyanız varsa, burada girerek premium veya kurumsal özellikleri etkinleştirebilirsiniz."
+        },
         "key": {
           "label": "Lisans Anahtarı",
-          "description": "Premium veya kurumsal lisans anahtarınızı girin"
+          "description": "Premium veya kurumsal lisans anahtarınızı girin",
+          "success": "Lisans Anahtarı Kaydedildi",
+          "successMessage": "Lisans anahtarınız başarıyla etkinleştirildi. Yeniden başlatma gerekmez.",
+          "overwriteWarning": {
+            "title": "⚠️ Uyarı: Mevcut Lisans Tespit Edildi",
+            "line1": "Mevcut lisans anahtarınızın üzerine yazma işlemi geri alınamaz.",
+            "line2": "Başka yerde yedeğiniz yoksa önceki lisansınız kalıcı olarak kaybolacaktır.",
+            "line3": "Önemli: Lisans anahtarlarını gizli ve güvenli tutun. Asla herkese açık şekilde paylaşmayın."
+          }
         },
         "enabled": {
           "label": "Premium Özellikleri Etkinleştir",
@@ -4278,12 +4558,17 @@
     "or": "veya",
     "dropFileHere": "Dosyayı buraya bırakın veya yüklemek için tıklayın",
     "dropFilesHere": "Dosyaları buraya bırakın veya yükleme düğmesine tıklayın",
+    "dropFilesHereOpen": "Dosyaları buraya bırakın veya Aç düğmesine tıklayın",
     "pdfFilesOnly": "Yalnızca PDF dosyaları",
     "supportedFileTypes": "Desteklenen dosya türleri",
     "upload": "Yükle",
     "uploadFile": "Dosya Yükle",
     "uploadFiles": "Dosyaları Yükle",
+    "open": "Aç",
+    "openFile": "Dosya Aç",
+    "openFiles": "Dosyalar Aç",
     "noFilesInStorage": "Depolamada kullanılabilir dosya yok. Önce bazı dosyalar yükleyin.",
+    "noFilesInStorageOpen": "Depolamada dosya yok. Önce bazı dosyaları açın.",
     "selectFromStorage": "Depolamadan Seç",
     "backToTools": "Araçlara Geri Dön",
     "addFiles": "Dosya Ekle",
@@ -4329,6 +4614,8 @@
     "myFiles": "Dosyalarım",
     "noRecentFiles": "Son dosya bulunamadı",
     "googleDriveNotAvailable": "Google Drive entegrasyonu kullanılamıyor",
+    "downloadSelected": "Seçilenleri İndir",
+    "saveSelected": "Seçilenleri Kaydet",
     "openFiles": "Dosyaları Aç",
     "openFile": "Dosya Aç",
     "details": "Dosya Ayrıntıları",
@@ -4341,7 +4628,6 @@
     "selectAll": "Tümünü Seç",
     "deselectAll": "Seçimi Kaldır",
     "deleteSelected": "Seçilenleri Sil",
-    "downloadSelected": "Seçilenleri İndir",
     "selectedCount": "{{count}} seçildi",
     "download": "İndir",
     "delete": "Sil",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Güvenlik İş Akışı",
       "secureWorkflowDesc": "JavaScript ve gömülü dosyalar gibi potansiyel olarak kötü amaçlı içeriği kaldırarak PDF belgelerini güvenceye alır, ardından yetkisiz erişimi önlemek için parola koruması ekler. Varsayılan parola 'password' olarak ayarlanır.",
       "processImages": "Görselleri İşle",
-      "processImagesDesc": "Birden çok görüntü dosyasını tek bir PDF belgeye dönüştürür, ardından görüntülerden aranabilir metin çıkarmak için OCR teknolojisini uygular."
+      "processImagesDesc": "Birden çok görüntü dosyasını tek bir PDF belgeye dönüştürür, ardından görüntülerden aranabilir metin çıkarmak için OCR teknolojisini uygular.",
+      "prePublishSanitization": "Yayın öncesi temizleme",
+      "prePublishSanitizationDesc": "PDF'leri çevrimiçi yayımlamadan önce veri sızıntısını önlemek için tüm gizli meta verileri, JavaScript'i, gömülü dosyaları, ek açıklamaları kaldıran ve formları düzleştiren temizleme iş akışı."
     }
+  },
+  "colorPicker": {
+    "title": "Renk seçin"
   },
   "common": {
     "previous": "Önceki",
@@ -4639,7 +4930,13 @@
     "used": "kullanılan",
     "available": "kullanılabilir",
     "cancel": "İptal",
-    "preview": "Önizleme"
+    "preview": "Önizleme",
+    "close": "Kapat",
+    "done": "Bitti",
+    "loading": "Yükleniyor...",
+    "back": "Geri",
+    "continue": "Devam et",
+    "error": "Hata"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Daha fazla dosya ekle...",
     "selectedFiles": "Seçilen Dosyalar",
     "submit": "Ekleri Ekle",
+    "tooltip": {
+      "header": {
+        "title": "Ek Ekle Hakkında"
+      },
+      "description": {
+        "title": "Ne yapar"
+      }
+    },
     "results": {
       "title": "Ek Sonuçları"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Özel Konum",
   "details": "Ayrıntılar",
-  "downloadUnavailable": "Bu öğe için indirme kullanılamıyor",
   "invalidUndoData": "Geri alma yapılamıyor: geçersiz işlem verisi",
   "margin": {
     "large": "Büyük",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Belki Sonra",
       "dontShowAgain": "Bir Daha Gösterme"
     },
+    "welcomeSlide": {
+      "title": "Stirling'e hoş geldiniz",
+      "body": "Stirling PDF artık her boyuttan ekip için hazır. Bu güncelleme yeni bir düzen, güçlü yeni yönetici yetenekleri ve en çok istenen özelliği içerir - <strong>Metni Düzenle</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Araçlardan birinin nasıl kullanılacağını göstermek için <strong>Kırp</strong> aracını seçelim.",
     "toolInterface": "Burası <strong>Kırp</strong> aracının arayüzü. Gördüğünüz gibi, üzerinde çalışacak PDF dosyaları henüz eklemediğimiz için pek bir şey yok.",
@@ -4823,7 +5131,39 @@
     "next": "İleri",
     "finish": "Bitir",
     "startTour": "Turu Başlat",
-    "startTourDescription": "Stirling PDF'in temel özelliklerinde rehberli bir tura çıkın"
+    "startTourDescription": "Stirling PDF'in temel özelliklerinde rehberli bir tura çıkın",
+    "buttons": {
+      "next": "İleri →",
+      "back": "Geri",
+      "skipForNow": "Şimdilik atla",
+      "download": "İndir →",
+      "showMeAround": "Bana etrafı göster",
+      "skipTheTour": "Turu atla"
+    },
+    "serverLicense": {
+      "skip": "Şimdilik atla",
+      "seePlans": "Planlara Bak →",
+      "upgrade": "Şimdi yükselt →",
+      "freeTitle": "Sunucu Lisansı",
+      "overLimitTitle": "Sunucu Lisansı Gerekli",
+      "overLimitBody": "Lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. <strong>{{overLimitUserCopy}}</strong> Stirling kullanıcınız var. Kesintisiz devam etmek için Stirling Server planına yükseltin - <strong>sınırsız koltuk</strong>, PDF metin düzenleme ve tam yönetici kontrolü $99/server/ay.",
+      "freeBody": "<strong>Open-Core</strong> lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. Kesintisiz ölçeklemek ve yeni <strong>PDF metin düzenleme aracımıza</strong> erken erişim almak için Stirling Server planını öneririz - tam düzenleme ve <strong>sınırsız koltuk</strong> $99/server/ay."
+    },
+    "desktopInstall": {
+      "title": "İndir",
+      "titleWithOs": "{{osLabel}} için indir",
+      "body": "Stirling, bir masaüstü uygulaması olarak en iyi şekilde çalışır. Çevrimdışı kullanabilir, belgelere daha hızlı erişebilir ve düzenlemeleri bilgisayarınızda yerel olarak yapabilirsiniz."
+    },
+    "planOverview": {
+      "adminTitle": "Yönetici Özeti",
+      "userTitle": "Plan Özeti",
+      "adminBodyLoginEnabled": "Bir yönetici olarak kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır.",
+      "adminBodyLoginDisabled": "Oturum açma modunu etkinleştirdiğinizde kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır.",
+      "userBody": "Ekip arkadaşlarını davet edin, roller atayın ve belgelerinizi tek bir güvenli çalışma alanında düzenli tutun. Tek başına kullanımdan büyümeye hazır olduğunuzda oturum açma modunu etkinleştirin."
+    },
+    "securityCheck": {
+      "message": "Uygulama son zamanlarda önemli değişiklikler geçirdi. Sunucu yöneticinizin dikkatine ihtiyaç duyulabilir. Devam etmek için lütfen rolünüzü doğrulayın."
+    }
   },
   "adminOnboarding": {
     "welcome": "<strong>Yönetici Turu</strong>'na hoş geldiniz! Sistem yöneticileri için mevcut güçlü kurumsal özellikleri ve ayarları keşfedelim.",
@@ -4852,7 +5192,10 @@
       "role": "Rol",
       "team": "Takım",
       "status": "Durum",
-      "actions": "İşlemler",
+      "actions": {
+        "label": "İşlemler",
+        "upgrade": "Yükselt"
+      },
       "noMembersFound": "Üye bulunamadı",
       "active": "Aktif",
       "disabled": "Devre dışı",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} kullanıcı kontenjanı mevcut",
         "noSlotsAvailable": "Uygun kontenjan yok",
         "currentUsage": "Şu anda {{max}} kullanıcı lisansının {{current}}'i kullanılıyor"
-      }
+      },
+      "loginRequired": "Önce oturum açma modunu etkinleştirin"
     },
     "teams": {
       "title": "Takımlar",
@@ -5057,6 +5401,17 @@
     "showComparison": "Tüm Özellikleri Karşılaştır",
     "hideComparison": "Özellik Karşılaştırmasını Gizle",
     "featureComparison": "Özellik Karşılaştırması",
+    "from": "Başlangıç",
+    "perMonth": "/ay",
+    "perSeat": "/koltuk",
+    "withServer": "+ Sunucu Planı",
+    "licensedSeats": "Lisanslı: {{count}} koltuk",
+    "includedInCurrent": "Planınızda Dahil",
+    "selectPlan": "Plan Seç",
+    "manage": "Yönet",
+    "manageSubscription": {
+      "description": "Aboneliğinizi, faturalandırmayı ve ödeme yöntemlerini yönetin"
+    },
     "activePlan": {
       "title": "Aktif Plan",
       "subtitle": "Mevcut abonelik ayrıntılarınız"
@@ -5074,13 +5429,16 @@
       "upTo": "En fazla"
     },
     "period": {
-      "month": "ay"
+      "month": "ay",
+      "perUserPerMonth": "/kullanıcı/ay"
     },
     "free": {
       "name": "Ücretsiz",
       "highlight1": "Haftalık sınırlı araç kullanımı",
       "highlight2": "Tüm araçlara erişim",
-      "highlight3": "Topluluk desteği"
+      "highlight3": "Topluluk desteği",
+      "forever": "Sonsuza kadar ücretsiz",
+      "included": "Dahil"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Kurumsal",
       "highlight1": "Özel fiyatlandırma",
       "highlight2": "Özel destek",
-      "highlight3": "En yeni özellikler"
+      "highlight3": "En yeni özellikler",
+      "requiresServer": "Sunucu gerektirir",
+      "requiresServerMessage": "Enterprise'a yükseltmeden önce lütfen önce Sunucu planına yükseltin."
     },
     "feature": {
       "title": "Özellik",
@@ -5102,6 +5462,12 @@
       "api": "API Erişimi",
       "priority": "Öncelikli Destek",
       "customPricing": "Özel Fiyatlandırma"
+    },
+    "licenseWarning": {
+      "title": "Ücretsiz öz barındırma sınırına ulaşıldı",
+      "body": "{{total}} kullanıcınız var ancak ücretsiz katman sunucu başına yalnızca {{limit}} destekler. Stirling PDF'nin sorunsuz çalışması için yükseltin.",
+      "overLimit": "{{limit}} sayısından fazla",
+      "cta": "Planlara bak"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Faturalandırmayı Yönet",
     "portal": {
       "error": "Faturalandırma portalı açılamadı"
-    }
+    },
+    "updateSeats": "Koltukları Güncelle",
+    "updateEnterpriseSeats": "Kurumsal Koltukları Güncelle",
+    "currentSeats": "Mevcut Koltuklar",
+    "minimumSeats": "Minimum Koltuk",
+    "basedOnUsers": "(mevcut kullanıcılar)",
+    "newSeatCount": "Yeni Koltuk Sayısı",
+    "newSeatCountDescription": "Kurumsal lisansınız için koltuk sayısını seçin",
+    "whatHappensNext": "Sonra ne olacak?",
+    "stripePortalRedirect": "Koltuk değişikliğini incelemek ve onaylamak için Stripe faturalandırma portalına yönlendirileceksiniz. Orantılı tutar otomatik hesaplanacaktır.",
+    "preparingUpdate": "Koltuk güncellemesi hazırlanıyor...",
+    "seatCountTooLow": "Koltuk sayısı en az {{minimum}} olmalı (mevcut kullanıcı sayısı)",
+    "seatCountUnchanged": "Lütfen farklı bir koltuk sayısı seçin",
+    "seatsUpdated": "Koltuklar Güncellendi",
+    "seatsUpdatedMessage": "Kurumsal koltuklarınız {{seats}} olarak güncellendi",
+    "updateProcessing": "Güncelleme İşleniyor",
+    "updateProcessingMessage": "Koltuk güncellemeniz işleniyor. Lütfen birkaç dakika içinde yenileyin.",
+    "notEnterprise": "Koltuk yönetimi yalnızca kurumsal lisanslar için kullanılabilir"
+  },
+  "upgradeBanner": {
+    "title": "Sunucu Planına Yükseltin",
+    "message": "Sınırsız kullanıcı ve gelişmiş özelliklerle Stirling PDF'den en iyi şekilde yararlanın",
+    "upgradeButton": "Şimdi Yükselt",
+    "dismiss": "Afişi kapat",
+    "attentionTitle": "Bu sunucunun yönetici dikkatine ihtiyacı var",
+    "attentionBody": "Daha fazla bilgi görmek için yöneticinizin oturum açması gerekiyor. Lütfen hemen iletişime geçin.",
+    "attentionBodyAdmin": "Bu sunucunun uyumlu kalması için lisans gereksinimlerini gözden geçirin.",
+    "seeInfo": "Bilgileri gör"
   },
   "payment": {
     "preparing": "Ödeme hazırlanıyor...",
@@ -5128,7 +5521,61 @@
     "success": "Ödeme Başarılı!",
     "successMessage": "Aboneliğiniz başarıyla etkinleştirildi. Kısa süre içinde bir onay e-postası alacaksınız.",
     "autoClose": "Bu pencere otomatik olarak kapanacaktır...",
-    "error": "Ödeme Hatası"
+    "error": "Ödeme Hatası",
+    "upgradeSuccess": "Ödeme başarılı! Aboneliğiniz yükseltildi. Lisansınız sunucunuza güncellendi. Kısa süre içinde bir onay e-postası alacaksınız.",
+    "paymentSuccess": "Ödeme başarılı! Lisans anahtarınız alınıyor...",
+    "licenseActivated": "Lisans etkinleştirildi! Lisans anahtarınız kaydedildi. Kayıtlı e-posta adresinize bir onay e-postası gönderildi.",
+    "licenseDelayed": "Ödeme başarılı! Lisansınız oluşturuluyor. Lisans anahtarınız kısa süre içinde e-postayla gönderilecektir. 10 dakika içinde almazsanız lütfen destekle iletişime geçin.",
+    "licensePollingError": "Ödeme başarılı ancak lisans anahtarınızı otomatik olarak alamadık. Lütfen e-postanızı kontrol edin veya ödeme onayınızla destekle iletişime geçin.",
+    "licenseRetrievalError": "Ödeme başarılı ancak lisans alma başarısız oldu. Lisans anahtarınızı e-postayla alacaksınız. 10 dakika içinde ulaşmazsa lütfen destekle iletişime geçin.",
+    "syncError": "Ödeme başarılı ancak lisans senkronizasyonu başarısız oldu. Lisansınız kısa süre içinde güncellenecektir. Sorunlar devam ederse lütfen destekle iletişime geçin.",
+    "licenseSaveError": "Lisans anahtarı kaydedilemedi. Etkinleştirmeyi tamamlamak için lütfen lisans anahtarınızla destekle iletişime geçin.",
+    "paymentCanceled": "Ödeme iptal edildi. Herhangi bir ücret yansıtılmadı.",
+    "syncingLicense": "Yükseltilen lisansınız senkronize ediliyor...",
+    "generatingLicense": "Lisans anahtarınız oluşturuluyor...",
+    "upgradeComplete": "Yükseltme Tamamlandı",
+    "upgradeCompleteMessage": "Aboneliğiniz başarıyla yükseltildi. Mevcut lisans anahtarınız güncellendi.",
+    "stripeNotConfigured": "Stripe Yapılandırılmadı",
+    "stripeNotConfiguredMessage": "Stripe ödeme entegrasyonu yapılandırılmadı. Lütfen yöneticinizle iletişime geçin.",
+    "monthly": "Aylık",
+    "yearly": "Yıllık",
+    "billingPeriod": "Faturalandırma Dönemi",
+    "enterpriseNote": "Koltuklar ödeme adımında ayarlanabilir (1-1000).",
+    "installationId": "Kurulum Kimliği",
+    "licenseKey": "Lisans Anahtarınız",
+    "licenseInstructions": "Bu, kurulumunuza eklendi. Ayrıca e-postanızda bir kopyasını alacaksınız.",
+    "canCloseWindow": "Bu pencereyi şimdi kapatabilirsiniz.",
+    "licenseKeyProcessing": "Lisans Anahtarı İşleniyor",
+    "licenseDelayedMessage": "Lisans anahtarınız oluşturuluyor. Lütfen kısa süre içinde e-postanızı kontrol edin veya destekle iletişime geçin.",
+    "perYear": "/yıl",
+    "perMonth": "/ay",
+    "emailInvalid": "Lütfen geçerli bir e-posta adresi girin",
+    "emailStage": {
+      "title": "E-postanızı Girin",
+      "description": "Lisans anahtarınızı ve makbuzları göndermek için bunu kullanacağız.",
+      "emailLabel": "E-posta Adresi",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Devam et",
+      "modalTitle": "Başlayın - {{planName}}"
+    },
+    "planStage": {
+      "title": "Faturalandırma Döneminizi Seçin",
+      "savingsNote": "Yıllık faturalandırma ile %{{percent}} tasarruf edin",
+      "basePrice": "Taban Fiyat",
+      "seatPrice": "Koltuk Başına",
+      "totalForSeats": "Toplam ({{count}} koltuk)",
+      "selectMonthly": "Aylığı Seç",
+      "selectYearly": "Yıllığı Seç",
+      "savePercent": "%{{percent}} tasarruf edin",
+      "savingsAmount": "{{amount}} tasarruf ediyorsunuz",
+      "modalTitle": "Faturalandırma Dönemi Seçin - {{planName}}",
+      "billedYearly": "Yıllık {{currency}}{{amount}} olarak faturalandırılır"
+    },
+    "paymentStage": {
+      "backToPlan": "Plan Seçimine Dön",
+      "selectedPlan": "Seçilen Plan",
+      "modalTitle": "Ödemeyi Tamamlayın - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "İlk Kez Oturum Açma",
@@ -5287,5 +5734,281 @@
     "offline": "Arka Uç Çevrimdışı",
     "starting": "Arka uç başlatılıyor...",
     "wait": "Lütfen arka ucun başlatılması tamamlanana kadar bekleyin ve tekrar deneyin."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Devam etmek için PDF'nin kilidini açın",
+    "title": "Devam etmek için parolayı kaldırın",
+    "description": "Bu PDF parola korumalı. Çalışmaya devam edebilmek için parolayı girin.",
+    "password": {
+      "label": "PDF parolası",
+      "placeholder": "PDF parolasını girin"
+    },
+    "skip": "Şimdilik atla",
+    "unlock": "Kilidi Aç ve Devam Et",
+    "incorrectPassword": "Yanlış parola",
+    "missingFile": "Seçilen dosya artık mevcut değil.",
+    "emptyResponse": "Parola kaldırma bir dosya üretmedi.",
+    "required": "Devam etmek için parolayı girin.",
+    "successTitle": "Parola kaldırıldı",
+    "successBodyWithName": "{{fileName}} dosyasından parola kaldırıldı",
+    "successBody": "Parola başarıyla kaldırıldı."
+  },
+  "setup": {
+    "welcome": "Stirling PDF'ye hoş geldiniz",
+    "description": "Stirling PDF'yi nasıl kullanmak istediğinizi seçerek başlayın",
+    "step1": {
+      "label": "Mod Seçin",
+      "description": "Çevrimdışı veya Sunucu"
+    },
+    "step2": {
+      "label": "Sunucu Seçin",
+      "description": "Öz barındırılan sunucu"
+    },
+    "step3": {
+      "label": "Oturum Açma",
+      "description": "Kimlik bilgilerini girin"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Stirling hesabınızla oturum açın"
+      },
+      "selfhosted": {
+        "title": "Öz Barındırılan Sunucu",
+        "description": "Kendi Stirling PDF sunucunuza bağlanın"
+      }
+    },
+    "saas": {
+      "title": "Stirling'de Oturum Açın",
+      "subtitle": "Stirling hesabınızla oturum açın"
+    },
+    "selfhosted": {
+      "title": "Sunucuda Oturum Açın",
+      "subtitle": "Sunucu kimlik bilgilerinizi girin"
+    },
+    "server": {
+      "title": "Sunucuya Bağlan",
+      "subtitle": "Öz barındırılan sunucu URL'nizi girin",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Öz barındırılan sunucu"
+      },
+      "url": {
+        "label": "Sunucu URL'si",
+        "description": "Öz barındırılan Stirling PDF sunucunuzun tam URL'sini girin"
+      },
+      "error": {
+        "emptyUrl": "Lütfen bir sunucu URL'si girin",
+        "unreachable": "Sunucuya bağlanılamadı",
+        "testFailed": "Bağlantı testi başarısız"
+      },
+      "testing": "Bağlantı test ediliyor..."
+    },
+    "login": {
+      "title": "Oturum Aç",
+      "subtitle": "Devam etmek için kimlik bilgilerinizi girin",
+      "connectingTo": "Bağlanılıyor:",
+      "username": {
+        "label": "Kullanıcı adı",
+        "placeholder": "Kullanıcı adınızı girin"
+      },
+      "email": {
+        "label": "E-posta",
+        "placeholder": "E-postanızı girin"
+      },
+      "password": {
+        "label": "Parola",
+        "placeholder": "Parolanızı girin"
+      },
+      "error": {
+        "emptyUsername": "Lütfen kullanıcı adınızı girin",
+        "emptyEmail": "Lütfen e-postanızı girin",
+        "emptyPassword": "Lütfen parolanızı girin",
+        "oauthFailed": "OAuth oturumu başarısız oldu. Lütfen tekrar deneyin."
+      },
+      "submit": "Oturum Aç",
+      "signInWith": "Şununla oturum aç",
+      "oauthPending": "Kimlik doğrulama için tarayıcı açılıyor...",
+      "orContinueWith": "Veya e-postayla devam edin"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Kimlik Doğrulama Başarılı",
+      "message": "Bu pencereyi kapatabilir ve Stirling PDF'ye dönebilirsiniz."
+    },
+    "error": {
+      "title": "Kimlik Doğrulama Başarısız",
+      "message": "Kimlik doğrulama başarılı olmadı. Bu pencereyi kapatıp tekrar deneyebilirsiniz."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON Düzenleyici",
+    "viewLabel": "PDF Düzenleyici",
+    "converting": "PDF düzenlenebilir formata dönüştürülüyor...",
+    "conversionFailed": "PDF dönüştürülemedi. Lütfen tekrar deneyin.",
+    "currentFile": "Geçerli dosya: {{name}}",
+    "pageSummary": "Sayfa {{number}} / {{total}}",
+    "pagePreviewAlt": "Sayfa önizleme",
+    "imageLabel": "Yerleştirilen resim",
+    "noTextOnPage": "Bu sayfada düzenlenebilir metin tespit edilmedi.",
+    "pageType": {
+      "paragraph": "Paragraf sayfası",
+      "sparse": "Seyrek metin"
+    },
+    "groupingMode": {
+      "auto": "Otomatik",
+      "paragraph": "Paragraf",
+      "singleLine": "Tek Satır"
+    },
+    "badges": {
+      "unsaved": "Düzenlendi",
+      "modified": "Düzenlendi",
+      "earlyAccess": "Erken Erişim"
+    },
+    "actions": {
+      "reset": "Değişiklikleri Sıfırla",
+      "downloadJson": "JSON'u İndir",
+      "generatePdf": "PDF Oluştur"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Metni kutulara otomatik sığdır",
+        "description": "Yazı tipi işleme PDF'den farklı olduğunda metni, orijinal sınırlayıcı kutusuna yatay olarak otomatik sığdırır."
+      },
+      "groupingMode": {
+        "title": "Metin Gruplama Modu",
+        "autoDescription": "Sayfa türünü otomatik algılar ve metni uygun şekilde gruplar.",
+        "paragraphDescription": "Hizalı satırları çok satırlı paragraf metin kutularında gruplar.",
+        "singleLineDescription": "Her PDF metin satırını ayrı bir metin kutusu olarak tutar."
+      },
+      "manualGrouping": {
+        "descriptionInline": "İpucu: Birden çok metin kutusu seçmek için Ctrl (Cmd) veya Shift tuşunu basılı tutun. Seçimin üzerinde bir araç çubuğu belirir; birleştirebilir, grubu çözebilir veya genişlikleri ayarlayabilirsiniz."
+      },
+      "forceSingleElement": {
+        "title": "Düzenlenen metni tek bir PDF öğesine kilitle",
+        "description": "Etkinleştirildiğinde, düzenlenmiş her metin kutusu, üst üste binen glifler veya karışık yazı tiplerini önlemek için tek bir PDF metin öğesi olarak dışa aktarılır."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Seçili kutuları birleştir",
+      "merge": "Seçimi birleştir",
+      "ungroupTooltip": "Paragrafı tekrar satırlara böl",
+      "ungroup": "Seçimin grubunu çöz",
+      "widthMenu": "Genişlik seçenekleri",
+      "expandWidth": "Sayfa kenarına genişlet",
+      "resetWidth": "Genişliği sıfırla",
+      "resizeHandle": "Metin genişliğini ayarla"
+    },
+    "disclaimer": {
+      "heading": "Önizleme Sınırlamaları",
+      "textFocus": "Bu çalışma alanı, metni düzenlemeye ve gömülü görselleri yeniden konumlandırmaya odaklanır. Karmaşık sayfa çizimleri, form parçacıkları ve katmanlı grafikler dışa aktarma için korunur ancak burada tam düzenlenemez.",
+      "previewVariance": "Bazı görseller (ör. tablo kenarlıkları, şekiller veya ek açıklama görünümleri) önizlemede tam olarak gösterilmeyebilir. Dışa aktarılan PDF, mümkün olduğunda orijinal çizim komutlarını korur.",
+      "alpha": "Bu alfa görüntüleyici hâlâ gelişiyor—bazı yazı tipleri, renkler, saydamlık efektleri ve yerleşim ayrıntıları biraz değişebilir. Lütfen paylaşmadan önce oluşturulan PDF'yi iki kez kontrol edin."
+    },
+    "empty": {
+      "title": "Belge yüklenmedi",
+      "subtitle": "Metin içeriğini düzenlemeye başlamak için bir PDF veya JSON dosyası yükleyin."
+    },
+    "welcomeBanner": {
+      "title": "PDF Metin Düzenleyiciye Hoş Geldiniz (Erken Erişim)",
+      "experimental": "Bu, aktif geliştirme aşamasında deneysel bir özelliktir. Kullanım sırasında bazı kararsızlıklar ve sorunlar beklenebilir.",
+      "howItWorks": "Bu araç, PDF'inizi metin içeriğini değiştirebileceğiniz ve görselleri yeniden konumlandırabileceğiniz düzenlenebilir bir formata dönüştürür. Değişiklikler yeni bir PDF olarak kaydedilir.",
+      "bestFor": "En İyi Şunlarla Çalışır:",
+      "bestFor1": "Ağırlıklı olarak metin ve görseller içeren basit PDF'ler",
+      "bestFor2": "Standart paragraf biçimlendirmesine sahip belgeler",
+      "bestFor3": "Mektuplar, denemeler, raporlar ve temel belgeler",
+      "notIdealFor": "Şunlar için İdeal Değil:",
+      "notIdealFor1": "Madde işaretleri, tablolar veya çok sütunlu düzenler gibi özel biçimlendirmeye sahip PDF'ler",
+      "notIdealFor2": "Dergiler, broşürler veya yoğun tasarımlı belgeler",
+      "notIdealFor3": "Karmaşık düzenlere sahip kullanım kılavuzları",
+      "limitations": "Mevcut Sınırlamalar:",
+      "limitation1": "Fontların görüntülenmesi orijinal PDF'den biraz farklı olabilir",
+      "limitation2": "Karmaşık grafikler, form alanları ve açıklamalar korunur ancak düzenlenemez",
+      "limitation3": "Büyük dosyaların dönüştürülmesi ve işlenmesi zaman alabilir",
+      "knownIssues": "Bilinen Sorunlar (Düzeltiliyor):",
+      "issue1": "Metin rengi şu anda korunmuyor (yakında eklenecek)",
+      "issue2": "Paragraf modunda hizalama ve boşluk sorunları daha fazladır - Tek Satır modu önerilir",
+      "issue3": "Önizleme görünümü dışa aktarılan PDF'den farklıdır - dışa aktarılan PDF'ler orijinale daha yakındır",
+      "issue4": "Döndürülmüş metnin hizalaması manuel ayar gerektirebilir",
+      "issue5": "Şeffaflık ve katmanlama efektleri orijinalden farklı olabilir",
+      "feedback": "Bu bir erken erişim özelliğidir. Lütfen geliştirmemize yardımcı olmak için karşılaştığınız sorunları bildirin!",
+      "gotIt": "Anladım",
+      "dontShowAgain": "Bir daha gösterme"
+    },
+    "modeChange": {
+      "title": "Mod Değişikliğini Onayla",
+      "warning": "Metin gruplama modunu değiştirmek kaydedilmemiş tüm değişiklikleri sıfırlayacaktır. Devam etmek istiyor musunuz?",
+      "cancel": "İptal",
+      "confirm": "Sıfırla ve Modu Değiştir"
+    },
+    "fontAnalysis": {
+      "details": "Font Ayrıntıları",
+      "embedded": "Gömülü",
+      "type": "Tür",
+      "webFormat": "Web Formatı",
+      "warnings": "Uyarılar",
+      "suggestions": "Notlar",
+      "currentPageFonts": "Bu sayfadaki fontlar",
+      "allFonts": "Tüm fontlar",
+      "fallback": "yedek",
+      "missing": "eksik",
+      "perfectMessage": "Tüm fontlar mükemmel şekilde yeniden üretilebilir.",
+      "warningMessage": "Bazı fontlar doğru görüntülenmeyebilir.",
+      "infoMessage": "Font yeniden üretim bilgisi mevcut.",
+      "perfect": "mükemmel",
+      "subset": "kısmi"
+    },
+    "errors": {
+      "invalidJson": "JSON dosyası okunamadı. PDF to JSON aracı tarafından oluşturulduğundan emin olun.",
+      "pdfConversion": "Düzenlenen JSON tekrar PDF'ye dönüştürülemedi."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Oturum Süresi Doldu",
+    "pleaseLoginAgain": "Lütfen tekrar giriş yapın.",
+    "accessDenied": "Erişim Reddedildi",
+    "insufficientPermissions": "Bu işlemi gerçekleştirmek için izniniz yok."
+  },
+  "addText": {
+    "title": "Metin Ekle",
+    "header": "PDF'lere metin ekleyin",
+    "text": {
+      "name": "Metin içeriği",
+      "placeholder": "Ekleyeceğiniz metni girin",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font boyutu",
+      "fontSizePlaceholder": "Font boyutunu yazın veya seçin (8-200)",
+      "colorLabel": "Metin rengi"
+    },
+    "steps": {
+      "configure": "Metni Yapılandır"
+    },
+    "step": {
+      "createDesc": "Ekleyeceğiniz metni girin",
+      "place": "Metni Yerleştir",
+      "placeDesc": "Metninizi eklemek için PDF'ye tıklayın"
+    },
+    "instructions": {
+      "title": "Metin nasıl eklenir",
+      "text": "Yukarıya metninizi girdikten sonra, PDF üzerinde herhangi bir yere tıklayarak yerleştirin.",
+      "paused": "Yerleştirme duraklatıldı",
+      "resumeHint": "Metni eklemek için yerleştirmeye devam edin.",
+      "noSignature": "Yerleştirmeyi etkinleştirmek için yukarıya metin girin."
+    },
+    "mode": {
+      "move": "Metni Taşı",
+      "place": "Metni Yerleştir",
+      "pause": "Yerleştirmeyi duraklat",
+      "resume": "Yerleştirmeye devam et"
+    },
+    "results": {
+      "title": "Metin Ekleme Sonuçları"
+    },
+    "error": {
+      "failed": "PDF'ye metin eklenirken bir hata oluştu."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Metni Uygula"
   }
 }

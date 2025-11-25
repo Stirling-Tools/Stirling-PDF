@@ -17,6 +17,8 @@
       "comingSoon": "Em breve:",
       "favorite": "Adicionar aos favoritos",
       "favorites": "Favoritos",
+      "unavailable": "Desativado pelo administrador do servidor:",
+      "unavailableDependency": "Indisponível - ferramenta necessária ausente no servidor:",
       "heading": "Todas as ferramentas (visualização em tela cheia)",
       "noResults": "Tente ajustar sua pesquisa ou alternar descrições para encontrar o que precisa.",
       "recommended": "Recomendado",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Alternar para modo tela cheia",
       "sidebar": "Alternar para modo barra lateral"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Recurso premium:",
+    "comingSoon": "Em breve:"
   },
   "unsavedChanges": "Você tem alterações não salvas no seu PDF. O que você gostaria de fazer?",
   "areYouSure": "Tem certeza de que deseja sair?",
@@ -40,6 +45,30 @@
     "message": "Este ZIP contém {{count}} arquivos. Extrair mesmo assim?",
     "cancel": "Cancelar",
     "confirm": "Extrair"
+  },
+  "defaultApp": {
+    "title": "Definir como app padrão de PDF",
+    "message": "Deseja definir o Stirling PDF como seu editor de PDF padrão?",
+    "description": "Você pode alterar isso depois nas configurações do sistema.",
+    "notNow": "Agora não",
+    "setDefault": "Definir padrão",
+    "dismiss": "Ignorar",
+    "prompt": {
+      "title": "Definir como editor de PDF padrão",
+      "message": "Torne o Stirling PDF seu aplicativo padrão para abrir arquivos PDF."
+    },
+    "success": {
+      "title": "App padrão definido",
+      "message": "O Stirling PDF agora é seu editor de PDF padrão"
+    },
+    "settingsOpened": {
+      "title": "Configurações abertas",
+      "message": "Selecione o Stirling PDF nas configurações do sistema"
+    },
+    "error": {
+      "title": "Erro",
+      "message": "Falha ao definir o manipulador de PDF padrão"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Salvar",
   "saveToBrowser": "Salvar no Navegador",
   "download": "Baixar (JSON)",
+  "downloadUnavailable": "Download indisponível para este item",
+  "saveUnavailable": "Salvar indisponível para este item",
   "pin": "Fixar arquivo (manter ativo após execução da ferramenta)",
   "unpin": "Desafixar arquivo (substituir após execução da ferramenta)",
   "undoOperationTooltip": "Clique para desfazer a última operação e restaurar os arquivos originais",
@@ -168,6 +199,7 @@
   },
   "edit": "Editar",
   "delete": "Apagar",
+  "never": "Nunca",
   "username": "Usuário",
   "password": "Senha",
   "welcome": "Bem-vindo",
@@ -262,7 +294,8 @@
     "learnMore": "Saiba mais",
     "enable": "Habilitar coleta de dados",
     "disable": "Desabilitar coleta de dados",
-    "settings": "Você pode alterar as configurações de coleta de dados no arquivo config/settings.yml"
+    "settings": "Você pode alterar as configurações de coleta de dados no arquivo config/settings.yml",
+    "privacyAssurance": "Não rastreamos informações pessoais nem o conteúdo dos seus arquivos."
   },
   "navbar": {
     "favorite": "Favoritos",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Configurações",
-    "update": "Atualização disponível",
-    "updateAvailable": "{0} é a versão atualmente instalada. Uma nova versão ({1}) está disponível.",
-    "appVersion": "Versão do Aplicativo:",
-    "downloadOption": {
-      "title": "Escolha a opção de download (para download de arquivo único, não compactados):",
-      "1": "Abrir na mesma janela",
-      "2": "Abrir em nova janela",
-      "3": "Baixar o arquivo"
-    },
-    "zipThreshold": "Compactar os arquivos quando o número baixado exceder:",
-    "signOut": "Sair",
-    "accountSettings": "Configurações da Conta",
-    "bored": {
-      "help": "Habilitar jogos secretos"
-    },
-    "cacheInputs": {
-      "name": "Salvar entradas do formulário.",
-      "help": "Habilitar para armazenar entradas usadas anteriormente para execuções futuras"
+    "connection": {
+      "title": "Modo de conexão",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Self-Hosted"
+      },
+      "server": "Servidor",
+      "user": "Logado como",
+      "logout": "Sair"
     },
     "general": {
       "title": "Geral",
       "description": "Configurar preferências gerais do aplicativo.",
-      "account": "Conta",
-      "accountDescription": "Gerencie as configurações da sua conta",
       "user": "Usuário",
-      "signedInAs": "Conectado como",
       "logout": "Sair",
       "enableFeatures": {
+        "dismiss": "Dispensar",
         "title": "Para administradores do sistema",
         "intro": "Ative autenticação de usuários, gerenciamento de equipe e recursos de área de trabalho para sua organização.",
         "action": "Configurar",
         "and": "e",
         "benefit": "Ativa papéis de usuário, colaboração em equipe, controles de administrador e recursos corporativos.",
-        "learnMore": "Saiba mais na documentação",
-        "dismiss": "Dispensar"
+        "learnMore": "Saiba mais na documentação"
       },
-      "autoUnzip": "Descompactar automaticamente respostas da API",
-      "autoUnzipDescription": "Extrair automaticamente arquivos de respostas ZIP",
-      "autoUnzipTooltip": "Extrai automaticamente arquivos ZIP retornados por operações da API. Desative para manter os arquivos ZIP intactos. Isso não afeta fluxos de automação.",
-      "autoUnzipFileLimit": "Limite de arquivos para descompactação automática",
-      "autoUnzipFileLimitDescription": "Número máximo de arquivos a extrair do ZIP",
-      "autoUnzipFileLimitTooltip": "Somente descompactar se o ZIP contiver esse número de arquivos ou menos. Defina mais alto para extrair ZIPs maiores.",
       "defaultToolPickerMode": "Modo padrão do seletor de ferramentas",
       "defaultToolPickerModeDescription": "Escolha se o seletor de ferramentas abre em tela cheia ou barra lateral por padrão",
       "mode": {
-        "fullscreen": "Tela cheia",
-        "sidebar": "Barra lateral"
-      }
+        "sidebar": "Barra lateral",
+        "fullscreen": "Tela cheia"
+      },
+      "autoUnzipTooltip": "Extrai automaticamente arquivos ZIP retornados por operações da API. Desative para manter os arquivos ZIP intactos. Isso não afeta fluxos de automação.",
+      "autoUnzip": "Descompactar automaticamente respostas da API",
+      "autoUnzipDescription": "Extrair automaticamente arquivos de respostas ZIP",
+      "autoUnzipFileLimitTooltip": "Somente descompactar se o ZIP contiver esse número de arquivos ou menos. Defina mais alto para extrair ZIPs maiores.",
+      "autoUnzipFileLimit": "Limite de arquivos para descompactação automática",
+      "autoUnzipFileLimitDescription": "Número máximo de arquivos a extrair do ZIP",
+      "defaultPdfEditor": "Editor de PDF padrão",
+      "defaultPdfEditorActive": "O Stirling PDF é seu editor de PDF padrão",
+      "defaultPdfEditorInactive": "Outro aplicativo está definido como padrão",
+      "defaultPdfEditorChecking": "Verificando...",
+      "defaultPdfEditorSet": "Já é padrão",
+      "setAsDefault": "Definir como padrão",
+      "updates": {
+        "title": "Atualizações de software",
+        "description": "Verifique atualizações e veja informações da versão",
+        "currentVersion": "Versão atual",
+        "latestVersion": "Última versão",
+        "checkForUpdates": "Verificar atualizações",
+        "viewDetails": "Ver detalhes"
+      },
+      "hideUnavailableTools": "Ocultar ferramentas indisponíveis",
+      "hideUnavailableToolsDescription": "Remove ferramentas desativadas pelo servidor em vez de mostrá-las esmaecidas.",
+      "hideUnavailableConversions": "Ocultar conversões indisponíveis",
+      "hideUnavailableConversionsDescription": "Remove opções de conversão desativadas na ferramenta Converter em vez de mostrá-las esmaecidas."
     },
     "hotkeys": {
-      "title": "Atalhos de teclado",
-      "description": "Passe o mouse sobre uma ferramenta para ver seu atalho ou personalize abaixo. Clique em \"Alterar atalho\" e pressione uma nova combinação de teclas. Pressione Esc para cancelar.",
-      "errorModifier": {
-        "mac": "Inclua ⌘ (Command), ⌥ (Option) ou outro modificador no atalho.",
-        "windows": "Inclua Ctrl, Alt ou outro modificador no atalho."
-      },
       "errorConflict": "Atalho já usado por {{tool}}.",
+      "searchPlaceholder": "Pesquisar ferramentas...",
       "none": "Não atribuído",
       "customBadge": "Personalizado",
       "defaultLabel": "Padrão: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Alterar atalho",
       "reset": "Redefinir",
       "shortcut": "Atalho",
-      "noShortcut": "Nenhum atalho definido",
-      "searchPlaceholder": "Pesquisar ferramentas..."
+      "noShortcut": "Nenhum atalho definido"
     }
+  },
+  "update": {
+    "modalTitle": "Atualização disponível",
+    "current": "Versão atual",
+    "latest": "Última versão",
+    "latestStable": "Última estável",
+    "priorityLabel": "Prioridade",
+    "recommendedAction": "Ação recomendada",
+    "breakingChangesDetected": "Alterações incompatíveis detectadas",
+    "breakingChangesMessage": "Algumas versões contêm alterações incompatíveis. Revise os guias de migração abaixo antes de atualizar.",
+    "migrationGuides": "Guias de migração",
+    "viewGuide": "Ver guia",
+    "loadingDetailedInfo": "Carregando informações detalhadas...",
+    "close": "Fechar",
+    "viewAllReleases": "Ver todas as versões",
+    "downloadLatest": "Baixar a mais recente",
+    "availableUpdates": "Atualizações disponíveis",
+    "unableToLoadDetails": "Não foi possível carregar informações detalhadas.",
+    "version": "Versão",
+    "urgentUpdateAvailable": "Atualização urgente",
+    "updateAvailable": "Atualização disponível",
+    "releaseNotes": "Notas da versão",
+    "priority": {
+      "urgent": "Urgente",
+      "normal": "Normal",
+      "minor": "Menor",
+      "low": "Baixa"
+    },
+    "breakingChanges": "Alterações incompatíveis",
+    "breakingChangesDefault": "Esta versão contém alterações incompatíveis.",
+    "migrationGuide": "Guia de migração"
   },
   "changeCreds": {
     "title": "Alterar Credenciais",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Sobrepor um PDF sobre outro",
       "title": "Sobrepor PDFs"
+    },
+    "pdfTextEditor": {
+      "title": "Editor de texto de PDF",
+      "desc": "Revise e edite exportações JSON do Stirling PDF com edição de texto agrupada e regeneração do PDF"
+    },
+    "addText": {
+      "tags": "texto,anotação,rótulo",
+      "title": "Adicionar texto",
+      "desc": "Adicione texto personalizado em qualquer lugar do seu PDF"
     }
   },
   "landing": {
     "addFiles": "Adicionar arquivos",
-    "uploadFromComputer": "Fazer upload do computador"
+    "uploadFromComputer": "Fazer upload do computador",
+    "openFromComputer": "Abrir do computador"
   },
   "viewPdf": {
     "tags": "visualizar,ler,anotar,texto,imagem",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Ocorreu um erro ao mesclar os PDFs."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral das configurações de mesclagem"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,imagem,foto",
     "title": "Adicionar Imagem",
     "header": "Adicionar Imagem",
-    "everyPage": "Para cada página?",
-    "upload": "Carregar imagem",
-    "submit": "Adicionar imagem"
+    "image": {
+      "name": "Imagem",
+      "placeholder": "Enviar uma imagem",
+      "label": "Arquivo de imagem"
+    },
+    "steps": {
+      "configure": "Configurar imagem"
+    },
+    "step": {
+      "createDesc": "Envie a imagem que deseja adicionar",
+      "place": "Posicionar imagem",
+      "placeDesc": "Clique no PDF para adicionar sua imagem"
+    },
+    "instructions": {
+      "title": "Como adicionar imagens",
+      "text": "Após enviar sua imagem acima, clique em qualquer lugar no PDF para posicioná-la.",
+      "paused": "Posicionamento pausado",
+      "resumeHint": "Retome o posicionamento para clicar e adicionar sua imagem.",
+      "noSignature": "Envie uma imagem acima para habilitar o posicionamento."
+    },
+    "mode": {
+      "move": "Mover imagem",
+      "place": "Posicionar imagem",
+      "pause": "Pausar posicionamento",
+      "resume": "Retomar posicionamento"
+    },
+    "results": {
+      "title": "Resultados de adicionar imagem"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao adicionar a imagem ao PDF."
+    },
+    "saved": {
+      "defaultLabel": "Imagem",
+      "defaultImageLabel": "Imagem enviada"
+    },
+    "applySignatures": "Aplicar imagens"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Impedir impressão de formatos diferentes."
     },
     "submit": "Alterar"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Marcadores e sumário",
+      "replaceExisting": "Substituir marcadores existentes (desmarque para acrescentar)",
+      "replaceExistingHint": "Quando desativado, o novo sumário é acrescentado após os marcadores atuais."
+    },
+    "actions": {
+      "source": "Carregar marcadores",
+      "selectedFile": "Carregado de {{file}}",
+      "noFile": "Selecione um PDF para extrair os marcadores existentes.",
+      "loadFromPdf": "Carregar do PDF selecionado",
+      "importJson": "Importar JSON",
+      "importClipboard": "Colar JSON da área de transferência",
+      "export": "Exportar marcadores",
+      "exportJson": "Baixar JSON",
+      "exportClipboard": "Copiar JSON para a área de transferência",
+      "clipboardUnavailable": "O acesso à área de transferência não está disponível neste navegador."
+    },
+    "info": {
+      "line1": "Cada marcador precisa de um título descritivo e da página que deve abrir.",
+      "line2": "Use marcadores filhos para criar uma hierarquia para capítulos, seções ou subseções.",
+      "line3": "Importe marcadores do PDF selecionado ou de um arquivo JSON para economizar tempo."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Abra a ferramenta para começar a editar",
+        "description": "Selecione a ferramenta Editar sumário para carregar o espaço de trabalho."
+      },
+      "tabTitle": "Área de trabalho do sumário",
+      "subtitle": "Importe marcadores, crie hierarquias e aplique o sumário sem painéis laterais apertados.",
+      "noFile": "Nenhum PDF selecionado",
+      "fileLabel": "As alterações serão aplicadas ao PDF atualmente selecionado.",
+      "filePrompt": "Selecione um PDF da sua biblioteca ou envie um novo para começar.",
+      "changeFile": "Trocar PDF",
+      "selectFile": "Selecionar PDF"
+    },
+    "editor": {
+      "heading": "Editor de marcadores",
+      "description": "Adicione, aninhe e reordene marcadores para montar o sumário do seu PDF.",
+      "addTopLevel": "Adicionar marcador de nível superior",
+      "empty": {
+        "title": "Ainda não há marcadores",
+        "description": "Importe marcadores existentes ou comece adicionando sua primeira entrada.",
+        "action": "Adicionar primeiro marcador"
+      },
+      "defaultTitle": "Novo marcador",
+      "defaultChildTitle": "Marcador filho",
+      "defaultSiblingTitle": "Novo marcador",
+      "untitled": "Marcador sem título",
+      "childBadge": "Filho",
+      "pagePreview": "Página {{page}}",
+      "field": {
+        "title": "Título do marcador",
+        "page": "Número da página de destino"
+      },
+      "actions": {
+        "toggle": "Alternar filhos",
+        "addChild": "Adicionar marcador filho",
+        "addSibling": "Adicionar marcador irmão",
+        "remove": "Remover marcador"
+      },
+      "confirmRemove": "Remover este marcador e todos os seus filhos?"
+    },
+    "messages": {
+      "loadedTitle": "Marcadores extraídos",
+      "loadedBody": "Marcadores existentes do PDF foram carregados no editor.",
+      "noBookmarks": "Nenhum marcador foi encontrado no PDF selecionado.",
+      "loadFailed": "Não foi possível extrair marcadores do PDF selecionado.",
+      "imported": "Marcadores importados",
+      "importedBody": "Seu sumário JSON substituiu o conteúdo atual do editor.",
+      "importedClipboard": "Os dados da área de transferência substituíram a lista de marcadores atual.",
+      "invalidJson": "Estrutura JSON inválida",
+      "invalidJsonBody": "Forneça um arquivo JSON de marcadores válido e tente novamente.",
+      "exported": "Download de JSON pronto",
+      "copied": "Copiado para a área de transferência",
+      "copiedBody": "JSON de marcadores copiado com sucesso.",
+      "copyFailed": "Falha ao copiar"
+    },
+    "error": {
+      "failed": "Falha ao atualizar o sumário"
+    },
+    "submit": "Aplicar sumário",
+    "results": {
+      "title": "PDF atualizado com marcadores",
+      "subtitle": "Baixe o arquivo processado ou desfaça a operação abaixo."
+    }
   },
   "removePages": {
     "tags": "Remover páginas,excluir páginas",
@@ -1978,13 +2177,54 @@
       "title": "Desenhe sua assinatura",
       "clear": "Limpar"
     },
+    "canvas": {
+      "heading": "Desenhe sua assinatura",
+      "clickToOpen": "Clique para abrir a tela de desenho",
+      "modalTitle": "Desenhe sua assinatura",
+      "colorLabel": "Cor",
+      "penSizeLabel": "Espessura",
+      "penSizePlaceholder": "Tamanho",
+      "clear": "Limpar tela",
+      "colorPickerTitle": "Escolha a cor do traço"
+    },
     "text": {
       "name": "Nome do signatário",
-      "placeholder": "Insira seu nome completo"
+      "placeholder": "Insira seu nome completo",
+      "fontLabel": "Fonte",
+      "fontSizeLabel": "Tamanho da fonte",
+      "fontSizePlaceholder": "Digite ou selecione o tamanho da fonte (8-200)",
+      "colorLabel": "Cor do texto"
     },
     "clear": "Limpar",
     "add": "Adicionar",
-    "saved": "Assinaturas Salvas",
+    "saved": {
+      "heading": "Assinaturas salvas",
+      "description": "Reutilize assinaturas salvas a qualquer momento.",
+      "emptyTitle": "Ainda não há assinaturas salvas",
+      "emptyDescription": "Desenhe, envie ou digite uma assinatura acima e use \"Salvar na biblioteca\" para manter até {{max}} favoritas prontas para uso.",
+      "type": {
+        "canvas": "Desenho",
+        "image": "Upload",
+        "text": "Texto"
+      },
+      "limitTitle": "Limite atingido",
+      "limitDescription": "Remova uma assinatura salva antes de adicionar novas (máx. {{max}}).",
+      "carouselPosition": "{{current}} de {{total}}",
+      "prev": "Anterior",
+      "next": "Próximo",
+      "delete": "Remover",
+      "label": "Rótulo",
+      "defaultLabel": "Assinatura",
+      "defaultCanvasLabel": "Assinatura desenhada",
+      "defaultImageLabel": "Assinatura enviada",
+      "defaultTextLabel": "Assinatura digitada",
+      "saveButton": "Salvar assinatura",
+      "saveUnavailable": "Crie uma assinatura primeiro para salvá-la.",
+      "noChanges": "A assinatura atual já está salva.",
+      "status": {
+        "saved": "Salva"
+      }
+    },
     "save": "Salvar Assinatura",
     "applySignatures": "Aplicar assinaturas",
     "personalSigs": "Assinaturas Pessoais",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Configurar assinatura"
     },
+    "step": {
+      "createDesc": "Escolha como deseja criar a assinatura",
+      "place": "Posicionar e salvar",
+      "placeDesc": "Posicione a assinatura no seu PDF"
+    },
     "type": {
       "title": "Tipo de assinatura",
       "draw": "Desenhar",
-      "canvas": "Canvas",
+      "canvas": "Tela",
       "image": "Imagem",
-      "text": "Texto"
+      "text": "Texto",
+      "saved": "Salvas"
     },
     "image": {
       "label": "Enviar imagem da assinatura",
@@ -2019,11 +2265,17 @@
       "title": "Como adicionar assinatura",
       "canvas": "Depois de desenhar sua assinatura no canvas, feche o modal e clique em qualquer lugar no PDF para posicioná-la.",
       "image": "Depois de enviar a imagem da sua assinatura acima, clique em qualquer lugar no PDF para posicioná-la.",
-      "text": "Depois de inserir seu nome acima, clique em qualquer lugar no PDF para posicionar sua assinatura."
+      "saved": "Selecione uma assinatura salva acima e clique em qualquer lugar no PDF para posicioná-la.",
+      "text": "Depois de inserir seu nome acima, clique em qualquer lugar no PDF para posicionar sua assinatura.",
+      "paused": "Posicionamento pausado",
+      "resumeHint": "Retome o posicionamento para clicar e adicionar sua assinatura.",
+      "noSignature": "Crie uma assinatura acima para habilitar as ferramentas de posicionamento."
     },
     "mode": {
       "move": "Mover assinatura",
-      "place": "Posicionar assinatura"
+      "place": "Posicionar assinatura",
+      "pause": "Pausar posicionamento",
+      "resume": "Retomar posicionamento"
     },
     "updateAndPlace": "Atualizar e posicionar",
     "activate": "Ativar posicionamento de assinatura",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Sobre remover anotações",
       "description": "Esta ferramenta removerá todas as anotações (comentários, realces, notas etc.) dos seus documentos PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Sobre Remover Anotações"
+      },
+      "description": {
+        "title": "O que faz"
+      }
     },
     "error": {
       "failed": "Ocorreu um erro ao remover anotações do PDF."
@@ -2578,7 +2838,7 @@
       "label": "Tamanho de página desejado",
       "keep": "Manter tamanho original",
       "letter": "Carta",
-      "legal": "Legal"
+      "legal": "Ofício"
     },
     "submit": "Ajustar escala da página",
     "error": {
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Como funciona a renomeação automática"
       },
+      "description": {
+        "title": "O que faz"
+      },
       "howItWorks": {
         "title": "Renomeação inteligente",
         "text": "Localiza automaticamente o título no conteúdo do seu PDF e o usa como nome de arquivo.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Cria um nome de arquivo limpo e válido a partir do título detectado",
         "bullet3": "Mantém o nome original se nenhum título adequado for encontrado"
       }
+    },
+    "settings": {
+      "title": "Sobre"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "Exportar PDF",
     "downloadSelected": "Baixar arquivos selecionados",
     "downloadAll": "Baixar tudo",
+    "saveAll": "Salvar tudo",
     "toggleTheme": "Alternar tema",
+    "toggleBookmarks": "Alternar marcadores",
     "language": "Idioma",
     "search": "Pesquisar PDF",
     "panMode": "Modo de panorâmica",
@@ -4212,9 +4480,21 @@
         "title": "Premium e Enterprise",
         "description": "Configurar sua chave de licença premium ou enterprise.",
         "license": "Configuração de licença",
+        "licenseKey": {
+          "toggle": "Tem uma chave de licença ou arquivo de certificado?",
+          "info": "Se você tem uma chave de licença ou um arquivo de certificado de uma compra direta, insira aqui para ativar recursos premium ou enterprise."
+        },
         "key": {
           "label": "Chave de licença",
-          "description": "Insira sua chave de licença premium ou enterprise"
+          "description": "Insira sua chave de licença premium ou enterprise",
+          "success": "Chave de licença salva",
+          "successMessage": "Sua chave de licença foi ativada com sucesso. Não é necessário reiniciar.",
+          "overwriteWarning": {
+            "title": "⚠️ Aviso: licença existente detectada",
+            "line1": "Substituir sua chave de licença atual não pode ser desfeito.",
+            "line2": "Sua licença anterior será perdida permanentemente, a menos que você tenha um backup em outro lugar.",
+            "line3": "Importante: mantenha chaves de licença privadas e seguras. Nunca as compartilhe publicamente."
+          }
         },
         "enabled": {
           "label": "Habilitar recursos Premium",
@@ -4278,12 +4558,17 @@
     "or": "ou",
     "dropFileHere": "Solte o arquivo aqui ou clique para fazer upload",
     "dropFilesHere": "Solte os arquivos aqui ou clique no botão de upload",
+    "dropFilesHereOpen": "Solte arquivos aqui ou clique no botão abrir",
     "pdfFilesOnly": "Apenas arquivos PDF",
     "supportedFileTypes": "Tipos de arquivo suportados",
     "upload": "Fazer upload",
     "uploadFile": "Fazer upload de arquivo",
     "uploadFiles": "Fazer upload de arquivos",
+    "open": "Abrir",
+    "openFile": "Abrir arquivo",
+    "openFiles": "Abrir arquivos",
     "noFilesInStorage": "Nenhum arquivo disponível no armazenamento. Primeiro faça upload de alguns arquivos.",
+    "noFilesInStorageOpen": "Nenhum arquivo disponível no armazenamento. Abra alguns arquivos primeiro.",
     "selectFromStorage": "Selecionar do armazenamento",
     "backToTools": "Voltar às ferramentas",
     "addFiles": "Adicionar arquivos",
@@ -4329,6 +4614,8 @@
     "myFiles": "Meus arquivos",
     "noRecentFiles": "Nenhum arquivo recente encontrado",
     "googleDriveNotAvailable": "Integração com Google Drive indisponível",
+    "downloadSelected": "Baixar selecionados",
+    "saveSelected": "Salvar selecionados",
     "openFiles": "Abrir arquivos",
     "openFile": "Abrir arquivo",
     "details": "Detalhes do arquivo",
@@ -4341,7 +4628,6 @@
     "selectAll": "Selecionar Tudo",
     "deselectAll": "Desselecionar Tudo",
     "deleteSelected": "Apagar Selecionados",
-    "downloadSelected": "Baixar selecionados",
     "selectedCount": "{{count}} selecionado(s)",
     "download": "Baixar (JSON)",
     "delete": "Apagar",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Fluxo de segurança",
       "secureWorkflowDesc": "Protege documentos PDF removendo conteúdo potencialmente malicioso, como JavaScript e arquivos incorporados, e adiciona proteção por senha para evitar acesso não autorizado. A senha padrão é 'password'.",
       "processImages": "Processar imagens",
-      "processImagesDesc": "Converte vários arquivos de imagem em um único documento PDF e, em seguida, aplica tecnologia de OCR para extrair texto pesquisável das imagens."
+      "processImagesDesc": "Converte vários arquivos de imagem em um único documento PDF e, em seguida, aplica tecnologia de OCR para extrair texto pesquisável das imagens.",
+      "prePublishSanitization": "Higienização pré-publicação",
+      "prePublishSanitizationDesc": "Fluxo de higienização que remove todos os metadados ocultos, JavaScript, arquivos incorporados, anotações e achata formulários para evitar vazamento de dados antes de publicar PDFs online."
     }
+  },
+  "colorPicker": {
+    "title": "Escolha a cor"
   },
   "common": {
     "previous": "Anterior",
@@ -4639,7 +4930,13 @@
     "used": "usado",
     "available": "disponível",
     "cancel": "Cancelar",
-    "preview": "Pré-visualização"
+    "preview": "Pré-visualização",
+    "close": "Fechar",
+    "done": "Concluído",
+    "loading": "Carregando...",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "error": "Erro"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Adicionar mais arquivos...",
     "selectedFiles": "Arquivos selecionados",
     "submit": "Adicionar anexos",
+    "tooltip": {
+      "header": {
+        "title": "Sobre Adicionar Anexos"
+      },
+      "description": {
+        "title": "O que faz"
+      }
+    },
     "results": {
       "title": "Resultados dos anexos"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Posição personalizada",
   "details": "Detalhes",
-  "downloadUnavailable": "Download indisponível para este item",
   "invalidUndoData": "Não é possível desfazer: dados de operação inválidos",
   "margin": {
     "large": "Grande",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Talvez mais tarde",
       "dontShowAgain": "Não mostrar novamente"
     },
+    "welcomeSlide": {
+      "title": "Bem-vindo ao Stirling",
+      "body": "Stirling PDF agora está pronto para equipes de todos os tamanhos. Esta atualização inclui um novo layout, poderosos recursos de administração e nosso recurso mais solicitado - <strong>Editar texto</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Vamos selecionar a ferramenta de <strong>Recortar</strong> para demonstrar como usar uma das ferramentas.",
     "toolInterface": "Esta é a interface da ferramenta de <strong>Recortar</strong>. Como você pode ver, não há muito aqui porque ainda não adicionamos nenhum arquivo PDF para trabalhar.",
@@ -4823,7 +5131,39 @@
     "next": "Próximo",
     "finish": "Concluir",
     "startTour": "Iniciar tour",
-    "startTourDescription": "Faça um tour guiado pelos principais recursos do Stirling PDF"
+    "startTourDescription": "Faça um tour guiado pelos principais recursos do Stirling PDF",
+    "buttons": {
+      "next": "Próximo →",
+      "back": "Voltar",
+      "skipForNow": "Pular por enquanto",
+      "download": "Baixar →",
+      "showMeAround": "Me mostre por aí",
+      "skipTheTour": "Pular o tour"
+    },
+    "serverLicense": {
+      "skip": "Pular por enquanto",
+      "seePlans": "Ver planos →",
+      "upgrade": "Fazer upgrade agora →",
+      "freeTitle": "Licença do servidor",
+      "overLimitTitle": "Necessária licença do servidor",
+      "overLimitBody": "Nossa licença permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Você tem <strong>{{overLimitUserCopy}}</strong> usuários do Stirling. Para continuar sem interrupções, faça upgrade para o plano Stirling Server - <strong>assentos ilimitados</strong>, edição de texto em PDF e controle total de admin por US$ 99/servidor/mês.",
+      "freeBody": "Nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Para escalar sem interrupções e ter acesso antecipado à nova <strong>ferramenta de edição de texto em PDF</strong>, recomendamos o plano Stirling Server - edição completa e <strong>assentos ilimitados</strong> por US$ 99/servidor/mês."
+    },
+    "desktopInstall": {
+      "title": "Download",
+      "titleWithOs": "Download para {{osLabel}}",
+      "body": "O Stirling funciona melhor como app desktop. Você pode usá-lo offline, acessar documentos mais rápido e fazer edições localmente no computador."
+    },
+    "planOverview": {
+      "adminTitle": "Visão geral do admin",
+      "userTitle": "Visão geral do plano",
+      "adminBodyLoginEnabled": "Como admin, você pode gerenciar usuários, configurar as configurações e monitorar a integridade do servidor. As primeiras <strong>{{freeTierLimit}}</strong> pessoas no seu servidor usam o Stirling gratuitamente.",
+      "adminBodyLoginDisabled": "Depois de ativar o modo de login, você poderá gerenciar usuários, configurar as configurações e monitorar a integridade do servidor. As primeiras <strong>{{freeTierLimit}}</strong> pessoas no seu servidor usam o Stirling gratuitamente.",
+      "userBody": "Convide colegas, atribua funções e mantenha seus documentos organizados em um espaço de trabalho seguro. Ative o modo de login quando estiver pronto para ir além do uso individual."
+    },
+    "securityCheck": {
+      "message": "O aplicativo passou por mudanças significativas recentemente. Pode ser necessária a atenção do administrador do servidor. Confirme seu papel para continuar."
+    }
   },
   "adminOnboarding": {
     "welcome": "Bem-vindo ao <strong>Tour do Admin</strong>! Vamos explorar os poderosos recursos e configurações empresariais disponíveis para administradores do sistema.",
@@ -4852,7 +5192,10 @@
       "role": "Função",
       "team": "Equipe",
       "status": "Status",
-      "actions": "Ações",
+      "actions": {
+        "label": "Ações",
+        "upgrade": "Upgrade"
+      },
       "noMembersFound": "Nenhum membro encontrado",
       "active": "Ativo",
       "disabled": "Desativado",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} vaga(s) de usuário disponível(is)",
         "noSlotsAvailable": "Nenhuma vaga disponível",
         "currentUsage": "Atualmente usando {{current}} de {{max}} licenças de usuário"
-      }
+      },
+      "loginRequired": "Ative o modo de login primeiro"
     },
     "teams": {
       "title": "Equipes",
@@ -5057,6 +5401,17 @@
     "showComparison": "Comparar todos os recursos",
     "hideComparison": "Ocultar comparação de recursos",
     "featureComparison": "Comparação de recursos",
+    "from": "A partir de",
+    "perMonth": "/mês",
+    "perSeat": "/assento",
+    "withServer": "+ Plano Server",
+    "licensedSeats": "Licenciados: {{count}} assentos",
+    "includedInCurrent": "Incluído no seu plano",
+    "selectPlan": "Selecionar plano",
+    "manage": "Gerenciar",
+    "manageSubscription": {
+      "description": "Gerencie sua assinatura, cobrança e formas de pagamento"
+    },
     "activePlan": {
       "title": "Plano ativo",
       "subtitle": "Detalhes da sua assinatura atual"
@@ -5074,13 +5429,16 @@
       "upTo": "Até"
     },
     "period": {
-      "month": "mês"
+      "month": "mês",
+      "perUserPerMonth": "/usuário/mês"
     },
     "free": {
       "name": "Gratuito",
       "highlight1": "Uso limitado de ferramentas por semana",
       "highlight2": "Acesso a todas as ferramentas",
-      "highlight3": "Suporte da comunidade"
+      "highlight3": "Suporte da comunidade",
+      "forever": "Gratuito para sempre",
+      "included": "Incluído"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Empresarial",
       "highlight1": "Preços personalizados",
       "highlight2": "Suporte dedicado",
-      "highlight3": "Recursos mais recentes"
+      "highlight3": "Recursos mais recentes",
+      "requiresServer": "Requer Server",
+      "requiresServerMessage": "Faça upgrade para o plano Server antes de atualizar para Enterprise."
     },
     "feature": {
       "title": "Recurso",
@@ -5102,6 +5462,12 @@
       "api": "Acesso à API",
       "priority": "Suporte prioritário",
       "customPricing": "Preços personalizados"
+    },
+    "licenseWarning": {
+      "title": "Limite gratuito de self-hosted atingido",
+      "body": "Você tem {{total}} usuários, mas o nível gratuito suporta apenas {{limit}} por servidor. Faça upgrade para manter o Stirling PDF funcionando sem problemas.",
+      "overLimit": "mais de {{limit}}",
+      "cta": "Ver planos"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Gerenciar cobrança",
     "portal": {
       "error": "Falha ao abrir o portal de cobrança"
-    }
+    },
+    "updateSeats": "Atualizar assentos",
+    "updateEnterpriseSeats": "Atualizar assentos Enterprise",
+    "currentSeats": "Assentos atuais",
+    "minimumSeats": "Mínimo de assentos",
+    "basedOnUsers": "(usuários atuais)",
+    "newSeatCount": "Novo número de assentos",
+    "newSeatCountDescription": "Selecione o número de assentos para sua licença enterprise",
+    "whatHappensNext": "O que acontece a seguir?",
+    "stripePortalRedirect": "Você será redirecionado ao portal de cobrança da Stripe para revisar e confirmar a alteração de assentos. O valor proporcional será calculado automaticamente.",
+    "preparingUpdate": "Preparando atualização de assentos...",
+    "seatCountTooLow": "O número de assentos deve ser pelo menos {{minimum}} (número atual de usuários)",
+    "seatCountUnchanged": "Selecione um número de assentos diferente",
+    "seatsUpdated": "Assentos atualizados",
+    "seatsUpdatedMessage": "Seus assentos Enterprise foram atualizados para {{seats}}",
+    "updateProcessing": "Processando atualização",
+    "updateProcessingMessage": "Sua atualização de assentos está sendo processada. Atualize em alguns instantes.",
+    "notEnterprise": "Gerenciamento de assentos disponível apenas para licenças Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Faça upgrade para o plano Server",
+    "message": "Aproveite ao máximo o Stirling PDF com usuários ilimitados e recursos avançados",
+    "upgradeButton": "Fazer upgrade agora",
+    "dismiss": "Dispensar banner",
+    "attentionTitle": "Este servidor precisa de atenção do admin",
+    "attentionBody": "Seu admin precisa entrar para ver mais informações. Entre em contato com ele imediatamente.",
+    "attentionBodyAdmin": "Revise os requisitos de licença para manter este servidor em conformidade.",
+    "seeInfo": "Ver informações"
   },
   "payment": {
     "preparing": "Preparando seu checkout...",
@@ -5128,7 +5521,61 @@
     "success": "Pagamento bem-sucedido!",
     "successMessage": "Sua assinatura foi ativada com sucesso. Você receberá um e-mail de confirmação em breve.",
     "autoClose": "Esta janela será fechada automaticamente...",
-    "error": "Erro de pagamento"
+    "error": "Erro de pagamento",
+    "upgradeSuccess": "Pagamento bem-sucedido! Sua assinatura foi atualizada. A licença foi atualizada no seu servidor. Você receberá um e-mail de confirmação em breve.",
+    "paymentSuccess": "Pagamento bem-sucedido! Recuperando sua chave de licença...",
+    "licenseActivated": "Licença ativada! Sua chave de licença foi salva. Um e-mail de confirmação foi enviado ao seu endereço de e-mail registrado.",
+    "licenseDelayed": "Pagamento bem-sucedido! Sua licença está sendo gerada. Você receberá um e-mail com sua chave de licença em breve. Se não receber em 10 minutos, entre em contato com o suporte.",
+    "licensePollingError": "Pagamento bem-sucedido, mas não foi possível recuperar sua chave de licença automaticamente. Verifique seu e-mail ou contate o suporte com a confirmação do pagamento.",
+    "licenseRetrievalError": "Pagamento bem-sucedido, mas a recuperação da licença falhou. Você receberá sua chave de licença por e-mail. Contate o suporte se não receber em 10 minutos.",
+    "syncError": "Pagamento bem-sucedido, mas a sincronização da licença falhou. Sua licença será atualizada em breve. Contate o suporte se o problema persistir.",
+    "licenseSaveError": "Falha ao salvar a chave de licença. Contate o suporte com sua chave para concluir a ativação.",
+    "paymentCanceled": "Pagamento foi cancelado. Nenhuma cobrança foi feita.",
+    "syncingLicense": "Sincronizando sua licença atualizada...",
+    "generatingLicense": "Gerando sua chave de licença...",
+    "upgradeComplete": "Upgrade concluído",
+    "upgradeCompleteMessage": "Sua assinatura foi atualizada com sucesso. Sua chave de licença existente foi atualizada.",
+    "stripeNotConfigured": "Stripe não configurado",
+    "stripeNotConfiguredMessage": "A integração de pagamento via Stripe não está configurada. Contate o administrador.",
+    "monthly": "Mensal",
+    "yearly": "Anual",
+    "billingPeriod": "Período de cobrança",
+    "enterpriseNote": "Assentos podem ser ajustados no checkout (1-1000).",
+    "installationId": "ID da instalação",
+    "licenseKey": "Sua chave de licença",
+    "licenseInstructions": "Isso foi adicionado à sua instalação. Você também receberá uma cópia por e-mail.",
+    "canCloseWindow": "Você já pode fechar esta janela.",
+    "licenseKeyProcessing": "Processando chave de licença",
+    "licenseDelayedMessage": "Sua chave de licença está sendo gerada. Verifique seu e-mail em breve ou contate o suporte.",
+    "perYear": "/ano",
+    "perMonth": "/mês",
+    "emailInvalid": "Digite um endereço de e-mail válido",
+    "emailStage": {
+      "title": "Informe seu e-mail",
+      "description": "Usaremos isso para enviar sua chave de licença e recibos.",
+      "emailLabel": "Endereço de e-mail",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Continuar",
+      "modalTitle": "Começar - {{planName}}"
+    },
+    "planStage": {
+      "title": "Escolha seu período de cobrança",
+      "savingsNote": "Economize {{percent}}% com cobrança anual",
+      "basePrice": "Preço base",
+      "seatPrice": "Por assento",
+      "totalForSeats": "Total ({{count}} assentos)",
+      "selectMonthly": "Selecionar mensal",
+      "selectYearly": "Selecionar anual",
+      "savePercent": "Economize {{percent}}%",
+      "savingsAmount": "Você economiza {{amount}}",
+      "modalTitle": "Selecionar período de cobrança - {{planName}}",
+      "billedYearly": "Cobrado anualmente em {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Voltar para seleção de plano",
+      "selectedPlan": "Plano selecionado",
+      "modalTitle": "Concluir pagamento - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Primeiro login",
@@ -5287,5 +5734,281 @@
     "offline": "Backend offline",
     "starting": "Backend iniciando...",
     "wait": "Aguarde o backend concluir a inicialização e tente novamente."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Desbloqueie o PDF para continuar",
+    "title": "Remover a senha para continuar",
+    "description": "Este PDF está protegido por senha. Insira a senha para continuar trabalhando nele.",
+    "password": {
+      "label": "Senha do PDF",
+      "placeholder": "Insira a senha do PDF"
+    },
+    "skip": "Pular por enquanto",
+    "unlock": "Desbloquear e continuar",
+    "incorrectPassword": "Senha incorreta",
+    "missingFile": "O arquivo selecionado não está mais disponível.",
+    "emptyResponse": "A remoção da senha não gerou um arquivo.",
+    "required": "Insira a senha para continuar.",
+    "successTitle": "Senha removida",
+    "successBodyWithName": "Senha removida de {{fileName}}",
+    "successBody": "Senha removida com sucesso."
+  },
+  "setup": {
+    "welcome": "Bem-vindo ao Stirling PDF",
+    "description": "Comece escolhendo como deseja usar o Stirling PDF",
+    "step1": {
+      "label": "Escolher modo",
+      "description": "Offline ou servidor"
+    },
+    "step2": {
+      "label": "Selecionar servidor",
+      "description": "Servidor self-hosted"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Informar credenciais"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Entre com sua conta do Stirling"
+      },
+      "selfhosted": {
+        "title": "Servidor self-hosted",
+        "description": "Conecte-se ao seu próprio servidor Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Entrar no Stirling",
+      "subtitle": "Entre com sua conta do Stirling"
+    },
+    "selfhosted": {
+      "title": "Entrar no servidor",
+      "subtitle": "Informe suas credenciais do servidor"
+    },
+    "server": {
+      "title": "Conectar ao servidor",
+      "subtitle": "Informe a URL do seu servidor self-hosted",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Servidor self-hosted"
+      },
+      "url": {
+        "label": "URL do servidor",
+        "description": "Informe a URL completa do seu servidor self-hosted Stirling PDF"
+      },
+      "error": {
+        "emptyUrl": "Informe uma URL de servidor",
+        "unreachable": "Não foi possível conectar ao servidor",
+        "testFailed": "Falha no teste de conexão"
+      },
+      "testing": "Testando conexão..."
+    },
+    "login": {
+      "title": "Entrar",
+      "subtitle": "Informe suas credenciais para continuar",
+      "connectingTo": "Conectando a:",
+      "username": {
+        "label": "Usuário",
+        "placeholder": "Digite seu usuário"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Digite seu e-mail"
+      },
+      "password": {
+        "label": "Senha",
+        "placeholder": "Digite sua senha"
+      },
+      "error": {
+        "emptyUsername": "Digite seu usuário",
+        "emptyEmail": "Digite seu e-mail",
+        "emptyPassword": "Digite sua senha",
+        "oauthFailed": "Falha no login via OAuth. Tente novamente."
+      },
+      "submit": "Login",
+      "signInWith": "Entrar com",
+      "oauthPending": "Abrindo o navegador para autenticação...",
+      "orContinueWith": "Ou continue com e-mail"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Autenticação bem-sucedida",
+      "message": "Você pode fechar esta janela e voltar ao Stirling PDF."
+    },
+    "error": {
+      "title": "Falha na autenticação",
+      "message": "A autenticação não foi bem-sucedida. Você pode fechar esta janela e tentar novamente."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor de JSON de PDF",
+    "viewLabel": "Editor de PDF",
+    "converting": "Convertendo o PDF para formato editável...",
+    "conversionFailed": "Falha ao converter o PDF. Tente novamente.",
+    "currentFile": "Arquivo atual: {{name}}",
+    "pageSummary": "Página {{number}} de {{total}}",
+    "pagePreviewAlt": "Prévia da página",
+    "imageLabel": "Imagem posicionada",
+    "noTextOnPage": "Nenhum texto editável foi detectado nesta página.",
+    "pageType": {
+      "paragraph": "Página de parágrafos",
+      "sparse": "Texto esparso"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Parágrafo",
+      "singleLine": "Linha única"
+    },
+    "badges": {
+      "unsaved": "Editado",
+      "modified": "Editado",
+      "earlyAccess": "Acesso antecipado"
+    },
+    "actions": {
+      "reset": "Reverter alterações",
+      "downloadJson": "Baixar JSON",
+      "generatePdf": "Gerar PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Dimensionar texto automaticamente para caber nas caixas",
+        "description": "Dimensiona o texto horizontalmente para caber na caixa delimitadora original quando a renderização da fonte difere do PDF."
+      },
+      "groupingMode": {
+        "title": "Modo de agrupamento de texto",
+        "autoDescription": "Detecta automaticamente o tipo de página e agrupa o texto de forma apropriada.",
+        "paragraphDescription": "Agrupa linhas alinhadas em caixas de texto de parágrafo multilinha.",
+        "singleLineDescription": "Mantém cada linha de texto do PDF como uma caixa de texto separada."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Dica: Segure Ctrl (Cmd) ou Shift para selecionar várias caixas de texto. Uma barra de ferramentas flutuante aparecerá acima da seleção para você mesclar, desagrupar ou ajustar larguras."
+      },
+      "forceSingleElement": {
+        "title": "Fixar texto editado em um único elemento PDF",
+        "description": "Quando ativado, o editor exporta cada caixa de texto editada como um único elemento de texto PDF para evitar sobreposição de glifos ou fontes misturadas."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Mesclar caixas selecionadas",
+      "merge": "Mesclar seleção",
+      "ungroupTooltip": "Dividir parágrafo de volta em linhas",
+      "ungroup": "Desagrupar seleção",
+      "widthMenu": "Opções de largura",
+      "expandWidth": "Expandir até a borda da página",
+      "resetWidth": "Redefinir largura",
+      "resizeHandle": "Ajustar largura do texto"
+    },
+    "disclaimer": {
+      "heading": "Limitações da visualização",
+      "textFocus": "Este espaço de trabalho foca na edição de texto e no reposicionamento de imagens incorporadas. Artes complexas, widgets de formulário e gráficos em camadas são preservados para exportação, mas não são totalmente editáveis aqui.",
+      "previewVariance": "Alguns elementos visuais (como bordas de tabelas, formas ou aparências de anotações) podem não ser exibidos exatamente na visualização. O PDF exportado mantém os comandos de desenho originais sempre que possível.",
+      "alpha": "Este visualizador alpha ainda está evoluindo—certas fontes, cores, efeitos de transparência e detalhes de layout podem variar levemente. Verifique o PDF gerado antes de compartilhar."
+    },
+    "empty": {
+      "title": "Nenhum documento carregado",
+      "subtitle": "Carregue um PDF ou JSON para começar a editar texto."
+    },
+    "welcomeBanner": {
+      "title": "Bem-vindo ao Editor de Texto PDF (Acesso antecipado)",
+      "experimental": "Este é um recurso experimental em desenvolvimento ativo. Espere alguma instabilidade e problemas durante o uso.",
+      "howItWorks": "Esta ferramenta converte seu PDF em um formato editável no qual você pode modificar o conteúdo do texto e reposicionar imagens. As alterações são salvas como um novo PDF.",
+      "bestFor": "Funciona melhor com:",
+      "bestFor1": "PDFs simples contendo principalmente texto e imagens",
+      "bestFor2": "Documentos com formatação de parágrafo padrão",
+      "bestFor3": "Cartas, redações, relatórios e documentos básicos",
+      "notIdealFor": "Não é ideal para:",
+      "notIdealFor1": "PDFs com formatação especial como marcadores, tabelas ou layouts de múltiplas colunas",
+      "notIdealFor2": "Revistas, folhetos ou documentos altamente diagramados",
+      "notIdealFor3": "Manuais de instruções com layouts complexos",
+      "limitations": "Limitações atuais:",
+      "limitation1": "A renderização de fontes pode diferir ligeiramente do PDF original",
+      "limitation2": "Gráficos complexos, campos de formulário e anotações são preservados, mas não são editáveis",
+      "limitation3": "Arquivos grandes podem demorar para converter e processar",
+      "knownIssues": "Problemas conhecidos (sendo corrigidos):",
+      "issue1": "A cor do texto não é preservada no momento (será adicionada em breve)",
+      "issue2": "O modo Parágrafo tem mais problemas de alinhamento e espaçamento - recomenda-se o modo Linha única",
+      "issue3": "A visualização difere do PDF exportado - os PDFs exportados ficam mais próximos do original",
+      "issue4": "O alinhamento de texto rotacionado pode precisar de ajuste manual",
+      "issue5": "Os efeitos de transparência e camadas podem variar em relação ao original",
+      "feedback": "Este é um recurso de acesso antecipado. Relate quaisquer problemas que encontrar para nos ajudar a melhorar!",
+      "gotIt": "Entendi",
+      "dontShowAgain": "Não mostrar novamente"
+    },
+    "modeChange": {
+      "title": "Confirmar alteração de modo",
+      "warning": "Alterar o modo de agrupamento de texto vai redefinir todas as alterações não salvas. Tem certeza de que deseja continuar?",
+      "cancel": "Cancelar",
+      "confirm": "Redefinir e alterar modo"
+    },
+    "fontAnalysis": {
+      "details": "Detalhes da fonte",
+      "embedded": "Incorporada",
+      "type": "Tipo",
+      "webFormat": "Formato web",
+      "warnings": "Avisos",
+      "suggestions": "Notas",
+      "currentPageFonts": "Fontes nesta página",
+      "allFonts": "Todas as fontes",
+      "fallback": "alternativa",
+      "missing": "ausente",
+      "perfectMessage": "Todas as fontes podem ser reproduzidas perfeitamente.",
+      "warningMessage": "Algumas fontes podem não renderizar corretamente.",
+      "infoMessage": "Informações de reprodução de fontes disponíveis.",
+      "perfect": "perfeito",
+      "subset": "subconjunto"
+    },
+    "errors": {
+      "invalidJson": "Não foi possível ler o arquivo JSON. Verifique se ele foi gerado pela ferramenta PDF para JSON.",
+      "pdfConversion": "Não foi possível converter o JSON editado de volta para PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sessão expirada",
+    "pleaseLoginAgain": "Faça login novamente.",
+    "accessDenied": "Acesso negado",
+    "insufficientPermissions": "Você não tem permissão para executar esta ação."
+  },
+  "addText": {
+    "title": "Adicionar texto",
+    "header": "Adicionar texto a PDFs",
+    "text": {
+      "name": "Conteúdo do texto",
+      "placeholder": "Digite o texto que deseja adicionar",
+      "fontLabel": "Fonte",
+      "fontSizeLabel": "Tamanho da fonte",
+      "fontSizePlaceholder": "Digite ou selecione o tamanho da fonte (8-200)",
+      "colorLabel": "Cor do texto"
+    },
+    "steps": {
+      "configure": "Configurar texto"
+    },
+    "step": {
+      "createDesc": "Digite o texto que deseja adicionar",
+      "place": "Posicionar texto",
+      "placeDesc": "Clique no PDF para adicionar seu texto"
+    },
+    "instructions": {
+      "title": "Como adicionar texto",
+      "text": "Após digitar seu texto acima, clique em qualquer lugar do PDF para posicioná-lo.",
+      "paused": "Posicionamento pausado",
+      "resumeHint": "Retome o posicionamento para clicar e adicionar seu texto.",
+      "noSignature": "Digite o texto acima para ativar o posicionamento."
+    },
+    "mode": {
+      "move": "Mover texto",
+      "place": "Posicionar texto",
+      "pause": "Pausar posicionamento",
+      "resume": "Retomar posicionamento"
+    },
+    "results": {
+      "title": "Resultados de adicionar texto"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao adicionar texto ao PDF."
+    },
+    "tags": "texto,anotação,rótulo",
+    "applySignatures": "Aplicar texto"
   }
 }

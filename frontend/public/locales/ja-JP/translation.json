@@ -17,6 +17,8 @@
       "comingSoon": "近日公開:",
       "favorite": "お気に入りに追加",
       "favorites": "お気に入り",
+      "unavailable": "サーバー管理者により無効化:",
+      "unavailableDependency": "利用不可 - 必要なツールがサーバーにありません:",
       "heading": "すべてのツール（フルスクリーン表示）",
       "noResults": "検索条件を調整するか、説明の表示を切り替えて必要なものを見つけてください。",
       "recommended": "おすすめ",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "フルスクリーンモードに切り替え",
       "sidebar": "サイドバーモードに切り替え"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "プレミアム機能:",
+    "comingSoon": "近日公開:"
   },
   "unsavedChanges": "PDF に未保存の変更があります。",
   "areYouSure": "本当に離れますか？",
@@ -40,6 +45,30 @@
     "message": "このZIPには{{count}}個のファイルが含まれています。展開しますか？",
     "cancel": "キャンセル",
     "confirm": "展開"
+  },
+  "defaultApp": {
+    "title": "既定のPDFアプリに設定",
+    "message": "Stirling PDF を既定のPDFエディターに設定しますか？",
+    "description": "後でシステム設定で変更できます。",
+    "notNow": "今はしない",
+    "setDefault": "既定に設定",
+    "dismiss": "閉じる",
+    "prompt": {
+      "title": "既定のPDFエディターに設定",
+      "message": "PDFファイルを開く既定のアプリとして Stirling PDF を設定します。"
+    },
+    "success": {
+      "title": "既定のアプリを設定",
+      "message": "Stirling PDF が既定のPDFエディターになりました"
+    },
+    "settingsOpened": {
+      "title": "設定を開きました",
+      "message": "システム設定で Stirling PDF を選択してください"
+    },
+    "error": {
+      "title": "エラー",
+      "message": "既定のPDFハンドラーの設定に失敗しました"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "保存",
   "saveToBrowser": "ブラウザへ保存",
   "download": "ダウンロード",
+  "downloadUnavailable": "この項目はダウンロードできません",
+  "saveUnavailable": "この項目は保存できません",
   "pin": "ファイルをピン留め（ツール実行後も保持）",
   "unpin": "ピン留めを解除（ツール実行後に置き換え）",
   "undoOperationTooltip": "クリックして直前の操作を取り消し、元のファイルを復元します",
@@ -168,6 +199,7 @@
   },
   "edit": "編集",
   "delete": "削除",
+  "never": "なし",
   "username": "ユーザー名",
   "password": "パスワード",
   "welcome": "ようこそ",
@@ -262,7 +294,8 @@
     "learnMore": "詳しく見る",
     "enable": "分析を有効にする",
     "disable": "分析を無効にする",
-    "settings": "config/settings.ymlファイルでアナリティクスの設定を変更できます。"
+    "settings": "config/settings.ymlファイルでアナリティクスの設定を変更できます。",
+    "privacyAssurance": "個人情報やファイル内容は一切追跡しません。"
   },
   "navbar": {
     "favorite": "お気に入り",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "設定",
-    "update": "利用可能なアップデート",
-    "updateAvailable": "バージョン {0} がインストールされています。 新しいバージョン ({1}) が利用可能です。",
-    "appVersion": "Appバージョン:",
-    "downloadOption": {
-      "title": "ダウンロードオプション (zip以外の単一ファイル):",
-      "1": "同じウィンドウで開く",
-      "2": "新しいウィンドウで開く",
-      "3": "ファイルをダウンロード"
-    },
-    "zipThreshold": "このファイル数を超えたときにファイルを圧縮する",
-    "signOut": "サインアウト",
-    "accountSettings": "アカウント設定",
-    "bored": {
-      "help": "イースターエッグゲームを有効にする"
-    },
-    "cacheInputs": {
-      "name": "フォームの入力を保存する",
-      "help": "以前使用した入力を保存し、次回から使用できるようにする。"
+    "connection": {
+      "title": "接続モード",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "セルフホスト"
+      },
+      "server": "サーバー",
+      "user": "ログイン中:",
+      "logout": "ログアウト"
     },
     "general": {
       "title": "一般",
       "description": "アプリの一般設定を構成します。",
-      "account": "アカウント",
-      "accountDescription": "アカウント設定を管理",
       "user": "ユーザー",
-      "signedInAs": "サインイン中:",
       "logout": "ログアウト",
       "enableFeatures": {
+        "dismiss": "閉じる",
         "title": "システム管理者向け",
         "intro": "組織向けにユーザー認証、チーム管理、ワークスペース機能を有効化します。",
         "action": "設定",
         "and": "と",
         "benefit": "ユーザーロール、チームコラボレーション、管理機能、エンタープライズ機能を有効化します。",
-        "learnMore": "ドキュメントで詳しく見る",
-        "dismiss": "閉じる"
+        "learnMore": "ドキュメントで詳しく見る"
       },
-      "autoUnzip": "API 応答を自動解凍",
-      "autoUnzipDescription": "ZIP 応答からファイルを自動的に抽出",
-      "autoUnzipTooltip": "API 操作で返された ZIP ファイルを自動的に展開します。ZIP をそのまま保持するには無効にします。自動化ワークフローには影響しません。",
-      "autoUnzipFileLimit": "自動解凍のファイル数上限",
-      "autoUnzipFileLimitDescription": "ZIP から抽出する最大ファイル数",
-      "autoUnzipFileLimitTooltip": "ZIP に含まれるファイル数がこの数以下の場合のみ解凍します。大きな ZIP を展開するには上限を上げてください。",
       "defaultToolPickerMode": "デフォルトのツールピッカー表示モード",
       "defaultToolPickerModeDescription": "ツールピッカーをデフォルトでフルスクリーンまたはサイドバーのどちらで開くか選択します",
       "mode": {
-        "fullscreen": "フルスクリーン",
-        "sidebar": "サイドバー"
-      }
+        "sidebar": "サイドバー",
+        "fullscreen": "フルスクリーン"
+      },
+      "autoUnzipTooltip": "API 操作で返された ZIP ファイルを自動的に展開します。ZIP をそのまま保持するには無効にします。自動化ワークフローには影響しません。",
+      "autoUnzip": "API 応答を自動解凍",
+      "autoUnzipDescription": "ZIP 応答からファイルを自動的に抽出",
+      "autoUnzipFileLimitTooltip": "ZIP に含まれるファイル数がこの数以下の場合のみ解凍します。大きな ZIP を展開するには上限を上げてください。",
+      "autoUnzipFileLimit": "自動解凍のファイル数上限",
+      "autoUnzipFileLimitDescription": "ZIP から抽出する最大ファイル数",
+      "defaultPdfEditor": "既定のPDFエディター",
+      "defaultPdfEditorActive": "Stirling PDF は既定のPDFエディターです",
+      "defaultPdfEditorInactive": "別のアプリが既定に設定されています",
+      "defaultPdfEditorChecking": "確認中...",
+      "defaultPdfEditorSet": "既に既定です",
+      "setAsDefault": "既定に設定",
+      "updates": {
+        "title": "ソフトウェア更新",
+        "description": "更新の確認とバージョン情報の表示",
+        "currentVersion": "現在のバージョン",
+        "latestVersion": "最新バージョン",
+        "checkForUpdates": "更新を確認",
+        "viewDetails": "詳細を表示"
+      },
+      "hideUnavailableTools": "利用不可のツールを非表示",
+      "hideUnavailableToolsDescription": "グレー表示の代わりに、サーバーで無効化されたツールを非表示にします。",
+      "hideUnavailableConversions": "利用不可の変換を非表示",
+      "hideUnavailableConversionsDescription": "グレー表示の代わりに、Convert ツールで無効な変換オプションを非表示にします。"
     },
     "hotkeys": {
-      "title": "キーボードショートカット",
-      "description": "ツールにカーソルを合わせるとショートカットが表示されます。下でカスタマイズも可能です。「ショートカットを変更」をクリックし、新しいキーの組み合わせを押してください。Esc でキャンセル。",
-      "errorModifier": {
-        "mac": "ショートカットに ⌘（Command）、⌥（Option）などの修飾キーを含めてください。",
-        "windows": "ショートカットに Ctrl、Alt などの修飾キーを含めてください。"
-      },
       "errorConflict": "ショートカットはすでに{{tool}}で使用されています。",
+      "searchPlaceholder": "ツールを検索...",
       "none": "未割り当て",
       "customBadge": "カスタム",
       "defaultLabel": "デフォルト: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "ショートカットを変更",
       "reset": "リセット",
       "shortcut": "ショートカット",
-      "noShortcut": "ショートカット未設定",
-      "searchPlaceholder": "ツールを検索..."
+      "noShortcut": "ショートカット未設定"
     }
+  },
+  "update": {
+    "modalTitle": "更新があります",
+    "current": "現在のバージョン",
+    "latest": "最新バージョン",
+    "latestStable": "最新の安定版",
+    "priorityLabel": "優先度",
+    "recommendedAction": "推奨アクション",
+    "breakingChangesDetected": "互換性のない変更を検出",
+    "breakingChangesMessage": "一部のバージョンには互換性のない変更が含まれます。更新前に以下の移行ガイドを確認してください。",
+    "migrationGuides": "移行ガイド",
+    "viewGuide": "ガイドを見る",
+    "loadingDetailedInfo": "詳細情報を読み込み中...",
+    "close": "閉じる",
+    "viewAllReleases": "すべてのリリースを見る",
+    "downloadLatest": "最新をダウンロード",
+    "availableUpdates": "利用可能な更新",
+    "unableToLoadDetails": "詳細情報を読み込めません。",
+    "version": "バージョン",
+    "urgentUpdateAvailable": "緊急の更新",
+    "updateAvailable": "更新があります",
+    "releaseNotes": "リリースノート",
+    "priority": {
+      "urgent": "緊急",
+      "normal": "通常",
+      "minor": "軽微",
+      "low": "低"
+    },
+    "breakingChanges": "互換性のない変更",
+    "breakingChangesDefault": "このバージョンには互換性のない変更が含まれます。",
+    "migrationGuide": "移行ガイド"
   },
   "changeCreds": {
     "title": "資格情報の変更",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "1つのPDFを別のPDFの上に重ねます",
       "title": "PDFを重ね合わせ"
+    },
+    "pdfTextEditor": {
+      "title": "PDFテキストエディター",
+      "desc": "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "テキストを追加",
+      "desc": "PDFの任意の場所にテキストを追加"
     }
   },
   "landing": {
     "addFiles": "ファイルを追加",
-    "uploadFromComputer": "コンピュータからアップロード"
+    "uploadFromComputer": "コンピュータからアップロード",
+    "openFromComputer": "コンピューターから開く"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "PDF の結合中にエラーが発生しました。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "結合設定の概要"
+      }
     }
   },
   "split": {
@@ -1108,6 +1186,7 @@
     "grayscale": "グレースケール",
     "errorConversion": "ファイルの変換中にエラーが発生しました。",
     "cbzOptions": "CBZ から PDF へのオプション",
+    "optimizeForEbook": "PDF を eBook リーダー向けに最適化（Ghostscript 使用）",
     "cbzOutputOptions": "PDF から CBZ へのオプション",
     "cbzDpi": "画像レンダリングの DPI"
   },
@@ -1181,9 +1260,43 @@
     "tags": "画像,img,jpg,ピクチャ,写真",
     "title": "画像の追加",
     "header": "PDFに画像を追加",
-    "everyPage": "全ページ？",
-    "upload": "画像の追加",
-    "submit": "画像の追加"
+    "image": {
+      "name": "画像",
+      "placeholder": "画像をアップロード",
+      "label": "画像ファイル"
+    },
+    "steps": {
+      "configure": "画像を設定"
+    },
+    "step": {
+      "createDesc": "追加する画像をアップロード",
+      "place": "画像を配置",
+      "placeDesc": "PDFをクリックして画像を追加"
+    },
+    "instructions": {
+      "title": "画像の追加方法",
+      "text": "画像をアップロード後、PDF上の任意の場所をクリックして配置します。",
+      "paused": "配置を一時停止",
+      "resumeHint": "再開してクリックで画像を追加します。",
+      "noSignature": "画像をアップロードすると配置できます。"
+    },
+    "mode": {
+      "move": "画像を移動",
+      "place": "画像を配置",
+      "pause": "配置を一時停止",
+      "resume": "配置を再開"
+    },
+    "results": {
+      "title": "画像追加の結果"
+    },
+    "error": {
+      "failed": "PDF に画像を追加中にエラーが発生しました。"
+    },
+    "saved": {
+      "defaultLabel": "画像",
+      "defaultImageLabel": "アップロードした画像"
+    },
+    "applySignatures": "画像を適用"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1395,6 +1508,93 @@
       "10": "異なる形式の印刷を禁止"
     },
     "submit": "変更"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "ブックマークとアウトライン",
+      "replaceExisting": "既存のブックマークを置換（オフで末尾に追加）",
+      "replaceExistingHint": "無効にすると、新しいアウトラインは現在のブックマークの後ろに追加されます。"
+    },
+    "actions": {
+      "source": "ブックマークを読み込み",
+      "selectedFile": "{{file}} から読み込み",
+      "noFile": "既存のブックマークを抽出するPDFを選択してください。",
+      "loadFromPdf": "選択したPDFから読み込み",
+      "importJson": "JSON をインポート",
+      "importClipboard": "クリップボードの JSON を貼り付け",
+      "export": "ブックマークをエクスポート",
+      "exportJson": "JSON をダウンロード",
+      "exportClipboard": "JSON をクリップボードにコピー",
+      "clipboardUnavailable": "このブラウザーではクリップボードにアクセスできません。"
+    },
+    "info": {
+      "line1": "各ブックマークには説明的なタイトルと、開くページを指定します。",
+      "line2": "子ブックマークを使用して、章・節・小節の階層を作成します。",
+      "line3": "選択したPDFやJSONファイルからブックマークをインポートすると時間を節約できます。"
+    },
+    "workbench": {
+      "empty": {
+        "title": "ツールを開いて編集を開始",
+        "description": "目次編集ツールを選択してワークスペースを読み込みます。"
+      },
+      "tabTitle": "アウトライン ワークスペース",
+      "subtitle": "ブックマークのインポート、階層作成、アウトライン適用をサイドパネルなしで行えます。",
+      "noFile": "PDFが選択されていません",
+      "fileLabel": "変更は現在選択中のPDFに適用されます。",
+      "filePrompt": "ライブラリからPDFを選ぶか、新規にアップロードしてください。",
+      "changeFile": "PDFを変更",
+      "selectFile": "PDFを選択"
+    },
+    "editor": {
+      "heading": "ブックマーク エディター",
+      "description": "ブックマークの追加、入れ子、並べ替えでPDFのアウトラインを作成します。",
+      "addTopLevel": "最上位のブックマークを追加",
+      "empty": {
+        "title": "ブックマークはまだありません",
+        "description": "既存のブックマークをインポートするか、まずは最初の項目を追加してください。",
+        "action": "最初のブックマークを追加"
+      },
+      "defaultTitle": "新しいブックマーク",
+      "defaultChildTitle": "子ブックマーク",
+      "defaultSiblingTitle": "新しいブックマーク",
+      "untitled": "無題のブックマーク",
+      "childBadge": "子",
+      "pagePreview": "ページ {{page}}",
+      "field": {
+        "title": "ブックマークのタイトル",
+        "page": "対象ページ番号"
+      },
+      "actions": {
+        "toggle": "子を切り替え",
+        "addChild": "子ブックマークを追加",
+        "addSibling": "同階層のブックマークを追加",
+        "remove": "ブックマークを削除"
+      },
+      "confirmRemove": "このブックマークとその子をすべて削除しますか？"
+    },
+    "messages": {
+      "loadedTitle": "ブックマークを抽出しました",
+      "loadedBody": "PDFの既存のブックマークをエディターに読み込みました。",
+      "noBookmarks": "選択したPDFにブックマークは見つかりませんでした。",
+      "loadFailed": "選択したPDFからブックマークを抽出できませんでした。",
+      "imported": "ブックマークをインポートしました",
+      "importedBody": "JSONのアウトラインが現在のエディター内容を置き換えました。",
+      "importedClipboard": "クリップボードのデータで現在のブックマーク一覧を置き換えました。",
+      "invalidJson": "無効な JSON 構造",
+      "invalidJsonBody": "有効なブックマークの JSON ファイルを指定して、もう一度お試しください。",
+      "exported": "JSON のダウンロード準備完了",
+      "copied": "クリップボードにコピーしました",
+      "copiedBody": "ブックマークの JSON をコピーしました。",
+      "copyFailed": "コピーに失敗しました"
+    },
+    "error": {
+      "failed": "目次の更新に失敗しました"
+    },
+    "submit": "目次を適用",
+    "results": {
+      "title": "ブックマーク付きでPDFを更新",
+      "subtitle": "処理済みファイルをダウンロードするか、下で操作を取り消します。"
+    }
   },
   "removePages": {
     "tags": "ページを削除,ページ削除",
@@ -1977,13 +2177,54 @@
       "title": "署名を描く",
       "clear": "クリア"
     },
+    "canvas": {
+      "heading": "署名を描画",
+      "clickToOpen": "クリックして描画キャンバスを開く",
+      "modalTitle": "署名を描画",
+      "colorLabel": "色",
+      "penSizeLabel": "ペンサイズ",
+      "penSizePlaceholder": "サイズ",
+      "clear": "キャンバスを消去",
+      "colorPickerTitle": "線の色を選択"
+    },
     "text": {
       "name": "署名者名",
-      "placeholder": "氏名を入力"
+      "placeholder": "氏名を入力",
+      "fontLabel": "フォント",
+      "fontSizeLabel": "フォントサイズ",
+      "fontSizePlaceholder": "フォントサイズを入力または選択 (8-200)",
+      "colorLabel": "テキストの色"
     },
     "clear": "クリア",
     "add": "追加",
-    "saved": "保存された署名",
+    "saved": {
+      "heading": "保存済みの署名",
+      "description": "保存した署名はいつでも再利用できます。",
+      "emptyTitle": "保存済みの署名はありません",
+      "emptyDescription": "上で署名を描く、アップロード、または入力してから「ライブラリに保存」を使うと、最大 {{max}} 件のお気に入りを保存しておけます。",
+      "type": {
+        "canvas": "描画",
+        "image": "アップロード",
+        "text": "テキスト"
+      },
+      "limitTitle": "上限に達しました",
+      "limitDescription": "新しく追加する前に保存済みの署名を削除してください（最大 {{max}} 件）。",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "前へ",
+      "next": "次へ",
+      "delete": "削除",
+      "label": "ラベル",
+      "defaultLabel": "署名",
+      "defaultCanvasLabel": "手書き署名",
+      "defaultImageLabel": "アップロードした署名",
+      "defaultTextLabel": "入力した署名",
+      "saveButton": "署名を保存",
+      "saveUnavailable": "まず署名を作成してから保存してください。",
+      "noChanges": "現在の署名はすでに保存済みです。",
+      "status": {
+        "saved": "保存済み"
+      }
+    },
     "save": "署名を保存",
     "applySignatures": "署名を適用",
     "personalSigs": "個人署名",
@@ -2002,12 +2243,18 @@
     "steps": {
       "configure": "署名を設定"
     },
+    "step": {
+      "createDesc": "署名の作成方法を選択",
+      "place": "配置して保存",
+      "placeDesc": "PDF上に署名の位置を指定"
+    },
     "type": {
       "title": "署名タイプ",
       "draw": "描画",
       "canvas": "キャンバス",
       "image": "画像",
-      "text": "テキスト"
+      "text": "テキスト",
+      "saved": "保存済み"
     },
     "image": {
       "label": "署名画像をアップロード",
@@ -2018,11 +2265,17 @@
       "title": "署名の追加方法",
       "canvas": "キャンバスで署名を描いた後、モーダルを閉じてから PDF 上の任意の場所をクリックして配置します。",
       "image": "上で署名画像をアップロードした後、PDF 上の任意の場所をクリックして配置します。",
-      "text": "上で氏名を入力した後、PDF 上の任意の場所をクリックして署名を配置します。"
+      "saved": "上の保存済み署名を選択し、PDF上の任意の場所をクリックして配置します。",
+      "text": "上で氏名を入力した後、PDF 上の任意の場所をクリックして署名を配置します。",
+      "paused": "配置を一時停止",
+      "resumeHint": "再開してクリックで署名を追加します。",
+      "noSignature": "上で署名を作成すると配置ツールが使えます。"
     },
     "mode": {
       "move": "署名を移動",
-      "place": "署名を配置"
+      "place": "署名を配置",
+      "pause": "配置を一時停止",
+      "resume": "配置を再開"
     },
     "updateAndPlace": "更新して配置",
     "activate": "署名配置を有効化",
@@ -2161,6 +2414,14 @@
     "info": {
       "title": "注釈削除について",
       "description": "このツールは PDF 文書からすべての注釈（コメント、ハイライト、ノート等）を削除します。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "注釈削除について"
+      },
+      "description": {
+        "title": "機能"
+      }
     },
     "error": {
       "failed": "PDF から注釈を削除中にエラーが発生しました。"
@@ -2626,6 +2887,9 @@
       "header": {
         "title": "自動リネームの仕組み"
       },
+      "description": {
+        "title": "機能"
+      },
       "howItWorks": {
         "title": "スマートリネーム",
         "text": "PDF コンテンツからタイトルを自動的に検出し、ファイル名として使用します。",
@@ -2633,6 +2897,9 @@
         "bullet2": "検出したタイトルからクリーンで有効なファイル名を作成します",
         "bullet3": "適切なタイトルが見つからない場合は元の名前を保持します"
       }
+    },
+    "settings": {
+      "title": "概要"
     }
   },
   "adjust-contrast": {
@@ -3597,7 +3864,9 @@
     "exportAll": "PDF を書き出し",
     "downloadSelected": "選択したファイルをダウンロード",
     "downloadAll": "すべてをダウンロード",
+    "saveAll": "すべて保存",
     "toggleTheme": "テーマを切り替え",
+    "toggleBookmarks": "ブックマークを切り替え",
     "language": "言語",
     "search": "PDF を検索",
     "panMode": "パンモード",
@@ -4136,7 +4405,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "アプリをインストール",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4211,9 +4480,21 @@
         "title": "プレミアムとエンタープライズ",
         "description": "プレミアムまたはエンタープライズのライセンスキーを構成します。",
         "license": "ライセンス設定",
+        "licenseKey": {
+          "toggle": "ライセンスキーまたは証明書ファイルをお持ちですか？",
+          "info": "直接購入で入手したライセンスキーまたは証明書ファイルがある場合、ここに入力してプレミアムまたはエンタープライズ機能を有効化できます。"
+        },
         "key": {
           "label": "ライセンスキー",
-          "description": "プレミアムまたはエンタープライズのライセンスキーを入力"
+          "description": "プレミアムまたはエンタープライズのライセンスキーを入力",
+          "success": "ライセンスキーを保存しました",
+          "successMessage": "ライセンスキーは正常に有効化されました。再起動は不要です。",
+          "overwriteWarning": {
+            "title": "⚠️ 警告: 既存のライセンスを検出",
+            "line1": "現在のライセンスキーを上書きすると元に戻せません。",
+            "line2": "別途バックアップしていない限り、以前のライセンスは永久に失われます。",
+            "line3": "重要: ライセンスキーは秘密に安全に保管してください。公開で共有しないでください。"
+          }
         },
         "enabled": {
           "label": "プレミアム機能を有効化",
@@ -4277,12 +4558,17 @@
     "or": "または",
     "dropFileHere": "ここにドロップするかクリックしてアップロード",
     "dropFilesHere": "ここにドロップするかアップロードボタンをクリック",
+    "dropFilesHereOpen": "ここにファイルをドロップするか、開くボタンをクリック",
     "pdfFilesOnly": "PDF のみ",
     "supportedFileTypes": "対応ファイルタイプ",
     "upload": "アップロード",
     "uploadFile": "ファイルをアップロード",
     "uploadFiles": "複数ファイルをアップロード",
+    "open": "開く",
+    "openFile": "ファイルを開く",
+    "openFiles": "複数ファイルを開く",
     "noFilesInStorage": "ストレージにファイルがありません。まずはファイルをアップロードしてください。",
+    "noFilesInStorageOpen": "ストレージに利用可能なファイルがありません。先にファイルを開いてください。",
     "selectFromStorage": "ストレージから選択",
     "backToTools": "ツールに戻る",
     "addFiles": "ファイルを追加",
@@ -4328,6 +4614,8 @@
     "myFiles": "マイファイル",
     "noRecentFiles": "最近のファイルは見つかりませんでした",
     "googleDriveNotAvailable": "Google ドライブ連携は利用できません",
+    "downloadSelected": "選択をダウンロード",
+    "saveSelected": "選択項目を保存",
     "openFiles": "複数ファイルを開く",
     "openFile": "ファイルを開く",
     "details": "ファイル詳細",
@@ -4340,7 +4628,6 @@
     "selectAll": "すべて選択",
     "deselectAll": "選択を解除",
     "deleteSelected": "選択項目を削除",
-    "downloadSelected": "選択をダウンロード",
     "selectedCount": "{{count}} 件選択",
     "download": "ダウンロード",
     "delete": "削除",
@@ -4620,8 +4907,13 @@
       "secureWorkflow": "セキュリティ ワークフロー",
       "secureWorkflowDesc": "JavaScript や埋め込みファイルなどの潜在的に悪意あるコンテンツを削除し、パスワード保護を追加して PDF を保護します。既定パスワードは「password」です。",
       "processImages": "画像を処理",
-      "processImagesDesc": "複数の画像ファイルを 1 つの PDF に変換し、OCR で検索可能なテキストを抽出します。"
+      "processImagesDesc": "複数の画像ファイルを 1 つの PDF に変換し、OCR で検索可能なテキストを抽出します。",
+      "prePublishSanitization": "公開前のサニタイズ",
+      "prePublishSanitizationDesc": "PDF をオンライン公開する前に、隠れたメタデータ、JavaScript、埋め込みファイル、注釈をすべて削除し、フォームをフラット化して情報漏洩を防ぐサニタイズ ワークフローです。"
     }
+  },
+  "colorPicker": {
+    "title": "色を選択"
   },
   "common": {
     "previous": "前へ",
@@ -4638,7 +4930,13 @@
     "used": "使用済み",
     "available": "利用可能",
     "cancel": "キャンセル",
-    "preview": "プレビュー"
+    "preview": "プレビュー",
+    "close": "閉じる",
+    "done": "完了",
+    "loading": "読み込み中...",
+    "back": "戻る",
+    "continue": "続行",
+    "error": "エラー"
   },
   "config": {
     "overview": {
@@ -4704,6 +5002,14 @@
     "addMoreFiles": "さらにファイルを追加...",
     "selectedFiles": "選択したファイル",
     "submit": "添付を追加",
+    "tooltip": {
+      "header": {
+        "title": "添付追加について"
+      },
+      "description": {
+        "title": "機能"
+      }
+    },
     "results": {
       "title": "添付結果"
     },
@@ -4723,7 +5029,6 @@
   },
   "customPosition": "カスタム位置",
   "details": "詳細",
-  "downloadUnavailable": "この項目はダウンロードできません",
   "invalidUndoData": "元に戻せません: 無効な操作データです",
   "margin": {
     "large": "大",
@@ -4800,6 +5105,10 @@
       "maybeLater": "後で",
       "dontShowAgain": "今後表示しない"
     },
+    "welcomeSlide": {
+      "title": "Stirling へようこそ",
+      "body": "Stirling PDF はあらゆる規模のチームで使えるようになりました。このアップデートには新しいレイアウト、強力な管理機能、そして最も要望の多かった機能 - <strong>テキスト編集</strong> が含まれます。"
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "ツールの使い方を説明するため、まずは <strong>切り抜き</strong> ツールを選択しましょう。",
     "toolInterface": "こちらが <strong>切り抜き</strong> ツールの画面です。まだ作業用の PDF ファイルを追加していないため、表示項目は多くありません。",
@@ -4822,7 +5131,39 @@
     "next": "次へ",
     "finish": "完了",
     "startTour": "ツアーを開始",
-    "startTourDescription": "Stirling PDF の主な機能をガイド付きで紹介します"
+    "startTourDescription": "Stirling PDF の主な機能をガイド付きで紹介します",
+    "buttons": {
+      "next": "次へ →",
+      "back": "戻る",
+      "skipForNow": "今はスキップ",
+      "download": "ダウンロード →",
+      "showMeAround": "ツアーを見る",
+      "skipTheTour": "ツアーをスキップ"
+    },
+    "serverLicense": {
+      "skip": "今はスキップ",
+      "seePlans": "プランを見る →",
+      "upgrade": "今すぐアップグレード →",
+      "freeTitle": "サーバーライセンス",
+      "overLimitTitle": "サーバーライセンスが必要です",
+      "overLimitBody": "当社のライセンスでは、サーバーごとに <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。現在 <strong>{{overLimitUserCopy}}</strong> の Stirling ユーザーがいます。中断なく利用を続けるには、Stirling Server プランにアップグレードしてください - <strong>無制限席数</strong>、PDF テキスト編集、完全な管理機能が $99/サーバー/月 です。",
+      "freeBody": "当社の <strong>オープンコア</strong> ライセンスでは、サーバーごとに最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。中断なく拡張し、新しい <strong>PDF テキスト編集ツール</strong> に早期アクセスするには、Stirling Server プランをお勧めします。完全編集と <strong>無制限席数</strong> が $99/サーバー/月 です。"
+    },
+    "desktopInstall": {
+      "title": "ダウンロード",
+      "titleWithOs": "{{osLabel}} 用をダウンロード",
+      "body": "Stirling はデスクトップアプリとして最適に動作します。オフラインでも使えて、文書に素早くアクセスし、PC上でローカル編集できます。"
+    },
+    "planOverview": {
+      "adminTitle": "管理者向け概要",
+      "userTitle": "プラン概要",
+      "adminBodyLoginEnabled": "管理者として、ユーザー管理、設定の構成、サーバーの健全性監視ができます。サーバー上の最初の <strong>{{freeTierLimit}}</strong> 人は無料で Stirling を利用できます。",
+      "adminBodyLoginDisabled": "ログインモードを有効にすると、ユーザー管理、設定の構成、サーバーの健全性監視が可能です。サーバー上の最初の <strong>{{freeTierLimit}}</strong> 人は無料で Stirling を利用できます。",
+      "userBody": "メンバーを招待し、役割を割り当て、1つの安全なワークスペースで文書を整理できます。ソロ利用を超えて拡大する準備ができたら、いつでもログインモードを有効にしてください。"
+    },
+    "securityCheck": {
+      "message": "アプリケーションに最近大きな変更がありました。サーバー管理者の対応が必要な場合があります。続行するには、ご自身の役割を確認してください。"
+    }
   },
   "adminOnboarding": {
     "welcome": "<strong>管理者ツアー</strong> へようこそ！システム管理者向けの強力なエンタープライズ機能と設定を見ていきましょう。",
@@ -4851,7 +5192,10 @@
       "role": "役割",
       "team": "チーム",
       "status": "ステータス",
-      "actions": "操作",
+      "actions": {
+        "label": "操作",
+        "upgrade": "アップグレード"
+      },
       "noMembersFound": "メンバーが見つかりません",
       "active": "有効",
       "disabled": "無効",
@@ -4963,7 +5307,8 @@
         "slotsAvailable": "{{count}} 件のユーザースロットが利用可能",
         "noSlotsAvailable": "利用可能な枠がありません",
         "currentUsage": "現在 {{max}} 件中 {{current}} 件のユーザーライセンスを使用"
-      }
+      },
+      "loginRequired": "先にログインモードを有効にしてください"
     },
     "teams": {
       "title": "チーム",
@@ -5056,6 +5401,17 @@
     "showComparison": "すべての機能を比較",
     "hideComparison": "機能比較を隠す",
     "featureComparison": "機能比較",
+    "from": "から",
+    "perMonth": "/月",
+    "perSeat": "/席",
+    "withServer": "+ Server プラン",
+    "licensedSeats": "ライセンス: {{count}} 席",
+    "includedInCurrent": "ご利用中のプランに含まれています",
+    "selectPlan": "プランを選択",
+    "manage": "管理",
+    "manageSubscription": {
+      "description": "サブスクリプション、請求、支払い方法を管理"
+    },
     "activePlan": {
       "title": "アクティブなプラン",
       "subtitle": "現在のサブスクリプションの詳細"
@@ -5073,13 +5429,16 @@
       "upTo": "最大"
     },
     "period": {
-      "month": "月"
+      "month": "月",
+      "perUserPerMonth": "/ユーザー/月"
     },
     "free": {
       "name": "無料",
       "highlight1": "週あたりのツール利用に制限",
       "highlight2": "すべてのツールにアクセス",
-      "highlight3": "コミュニティサポート"
+      "highlight3": "コミュニティサポート",
+      "forever": "永久無料",
+      "included": "含まれる"
     },
     "pro": {
       "name": "プロ",
@@ -5091,7 +5450,9 @@
       "name": "エンタープライズ",
       "highlight1": "カスタム価格",
       "highlight2": "専用サポート",
-      "highlight3": "最新機能"
+      "highlight3": "最新機能",
+      "requiresServer": "Server が必要",
+      "requiresServerMessage": "Enterprise にアップグレードする前に、先に Server プランへアップグレードしてください。"
     },
     "feature": {
       "title": "機能",
@@ -5101,6 +5462,12 @@
       "api": "API アクセス",
       "priority": "優先サポート",
       "customPricing": "カスタム価格"
+    },
+    "licenseWarning": {
+      "title": "セルフホストの無料上限に達しました",
+      "body": "ユーザーは {{total}} 人ですが、無料枠はサーバーあたり {{limit}} 人までです。Stirling PDF を円滑に運用するにはアップグレードしてください。",
+      "overLimit": "{{limit}} を超過",
+      "cta": "プランを見る"
     }
   },
   "subscription": {
@@ -5119,7 +5486,34 @@
     "manageBilling": "請求の管理",
     "portal": {
       "error": "請求ポータルを開けませんでした"
-    }
+    },
+    "updateSeats": "席数を更新",
+    "updateEnterpriseSeats": "Enterprise の席数を更新",
+    "currentSeats": "現在の席数",
+    "minimumSeats": "最小席数",
+    "basedOnUsers": "（現在のユーザー数）",
+    "newSeatCount": "新しい席数",
+    "newSeatCountDescription": "エンタープライズ ライセンスの席数を選択",
+    "whatHappensNext": "次の手順",
+    "stripePortalRedirect": "Stripe の請求ポータルにリダイレクトされ、席数の変更を確認できます。日割り額は自動計算されます。",
+    "preparingUpdate": "席数の更新を準備中...",
+    "seatCountTooLow": "席数は最低 {{minimum}}（現在のユーザー数）以上にしてください",
+    "seatCountUnchanged": "別の席数を選択してください",
+    "seatsUpdated": "席数を更新しました",
+    "seatsUpdatedMessage": "エンタープライズの席数が {{seats}} に更新されました",
+    "updateProcessing": "更新を処理中",
+    "updateProcessingMessage": "席数の更新を処理しています。数秒後に再読み込みしてください。",
+    "notEnterprise": "席数管理はエンタープライズ ライセンスでのみ利用できます"
+  },
+  "upgradeBanner": {
+    "title": "Server プランにアップグレード",
+    "message": "無制限ユーザーと高度な機能で Stirling PDF を最大限活用",
+    "upgradeButton": "今すぐアップグレード",
+    "dismiss": "バナーを閉じる",
+    "attentionTitle": "このサーバーには管理者の対応が必要です",
+    "attentionBody": "詳細を見るには管理者がサインインする必要があります。至急ご連絡ください。",
+    "attentionBodyAdmin": "このサーバーを準拠させるため、ライセンス要件を確認してください。",
+    "seeInfo": "詳細を見る"
   },
   "payment": {
     "preparing": "チェックアウトを準備しています...",
@@ -5127,7 +5521,61 @@
     "success": "支払いが完了しました",
     "successMessage": "サブスクリプションが有効化されました。まもなく確認メールが届きます。",
     "autoClose": "このウィンドウは自動的に閉じます...",
-    "error": "支払いエラー"
+    "error": "支払いエラー",
+    "upgradeSuccess": "支払いに成功しました！ サブスクリプションがアップグレードされ、ライセンスがサーバーに更新されました。確認メールをまもなくお送りします。",
+    "paymentSuccess": "支払いに成功しました！ ライセンスキーを取得中...",
+    "licenseActivated": "ライセンスを有効化しました！ ライセンスキーは保存済みです。登録メール宛に確認メールを送信しました。",
+    "licenseDelayed": "支払いは完了しました。ライセンスを生成中です。間もなくライセンスキーをメールでお送りします。10分以内に届かない場合はサポートへご連絡ください。",
+    "licensePollingError": "支払いは完了しましたが、ライセンスキーを自動取得できませんでした。メールを確認するか、支払い確認情報とともにサポートへお問い合わせください。",
+    "licenseRetrievalError": "支払いは完了しましたが、ライセンスの取得に失敗しました。ライセンスキーはメールでお送りします。10分以内に届かない場合はサポートへご連絡ください。",
+    "syncError": "支払いは完了しましたが、ライセンスの同期に失敗しました。間もなくライセンスが更新されます。問題が続く場合はサポートへご連絡ください。",
+    "licenseSaveError": "ライセンスキーの保存に失敗しました。ライセンスキーを添えてサポートへご連絡のうえ、有効化を完了してください。",
+    "paymentCanceled": "支払いをキャンセルしました。課金は行われていません。",
+    "syncingLicense": "アップグレード済みライセンスを同期中...",
+    "generatingLicense": "ライセンスキーを生成中...",
+    "upgradeComplete": "アップグレード完了",
+    "upgradeCompleteMessage": "サブスクリプションは正常にアップグレードされ、既存のライセンスキーが更新されました。",
+    "stripeNotConfigured": "Stripe が未設定",
+    "stripeNotConfiguredMessage": "Stripe の決済連携が設定されていません。管理者に連絡してください。",
+    "monthly": "月額",
+    "yearly": "年額",
+    "billingPeriod": "請求期間",
+    "enterpriseNote": "席数はチェックアウトで調整できます（1〜1000）。",
+    "installationId": "インストールID",
+    "licenseKey": "あなたのライセンスキー",
+    "licenseInstructions": "これはインストールに追加済みです。コピーはメールでもお送りします。",
+    "canCloseWindow": "このウィンドウは閉じても構いません。",
+    "licenseKeyProcessing": "ライセンスキーを処理中",
+    "licenseDelayedMessage": "ライセンスキーを生成中です。間もなくメールをご確認いただくか、サポートへご連絡ください。",
+    "perYear": "/年",
+    "perMonth": "/月",
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "emailStage": {
+      "title": "メールアドレスを入力",
+      "description": "ライセンスキーと領収書の送付に使用します。",
+      "emailLabel": "メールアドレス",
+      "emailPlaceholder": "your@email.com",
+      "continue": "続行",
+      "modalTitle": "開始する - {{planName}}"
+    },
+    "planStage": {
+      "title": "請求期間を選択",
+      "savingsNote": "年額払いで {{percent}}% お得",
+      "basePrice": "基本価格",
+      "seatPrice": "席単価",
+      "totalForSeats": "合計（{{count}} 席）",
+      "selectMonthly": "月額を選択",
+      "selectYearly": "年額を選択",
+      "savePercent": "{{percent}}% お得",
+      "savingsAmount": "{{amount}} 節約",
+      "modalTitle": "請求期間を選択 - {{planName}}",
+      "billedYearly": "年額 {{currency}}{{amount}} で請求"
+    },
+    "paymentStage": {
+      "backToPlan": "プラン選択に戻る",
+      "selectedPlan": "選択したプラン",
+      "modalTitle": "支払いを完了 - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "初回ログイン",
@@ -5286,5 +5734,281 @@
     "offline": "バックエンドはオフライン",
     "starting": "バックエンドを起動しています...",
     "wait": "バックエンドの起動完了までお待ちいただき、再度お試しください。"
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "続行するにはPDFを解除",
+    "title": "続行するにはパスワードを削除",
+    "description": "このPDFはパスワードで保護されています。作業を続けるにはパスワードを入力してください。",
+    "password": {
+      "label": "PDF のパスワード",
+      "placeholder": "PDF のパスワードを入力"
+    },
+    "skip": "今はスキップ",
+    "unlock": "解除して続行",
+    "incorrectPassword": "パスワードが違います",
+    "missingFile": "選択したファイルは利用できません。",
+    "emptyResponse": "パスワードの削除でファイルが生成されませんでした。",
+    "required": "続行するにはパスワードを入力してください。",
+    "successTitle": "パスワードを削除しました",
+    "successBodyWithName": "{{fileName}} からパスワードを削除しました",
+    "successBody": "パスワードを削除しました。"
+  },
+  "setup": {
+    "welcome": "Stirling PDF へようこそ",
+    "description": "Stirling PDF の使い方を選んで開始しましょう",
+    "step1": {
+      "label": "モードを選択",
+      "description": "オフライン または サーバー"
+    },
+    "step2": {
+      "label": "サーバーを選択",
+      "description": "セルフホストのサーバー"
+    },
+    "step3": {
+      "label": "ログイン",
+      "description": "認証情報を入力"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Stirling アカウントでサインイン"
+      },
+      "selfhosted": {
+        "title": "セルフホスト サーバー",
+        "description": "自分の Stirling PDF サーバーに接続"
+      }
+    },
+    "saas": {
+      "title": "Stirling にサインイン",
+      "subtitle": "Stirling アカウントでサインイン"
+    },
+    "selfhosted": {
+      "title": "サーバーにサインイン",
+      "subtitle": "サーバーの認証情報を入力"
+    },
+    "server": {
+      "title": "サーバーに接続",
+      "subtitle": "セルフホスト サーバーの URL を入力",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "セルフホスト サーバー"
+      },
+      "url": {
+        "label": "サーバー URL",
+        "description": "セルフホストの Stirling PDF サーバーの完全な URL を入力してください"
+      },
+      "error": {
+        "emptyUrl": "サーバー URL を入力してください",
+        "unreachable": "サーバーに接続できませんでした",
+        "testFailed": "接続テストに失敗しました"
+      },
+      "testing": "接続をテスト中..."
+    },
+    "login": {
+      "title": "サインイン",
+      "subtitle": "続行するには認証情報を入力",
+      "connectingTo": "接続先:",
+      "username": {
+        "label": "ユーザー名",
+        "placeholder": "ユーザー名を入力"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "メールアドレスを入力"
+      },
+      "password": {
+        "label": "パスワード",
+        "placeholder": "パスワードを入力"
+      },
+      "error": {
+        "emptyUsername": "ユーザー名を入力してください",
+        "emptyEmail": "メールアドレスを入力してください",
+        "emptyPassword": "パスワードを入力してください",
+        "oauthFailed": "OAuth ログインに失敗しました。もう一度お試しください。"
+      },
+      "submit": "ログイン",
+      "signInWith": "でサインイン",
+      "oauthPending": "認証のためブラウザーを開いています...",
+      "orContinueWith": "またはメールで続行"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "認証に成功しました",
+      "message": "このウィンドウを閉じて Stirling PDF に戻れます。"
+    },
+    "error": {
+      "title": "認証に失敗しました",
+      "message": "認証に失敗しました。このウィンドウを閉じて、もう一度お試しください。"
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON エディター",
+    "viewLabel": "PDF エディター",
+    "converting": "PDF を編集可能形式に変換中...",
+    "conversionFailed": "PDF の変換に失敗しました。もう一度お試しください。",
+    "currentFile": "現在のファイル: {{name}}",
+    "pageSummary": "{{total}} ページ中 {{number}} ページ目",
+    "pagePreviewAlt": "ページプレビュー",
+    "imageLabel": "配置済み画像",
+    "noTextOnPage": "このページで編集可能なテキストは検出されませんでした。",
+    "pageType": {
+      "paragraph": "段落ページ",
+      "sparse": "疎なテキスト"
+    },
+    "groupingMode": {
+      "auto": "自動",
+      "paragraph": "段落",
+      "singleLine": "1行"
+    },
+    "badges": {
+      "unsaved": "編集済み",
+      "modified": "編集済み",
+      "earlyAccess": "早期アクセス"
+    },
+    "actions": {
+      "reset": "変更をリセット",
+      "downloadJson": "JSON をダウンロード",
+      "generatePdf": "PDF を生成"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "ボックスに収まるようテキストを自動スケール",
+        "description": "フォントレンダリングがPDFと異なる場合に、元のバウンディングボックス内に収まるよう横方向に自動スケールします。"
+      },
+      "groupingMode": {
+        "title": "テキストのグループ化モード",
+        "autoDescription": "ページ種別を自動判定し、適切にテキストをグループ化します。",
+        "paragraphDescription": "整列した行を複数行の段落テキストボックスにまとめます。",
+        "singleLineDescription": "各PDFのテキスト行を個別のテキストボックスとして保持します。"
+      },
+      "manualGrouping": {
+        "descriptionInline": "ヒント: Ctrl（Cmd）または Shift を押しながらで複数選択。選択の上にフローティングツールバーが表示され、結合・分割・幅調整ができます。"
+      },
+      "forceSingleElement": {
+        "title": "編集したテキストを1つのPDF要素に固定",
+        "description": "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
+      }
+    },
+    "manual": {
+      "mergeTooltip": "選択ボックスを結合",
+      "merge": "選択を結合",
+      "ungroupTooltip": "段落を行に分割",
+      "ungroup": "選択を分割",
+      "widthMenu": "幅オプション",
+      "expandWidth": "ページ端まで拡張",
+      "resetWidth": "幅をリセット",
+      "resizeHandle": "テキストの幅を調整"
+    },
+    "disclaimer": {
+      "heading": "プレビューの制限",
+      "textFocus": "このワークスペースはテキストの編集と埋め込み画像の再配置に特化しています。複雑なページアートワーク、フォームウィジェット、レイヤー付きグラフィックスは書き出し時に保持されますが、ここでは完全には編集できません。",
+      "previewVariance": "一部のビジュアル（表の罫線、図形、注釈の見え方など）はプレビューで正確に表示されない場合があります。書き出されたPDFは可能な限り元の描画コマンドを保持します。",
+      "alpha": "このアルファ版ビューアは開発途上です。一部のフォント、色、透明効果、レイアウトの細部がわずかに変化する場合があります。共有前に生成されたPDFを必ず確認してください。"
+    },
+    "empty": {
+      "title": "ドキュメントが読み込まれていません",
+      "subtitle": "テキスト編集を開始するにはPDFまたはJSONファイルを読み込んでください。"
+    },
+    "welcomeBanner": {
+      "title": "PDF Text Editor（早期アクセス）へようこそ",
+      "experimental": "これは開発中の実験的機能です。使用中の不安定さや不具合が発生する可能性があります。",
+      "howItWorks": "このツールはPDFを編集可能な形式に変換し、テキストの編集や画像の再配置が行えます。変更は新しいPDFとして保存されます。",
+      "bestFor": "最適：",
+      "bestFor1": "主にテキストと画像で構成されたシンプルなPDF",
+      "bestFor2": "標準的な段落書式のドキュメント",
+      "bestFor3": "手紙、エッセイ、レポートなどの基本的なドキュメント",
+      "notIdealFor": "不向き：",
+      "notIdealFor1": "箇条書き、表、複数段組などの特別な書式を含むPDF",
+      "notIdealFor2": "雑誌、パンフレットなどデザイン性の高いドキュメント",
+      "notIdealFor3": "複雑なレイアウトの取扱説明書",
+      "limitations": "現在の制限：",
+      "limitation1": "フォントの描画が元のPDFとわずかに異なる場合があります",
+      "limitation2": "複雑なグラフィックス、フォームフィールド、注釈は保持されますが編集できません",
+      "limitation3": "大きなファイルは変換と処理に時間がかかる場合があります",
+      "knownIssues": "既知の問題（修正中）：",
+      "issue1": "テキストの色は現在保持されません（近日対応予定）",
+      "issue2": "段落モードは整列や行間の問題が多いため、単一行モードを推奨します",
+      "issue3": "プレビュー表示は書き出し後のPDFと異なる場合があります（書き出しPDFの方が原本に近い）",
+      "issue4": "回転テキストの整列は手動調整が必要な場合があります",
+      "issue5": "透明度やレイヤー効果は原本と異なる場合があります",
+      "feedback": "これは早期アクセス機能です。問題があればご報告ください。改善に役立ちます。",
+      "gotIt": "了解",
+      "dontShowAgain": "今後表示しない"
+    },
+    "modeChange": {
+      "title": "モード変更の確認",
+      "warning": "テキストのグループ化モードを変更すると、未保存の変更はすべてリセットされます。続行してよろしいですか？",
+      "cancel": "キャンセル",
+      "confirm": "リセットしてモード変更"
+    },
+    "fontAnalysis": {
+      "details": "フォント詳細",
+      "embedded": "埋め込み",
+      "type": "種類",
+      "webFormat": "Web形式",
+      "warnings": "警告",
+      "suggestions": "注記",
+      "currentPageFonts": "このページのフォント",
+      "allFonts": "すべてのフォント",
+      "fallback": "フォールバック",
+      "missing": "欠落",
+      "perfectMessage": "すべてのフォントを完全に再現できます。",
+      "warningMessage": "一部のフォントは正しく表示されない可能性があります。",
+      "infoMessage": "フォント再現情報があります。",
+      "perfect": "完全",
+      "subset": "サブセット"
+    },
+    "errors": {
+      "invalidJson": "JSONファイルを読み取れません。PDF to JSONツールで生成されたものか確認してください。",
+      "pdfConversion": "編集したJSONをPDFに変換できませんでした。"
+    }
+  },
+  "auth": {
+    "sessionExpired": "セッションの有効期限が切れました",
+    "pleaseLoginAgain": "再度ログインしてください。",
+    "accessDenied": "アクセス拒否",
+    "insufficientPermissions": "この操作を実行する権限がありません。"
+  },
+  "addText": {
+    "title": "テキスト追加",
+    "header": "PDFにテキストを追加",
+    "text": {
+      "name": "テキスト内容",
+      "placeholder": "追加するテキストを入力",
+      "fontLabel": "フォント",
+      "fontSizeLabel": "フォントサイズ",
+      "fontSizePlaceholder": "フォントサイズを入力または選択（8〜200）",
+      "colorLabel": "テキストの色"
+    },
+    "steps": {
+      "configure": "テキスト設定"
+    },
+    "step": {
+      "createDesc": "追加するテキストを入力",
+      "place": "テキスト配置",
+      "placeDesc": "PDF上をクリックしてテキストを追加"
+    },
+    "instructions": {
+      "title": "テキストの追加方法",
+      "text": "上でテキストを入力したら、PDF上の任意の場所をクリックして配置します。",
+      "paused": "配置を一時停止",
+      "resumeHint": "配置を再開してクリックし、テキストを追加してください。",
+      "noSignature": "上でテキストを入力すると配置できるようになります。"
+    },
+    "mode": {
+      "move": "テキスト移動",
+      "place": "テキスト配置",
+      "pause": "配置を一時停止",
+      "resume": "配置を再開"
+    },
+    "results": {
+      "title": "テキスト追加の結果"
+    },
+    "error": {
+      "failed": "PDFにテキストを追加中にエラーが発生しました。"
+    },
+    "tags": "テキスト,注釈,ラベル",
+    "applySignatures": "テキストを適用"
   }
 }

@@ -17,6 +17,8 @@
       "comingSoon": "即將推出：",
       "favorite": "加入我的最愛",
       "favorites": "我的最愛",
+      "unavailable": "已被伺服器管理員停用：",
+      "unavailableDependency": "無法使用 - 伺服器缺少必要工具：",
       "heading": "所有工具（全螢幕檢視）",
       "noResults": "嘗試調整搜尋或切換說明以找到所需內容。",
       "recommended": "建議",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "切換至全螢幕模式",
       "sidebar": "切換至側邊欄模式"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "進階功能：",
+    "comingSoon": "即將推出："
   },
   "unsavedChanges": "您對 PDF 的變更尚未儲存。",
   "areYouSure": "確定要離開嗎？",
@@ -40,6 +45,30 @@
     "message": "此 ZIP 包含 {{count}} 個檔案。仍要解壓縮嗎？",
     "cancel": "取消",
     "confirm": "解壓縮"
+  },
+  "defaultApp": {
+    "title": "設為預設 PDF 應用程式",
+    "message": "是否要將 Stirling PDF 設為預設 PDF 編輯器？",
+    "description": "稍後可在系統設定中變更。",
+    "notNow": "暫時不要",
+    "setDefault": "設為預設",
+    "dismiss": "關閉",
+    "prompt": {
+      "title": "設為預設 PDF 編輯器",
+      "message": "將 Stirling PDF 設為開啟 PDF 檔的預設應用程式。"
+    },
+    "success": {
+      "title": "已設為預設應用程式",
+      "message": "Stirling PDF 已成為你的預設 PDF 編輯器"
+    },
+    "settingsOpened": {
+      "title": "已開啟設定",
+      "message": "請在系統設定中選擇 Stirling PDF"
+    },
+    "error": {
+      "title": "錯誤",
+      "message": "設定預設 PDF 處理程式失敗"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "儲存",
   "saveToBrowser": "儲存到瀏覽器",
   "download": "下載",
+  "downloadUnavailable": "此項目無法下載",
+  "saveUnavailable": "此項目無法儲存",
   "pin": "釘選檔案（工具執行後保持作用中）",
   "unpin": "取消釘選檔案（工具執行後以新檔取代）",
   "undoOperationTooltip": "按一下可復原上一次操作並還原原始檔案",
@@ -168,6 +199,7 @@
   },
   "edit": "編輯",
   "delete": "刪除",
+  "never": "永不",
   "username": "使用者名稱",
   "password": "密碼",
   "welcome": "歡迎",
@@ -262,7 +294,8 @@
     "learnMore": "了解更多",
     "enable": "啟用分析功能",
     "disable": "停用分析功能",
-    "settings": "您可以在 config/settings.yml 檔案中變更分析功能的設定"
+    "settings": "您可以在 config/settings.yml 檔案中變更分析功能的設定",
+    "privacyAssurance": "我們不會追蹤任何個人資訊或你檔案的內容。"
   },
   "navbar": {
     "favorite": "我的最愛",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "設定",
-    "update": "有更新可用",
-    "updateAvailable": "目前安裝的版本是 {0}。有新版本（{1}）可供使用。",
-    "appVersion": "應用程式版本：",
-    "downloadOption": {
-      "title": "選擇下載選項（適用於單一檔案非壓縮下載）：",
-      "1": "在同一視窗中開啟",
-      "2": "在新視窗中開啟",
-      "3": "下載檔案"
-    },
-    "zipThreshold": "當下載檔案數量超過此數值時，將檔案壓縮",
-    "signOut": "登出",
-    "accountSettings": "帳號設定",
-    "bored": {
-      "help": "啟用彩蛋遊戲"
-    },
-    "cacheInputs": {
-      "name": "儲存表單輸入",
-      "help": "啟用此功能以儲存先前使用的輸入，以便日後使用"
+    "connection": {
+      "title": "連線模式",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "自託管"
+      },
+      "server": "伺服器",
+      "user": "已登入身分",
+      "logout": "登出"
     },
     "general": {
       "title": "一般",
       "description": "設定一般應用程式偏好設定。",
-      "account": "帳戶",
-      "accountDescription": "管理您的帳戶設定",
       "user": "使用者",
-      "signedInAs": "登入身分",
       "logout": "登出",
       "enableFeatures": {
+        "dismiss": "關閉",
         "title": "系統管理員專用",
         "intro": "為您的組織啟用使用者驗證、團隊管理與工作區功能。",
         "action": "設定",
         "and": "與",
         "benefit": "啟用使用者角色、團隊協作、管理控制與企業功能。",
-        "learnMore": "在文件中了解更多",
-        "dismiss": "關閉"
+        "learnMore": "在文件中了解更多"
       },
-      "autoUnzip": "自動解壓縮 API 回應",
-      "autoUnzipDescription": "自動從 ZIP 回應中解壓縮檔案",
-      "autoUnzipTooltip": "自動解壓縮 API 操作回傳的 ZIP 檔案。停用以保留 ZIP 檔不變。這不會影響自動化工作流程。",
-      "autoUnzipFileLimit": "自動解壓縮檔案上限",
-      "autoUnzipFileLimitDescription": "從 ZIP 解壓縮的最大檔案數",
-      "autoUnzipFileLimitTooltip": "僅在 ZIP 含有不超過此數量的檔案時解壓縮。提高數值可解壓較大的 ZIP。",
       "defaultToolPickerMode": "預設工具選擇器模式",
       "defaultToolPickerModeDescription": "選擇工具選擇器預設以全螢幕或側邊欄開啟",
       "mode": {
-        "fullscreen": "全螢幕",
-        "sidebar": "側邊欄"
-      }
+        "sidebar": "側邊欄",
+        "fullscreen": "全螢幕"
+      },
+      "autoUnzipTooltip": "自動解壓縮 API 操作回傳的 ZIP 檔案。停用以保留 ZIP 檔不變。這不會影響自動化工作流程。",
+      "autoUnzip": "自動解壓縮 API 回應",
+      "autoUnzipDescription": "自動從 ZIP 回應中解壓縮檔案",
+      "autoUnzipFileLimitTooltip": "僅在 ZIP 含有不超過此數量的檔案時解壓縮。提高數值可解壓較大的 ZIP。",
+      "autoUnzipFileLimit": "自動解壓縮檔案上限",
+      "autoUnzipFileLimitDescription": "從 ZIP 解壓縮的最大檔案數",
+      "defaultPdfEditor": "預設 PDF 編輯器",
+      "defaultPdfEditorActive": "Stirling PDF 是你的預設 PDF 編輯器",
+      "defaultPdfEditorInactive": "已由其他應用程式設為預設",
+      "defaultPdfEditorChecking": "正在檢查...",
+      "defaultPdfEditorSet": "已是預設",
+      "setAsDefault": "設為預設",
+      "updates": {
+        "title": "軟體更新",
+        "description": "檢查更新並檢視版本資訊",
+        "currentVersion": "目前版本",
+        "latestVersion": "最新版本",
+        "checkForUpdates": "檢查更新",
+        "viewDetails": "檢視詳細資料"
+      },
+      "hideUnavailableTools": "隱藏無法使用的工具",
+      "hideUnavailableToolsDescription": "移除伺服器已停用的工具，而非以灰色顯示。",
+      "hideUnavailableConversions": "隱藏無法使用的轉換",
+      "hideUnavailableConversionsDescription": "在「轉換」工具中移除已停用的轉換選項，而非以灰色顯示。"
     },
     "hotkeys": {
-      "title": "鍵盤快捷鍵",
-      "description": "將滑鼠移到工具上可查看其快捷鍵，或在下方自訂。點擊「變更快捷鍵」並按下新的按鍵組合。按 Esc 取消。",
-      "errorModifier": {
-        "mac": "快捷鍵需包含 ⌘（Command）、⌥（Option）或其他修飾鍵。",
-        "windows": "快捷鍵需包含 Ctrl、Alt 或其他修飾鍵。"
-      },
       "errorConflict": "快捷鍵已被 {{tool}} 使用。",
+      "searchPlaceholder": "搜尋工具...",
       "none": "未指派",
       "customBadge": "自訂",
       "defaultLabel": "預設：{{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "變更快捷鍵",
       "reset": "重設",
       "shortcut": "快捷鍵",
-      "noShortcut": "未設定快捷鍵",
-      "searchPlaceholder": "搜尋工具..."
+      "noShortcut": "未設定快捷鍵"
     }
+  },
+  "update": {
+    "modalTitle": "有可用更新",
+    "current": "目前版本",
+    "latest": "最新版本",
+    "latestStable": "最新穩定版",
+    "priorityLabel": "優先順序",
+    "recommendedAction": "建議動作",
+    "breakingChangesDetected": "偵測到重大變更",
+    "breakingChangesMessage": "部分版本包含重大變更。更新前請先查看下方的遷移指南。",
+    "migrationGuides": "遷移指南",
+    "viewGuide": "查看指南",
+    "loadingDetailedInfo": "正在載入詳細資訊...",
+    "close": "關閉",
+    "viewAllReleases": "檢視所有版本",
+    "downloadLatest": "下載最新版本",
+    "availableUpdates": "可用更新",
+    "unableToLoadDetails": "無法載入詳細資訊。",
+    "version": "版本",
+    "urgentUpdateAvailable": "緊急更新",
+    "updateAvailable": "可用更新",
+    "releaseNotes": "版本資訊",
+    "priority": {
+      "urgent": "緊急",
+      "normal": "一般",
+      "minor": "次要",
+      "low": "低"
+    },
+    "breakingChanges": "重大變更",
+    "breakingChangesDefault": "此版本包含重大變更。",
+    "migrationGuide": "遷移指南"
   },
   "changeCreds": {
     "title": "變更憑證",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "將 PDF 覆蓋在另一個 PDF 上",
       "title": "覆蓋 PDF"
+    },
+    "pdfTextEditor": {
+      "title": "PDF 文字編輯器",
+      "desc": "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "新增文字",
+      "desc": "在 PDF 的任意位置新增自訂文字"
     }
   },
   "landing": {
     "addFiles": "新增檔案",
-    "uploadFromComputer": "從電腦上傳"
+    "uploadFromComputer": "從電腦上傳",
+    "openFromComputer": "從電腦開啟"
   },
   "viewPdf": {
     "tags": "檢視,閱讀,註釋,文字,圖片",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "合併 PDF 時發生錯誤。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "合併設定概覽"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,圖片,照片",
     "title": "新增圖片",
     "header": "新增圖片到 PDF",
-    "everyPage": "每一頁？",
-    "upload": "新增圖片",
-    "submit": "新增圖片"
+    "image": {
+      "name": "圖片",
+      "placeholder": "上傳一張圖片",
+      "label": "圖片檔"
+    },
+    "steps": {
+      "configure": "設定圖片"
+    },
+    "step": {
+      "createDesc": "上傳你要加入的圖片",
+      "place": "放置圖片",
+      "placeDesc": "在 PDF 上點擊以加入圖片"
+    },
+    "instructions": {
+      "title": "如何新增圖片",
+      "text": "在上方上傳圖片後，點擊 PDF 任意位置即可放置。",
+      "paused": "已暫停放置",
+      "resumeHint": "恢復放置後，點擊即可加入圖片。",
+      "noSignature": "請先上傳圖片以啟用放置。"
+    },
+    "mode": {
+      "move": "移動圖片",
+      "place": "放置圖片",
+      "pause": "暫停放置",
+      "resume": "恢復放置"
+    },
+    "results": {
+      "title": "新增圖片結果"
+    },
+    "error": {
+      "failed": "將圖片加入 PDF 時發生錯誤。"
+    },
+    "saved": {
+      "defaultLabel": "圖片",
+      "defaultImageLabel": "已上傳的圖片"
+    },
+    "applySignatures": "套用圖片"
   },
   "attachments": {
     "tags": "嵌入,附件,檔案,附加,附件管理",
@@ -1396,6 +1508,93 @@
       "10": "防止列印不同格式"
     },
     "submit": "變更"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "書籤與大綱",
+      "replaceExisting": "取代現有書籤（取消勾選以附加）",
+      "replaceExistingHint": "停用時，新的大綱會附加在目前書籤之後。"
+    },
+    "actions": {
+      "source": "載入書籤",
+      "selectedFile": "已從 {{file}} 載入",
+      "noFile": "選擇 PDF 以擷取現有書籤。",
+      "loadFromPdf": "從選取的 PDF 載入",
+      "importJson": "匯入 JSON",
+      "importClipboard": "從剪貼簿貼上 JSON",
+      "export": "匯出書籤",
+      "exportJson": "下載 JSON",
+      "exportClipboard": "將 JSON 複製到剪貼簿",
+      "clipboardUnavailable": "此瀏覽器無法存取剪貼簿。"
+    },
+    "info": {
+      "line1": "每個書籤都需要描述性標題與對應的開啟頁面。",
+      "line2": "使用子書籤為章節、節或小節建立階層。",
+      "line3": "可從選取的 PDF 或 JSON 檔匯入書籤以節省時間。"
+    },
+    "workbench": {
+      "empty": {
+        "title": "開啟工具開始編輯",
+        "description": "選擇「編輯目錄」工具以載入其工作區。"
+      },
+      "tabTitle": "大綱工作區",
+      "subtitle": "匯入書籤、建立階層，並在不受擁擠的側邊欄影響下套用大綱。",
+      "noFile": "未選取 PDF",
+      "fileLabel": "變更將套用到目前選取的 PDF。",
+      "filePrompt": "從你的資料庫選擇 PDF，或上傳新檔開始。",
+      "changeFile": "更換 PDF",
+      "selectFile": "選擇 PDF"
+    },
+    "editor": {
+      "heading": "書籤編輯器",
+      "description": "新增、巢狀與重新排序書籤，打造你的 PDF 大綱。",
+      "addTopLevel": "新增最上層書籤",
+      "empty": {
+        "title": "尚無書籤",
+        "description": "匯入現有書籤，或先新增第一個項目。",
+        "action": "新增第一個書籤"
+      },
+      "defaultTitle": "新書籤",
+      "defaultChildTitle": "子書籤",
+      "defaultSiblingTitle": "新書籤",
+      "untitled": "未命名書籤",
+      "childBadge": "子項",
+      "pagePreview": "第 {{page}} 頁",
+      "field": {
+        "title": "書籤標題",
+        "page": "目標頁碼"
+      },
+      "actions": {
+        "toggle": "展開/收合子項",
+        "addChild": "新增子書籤",
+        "addSibling": "新增同層書籤",
+        "remove": "移除書籤"
+      },
+      "confirmRemove": "要移除此書籤及其所有子項嗎？"
+    },
+    "messages": {
+      "loadedTitle": "已擷取書籤",
+      "loadedBody": "已將 PDF 的現有書籤載入編輯器。",
+      "noBookmarks": "選取的 PDF 中找不到書籤。",
+      "loadFailed": "無法從選取的 PDF 擷取書籤。",
+      "imported": "已匯入書籤",
+      "importedBody": "你的 JSON 大綱已取代目前的編輯內容。",
+      "importedClipboard": "剪貼簿資料已取代目前的書籤清單。",
+      "invalidJson": "JSON 結構無效",
+      "invalidJsonBody": "請提供有效的書籤 JSON 檔，再試一次。",
+      "exported": "JSON 下載就緒",
+      "copied": "已複製到剪貼簿",
+      "copiedBody": "已成功複製書籤 JSON。",
+      "copyFailed": "複製失敗"
+    },
+    "error": {
+      "failed": "更新目錄失敗"
+    },
+    "submit": "套用目錄",
+    "results": {
+      "title": "已更新含書籤的 PDF",
+      "subtitle": "以下可下載處理後的檔案或復原此操作。"
+    }
   },
   "removePages": {
     "tags": "移除頁面,刪除頁面",
@@ -1669,8 +1868,8 @@
     "trapped": {
       "label": "Trapped 狀態",
       "unknown": "未知",
-      "true": "True",
-      "false": "False"
+      "true": "是",
+      "false": "否"
     },
     "advanced": {
       "title": "進階選項"
@@ -1978,13 +2177,54 @@
       "title": "繪製您的簽名",
       "clear": "清除"
     },
+    "canvas": {
+      "heading": "繪製你的簽名",
+      "clickToOpen": "點擊以開啟繪圖畫布",
+      "modalTitle": "繪製你的簽名",
+      "colorLabel": "顏色",
+      "penSizeLabel": "筆刷大小",
+      "penSizePlaceholder": "大小",
+      "clear": "清除畫布",
+      "colorPickerTitle": "選擇筆畫顏色"
+    },
     "text": {
       "name": "簽署者姓名",
-      "placeholder": "輸入您的全名"
+      "placeholder": "輸入您的全名",
+      "fontLabel": "字型",
+      "fontSizeLabel": "字型大小",
+      "fontSizePlaceholder": "輸入或選擇字型大小（8-200）",
+      "colorLabel": "文字顏色"
     },
     "clear": "清除",
     "add": "新增",
-    "saved": "已儲存的簽章",
+    "saved": {
+      "heading": "已儲存的簽名",
+      "description": "可隨時重複使用已儲存的簽名。",
+      "emptyTitle": "尚未儲存簽名",
+      "emptyDescription": "在上方繪製、上傳或輸入簽名，然後使用「儲存到資料庫」即可保留最多 {{max}} 個常用項。",
+      "type": {
+        "canvas": "手繪",
+        "image": "上傳",
+        "text": "文字"
+      },
+      "limitTitle": "已達上限",
+      "limitDescription": "新增前請先移除一個已儲存的簽名（最多 {{max}}）。",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "上一個",
+      "next": "下一個",
+      "delete": "移除",
+      "label": "標籤",
+      "defaultLabel": "簽名",
+      "defaultCanvasLabel": "手繪簽名",
+      "defaultImageLabel": "上傳的簽名",
+      "defaultTextLabel": "輸入的簽名",
+      "saveButton": "儲存簽名",
+      "saveUnavailable": "請先建立簽名才能儲存。",
+      "noChanges": "目前簽名已儲存。",
+      "status": {
+        "saved": "已儲存"
+      }
+    },
     "save": "儲存簽章",
     "applySignatures": "套用簽名",
     "personalSigs": "個人簽章",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "設定簽名"
     },
+    "step": {
+      "createDesc": "選擇你要建立簽名的方式",
+      "place": "放置與儲存",
+      "placeDesc": "在 PDF 上定位簽名"
+    },
     "type": {
       "title": "簽名類型",
       "draw": "手繪",
       "canvas": "畫布",
       "image": "影像",
-      "text": "文字"
+      "text": "文字",
+      "saved": "已儲存"
     },
     "image": {
       "label": "上傳簽名影像",
@@ -2019,11 +2265,17 @@
       "title": "如何加入簽名",
       "canvas": "在畫布中繪製簽名後，關閉此視窗，接著在 PDF 任意位置點擊以放置。",
       "image": "在上方上傳簽名影像後，於 PDF 任意位置點擊以放置。",
-      "text": "在上方輸入您的姓名後，於 PDF 任意位置點擊以放置簽名。"
+      "saved": "在上方選擇已儲存的簽名，然後在 PDF 任意位置點擊以放置。",
+      "text": "在上方輸入您的姓名後，於 PDF 任意位置點擊以放置簽名。",
+      "paused": "已暫停放置",
+      "resumeHint": "恢復放置後，點擊即可加入簽名。",
+      "noSignature": "請在上方建立簽名以啟用放置工具。"
     },
     "mode": {
       "move": "移動簽名",
-      "place": "放置簽名"
+      "place": "放置簽名",
+      "pause": "暫停放置",
+      "resume": "恢復放置"
     },
     "updateAndPlace": "更新並放置",
     "activate": "啟用簽名放置",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "關於移除註解",
       "description": "此工具會移除 PDF 文件中的所有註解（留言、重點標示、注記等）。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "關於移除註解"
+      },
+      "description": {
+        "title": "功能說明"
+      }
     },
     "error": {
       "failed": "從 PDF 移除註解時發生錯誤。"
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "自動重新命名運作方式"
       },
+      "description": {
+        "title": "功能說明"
+      },
       "howItWorks": {
         "title": "智慧重新命名",
         "text": "自動從 PDF 內容找出標題並用作檔名。",
@@ -2634,6 +2897,9 @@
         "bullet2": "依偵測到的標題建立乾淨且有效的檔名",
         "bullet3": "若找不到合適標題則保留原檔名"
       }
+    },
+    "settings": {
+      "title": "關於"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "匯出 PDF",
     "downloadSelected": "下載選取的檔案",
     "downloadAll": "全部下載",
+    "saveAll": "全部儲存",
     "toggleTheme": "切換主題",
+    "toggleBookmarks": "切換書籤",
     "language": "語言",
     "search": "搜尋 PDF",
     "panMode": "平移模式",
@@ -3947,15 +4215,15 @@
             "description": "用於驗證的 OAuth2 提供者"
           },
           "issuer": {
-            "label": "Issuer URL",
+            "label": "發行者 URL",
             "description": "OAuth2 提供者的 Issuer URL"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "用戶端 ID",
             "description": "由提供者提供的 OAuth2 Client ID"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "用戶端密鑰",
             "description": "由提供者提供的 OAuth2 Client Secret"
           },
           "useAsUsername": {
@@ -3971,7 +4239,7 @@
             "description": "阻止透過 OAuth2 註冊新使用者"
           },
           "scopes": {
-            "label": "OAuth2 Scopes",
+            "label": "OAuth2 範圍",
             "description": "以逗號分隔的 OAuth2 scope 清單（例如：openid、profile、email）"
           }
         },
@@ -4212,9 +4480,21 @@
         "title": "Premium 與 Enterprise",
         "description": "設定您的 Premium 或 Enterprise 授權金鑰。",
         "license": "擴充授權設定",
+        "licenseKey": {
+          "toggle": "有授權金鑰或憑證檔嗎？",
+          "info": "如果你有直接購買的授權金鑰或憑證檔，可在此輸入以啟用進階或企業功能。"
+        },
         "key": {
           "label": "擴充授權金鑰",
-          "description": "輸入您的 Premium 或 Enterprise 授權金鑰"
+          "description": "輸入您的 Premium 或 Enterprise 授權金鑰",
+          "success": "已儲存授權金鑰",
+          "successMessage": "你的授權金鑰已成功啟用，無需重新啟動。",
+          "overwriteWarning": {
+            "title": "⚠️ 警告：偵測到現有授權",
+            "line1": "覆寫目前的授權金鑰後將無法復原。",
+            "line2": "除非你另有備份，否則先前的授權將永久遺失。",
+            "line3": "重要：請妥善保管授權金鑰並保持私密，切勿公開分享。"
+          }
         },
         "enabled": {
           "label": "啟用 Premium 功能",
@@ -4278,12 +4558,17 @@
     "or": "或",
     "dropFileHere": "將檔案拖放到此處或點擊以上傳",
     "dropFilesHere": "將檔案拖放到此處或點擊上傳按鈕",
+    "dropFilesHereOpen": "將檔案拖曳到此處或點擊開啟按鈕",
     "pdfFilesOnly": "僅限 PDF 檔",
     "supportedFileTypes": "支援的檔案類型",
     "upload": "上傳",
     "uploadFile": "上傳檔案",
     "uploadFiles": "上傳檔案",
+    "open": "開啟",
+    "openFile": "開啟檔案",
+    "openFiles": "開啟多個檔案",
     "noFilesInStorage": "儲存空間中沒有可用檔案。請先上傳一些檔案。",
+    "noFilesInStorageOpen": "儲存空間中沒有可用檔案。請先開啟一些檔案。",
     "selectFromStorage": "從儲存空間選取",
     "backToTools": "返回工具",
     "addFiles": "新增檔案",
@@ -4329,6 +4614,8 @@
     "myFiles": "我的檔案",
     "noRecentFiles": "找不到最近的檔案",
     "googleDriveNotAvailable": "無法使用 Google Drive 整合",
+    "downloadSelected": "下載所選",
+    "saveSelected": "儲存已選",
     "openFiles": "開啟檔案",
     "openFile": "開啟檔案",
     "details": "檔案詳細資訊",
@@ -4341,7 +4628,6 @@
     "selectAll": "全選",
     "deselectAll": "取消全選",
     "deleteSelected": "刪除已選取的項目",
-    "downloadSelected": "下載所選",
     "selectedCount": "{{count}} 個已選",
     "download": "下載",
     "delete": "刪除",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "安全性流程",
       "secureWorkflowDesc": "移除 JavaScript 與內嵌檔案等可能的惡意內容來保護 PDF，並新增密碼保護以防止未授權存取。預設密碼為「password」。",
       "processImages": "處理影像",
-      "processImagesDesc": "將多個影像檔轉為單一 PDF 文件，接著套用 OCR 技術以擷取可搜尋文字。"
+      "processImagesDesc": "將多個影像檔轉為單一 PDF 文件，接著套用 OCR 技術以擷取可搜尋文字。",
+      "prePublishSanitization": "發佈前淨化",
+      "prePublishSanitizationDesc": "移除所有隱藏中繼資料、JavaScript、內嵌檔案、註解，並將表單攤平，以防在將 PDF 發佈上線前發生資料外洩的淨化流程。"
     }
+  },
+  "colorPicker": {
+    "title": "選擇顏色"
   },
   "common": {
     "previous": "上一步",
@@ -4639,7 +4930,13 @@
     "used": "已使用",
     "available": "可用",
     "cancel": "取消",
-    "preview": "預覽"
+    "preview": "預覽",
+    "close": "關閉",
+    "done": "完成",
+    "loading": "正在載入...",
+    "back": "返回",
+    "continue": "繼續",
+    "error": "錯誤"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "新增更多檔案...",
     "selectedFiles": "已選擇的檔案",
     "submit": "新增附件",
+    "tooltip": {
+      "header": {
+        "title": "關於新增附件"
+      },
+      "description": {
+        "title": "功能說明"
+      }
+    },
     "results": {
       "title": "附件結果"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "自訂位置",
   "details": "詳細資料",
-  "downloadUnavailable": "此項目無法下載",
   "invalidUndoData": "無法復原：無效的作業資料",
   "margin": {
     "large": "大",
@@ -4801,6 +5105,10 @@
       "maybeLater": "稍後再說",
       "dontShowAgain": "不再顯示"
     },
+    "welcomeSlide": {
+      "title": "歡迎使用 Stirling",
+      "body": "Stirling PDF 現在已準備好支援各種規模的團隊。此更新包含全新版面、強大的新管理功能，以及大家最期待的功能 - <strong>編輯文字</strong>。"
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "我們先選擇 <strong>裁切</strong> 工具，示範如何使用其中一個工具。",
     "toolInterface": "這是 <strong>裁切</strong> 工具介面。如您所見，因為尚未加入任何 PDF 檔可供操作，因此內容不多。",
@@ -4823,7 +5131,39 @@
     "next": "下一步",
     "finish": "完成",
     "startTour": "開始導覽",
-    "startTourDescription": "帶您導覽 Stirling PDF 的重點功能"
+    "startTourDescription": "帶您導覽 Stirling PDF 的重點功能",
+    "buttons": {
+      "next": "下一步 →",
+      "back": "返回",
+      "skipForNow": "暫時略過",
+      "download": "下載 →",
+      "showMeAround": "帶我導覽",
+      "skipTheTour": "略過導覽"
+    },
+    "serverLicense": {
+      "skip": "暫時略過",
+      "seePlans": "查看方案 →",
+      "upgrade": "立即升級 →",
+      "freeTitle": "伺服器授權",
+      "overLimitTitle": "需要伺服器授權",
+      "overLimitBody": "我們的授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。你有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 使用者。若要不中斷使用，請升級至 Stirling Server 方案 - <strong>不限席次</strong>、PDF 文字編輯，以及完整管理控制，每台伺服器 $99/月。",
+      "freeBody": "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充並搶先體驗全新的 <strong>PDF 文字編輯工具</strong>，建議升級至 Stirling Server 方案 - 完整編輯與 <strong>不限席次</strong>，每台伺服器 $99/月。"
+    },
+    "desktopInstall": {
+      "title": "下載",
+      "titleWithOs": "下載適用於 {{osLabel}} 的版本",
+      "body": "Stirling 最適合以桌面應用程式使用。你可以離線操作、更快存取文件，並在電腦本機進行編輯。"
+    },
+    "planOverview": {
+      "adminTitle": "管理員總覽",
+      "userTitle": "方案總覽",
+      "adminBodyLoginEnabled": "身為管理員，你可以管理使用者、設定參數並監控伺服器健康狀態。伺服器上的前 <strong>{{freeTierLimit}}</strong> 人可免費使用 Stirling。",
+      "adminBodyLoginDisabled": "啟用登入模式後，你可以管理使用者、設定參數並監控伺服器健康狀態。伺服器上的前 <strong>{{freeTierLimit}}</strong> 人可免費使用 Stirling。",
+      "userBody": "邀請隊友、指派角色，並在單一安全的工作區中整理你的文件。當你準備好超越個人使用時，可隨時啟用登入模式。"
+    },
+    "securityCheck": {
+      "message": "應用程式近期進行了重大變更，可能需要你的伺服器管理員關注。請確認你的角色以繼續。"
+    }
   },
   "adminOnboarding": {
     "welcome": "歡迎來到 <strong>管理員導覽</strong>！一起探索提供系統管理員使用的強大企業功能與設定。",
@@ -4852,7 +5192,10 @@
       "role": "角色",
       "team": "團隊",
       "status": "狀態",
-      "actions": "操作",
+      "actions": {
+        "label": "操作",
+        "upgrade": "升級"
+      },
       "noMembersFound": "找不到成員",
       "active": "啟用",
       "disabled": "已停用",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "尚有 {{count}} 個使用者名額",
         "noSlotsAvailable": "沒有可用名額",
         "currentUsage": "目前使用 {{current}} / {{max}} 個使用者授權"
-      }
+      },
+      "loginRequired": "請先啟用登入模式"
     },
     "teams": {
       "title": "團隊",
@@ -5057,6 +5401,17 @@
     "showComparison": "比較所有功能",
     "hideComparison": "隱藏功能比較",
     "featureComparison": "功能比較",
+    "from": "起",
+    "perMonth": "/月",
+    "perSeat": "/席",
+    "withServer": "+ Server 方案",
+    "licensedSeats": "已授權：{{count}} 席",
+    "includedInCurrent": "已包含於你的方案",
+    "selectPlan": "選擇方案",
+    "manage": "管理",
+    "manageSubscription": {
+      "description": "管理你的訂閱、帳單與付款方式"
+    },
     "activePlan": {
       "title": "使用中方案",
       "subtitle": "您目前的訂閱詳情"
@@ -5074,13 +5429,16 @@
       "upTo": "最多"
     },
     "period": {
-      "month": "月"
+      "month": "月",
+      "perUserPerMonth": "/使用者/月"
     },
     "free": {
       "name": "免費",
       "highlight1": "每週工具使用次數有限",
       "highlight2": "可存取所有工具",
-      "highlight3": "社群支援"
+      "highlight3": "社群支援",
+      "forever": "永遠免費",
+      "included": "已包含"
     },
     "pro": {
       "name": "專業版",
@@ -5092,7 +5450,9 @@
       "name": "企業版",
       "highlight1": "自訂價格",
       "highlight2": "專屬支援",
-      "highlight3": "最新功能"
+      "highlight3": "最新功能",
+      "requiresServer": "需要 Server",
+      "requiresServerMessage": "請先升級到 Server 方案，再升級至 Enterprise。"
     },
     "feature": {
       "title": "功能",
@@ -5102,6 +5462,12 @@
       "api": "API 存取",
       "priority": "優先支援",
       "customPricing": "自訂價格"
+    },
+    "licenseWarning": {
+      "title": "自託管免費上限已達",
+      "body": "你有 {{total}} 位使用者，但免費層每台伺服器僅支援 {{limit}} 位。升級以保持 Stirling PDF 運作順暢。",
+      "overLimit": "多於 {{limit}}",
+      "cta": "查看方案"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "管理計費",
     "portal": {
       "error": "開啟計費入口失敗"
-    }
+    },
+    "updateSeats": "更新席次",
+    "updateEnterpriseSeats": "更新 Enterprise 席次",
+    "currentSeats": "目前席次",
+    "minimumSeats": "最少席次",
+    "basedOnUsers": "（目前使用者數）",
+    "newSeatCount": "新的席次數",
+    "newSeatCountDescription": "選擇企業授權的席次數量",
+    "whatHappensNext": "接下來會發生什麼？",
+    "stripePortalRedirect": "你將被導向至 Stripe 的付款入口，以檢視並確認席次變更。系統將自動計算按比例金額。",
+    "preparingUpdate": "正在準備更新席次...",
+    "seatCountTooLow": "席次至少需為 {{minimum}}（目前使用者數）",
+    "seatCountUnchanged": "請選擇不同的席次數",
+    "seatsUpdated": "已更新席次",
+    "seatsUpdatedMessage": "你的企業席次已更新為 {{seats}}",
+    "updateProcessing": "正在處理更新",
+    "updateProcessingMessage": "你的席次更新正在處理中。請稍後重新整理。",
+    "notEnterprise": "僅企業授權可管理席次"
+  },
+  "upgradeBanner": {
+    "title": "升級至 Server 方案",
+    "message": "以不限人數與進階功能，充分發揮 Stirling PDF",
+    "upgradeButton": "立即升級",
+    "dismiss": "關閉橫幅",
+    "attentionTitle": "此伺服器需要管理員關注",
+    "attentionBody": "你的管理員需要登入以查看更多資訊。請立即聯絡他們。",
+    "attentionBodyAdmin": "請檢視授權需求以維持此伺服器合規。",
+    "seeInfo": "查看資訊"
   },
   "payment": {
     "preparing": "正在準備結帳...",
@@ -5128,7 +5521,61 @@
     "success": "付款成功！",
     "successMessage": "您的訂閱已成功啟用。您將很快收到確認電子郵件。",
     "autoClose": "此視窗將自動關閉...",
-    "error": "付款錯誤"
+    "error": "付款錯誤",
+    "upgradeSuccess": "付款成功！你的訂閱已升級。伺服器上的授權已更新。你將很快收到確認 Email。",
+    "paymentSuccess": "付款成功！正在擷取你的授權金鑰...",
+    "licenseActivated": "已啟用授權！你的授權金鑰已儲存。確認 Email 已寄至你的註冊信箱。",
+    "licenseDelayed": "付款成功！你的授權正在產生中。你將很快收到含授權金鑰的 Email。若 10 分鐘內未收到，請聯絡客服。",
+    "licensePollingError": "付款成功但我們無法自動擷取你的授權金鑰。請查收 Email 或攜帶付款確認聯絡客服。",
+    "licenseRetrievalError": "付款成功但擷取授權失敗。你將透過 Email 收到授權金鑰。若 10 分鐘內未收到，請聯絡客服。",
+    "syncError": "付款成功但授權同步失敗。你的授權將很快更新。若問題持續，請聯絡客服。",
+    "licenseSaveError": "儲存授權金鑰失敗。請攜帶授權金鑰聯絡客服完成啟用。",
+    "paymentCanceled": "已取消付款。未扣款。",
+    "syncingLicense": "正在同步升級後的授權...",
+    "generatingLicense": "正在產生授權金鑰...",
+    "upgradeComplete": "升級完成",
+    "upgradeCompleteMessage": "你的訂閱已成功升級。既有授權金鑰已更新。",
+    "stripeNotConfigured": "未設定 Stripe",
+    "stripeNotConfiguredMessage": "尚未設定 Stripe 付款整合。請聯絡你的管理員。",
+    "monthly": "月繳",
+    "yearly": "年繳",
+    "billingPeriod": "計費週期",
+    "enterpriseNote": "席次可在結帳時調整（1-1000）。",
+    "installationId": "安裝 ID",
+    "licenseKey": "你的授權金鑰",
+    "licenseInstructions": "這已加入你的安裝中。你也會收到一封 Email 副本。",
+    "canCloseWindow": "你現在可以關閉此視窗。",
+    "licenseKeyProcessing": "授權金鑰處理中",
+    "licenseDelayedMessage": "你的授權金鑰正在產生中。請稍後查收 Email，或聯絡客服。",
+    "perYear": "/年",
+    "perMonth": "/月",
+    "emailInvalid": "請輸入有效的 Email 位址",
+    "emailStage": {
+      "title": "輸入你的 Email",
+      "description": "我們將用它來寄送你的授權金鑰與收據。",
+      "emailLabel": "Email 位址",
+      "emailPlaceholder": "your@email.com",
+      "continue": "繼續",
+      "modalTitle": "開始使用 - {{planName}}"
+    },
+    "planStage": {
+      "title": "選擇你的計費週期",
+      "savingsNote": "年繳可省下 {{percent}}%",
+      "basePrice": "基本價格",
+      "seatPrice": "每席價格",
+      "totalForSeats": "總計（{{count}} 席）",
+      "selectMonthly": "選擇月繳",
+      "selectYearly": "選擇年繳",
+      "savePercent": "省下 {{percent}}%",
+      "savingsAmount": "你可省下 {{amount}}",
+      "modalTitle": "選擇計費週期 - {{planName}}",
+      "billedYearly": "年繳金額為 {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "返回方案選擇",
+      "selectedPlan": "已選擇的方案",
+      "modalTitle": "完成付款 - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "首次登入",
@@ -5287,5 +5734,281 @@
     "offline": "後端離線",
     "starting": "後端正在啟動...",
     "wait": "請等待後端啟動完成後再試一次。"
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "解鎖 PDF 以繼續",
+    "title": "移除密碼以繼續",
+    "description": "此 PDF 已受密碼保護。請輸入密碼以繼續操作。",
+    "password": {
+      "label": "PDF 密碼",
+      "placeholder": "輸入 PDF 密碼"
+    },
+    "skip": "暫時略過",
+    "unlock": "解鎖並繼續",
+    "incorrectPassword": "密碼錯誤",
+    "missingFile": "選取的檔案已不存在。",
+    "emptyResponse": "移除密碼未產生檔案。",
+    "required": "請輸入密碼以繼續。",
+    "successTitle": "已移除密碼",
+    "successBodyWithName": "已從 {{fileName}} 移除密碼",
+    "successBody": "已成功移除密碼。"
+  },
+  "setup": {
+    "welcome": "歡迎使用 Stirling PDF",
+    "description": "開始選擇你要如何使用 Stirling PDF",
+    "step1": {
+      "label": "選擇模式",
+      "description": "離線或伺服器"
+    },
+    "step2": {
+      "label": "選擇伺服器",
+      "description": "自託管伺服器"
+    },
+    "step3": {
+      "label": "登入",
+      "description": "輸入認證資訊"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "使用你的 Stirling 帳戶登入"
+      },
+      "selfhosted": {
+        "title": "自託管伺服器",
+        "description": "連線至你自己的 Stirling PDF 伺服器"
+      }
+    },
+    "saas": {
+      "title": "登入 Stirling",
+      "subtitle": "使用你的 Stirling 帳戶登入"
+    },
+    "selfhosted": {
+      "title": "登入伺服器",
+      "subtitle": "輸入你的伺服器認證資訊"
+    },
+    "server": {
+      "title": "連線至伺服器",
+      "subtitle": "輸入你的自託管伺服器 URL",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "自託管伺服器"
+      },
+      "url": {
+        "label": "伺服器 URL",
+        "description": "輸入你自託管 Stirling PDF 伺服器的完整 URL"
+      },
+      "error": {
+        "emptyUrl": "請輸入伺服器 URL",
+        "unreachable": "無法連線至伺服器",
+        "testFailed": "連線測試失敗"
+      },
+      "testing": "正在測試連線..."
+    },
+    "login": {
+      "title": "登入",
+      "subtitle": "輸入你的認證資訊以繼續",
+      "connectingTo": "正在連線到：",
+      "username": {
+        "label": "使用者名稱",
+        "placeholder": "輸入你的使用者名稱"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "輸入你的 Email"
+      },
+      "password": {
+        "label": "密碼",
+        "placeholder": "輸入你的密碼"
+      },
+      "error": {
+        "emptyUsername": "請輸入你的使用者名稱",
+        "emptyEmail": "請輸入你的 Email",
+        "emptyPassword": "請輸入你的密碼",
+        "oauthFailed": "OAuth 登入失敗。請再試一次。"
+      },
+      "submit": "登入",
+      "signInWith": "以此登入",
+      "oauthPending": "正在開啟瀏覽器進行驗證...",
+      "orContinueWith": "或改用 Email 繼續"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "驗證成功",
+      "message": "你可以關閉此視窗並回到 Stirling PDF。"
+    },
+    "error": {
+      "title": "驗證失敗",
+      "message": "驗證未成功。你可以關閉此視窗後再試一次。"
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON 編輯器",
+    "viewLabel": "PDF 編輯器",
+    "converting": "正在將 PDF 轉換為可編輯格式...",
+    "conversionFailed": "轉換 PDF 失敗。請再試一次。",
+    "currentFile": "目前檔案：{{name}}",
+    "pageSummary": "第 {{number}} / {{total}} 頁",
+    "pagePreviewAlt": "頁面預覽",
+    "imageLabel": "已放置的圖片",
+    "noTextOnPage": "此頁未偵測到可編輯文字。",
+    "pageType": {
+      "paragraph": "段落頁面",
+      "sparse": "零散文字"
+    },
+    "groupingMode": {
+      "auto": "自動",
+      "paragraph": "段落",
+      "singleLine": "單行"
+    },
+    "badges": {
+      "unsaved": "已編輯",
+      "modified": "已編輯",
+      "earlyAccess": "搶先體驗"
+    },
+    "actions": {
+      "reset": "重設變更",
+      "downloadJson": "下載 JSON",
+      "generatePdf": "產生 PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "自動縮放文字以符合方框",
+        "description": "當字型呈現與 PDF 不同時，自動在水平方向縮放文字以適配其原始邊界框。"
+      },
+      "groupingMode": {
+        "title": "文字分組模式",
+        "autoDescription": "自動偵測頁面類型並適當分組文字。",
+        "paragraphDescription": "將對齊的多行合併為段落文字框。",
+        "singleLineDescription": "每一行 PDF 文字保留為單獨的文字框。"
+      },
+      "manualGrouping": {
+        "descriptionInline": "提示：按住 Ctrl（或 Cmd）或 Shift 以多選文字框。選取上方會出現浮動工具列，可用來合併、取消分組或調整寬度。"
+      },
+      "forceSingleElement": {
+        "title": "將已編輯文字鎖定為單一 PDF 元素",
+        "description": "啟用時，編輯器會將每個已編輯文字框匯出為一個 PDF 文字元素，以避免字形重疊或字型混用。"
+      }
+    },
+    "manual": {
+      "mergeTooltip": "合併所選方框",
+      "merge": "合併所選",
+      "ungroupTooltip": "將段落拆回多行",
+      "ungroup": "取消分組所選",
+      "widthMenu": "寬度選項",
+      "expandWidth": "展開至頁緣",
+      "resetWidth": "重設寬度",
+      "resizeHandle": "調整文字寬度"
+    },
+    "disclaimer": {
+      "heading": "預覽限制",
+      "textFocus": "此工作區專注於編輯文字與重新定位嵌入的圖片。複雜的頁面圖像、表單元件與分層圖形會在匯出時保留，但無法於此完全編輯。",
+      "previewVariance": "部分視覺元素（如表格邊框、形狀或註解外觀）在預覽中可能與實際略有差異。匯出後的 PDF 會盡可能保留原始繪圖指令。",
+      "alpha": "此 Alpha 檢視器仍在演進中——部分字型、顏色、透明度效果與版面細節可能略有變動。分享前請再次檢查產生的 PDF。"
+    },
+    "empty": {
+      "title": "尚未載入文件",
+      "subtitle": "載入 PDF 或 JSON 檔以開始編輯文字內容。"
+    },
+    "welcomeBanner": {
+      "title": "歡迎使用 PDF 文字編輯器（搶先體驗）",
+      "experimental": "這是仍在積極開發中的實驗性功能。使用期間可能遇到些許不穩定與問題。",
+      "howItWorks": "此工具會將你的 PDF 轉為可編輯格式，你可修改文字內容並重新定位圖片。變更將另存為新的 PDF。",
+      "bestFor": "最適合：",
+      "bestFor1": "以文字與圖片為主的簡單 PDF",
+      "bestFor2": "採標準段落格式的文件",
+      "bestFor3": "信件、論文、報告與基本文件",
+      "notIdealFor": "不適用於：",
+      "notIdealFor1": "含特殊格式的 PDF，例如項目符號、表格或多欄版面",
+      "notIdealFor2": "雜誌、型錄或高度設計的文件",
+      "notIdealFor3": "版面複雜的說明手冊",
+      "limitations": "目前限制：",
+      "limitation1": "字型呈現可能與原始 PDF 略有差異",
+      "limitation2": "複雜圖形、表單欄位與註解會保留，但不可編輯",
+      "limitation3": "大型檔案可能需要時間轉換與處理",
+      "knownIssues": "已知問題（修復中）：",
+      "issue1": "目前無法保留文字顏色（即將加入）",
+      "issue2": "段落模式對齊與間距問題較多，建議使用單行模式",
+      "issue3": "預覽與匯出後的 PDF 顯示不同；匯出的 PDF 更接近原始檔",
+      "issue4": "旋轉文字的對齊可能需要手動調整",
+      "issue5": "透明與分層效果可能與原始不同",
+      "feedback": "此功能為搶先體驗。請回報任何問題以協助我們改進！",
+      "gotIt": "知道了",
+      "dontShowAgain": "不再顯示"
+    },
+    "modeChange": {
+      "title": "確認變更模式",
+      "warning": "變更文字群組模式將重設所有未儲存的變更。確定要繼續嗎？",
+      "cancel": "取消",
+      "confirm": "重設並變更模式"
+    },
+    "fontAnalysis": {
+      "details": "字型詳細資訊",
+      "embedded": "嵌入",
+      "type": "類型",
+      "webFormat": "Web 格式",
+      "warnings": "警告",
+      "suggestions": "備註",
+      "currentPageFonts": "此頁字型",
+      "allFonts": "所有字型",
+      "fallback": "後備",
+      "missing": "缺少",
+      "perfectMessage": "所有字型皆可完美重現。",
+      "warningMessage": "某些字型可能無法正確呈現。",
+      "infoMessage": "提供字型重現相關資訊。",
+      "perfect": "完美",
+      "subset": "子集"
+    },
+    "errors": {
+      "invalidJson": "無法讀取 JSON 檔。請確認該檔是由 PDF to JSON 工具產生。",
+      "pdfConversion": "無法將已編輯的 JSON 轉回 PDF。"
+    }
+  },
+  "auth": {
+    "sessionExpired": "工作階段已逾時",
+    "pleaseLoginAgain": "請重新登入。",
+    "accessDenied": "拒絕存取",
+    "insufficientPermissions": "您沒有執行此操作的權限。"
+  },
+  "addText": {
+    "title": "新增文字",
+    "header": "在 PDF 新增文字",
+    "text": {
+      "name": "文字內容",
+      "placeholder": "輸入要新增的文字",
+      "fontLabel": "字型",
+      "fontSizeLabel": "字型大小",
+      "fontSizePlaceholder": "輸入或選擇字型大小 (8-200)",
+      "colorLabel": "文字顏色"
+    },
+    "steps": {
+      "configure": "設定文字"
+    },
+    "step": {
+      "createDesc": "輸入要新增的文字",
+      "place": "放置文字",
+      "placeDesc": "在 PDF 上點擊以加入文字"
+    },
+    "instructions": {
+      "title": "如何新增文字",
+      "text": "在上方輸入文字後，於 PDF 任意位置點擊以放置。",
+      "paused": "暫停放置",
+      "resumeHint": "恢復放置後即可點擊加入文字。",
+      "noSignature": "請先在上方輸入文字以啟用放置。"
+    },
+    "mode": {
+      "move": "移動文字",
+      "place": "放置文字",
+      "pause": "暫停放置",
+      "resume": "恢復放置"
+    },
+    "results": {
+      "title": "新增文字結果"
+    },
+    "error": {
+      "failed": "將文字新增到 PDF 時發生錯誤。"
+    },
+    "tags": "文字,註解,標籤",
+    "applySignatures": "套用文字"
   }
 }

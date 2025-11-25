@@ -17,6 +17,8 @@
       "comingSoon": "Kommer snart:",
       "favorite": "Føj til favoritter",
       "favorites": "Favoritter",
+      "unavailable": "Deaktiveret af serveradministrator:",
+      "unavailableDependency": "Ikke tilgængelig – påkrævet værktøj mangler på serveren:",
       "heading": "Alle værktøjer (fuldskærmsvisning)",
       "noResults": "Prøv at justere din søgning eller slå beskrivelser til for at finde det, du har brug for.",
       "recommended": "Anbefalet",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Skift til fuldskærmstilstand",
       "sidebar": "Skift til sidepanel-tilstand"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Premium-funktion:",
+    "comingSoon": "Kommer snart:"
   },
   "unsavedChanges": "Du har ikke-gemte ændringer i din PDF.",
   "areYouSure": "Er du sikker på, at du vil forlade?",
@@ -40,6 +45,30 @@
     "message": "Denne ZIP indeholder {{count}} filer. Udpak alligevel?",
     "cancel": "Annuller",
     "confirm": "Udpak"
+  },
+  "defaultApp": {
+    "title": "Sæt som standard PDF-app",
+    "message": "Vil du sætte Stirling PDF som din standard PDF-editor?",
+    "description": "Du kan ændre dette senere i dine systemindstillinger.",
+    "notNow": "Ikke nu",
+    "setDefault": "Sæt som standard",
+    "dismiss": "Afvis",
+    "prompt": {
+      "title": "Sæt som standard PDF-editor",
+      "message": "Gør Stirling PDF til din standardapp til at åbne PDF-filer."
+    },
+    "success": {
+      "title": "Standardapp valgt",
+      "message": "Stirling PDF er nu din standard PDF-editor"
+    },
+    "settingsOpened": {
+      "title": "Indstillinger åbnet",
+      "message": "Vælg Stirling PDF i dine systemindstillinger"
+    },
+    "error": {
+      "title": "Fejl",
+      "message": "Kunne ikke angive standard PDF-håndterer"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Gem",
   "saveToBrowser": "Gem til browser",
   "download": "Download",
+  "downloadUnavailable": "Download ikke tilgængelig for dette element",
+  "saveUnavailable": "Gem er ikke tilgængelig for dette element",
   "pin": "Fastgør fil (behold aktiv efter værktøjskørsel)",
   "unpin": "Frigør fil (erstat efter værktøjskørsel)",
   "undoOperationTooltip": "Klik for at fortryde den sidste handling og gendanne de oprindelige filer",
@@ -168,6 +199,7 @@
   },
   "edit": "Rediger",
   "delete": "Slet",
+  "never": "Aldrig",
   "username": "Brugernavn",
   "password": "Adgangskode",
   "welcome": "Velkommen",
@@ -262,7 +294,8 @@
     "learnMore": "Lær mere",
     "enable": "Aktivér analytics",
     "disable": "Deaktiver analytics",
-    "settings": "Du kan ændre analytics-indstillingerne i config/settings.yml-filen"
+    "settings": "Du kan ændre analytics-indstillingerne i config/settings.yml-filen",
+    "privacyAssurance": "Vi sporer ikke personlige oplysninger eller indholdet af dine filer."
   },
   "navbar": {
     "favorite": "Favoritter",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Indstillinger",
-    "update": "Opdatering tilgængelig",
-    "updateAvailable": "{0} er den aktuelt installerede version. En ny version ({1}) er tilgængelig.",
-    "appVersion": "App-version:",
-    "downloadOption": {
-      "title": "Vælg download mulighed (For enkelt fil ikke-zip downloads):",
-      "1": "Åbn i samme vindue",
-      "2": "Åbn i nyt vindue",
-      "3": "Download fil"
-    },
-    "zipThreshold": "Zip filer når antallet af downloadede filer overstiger",
-    "signOut": "Log ud",
-    "accountSettings": "Kontoindstillinger",
-    "bored": {
-      "help": "Aktiverer påskeæg spil"
-    },
-    "cacheInputs": {
-      "name": "Gem formularinput",
-      "help": "Aktivér for at gemme tidligere anvendte input til fremtidige kørsler"
+    "connection": {
+      "title": "Forbindelsestilstand",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Selvhostet"
+      },
+      "server": "Server",
+      "user": "Logget ind som",
+      "logout": "Log ud"
     },
     "general": {
       "title": "Generelt",
       "description": "Konfigurer generelle programindstillinger.",
-      "account": "Konto",
-      "accountDescription": "Administrer dine kontoindstillinger",
       "user": "Bruger",
-      "signedInAs": "Logget ind som",
       "logout": "Log ud",
       "enableFeatures": {
+        "dismiss": "Afvis",
         "title": "For systemadministratorer",
         "intro": "Aktivér brugergodkendelse, teamstyring og arbejdsområdefunktioner for din organisation.",
         "action": "Konfigurer",
         "and": "og",
         "benefit": "Aktiverer brugerroller, teamsamarbejde, admin-kontroller og enterprise-funktioner.",
-        "learnMore": "Læs mere i dokumentationen",
-        "dismiss": "Afvis"
+        "learnMore": "Læs mere i dokumentationen"
       },
-      "autoUnzip": "Auto-udpak API-svar",
-      "autoUnzipDescription": "Udpak automatisk filer fra ZIP-svar",
-      "autoUnzipTooltip": "Udpak automatisk ZIP-filer returneret fra API-operationer. Deaktivér for at beholde ZIP-filer intakte. Dette påvirker ikke automatiseringsarbejdsgange.",
-      "autoUnzipFileLimit": "Grænse for auto-udpakning",
-      "autoUnzipFileLimitDescription": "Maksimalt antal filer der udtrækkes fra ZIP",
-      "autoUnzipFileLimitTooltip": "Pak kun ud, hvis ZIP'en indeholder dette antal filer eller færre. Sæt højere for at udpakke større ZIP'er.",
       "defaultToolPickerMode": "Standardtilstand for værktøjsvælger",
       "defaultToolPickerModeDescription": "Vælg om værktøjsvælgeren skal åbne i fuldskærm eller sidepanel som standard",
       "mode": {
-        "fullscreen": "Fuldskærm",
-        "sidebar": "Sidepanel"
-      }
+        "sidebar": "Sidepanel",
+        "fullscreen": "Fuldskærm"
+      },
+      "autoUnzipTooltip": "Udpak automatisk ZIP-filer returneret fra API-operationer. Deaktivér for at beholde ZIP-filer intakte. Dette påvirker ikke automatiseringsarbejdsgange.",
+      "autoUnzip": "Auto-udpak API-svar",
+      "autoUnzipDescription": "Udpak automatisk filer fra ZIP-svar",
+      "autoUnzipFileLimitTooltip": "Pak kun ud, hvis ZIP'en indeholder dette antal filer eller færre. Sæt højere for at udpakke større ZIP'er.",
+      "autoUnzipFileLimit": "Grænse for auto-udpakning",
+      "autoUnzipFileLimitDescription": "Maksimalt antal filer der udtrækkes fra ZIP",
+      "defaultPdfEditor": "Standard PDF-editor",
+      "defaultPdfEditorActive": "Stirling PDF er din standard PDF-editor",
+      "defaultPdfEditorInactive": "En anden app er sat som standard",
+      "defaultPdfEditorChecking": "Tjekker...",
+      "defaultPdfEditorSet": "Allerede standard",
+      "setAsDefault": "Sæt som standard",
+      "updates": {
+        "title": "Softwareopdateringer",
+        "description": "Søg efter opdateringer og se versionsinfo",
+        "currentVersion": "Nuværende version",
+        "latestVersion": "Seneste version",
+        "checkForUpdates": "Søg efter opdateringer",
+        "viewDetails": "Vis detaljer"
+      },
+      "hideUnavailableTools": "Skjul utilgængelige værktøjer",
+      "hideUnavailableToolsDescription": "Fjern værktøjer, som din server har deaktiveret, i stedet for at vise dem nedtonet.",
+      "hideUnavailableConversions": "Skjul utilgængelige konverteringer",
+      "hideUnavailableConversionsDescription": "Fjern deaktiverede konverteringsmuligheder i Konverter-værktøjet i stedet for at vise dem nedtonet."
     },
     "hotkeys": {
-      "title": "Tastaturgenveje",
-      "description": "Hold markøren over et værktøj for at se dets genvej eller tilpas den nedenfor. Klik \"Skift genvej\" og tryk en ny tastekombination. Tryk Esc for at annullere.",
-      "errorModifier": {
-        "mac": "Medtag ⌘ (Command), ⌥ (Option) eller en anden modifikatortast i din genvej.",
-        "windows": "Medtag Ctrl, Alt eller en anden modifikatortast i din genvej."
-      },
       "errorConflict": "Genvej bruges allerede af {{tool}}.",
+      "searchPlaceholder": "Søg værktøjer...",
       "none": "Ikke tildelt",
       "customBadge": "Brugerdefineret",
       "defaultLabel": "Standard: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Skift genvej",
       "reset": "Nulstil",
       "shortcut": "Genvej",
-      "noShortcut": "Ingen genvej angivet",
-      "searchPlaceholder": "Søg værktøjer..."
+      "noShortcut": "Ingen genvej angivet"
     }
+  },
+  "update": {
+    "modalTitle": "Opdatering tilgængelig",
+    "current": "Nuværende version",
+    "latest": "Seneste version",
+    "latestStable": "Seneste stabile",
+    "priorityLabel": "Prioritet",
+    "recommendedAction": "Anbefalet handling",
+    "breakingChangesDetected": "Inkompatible ændringer registreret",
+    "breakingChangesMessage": "Nogle versioner indeholder inkompatible ændringer. Gennemgå venligst migrationsvejledningerne nedenfor før opdatering.",
+    "migrationGuides": "Migrationsvejledninger",
+    "viewGuide": "Vis vejledning",
+    "loadingDetailedInfo": "Indlæser detaljerede oplysninger...",
+    "close": "Luk",
+    "viewAllReleases": "Se alle udgivelser",
+    "downloadLatest": "Download seneste",
+    "availableUpdates": "Tilgængelige opdateringer",
+    "unableToLoadDetails": "Kan ikke indlæse detaljerede oplysninger.",
+    "version": "Version",
+    "urgentUpdateAvailable": "Hastende opdatering",
+    "updateAvailable": "Opdatering tilgængelig",
+    "releaseNotes": "Udgivelsesnoter",
+    "priority": {
+      "urgent": "Hastende",
+      "normal": "Normal",
+      "minor": "Mindre",
+      "low": "Lav"
+    },
+    "breakingChanges": "Inkompatible ændringer",
+    "breakingChangesDefault": "Denne version indeholder inkompatible ændringer.",
+    "migrationGuide": "Migrationsvejledning"
   },
   "changeCreds": {
     "title": "Skift Legitimationsoplysninger",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Overlejrer PDF'er oven på en anden PDF",
       "title": "Overlejr PDF'er"
+    },
+    "pdfTextEditor": {
+      "title": "PDF-teksteditor",
+      "desc": "Gennemse og rediger Stirling PDF JSON-eksporter med grupperet tekstredigering og regenerering af PDF"
+    },
+    "addText": {
+      "tags": "tekst,annotering,etiket",
+      "title": "Tilføj tekst",
+      "desc": "Tilføj brugerdefineret tekst hvor som helst i din PDF"
     }
   },
   "landing": {
     "addFiles": "Tilføj filer",
-    "uploadFromComputer": "Upload fra computer"
+    "uploadFromComputer": "Upload fra computer",
+    "openFromComputer": "Åbn fra computer"
   },
   "viewPdf": {
     "tags": "se,læs,annotér,tekst,billede",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Der opstod en fejl under sammenfletning af PDF'erne."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overblik over fletteindstillinger"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,billede,foto",
     "title": "Tilføj Billede",
     "header": "Tilføj billede til PDF",
-    "everyPage": "Hver Side?",
-    "upload": "Tilføj billede",
-    "submit": "Tilføj billede"
+    "image": {
+      "name": "Billede",
+      "placeholder": "Upload et billede",
+      "label": "Billedfil"
+    },
+    "steps": {
+      "configure": "Konfigurer billede"
+    },
+    "step": {
+      "createDesc": "Upload billedet, du vil tilføje",
+      "place": "Placer billede",
+      "placeDesc": "Klik på PDF'en for at tilføje dit billede"
+    },
+    "instructions": {
+      "title": "Sådan tilføjer du billeder",
+      "text": "Når du har uploadet billedet ovenfor, skal du klikke hvor som helst på PDF'en for at placere det.",
+      "paused": "Placering sat på pause",
+      "resumeHint": "Genoptag placering for at klikke og tilføje dit billede.",
+      "noSignature": "Upload et billede ovenfor for at aktivere placering."
+    },
+    "mode": {
+      "move": "Flyt billede",
+      "place": "Placer billede",
+      "pause": "Sæt placering på pause",
+      "resume": "Genoptag placering"
+    },
+    "results": {
+      "title": "Resultater for billedtilføjelse"
+    },
+    "error": {
+      "failed": "Der opstod en fejl under tilføjelse af billede til PDF'en."
+    },
+    "saved": {
+      "defaultLabel": "Billede",
+      "defaultImageLabel": "Uploadet billede"
+    },
+    "applySignatures": "Anvend billeder"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Forhindre udskrivning af forskellige formater"
     },
     "submit": "Ændre"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Bogmærker og oversigt",
+      "replaceExisting": "Erstat eksisterende bogmærker (fjern markering for at tilføje efter)",
+      "replaceExistingHint": "Når deaktiveret, tilføjes den nye oversigt efter de nuværende bogmærker."
+    },
+    "actions": {
+      "source": "Indlæs bogmærker",
+      "selectedFile": "Indlæst fra {{file}}",
+      "noFile": "Vælg en PDF for at udtrække eksisterende bogmærker.",
+      "loadFromPdf": "Indlæs fra valgt PDF",
+      "importJson": "Importer JSON",
+      "importClipboard": "Indsæt JSON fra udklipsholderen",
+      "export": "Eksporter bogmærker",
+      "exportJson": "Download JSON",
+      "exportClipboard": "Kopiér JSON til udklipsholder",
+      "clipboardUnavailable": "Adgang til udklipsholder er ikke tilgængelig i denne browser."
+    },
+    "info": {
+      "line1": "Hvert bogmærke skal have en beskrivende titel og den side, det skal åbne.",
+      "line2": "Brug underbogmærker til at opbygge et hierarki for kapitler, afsnit eller underafsnit.",
+      "line3": "Importer bogmærker fra den valgte PDF eller fra en JSON-fil for at spare tid."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Åbn værktøjet for at begynde at redigere",
+        "description": "Vælg værktøjet Rediger indholdsfortegnelse for at indlæse arbejdsområdet."
+      },
+      "tabTitle": "Oversigtsarbejdsområde",
+      "subtitle": "Importer bogmærker, opbyg hierarkier og anvend oversigten uden trange sidepaneler.",
+      "noFile": "Ingen PDF valgt",
+      "fileLabel": "Ændringer anvendes på den aktuelt valgte PDF.",
+      "filePrompt": "Vælg en PDF fra dit bibliotek eller upload en ny for at starte.",
+      "changeFile": "Skift PDF",
+      "selectFile": "Vælg PDF"
+    },
+    "editor": {
+      "heading": "Bogmærke-editor",
+      "description": "Tilføj, indlejr og omarrangér bogmærker for at skabe din PDF-oversigt.",
+      "addTopLevel": "Tilføj bogmærke på øverste niveau",
+      "empty": {
+        "title": "Ingen bogmærker endnu",
+        "description": "Importer eksisterende bogmærker, eller start med at tilføje din første post.",
+        "action": "Tilføj første bogmærke"
+      },
+      "defaultTitle": "Nyt bogmærke",
+      "defaultChildTitle": "Underbogmærke",
+      "defaultSiblingTitle": "Nyt bogmærke",
+      "untitled": "Unavngivet bogmærke",
+      "childBadge": "Under",
+      "pagePreview": "Side {{page}}",
+      "field": {
+        "title": "Bogmærketitel",
+        "page": "Målsidenummer"
+      },
+      "actions": {
+        "toggle": "Skift underbogmærker",
+        "addChild": "Tilføj underbogmærke",
+        "addSibling": "Tilføj sideordnet bogmærke",
+        "remove": "Fjern bogmærke"
+      },
+      "confirmRemove": "Fjerne dette bogmærke og alle dets underbogmærker?"
+    },
+    "messages": {
+      "loadedTitle": "Bogmærker udtrukket",
+      "loadedBody": "Eksisterende bogmærker fra PDF'en blev indlæst i editoren.",
+      "noBookmarks": "Der blev ikke fundet bogmærker i den valgte PDF.",
+      "loadFailed": "Kan ikke udtrække bogmærker fra den valgte PDF.",
+      "imported": "Bogmærker importeret",
+      "importedBody": "Din JSON-oversigt erstattede det aktuelle indhold i editoren.",
+      "importedClipboard": "Data fra udklipsholderen erstattede den aktuelle bogmærkeliste.",
+      "invalidJson": "Ugyldig JSON-struktur",
+      "invalidJsonBody": "Angiv en gyldig JSON-fil med bogmærker, og prøv igen.",
+      "exported": "JSON-download klar",
+      "copied": "Kopieret til udklipsholderen",
+      "copiedBody": "JSON for bogmærker kopieret.",
+      "copyFailed": "Kopiering mislykkedes"
+    },
+    "error": {
+      "failed": "Kunne ikke opdatere indholdsfortegnelsen"
+    },
+    "submit": "Anvend indholdsfortegnelsen",
+    "results": {
+      "title": "Opdateret PDF med bogmærker",
+      "subtitle": "Download den behandlede fil, eller fortryd handlingen nedenfor."
+    }
   },
   "removePages": {
     "tags": "Fjern sider,slet sider",
@@ -1652,7 +1851,7 @@
       "placeholder": "Dokumentopretter"
     },
     "producer": {
-      "label": "Producer",
+      "label": "Producent",
       "placeholder": "Dokumentproducer"
     },
     "dates": {
@@ -1978,13 +2177,54 @@
       "title": "Tegn din underskrift",
       "clear": "Ryd"
     },
+    "canvas": {
+      "heading": "Tegn din signatur",
+      "clickToOpen": "Klik for at åbne tegnefeltet",
+      "modalTitle": "Tegn din signatur",
+      "colorLabel": "Farve",
+      "penSizeLabel": "Pennestørrelse",
+      "penSizePlaceholder": "Størrelse",
+      "clear": "Ryd tegnefelt",
+      "colorPickerTitle": "Vælg stregfarve"
+    },
     "text": {
       "name": "Underskrivers navn",
-      "placeholder": "Indtast dit fulde navn"
+      "placeholder": "Indtast dit fulde navn",
+      "fontLabel": "Skrifttype",
+      "fontSizeLabel": "Skriftstørrelse",
+      "fontSizePlaceholder": "Skriv eller vælg skriftstørrelse (8-200)",
+      "colorLabel": "Tekstfarve"
     },
     "clear": "Ryd",
     "add": "Tilføj",
-    "saved": "Gemte Signaturer",
+    "saved": {
+      "heading": "Gemte signaturer",
+      "description": "Genbrug gemte signaturer når som helst.",
+      "emptyTitle": "Ingen gemte signaturer endnu",
+      "emptyDescription": "Tegn, upload eller skriv en signatur ovenfor, og brug derefter \"Gem i bibliotek\" for at gemme op til {{max}} favoritter klar til brug.",
+      "type": {
+        "canvas": "Tegning",
+        "image": "Upload",
+        "text": "Tekst"
+      },
+      "limitTitle": "Grænse nået",
+      "limitDescription": "Fjern en gemt signatur, før du tilføjer nye (maks. {{max}}).",
+      "carouselPosition": "{{current}} af {{total}}",
+      "prev": "Forrige",
+      "next": "Næste",
+      "delete": "Fjern",
+      "label": "Etiket",
+      "defaultLabel": "Signatur",
+      "defaultCanvasLabel": "Tegnet signatur",
+      "defaultImageLabel": "Uploadet signatur",
+      "defaultTextLabel": "Indtastet signatur",
+      "saveButton": "Gem signatur",
+      "saveUnavailable": "Opret først en signatur for at gemme den.",
+      "noChanges": "Nuværende signatur er allerede gemt.",
+      "status": {
+        "saved": "Gemt"
+      }
+    },
     "save": "Gem Signatur",
     "applySignatures": "Anvend underskrifter",
     "personalSigs": "Personlige Signaturer",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Konfigurer underskrift"
     },
+    "step": {
+      "createDesc": "Vælg, hvordan du vil oprette signaturen",
+      "place": "Placér og gem",
+      "placeDesc": "Placér signaturen på din PDF"
+    },
     "type": {
       "title": "Underskriftstype",
       "draw": "Tegn",
       "canvas": "Lærred",
       "image": "Billede",
-      "text": "Tekst"
+      "text": "Tekst",
+      "saved": "Gemt"
     },
     "image": {
       "label": "Upload billede af underskrift",
@@ -2019,11 +2265,17 @@
       "title": "Sådan tilføjer du underskrift",
       "canvas": "Når du har tegnet din underskrift på lærredet, luk dialogen og klik derefter hvor som helst på PDF'en for at placere den.",
       "image": "Når du har uploadet din underskriftsbillede ovenfor, klik hvor som helst på PDF'en for at placere den.",
-      "text": "Når du har indtastet dit navn ovenfor, klik hvor som helst på PDF'en for at placere din underskrift."
+      "saved": "Vælg en gemt signatur ovenfor, og klik derefter hvor som helst på PDF'en for at placere den.",
+      "text": "Når du har indtastet dit navn ovenfor, klik hvor som helst på PDF'en for at placere din underskrift.",
+      "paused": "Placering sat på pause",
+      "resumeHint": "Genoptag placering for at klikke og tilføje din signatur.",
+      "noSignature": "Opret en signatur ovenfor for at aktivere placeringsværktøjer."
     },
     "mode": {
       "move": "Flyt underskrift",
-      "place": "Placer underskrift"
+      "place": "Placer underskrift",
+      "pause": "Sæt placering på pause",
+      "resume": "Genoptag placering"
     },
     "updateAndPlace": "Opdater og placer",
     "activate": "Aktivér placering af underskrift",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Om fjernelse af annoteringer",
       "description": "Dette værktøj fjerner alle annoteringer (kommentarer, fremhævninger, noter osv.) fra dine PDF-dokumenter."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Om Fjern annoteringer"
+      },
+      "description": {
+        "title": "Hvad den gør"
+      }
     },
     "error": {
       "failed": "Der opstod en fejl under fjernelse af annoteringer fra PDF'en."
@@ -2568,7 +2828,7 @@
     "submit": "Indsend"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "ændre størrelse,ændre,dimension,tilpas",
     "title": "Juster sideskalering",
     "header": "Juster sideskalering",
     "scaleFactor": {
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Sådan fungerer Automatisk omdøbning"
       },
+      "description": {
+        "title": "Hvad den gør"
+      },
       "howItWorks": {
         "title": "Smart omdøbning",
         "text": "Finder automatisk titlen fra dit PDF-indhold og bruger den som filnavn.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Opretter et rent, gyldigt filnavn ud fra den fundne titel",
         "bullet3": "Beholder det oprindelige navn, hvis ingen passende titel findes"
       }
+    },
+    "settings": {
+      "title": "Om"
     }
   },
   "adjust-contrast": {
@@ -3058,7 +3324,7 @@
       "algorithm": "Algoritme",
       "keySize": "Nøglestørrelse",
       "version": "Version",
-      "keyUsage": "Key Usage",
+      "keyUsage": "Nøgleanvendelse",
       "selfSigned": "Selvsigneret",
       "bits": "bit",
       "details": "Certifikatdetaljer"
@@ -3598,7 +3864,9 @@
     "exportAll": "Eksporter PDF",
     "downloadSelected": "Download valgte filer",
     "downloadAll": "Download alle",
+    "saveAll": "Gem alle",
     "toggleTheme": "Skift tema",
+    "toggleBookmarks": "Skift bogmærker",
     "language": "Sprog",
     "search": "Søg i PDF",
     "panMode": "Pan-tilstand",
@@ -4137,7 +4405,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Installer app",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4480,21 @@
         "title": "Premium og Enterprise",
         "description": "Konfigurer din premium- eller enterprise-licensnøgle.",
         "license": "Licenskonfiguration",
+        "licenseKey": {
+          "toggle": "Har du en licensnøgle eller en certifikatfil?",
+          "info": "Hvis du har en licensnøgle eller en certifikatfil fra et direkte køb, kan du indtaste den her for at aktivere premium- eller enterprise-funktioner."
+        },
         "key": {
           "label": "Licensnøgle",
-          "description": "Indtast din premium- eller enterprise-licensnøgle"
+          "description": "Indtast din premium- eller enterprise-licensnøgle",
+          "success": "Licensnøgle gemt",
+          "successMessage": "Din licensnøgle er aktiveret. Genstart er ikke påkrævet.",
+          "overwriteWarning": {
+            "title": "⚠️ Advarsel: Eksisterende licens fundet",
+            "line1": "Overskrivning af din nuværende licensnøgle kan ikke fortrydes.",
+            "line2": "Din tidligere licens går permanent tabt, medmindre du har sikkerhedskopieret den andetsteds.",
+            "line3": "Vigtigt: Hold licensnøgler private og sikre. Del dem aldrig offentligt."
+          }
         },
         "enabled": {
           "label": "Aktivér premium-funktioner",
@@ -4278,12 +4558,17 @@
     "or": "eller",
     "dropFileHere": "Slip fil her eller klik for at uploade",
     "dropFilesHere": "Slip filer her eller klik på upload-knappen",
+    "dropFilesHereOpen": "Slip filer her eller klik på knappen Åbn",
     "pdfFilesOnly": "Kun PDF-filer",
     "supportedFileTypes": "Understøttede filtyper",
     "upload": "Upload",
     "uploadFile": "Upload fil",
     "uploadFiles": "Upload filer",
+    "open": "Åbn",
+    "openFile": "Åbn fil",
+    "openFiles": "Åbn filer",
     "noFilesInStorage": "Ingen filer tilgængelige i lageret. Upload nogle filer først.",
+    "noFilesInStorageOpen": "Ingen filer tilgængelige i lageret. Åbn nogle filer først.",
     "selectFromStorage": "Vælg fra lager",
     "backToTools": "Tilbage til værktøjer",
     "addFiles": "Tilføj filer",
@@ -4329,6 +4614,8 @@
     "myFiles": "Mine filer",
     "noRecentFiles": "Ingen seneste filer fundet",
     "googleDriveNotAvailable": "Google Drive-integration ikke tilgængelig",
+    "downloadSelected": "Download valgte",
+    "saveSelected": "Gem valgte",
     "openFiles": "Åbn filer",
     "openFile": "Åbn fil",
     "details": "Fildetaljer",
@@ -4341,7 +4628,6 @@
     "selectAll": "Vælg alle",
     "deselectAll": "Fravælg alle",
     "deleteSelected": "Slet valgte",
-    "downloadSelected": "Download valgte",
     "selectedCount": "{{count}} valgt",
     "download": "Download",
     "delete": "Slet",
@@ -4439,7 +4725,7 @@
       "keyLength": {
         "label": "Længde på krypteringsnøgle",
         "40bit": "40-bit (Lav)",
-        "128bit": "128-bit (Standard)",
+        "128bit": "128-bit (standard)",
         "256bit": "256-bit (Høj)"
       }
     },
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Sikkerhedsarbejdsgang",
       "secureWorkflowDesc": "Sikrer PDF-dokumenter ved at fjerne potentielt ondsindet indhold som JavaScript og indlejrede filer og tilføjer derefter adgangskodebeskyttelse for at forhindre uautoriseret adgang. Adgangskoden er som standard sat til 'password'.",
       "processImages": "Behandl billeder",
-      "processImagesDesc": "Konverterer flere billedfiler til ét PDF-dokument og anvender derefter OCR-teknologi for at udtrække søgbar tekst fra billederne."
+      "processImagesDesc": "Konverterer flere billedfiler til ét PDF-dokument og anvender derefter OCR-teknologi for at udtrække søgbar tekst fra billederne.",
+      "prePublishSanitization": "Sanering før publicering",
+      "prePublishSanitizationDesc": "Saneringsworkflow, der fjerner al skjult metadata, JavaScript, indlejrede filer og annoteringer og fladgør formularer for at forhindre datalækage før publicering af PDF'er online."
     }
+  },
+  "colorPicker": {
+    "title": "Vælg farve"
   },
   "common": {
     "previous": "Forrige",
@@ -4639,7 +4930,13 @@
     "used": "brugt",
     "available": "tilgængelig",
     "cancel": "Annullér",
-    "preview": "Forhåndsvisning"
+    "preview": "Forhåndsvisning",
+    "close": "Luk",
+    "done": "Færdig",
+    "loading": "Indlæser...",
+    "back": "Tilbage",
+    "continue": "Fortsæt",
+    "error": "Fejl"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Tilføj flere filer...",
     "selectedFiles": "Valgte filer",
     "submit": "Tilføj vedhæftede filer",
+    "tooltip": {
+      "header": {
+        "title": "Om Tilføj vedhæftede filer"
+      },
+      "description": {
+        "title": "Hvad den gør"
+      }
+    },
     "results": {
       "title": "Resultater for vedhæftninger"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Tilpasset placering",
   "details": "Detaljer",
-  "downloadUnavailable": "Download ikke tilgængelig for dette element",
   "invalidUndoData": "Kan ikke fortryde: ugyldige handlingsdata",
   "margin": {
     "large": "Stor",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Måske senere",
       "dontShowAgain": "Vis ikke igen"
     },
+    "welcomeSlide": {
+      "title": "Velkommen til Stirling",
+      "body": "Stirling PDF er nu klar til teams i alle størrelser. Denne opdatering indeholder et nyt layout, stærke nye admin-funktioner og vores mest efterspurgte funktion – <strong>Rediger tekst</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Lad os vælge <strong>Beskær</strong>-værktøjet for at demonstrere, hvordan man bruger et af værktøjerne.",
     "toolInterface": "Dette er <strong>Beskær</strong>-værktøjets grænseflade. Som du kan se, er der ikke meget at se, fordi vi endnu ikke har tilføjet nogen PDF-filer at arbejde med.",
@@ -4823,7 +5131,39 @@
     "next": "Næste",
     "finish": "Færdig",
     "startTour": "Start rundtur",
-    "startTourDescription": "Tag en guidet tur gennem Stirling PDFs nøglefunktioner"
+    "startTourDescription": "Tag en guidet tur gennem Stirling PDFs nøglefunktioner",
+    "buttons": {
+      "next": "Næste →",
+      "back": "Tilbage",
+      "skipForNow": "Spring over for nu",
+      "download": "Download →",
+      "showMeAround": "Vis mig rundt",
+      "skipTheTour": "Spring rundvisningen over"
+    },
+    "serverLicense": {
+      "skip": "Spring over for nu",
+      "seePlans": "Se planer →",
+      "upgrade": "Opgrader nu →",
+      "freeTitle": "Serverlicens",
+      "overLimitTitle": "Serverlicens påkrævet",
+      "overLimitBody": "Vores licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brugere. For at fortsætte uden afbrydelser skal du opgradere til Stirling Server-abonnementet – <strong>ubegrænsede pladser</strong>, PDF-tekstredigering og fuld admin-kontrol for $99/server/md.",
+      "freeBody": "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
+    },
+    "desktopInstall": {
+      "title": "Download",
+      "titleWithOs": "Download til {{osLabel}}",
+      "body": "Stirling fungerer bedst som desktop-app. Du kan bruge den offline, få hurtigere adgang til dokumenter og redigere lokalt på din computer."
+    },
+    "planOverview": {
+      "adminTitle": "Admin-overblik",
+      "userTitle": "Plan-overblik",
+      "adminBodyLoginEnabled": "Som admin kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis.",
+      "adminBodyLoginDisabled": "Når du aktiverer login-tilstand, kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis.",
+      "userBody": "Invitér teammedlemmer, tildel roller, og hold dine dokumenter organiseret i ét sikkert arbejdsområde. Aktiver login-tilstand, når du er klar til at vokse ud over solo-brug."
+    },
+    "securityCheck": {
+      "message": "Applikationen har gennemgået væsentlige ændringer for nylig. Din serveradmins opmærksomhed kan være påkrævet. Bekræft din rolle for at fortsætte."
+    }
   },
   "adminOnboarding": {
     "welcome": "Velkommen til <strong>Administratorrundturen</strong>! Lad os udforske de avancerede enterprise-funktioner og indstillinger, der er tilgængelige for systemadministratorer.",
@@ -4852,7 +5192,10 @@
       "role": "Rolle",
       "team": "Team",
       "status": "Status",
-      "actions": "Handlinger",
+      "actions": {
+        "label": "Handlinger",
+        "upgrade": "Opgrader"
+      },
       "noMembersFound": "Ingen medlemmer fundet",
       "active": "Aktiv",
       "disabled": "Deaktiveret",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} ledig(e) brugerplads(er)",
         "noSlotsAvailable": "Ingen pladser tilgængelige",
         "currentUsage": "Bruger i øjeblikket {{current}} af {{max}} brugerlicenser"
-      }
+      },
+      "loginRequired": "Aktivér først login-tilstand"
     },
     "teams": {
       "title": "Teams",
@@ -5057,6 +5401,17 @@
     "showComparison": "Sammenlign alle funktioner",
     "hideComparison": "Skjul funktionssammenligning",
     "featureComparison": "Sammenligning af funktioner",
+    "from": "Fra",
+    "perMonth": "/måned",
+    "perSeat": "/plads",
+    "withServer": "+ Server-plan",
+    "licensedSeats": "Licenseret: {{count}} pladser",
+    "includedInCurrent": "Inkluderet i din plan",
+    "selectPlan": "Vælg plan",
+    "manage": "Administrer",
+    "manageSubscription": {
+      "description": "Administrer dit abonnement, fakturering og betalingsmetoder"
+    },
     "activePlan": {
       "title": "Aktiv plan",
       "subtitle": "Dine nuværende abonnementsdetaljer"
@@ -5074,13 +5429,16 @@
       "upTo": "Op til"
     },
     "period": {
-      "month": "måned"
+      "month": "måned",
+      "perUserPerMonth": "/bruger/måned"
     },
     "free": {
       "name": "Gratis",
       "highlight1": "Begrænset brug af værktøjer pr. uge",
       "highlight2": "Adgang til alle værktøjer",
-      "highlight3": "Support fra fællesskabet"
+      "highlight3": "Support fra fællesskabet",
+      "forever": "Altid gratis",
+      "included": "Inkluderet"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Skræddersyet prissætning",
       "highlight2": "Dedikeret support",
-      "highlight3": "Nyeste funktioner"
+      "highlight3": "Nyeste funktioner",
+      "requiresServer": "Kræver server",
+      "requiresServerMessage": "Opgrader først til Server-planen, før du opgraderer til Enterprise."
     },
     "feature": {
       "title": "Funktion",
@@ -5102,6 +5462,12 @@
       "api": "API-adgang",
       "priority": "Prioriteret support",
       "customPricing": "Skræddersyet prissætning"
+    },
+    "licenseWarning": {
+      "title": "Gratis selvhostet grænse nået",
+      "body": "Du har {{total}} brugere, men den gratis plan understøtter kun {{limit}} pr. server. Opgrader for at holde Stirling PDF kørende uden problemer.",
+      "overLimit": "mere end {{limit}}",
+      "cta": "Se planer"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Administrer fakturering",
     "portal": {
       "error": "Kunne ikke åbne faktureringsportal"
-    }
+    },
+    "updateSeats": "Opdater pladser",
+    "updateEnterpriseSeats": "Opdater Enterprise-pladser",
+    "currentSeats": "Nuværende pladser",
+    "minimumSeats": "Minimum pladser",
+    "basedOnUsers": "(nuværende brugere)",
+    "newSeatCount": "Nyt antal pladser",
+    "newSeatCountDescription": "Vælg antal pladser til din Enterprise-licens",
+    "whatHappensNext": "Hvad sker der nu?",
+    "stripePortalRedirect": "Du bliver omdirigeret til Stripes faktureringsportal for at gennemgå og bekræfte ændringen. Det forholdsmæssige beløb beregnes automatisk.",
+    "preparingUpdate": "Forbereder opdatering af pladser...",
+    "seatCountTooLow": "Antal pladser skal være mindst {{minimum}} (nuværende antal brugere)",
+    "seatCountUnchanged": "Vælg venligst et andet antal pladser",
+    "seatsUpdated": "Pladser opdateret",
+    "seatsUpdatedMessage": "Dine Enterprise-pladser er opdateret til {{seats}}",
+    "updateProcessing": "Opdatering behandles",
+    "updateProcessingMessage": "Din opdatering af pladser behandles. Opdater siden om et øjeblik.",
+    "notEnterprise": "Pladshåndtering er kun tilgængelig for Enterprise-licenser"
+  },
+  "upgradeBanner": {
+    "title": "Opgrader til Server-plan",
+    "message": "Få mest ud af Stirling PDF med ubegrænsede brugere og avancerede funktioner",
+    "upgradeButton": "Opgrader nu",
+    "dismiss": "Afvis banner",
+    "attentionTitle": "Denne server kræver admin-opmærksomhed",
+    "attentionBody": "Din admin skal logge ind for at se flere oplysninger. Kontakt dem straks.",
+    "attentionBodyAdmin": "Gennemgå licenskravene for at holde denne server i overensstemmelse.",
+    "seeInfo": "Se info"
   },
   "payment": {
     "preparing": "Forbereder din betaling...",
@@ -5128,7 +5521,61 @@
     "success": "Betaling gennemført!",
     "successMessage": "Dit abonnement er blevet aktiveret. Du modtager snart en bekræftelsesmail.",
     "autoClose": "Dette vindue lukker automatisk...",
-    "error": "Betalingsfejl"
+    "error": "Betalingsfejl",
+    "upgradeSuccess": "Betaling gennemført! Dit abonnement er opgraderet. Licensen er opdateret på din server. Du modtager snart en bekræftelsesmail.",
+    "paymentSuccess": "Betaling gennemført! Henter din licensnøgle...",
+    "licenseActivated": "Licens aktiveret! Din licensnøgle er gemt. En bekræftelsesmail er sendt til din registrerede e-mailadresse.",
+    "licenseDelayed": "Betaling gennemført! Din licens genereres. Du modtager snart en e-mail med din licensnøgle. Hvis du ikke modtager den inden for 10 minutter, kontakt support.",
+    "licensePollingError": "Betaling gennemført, men vi kunne ikke hente din licensnøgle automatisk. Tjek din e-mail, eller kontakt support med din betalingsbekræftelse.",
+    "licenseRetrievalError": "Betaling gennemført, men hentning af licens mislykkedes. Du modtager din licensnøgle via e-mail. Kontakt support, hvis du ikke modtager den inden for 10 minutter.",
+    "syncError": "Betaling gennemført, men licenssynkronisering mislykkedes. Din licens bliver opdateret snart. Kontakt support, hvis problemet fortsætter.",
+    "licenseSaveError": "Kunne ikke gemme licensnøgle. Kontakt support med din licensnøgle for at fuldføre aktiveringen.",
+    "paymentCanceled": "Betalingen blev annulleret. Du er ikke blevet opkrævet.",
+    "syncingLicense": "Synkroniserer din opgraderede licens...",
+    "generatingLicense": "Genererer din licensnøgle...",
+    "upgradeComplete": "Opgradering fuldført",
+    "upgradeCompleteMessage": "Dit abonnement er opgraderet. Din eksisterende licensnøgle er blevet opdateret.",
+    "stripeNotConfigured": "Stripe ikke konfigureret",
+    "stripeNotConfiguredMessage": "Stripe-betalingsintegration er ikke konfigureret. Kontakt din administrator.",
+    "monthly": "Månedlig",
+    "yearly": "Årlig",
+    "billingPeriod": "Faktureringsperiode",
+    "enterpriseNote": "Pladser kan justeres i checkout (1-1000).",
+    "installationId": "Installations-ID",
+    "licenseKey": "Din licensnøgle",
+    "licenseInstructions": "Dette er tilføjet til din installation. Du modtager også en kopi via e-mail.",
+    "canCloseWindow": "Du kan nu lukke dette vindue.",
+    "licenseKeyProcessing": "Behandler licensnøgle",
+    "licenseDelayedMessage": "Din licensnøgle genereres. Tjek din e-mail om lidt, eller kontakt support.",
+    "perYear": "/år",
+    "perMonth": "/måned",
+    "emailInvalid": "Indtast en gyldig e-mailadresse",
+    "emailStage": {
+      "title": "Indtast din e-mail",
+      "description": "Vi bruger den til at sende din licensnøgle og kvitteringer.",
+      "emailLabel": "E-mailadresse",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Fortsæt",
+      "modalTitle": "Kom i gang – {{planName}}"
+    },
+    "planStage": {
+      "title": "Vælg din faktureringsperiode",
+      "savingsNote": "Spar {{percent}}% med årlig fakturering",
+      "basePrice": "Basispris",
+      "seatPrice": "Per plads",
+      "totalForSeats": "I alt ({{count}} pladser)",
+      "selectMonthly": "Vælg månedlig",
+      "selectYearly": "Vælg årlig",
+      "savePercent": "Spar {{percent}}%",
+      "savingsAmount": "Du sparer {{amount}}",
+      "modalTitle": "Vælg faktureringsperiode – {{planName}}",
+      "billedYearly": "Faktureres årligt med {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Tilbage til planvalg",
+      "selectedPlan": "Valgt plan",
+      "modalTitle": "Gennemfør betaling – {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Første login",
@@ -5287,5 +5734,281 @@
     "offline": "Backend offline",
     "starting": "Backend starter op...",
     "wait": "Vent, til backend er startet helt op, og prøv igen."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Lås PDF op for at fortsætte",
+    "title": "Fjern adgangskode for at fortsætte",
+    "description": "Denne PDF er beskyttet med adgangskode. Indtast adgangskoden, så du kan fortsætte arbejdet.",
+    "password": {
+      "label": "PDF-adgangskode",
+      "placeholder": "Indtast PDF-adgangskoden"
+    },
+    "skip": "Spring over for nu",
+    "unlock": "Lås op og fortsæt",
+    "incorrectPassword": "Forkert adgangskode",
+    "missingFile": "Den valgte fil er ikke længere tilgængelig.",
+    "emptyResponse": "Fjernelse af adgangskode gav ingen fil.",
+    "required": "Indtast adgangskoden for at fortsætte.",
+    "successTitle": "Adgangskode fjernet",
+    "successBodyWithName": "Adgangskode fjernet fra {{fileName}}",
+    "successBody": "Adgangskoden blev fjernet."
+  },
+  "setup": {
+    "welcome": "Velkommen til Stirling PDF",
+    "description": "Kom i gang ved at vælge, hvordan du vil bruge Stirling PDF",
+    "step1": {
+      "label": "Vælg tilstand",
+      "description": "Offline eller server"
+    },
+    "step2": {
+      "label": "Vælg server",
+      "description": "Selvhostet server"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Indtast loginoplysninger"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Log ind med din Stirling-konto"
+      },
+      "selfhosted": {
+        "title": "Selvhostet server",
+        "description": "Forbind til din egen Stirling PDF-server"
+      }
+    },
+    "saas": {
+      "title": "Log ind på Stirling",
+      "subtitle": "Log ind med din Stirling-konto"
+    },
+    "selfhosted": {
+      "title": "Log ind på server",
+      "subtitle": "Indtast dine server-loginoplysninger"
+    },
+    "server": {
+      "title": "Forbind til server",
+      "subtitle": "Indtast URL til din selvhostede server",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Selvhostet server"
+      },
+      "url": {
+        "label": "Server-URL",
+        "description": "Indtast den fulde URL til din selvhostede Stirling PDF-server"
+      },
+      "error": {
+        "emptyUrl": "Indtast en server-URL",
+        "unreachable": "Kunne ikke forbinde til server",
+        "testFailed": "Forbindelsestest mislykkedes"
+      },
+      "testing": "Tester forbindelse..."
+    },
+    "login": {
+      "title": "Log ind",
+      "subtitle": "Indtast dine oplysninger for at fortsætte",
+      "connectingTo": "Forbinder til:",
+      "username": {
+        "label": "Brugernavn",
+        "placeholder": "Indtast dit brugernavn"
+      },
+      "email": {
+        "label": "E-mail",
+        "placeholder": "Indtast din e-mail"
+      },
+      "password": {
+        "label": "Adgangskode",
+        "placeholder": "Indtast din adgangskode"
+      },
+      "error": {
+        "emptyUsername": "Indtast dit brugernavn",
+        "emptyEmail": "Indtast din email",
+        "emptyPassword": "Indtast din adgangskode",
+        "oauthFailed": "OAuth-login mislykkedes. Prøv igen."
+      },
+      "submit": "Log ind",
+      "signInWith": "Log ind med",
+      "oauthPending": "Åbner browser for godkendelse...",
+      "orContinueWith": "Eller fortsæt med email"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Godkendelse lykkedes",
+      "message": "Du kan lukke dette vindue og vende tilbage til Stirling PDF."
+    },
+    "error": {
+      "title": "Godkendelse mislykkedes",
+      "message": "Godkendelsen var ikke vellykket. Du kan lukke dette vindue og prøve igen."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON-editor",
+    "viewLabel": "PDF-editor",
+    "converting": "Konverterer PDF til redigerbart format...",
+    "conversionFailed": "Kunne ikke konvertere PDF. Prøv igen.",
+    "currentFile": "Aktuel fil: {{name}}",
+    "pageSummary": "Side {{number}} af {{total}}",
+    "pagePreviewAlt": "Forhåndsvisning af side",
+    "imageLabel": "Placeret billede",
+    "noTextOnPage": "Ingen redigerbar tekst blev fundet på denne side.",
+    "pageType": {
+      "paragraph": "Afsnitsside",
+      "sparse": "Sparsom tekst"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Afsnit",
+      "singleLine": "Enkeltlinje"
+    },
+    "badges": {
+      "unsaved": "Redigeret",
+      "modified": "Redigeret",
+      "earlyAccess": "Early Access"
+    },
+    "actions": {
+      "reset": "Nulstil ændringer",
+      "downloadJson": "Download JSON",
+      "generatePdf": "Generer PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Autoskalér tekst, så den passer i bokse",
+        "description": "Skalerer automatisk tekst vandret, så den passer inden for sin oprindelige afgrænsningsboks, når skrifttypegengivelsen afviger fra PDF'en."
+      },
+      "groupingMode": {
+        "title": "Tilstand for tekstgruppering",
+        "autoDescription": "Registrerer automatisk sidetype og grupperer tekst passende.",
+        "paragraphDescription": "Grupperer justerede linjer til flerlinjede afsnitstekstbokse.",
+        "singleLineDescription": "Beholder hver PDF-tekstlinje som en separat tekstboks."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Hold Ctrl (Cmd) eller Shift for at multivælge tekstbokse. En flydende værktøjslinje vises over markeringen, så du kan flette, ophæve gruppering eller justere bredder."
+      },
+      "forceSingleElement": {
+        "title": "Lås redigeret tekst til ét enkelt PDF-element",
+        "description": "Når aktiveret, eksporterer editoren hver redigeret tekstboks som ét PDF-textelement for at undgå overlap af glyffer eller blandede skrifttyper."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Flet valgte bokse",
+      "merge": "Flet markering",
+      "ungroupTooltip": "Del afsnit op i linjer igen",
+      "ungroup": "Ophæv gruppering af markering",
+      "widthMenu": "Breddeindstillinger",
+      "expandWidth": "Udvid til sidens kant",
+      "resetWidth": "Nulstil bredde",
+      "resizeHandle": "Juster tekstbredde"
+    },
+    "disclaimer": {
+      "heading": "Begrænsninger i forhåndsvisning",
+      "textFocus": "Dette arbejdsområde fokuserer på at redigere tekst og omplacere indlejrede billeder. Kompleks sidegrafik, formularfelter og lagdelt grafik bevares til eksport, men er ikke fuldt redigerbare her.",
+      "previewVariance": "Nogle visuelle elementer (såsom tabelkanter, figurer eller kommentarers udseende) vises måske ikke præcist i forhåndsvisningen. Den eksporterede PDF bevarer de originale tegnekommandoer, når det er muligt.",
+      "alpha": "Denne alpha-fremviser er stadig under udvikling—visse skrifttyper, farver, gennemsigtighedseffekter og layoutdetaljer kan ændre sig en smule. Dobbelttjek den genererede PDF, før du deler."
+    },
+    "empty": {
+      "title": "Intet dokument indlæst",
+      "subtitle": "Indlæs en PDF- eller JSON-fil for at begynde at redigere tekstindhold."
+    },
+    "welcomeBanner": {
+      "title": "Velkommen til PDF-teksteditor (Early Access)",
+      "experimental": "Dette er en eksperimentel funktion under aktiv udvikling. Forvent en vis ustabilitet og problemer under brug.",
+      "howItWorks": "Dette værktøj konverterer din PDF til et redigerbart format, hvor du kan ændre tekstindhold og flytte billeder. Ændringer gemmes tilbage som en ny PDF.",
+      "bestFor": "Fungerer bedst med:",
+      "bestFor1": "Enkle PDF'er primært med tekst og billeder",
+      "bestFor2": "Dokumenter med standard afsnitsformatering",
+      "bestFor3": "Brev, essays, rapporter og basale dokumenter",
+      "notIdealFor": "Ikke ideelt til:",
+      "notIdealFor1": "PDF'er med særlig formatering som punktlister, tabeller eller layout med flere kolonner",
+      "notIdealFor2": "Magasiner, brochurer eller stærkt designede dokumenter",
+      "notIdealFor3": "Brugervejledninger med komplekse layouts",
+      "limitations": "Nuværende begrænsninger:",
+      "limitation1": "Skrifttypegengivelse kan afvige en smule fra den originale PDF",
+      "limitation2": "Kompleks grafik, formularfelter og kommentarer bevares, men kan ikke redigeres",
+      "limitation3": "Store filer kan tage tid at konvertere og behandle",
+      "knownIssues": "Kendte problemer (under rettelse):",
+      "issue1": "Tekstfarve bevares ikke i øjeblikket (tilføjes snart)",
+      "issue2": "Afsnit-tilstand har flere problemer med justering og afstand - Enkeltlinje-tilstand anbefales",
+      "issue3": "Forhåndsvisningen afviger fra den eksporterede PDF - eksporterede PDF'er ligger tættere på originalen",
+      "issue4": "Justeret roteret tekst kan kræve manuel finjustering",
+      "issue5": "Gennemsigtighed og lagdelte effekter kan afvige fra originalen",
+      "feedback": "Dette er en Early Access-funktion. Rapporter venligst eventuelle problemer, du støder på, så vi kan forbedre os!",
+      "gotIt": "Forstået",
+      "dontShowAgain": "Vis ikke igen"
+    },
+    "modeChange": {
+      "title": "Bekræft tilstandsændring",
+      "warning": "Ændring af tekstgruppering nulstiller alle ikke-gemte ændringer. Er du sikker på, at du vil fortsætte?",
+      "cancel": "Annuller",
+      "confirm": "Nulstil og skift tilstand"
+    },
+    "fontAnalysis": {
+      "details": "Skrifttypedetaljer",
+      "embedded": "Indlejret",
+      "type": "Type",
+      "webFormat": "Webformat",
+      "warnings": "Advarsler",
+      "suggestions": "Bemærkninger",
+      "currentPageFonts": "Skrifttyper på denne side",
+      "allFonts": "Alle skrifttyper",
+      "fallback": "fallback",
+      "missing": "mangler",
+      "perfectMessage": "Alle skrifttyper kan gengives perfekt.",
+      "warningMessage": "Nogle skrifttyper gengives muligvis ikke korrekt.",
+      "infoMessage": "Info om skrifttypegengivelse er tilgængelig.",
+      "perfect": "perfekt",
+      "subset": "delmængde"
+    },
+    "errors": {
+      "invalidJson": "Kan ikke læse JSON-filen. Sørg for, at den blev genereret af PDF-til-JSON-værktøjet.",
+      "pdfConversion": "Kan ikke konvertere den redigerede JSON tilbage til en PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Session udløbet",
+    "pleaseLoginAgain": "Log ind igen.",
+    "accessDenied": "Adgang nægtet",
+    "insufficientPermissions": "Du har ikke tilladelse til at udføre denne handling."
+  },
+  "addText": {
+    "title": "Tilføj tekst",
+    "header": "Tilføj tekst til PDF'er",
+    "text": {
+      "name": "Tekstindhold",
+      "placeholder": "Indtast teksten, du vil tilføje",
+      "fontLabel": "Skrifttype",
+      "fontSizeLabel": "Skriftstørrelse",
+      "fontSizePlaceholder": "Skriv eller vælg skriftstørrelse (8-200)",
+      "colorLabel": "Tekstfarve"
+    },
+    "steps": {
+      "configure": "Konfigurer tekst"
+    },
+    "step": {
+      "createDesc": "Indtast teksten, du vil tilføje",
+      "place": "Placer tekst",
+      "placeDesc": "Klik på PDF'en for at tilføje din tekst"
+    },
+    "instructions": {
+      "title": "Sådan tilføjer du tekst",
+      "text": "Når du har indtastet din tekst ovenfor, skal du klikke hvor som helst på PDF'en for at placere den.",
+      "paused": "Placering sat på pause",
+      "resumeHint": "Genoptag placering for at klikke og tilføje din tekst.",
+      "noSignature": "Indtast tekst ovenfor for at aktivere placering."
+    },
+    "mode": {
+      "move": "Flyt tekst",
+      "place": "Placer tekst",
+      "pause": "Sæt placering på pause",
+      "resume": "Genoptag placering"
+    },
+    "results": {
+      "title": "Resultater af tilføjelse af tekst"
+    },
+    "error": {
+      "failed": "Der opstod en fejl under tilføjelse af tekst til PDF'en."
+    },
+    "tags": "tekst,annotering,etiket",
+    "applySignatures": "Anvend tekst"
   }
 }

@@ -17,6 +17,8 @@
       "comingSoon": "În curând:",
       "favorite": "Adăugați la favorite",
       "favorites": "Favorite",
+      "unavailable": "Dezactivat de administratorul serverului:",
+      "unavailableDependency": "Indisponibil – lipsește un instrument necesar pe server:",
       "heading": "Toate instrumentele (vizualizare pe tot ecranul)",
       "noResults": "Încercați să ajustați căutarea sau comutați descrierile pentru a găsi ce aveți nevoie.",
       "recommended": "Recomandat",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Comutați la modul ecran complet",
       "sidebar": "Comutați la modul bară laterală"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Funcție premium:",
+    "comingSoon": "În curând:"
   },
   "unsavedChanges": "Aveți modificări nesalvate în PDF.",
   "areYouSure": "Sigur doriți să părăsiți?",
@@ -40,6 +45,30 @@
     "message": "Acest ZIP conține {{count}} fișiere. Extrageți oricum?",
     "cancel": "Anulare",
     "confirm": "Extrageți"
+  },
+  "defaultApp": {
+    "title": "Setează ca aplicație PDF implicită",
+    "message": "Vrei să setezi Stirling PDF ca editorul tău PDF implicit?",
+    "description": "Poți schimba asta mai târziu din setările sistemului.",
+    "notNow": "Nu acum",
+    "setDefault": "Setează ca implicită",
+    "dismiss": "Închide",
+    "prompt": {
+      "title": "Setează ca editor PDF implicit",
+      "message": "Fă din Stirling PDF aplicația implicită pentru deschiderea fișierelor PDF."
+    },
+    "success": {
+      "title": "Aplicație implicită setată",
+      "message": "Stirling PDF este acum editorul tău PDF implicit"
+    },
+    "settingsOpened": {
+      "title": "Setări deschise",
+      "message": "Te rugăm să selectezi Stirling PDF în setările sistemului"
+    },
+    "error": {
+      "title": "Eroare",
+      "message": "Nu s-a putut seta gestionarul PDF implicit"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Salvează",
   "saveToBrowser": "Salvează în Browser",
   "download": "Descarcă",
+  "downloadUnavailable": "Descărcare indisponibilă pentru acest element",
+  "saveUnavailable": "Salvarea nu este disponibilă pentru acest element",
   "pin": "Fixare fișier (rămâne activ după rularea instrumentului)",
   "unpin": "Anulare fixare fișier (înlocuiește după rularea instrumentului)",
   "undoOperationTooltip": "Faceți clic pentru a anula ultima operațiune și a restaura fișierele originale",
@@ -168,6 +199,7 @@
   },
   "edit": "Editare",
   "delete": "Șterge",
+  "never": "Niciodată",
   "username": "Nume de utilizator",
   "password": "Parolă",
   "welcome": "Bun venit",
@@ -262,7 +294,8 @@
     "learnMore": "Aflați mai multe",
     "enable": "Activați analizele",
     "disable": "Dezactivați analizele",
-    "settings": "Puteți schimba setările pentru analize în fișierul config/settings.yml"
+    "settings": "Puteți schimba setările pentru analize în fișierul config/settings.yml",
+    "privacyAssurance": "Nu urmărim nicio informație personală și nici conținutul fișierelor tale."
   },
   "navbar": {
     "favorite": "Favorite",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Setări",
-    "update": "Actualizare disponibilă",
-    "updateAvailable": "{0} este versiunea instalată curent. O nouă versiune ({1}) este disponibilă.",
-    "appVersion": "Versiune aplicație:",
-    "downloadOption": {
-      "title": "Alege opțiunea de descărcare (pentru descărcarea unui singur fișier non-zip):",
-      "1": "Deschide în aceeași fereastră",
-      "2": "Deschide într-o fereastră nouă",
-      "3": "Descarcă fișierul"
-    },
-    "zipThreshold": "Împachetează fișierele când numărul de fișiere descărcate depășește",
-    "signOut": "Deconectare",
-    "accountSettings": "Setări Cont",
-    "bored": {
-      "help": "Activează jocul easter egg"
-    },
-    "cacheInputs": {
-      "name": "Salvează intrările formularului",
-      "help": "Activează pentru a stoca intrările utilizate anterior pentru rulări viitoare"
+    "connection": {
+      "title": "Mod de conectare",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Găzduit local"
+      },
+      "server": "Server",
+      "user": "Conectat ca",
+      "logout": "Deconectare"
     },
     "general": {
       "title": "General",
       "description": "Configurați preferințele generale ale aplicației.",
-      "account": "Cont",
-      "accountDescription": "Gestionați setările contului",
       "user": "Utilizator",
-      "signedInAs": "Autentificat ca",
       "logout": "Deconectare",
       "enableFeatures": {
+        "dismiss": "Ignorați",
         "title": "Pentru administratorii de sistem",
         "intro": "Activați autentificarea utilizatorilor, gestionarea echipei și funcțiile spațiului de lucru pentru organizația dvs.",
         "action": "Configurați",
         "and": "și",
         "benefit": "Activează roluri de utilizator, colaborare în echipă, controale de administrare și funcții enterprise.",
-        "learnMore": "Aflați mai multe în documentație",
-        "dismiss": "Ignorați"
+        "learnMore": "Aflați mai multe în documentație"
       },
-      "autoUnzip": "Dezarhivare automată a răspunsurilor API",
-      "autoUnzipDescription": "Extrage automat fișiere din răspunsurile ZIP",
-      "autoUnzipTooltip": "Extrage automat fișierele ZIP returnate de operațiile API. Dezactivați pentru a păstra fișierele ZIP intacte. Aceasta nu afectează fluxurile de automatizare.",
-      "autoUnzipFileLimit": "Limită fișiere pentru dezarhivare automată",
-      "autoUnzipFileLimitDescription": "Numărul maxim de fișiere de extras din ZIP",
-      "autoUnzipFileLimitTooltip": "Dezarhivați doar dacă ZIP-ul conține atâtea fișiere sau mai puține. Setați mai mare pentru a extrage ZIP-uri mai mari.",
       "defaultToolPickerMode": "Mod implicit selector de instrumente",
       "defaultToolPickerModeDescription": "Alegeți dacă selectorul de instrumente se deschide implicit pe ecran complet sau în bară laterală",
       "mode": {
-        "fullscreen": "Ecran complet",
-        "sidebar": "Bară laterală"
-      }
+        "sidebar": "Bară laterală",
+        "fullscreen": "Ecran complet"
+      },
+      "autoUnzipTooltip": "Extrage automat fișierele ZIP returnate de operațiile API. Dezactivați pentru a păstra fișierele ZIP intacte. Aceasta nu afectează fluxurile de automatizare.",
+      "autoUnzip": "Dezarhivare automată a răspunsurilor API",
+      "autoUnzipDescription": "Extrage automat fișiere din răspunsurile ZIP",
+      "autoUnzipFileLimitTooltip": "Dezarhivați doar dacă ZIP-ul conține atâtea fișiere sau mai puține. Setați mai mare pentru a extrage ZIP-uri mai mari.",
+      "autoUnzipFileLimit": "Limită fișiere pentru dezarhivare automată",
+      "autoUnzipFileLimitDescription": "Numărul maxim de fișiere de extras din ZIP",
+      "defaultPdfEditor": "Editor PDF implicit",
+      "defaultPdfEditorActive": "Stirling PDF este editorul tău PDF implicit",
+      "defaultPdfEditorInactive": "O altă aplicație este setată ca implicită",
+      "defaultPdfEditorChecking": "Se verifică...",
+      "defaultPdfEditorSet": "Deja implicit",
+      "setAsDefault": "Setează ca implicit",
+      "updates": {
+        "title": "Actualizări software",
+        "description": "Caută actualizări și vezi informații despre versiune",
+        "currentVersion": "Versiune curentă",
+        "latestVersion": "Ultima versiune",
+        "checkForUpdates": "Caută actualizări",
+        "viewDetails": "Vezi detalii"
+      },
+      "hideUnavailableTools": "Ascunde instrumentele indisponibile",
+      "hideUnavailableToolsDescription": "Elimină din listă instrumentele dezactivate de server, în loc să fie afișate estompate.",
+      "hideUnavailableConversions": "Ascunde conversiile indisponibile",
+      "hideUnavailableConversionsDescription": "Elimină opțiunile de conversie dezactivate în instrumentul Convert, în loc să fie afișate estompate."
     },
     "hotkeys": {
-      "title": "Scurtături de tastatură",
-      "description": "Plasați cursorul peste un instrument pentru a vedea scurtătura sau personalizați-o mai jos. Faceți clic pe \"Schimbați scurtătura\" și apăsați o nouă combinație de taste. Apăsați Esc pentru a anula.",
-      "errorModifier": {
-        "mac": "Includeți ⌘ (Command), ⌥ (Option) sau un alt modificator în scurtătură.",
-        "windows": "Includeți Ctrl, Alt sau un alt modificator în scurtătură."
-      },
       "errorConflict": "Scurtătura este deja utilizată de {{tool}}.",
+      "searchPlaceholder": "Căutați instrumente...",
       "none": "Neatribuit",
       "customBadge": "Personalizat",
       "defaultLabel": "Implicit: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Schimbați scurtătura",
       "reset": "Resetare",
       "shortcut": "Scurtătură",
-      "noShortcut": "Nicio scurtătură setată",
-      "searchPlaceholder": "Căutați instrumente..."
+      "noShortcut": "Nicio scurtătură setată"
     }
+  },
+  "update": {
+    "modalTitle": "Actualizare disponibilă",
+    "current": "Versiune curentă",
+    "latest": "Ultima versiune",
+    "latestStable": "Ultima stabilă",
+    "priorityLabel": "Prioritate",
+    "recommendedAction": "Acțiune recomandată",
+    "breakingChangesDetected": "Modificări incompatibile detectate",
+    "breakingChangesMessage": "Unele versiuni conțin modificări incompatibile. Consultă ghidurile de migrare de mai jos înainte de a actualiza.",
+    "migrationGuides": "Ghiduri de migrare",
+    "viewGuide": "Vezi ghidul",
+    "loadingDetailedInfo": "Se încarcă informațiile detaliate...",
+    "close": "Închide",
+    "viewAllReleases": "Vezi toate versiunile",
+    "downloadLatest": "Descarcă cea mai recentă",
+    "availableUpdates": "Actualizări disponibile",
+    "unableToLoadDetails": "Nu se pot încărca informațiile detaliate.",
+    "version": "Versiune",
+    "urgentUpdateAvailable": "Actualizare urgentă",
+    "updateAvailable": "Actualizare disponibilă",
+    "releaseNotes": "Note de versiune",
+    "priority": {
+      "urgent": "Urgentă",
+      "normal": "Normală",
+      "minor": "Minoră",
+      "low": "Scăzută"
+    },
+    "breakingChanges": "Modificări incompatibile",
+    "breakingChangesDefault": "Această versiune conține modificări incompatibile.",
+    "migrationGuide": "Ghid de migrare"
   },
   "changeCreds": {
     "title": "Schimbă Credențialele",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Suprapune PDF-uri peste alt PDF",
       "title": "Suprapune PDF-uri"
+    },
+    "pdfTextEditor": {
+      "title": "Editor text PDF",
+      "desc": "Revizuiește și editează exporturile JSON Stirling PDF cu editare de text grupată și regenerare PDF"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Adaugă text",
+      "desc": "Adaugă text personalizat oriunde în PDF-ul tău"
     }
   },
   "landing": {
     "addFiles": "Adăugați fișiere",
-    "uploadFromComputer": "Încărcați de pe calculator"
+    "uploadFromComputer": "Încărcați de pe calculator",
+    "openFromComputer": "Deschide de pe calculator"
   },
   "viewPdf": {
     "tags": "vizualizare,citește,adnotează,text,imagine",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "A apărut o eroare la îmbinarea PDF-urilor."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Prezentare setări de îmbinare"
+      }
     }
   },
   "split": {
@@ -1090,7 +1168,7 @@
     "odtExt": "OpenDocument Text (.odt)",
     "pptExt": "PowerPoint (.pptx)",
     "odpExt": "OpenDocument Presentation (.odp)",
-    "txtExt": "Plain Text (.txt)",
+    "txtExt": "Text simplu (.txt)",
     "rtfExt": "Rich Text Format (.rtf)",
     "selectedFiles": "Fișiere selectate",
     "noFileSelected": "Niciun fișier selectat. Folosiți panoul de fișiere pentru a adăuga fișiere.",
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,poză,fotografie",
     "title": "Adăugare imagine",
     "header": "Adăugare imagine în PDF",
-    "everyPage": "Pe fiecare pagină?",
-    "upload": "Adăugare imagine",
-    "submit": "Adăugare imagine"
+    "image": {
+      "name": "Imagine",
+      "placeholder": "Încarcă o imagine",
+      "label": "Fișier imagine"
+    },
+    "steps": {
+      "configure": "Configurează imaginea"
+    },
+    "step": {
+      "createDesc": "Încarcă imaginea pe care vrei să o adaugi",
+      "place": "Plasează imaginea",
+      "placeDesc": "Fă clic pe PDF pentru a adăuga imaginea"
+    },
+    "instructions": {
+      "title": "Cum adaugi imagini",
+      "text": "După ce încarci imaginea de mai sus, fă clic oriunde pe PDF pentru a o plasa.",
+      "paused": "Plasare întreruptă",
+      "resumeHint": "Reia plasarea pentru a face clic și a adăuga imaginea.",
+      "noSignature": "Încarcă o imagine mai sus pentru a activa plasarea."
+    },
+    "mode": {
+      "move": "Mută imaginea",
+      "place": "Plasează imaginea",
+      "pause": "Pauză plasare",
+      "resume": "Reia plasarea"
+    },
+    "results": {
+      "title": "Rezultate adăugare imagine"
+    },
+    "error": {
+      "failed": "A apărut o eroare la adăugarea imaginii în PDF."
+    },
+    "saved": {
+      "defaultLabel": "Imagine",
+      "defaultImageLabel": "Imagine încărcată"
+    },
+    "applySignatures": "Aplică imagini"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Previne tipărirea în formate diferite"
     },
     "submit": "Schimbă"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Semne de carte și cuprins",
+      "replaceExisting": "Înlocuiește semnele de carte existente (debifează pentru a adăuga)",
+      "replaceExistingHint": "Când este dezactivat, noul cuprins este adăugat după semnele de carte curente."
+    },
+    "actions": {
+      "source": "Încarcă semnele de carte",
+      "selectedFile": "Încărcat din {{file}}",
+      "noFile": "Selectează un PDF pentru a extrage semnele de carte existente.",
+      "loadFromPdf": "Încarcă din PDF-ul selectat",
+      "importJson": "Importă JSON",
+      "importClipboard": "Lipește JSON din clipboard",
+      "export": "Exportă semnele de carte",
+      "exportJson": "Descarcă JSON",
+      "exportClipboard": "Copiază JSON în clipboard",
+      "clipboardUnavailable": "Accesul la clipboard nu este disponibil în acest browser."
+    },
+    "info": {
+      "line1": "Fiecare semn de carte are nevoie de un titlu descriptiv și pagina pe care să o deschidă.",
+      "line2": "Folosește semne de carte copil pentru a construi o ierarhie pentru capitole, secțiuni sau subsecțiuni.",
+      "line3": "Importă semne de carte din PDF-ul selectat sau dintr-un fișier JSON pentru a economisi timp."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Deschide instrumentul pentru a începe editarea",
+        "description": "Selectează instrumentul Edit Table of Contents pentru a încărca spațiul de lucru."
+      },
+      "tabTitle": "Spațiu de lucru cuprins",
+      "subtitle": "Importă semne, creează ierarhii și aplică cuprinsul fără panouri laterale înghesuite.",
+      "noFile": "Niciun PDF selectat",
+      "fileLabel": "Modificările vor fi aplicate PDF-ului selectat.",
+      "filePrompt": "Selectează un PDF din bibliotecă sau încarcă unul nou pentru a începe.",
+      "changeFile": "Schimbă PDF-ul",
+      "selectFile": "Selectează PDF"
+    },
+    "editor": {
+      "heading": "Editor de semne de carte",
+      "description": "Adaugă, inserează ierarhic și reordonează semnele de carte pentru a crea cuprinsul PDF-ului.",
+      "addTopLevel": "Adaugă semn de carte de nivel superior",
+      "empty": {
+        "title": "Încă nu există semne de carte",
+        "description": "Importă semnele existente sau începe adăugând prima intrare.",
+        "action": "Adaugă primul semn de carte"
+      },
+      "defaultTitle": "Semn de carte nou",
+      "defaultChildTitle": "Semn de carte copil",
+      "defaultSiblingTitle": "Semn de carte nou",
+      "untitled": "Semn de carte fără titlu",
+      "childBadge": "Copil",
+      "pagePreview": "Pagina {{page}}",
+      "field": {
+        "title": "Titlul semnului de carte",
+        "page": "Numărul paginii țintă"
+      },
+      "actions": {
+        "toggle": "Comută copiii",
+        "addChild": "Adaugă semn de carte copil",
+        "addSibling": "Adaugă semn de carte la același nivel",
+        "remove": "Elimină semnul de carte"
+      },
+      "confirmRemove": "Elimini acest semn de carte și toți descendenții lui?"
+    },
+    "messages": {
+      "loadedTitle": "Semne de carte extrase",
+      "loadedBody": "Semnele de carte existente din PDF au fost încărcate în editor.",
+      "noBookmarks": "Nu s-au găsit semne de carte în PDF-ul selectat.",
+      "loadFailed": "Nu s-au putut extrage semnele de carte din PDF-ul selectat.",
+      "imported": "Semne de carte importate",
+      "importedBody": "Cuprinsul din JSON a înlocuit conținutul actual al editorului.",
+      "importedClipboard": "Datele din clipboard au înlocuit lista curentă de semne de carte.",
+      "invalidJson": "Structură JSON invalidă",
+      "invalidJsonBody": "Furnizează un fișier JSON de semne de carte valid și încearcă din nou.",
+      "exported": "Descărcarea JSON e pregătită",
+      "copied": "Copiat în clipboard",
+      "copiedBody": "JSON-ul de semne de carte a fost copiat cu succes.",
+      "copyFailed": "Copiere eșuată"
+    },
+    "error": {
+      "failed": "Nu s-a putut actualiza cuprinsul"
+    },
+    "submit": "Aplică cuprinsul",
+    "results": {
+      "title": "PDF actualizat cu semne de carte",
+      "subtitle": "Descarcă fișierul procesat sau anulează operația mai jos."
+    }
   },
   "removePages": {
     "tags": "Elimină pagini,șterge pagini",
@@ -1978,13 +2177,54 @@
       "title": "Desenați semnătura",
       "clear": "Șterge"
     },
+    "canvas": {
+      "heading": "Desenează-ți semnătura",
+      "clickToOpen": "Clic pentru a deschide zona de desen",
+      "modalTitle": "Desenează-ți semnătura",
+      "colorLabel": "Culoare",
+      "penSizeLabel": "Grosime linie",
+      "penSizePlaceholder": "Mărime",
+      "clear": "Șterge desenul",
+      "colorPickerTitle": "Alege culoarea liniei"
+    },
     "text": {
       "name": "Nume semnatar",
-      "placeholder": "Introduceți numele complet"
+      "placeholder": "Introduceți numele complet",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Mărime font",
+      "fontSizePlaceholder": "Tastează sau selectează mărimea fontului (8-200)",
+      "colorLabel": "Culoare text"
     },
     "clear": "Curăță",
     "add": "Adaugă",
-    "saved": "Semnături salvate",
+    "saved": {
+      "heading": "Semnături salvate",
+      "description": "Reutilizează semnăturile salvate oricând.",
+      "emptyTitle": "Încă nu există semnături salvate",
+      "emptyDescription": "Desenează, încarcă sau scrie o semnătură mai sus, apoi folosește \"Salvează în bibliotecă\" pentru a păstra până la {{max}} favorite gata de utilizare.",
+      "type": {
+        "canvas": "Desen",
+        "image": "Încărcare",
+        "text": "Text"
+      },
+      "limitTitle": "Limită atinsă",
+      "limitDescription": "Elimină o semnătură salvată înainte de a adăuga altele (max {{max}}).",
+      "carouselPosition": "{{current}} din {{total}}",
+      "prev": "Anterior",
+      "next": "Următor",
+      "delete": "Elimină",
+      "label": "Etichetă",
+      "defaultLabel": "Semnătură",
+      "defaultCanvasLabel": "Semnătură desenată",
+      "defaultImageLabel": "Semnătură încărcată",
+      "defaultTextLabel": "Semnătură tastată",
+      "saveButton": "Salvează semnătura",
+      "saveUnavailable": "Creează mai întâi o semnătură pentru a o salva.",
+      "noChanges": "Semnătura curentă este deja salvată.",
+      "status": {
+        "saved": "Salvat"
+      }
+    },
     "save": "Salvează semnătura",
     "applySignatures": "Aplică semnăturile",
     "personalSigs": "Semnături personale",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Configurează semnătura"
     },
+    "step": {
+      "createDesc": "Alege cum vrei să creezi semnătura",
+      "place": "Plasează și salvează",
+      "placeDesc": "Plasează semnătura pe PDF"
+    },
     "type": {
       "title": "Tip de semnătură",
       "draw": "Desen",
-      "canvas": "Canvas",
+      "canvas": "Desen",
       "image": "Imagine",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Salvate"
     },
     "image": {
       "label": "Încarcă imaginea semnăturii",
@@ -2019,11 +2265,17 @@
       "title": "Cum să adăugați semnătura",
       "canvas": "După ce desenați semnătura în canvas, închideți fereastra și apoi faceți clic oriunde pe PDF pentru a o plasa.",
       "image": "După încărcarea imaginii semnăturii de mai sus, faceți clic oriunde pe PDF pentru a o plasa.",
-      "text": "După ce introduceți numele mai sus, faceți clic oriunde pe PDF pentru a plasa semnătura."
+      "saved": "Selectează o semnătură salvată mai sus, apoi fă clic oriunde pe PDF pentru a o plasa.",
+      "text": "După ce introduceți numele mai sus, faceți clic oriunde pe PDF pentru a plasa semnătura.",
+      "paused": "Plasare întreruptă",
+      "resumeHint": "Reia plasarea pentru a face clic și a adăuga semnătura.",
+      "noSignature": "Creează o semnătură mai sus pentru a activa instrumentele de plasare."
     },
     "mode": {
       "move": "Mută semnătura",
-      "place": "Plasează semnătura"
+      "place": "Plasează semnătura",
+      "pause": "Pauză plasare",
+      "resume": "Reia plasarea"
     },
     "updateAndPlace": "Actualizează și plasează",
     "activate": "Activează plasarea semnăturii",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Despre eliminarea adnotărilor",
       "description": "Acest instrument va elimina toate adnotările (comentarii, evidențieri, note etc.) din documentele PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Despre eliminarea adnotărilor"
+      },
+      "description": {
+        "title": "Ce face"
+      }
     },
     "error": {
       "failed": "A apărut o eroare la eliminarea adnotărilor din PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Cum funcționează redenumirea automată"
       },
+      "description": {
+        "title": "Ce face"
+      },
       "howItWorks": {
         "title": "Redenumire inteligentă",
         "text": "Găsește automat titlul din conținutul PDF-ului și îl folosește ca nume de fișier.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Creează un nume de fișier curat și valid din titlul detectat",
         "bullet3": "Păstrează numele original dacă nu se găsește un titlu potrivit"
       }
+    },
+    "settings": {
+      "title": "Despre"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "Exportați PDF",
     "downloadSelected": "Descărcați fișierele selectate",
     "downloadAll": "Descărcați tot",
+    "saveAll": "Salvează tot",
     "toggleTheme": "Comutați tema",
+    "toggleBookmarks": "Comută semnele de carte",
     "language": "Limbă",
     "search": "Căutați în PDF",
     "panMode": "Mod panoramare",
@@ -4212,9 +4480,21 @@
         "title": "Premium și Enterprise",
         "description": "Configurați cheia de licență premium sau enterprise.",
         "license": "Configurare licență",
+        "licenseKey": {
+          "toggle": "Ai o cheie de licență sau un fișier certificat?",
+          "info": "Dacă ai o cheie de licență sau un fișier certificat dintr-o achiziție directă, o poți introduce aici pentru a activa funcțiile premium sau enterprise."
+        },
         "key": {
           "label": "Cheie de licență",
-          "description": "Introduceți cheia de licență premium sau enterprise"
+          "description": "Introduceți cheia de licență premium sau enterprise",
+          "success": "Cheie de licență salvată",
+          "successMessage": "Cheia ta de licență a fost activată cu succes. Nu este necesară repornirea.",
+          "overwriteWarning": {
+            "title": "⚠️ Avertizare: licență existentă detectată",
+            "line1": "Suprascrierea cheii de licență curente nu poate fi anulată.",
+            "line2": "Licența anterioară va fi pierdută definitiv dacă nu ai o copie de rezervă.",
+            "line3": "Important: Păstrează cheile de licență private și în siguranță. Nu le distribui public."
+          }
         },
         "enabled": {
           "label": "Activează funcțiile Premium",
@@ -4278,12 +4558,17 @@
     "or": "sau",
     "dropFileHere": "Trageți fișierul aici sau faceți clic pentru a încărca",
     "dropFilesHere": "Trageți fișierele aici sau faceți clic pe butonul de încărcare",
+    "dropFilesHereOpen": "Trage fișiere aici sau apasă butonul Deschide",
     "pdfFilesOnly": "Doar fișiere PDF",
     "supportedFileTypes": "Tipuri de fișiere acceptate",
     "upload": "Încărcați",
     "uploadFile": "Încărcați fișier",
     "uploadFiles": "Încărcați fișiere",
+    "open": "Deschide",
+    "openFile": "Deschide fișier",
+    "openFiles": "Deschide fișiere",
     "noFilesInStorage": "Nu există fișiere disponibile în stocare. Încărcați mai întâi câteva fișiere.",
+    "noFilesInStorageOpen": "Nu există fișiere în stocare. Deschide mai întâi câteva fișiere.",
     "selectFromStorage": "Selectați din stocare",
     "backToTools": "Înapoi la Instrumente",
     "addFiles": "Adăugați fișiere",
@@ -4329,6 +4614,8 @@
     "myFiles": "Fișierele mele",
     "noRecentFiles": "Nu s-au găsit fișiere recente",
     "googleDriveNotAvailable": "Integrarea cu Google Drive nu este disponibilă",
+    "downloadSelected": "Descărcați selecția",
+    "saveSelected": "Salvează selecția",
     "openFiles": "Deschideți fișiere",
     "openFile": "Deschideți fișier",
     "details": "Detalii fișier",
@@ -4341,7 +4628,6 @@
     "selectAll": "Selectați tot",
     "deselectAll": "Deselectați tot",
     "deleteSelected": "Ștergeți selecția",
-    "downloadSelected": "Descărcați selecția",
     "selectedCount": "{{count}} selectate",
     "download": "Descarcă",
     "delete": "Șterge",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Flux de securitate",
       "secureWorkflowDesc": "Asigură documentele PDF prin eliminarea conținutului potențial malițios precum JavaScript și fișierele încorporate, apoi adaugă protecție cu parolă pentru a preveni accesul neautorizat. Parola este setată la 'password' în mod implicit.",
       "processImages": "Procesează imagini",
-      "processImagesDesc": "Convertește mai multe fișiere imagine într-un singur document PDF, apoi aplică tehnologia OCR pentru a extrage text căutabil din imagini."
+      "processImagesDesc": "Convertește mai multe fișiere imagine într-un singur document PDF, apoi aplică tehnologia OCR pentru a extrage text căutabil din imagini.",
+      "prePublishSanitization": "Curățare înainte de publicare",
+      "prePublishSanitizationDesc": "Flux care elimină toate metadatele ascunse, JavaScript, fișierele încorporate, adnotările și aplatizează formularele pentru a preveni scurgerile de date înainte de publicarea online a PDF-urilor."
     }
+  },
+  "colorPicker": {
+    "title": "Alege culoarea"
   },
   "common": {
     "previous": "Înapoi",
@@ -4639,7 +4930,13 @@
     "used": "utilizat",
     "available": "disponibil",
     "cancel": "Anulați",
-    "preview": "Previzualizare"
+    "preview": "Previzualizare",
+    "close": "Închide",
+    "done": "Gata",
+    "loading": "Se încarcă...",
+    "back": "Înapoi",
+    "continue": "Continuă",
+    "error": "Eroare"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Adăugați mai multe fișiere...",
     "selectedFiles": "Fișiere selectate",
     "submit": "Adăugați atașamente",
+    "tooltip": {
+      "header": {
+        "title": "Despre adăugarea atașamentelor"
+      },
+      "description": {
+        "title": "Ce face"
+      }
+    },
     "results": {
       "title": "Rezultatele atașării"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Poziție personalizată",
   "details": "Detalii",
-  "downloadUnavailable": "Descărcare indisponibilă pentru acest element",
   "invalidUndoData": "Nu se poate anula: date de operațiune nevalide",
   "margin": {
     "large": "Mare",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Poate mai târziu",
       "dontShowAgain": "Nu mai arăta"
     },
+    "welcomeSlide": {
+      "title": "Bun venit la Stirling",
+      "body": "Stirling PDF este acum pregătit pentru echipe de orice dimensiune. Această actualizare include un nou aspect, capabilități puternice pentru admin și cea mai solicitată funcție - <strong>Edit Text</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Să selectăm instrumentul <strong>Decupare</strong> pentru a demonstra cum se utilizează unul dintre instrumente.",
     "toolInterface": "Aceasta este interfața instrumentului <strong>Decupare</strong>. După cum vedeți, nu este prea mult acolo deoarece încă nu am adăugat fișiere PDF cu care să lucrăm.",
@@ -4823,7 +5131,39 @@
     "next": "Înainte",
     "finish": "Finalizați",
     "startTour": "Porniți turul",
-    "startTourDescription": "Faceți un tur ghidat al funcțiilor esențiale Stirling PDF"
+    "startTourDescription": "Faceți un tur ghidat al funcțiilor esențiale Stirling PDF",
+    "buttons": {
+      "next": "Înainte →",
+      "back": "Înapoi",
+      "skipForNow": "Sari peste deocamdată",
+      "download": "Descarcă →",
+      "showMeAround": "Arată-mi",
+      "skipTheTour": "Sari peste tur"
+    },
+    "serverLicense": {
+      "skip": "Sari peste deocamdată",
+      "seePlans": "Vezi planuri →",
+      "upgrade": "Fă upgrade acum →",
+      "freeTitle": "Licență server",
+      "overLimitTitle": "Necesită licență de server",
+      "overLimitBody": "Politica noastră de licențiere permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Ai <strong>{{overLimitUserCopy}}</strong> utilizatori Stirling. Pentru a continua fără întreruperi, fă upgrade la planul Stirling Server - <strong>locuri nelimitate</strong>, editare text PDF și control complet de admin pentru $99/server/lună.",
+      "freeBody": "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru a scala fără întreruperi și a primi acces timpuriu la noul nostru <strong>instrument de editare text PDF</strong>, recomandăm planul Stirling Server - editare completă și <strong>locuri nelimitate</strong> pentru $99/server/lună."
+    },
+    "desktopInstall": {
+      "title": "Descărcare",
+      "titleWithOs": "Descărcare pentru {{osLabel}}",
+      "body": "Stirling funcționează cel mai bine ca aplicație desktop. O poți folosi offline, accesezi documentele mai rapid și faci editări local pe computer."
+    },
+    "planOverview": {
+      "adminTitle": "Prezentare admin",
+      "userTitle": "Prezentare plan",
+      "adminBodyLoginEnabled": "Ca admin, poți gestiona utilizatori, configura setări și monitoriza starea serverului. Primele <strong>{{freeTierLimit}}</strong> persoane de pe serverul tău folosesc Stirling gratuit.",
+      "adminBodyLoginDisabled": "După ce activezi modul de autentificare, poți gestiona utilizatori, configura setări și monitoriza starea serverului. Primele <strong>{{freeTierLimit}}</strong> persoane de pe serverul tău folosesc Stirling gratuit.",
+      "userBody": "Invite colegi, atribuie roluri și ține documentele organizate într-un spațiu de lucru sigur. Activează modul de autentificare când ești pregătit să treci dincolo de utilizarea solo."
+    },
+    "securityCheck": {
+      "message": "Aplicația a suferit schimbări semnificative recent. Poate fi nevoie de atenția adminului serverului. Confirmă-ți rolul pentru a continua."
+    }
   },
   "adminOnboarding": {
     "welcome": "Bun venit la <strong>Turul Admin</strong>! Haideți să explorăm funcțiile enterprise și setările puternice disponibile administratorilor de sistem.",
@@ -4852,7 +5192,10 @@
       "role": "Rol",
       "team": "Echipă",
       "status": "Stare",
-      "actions": "Acțiuni",
+      "actions": {
+        "label": "Acțiuni",
+        "upgrade": "Fă upgrade"
+      },
       "noMembersFound": "Nu s-au găsit membri",
       "active": "Activ",
       "disabled": "Dezactivat",
@@ -4953,7 +5296,7 @@
         "username": "Utilizator",
         "email": "Email",
         "link": "Link",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "emailDisabled": "Invitațiile prin email necesită configurarea SMTP și mail.enableInvites=true în setări"
       },
       "license": {
         "users": "utilizatori",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} loc(uri) de utilizator disponibile",
         "noSlotsAvailable": "Niciun loc disponibil",
         "currentUsage": "În prezent se folosesc {{current}} din {{max}} licențe de utilizator"
-      }
+      },
+      "loginRequired": "Activează mai întâi modul de autentificare"
     },
     "teams": {
       "title": "Echipe",
@@ -5057,6 +5401,17 @@
     "showComparison": "Compară toate funcțiile",
     "hideComparison": "Ascunde comparația funcțiilor",
     "featureComparison": "Comparație funcții",
+    "from": "De la",
+    "perMonth": "/lună",
+    "perSeat": "/loc",
+    "withServer": "+ Plan Server",
+    "licensedSeats": "Licențiate: {{count}} locuri",
+    "includedInCurrent": "Inclus în planul tău",
+    "selectPlan": "Selectează planul",
+    "manage": "Gestionează",
+    "manageSubscription": {
+      "description": "Gestionează abonarea, facturarea și metodele de plată"
+    },
     "activePlan": {
       "title": "Plan activ",
       "subtitle": "Detaliile abonamentului curent"
@@ -5074,13 +5429,16 @@
       "upTo": "Până la"
     },
     "period": {
-      "month": "lună"
+      "month": "lună",
+      "perUserPerMonth": "/utilizator/lună"
     },
     "free": {
       "name": "Gratuit",
       "highlight1": "Utilizare limitată a instrumentelor pe săptămână",
       "highlight2": "Acces la toate instrumentele",
-      "highlight3": "Asistență din comunitate"
+      "highlight3": "Asistență din comunitate",
+      "forever": "Gratuit pentru totdeauna",
+      "included": "Inclus"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Preț personalizat",
       "highlight2": "Asistență dedicată",
-      "highlight3": "Cele mai noi funcții"
+      "highlight3": "Cele mai noi funcții",
+      "requiresServer": "Necesită Server",
+      "requiresServerMessage": "Te rugăm să faci mai întâi upgrade la planul Server înainte de a trece la Enterprise."
     },
     "feature": {
       "title": "Funcție",
@@ -5102,6 +5462,12 @@
       "api": "Acces API",
       "priority": "Asistență prioritară",
       "customPricing": "Preț personalizat"
+    },
+    "licenseWarning": {
+      "title": "Limită self-hosted gratuită atinsă",
+      "body": "Ai {{total}} utilizatori, dar nivelul gratuit suportă doar {{limit}} per server. Fă upgrade pentru ca Stirling PDF să ruleze fără probleme.",
+      "overLimit": "mai mult de {{limit}}",
+      "cta": "Vezi planuri"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Gestionează facturarea",
     "portal": {
       "error": "Deschiderea portalului de facturare a eșuat"
-    }
+    },
+    "updateSeats": "Actualizează locurile",
+    "updateEnterpriseSeats": "Actualizează locurile Enterprise",
+    "currentSeats": "Locuri curente",
+    "minimumSeats": "Locuri minime",
+    "basedOnUsers": "(utilizatori curenți)",
+    "newSeatCount": "Număr nou de locuri",
+    "newSeatCountDescription": "Selectează numărul de locuri pentru licența enterprise",
+    "whatHappensNext": "Ce urmează?",
+    "stripePortalRedirect": "Vei fi redirecționat către portalul de plăți Stripe pentru a revizui și confirma schimbarea locurilor. Suma proporțională va fi calculată automat.",
+    "preparingUpdate": "Se pregătește actualizarea locurilor...",
+    "seatCountTooLow": "Numărul de locuri trebuie să fie cel puțin {{minimum}} (numărul curent de utilizatori)",
+    "seatCountUnchanged": "Te rugăm să selectezi un număr diferit de locuri",
+    "seatsUpdated": "Locuri actualizate",
+    "seatsUpdatedMessage": "Locurile tale enterprise au fost actualizate la {{seats}}",
+    "updateProcessing": "Actualizare în curs",
+    "updateProcessingMessage": "Actualizarea locurilor este în curs de procesare. Reîmprospătează peste câteva momente.",
+    "notEnterprise": "Gestionarea locurilor este disponibilă doar pentru licențe enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Upgrade la planul Server",
+    "message": "Profită la maximum de Stirling PDF cu utilizatori nelimitați și funcții avansate",
+    "upgradeButton": "Fă upgrade acum",
+    "dismiss": "Ascunde bannerul",
+    "attentionTitle": "Acest server necesită atenția adminului",
+    "attentionBody": "Adminul tău trebuie să se conecteze pentru mai multe informații. Contactează-l imediat.",
+    "attentionBodyAdmin": "Revizuiește cerințele de licențiere pentru a menține conformitatea acestui server.",
+    "seeInfo": "Vezi info"
   },
   "payment": {
     "preparing": "Se pregătește checkout-ul...",
@@ -5128,7 +5521,61 @@
     "success": "Plată reușită!",
     "successMessage": "Abonamentul dvs. a fost activat cu succes. Veți primi în curând un e-mail de confirmare.",
     "autoClose": "Această fereastră se va închide automat...",
-    "error": "Eroare de plată"
+    "error": "Eroare de plată",
+    "upgradeSuccess": "Plată reușită! Abonamentul a fost actualizat. Licența a fost actualizată pe serverul tău. Vei primi în curând un email de confirmare.",
+    "paymentSuccess": "Plată reușită! Se preia cheia ta de licență...",
+    "licenseActivated": "Licență activată! Cheia ta de licență a fost salvată. Un email de confirmare a fost trimis la adresa ta.",
+    "licenseDelayed": "Plată reușită! Licența ta este în curs de generare. Vei primi în curând un email cu cheia de licență. Dacă nu îl primești în 10 minute, contactează support.",
+    "licensePollingError": "Plată reușită, dar nu am putut prelua automat cheia ta de licență. Verifică emailul sau contactează support cu confirmarea plății.",
+    "licenseRetrievalError": "Plată reușită, dar preluarea licenței a eșuat. Vei primi cheia de licență pe email. Te rugăm să contactezi support dacă nu o primești în 10 minute.",
+    "syncError": "Plată reușită, dar sincronizarea licenței a eșuat. Licența ta va fi actualizată în curând. Contactează support dacă problemele persistă.",
+    "licenseSaveError": "Nu s-a putut salva cheia de licență. Te rugăm să contactezi support cu cheia ta pentru a finaliza activarea.",
+    "paymentCanceled": "Plata a fost anulată. Nu s-au făcut debiteri.",
+    "syncingLicense": "Se sincronizează licența actualizată...",
+    "generatingLicense": "Se generează cheia ta de licență...",
+    "upgradeComplete": "Upgrade finalizat",
+    "upgradeCompleteMessage": "Abonamentul tău a fost actualizat cu succes. Cheia de licență existentă a fost actualizată.",
+    "stripeNotConfigured": "Stripe neconfigurat",
+    "stripeNotConfiguredMessage": "Integrarea de plăți Stripe nu este configurată. Te rugăm să contactezi administratorul.",
+    "monthly": "Lunar",
+    "yearly": "Anual",
+    "billingPeriod": "Perioadă de facturare",
+    "enterpriseNote": "Locurile pot fi ajustate la checkout (1-1000).",
+    "installationId": "ID instalare",
+    "licenseKey": "Cheia ta de licență",
+    "licenseInstructions": "A fost adăugată în instalarea ta. Vei primi o copie și pe email.",
+    "canCloseWindow": "Poți închide această fereastră.",
+    "licenseKeyProcessing": "Procesare cheie de licență",
+    "licenseDelayedMessage": "Cheia ta de licență este în curs de generare. Verifică emailul în curând sau contactează support.",
+    "perYear": "/an",
+    "perMonth": "/lună",
+    "emailInvalid": "Te rugăm să introduci o adresă de email validă",
+    "emailStage": {
+      "title": "Introdu adresa ta de email",
+      "description": "O folosim pentru a-ți trimite cheia de licență și chitanțele.",
+      "emailLabel": "Adresă de email",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Continuă",
+      "modalTitle": "Începe - {{planName}}"
+    },
+    "planStage": {
+      "title": "Alege perioada de facturare",
+      "savingsNote": "Economisește {{percent}}% cu facturare anuală",
+      "basePrice": "Preț de bază",
+      "seatPrice": "Per loc",
+      "totalForSeats": "Total ({{count}} locuri)",
+      "selectMonthly": "Selectează lunar",
+      "selectYearly": "Selectează anual",
+      "savePercent": "Economisești {{percent}}%",
+      "savingsAmount": "Economisești {{amount}}",
+      "modalTitle": "Selectează perioada de facturare - {{planName}}",
+      "billedYearly": "Facturat anual la {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Înapoi la alegerea planului",
+      "selectedPlan": "Plan selectat",
+      "modalTitle": "Finalizează plata - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Prima autentificare",
@@ -5287,5 +5734,281 @@
     "offline": "Backend offline",
     "starting": "Backend-ul pornește...",
     "wait": "Așteptați ca backend-ul să finalizeze pornirea și încercați din nou."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Deblochează PDF-ul pentru a continua",
+    "title": "Elimină parola pentru a continua",
+    "description": "Acest PDF este protejat cu parolă. Introdu parola pentru a continua lucrul cu el.",
+    "password": {
+      "label": "Parola PDF",
+      "placeholder": "Introdu parola PDF"
+    },
+    "skip": "Sari peste deocamdată",
+    "unlock": "Deblochează și continuă",
+    "incorrectPassword": "Parolă incorectă",
+    "missingFile": "Fișierul selectat nu mai este disponibil.",
+    "emptyResponse": "Eliminarea parolei nu a generat un fișier.",
+    "required": "Introdu parola pentru a continua.",
+    "successTitle": "Parolă eliminată",
+    "successBodyWithName": "Parola a fost eliminată din {{fileName}}",
+    "successBody": "Parola a fost eliminată cu succes."
+  },
+  "setup": {
+    "welcome": "Bun venit la Stirling PDF",
+    "description": "Începe alegând cum vrei să folosești Stirling PDF",
+    "step1": {
+      "label": "Alege modul",
+      "description": "Offline sau Server"
+    },
+    "step2": {
+      "label": "Selectează serverul",
+      "description": "Server găzduit local"
+    },
+    "step3": {
+      "label": "Login",
+      "description": "Introdu acreditările"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Autentifică-te cu contul tău Stirling"
+      },
+      "selfhosted": {
+        "title": "Server Self-Hosted",
+        "description": "Conectează-te la propriul tău server Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Autentifică-te în Stirling",
+      "subtitle": "Autentifică-te cu contul tău Stirling"
+    },
+    "selfhosted": {
+      "title": "Autentifică-te pe server",
+      "subtitle": "Introdu acreditările serverului tău"
+    },
+    "server": {
+      "title": "Conectează-te la server",
+      "subtitle": "Introdu URL-ul serverului tău self-hosted",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Server găzduit local"
+      },
+      "url": {
+        "label": "URL server",
+        "description": "Introdu URL-ul complet al serverului tău Stirling PDF găzduit local"
+      },
+      "error": {
+        "emptyUrl": "Te rugăm să introduci un URL de server",
+        "unreachable": "Nu s-a putut conecta la server",
+        "testFailed": "Testul de conexiune a eșuat"
+      },
+      "testing": "Se testează conexiunea..."
+    },
+    "login": {
+      "title": "Autentificare",
+      "subtitle": "Introdu acreditările pentru a continua",
+      "connectingTo": "Conectare la:",
+      "username": {
+        "label": "Utilizator",
+        "placeholder": "Introdu numele de utilizator"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Introdu adresa de email"
+      },
+      "password": {
+        "label": "Parolă",
+        "placeholder": "Introdu parola"
+      },
+      "error": {
+        "emptyUsername": "Te rugăm să introduci numele de utilizator",
+        "emptyEmail": "Te rugăm să introduci adresa de email",
+        "emptyPassword": "Te rugăm să introduci parola",
+        "oauthFailed": "Autentificarea OAuth a eșuat. Încearcă din nou."
+      },
+      "submit": "Autentificare",
+      "signInWith": "Autentifică-te cu",
+      "oauthPending": "Se deschide browserul pentru autentificare...",
+      "orContinueWith": "Sau continuă cu email"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Autentificare reușită",
+      "message": "Puteți închide această fereastră și reveni la Stirling PDF."
+    },
+    "error": {
+      "title": "Autentificare eșuată",
+      "message": "Autentificarea nu a reușit. Puteți închide această fereastră și să încercați din nou."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor JSON pentru PDF",
+    "viewLabel": "Editor PDF",
+    "converting": "Se convertește PDF-ul în format editabil...",
+    "conversionFailed": "Conversia PDF-ului a eșuat. Vă rugăm să încercați din nou.",
+    "currentFile": "Fișier curent: {{name}}",
+    "pageSummary": "Pagina {{number}} din {{total}}",
+    "pagePreviewAlt": "Previzualizare pagină",
+    "imageLabel": "Imagine plasată",
+    "noTextOnPage": "Nu a fost detectat text editabil pe această pagină.",
+    "pageType": {
+      "paragraph": "Pagină cu paragrafe",
+      "sparse": "Text rar"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Paragraf",
+      "singleLine": "O singură linie"
+    },
+    "badges": {
+      "unsaved": "Editat",
+      "modified": "Editat",
+      "earlyAccess": "Acces timpuriu"
+    },
+    "actions": {
+      "reset": "Resetați modificările",
+      "downloadJson": "Descărcați JSON",
+      "generatePdf": "Generați PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Scalare automată a textului pentru a se potrivi în casete",
+        "description": "Scalează automat textul pe orizontală pentru a se încadra în caseta de delimitare inițială când randarea fontului diferă față de PDF."
+      },
+      "groupingMode": {
+        "title": "Mod de grupare a textului",
+        "autoDescription": "Detectează automat tipul paginii și grupează textul corespunzător.",
+        "paragraphDescription": "Grupează liniile aliniate în casete de text paragraf, pe mai multe rânduri.",
+        "singleLineDescription": "Păstrează fiecare linie de text PDF ca o casetă de text separată."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Sfat: Țineți apăsat Ctrl (Cmd) sau Shift pentru a selecta mai multe casete de text. O bară de instrumente plutitoare va apărea deasupra selecției, pentru a putea uni, separa sau ajusta lățimile."
+      },
+      "forceSingleElement": {
+        "title": "Blocați textul editat într-un singur element PDF",
+        "description": "Când este activată, editorul exportă fiecare casetă de text editată ca un singur element de text PDF pentru a evita suprapunerea glifelor sau amestecul de fonturi."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Unește casetele selectate",
+      "merge": "Unește selecția",
+      "ungroupTooltip": "Împarte paragraful înapoi în rânduri",
+      "ungroup": "Separă selecția",
+      "widthMenu": "Opțiuni lățime",
+      "expandWidth": "Extinde până la marginea paginii",
+      "resetWidth": "Resetați lățimea",
+      "resizeHandle": "Ajustați lățimea textului"
+    },
+    "disclaimer": {
+      "heading": "Limitări ale previzualizării",
+      "textFocus": "Acest spațiu de lucru se concentrează pe editarea textului și repoziționarea imaginilor încorporate. Elemente grafice complexe de pagină, widgeturi de formular și grafică stratificată sunt păstrate pentru export, dar nu sunt pe deplin editabile aici.",
+      "previewVariance": "Unele elemente vizuale (cum ar fi margini de tabel, forme sau aspectul adnotărilor) pot să nu fie afișate exact în previzualizare. PDF-ul exportat păstrează comenzile de desen originale ori de câte ori este posibil.",
+      "alpha": "Acest vizualizator alpha este încă în dezvoltare — anumite fonturi, culori, efecte de transparență și detalii de aranjare pot varia ușor. Vă rugăm să verificați încă o dată PDF-ul generat înainte de a-l partaja."
+    },
+    "empty": {
+      "title": "Niciun document încărcat",
+      "subtitle": "Încărcați un fișier PDF sau JSON pentru a începe editarea conținutului text."
+    },
+    "welcomeBanner": {
+      "title": "Bine ați venit la Editor text PDF (Acces timpuriu)",
+      "experimental": "Aceasta este o funcție experimentală în dezvoltare activă. Așteptați-vă la o anumită instabilitate și probleme în timpul utilizării.",
+      "howItWorks": "Acest instrument convertește PDF-ul într-un format editabil în care puteți modifica textul și repoziționa imaginile. Modificările sunt salvate într-un nou PDF.",
+      "bestFor": "Funcționează cel mai bine cu:",
+      "bestFor1": "PDF-uri simple care conțin în principal text și imagini",
+      "bestFor2": "Documente cu formatare standard a paragrafelor",
+      "bestFor3": "Scrisori, eseuri, rapoarte și documente de bază",
+      "notIdealFor": "Nu este ideal pentru:",
+      "notIdealFor1": "PDF-uri cu formatare specială, cum ar fi liste cu puncte, tabele sau dispuneri pe mai multe coloane",
+      "notIdealFor2": "Reviste, broșuri sau documente cu design complex",
+      "notIdealFor3": "Manuale cu dispuneri complexe",
+      "limitations": "Limitări actuale:",
+      "limitation1": "Randarea fonturilor poate diferi ușor față de PDF-ul original",
+      "limitation2": "Grafica complexă, câmpurile de formular și adnotările sunt păstrate, dar nu sunt editabile",
+      "limitation3": "Fișierele mari pot necesita timp pentru conversie și procesare",
+      "knownIssues": "Probleme cunoscute (în curs de remediere):",
+      "issue1": "Culoarea textului nu este păstrată în prezent (va fi adăugată în curând)",
+      "issue2": "Modul Paragraf are mai multe probleme de aliniere și spațiere - este recomandat modul O singură linie",
+      "issue3": "Afișarea în previzualizare diferă de PDF-ul exportat - PDF-urile exportate sunt mai apropiate de original",
+      "issue4": "Alinierea textului rotit poate necesita ajustare manuală",
+      "issue5": "Efectele de transparență și stratificare pot varia față de original",
+      "feedback": "Aceasta este o funcție în acces timpuriu. Vă rugăm să raportați orice problemă întâmpinați, pentru a ne ajuta să îmbunătățim!",
+      "gotIt": "Am înțeles",
+      "dontShowAgain": "Nu mai afișa"
+    },
+    "modeChange": {
+      "title": "Confirmați schimbarea modului",
+      "warning": "Schimbarea modului de grupare a textului va reseta toate modificările nesalvate. Sigur doriți să continuați?",
+      "cancel": "Anulați",
+      "confirm": "Resetați și schimbați modul"
+    },
+    "fontAnalysis": {
+      "details": "Detalii font",
+      "embedded": "Încorporat",
+      "type": "Tip",
+      "webFormat": "Format web",
+      "warnings": "Avertizări",
+      "suggestions": "Note",
+      "currentPageFonts": "Fonturi pe această pagină",
+      "allFonts": "Toate fonturile",
+      "fallback": "fallback",
+      "missing": "lipsește",
+      "perfectMessage": "Toate fonturile pot fi redate perfect.",
+      "warningMessage": "Unele fonturi pot să nu fie redate corect.",
+      "infoMessage": "Sunt disponibile informații despre redarea fonturilor.",
+      "perfect": "perfect",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Nu se poate citi fișierul JSON. Asigurați-vă că a fost generat de instrumentul PDF to JSON.",
+      "pdfConversion": "Nu se poate converti JSON-ul editat înapoi în PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sesiune expirată",
+    "pleaseLoginAgain": "Vă rugăm să vă autentificați din nou.",
+    "accessDenied": "Acces refuzat",
+    "insufficientPermissions": "Nu aveți permisiunea de a efectua această acțiune."
+  },
+  "addText": {
+    "title": "Adăugați text",
+    "header": "Adăugați text în PDF-uri",
+    "text": {
+      "name": "Conținut text",
+      "placeholder": "Introduceți textul pe care doriți să-l adăugați",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Dimensiune font",
+      "fontSizePlaceholder": "Tastați sau selectați dimensiunea fontului (8-200)",
+      "colorLabel": "Culoarea textului"
+    },
+    "steps": {
+      "configure": "Configurați textul"
+    },
+    "step": {
+      "createDesc": "Introduceți textul pe care doriți să-l adăugați",
+      "place": "Plasați textul",
+      "placeDesc": "Faceți clic pe PDF pentru a adăuga textul"
+    },
+    "instructions": {
+      "title": "Cum adăugați text",
+      "text": "După ce ați introdus textul mai sus, faceți clic oriunde pe PDF pentru a-l plasa.",
+      "paused": "Plasarea este întreruptă",
+      "resumeHint": "Reluați plasarea pentru a face clic și a adăuga textul.",
+      "noSignature": "Introduceți textul mai sus pentru a activa plasarea."
+    },
+    "mode": {
+      "move": "Mutare text",
+      "place": "Plasare text",
+      "pause": "Pauză plasare",
+      "resume": "Reluare plasare"
+    },
+    "results": {
+      "title": "Rezultate adăugare text"
+    },
+    "error": {
+      "failed": "A apărut o eroare la adăugarea textului în PDF."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Aplicați textul"
   }
 }

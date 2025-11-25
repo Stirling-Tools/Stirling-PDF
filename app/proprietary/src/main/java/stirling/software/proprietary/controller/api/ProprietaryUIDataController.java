@@ -120,6 +120,42 @@ public class ProprietaryUIDataController {
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.getEnableLogin());
 
+        // Check if this is first-time setup (no users or only default admin with unchanged
+        // password)
+        boolean isFirstTimeSetup = false;
+        boolean showDefaultCredentials = false;
+
+        // Get all users and filter out internal API user
+        List<User> allUsers = userRepository.findAll();
+        List<User> realUsers =
+                allUsers.stream()
+                        .filter(
+                                user ->
+                                        !Role.INTERNAL_API_USER
+                                                .getRoleId()
+                                                .equals(user.getUsername()))
+                        .toList();
+        long userCount = realUsers.size();
+
+        if (userCount == 0) {
+            isFirstTimeSetup = true;
+            showDefaultCredentials = true;
+        } else if (userCount == 1) {
+            // Check if the only user is the default admin with isFirstLogin flag
+            Optional<User> adminUser = userRepository.findByUsernameIgnoreCase("admin");
+
+            if (adminUser.isPresent() && Boolean.TRUE.equals(adminUser.get().getIsFirstLogin())) {
+                isFirstTimeSetup = true;
+                // Only show default credentials if username is still "admin" (case-insensitive
+                // check already done)
+                // The isFirstLogin flag indicates the password hasn't been changed
+                showDefaultCredentials = true;
+            }
+        }
+
+        data.setFirstTimeSetup(isFirstTimeSetup);
+        data.setShowDefaultCredentials(showDefaultCredentials);
+
         OAUTH2 oauth = securityProps.getOauth2();
 
         if (oauth != null && oauth.getEnabled()) {
@@ -456,6 +492,8 @@ public class ProprietaryUIDataController {
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;
+        private boolean firstTimeSetup;
+        private boolean showDefaultCredentials;
     }
 
     @Data

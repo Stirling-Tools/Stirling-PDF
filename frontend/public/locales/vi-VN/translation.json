@@ -17,6 +17,8 @@
       "comingSoon": "Sắp ra mắt:",
       "favorite": "Thêm vào Mục yêu thích",
       "favorites": "Mục yêu thích",
+      "unavailable": "Bị quản trị viên server vô hiệu hóa:",
+      "unavailableDependency": "Không khả dụng - thiếu công cụ cần thiết trên server:",
       "heading": "Tất cả công cụ (chế độ toàn màn hình)",
       "noResults": "Hãy thử điều chỉnh tìm kiếm hoặc chuyển đổi mô tả để tìm thứ bạn cần.",
       "recommended": "Đề xuất",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Chuyển sang chế độ toàn màn hình",
       "sidebar": "Chuyển sang chế độ thanh bên"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Tính năng Premium:",
+    "comingSoon": "Sắp ra mắt:"
   },
   "unsavedChanges": "Bạn có thay đổi chưa lưu đối với PDF.",
   "areYouSure": "Bạn có chắc muốn rời đi không?",
@@ -40,6 +45,30 @@
     "message": "ZIP này chứa {{count}} tệp. Vẫn giải nén?",
     "cancel": "Hủy",
     "confirm": "Giải nén"
+  },
+  "defaultApp": {
+    "title": "Đặt làm ứng dụng PDF mặc định",
+    "message": "Bạn có muốn đặt Stirling PDF làm trình chỉnh sửa PDF mặc định không?",
+    "description": "Bạn có thể thay đổi sau trong cài đặt hệ thống.",
+    "notNow": "Để sau",
+    "setDefault": "Đặt mặc định",
+    "dismiss": "Bỏ qua",
+    "prompt": {
+      "title": "Đặt làm trình chỉnh sửa PDF mặc định",
+      "message": "Đặt Stirling PDF làm ứng dụng mặc định để mở tệp PDF."
+    },
+    "success": {
+      "title": "Đã đặt ứng dụng mặc định",
+      "message": "Stirling PDF hiện là trình chỉnh sửa PDF mặc định của bạn"
+    },
+    "settingsOpened": {
+      "title": "Đã mở Cài đặt",
+      "message": "Vui lòng chọn Stirling PDF trong cài đặt hệ thống"
+    },
+    "error": {
+      "title": "Lỗi",
+      "message": "Không thể đặt trình xử lý PDF mặc định"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Lưu",
   "saveToBrowser": "Lưu vào trình duyệt",
   "download": "Tải xuống",
+  "downloadUnavailable": "Không thể tải xuống mục này",
+  "saveUnavailable": "Không thể lưu mục này",
   "pin": "Ghim tệp (giữ hoạt động sau khi chạy công cụ)",
   "unpin": "Bỏ ghim tệp (thay thế sau khi chạy công cụ)",
   "undoOperationTooltip": "Nhấp để hoàn tác thao tác cuối và khôi phục các tệp gốc",
@@ -168,6 +199,7 @@
   },
   "edit": "Chỉnh sửa",
   "delete": "Xóa",
+  "never": "Không bao giờ",
   "username": "Tên người dùng",
   "password": "Mật khẩu",
   "welcome": "Chào mừng",
@@ -262,7 +294,8 @@
     "learnMore": "Tìm hiểu thêm",
     "enable": "Bật phân tích",
     "disable": "Tắt phân tích",
-    "settings": "Bạn có thể thay đổi cài đặt phân tích trong tệp config/settings.yml"
+    "settings": "Bạn có thể thay đổi cài đặt phân tích trong tệp config/settings.yml",
+    "privacyAssurance": "Chúng tôi không theo dõi thông tin cá nhân hay nội dung tệp của bạn."
   },
   "navbar": {
     "favorite": "Yêu thích",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Cài đặt",
-    "update": "Có bản cập nhật",
-    "updateAvailable": "{0} là phiên bản hiện tại đã cài đặt. Một phiên bản mới ({1}) đã có sẵn.",
-    "appVersion": "Phiên bản ứng dụng:",
-    "downloadOption": {
-      "title": "Chọn tùy chọn tải xuống (Đối với tải xuống tệp đơn không nén):",
-      "1": "Mở trong cùng cửa sổ",
-      "2": "Mở trong cửa sổ mới",
-      "3": "Tải xuống tệp"
-    },
-    "zipThreshold": "Nén tệp khi số lượng tệp tải xuống vượt quá",
-    "signOut": "Đăng xuất",
-    "accountSettings": "Cài đặt tài khoản",
-    "bored": {
-      "help": "Bật trò chơi ẩn"
-    },
-    "cacheInputs": {
-      "name": "Lưu đầu vào biểu mẫu",
-      "help": "Bật để lưu trữ các đầu vào đã sử dụng trước đó cho các lần chạy trong tương lai"
+    "connection": {
+      "title": "Chế độ kết nối",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Tự lưu trữ"
+      },
+      "server": "Server",
+      "user": "Đăng nhập với tư cách",
+      "logout": "Đăng xuất"
     },
     "general": {
       "title": "Chung",
       "description": "Cấu hình các tùy chọn chung của ứng dụng.",
-      "account": "Tài khoản",
-      "accountDescription": "Quản lý cài đặt tài khoản của bạn",
       "user": "Người dùng",
-      "signedInAs": "Đăng nhập với tư cách",
       "logout": "Đăng xuất",
       "enableFeatures": {
+        "dismiss": "Bỏ qua",
         "title": "Dành cho Quản trị viên Hệ thống",
         "intro": "Bật xác thực người dùng, quản lý nhóm và các tính năng không gian làm việc cho tổ chức của bạn.",
         "action": "Cấu hình",
         "and": "và",
         "benefit": "Bật vai trò người dùng, cộng tác nhóm, kiểm soát quản trị và các tính năng doanh nghiệp.",
-        "learnMore": "Tìm hiểu thêm trong tài liệu",
-        "dismiss": "Bỏ qua"
+        "learnMore": "Tìm hiểu thêm trong tài liệu"
       },
-      "autoUnzip": "Tự động giải nén phản hồi API",
-      "autoUnzipDescription": "Tự động giải nén tệp từ phản hồi ZIP",
-      "autoUnzipTooltip": "Tự động giải nén các tệp ZIP trả về từ thao tác API. Tắt để giữ nguyên tệp ZIP. Điều này không ảnh hưởng đến các quy trình tự động.",
-      "autoUnzipFileLimit": "Giới hạn tệp tự động giải nén",
-      "autoUnzipFileLimitDescription": "Số lượng tệp tối đa để giải nén từ ZIP",
-      "autoUnzipFileLimitTooltip": "Chỉ giải nén nếu ZIP chứa số tệp bằng hoặc ít hơn giá trị này. Tăng lên để giải nén ZIP lớn hơn.",
       "defaultToolPickerMode": "Chế độ chọn công cụ mặc định",
       "defaultToolPickerModeDescription": "Chọn liệu bộ chọn công cụ sẽ mở mặc định ở toàn màn hình hay thanh bên",
       "mode": {
-        "fullscreen": "Toàn màn hình",
-        "sidebar": "Thanh bên"
-      }
+        "sidebar": "Thanh bên",
+        "fullscreen": "Toàn màn hình"
+      },
+      "autoUnzipTooltip": "Tự động giải nén các tệp ZIP trả về từ thao tác API. Tắt để giữ nguyên tệp ZIP. Điều này không ảnh hưởng đến các quy trình tự động.",
+      "autoUnzip": "Tự động giải nén phản hồi API",
+      "autoUnzipDescription": "Tự động giải nén tệp từ phản hồi ZIP",
+      "autoUnzipFileLimitTooltip": "Chỉ giải nén nếu ZIP chứa số tệp bằng hoặc ít hơn giá trị này. Tăng lên để giải nén ZIP lớn hơn.",
+      "autoUnzipFileLimit": "Giới hạn tệp tự động giải nén",
+      "autoUnzipFileLimitDescription": "Số lượng tệp tối đa để giải nén từ ZIP",
+      "defaultPdfEditor": "Trình chỉnh sửa PDF mặc định",
+      "defaultPdfEditorActive": "Stirling PDF là trình chỉnh sửa PDF mặc định của bạn",
+      "defaultPdfEditorInactive": "Ứng dụng khác đang được đặt mặc định",
+      "defaultPdfEditorChecking": "Đang kiểm tra...",
+      "defaultPdfEditorSet": "Đã là mặc định",
+      "setAsDefault": "Đặt làm mặc định",
+      "updates": {
+        "title": "Cập nhật phần mềm",
+        "description": "Kiểm tra cập nhật và xem thông tin phiên bản",
+        "currentVersion": "Phiên bản hiện tại",
+        "latestVersion": "Phiên bản mới nhất",
+        "checkForUpdates": "Kiểm tra cập nhật",
+        "viewDetails": "Xem chi tiết"
+      },
+      "hideUnavailableTools": "Ẩn công cụ không khả dụng",
+      "hideUnavailableToolsDescription": "Loại bỏ các công cụ bị server của bạn vô hiệu hóa thay vì hiển thị mờ.",
+      "hideUnavailableConversions": "Ẩn chuyển đổi không khả dụng",
+      "hideUnavailableConversionsDescription": "Loại bỏ tùy chọn chuyển đổi bị vô hiệu hóa trong công cụ Chuyển đổi thay vì hiển thị mờ."
     },
     "hotkeys": {
-      "title": "Phím tắt",
-      "description": "Di chuột lên công cụ để xem phím tắt hoặc tùy chỉnh bên dưới. Nhấp \"Thay đổi phím tắt\" và nhấn tổ hợp phím mới. Nhấn Esc để hủy.",
-      "errorModifier": {
-        "mac": "Bao gồm ⌘ (Command), ⌥ (Option) hoặc một phím bổ trợ khác trong phím tắt của bạn.",
-        "windows": "Bao gồm Ctrl, Alt hoặc một phím bổ trợ khác trong phím tắt của bạn."
-      },
       "errorConflict": "Phím tắt đã được dùng bởi {{tool}}.",
+      "searchPlaceholder": "Tìm công cụ...",
       "none": "Chưa gán",
       "customBadge": "Tùy chỉnh",
       "defaultLabel": "Mặc định: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Thay đổi phím tắt",
       "reset": "Đặt lại",
       "shortcut": "Phím tắt",
-      "noShortcut": "Chưa đặt phím tắt",
-      "searchPlaceholder": "Tìm công cụ..."
+      "noShortcut": "Chưa đặt phím tắt"
     }
+  },
+  "update": {
+    "modalTitle": "Có bản cập nhật",
+    "current": "Phiên bản hiện tại",
+    "latest": "Phiên bản mới nhất",
+    "latestStable": "Ổn định mới nhất",
+    "priorityLabel": "Mức ưu tiên",
+    "recommendedAction": "Hành động khuyến nghị",
+    "breakingChangesDetected": "Phát hiện thay đổi phá vỡ",
+    "breakingChangesMessage": "Một số phiên bản có thay đổi phá vỡ. Vui lòng xem hướng dẫn chuyển đổi bên dưới trước khi cập nhật.",
+    "migrationGuides": "Hướng dẫn chuyển đổi",
+    "viewGuide": "Xem hướng dẫn",
+    "loadingDetailedInfo": "Đang tải thông tin chi tiết...",
+    "close": "Đóng",
+    "viewAllReleases": "Xem tất cả bản phát hành",
+    "downloadLatest": "Tải bản mới nhất",
+    "availableUpdates": "Bản cập nhật khả dụng",
+    "unableToLoadDetails": "Không thể tải thông tin chi tiết.",
+    "version": "Phiên bản",
+    "urgentUpdateAvailable": "Cập nhật khẩn cấp",
+    "updateAvailable": "Có bản cập nhật",
+    "releaseNotes": "Ghi chú phát hành",
+    "priority": {
+      "urgent": "Khẩn cấp",
+      "normal": "Thường",
+      "minor": "Nhỏ",
+      "low": "Thấp"
+    },
+    "breakingChanges": "Thay đổi phá vỡ",
+    "breakingChangesDefault": "Phiên bản này có thay đổi phá vỡ.",
+    "migrationGuide": "Hướng dẫn chuyển đổi"
   },
   "changeCreds": {
     "title": "Thay đổi thông tin đăng nhập",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Chồng lớp PDF lên trên PDF khác",
       "title": "Chồng lớp PDF"
+    },
+    "pdfTextEditor": {
+      "title": "Trình chỉnh sửa văn bản PDF",
+      "desc": "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Thêm văn bản",
+      "desc": "Thêm văn bản tùy chỉnh ở bất kỳ đâu trong PDF"
     }
   },
   "landing": {
     "addFiles": "Thêm tệp",
-    "uploadFromComputer": "Tải lên từ máy tính"
+    "uploadFromComputer": "Tải lên từ máy tính",
+    "openFromComputer": "Mở từ máy tính"
   },
   "viewPdf": {
     "tags": "xem,đọc,chú thích,văn bản,hình ảnh",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Đã xảy ra lỗi khi gộp các PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Tổng quan cài đặt gộp"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,hình ảnh,ảnh",
     "title": "Thêm hình ảnh",
     "header": "Thêm hình ảnh vào PDF",
-    "everyPage": "Mọi trang?",
-    "upload": "Thêm hình ảnh",
-    "submit": "Thêm hình ảnh"
+    "image": {
+      "name": "Ảnh",
+      "placeholder": "Tải lên một ảnh",
+      "label": "Tệp ảnh"
+    },
+    "steps": {
+      "configure": "Cấu hình ảnh"
+    },
+    "step": {
+      "createDesc": "Tải lên ảnh bạn muốn thêm",
+      "place": "Đặt ảnh",
+      "placeDesc": "Nhấp vào PDF để thêm ảnh"
+    },
+    "instructions": {
+      "title": "Cách thêm ảnh",
+      "text": "Sau khi tải ảnh lên, nhấp vào bất kỳ đâu trên PDF để đặt ảnh.",
+      "paused": "Tạm dừng đặt",
+      "resumeHint": "Tiếp tục đặt để nhấp và thêm ảnh.",
+      "noSignature": "Tải lên ảnh để bật chế độ đặt."
+    },
+    "mode": {
+      "move": "Di chuyển ảnh",
+      "place": "Đặt ảnh",
+      "pause": "Tạm dừng đặt",
+      "resume": "Tiếp tục đặt"
+    },
+    "results": {
+      "title": "Kết quả thêm ảnh"
+    },
+    "error": {
+      "failed": "Đã xảy ra lỗi khi thêm ảnh vào PDF."
+    },
+    "saved": {
+      "defaultLabel": "Ảnh",
+      "defaultImageLabel": "Ảnh đã tải lên"
+    },
+    "applySignatures": "Áp dụng ảnh"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Ngăn chặn in các định dạng khác nhau"
     },
     "submit": "Thay đổi"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Dấu trang & đề cương",
+      "replaceExisting": "Thay thế dấu trang hiện có (bỏ chọn để nối thêm)",
+      "replaceExistingHint": "Khi tắt, đề cương mới sẽ được nối thêm sau các dấu trang hiện tại."
+    },
+    "actions": {
+      "source": "Tải dấu trang",
+      "selectedFile": "Đã tải từ {{file}}",
+      "noFile": "Chọn một PDF để trích xuất dấu trang hiện có.",
+      "loadFromPdf": "Tải từ PDF đã chọn",
+      "importJson": "Nhập JSON",
+      "importClipboard": "Dán JSON từ bộ nhớ tạm",
+      "export": "Xuất dấu trang",
+      "exportJson": "Tải JSON",
+      "exportClipboard": "Sao chép JSON vào bộ nhớ tạm",
+      "clipboardUnavailable": "Trình duyệt này không cho phép truy cập bộ nhớ tạm."
+    },
+    "info": {
+      "line1": "Mỗi dấu trang cần một tiêu đề mô tả và trang sẽ mở.",
+      "line2": "Dùng dấu trang con để tạo phân cấp cho chương, mục, hoặc tiểu mục.",
+      "line3": "Nhập dấu trang từ PDF đã chọn hoặc từ tệp JSON để tiết kiệm thời gian."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Mở công cụ để bắt đầu chỉnh sửa",
+        "description": "Chọn công cụ Chỉnh sửa Mục lục để tải không gian làm việc."
+      },
+      "tabTitle": "Không gian đề cương",
+      "subtitle": "Nhập dấu trang, tạo phân cấp và áp dụng đề cương mà không cần các bảng bên chật chội.",
+      "noFile": "Chưa chọn PDF",
+      "fileLabel": "Thay đổi sẽ áp dụng cho PDF đang được chọn.",
+      "filePrompt": "Chọn một PDF từ thư viện hoặc tải lên tệp mới để bắt đầu.",
+      "changeFile": "Đổi PDF",
+      "selectFile": "Chọn PDF"
+    },
+    "editor": {
+      "heading": "Trình chỉnh sửa dấu trang",
+      "description": "Thêm, lồng và sắp xếp lại dấu trang để tạo đề cương PDF.",
+      "addTopLevel": "Thêm dấu trang cấp cao",
+      "empty": {
+        "title": "Chưa có dấu trang",
+        "description": "Nhập dấu trang hiện có hoặc bắt đầu bằng cách thêm mục đầu tiên.",
+        "action": "Thêm dấu trang đầu tiên"
+      },
+      "defaultTitle": "Dấu trang mới",
+      "defaultChildTitle": "Dấu trang con",
+      "defaultSiblingTitle": "Dấu trang mới",
+      "untitled": "Dấu trang không tiêu đề",
+      "childBadge": "Con",
+      "pagePreview": "Trang {{page}}",
+      "field": {
+        "title": "Tiêu đề dấu trang",
+        "page": "Số trang đích"
+      },
+      "actions": {
+        "toggle": "Đóng/mở mục con",
+        "addChild": "Thêm dấu trang con",
+        "addSibling": "Thêm dấu trang cùng cấp",
+        "remove": "Xóa dấu trang"
+      },
+      "confirmRemove": "Xóa dấu trang này và tất cả mục con?"
+    },
+    "messages": {
+      "loadedTitle": "Đã trích xuất dấu trang",
+      "loadedBody": "Dấu trang hiện có từ PDF đã được tải vào trình chỉnh sửa.",
+      "noBookmarks": "Không tìm thấy dấu trang trong PDF đã chọn.",
+      "loadFailed": "Không thể trích xuất dấu trang từ PDF đã chọn.",
+      "imported": "Đã nhập dấu trang",
+      "importedBody": "Đề cương JSON của bạn đã thay thế nội dung hiện tại.",
+      "importedClipboard": "Dữ liệu bộ nhớ tạm đã thay thế danh sách dấu trang hiện tại.",
+      "invalidJson": "Cấu trúc JSON không hợp lệ",
+      "invalidJsonBody": "Vui lòng cung cấp tệp JSON dấu trang hợp lệ và thử lại.",
+      "exported": "Sẵn sàng tải JSON",
+      "copied": "Đã sao chép vào bộ nhớ tạm",
+      "copiedBody": "Đã sao chép JSON dấu trang thành công.",
+      "copyFailed": "Sao chép thất bại"
+    },
+    "error": {
+      "failed": "Không thể cập nhật mục lục"
+    },
+    "submit": "Áp dụng mục lục",
+    "results": {
+      "title": "PDF đã cập nhật kèm dấu trang",
+      "subtitle": "Tải tệp đã xử lý hoặc hoàn tác thao tác bên dưới."
+    }
   },
   "removePages": {
     "tags": "Xóa trang,xóa trang",
@@ -1978,13 +2177,54 @@
       "title": "Vẽ chữ ký của bạn",
       "clear": "Xóa"
     },
+    "canvas": {
+      "heading": "Vẽ chữ ký của bạn",
+      "clickToOpen": "Nhấp để mở vùng vẽ",
+      "modalTitle": "Vẽ chữ ký của bạn",
+      "colorLabel": "Màu",
+      "penSizeLabel": "Cỡ bút",
+      "penSizePlaceholder": "Cỡ",
+      "clear": "Xóa vùng vẽ",
+      "colorPickerTitle": "Chọn màu nét vẽ"
+    },
     "text": {
       "name": "Tên người ký",
-      "placeholder": "Nhập họ tên đầy đủ"
+      "placeholder": "Nhập họ tên đầy đủ",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Cỡ chữ",
+      "fontSizePlaceholder": "Nhập hoặc chọn cỡ chữ (8-200)",
+      "colorLabel": "Màu chữ"
     },
     "clear": "Xóa",
     "add": "Thêm",
-    "saved": "Chữ ký đã lưu",
+    "saved": {
+      "heading": "Chữ ký đã lưu",
+      "description": "Tái sử dụng chữ ký đã lưu bất cứ lúc nào.",
+      "emptyTitle": "Chưa có chữ ký đã lưu",
+      "emptyDescription": "Vẽ, tải lên hoặc gõ chữ ký ở trên, rồi dùng \"Lưu vào thư viện\" để lưu tối đa {{max}} mục ưa thích sẵn dùng.",
+      "type": {
+        "canvas": "Vẽ",
+        "image": "Tải lên",
+        "text": "Chữ"
+      },
+      "limitTitle": "Đã đạt giới hạn",
+      "limitDescription": "Xóa một chữ ký đã lưu trước khi thêm mới (tối đa {{max}}).",
+      "carouselPosition": "{{current}} trên {{total}}",
+      "prev": "Trước",
+      "next": "Tiếp",
+      "delete": "Xóa",
+      "label": "Nhãn",
+      "defaultLabel": "Chữ ký",
+      "defaultCanvasLabel": "Chữ ký vẽ",
+      "defaultImageLabel": "Chữ ký đã tải lên",
+      "defaultTextLabel": "Chữ ký nhập",
+      "saveButton": "Lưu chữ ký",
+      "saveUnavailable": "Hãy tạo chữ ký trước để lưu.",
+      "noChanges": "Chữ ký hiện tại đã được lưu.",
+      "status": {
+        "saved": "Đã lưu"
+      }
+    },
     "save": "Lưu chữ ký",
     "applySignatures": "Áp dụng chữ ký",
     "personalSigs": "Chữ ký cá nhân",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Cấu hình chữ ký"
     },
+    "step": {
+      "createDesc": "Chọn cách bạn muốn tạo chữ ký",
+      "place": "Đặt & lưu",
+      "placeDesc": "Đặt vị trí chữ ký trên PDF"
+    },
     "type": {
       "title": "Loại chữ ký",
       "draw": "Vẽ",
-      "canvas": "Canvas",
+      "canvas": "Vẽ",
       "image": "Hình ảnh",
-      "text": "Văn bản"
+      "text": "Văn bản",
+      "saved": "Đã lưu"
     },
     "image": {
       "label": "Tải lên ảnh chữ ký",
@@ -2019,11 +2265,17 @@
       "title": "Cách thêm chữ ký",
       "canvas": "Sau khi vẽ chữ ký trong canvas, đóng hộp thoại rồi bấm vào bất kỳ đâu trên PDF để đặt nó.",
       "image": "Sau khi tải lên ảnh chữ ký ở trên, bấm vào bất kỳ đâu trên PDF để đặt nó.",
-      "text": "Sau khi nhập tên ở trên, bấm vào bất kỳ đâu trên PDF để đặt chữ ký của bạn."
+      "saved": "Chọn một chữ ký đã lưu ở trên, rồi nhấp vào bất kỳ đâu trên PDF để đặt.",
+      "text": "Sau khi nhập tên ở trên, bấm vào bất kỳ đâu trên PDF để đặt chữ ký của bạn.",
+      "paused": "Tạm dừng đặt",
+      "resumeHint": "Tiếp tục đặt để nhấp và thêm chữ ký.",
+      "noSignature": "Tạo chữ ký ở trên để bật công cụ đặt."
     },
     "mode": {
       "move": "Di chuyển chữ ký",
-      "place": "Đặt chữ ký"
+      "place": "Đặt chữ ký",
+      "pause": "Tạm dừng đặt",
+      "resume": "Tiếp tục đặt"
     },
     "updateAndPlace": "Cập nhật và đặt",
     "activate": "Kích hoạt đặt chữ ký",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Giới thiệu về Xóa chú thích",
       "description": "Công cụ này sẽ xóa tất cả chú thích (bình luận, tô sáng, ghi chú, v.v.) khỏi tài liệu PDF của bạn."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Giới thiệu về Xóa chú thích"
+      },
+      "description": {
+        "title": "Chức năng"
+      }
     },
     "error": {
       "failed": "Đã xảy ra lỗi khi xóa chú thích khỏi PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Cách tự động đổi tên hoạt động"
       },
+      "description": {
+        "title": "Chức năng"
+      },
       "howItWorks": {
         "title": "Đổi tên thông minh",
         "text": "Tự động tìm tiêu đề từ nội dung PDF của bạn và dùng làm tên tệp.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Tạo tên tệp sạch, hợp lệ từ tiêu đề phát hiện được",
         "bullet3": "Giữ tên gốc nếu không tìm thấy tiêu đề phù hợp"
       }
+    },
+    "settings": {
+      "title": "Giới thiệu"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "Xuất PDF",
     "downloadSelected": "Tải xuống các tệp đã chọn",
     "downloadAll": "Tải xuống tất cả",
+    "saveAll": "Lưu tất cả",
     "toggleTheme": "Chuyển đổi chủ đề",
+    "toggleBookmarks": "Bật/tắt dấu trang",
     "language": "Ngôn ngữ",
     "search": "Tìm kiếm PDF",
     "panMode": "Chế độ kéo",
@@ -4212,9 +4480,21 @@
         "title": "Premium & Enterprise",
         "description": "Cấu hình khóa giấy phép premium hoặc enterprise của bạn.",
         "license": "Cấu hình giấy phép",
+        "licenseKey": {
+          "toggle": "Có license key hoặc tệp chứng chỉ?",
+          "info": "Nếu bạn có license key hoặc tệp chứng chỉ từ mua trực tiếp, hãy nhập tại đây để kích hoạt tính năng Premium hoặc Enterprise."
+        },
         "key": {
           "label": "Khóa giấy phép",
-          "description": "Nhập khóa giấy phép premium hoặc enterprise của bạn"
+          "description": "Nhập khóa giấy phép premium hoặc enterprise của bạn",
+          "success": "Đã lưu license key",
+          "successMessage": "License key của bạn đã được kích hoạt thành công. Không cần khởi động lại.",
+          "overwriteWarning": {
+            "title": "⚠️ Cảnh báo: Phát hiện license hiện có",
+            "line1": "Ghi đè license key hiện tại không thể hoàn tác.",
+            "line2": "License trước đó sẽ bị mất vĩnh viễn trừ khi bạn đã sao lưu ở nơi khác.",
+            "line3": "Quan trọng: Giữ license key riêng tư và an toàn. Không bao giờ chia sẻ công khai."
+          }
         },
         "enabled": {
           "label": "Bật tính năng Premium",
@@ -4278,12 +4558,17 @@
     "or": "hoặc",
     "dropFileHere": "Thả tệp vào đây hoặc bấm để tải lên",
     "dropFilesHere": "Thả tệp vào đây hoặc bấm nút tải lên",
+    "dropFilesHereOpen": "Kéo thả tệp vào đây hoặc nhấp nút mở",
     "pdfFilesOnly": "Chỉ tệp PDF",
     "supportedFileTypes": "Loại tệp được hỗ trợ",
     "upload": "Tải lên",
     "uploadFile": "Tải tệp lên",
     "uploadFiles": "Tải nhiều tệp lên",
+    "open": "Mở",
+    "openFile": "Mở tệp",
+    "openFiles": "Mở nhiều tệp",
     "noFilesInStorage": "Không có tệp nào trong lưu trữ. Hãy tải lên một số tệp trước.",
+    "noFilesInStorageOpen": "Không có tệp trong bộ nhớ. Hãy mở một số tệp trước.",
     "selectFromStorage": "Chọn từ Lưu trữ",
     "backToTools": "Quay lại Công cụ",
     "addFiles": "Thêm tệp",
@@ -4329,6 +4614,8 @@
     "myFiles": "Tệp của tôi",
     "noRecentFiles": "Không tìm thấy tệp gần đây",
     "googleDriveNotAvailable": "Tích hợp Google Drive không khả dụng",
+    "downloadSelected": "Tải xuống mục đã chọn",
+    "saveSelected": "Lưu mục đã chọn",
     "openFiles": "Mở các tệp",
     "openFile": "Mở tệp",
     "details": "Chi tiết tệp",
@@ -4341,7 +4628,6 @@
     "selectAll": "Chọn tất cả",
     "deselectAll": "Bỏ chọn tất cả",
     "deleteSelected": "Xóa mục đã chọn",
-    "downloadSelected": "Tải xuống mục đã chọn",
     "selectedCount": "{{count}} đã chọn",
     "download": "Tải xuống",
     "delete": "Xóa",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Quy trình bảo mật",
       "secureWorkflowDesc": "Bảo vệ tài liệu PDF bằng cách loại bỏ nội dung có thể gây hại như JavaScript và tệp nhúng, sau đó thêm bảo vệ bằng mật khẩu để ngăn truy cập trái phép. Mật khẩu mặc định là 'password'.",
       "processImages": "Xử lý ảnh",
-      "processImagesDesc": "Chuyển nhiều tệp ảnh thành một tài liệu PDF, sau đó áp dụng công nghệ OCR để trích xuất văn bản có thể tìm kiếm từ ảnh."
+      "processImagesDesc": "Chuyển nhiều tệp ảnh thành một tài liệu PDF, sau đó áp dụng công nghệ OCR để trích xuất văn bản có thể tìm kiếm từ ảnh.",
+      "prePublishSanitization": "Làm sạch trước xuất bản",
+      "prePublishSanitizationDesc": "Quy trình làm sạch loại bỏ mọi metadata ẩn, JavaScript, tệp nhúng, chú thích và làm phẳng biểu mẫu để ngăn rò rỉ dữ liệu trước khi đăng PDF lên mạng."
     }
+  },
+  "colorPicker": {
+    "title": "Chọn màu"
   },
   "common": {
     "previous": "Trước",
@@ -4639,7 +4930,13 @@
     "used": "đã dùng",
     "available": "khả dụng",
     "cancel": "Hủy",
-    "preview": "Xem trước"
+    "preview": "Xem trước",
+    "close": "Đóng",
+    "done": "Xong",
+    "loading": "Đang tải...",
+    "back": "Quay lại",
+    "continue": "Tiếp tục",
+    "error": "Lỗi"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Thêm tệp...",
     "selectedFiles": "Các tệp đã chọn",
     "submit": "Thêm tệp đính kèm",
+    "tooltip": {
+      "header": {
+        "title": "Giới thiệu về Thêm tệp đính kèm"
+      },
+      "description": {
+        "title": "Chức năng"
+      }
+    },
     "results": {
       "title": "Kết quả đính kèm"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Vị trí tùy chỉnh",
   "details": "Chi tiết",
-  "downloadUnavailable": "Không thể tải xuống mục này",
   "invalidUndoData": "Không thể hoàn tác: dữ liệu thao tác không hợp lệ",
   "margin": {
     "large": "Lớn",
@@ -4801,6 +5105,10 @@
       "maybeLater": "Để sau",
       "dontShowAgain": "Không hiện lại"
     },
+    "welcomeSlide": {
+      "title": "Chào mừng đến với Stirling",
+      "body": "Stirling PDF nay sẵn sàng cho mọi quy mô đội nhóm. Bản cập nhật này có bố cục mới, khả năng quản trị mạnh mẽ và tính năng được yêu cầu nhiều nhất - <strong>Chỉnh sửa văn bản</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Hãy chọn công cụ <strong>Cắt xén</strong> để minh họa cách sử dụng một công cụ.",
     "toolInterface": "Đây là giao diện công cụ <strong>Cắt xén</strong>. Như bạn thấy, chưa có nhiều vì chúng ta chưa thêm tệp PDF nào để làm việc.",
@@ -4823,7 +5131,39 @@
     "next": "Tiếp",
     "finish": "Hoàn tất",
     "startTour": "Bắt đầu tham quan",
-    "startTourDescription": "Tham quan có hướng dẫn các tính năng chính của Stirling PDF"
+    "startTourDescription": "Tham quan có hướng dẫn các tính năng chính của Stirling PDF",
+    "buttons": {
+      "next": "Tiếp →",
+      "back": "Quay lại",
+      "skipForNow": "Bỏ qua tạm thời",
+      "download": "Tải xuống →",
+      "showMeAround": "Hướng dẫn nhanh",
+      "skipTheTour": "Bỏ qua hướng dẫn"
+    },
+    "serverLicense": {
+      "skip": "Bỏ qua tạm thời",
+      "seePlans": "Xem gói →",
+      "upgrade": "Nâng cấp ngay →",
+      "freeTitle": "Giấy phép Server",
+      "overLimitTitle": "Cần giấy phép Server",
+      "overLimitBody": "Giấy phép của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Bạn có <strong>{{overLimitUserCopy}}</strong> người dùng Stirling. Để tiếp tục không gián đoạn, hãy nâng cấp lên gói Stirling Server - <strong>số ghế không giới hạn</strong>, chỉnh sửa văn bản PDF và toàn quyền quản trị với $99/server/tháng.",
+      "freeBody": "Giấy phép <strong>Open-Core</strong> của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Để mở rộng không gián đoạn và truy cập sớm <strong>công cụ chỉnh sửa văn bản PDF</strong> mới, chúng tôi khuyến nghị gói Stirling Server - chỉnh sửa đầy đủ và <strong>số ghế không giới hạn</strong> với $99/server/tháng."
+    },
+    "desktopInstall": {
+      "title": "Tải xuống",
+      "titleWithOs": "Tải cho {{osLabel}}",
+      "body": "Stirling hoạt động tốt nhất như ứng dụng desktop. Bạn có thể dùng offline, truy cập tài liệu nhanh hơn và chỉnh sửa trực tiếp trên máy."
+    },
+    "planOverview": {
+      "adminTitle": "Tổng quan Admin",
+      "userTitle": "Tổng quan gói",
+      "adminBodyLoginEnabled": "Là admin, bạn có thể quản lý người dùng, cấu hình cài đặt và theo dõi tình trạng server. <strong>{{freeTierLimit}}</strong> người đầu tiên trên server của bạn được dùng Stirling miễn phí.",
+      "adminBodyLoginDisabled": "Khi bật chế độ đăng nhập, bạn có thể quản lý người dùng, cấu hình cài đặt và theo dõi tình trạng server. <strong>{{freeTierLimit}}</strong> người đầu tiên trên server của bạn được dùng Stirling miễn phí.",
+      "userBody": "Mời đồng đội, gán vai trò và quản lý tài liệu gọn gàng trong một không gian làm việc an toàn. Bật chế độ đăng nhập khi bạn sẵn sàng vượt qua chế độ dùng cá nhân."
+    },
+    "securityCheck": {
+      "message": "Ứng dụng vừa có nhiều thay đổi. Có thể cần sự chú ý của quản trị viên server. Vui lòng xác nhận vai trò của bạn để tiếp tục."
+    }
   },
   "adminOnboarding": {
     "welcome": "Chào mừng đến với <strong>Chuyến tham quan Quản trị</strong>! Hãy khám phá các tính năng enterprise mạnh mẽ và cài đặt dành cho quản trị viên hệ thống.",
@@ -4852,7 +5192,10 @@
       "role": "Vai trò",
       "team": "Nhóm",
       "status": "Trạng thái",
-      "actions": "Hành động",
+      "actions": {
+        "label": "Hành động",
+        "upgrade": "Nâng cấp"
+      },
       "noMembersFound": "Không tìm thấy thành viên",
       "active": "Đang hoạt động",
       "disabled": "Đã tắt",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "Còn {{count}} chỗ người dùng khả dụng",
         "noSlotsAvailable": "Không còn chỗ khả dụng",
         "currentUsage": "Đang dùng {{current}}/{{max}} giấy phép người dùng"
-      }
+      },
+      "loginRequired": "Hãy bật chế độ đăng nhập trước"
     },
     "teams": {
       "title": "Nhóm",
@@ -5057,6 +5401,17 @@
     "showComparison": "So sánh tất cả tính năng",
     "hideComparison": "Ẩn so sánh tính năng",
     "featureComparison": "So sánh tính năng",
+    "from": "Từ",
+    "perMonth": "/tháng",
+    "perSeat": "/ghế",
+    "withServer": "+ Gói Server",
+    "licensedSeats": "Đã cấp phép: {{count}} ghế",
+    "includedInCurrent": "Bao gồm trong gói của bạn",
+    "selectPlan": "Chọn gói",
+    "manage": "Quản lý",
+    "manageSubscription": {
+      "description": "Quản lý gói đăng ký, thanh toán và phương thức chi trả"
+    },
     "activePlan": {
       "title": "Gói đang hoạt động",
       "subtitle": "Chi tiết đăng ký hiện tại của bạn"
@@ -5074,13 +5429,16 @@
       "upTo": "Tối đa"
     },
     "period": {
-      "month": "tháng"
+      "month": "tháng",
+      "perUserPerMonth": "/người dùng/tháng"
     },
     "free": {
       "name": "Miễn phí",
       "highlight1": "Giới hạn số lần dùng công cụ mỗi tuần",
       "highlight2": "Truy cập tất cả công cụ",
-      "highlight3": "Hỗ trợ cộng đồng"
+      "highlight3": "Hỗ trợ cộng đồng",
+      "forever": "Miễn phí mãi mãi",
+      "included": "Bao gồm"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Giá tùy chỉnh",
       "highlight2": "Hỗ trợ chuyên trách",
-      "highlight3": "Tính năng mới nhất"
+      "highlight3": "Tính năng mới nhất",
+      "requiresServer": "Cần Server",
+      "requiresServerMessage": "Vui lòng nâng cấp lên gói Server trước khi nâng cấp lên Enterprise."
     },
     "feature": {
       "title": "Tính năng",
@@ -5102,6 +5462,12 @@
       "api": "Quyền truy cập API",
       "priority": "Hỗ trợ ưu tiên",
       "customPricing": "Giá tùy chỉnh"
+    },
+    "licenseWarning": {
+      "title": "Đã đạt giới hạn miễn phí tự lưu trữ",
+      "body": "Bạn có {{total}} người dùng nhưng gói miễn phí chỉ hỗ trợ {{limit}} mỗi server. Hãy nâng cấp để Stirling PDF hoạt động ổn định.",
+      "overLimit": "nhiều hơn {{limit}}",
+      "cta": "Xem gói"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Quản lý thanh toán",
     "portal": {
       "error": "Không thể mở cổng thanh toán"
-    }
+    },
+    "updateSeats": "Cập nhật số ghế",
+    "updateEnterpriseSeats": "Cập nhật số ghế Enterprise",
+    "currentSeats": "Số ghế hiện tại",
+    "minimumSeats": "Số ghế tối thiểu",
+    "basedOnUsers": "(người dùng hiện tại)",
+    "newSeatCount": "Số ghế mới",
+    "newSeatCountDescription": "Chọn số ghế cho giấy phép enterprise",
+    "whatHappensNext": "Tiếp theo là gì?",
+    "stripePortalRedirect": "Bạn sẽ được chuyển đến cổng thanh toán Stripe để xem và xác nhận thay đổi số ghế. Số tiền tính theo tỷ lệ sẽ được tính tự động.",
+    "preparingUpdate": "Đang chuẩn bị cập nhật số ghế...",
+    "seatCountTooLow": "Số ghế phải ít nhất {{minimum}} (bằng số người dùng hiện tại)",
+    "seatCountUnchanged": "Vui lòng chọn số ghế khác",
+    "seatsUpdated": "Đã cập nhật số ghế",
+    "seatsUpdatedMessage": "Số ghế Enterprise của bạn đã được cập nhật thành {{seats}}",
+    "updateProcessing": "Đang xử lý cập nhật",
+    "updateProcessingMessage": "Cập nhật số ghế của bạn đang được xử lý. Vui lòng làm mới sau ít phút.",
+    "notEnterprise": "Quản lý số ghế chỉ áp dụng cho giấy phép Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Nâng cấp lên gói Server",
+    "message": "Tận dụng tối đa Stirling PDF với người dùng không giới hạn và tính năng nâng cao",
+    "upgradeButton": "Nâng cấp ngay",
+    "dismiss": "Ẩn banner",
+    "attentionTitle": "Server này cần sự chú ý của admin",
+    "attentionBody": "Admin của bạn cần đăng nhập để xem thêm thông tin. Vui lòng liên hệ ngay.",
+    "attentionBodyAdmin": "Xem lại yêu cầu giấy phép để giữ server tuân thủ.",
+    "seeInfo": "Xem thông tin"
   },
   "payment": {
     "preparing": "Đang chuẩn bị thanh toán của bạn...",
@@ -5128,7 +5521,61 @@
     "success": "Thanh toán thành công!",
     "successMessage": "Gói đăng ký của bạn đã được kích hoạt thành công. Bạn sẽ sớm nhận được email xác nhận.",
     "autoClose": "Cửa sổ này sẽ tự động đóng...",
-    "error": "Lỗi thanh toán"
+    "error": "Lỗi thanh toán",
+    "upgradeSuccess": "Thanh toán thành công! Gói của bạn đã được nâng cấp. Giấy phép trên server đã được cập nhật. Bạn sẽ sớm nhận email xác nhận.",
+    "paymentSuccess": "Thanh toán thành công! Đang truy xuất license key của bạn...",
+    "licenseActivated": "Đã kích hoạt giấy phép! License key của bạn đã được lưu. Email xác nhận đã gửi đến địa chỉ đã đăng ký.",
+    "licenseDelayed": "Thanh toán thành công! Giấy phép của bạn đang được tạo. Bạn sẽ sớm nhận email chứa license key. Nếu không nhận trong 10 phút, vui lòng liên hệ hỗ trợ.",
+    "licensePollingError": "Thanh toán thành công nhưng chúng tôi không thể tự động lấy license key. Vui lòng kiểm tra email hoặc liên hệ hỗ trợ kèm xác nhận thanh toán.",
+    "licenseRetrievalError": "Thanh toán thành công nhưng lấy license thất bại. Bạn sẽ nhận license key qua email. Vui lòng liên hệ hỗ trợ nếu không nhận trong 10 phút.",
+    "syncError": "Thanh toán thành công nhưng đồng bộ giấy phép thất bại. Giấy phép sẽ sớm được cập nhật. Vui lòng liên hệ hỗ trợ nếu vẫn gặp sự cố.",
+    "licenseSaveError": "Không thể lưu license key. Vui lòng liên hệ hỗ trợ kèm license key để hoàn tất kích hoạt.",
+    "paymentCanceled": "Thanh toán đã hủy. Không bị trừ phí.",
+    "syncingLicense": "Đang đồng bộ giấy phép đã nâng cấp...",
+    "generatingLicense": "Đang tạo license key...",
+    "upgradeComplete": "Nâng cấp hoàn tất",
+    "upgradeCompleteMessage": "Gói đăng ký của bạn đã nâng cấp thành công. License key hiện có đã được cập nhật.",
+    "stripeNotConfigured": "Chưa cấu hình Stripe",
+    "stripeNotConfiguredMessage": "Tích hợp thanh toán Stripe chưa được cấu hình. Vui lòng liên hệ quản trị viên.",
+    "monthly": "Theo tháng",
+    "yearly": "Theo năm",
+    "billingPeriod": "Chu kỳ thanh toán",
+    "enterpriseNote": "Có thể điều chỉnh số ghế khi thanh toán (1-1000).",
+    "installationId": "Installation ID",
+    "licenseKey": "License key của bạn",
+    "licenseInstructions": "Khóa đã được thêm vào cài đặt của bạn. Bạn cũng sẽ nhận một bản qua email.",
+    "canCloseWindow": "Bạn có thể đóng cửa sổ này.",
+    "licenseKeyProcessing": "Đang xử lý license key",
+    "licenseDelayedMessage": "License key của bạn đang được tạo. Vui lòng kiểm tra email sớm hoặc liên hệ hỗ trợ.",
+    "perYear": "/năm",
+    "perMonth": "/tháng",
+    "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+    "emailStage": {
+      "title": "Nhập email của bạn",
+      "description": "Chúng tôi dùng email này để gửi license key và biên nhận.",
+      "emailLabel": "Địa chỉ email",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Tiếp tục",
+      "modalTitle": "Bắt đầu - {{planName}}"
+    },
+    "planStage": {
+      "title": "Chọn chu kỳ thanh toán",
+      "savingsNote": "Tiết kiệm {{percent}}% khi thanh toán theo năm",
+      "basePrice": "Giá cơ bản",
+      "seatPrice": "Theo ghế",
+      "totalForSeats": "Tổng ({{count}} ghế)",
+      "selectMonthly": "Chọn theo tháng",
+      "selectYearly": "Chọn theo năm",
+      "savePercent": "Tiết kiệm {{percent}}%",
+      "savingsAmount": "Bạn tiết kiệm {{amount}}",
+      "modalTitle": "Chọn chu kỳ thanh toán - {{planName}}",
+      "billedYearly": "Tính phí hàng năm {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Quay lại chọn gói",
+      "selectedPlan": "Gói đã chọn",
+      "modalTitle": "Hoàn tất thanh toán - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Đăng nhập lần đầu",
@@ -5287,5 +5734,281 @@
     "offline": "Backend ngoại tuyến",
     "starting": "Backend đang khởi động...",
     "wait": "Vui lòng chờ backend khởi động xong rồi thử lại."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Mở khóa PDF để tiếp tục",
+    "title": "Gỡ mật khẩu để tiếp tục",
+    "description": "PDF này được bảo vệ bằng mật khẩu. Nhập mật khẩu để tiếp tục làm việc với tệp.",
+    "password": {
+      "label": "Mật khẩu PDF",
+      "placeholder": "Nhập mật khẩu PDF"
+    },
+    "skip": "Bỏ qua tạm thời",
+    "unlock": "Mở khóa & tiếp tục",
+    "incorrectPassword": "Mật khẩu không đúng",
+    "missingFile": "Tệp đã chọn không còn khả dụng.",
+    "emptyResponse": "Gỡ mật khẩu không tạo ra tệp.",
+    "required": "Nhập mật khẩu để tiếp tục.",
+    "successTitle": "Đã gỡ mật khẩu",
+    "successBodyWithName": "Đã gỡ mật khẩu khỏi {{fileName}}",
+    "successBody": "Gỡ mật khẩu thành công."
+  },
+  "setup": {
+    "welcome": "Chào mừng đến với Stirling PDF",
+    "description": "Bắt đầu bằng cách chọn cách bạn muốn sử dụng Stirling PDF",
+    "step1": {
+      "label": "Chọn chế độ",
+      "description": "Offline hoặc Server"
+    },
+    "step2": {
+      "label": "Chọn server",
+      "description": "Server tự lưu trữ"
+    },
+    "step3": {
+      "label": "Đăng nhập",
+      "description": "Nhập thông tin đăng nhập"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Đăng nhập bằng tài khoản Stirling"
+      },
+      "selfhosted": {
+        "title": "Server tự lưu trữ",
+        "description": "Kết nối đến server Stirling PDF của bạn"
+      }
+    },
+    "saas": {
+      "title": "Đăng nhập vào Stirling",
+      "subtitle": "Đăng nhập bằng tài khoản Stirling"
+    },
+    "selfhosted": {
+      "title": "Đăng nhập vào server",
+      "subtitle": "Nhập thông tin đăng nhập server"
+    },
+    "server": {
+      "title": "Kết nối đến server",
+      "subtitle": "Nhập URL server tự lưu trữ",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Server tự lưu trữ"
+      },
+      "url": {
+        "label": "URL server",
+        "description": "Nhập URL đầy đủ của server Stirling PDF tự lưu trữ"
+      },
+      "error": {
+        "emptyUrl": "Vui lòng nhập URL server",
+        "unreachable": "Không thể kết nối đến server",
+        "testFailed": "Kiểm tra kết nối thất bại"
+      },
+      "testing": "Đang kiểm tra kết nối..."
+    },
+    "login": {
+      "title": "Đăng nhập",
+      "subtitle": "Nhập thông tin đăng nhập để tiếp tục",
+      "connectingTo": "Đang kết nối đến:",
+      "username": {
+        "label": "Tên người dùng",
+        "placeholder": "Nhập tên người dùng"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Nhập email"
+      },
+      "password": {
+        "label": "Mật khẩu",
+        "placeholder": "Nhập mật khẩu"
+      },
+      "error": {
+        "emptyUsername": "Vui lòng nhập tên người dùng",
+        "emptyEmail": "Vui lòng nhập email",
+        "emptyPassword": "Vui lòng nhập mật khẩu",
+        "oauthFailed": "Đăng nhập OAuth thất bại. Vui lòng thử lại."
+      },
+      "submit": "Đăng nhập",
+      "signInWith": "Đăng nhập với",
+      "oauthPending": "Đang mở trình duyệt để xác thực...",
+      "orContinueWith": "Hoặc tiếp tục bằng email"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Xác thực thành công",
+      "message": "Bạn có thể đóng cửa sổ này và quay lại Stirling PDF."
+    },
+    "error": {
+      "title": "Xác thực thất bại",
+      "message": "Xác thực không thành công. Bạn có thể đóng cửa sổ này và thử lại."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Trình chỉnh sửa PDF JSON",
+    "viewLabel": "Trình chỉnh sửa PDF",
+    "converting": "Đang chuyển PDF sang định dạng có thể chỉnh sửa...",
+    "conversionFailed": "Không thể chuyển đổi PDF. Vui lòng thử lại.",
+    "currentFile": "Tệp hiện tại: {{name}}",
+    "pageSummary": "Trang {{number}}/{{total}}",
+    "pagePreviewAlt": "Xem trước trang",
+    "imageLabel": "Ảnh đã đặt",
+    "noTextOnPage": "Không phát hiện văn bản có thể chỉnh sửa trên trang này.",
+    "pageType": {
+      "paragraph": "Trang đoạn văn",
+      "sparse": "Văn bản thưa"
+    },
+    "groupingMode": {
+      "auto": "Tự động",
+      "paragraph": "Đoạn văn",
+      "singleLine": "Một dòng"
+    },
+    "badges": {
+      "unsaved": "Đã chỉnh sửa",
+      "modified": "Đã chỉnh sửa",
+      "earlyAccess": "Truy cập sớm"
+    },
+    "actions": {
+      "reset": "Đặt lại thay đổi",
+      "downloadJson": "Tải JSON",
+      "generatePdf": "Tạo PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Tự căn chỉnh văn bản cho vừa hộp",
+        "description": "Tự động co giãn văn bản theo chiều ngang để vừa với hộp giới hạn gốc khi cách hiển thị font khác so với PDF."
+      },
+      "groupingMode": {
+        "title": "Chế độ nhóm văn bản",
+        "autoDescription": "Tự động nhận diện loại trang và nhóm văn bản phù hợp.",
+        "paragraphDescription": "Nhóm các dòng thẳng hàng thành hộp văn bản đoạn nhiều dòng.",
+        "singleLineDescription": "Giữ mỗi dòng văn bản PDF thành một hộp riêng."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Mẹo: Giữ Ctrl (Cmd) hoặc Shift để chọn nhiều hộp văn bản. Một thanh công cụ nổi sẽ xuất hiện phía trên vùng chọn để bạn gộp, tách hoặc điều chỉnh độ rộng."
+      },
+      "forceSingleElement": {
+        "title": "Khóa văn bản đã chỉnh sửa thành một phần tử PDF duy nhất",
+        "description": "Khi bật, trình chỉnh sửa xuất mỗi hộp văn bản đã chỉnh sửa thành một phần tử văn bản PDF để tránh chồng ký tự hoặc trộn font."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Gộp các hộp đã chọn",
+      "merge": "Gộp vùng chọn",
+      "ungroupTooltip": "Tách đoạn thành các dòng",
+      "ungroup": "Bỏ nhóm vùng chọn",
+      "widthMenu": "Tùy chọn độ rộng",
+      "expandWidth": "Mở rộng tới mép trang",
+      "resetWidth": "Đặt lại độ rộng",
+      "resizeHandle": "Điều chỉnh độ rộng văn bản"
+    },
+    "disclaimer": {
+      "heading": "Giới hạn bản xem trước",
+      "textFocus": "Không gian làm việc này tập trung vào chỉnh sửa văn bản và đặt lại vị trí hình ảnh nhúng. Đồ họa trang phức tạp, widget biểu mẫu và đồ họa nhiều lớp được giữ nguyên để xuất nhưng không thể chỉnh sửa đầy đủ tại đây.",
+      "previewVariance": "Một số hình ảnh (như viền bảng, hình dạng hoặc hiển thị chú thích) có thể không hiển thị chính xác trong bản xem trước. PDF xuất ra giữ các lệnh vẽ gốc khi có thể.",
+      "alpha": "Trình xem alpha này vẫn đang phát triển—một số font, màu sắc, hiệu ứng trong suốt và chi tiết bố cục có thể thay đổi nhẹ. Vui lòng kiểm tra kỹ PDF đã tạo trước khi chia sẻ."
+    },
+    "empty": {
+      "title": "Chưa tải tài liệu",
+      "subtitle": "Tải tệp PDF hoặc JSON để bắt đầu chỉnh sửa nội dung văn bản."
+    },
+    "welcomeBanner": {
+      "title": "Chào mừng đến với PDF Text Editor (Truy cập sớm)",
+      "experimental": "Đây là tính năng thử nghiệm đang được phát triển tích cực. Có thể sẽ không ổn định và phát sinh lỗi khi sử dụng.",
+      "howItWorks": "Công cụ này chuyển PDF của bạn sang định dạng có thể chỉnh sửa, nơi bạn có thể sửa nội dung văn bản và đặt lại vị trí hình ảnh. Thay đổi sẽ được lưu thành một PDF mới.",
+      "bestFor": "Tốt nhất cho:",
+      "bestFor1": "PDF đơn giản chủ yếu gồm văn bản và hình ảnh",
+      "bestFor2": "Tài liệu có định dạng đoạn văn tiêu chuẩn",
+      "bestFor3": "Thư, bài luận, báo cáo và tài liệu cơ bản",
+      "notIdealFor": "Không phù hợp cho:",
+      "notIdealFor1": "PDF có định dạng đặc biệt như gạch đầu dòng, bảng hoặc bố cục nhiều cột",
+      "notIdealFor2": "Tạp chí, brochure hoặc tài liệu thiết kế phức tạp",
+      "notIdealFor3": "Sổ tay hướng dẫn có bố cục phức tạp",
+      "limitations": "Giới hạn hiện tại:",
+      "limitation1": "Hiển thị font có thể hơi khác so với PDF gốc",
+      "limitation2": "Đồ họa phức tạp, trường biểu mẫu và chú thích được giữ lại nhưng không thể chỉnh sửa",
+      "limitation3": "Tệp lớn có thể mất thời gian để chuyển đổi và xử lý",
+      "knownIssues": "Vấn đề đã biết (đang sửa):",
+      "issue1": "Hiện chưa giữ màu văn bản (sẽ sớm bổ sung)",
+      "issue2": "Chế độ Đoạn có nhiều vấn đề căn chỉnh và giãn cách hơn - khuyến nghị dùng chế độ Dòng đơn",
+      "issue3": "Bản xem trước khác với PDF xuất ra - PDF xuất ra gần với bản gốc hơn",
+      "issue4": "Căn chỉnh văn bản xoay có thể cần chỉnh tay",
+      "issue5": "Hiệu ứng trong suốt và lớp có thể khác bản gốc",
+      "feedback": "Đây là tính năng truy cập sớm. Vui lòng báo lỗi bạn gặp để giúp chúng tôi cải thiện!",
+      "gotIt": "Đã hiểu",
+      "dontShowAgain": "Đừng hiển thị lại"
+    },
+    "modeChange": {
+      "title": "Xác nhận đổi chế độ",
+      "warning": "Đổi chế độ nhóm văn bản sẽ đặt lại mọi thay đổi chưa lưu. Bạn có chắc muốn tiếp tục?",
+      "cancel": "Hủy",
+      "confirm": "Đặt lại và đổi chế độ"
+    },
+    "fontAnalysis": {
+      "details": "Chi tiết font",
+      "embedded": "Nhúng",
+      "type": "Loại",
+      "webFormat": "Định dạng Web",
+      "warnings": "Cảnh báo",
+      "suggestions": "Ghi chú",
+      "currentPageFonts": "Font trên trang này",
+      "allFonts": "Tất cả font",
+      "fallback": "dự phòng",
+      "missing": "thiếu",
+      "perfectMessage": "Tất cả font có thể tái tạo hoàn hảo.",
+      "warningMessage": "Một số font có thể không hiển thị đúng.",
+      "infoMessage": "Có thông tin về tái tạo font.",
+      "perfect": "hoàn hảo",
+      "subset": "nhúng một phần"
+    },
+    "errors": {
+      "invalidJson": "Không thể đọc tệp JSON. Hãy đảm bảo tệp được tạo bởi công cụ PDF to JSON.",
+      "pdfConversion": "Không thể chuyển JSON đã chỉnh sửa lại thành PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Phiên đã hết hạn",
+    "pleaseLoginAgain": "Vui lòng đăng nhập lại.",
+    "accessDenied": "Từ chối truy cập",
+    "insufficientPermissions": "Bạn không có quyền thực hiện thao tác này."
+  },
+  "addText": {
+    "title": "Thêm văn bản",
+    "header": "Thêm văn bản vào PDF",
+    "text": {
+      "name": "Nội dung văn bản",
+      "placeholder": "Nhập văn bản bạn muốn thêm",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Cỡ chữ",
+      "fontSizePlaceholder": "Nhập hoặc chọn cỡ chữ (8-200)",
+      "colorLabel": "Màu văn bản"
+    },
+    "steps": {
+      "configure": "Thiết lập văn bản"
+    },
+    "step": {
+      "createDesc": "Nhập văn bản bạn muốn thêm",
+      "place": "Đặt văn bản",
+      "placeDesc": "Nhấp vào PDF để thêm văn bản của bạn"
+    },
+    "instructions": {
+      "title": "Cách thêm văn bản",
+      "text": "Sau khi nhập văn bản ở trên, hãy nhấp vào bất kỳ đâu trên PDF để đặt nó.",
+      "paused": "Tạm dừng đặt",
+      "resumeHint": "Tiếp tục đặt để nhấp và thêm văn bản.",
+      "noSignature": "Nhập văn bản ở trên để có thể đặt."
+    },
+    "mode": {
+      "move": "Di chuyển văn bản",
+      "place": "Đặt văn bản",
+      "pause": "Tạm dừng đặt",
+      "resume": "Tiếp tục đặt"
+    },
+    "results": {
+      "title": "Kết quả thêm văn bản"
+    },
+    "error": {
+      "failed": "Đã xảy ra lỗi khi thêm văn bản vào PDF."
+    },
+    "tags": "văn bản,chú thích,nhãn",
+    "applySignatures": "Áp dụng văn bản"
   }
 }

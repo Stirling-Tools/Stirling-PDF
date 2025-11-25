@@ -17,6 +17,8 @@
       "comingSoon": "قريبًا:",
       "favorite": "إضافة إلى المفضلة",
       "favorites": "المفضلة",
+      "unavailable": "معطَّل من قِبل مسؤول الخادم:",
+      "unavailableDependency": "غير متاح - الأداة المطلوبة مفقودة على الخادم:",
       "heading": "كل الأدوات (عرض ملء الشاشة)",
       "noResults": "جرّب ضبط البحث أو تبديل الوصف للعثور على ما تحتاجه.",
       "recommended": "موصى به",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "التبديل إلى وضع ملء الشاشة",
       "sidebar": "التبديل إلى وضع الشريط الجانبي"
-    }
+    },
+    "alpha": "ألفا",
+    "premiumFeature": "ميزة Premium:",
+    "comingSoon": "قريباً:"
   },
   "unsavedChanges": "لديك تغييرات غير محفوظة على ملف PDF. ماذا تريد أن تفعل؟",
   "areYouSure": "هل أنت متأكد أنك تريد المغادرة؟",
@@ -40,6 +45,30 @@
     "message": "هذا الملف ZIP يحتوي على {{count}} ملفات. هل تريد الاستخراج على أي حال؟",
     "cancel": "إلغاء",
     "confirm": "استخراج"
+  },
+  "defaultApp": {
+    "title": "تعيين كتطبيق PDF الافتراضي",
+    "message": "هل ترغب في تعيين Stirling PDF كمحرر PDF الافتراضي؟",
+    "description": "يمكنك تغيير ذلك لاحقاً من إعدادات النظام.",
+    "notNow": "ليس الآن",
+    "setDefault": "تعيين كافتراضي",
+    "dismiss": "تجاهل",
+    "prompt": {
+      "title": "تعيين كمحرر PDF افتراضي",
+      "message": "اجعل Stirling PDF التطبيق الافتراضي لفتح ملفات PDF."
+    },
+    "success": {
+      "title": "تم تعيين التطبيق الافتراضي",
+      "message": "أصبح Stirling PDF محرر PDF الافتراضي لديك"
+    },
+    "settingsOpened": {
+      "title": "تم فتح الإعدادات",
+      "message": "يرجى اختيار Stirling PDF في إعدادات النظام"
+    },
+    "error": {
+      "title": "خطأ",
+      "message": "فشل تعيين معالج PDF الافتراضي"
+    }
   },
   "language": {
     "direction": "rtl"
@@ -101,6 +130,8 @@
   "save": "حفظ",
   "saveToBrowser": "حفظ في المتصفح",
   "download": "تنزيل",
+  "downloadUnavailable": "التنزيل غير متاح لهذا العنصر",
+  "saveUnavailable": "الحفظ غير متاح لهذا العنصر",
   "pin": "تثبيت الملف (إبقاؤه نشطًا بعد تشغيل الأداة)",
   "unpin": "إلغاء تثبيت الملف (استبداله بعد تشغيل الأداة)",
   "undoOperationTooltip": "انقر للتراجع عن آخر عملية واستعادة الملفات الأصلية",
@@ -168,6 +199,7 @@
   },
   "edit": "تحرير",
   "delete": "حذف",
+  "never": "أبداً",
   "username": "اسم المستخدم",
   "password": "كلمة المرور",
   "welcome": "مرحبا",
@@ -262,7 +294,8 @@
     "learnMore": "اعرف المزيد",
     "enable": "تفعيل الإحصائيات",
     "disable": "تعطيل الإحصائيات",
-    "settings": "يمكنك تغيير إعدادات الإحصائيات في ملف config/settings.yml"
+    "settings": "يمكنك تغيير إعدادات الإحصائيات في ملف config/settings.yml",
+    "privacyAssurance": "لا نقوم بتتبع أي معلومات شخصية أو محتوى ملفاتك."
   },
   "navbar": {
     "favorite": "المفضلة",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "الإعدادات",
-    "update": "التحديث متاح",
-    "updateAvailable": "{0} هو الإصدار المثبت حاليًا. إصدار جديد ({1}) متاح.",
-    "appVersion": "إصدار التطبيق:",
-    "downloadOption": {
-      "title": "تحديد خيار التنزيل (للتنزيلات ذات الملف الواحد غير المضغوط):",
-      "1": "فتح في نفس النافذة",
-      "2": "فتح في نافذة جديدة",
-      "3": "تنزيل الملف"
-    },
-    "zipThreshold": "ملفات مضغوطة عند تجاوز عدد الملفات التي تم تنزيلها",
-    "signOut": "تسجيل الخروج",
-    "accountSettings": "اعدادات الحساب",
-    "bored": {
-      "help": "تمكين لعبة البيضة المخفية"
-    },
-    "cacheInputs": {
-      "name": "حفظ إدخالات النموذج",
-      "help": "تمكين لتخزين الإدخالات المستخدمة سابقًا للتشغيلات المستقبلية"
+    "connection": {
+      "title": "وضع الاتصال",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "مستضاف ذاتياً"
+      },
+      "server": "الخادم",
+      "user": "تم تسجيل الدخول باسم",
+      "logout": "تسجيل الخروج"
     },
     "general": {
       "title": "عام",
       "description": "تهيئة تفضيلات التطبيق العامة.",
-      "account": "الحساب",
-      "accountDescription": "إدارة إعدادات حسابك",
       "user": "المستخدم",
-      "signedInAs": "مسجل الدخول كـ",
       "logout": "تسجيل الخروج",
       "enableFeatures": {
+        "dismiss": "تجاهل",
         "title": "لمدراء النظام",
         "intro": "فعّل مصادقة المستخدمين وإدارة الفرق وميزات مساحة العمل لمؤسستك.",
         "action": "تكوين",
         "and": "و",
         "benefit": "يُفعّل أدوار المستخدمين، والتعاون عبر الفرق، وضوابط المشرف، وميزات المؤسسات.",
-        "learnMore": "تعرّف أكثر في التوثيق",
-        "dismiss": "تجاهل"
+        "learnMore": "تعرّف أكثر في التوثيق"
       },
-      "autoUnzip": "فك ضغط استجابات API تلقائيًا",
-      "autoUnzipDescription": "استخراج الملفات تلقائيًا من استجابات ZIP",
-      "autoUnzipTooltip": "فك ضغط ملفات ZIP التي تُعاد من عمليات API تلقائيًا. عطّل للحفاظ على ملفات ZIP كما هي. هذا لا يؤثر على سير عمل الأتمتة.",
-      "autoUnzipFileLimit": "حد فك الضغط التلقائي للملفات",
-      "autoUnzipFileLimitDescription": "الحد الأقصى لعدد الملفات المطلوب استخراجها من ZIP",
-      "autoUnzipFileLimitTooltip": "لا يتم فك الضغط إلا إذا احتوى ملف ZIP على هذا العدد من الملفات أو أقل. ارفع القيمة لاستخراج ملفات ZIP الأكبر.",
       "defaultToolPickerMode": "وضع منتقي الأدوات الافتراضي",
       "defaultToolPickerModeDescription": "اختر ما إذا كان منتقي الأدوات يفتح افتراضيًا بملء الشاشة أو في الشريط الجانبي",
       "mode": {
-        "fullscreen": "ملء الشاشة",
-        "sidebar": "الشريط الجانبي"
-      }
+        "sidebar": "الشريط الجانبي",
+        "fullscreen": "ملء الشاشة"
+      },
+      "autoUnzipTooltip": "فك ضغط ملفات ZIP التي تُعاد من عمليات API تلقائيًا. عطّل للحفاظ على ملفات ZIP كما هي. هذا لا يؤثر على سير عمل الأتمتة.",
+      "autoUnzip": "فك ضغط استجابات API تلقائيًا",
+      "autoUnzipDescription": "استخراج الملفات تلقائيًا من استجابات ZIP",
+      "autoUnzipFileLimitTooltip": "لا يتم فك الضغط إلا إذا احتوى ملف ZIP على هذا العدد من الملفات أو أقل. ارفع القيمة لاستخراج ملفات ZIP الأكبر.",
+      "autoUnzipFileLimit": "حد فك الضغط التلقائي للملفات",
+      "autoUnzipFileLimitDescription": "الحد الأقصى لعدد الملفات المطلوب استخراجها من ZIP",
+      "defaultPdfEditor": "محرر PDF الافتراضي",
+      "defaultPdfEditorActive": "Stirling PDF هو محرر PDF الافتراضي لديك",
+      "defaultPdfEditorInactive": "تطبيق آخر معيّن كافتراضي",
+      "defaultPdfEditorChecking": "جارٍ الفحص...",
+      "defaultPdfEditorSet": "افتراضي بالفعل",
+      "setAsDefault": "تعيين كافتراضي",
+      "updates": {
+        "title": "تحديثات البرنامج",
+        "description": "التحقق من التحديثات وعرض معلومات الإصدار",
+        "currentVersion": "الإصدار الحالي",
+        "latestVersion": "أحدث إصدار",
+        "checkForUpdates": "التحقق من التحديثات",
+        "viewDetails": "عرض التفاصيل"
+      },
+      "hideUnavailableTools": "إخفاء الأدوات غير المتاحة",
+      "hideUnavailableToolsDescription": "إزالة الأدوات التي عطّلها خادمك بدلاً من عرضها باللون الرمادي.",
+      "hideUnavailableConversions": "إخفاء التحويلات غير المتاحة",
+      "hideUnavailableConversionsDescription": "إزالة خيارات التحويل المعطّلة في أداة التحويل بدلاً من عرضها باللون الرمادي."
     },
     "hotkeys": {
-      "title": "اختصارات لوحة المفاتيح",
-      "description": "حرّك المؤشر فوق أداة لرؤية اختصارها أو خصّصه أدناه. انقر \"تغيير الاختصار\" ثم اضغط مجموعة مفاتيح جديدة. اضغط Esc للإلغاء.",
-      "errorModifier": {
-        "mac": "ضمّن ⌘ (Command) أو ⌥ (Option) أو مُعدِّلًا آخر في الاختصار.",
-        "windows": "ضمّن Ctrl أو Alt أو مُعدِّلًا آخر في الاختصار."
-      },
       "errorConflict": "الاختصار مستخدم بالفعل بواسطة {{tool}}.",
+      "searchPlaceholder": "ابحث في الأدوات...",
       "none": "غير معيّن",
       "customBadge": "مخصص",
       "defaultLabel": "الافتراضي: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "تغيير الاختصار",
       "reset": "إعادة ضبط",
       "shortcut": "اختصار",
-      "noShortcut": "لا يوجد اختصار معيّن",
-      "searchPlaceholder": "ابحث في الأدوات..."
+      "noShortcut": "لا يوجد اختصار معيّن"
     }
+  },
+  "update": {
+    "modalTitle": "يتوفر تحديث",
+    "current": "الإصدار الحالي",
+    "latest": "أحدث إصدار",
+    "latestStable": "أحدث مستقر",
+    "priorityLabel": "الأولوية",
+    "recommendedAction": "الإجراء الموصى به",
+    "breakingChangesDetected": "تم اكتشاف تغييرات كاسرة للتوافق",
+    "breakingChangesMessage": "تحتوي بعض الإصدارات على تغييرات كاسرة للتوافق. يرجى مراجعة أدلة الترحيل أدناه قبل التحديث.",
+    "migrationGuides": "أدلة الترحيل",
+    "viewGuide": "عرض الدليل",
+    "loadingDetailedInfo": "جارٍ تحميل معلومات تفصيلية...",
+    "close": "إغلاق",
+    "viewAllReleases": "عرض جميع الإصدارات",
+    "downloadLatest": "تنزيل الأحدث",
+    "availableUpdates": "التحديثات المتاحة",
+    "unableToLoadDetails": "تعذّر تحميل المعلومات التفصيلية.",
+    "version": "الإصدار",
+    "urgentUpdateAvailable": "تحديث عاجل",
+    "updateAvailable": "يتوفر تحديث",
+    "releaseNotes": "ملاحظات الإصدار",
+    "priority": {
+      "urgent": "عاجل",
+      "normal": "عادي",
+      "minor": "ثانوي",
+      "low": "منخفض"
+    },
+    "breakingChanges": "تغييرات كاسرة للتوافق",
+    "breakingChangesDefault": "يحتوي هذا الإصدار على تغييرات كاسرة للتوافق.",
+    "migrationGuide": "دليل الترحيل"
   },
   "changeCreds": {
     "title": "تغيير بيانات الاعتماد",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "تراكب ملف PDF فوق آخر",
       "title": "تراكب ملفات PDF"
+    },
+    "pdfTextEditor": {
+      "title": "محرر نصوص PDF",
+      "desc": "مراجعة وتحرير صادرات Stirling PDF بصيغة JSON مع تحرير نصوص مجمّعة وإعادة إنشاء PDF"
+    },
+    "addText": {
+      "tags": "نص,تعليق,تسمية",
+      "title": "إضافة نص",
+      "desc": "أضف نصاً مخصصاً في أي مكان داخل PDF"
     }
   },
   "landing": {
     "addFiles": "إضافة ملفات",
-    "uploadFromComputer": "الرفع من الكمبيوتر"
+    "uploadFromComputer": "الرفع من الكمبيوتر",
+    "openFromComputer": "فتح من الكمبيوتر"
   },
   "viewPdf": {
     "tags": "عرض,قراءة,تعليق,نص,صورة",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "حدث خطأ أثناء دمج ملفات PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على إعدادات الدمج"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "صورة,jpg,صورة,صورة فوتوغرافية",
     "title": "إضافة صورة",
     "header": "إضافة صورة إلى PDF",
-    "everyPage": "كل صفحة؟",
-    "upload": "إضافة صورة",
-    "submit": "إضافة صورة"
+    "image": {
+      "name": "صورة",
+      "placeholder": "ارفع صورة",
+      "label": "ملف صورة"
+    },
+    "steps": {
+      "configure": "تهيئة الصورة"
+    },
+    "step": {
+      "createDesc": "ارفع الصورة التي تريد إضافتها",
+      "place": "وضع الصورة",
+      "placeDesc": "انقر على ملف PDF لإضافة صورتك"
+    },
+    "instructions": {
+      "title": "كيفية إضافة الصور",
+      "text": "بعد رفع صورتك أعلاه، انقر في أي مكان على ملف PDF لوضعها.",
+      "paused": "تم إيقاف الوضع مؤقتاً",
+      "resumeHint": "استأنف الوضع للنقر وإضافة صورتك.",
+      "noSignature": "ارفع صورة أعلاه لتمكين الوضع."
+    },
+    "mode": {
+      "move": "تحريك الصورة",
+      "place": "وضع الصورة",
+      "pause": "إيقاف الوضع مؤقتاً",
+      "resume": "استئناف الوضع"
+    },
+    "results": {
+      "title": "نتائج إضافة الصورة"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إضافة الصورة إلى ملف PDF."
+    },
+    "saved": {
+      "defaultLabel": "صورة",
+      "defaultImageLabel": "صورة مرفوعة"
+    },
+    "applySignatures": "تطبيق الصور"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "منع طباعة التنسيقات المختلفة"
     },
     "submit": "تغيير"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "الإشارات المرجعية والمخطط",
+      "replaceExisting": "استبدال الإشارات المرجعية الحالية (أزل التحديد للإلحاق)",
+      "replaceExistingHint": "عند التعطيل، يتم إلحاق المخطط الجديد بعد الإشارات المرجعية الحالية."
+    },
+    "actions": {
+      "source": "تحميل الإشارات المرجعية",
+      "selectedFile": "تم التحميل من {{file}}",
+      "noFile": "اختر ملف PDF لاستخراج الإشارات المرجعية الحالية.",
+      "loadFromPdf": "التحميل من ملف PDF المحدد",
+      "importJson": "استيراد JSON",
+      "importClipboard": "لصق JSON من الحافظة",
+      "export": "تصدير الإشارات المرجعية",
+      "exportJson": "تنزيل JSON",
+      "exportClipboard": "نسخ JSON إلى الحافظة",
+      "clipboardUnavailable": "وصول الحافظة غير متاح في هذا المتصفح."
+    },
+    "info": {
+      "line1": "تحتاج كل إشارة مرجعية إلى عنوان وصفي والصفحة التي يجب فتحها.",
+      "line2": "استخدم الإشارات المرجعية الفرعية لبناء تسلسل هرمي للفصول والأقسام والفروع الفرعية.",
+      "line3": "استورد الإشارات المرجعية من PDF المحدد أو من ملف JSON لتوفير الوقت."
+    },
+    "workbench": {
+      "empty": {
+        "title": "افتح الأداة لبدء التحرير",
+        "description": "اختر أداة تحرير جدول المحتويات لتحميل مساحة العمل."
+      },
+      "tabTitle": "مساحة عمل المخطط",
+      "subtitle": "استورد الإشارات المرجعية وابنِ التسلسلات الهرمية وطبّق المخطط دون لوحات جانبية مزدحمة.",
+      "noFile": "لا يوجد PDF محدد",
+      "fileLabel": "ستُطبّق التغييرات على ملف PDF المحدد حالياً.",
+      "filePrompt": "اختر ملف PDF من مكتبتك أو ارفع ملفاً جديداً للبدء.",
+      "changeFile": "تغيير ملف PDF",
+      "selectFile": "اختيار PDF"
+    },
+    "editor": {
+      "heading": "محرر الإشارات المرجعية",
+      "description": "أضف الإشارات المرجعية وداخلها وأعد ترتيبها لصياغة مخطط PDF الخاص بك.",
+      "addTopLevel": "إضافة إشارة مرجعية علوية",
+      "empty": {
+        "title": "لا توجد إشارات مرجعية بعد",
+        "description": "استورد الإشارات المرجعية الحالية أو ابدأ بإضافة أول إدخال.",
+        "action": "إضافة أول إشارة"
+      },
+      "defaultTitle": "إشارة مرجعية جديدة",
+      "defaultChildTitle": "إشارة مرجعية فرعية",
+      "defaultSiblingTitle": "إشارة مرجعية جديدة",
+      "untitled": "إشارة مرجعية بدون عنوان",
+      "childBadge": "فرعي",
+      "pagePreview": "الصفحة {{page}}",
+      "field": {
+        "title": "عنوان الإشارة المرجعية",
+        "page": "رقم الصفحة المستهدفة"
+      },
+      "actions": {
+        "toggle": "تبديل العناصر الفرعية",
+        "addChild": "إضافة إشارة مرجعية فرعية",
+        "addSibling": "إضافة إشارة مرجعية شقيقة",
+        "remove": "إزالة الإشارة المرجعية"
+      },
+      "confirmRemove": "إزالة هذه الإشارة وكل فروعها؟"
+    },
+    "messages": {
+      "loadedTitle": "تم استخراج الإشارات المرجعية",
+      "loadedBody": "تم تحميل الإشارات المرجعية الحالية من ملف PDF إلى المحرر.",
+      "noBookmarks": "لم يتم العثور على إشارات مرجعية في ملف PDF المحدد.",
+      "loadFailed": "تعذّر استخراج الإشارات المرجعية من ملف PDF المحدد.",
+      "imported": "تم استيراد الإشارات المرجعية",
+      "importedBody": "استبدل مخطط JSON محتويات المحرر الحالية.",
+      "importedClipboard": "استبدلت بيانات الحافظة قائمة الإشارات المرجعية الحالية.",
+      "invalidJson": "بنية JSON غير صالحة",
+      "invalidJsonBody": "يرجى توفير ملف JSON صالح للإشارات المرجعية ثم المحاولة مرة أخرى.",
+      "exported": "تنزيل JSON جاهز",
+      "copied": "تم النسخ إلى الحافظة",
+      "copiedBody": "تم نسخ JSON الخاص بالإشارات المرجعية بنجاح.",
+      "copyFailed": "فشل النسخ"
+    },
+    "error": {
+      "failed": "فشل تحديث جدول المحتويات"
+    },
+    "submit": "تطبيق جدول المحتويات",
+    "results": {
+      "title": "تم تحديث PDF مع إشارات مرجعية",
+      "subtitle": "نزّل الملف المعالج أو تراجع عن العملية أدناه."
+    }
   },
   "removePages": {
     "tags": "إزالة الصفحات,حذف الصفحات",
@@ -1978,13 +2177,54 @@
       "title": "ارسم توقيعك",
       "clear": "مسح"
     },
+    "canvas": {
+      "heading": "ارسم توقيعك",
+      "clickToOpen": "انقر لفتح لوحة الرسم",
+      "modalTitle": "ارسم توقيعك",
+      "colorLabel": "اللون",
+      "penSizeLabel": "حجم القلم",
+      "penSizePlaceholder": "الحجم",
+      "clear": "مسح اللوحة",
+      "colorPickerTitle": "اختر لون الضربة"
+    },
     "text": {
       "name": "اسم الموقّع",
-      "placeholder": "أدخل اسمك الكامل"
+      "placeholder": "أدخل اسمك الكامل",
+      "fontLabel": "الخط",
+      "fontSizeLabel": "حجم الخط",
+      "fontSizePlaceholder": "اكتب أو اختر حجم الخط (8-200)",
+      "colorLabel": "لون النص"
     },
     "clear": "مسح",
     "add": "إضافة",
-    "saved": "توقيعات تم حفظها",
+    "saved": {
+      "heading": "التواقيع المحفوظة",
+      "description": "أعد استخدام التواقيع المحفوظة في أي وقت.",
+      "emptyTitle": "لا توجد تواقيع محفوظة بعد",
+      "emptyDescription": "ارسم أو ارفع أو اكتب توقيعاً أعلاه، ثم استخدم \"حفظ في المكتبة\" للاحتفاظ بما يصل إلى {{max}} مفضلات جاهزة للاستخدام.",
+      "type": {
+        "canvas": "رسم",
+        "image": "رفع",
+        "text": "نص"
+      },
+      "limitTitle": "تم بلوغ الحد",
+      "limitDescription": "أزل توقيعاً محفوظاً قبل إضافة جديد (حتى {{max}}).",
+      "carouselPosition": "{{current}} من {{total}}",
+      "prev": "السابق",
+      "next": "التالي",
+      "delete": "إزالة",
+      "label": "التسمية",
+      "defaultLabel": "توقيع",
+      "defaultCanvasLabel": "توقيع مرسوم",
+      "defaultImageLabel": "توقيع مرفوع",
+      "defaultTextLabel": "توقيع مكتوب",
+      "saveButton": "حفظ التوقيع",
+      "saveUnavailable": "أنشئ توقيعاً أولاً لحفظه.",
+      "noChanges": "التوقيع الحالي محفوظ بالفعل.",
+      "status": {
+        "saved": "تم الحفظ"
+      }
+    },
     "save": "حفظ توقيع",
     "applySignatures": "تطبيق التواقيع",
     "personalSigs": "توقيعات شخصية",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "تهيئة التوقيع"
     },
+    "step": {
+      "createDesc": "اختر كيفية إنشاء التوقيع",
+      "place": "وضع وحفظ",
+      "placeDesc": "ضع التوقيع على ملف PDF"
+    },
     "type": {
       "title": "نوع التوقيع",
       "draw": "رسم",
       "canvas": "لوحة Canvas",
       "image": "صورة",
-      "text": "نص"
+      "text": "نص",
+      "saved": "محفوظ"
     },
     "image": {
       "label": "رفع صورة التوقيع",
@@ -2019,11 +2265,17 @@
       "title": "كيفية إضافة توقيع",
       "canvas": "بعد رسم توقيعك في لوحة الرسم، أغلق النافذة ثم انقر في أي مكان على ملف PDF لوضعه.",
       "image": "بعد رفع صورة توقيعك أعلاه، انقر في أي مكان على ملف PDF لوضعه.",
-      "text": "بعد إدخال اسمك أعلاه، انقر في أي مكان على ملف PDF لوضع توقيعك."
+      "saved": "اختر توقيعاً محفوظاً أعلاه، ثم انقر في أي مكان على ملف PDF لوضعه.",
+      "text": "بعد إدخال اسمك أعلاه، انقر في أي مكان على ملف PDF لوضع توقيعك.",
+      "paused": "تم إيقاف الوضع مؤقتاً",
+      "resumeHint": "استأنف الوضع للنقر وإضافة توقيعك.",
+      "noSignature": "أنشئ توقيعاً أعلاه لتمكين أدوات الوضع."
     },
     "mode": {
       "move": "تحريك التوقيع",
-      "place": "وضع التوقيع"
+      "place": "وضع التوقيع",
+      "pause": "إيقاف الوضع مؤقتاً",
+      "resume": "استئناف الوضع"
     },
     "updateAndPlace": "تحديث ووضع",
     "activate": "تفعيل وضع وضع التوقيع",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "حول إزالة التعليقات",
       "description": "ستزيل هذه الأداة جميع التعليقات (تعليقات، تمييزات، ملاحظات، إلخ) من ملفات PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "حول إزالة التعليقات التوضيحية"
+      },
+      "description": {
+        "title": "ما الذي يقدمه"
+      }
     },
     "error": {
       "failed": "حدث خطأ أثناء إزالة التعليقات من PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "كيف تعمل إعادة التسمية التلقائية"
       },
+      "description": {
+        "title": "ما الذي يقدمه"
+      },
       "howItWorks": {
         "title": "إعادة تسمية ذكية",
         "text": "يجد تلقائيًا العنوان من محتوى PDF ويستخدمه كاسم الملف.",
@@ -2634,6 +2897,9 @@
         "bullet2": "ينشئ اسم ملف نظيفًا وصالحًا من العنوان المُكتشف",
         "bullet3": "يبقي الاسم الأصلي إذا لم يُعثر على عنوان مناسب"
       }
+    },
+    "settings": {
+      "title": "حول"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "تصدير PDF",
     "downloadSelected": "تنزيل الملفات المحددة",
     "downloadAll": "تنزيل الكل",
+    "saveAll": "حفظ الكل",
     "toggleTheme": "تبديل السِمة",
+    "toggleBookmarks": "تبديل الإشارات المرجعية",
     "language": "اللغة",
     "search": "بحث في PDF",
     "panMode": "وضع السحب",
@@ -4132,12 +4400,12 @@
             "description": "الحد الأقصى لوقت التنفيذ"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF إلى HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "تثبيت التطبيق",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4480,21 @@
         "title": "الممتاز والمؤسسي",
         "description": "تهيئة مفتاح الترخيص للمزايا الممتازة أو المؤسسية.",
         "license": "تهيئة الترخيص",
+        "licenseKey": {
+          "toggle": "هل لديك مفتاح ترخيص أو ملف شهادة؟",
+          "info": "إذا كان لديك مفتاح ترخيص أو ملف شهادة من عملية شراء مباشرة، فيمكنك إدخاله هنا لتفعيل ميزات Premium أو Enterprise."
+        },
         "key": {
           "label": "مفتاح الترخيص",
-          "description": "أدخل مفتاح الترخيص للمزايا الممتازة أو المؤسسية"
+          "description": "أدخل مفتاح الترخيص للمزايا الممتازة أو المؤسسية",
+          "success": "تم حفظ مفتاح الترخيص",
+          "successMessage": "تم تفعيل مفتاح الترخيص بنجاح. لا حاجة لإعادة التشغيل.",
+          "overwriteWarning": {
+            "title": "⚠️ تحذير: تم اكتشاف ترخيص قائم",
+            "line1": "لا يمكن التراجع عن استبدال مفتاح الترخيص الحالي.",
+            "line2": "سيُفقد ترخيصك السابق نهائياً ما لم تكن قد احتفظت بنسخة احتياطية منه في مكان آخر.",
+            "line3": "مهم: احتفظ بمفاتيح الترخيص خاصة وآمنة. لا تشاركها علناً أبداً."
+          }
         },
         "enabled": {
           "label": "تمكين الميزات الممتازة",
@@ -4278,12 +4558,17 @@
     "or": "أو",
     "dropFileHere": "أسقط الملف هنا أو انقر للتحميل",
     "dropFilesHere": "أسقط الملفات هنا أو انقر زر التحميل",
+    "dropFilesHereOpen": "أسقط الملفات هنا أو انقر زر الفتح",
     "pdfFilesOnly": "ملفات PDF فقط",
     "supportedFileTypes": "أنواع الملفات المدعومة",
     "upload": "تحميل",
     "uploadFile": "تحميل ملف",
     "uploadFiles": "تحميل ملفات",
+    "open": "فتح",
+    "openFile": "فتح ملف",
+    "openFiles": "فتح ملفات",
     "noFilesInStorage": "لا توجد ملفات في التخزين. ارفع بعض الملفات أولًا.",
+    "noFilesInStorageOpen": "لا توجد ملفات في التخزين. افتح بعض الملفات أولاً.",
     "selectFromStorage": "الاختيار من التخزين",
     "backToTools": "عودة إلى الأدوات",
     "addFiles": "إضافة ملفات",
@@ -4329,6 +4614,8 @@
     "myFiles": "ملفاتي",
     "noRecentFiles": "لم يتم العثور على ملفات حديثة",
     "googleDriveNotAvailable": "تكامل Google Drive غير متاح",
+    "downloadSelected": "تنزيل المحدّد",
+    "saveSelected": "حفظ المحدد",
     "openFiles": "فتح ملفات",
     "openFile": "فتح ملف",
     "details": "تفاصيل الملف",
@@ -4341,7 +4628,6 @@
     "selectAll": "تحديد الكل",
     "deselectAll": "إلغاء تحديد الكل",
     "deleteSelected": "حذف المحدد",
-    "downloadSelected": "تنزيل المحدّد",
     "selectedCount": "{{count}} محدد",
     "download": "تنزيل",
     "delete": "حذف",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "سير عمل الأمان",
       "secureWorkflowDesc": "يؤمّن مستندات PDF بإزالة المحتوى المحتمل الضرر مثل JavaScript والملفات المضمّنة، ثم يضيف حماية بكلمة مرور لمنع الوصول غير المصرح به. كلمة المرور الافتراضية 'password'.",
       "processImages": "معالجة الصور",
-      "processImagesDesc": "تحوّل ملفات صور متعددة إلى ملف PDF واحد، ثم تطبّق تقنية OCR لاستخراج نص قابل للبحث من الصور."
+      "processImagesDesc": "تحوّل ملفات صور متعددة إلى ملف PDF واحد، ثم تطبّق تقنية OCR لاستخراج نص قابل للبحث من الصور.",
+      "prePublishSanitization": "تنقية ما قبل النشر",
+      "prePublishSanitizationDesc": "سير عمل تنقية يزيل كل البيانات الوصفية المخفية وJavaScript والملفات المضمّنة والتعليقات، ويبسّط النماذج لمنع تسرّب البيانات قبل نشر ملفات PDF على الإنترنت."
     }
+  },
+  "colorPicker": {
+    "title": "اختر اللون"
   },
   "common": {
     "previous": "السابق",
@@ -4639,7 +4930,13 @@
     "used": "مستخدم",
     "available": "متاح",
     "cancel": "إلغاء",
-    "preview": "معاينة"
+    "preview": "معاينة",
+    "close": "إغلاق",
+    "done": "تم",
+    "loading": "جارٍ التحميل...",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "error": "خطأ"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "أضف مزيدًا من الملفات...",
     "selectedFiles": "الملفات المحددة",
     "submit": "إضافة المرفقات",
+    "tooltip": {
+      "header": {
+        "title": "حول إضافة المرفقات"
+      },
+      "description": {
+        "title": "ما الذي يقدمه"
+      }
+    },
     "results": {
       "title": "نتائج المرفقات"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "موضع مخصص",
   "details": "التفاصيل",
-  "downloadUnavailable": "التنزيل غير متاح لهذا العنصر",
   "invalidUndoData": "لا يمكن التراجع: بيانات العملية غير صالحة",
   "margin": {
     "large": "كبير",
@@ -4801,6 +5105,10 @@
       "maybeLater": "ربما لاحقًا",
       "dontShowAgain": "عدم الإظهار مجددًا"
     },
+    "welcomeSlide": {
+      "title": "مرحباً بك في Stirling",
+      "body": "Stirling PDF أصبح جاهزاً الآن للفرق من جميع الأحجام. يتضمن هذا التحديث تخطيطاً جديداً، وإمكانات إدارية قوية، وأكثر ميزة طُلبت - <strong>تحرير النص</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "لنختر أداة <strong>القص</strong> لشرح كيفية استخدام إحدى الأدوات.",
     "toolInterface": "هذه هي واجهة أداة <strong>القص</strong>. كما ترى، لا يوجد الكثير هنا لأننا لم نُضِف بعد أي ملفات PDF للعمل عليها.",
@@ -4823,7 +5131,39 @@
     "next": "التالي",
     "finish": "إنهاء",
     "startTour": "بدء الجولة",
-    "startTourDescription": "قم بجولة إرشادية للتعرّف على الميزات الرئيسية في Stirling PDF"
+    "startTourDescription": "قم بجولة إرشادية للتعرّف على الميزات الرئيسية في Stirling PDF",
+    "buttons": {
+      "next": "التالي →",
+      "back": "رجوع",
+      "skipForNow": "تخطي الآن",
+      "download": "تنزيل →",
+      "showMeAround": "أرني الجولة",
+      "skipTheTour": "تخطي الجولة"
+    },
+    "serverLicense": {
+      "skip": "تخطي الآن",
+      "seePlans": "عرض الخطط →",
+      "upgrade": "الترقية الآن →",
+      "freeTitle": "ترخيص الخادم",
+      "overLimitTitle": "مطلوب ترخيص خادم",
+      "overLimitBody": "ترخيصنا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. لديك <strong>{{overLimitUserCopy}}</strong> مستخدمي Stirling. للمتابعة دون انقطاع، ارقَ إلى خطة خادم Stirling - <strong>مقاعد غير محدودة</strong>، تحرير نصوص PDF، وتحكم إداري كامل مقابل $99/خادم/شهرياً.",
+      "freeBody": "ترخيص <strong>Open-Core</strong> لدينا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. للتوسع بسلاسة والحصول على وصول مبكر إلى <strong>أداة تحرير نصوص PDF</strong> الجديدة، نوصي بخطة خادم Stirling - تحرير كامل و<strong>مقاعد غير محدودة</strong> مقابل $99/خادم/شهرياً."
+    },
+    "desktopInstall": {
+      "title": "تنزيل",
+      "titleWithOs": "تنزيل لـ {{osLabel}}",
+      "body": "يعمل Stirling بشكل أفضل كتطبيق سطح مكتب. يمكنك استخدامه دون اتصال، والوصول إلى المستندات بسرعة أكبر، وإجراء التعديلات محلياً على جهازك."
+    },
+    "planOverview": {
+      "adminTitle": "نظرة عامة للمشرف",
+      "userTitle": "نظرة عامة على الخطة",
+      "adminBodyLoginEnabled": "بصفتك مشرفاً، يمكنك إدارة المستخدمين، وضبط الإعدادات، ومراقبة حالة الخادم. أول <strong>{{freeTierLimit}}</strong> شخصاً على خادمك يستخدمون Stirling مجاناً.",
+      "adminBodyLoginDisabled": "بمجرد تمكين وضع تسجيل الدخول، يمكنك إدارة المستخدمين، وضبط الإعدادات، ومراقبة حالة الخادم. أول <strong>{{freeTierLimit}}</strong> شخصاً على خادمك يستخدمون Stirling مجاناً.",
+      "userBody": "ادعُ زملاءك، وخصص الأدوار، واحفظ مستنداتك منظمة في مساحة عمل آمنة واحدة. فعّل وضع تسجيل الدخول عندما تكون مستعداً للتوسع بعد الاستخدام الفردي."
+    },
+    "securityCheck": {
+      "message": "خضعت التطبيق لتغييرات كبيرة مؤخراً. قد يتطلب ذلك انتباه مشرف الخادم. يرجى تأكيد دورك للمتابعة."
+    }
   },
   "adminOnboarding": {
     "welcome": "مرحبًا بك في <strong>جولة المسؤول</strong>! فلنستكشف الميزات المؤسسية القوية والإعدادات المتاحة لمسؤولي النظام.",
@@ -4852,7 +5192,10 @@
       "role": "الدور",
       "team": "الفريق",
       "status": "الحالة",
-      "actions": "إجراءات",
+      "actions": {
+        "label": "إجراءات",
+        "upgrade": "ترقية"
+      },
       "noMembersFound": "لم يتم العثور على أعضاء",
       "active": "نشط",
       "disabled": "معطّل",
@@ -4928,7 +5271,7 @@
       "inviteLink": {
         "description": "إنشاء رابط آمن يتيح للمستخدم تعيين كلمة مروره بنفسه",
         "email": "عنوان البريد الإلكتروني",
-        "emailPlaceholder": "user@example.com (optional)",
+        "emailPlaceholder": "user@example.com (اختياري)",
         "emailDescription": "اختياري — اتركه فارغًا للحصول على رابط دعوة عام يمكن لأي شخص استخدامه",
         "emailRequired": "عنوان البريد الإلكتروني مطلوب",
         "emailOptional": "اختياري — اتركه فارغًا للحصول على رابط دعوة عام",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "متاح {{count}} مقعد مستخدم",
         "noSlotsAvailable": "لا توجد مقاعد متاحة",
         "currentUsage": "تستخدم حالياً {{current}} من {{max}} تراخيص المستخدمين"
-      }
+      },
+      "loginRequired": "فعّل وضع تسجيل الدخول أولاً"
     },
     "teams": {
       "title": "الفرق",
@@ -5057,6 +5401,17 @@
     "showComparison": "قارن جميع الميزات",
     "hideComparison": "إخفاء مقارنة الميزات",
     "featureComparison": "مقارنة الميزات",
+    "from": "من",
+    "perMonth": "/شهر",
+    "perSeat": "/مقعد",
+    "withServer": "+ خطة الخادم",
+    "licensedSeats": "المرخَّصة: {{count}} مقعداً",
+    "includedInCurrent": "مشمولة في خطتك",
+    "selectPlan": "اختيار الخطة",
+    "manage": "إدارة",
+    "manageSubscription": {
+      "description": "إدارة الاشتراك والفوترة وطرق الدفع"
+    },
     "activePlan": {
       "title": "الخطة النشطة",
       "subtitle": "تفاصيل اشتراكك الحالي"
@@ -5074,13 +5429,16 @@
       "upTo": "حتى"
     },
     "period": {
-      "month": "شهر"
+      "month": "شهر",
+      "perUserPerMonth": "/مستخدم/شهر"
     },
     "free": {
       "name": "مجانية",
       "highlight1": "استخدام الأدوات محدود أسبوعيًا",
       "highlight2": "الوصول إلى جميع الأدوات",
-      "highlight3": "دعم المجتمع"
+      "highlight3": "دعم المجتمع",
+      "forever": "مجاني للأبد",
+      "included": "مشمولة"
     },
     "pro": {
       "name": "احترافية",
@@ -5092,7 +5450,9 @@
       "name": "مؤسسات",
       "highlight1": "تسعير مخصص",
       "highlight2": "دعم مخصص",
-      "highlight3": "أحدث الميزات"
+      "highlight3": "أحدث الميزات",
+      "requiresServer": "يتطلب خادماً",
+      "requiresServerMessage": "يرجى الترقية إلى خطة الخادم أولاً قبل الترقية إلى Enterprise."
     },
     "feature": {
       "title": "الميزة",
@@ -5102,6 +5462,12 @@
       "api": "وصول API",
       "priority": "دعم أولوية",
       "customPricing": "تسعير مخصص"
+    },
+    "licenseWarning": {
+      "title": "تم بلوغ حد الاستضافة الذاتية المجاني",
+      "body": "لديك {{total}} مستخدماً لكن الشريحة المجانية تدعم {{limit}} فقط لكل خادم. قم بالترقية للحفاظ على عمل Stirling PDF بسلاسة.",
+      "overLimit": "أكثر من {{limit}}",
+      "cta": "عرض الخطط"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "إدارة الفوترة",
     "portal": {
       "error": "فشل فتح بوابة الفوترة"
-    }
+    },
+    "updateSeats": "تحديث المقاعد",
+    "updateEnterpriseSeats": "تحديث مقاعد Enterprise",
+    "currentSeats": "المقاعد الحالية",
+    "minimumSeats": "الحد الأدنى للمقاعد",
+    "basedOnUsers": "(المستخدمون الحاليون)",
+    "newSeatCount": "عدد المقاعد الجديد",
+    "newSeatCountDescription": "اختر عدد المقاعد لترخيص Enterprise",
+    "whatHappensNext": "ماذا سيحدث لاحقاً؟",
+    "stripePortalRedirect": "ستتم إعادة توجيهك إلى بوابة فوترة Stripe لمراجعة تأكيد تغيير المقاعد. سيتم حساب المبلغ النسبي تلقائياً.",
+    "preparingUpdate": "جارٍ تجهيز تحديث المقاعد...",
+    "seatCountTooLow": "يجب ألا يقل عدد المقاعد عن {{minimum}} (عدد المستخدمين الحالي)",
+    "seatCountUnchanged": "يرجى اختيار عدد مقاعد مختلف",
+    "seatsUpdated": "تم تحديث المقاعد",
+    "seatsUpdatedMessage": "تم تحديث مقاعد Enterprise إلى {{seats}}",
+    "updateProcessing": "جاري تنفيذ التحديث",
+    "updateProcessingMessage": "جارٍ معالجة تحديث المقاعد. يرجى التحديث بعد قليل.",
+    "notEnterprise": "إدارة المقاعد متاحة فقط لتراخيص Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "الترقية إلى خطة الخادم",
+    "message": "احصل على أقصى استفادة من Stirling PDF مع مستخدمين غير محدودين وميزات متقدمة",
+    "upgradeButton": "الترقية الآن",
+    "dismiss": "تجاهل الشريط",
+    "attentionTitle": "هذا الخادم يحتاج إلى انتباه المشرف",
+    "attentionBody": "يجب على المشرف تسجيل الدخول لرؤية المزيد من المعلومات. يرجى التواصل معه فوراً.",
+    "attentionBodyAdmin": "راجع متطلبات الترخيص للحفاظ على امتثال هذا الخادم.",
+    "seeInfo": "عرض المعلومات"
   },
   "payment": {
     "preparing": "جارٍ تجهيز عملية الدفع...",
@@ -5128,7 +5521,61 @@
     "success": "تم الدفع بنجاح!",
     "successMessage": "تم تفعيل اشتراكك بنجاح. ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريبًا.",
     "autoClose": "سيتم إغلاق هذه النافذة تلقائيًا...",
-    "error": "خطأ في الدفع"
+    "error": "خطأ في الدفع",
+    "upgradeSuccess": "تم الدفع بنجاح! تم ترقية اشتراكك. تم تحديث الترخيص على خادمك. ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريباً.",
+    "paymentSuccess": "تم الدفع بنجاح! جارٍ جلب مفتاح الترخيص...",
+    "licenseActivated": "تم تفعيل الترخيص! تم حفظ مفتاح الترخيص الخاص بك. تم إرسال رسالة تأكيد إلى بريدك الإلكتروني المسجل.",
+    "licenseDelayed": "تم الدفع بنجاح! يتم إنشاء ترخيصك. ستتلقى رسالة تحتوي على مفتاح الترخيص قريباً. إذا لم تصلك خلال 10 دقائق، يرجى التواصل مع الدعم.",
+    "licensePollingError": "تم الدفع بنجاح ولكن تعذّر جلب مفتاح الترخيص تلقائياً. يرجى التحقق من بريدك الإلكتروني أو التواصل مع الدعم مع تأكيد الدفع.",
+    "licenseRetrievalError": "تم الدفع بنجاح ولكن فشل جلب الترخيص. ستتلقى مفتاح الترخيص عبر البريد الإلكتروني. يرجى التواصل مع الدعم إذا لم يصلك خلال 10 دقائق.",
+    "syncError": "تم الدفع بنجاح ولكن فشلت مزامنة الترخيص. سيتم تحديث الترخيص قريباً. يرجى التواصل مع الدعم إذا استمرت المشكلة.",
+    "licenseSaveError": "فشل حفظ مفتاح الترخيص. يرجى التواصل مع الدعم مع مفتاح الترخيص لإكمال التفعيل.",
+    "paymentCanceled": "تم إلغاء الدفع. لم يتم خصم أي رسوم.",
+    "syncingLicense": "جارٍ مزامنة الترخيص المُرقّى...",
+    "generatingLicense": "جارٍ إنشاء مفتاح الترخيص...",
+    "upgradeComplete": "اكتملت الترقية",
+    "upgradeCompleteMessage": "تمت ترقية اشتراكك بنجاح. تم تحديث مفتاح الترخيص الحالي.",
+    "stripeNotConfigured": "Stripe غير مُهيأ",
+    "stripeNotConfiguredMessage": "تكامل دفع Stripe غير مُعد. يرجى التواصل مع المسؤول.",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "billingPeriod": "فترة الفوترة",
+    "enterpriseNote": "يمكن تعديل المقاعد عند الدفع (1-1000).",
+    "installationId": "معرّف التثبيت",
+    "licenseKey": "مفتاح الترخيص الخاص بك",
+    "licenseInstructions": "تمت إضافته إلى تثبيتك. ستتلقى نسخة عبر بريدك الإلكتروني أيضاً.",
+    "canCloseWindow": "يمكنك الآن إغلاق هذه النافذة.",
+    "licenseKeyProcessing": "جارٍ معالجة مفتاح الترخيص",
+    "licenseDelayedMessage": "يتم إنشاء مفتاح الترخيص الخاص بك. يرجى التحقق من بريدك الإلكتروني قريباً أو التواصل مع الدعم.",
+    "perYear": "/سنة",
+    "perMonth": "/شهر",
+    "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
+    "emailStage": {
+      "title": "أدخل بريدك الإلكتروني",
+      "description": "سنستخدمه لإرسال مفتاح الترخيص والإيصالات.",
+      "emailLabel": "عنوان البريد الإلكتروني",
+      "emailPlaceholder": "your@email.com",
+      "continue": "متابعة",
+      "modalTitle": "البدء - {{planName}}"
+    },
+    "planStage": {
+      "title": "اختر فترة الفوترة",
+      "savingsNote": "وفّر {{percent}}% مع الفوترة السنوية",
+      "basePrice": "السعر الأساسي",
+      "seatPrice": "لكل مقعد",
+      "totalForSeats": "الإجمالي ({{count}} مقعداً)",
+      "selectMonthly": "اختر الشهري",
+      "selectYearly": "اختر السنوي",
+      "savePercent": "وفّر {{percent}}%",
+      "savingsAmount": "ستوفّر {{amount}}",
+      "modalTitle": "اختر فترة الفوترة - {{planName}}",
+      "billedYearly": "يُفوتر سنوياً بقيمة {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "عودة لاختيار الخطة",
+      "selectedPlan": "الخطة المحددة",
+      "modalTitle": "أكمل الدفع - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "تسجيل الدخول لأول مرة",
@@ -5287,5 +5734,281 @@
     "offline": "الواجهة الخلفية غير متصلة",
     "starting": "الواجهة الخلفية قيد التشغيل...",
     "wait": "يرجى انتظار اكتمال تشغيل الواجهة الخلفية ثم المحاولة مرة أخرى."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "افتح قفل PDF للمتابعة",
+    "title": "أزل كلمة المرور للمتابعة",
+    "description": "هذا الملف محمي بكلمة مرور. أدخل كلمة المرور للمتابعة في العمل عليه.",
+    "password": {
+      "label": "كلمة مرور PDF",
+      "placeholder": "أدخل كلمة مرور PDF"
+    },
+    "skip": "تخطَّ الآن",
+    "unlock": "فتح القفل والمتابعة",
+    "incorrectPassword": "كلمة مرور غير صحيحة",
+    "missingFile": "الملف المحدد لم يعد متاحاً.",
+    "emptyResponse": "لم تنتج إزالة كلمة المرور ملفاً.",
+    "required": "أدخل كلمة المرور للمتابعة.",
+    "successTitle": "تمت إزالة كلمة المرور",
+    "successBodyWithName": "تمت إزالة كلمة المرور من {{fileName}}",
+    "successBody": "تمت إزالة كلمة المرور بنجاح."
+  },
+  "setup": {
+    "welcome": "مرحباً بك في Stirling PDF",
+    "description": "ابدأ باختيار كيفية استخدام Stirling PDF",
+    "step1": {
+      "label": "اختيار الوضع",
+      "description": "دون اتصال أو خادم"
+    },
+    "step2": {
+      "label": "اختيار الخادم",
+      "description": "خادم مستضاف ذاتياً"
+    },
+    "step3": {
+      "label": "تسجيل الدخول",
+      "description": "أدخل بيانات الاعتماد"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "سجّل الدخول بحساب Stirling الخاص بك"
+      },
+      "selfhosted": {
+        "title": "خادم مستضاف ذاتياً",
+        "description": "اتصل بخادم Stirling PDF الخاص بك"
+      }
+    },
+    "saas": {
+      "title": "سجّل الدخول إلى Stirling",
+      "subtitle": "سجّل الدخول بحساب Stirling الخاص بك"
+    },
+    "selfhosted": {
+      "title": "سجّل الدخول إلى الخادم",
+      "subtitle": "أدخل بيانات اعتماد الخادم"
+    },
+    "server": {
+      "title": "الاتصال بالخادم",
+      "subtitle": "أدخل عنوان URL لخادمك المستضاف ذاتياً",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "خادم مستضاف ذاتياً"
+      },
+      "url": {
+        "label": "عنوان URL للخادم",
+        "description": "أدخل عنوان URL الكامل لخادم Stirling PDF المستضاف ذاتياً"
+      },
+      "error": {
+        "emptyUrl": "يرجى إدخال عنوان URL للخادم",
+        "unreachable": "تعذّر الاتصال بالخادم",
+        "testFailed": "فشل اختبار الاتصال"
+      },
+      "testing": "جارٍ اختبار الاتصال..."
+    },
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "أدخل بيانات الاعتماد للمتابعة",
+      "connectingTo": "جارٍ الاتصال بـ:",
+      "username": {
+        "label": "اسم المستخدم",
+        "placeholder": "أدخل اسم المستخدم"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "أدخل بريدك الإلكتروني"
+      },
+      "password": {
+        "label": "كلمة المرور",
+        "placeholder": "أدخل كلمة المرور"
+      },
+      "error": {
+        "emptyUsername": "يرجى إدخال اسم المستخدم",
+        "emptyEmail": "يرجى إدخال البريد الإلكتروني",
+        "emptyPassword": "يرجى إدخال كلمة المرور",
+        "oauthFailed": "فشل تسجيل الدخول عبر OAuth. يرجى المحاولة مرة أخرى."
+      },
+      "submit": "تسجيل الدخول",
+      "signInWith": "تسجيل الدخول باستخدام",
+      "oauthPending": "جارٍ فتح المتصفح للمصادقة...",
+      "orContinueWith": "أو المتابعة بالبريد الإلكتروني"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "تمت المصادقة بنجاح",
+      "message": "يمكنك إغلاق هذه النافذة والعودة إلى Stirling PDF."
+    },
+    "error": {
+      "title": "فشلت المصادقة",
+      "message": "لم تتم المصادقة بنجاح. يمكنك إغلاق هذه النافذة والمحاولة مجدداً."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "محرر JSON لملف PDF",
+    "viewLabel": "محرر PDF",
+    "converting": "جارٍ تحويل PDF إلى صيغة قابلة للتحرير...",
+    "conversionFailed": "فشل تحويل PDF. يرجى المحاولة مرة أخرى.",
+    "currentFile": "الملف الحالي: {{name}}",
+    "pageSummary": "الصفحة {{number}} من {{total}}",
+    "pagePreviewAlt": "معاينة الصفحة",
+    "imageLabel": "صورة موضوعة",
+    "noTextOnPage": "لم يتم اكتشاف نص قابل للتحرير في هذه الصفحة.",
+    "pageType": {
+      "paragraph": "صفحة فقرة",
+      "sparse": "نص متفرق"
+    },
+    "groupingMode": {
+      "auto": "تلقائي",
+      "paragraph": "فقرة",
+      "singleLine": "سطر واحد"
+    },
+    "badges": {
+      "unsaved": "معدَّل",
+      "modified": "معدَّل",
+      "earlyAccess": "وصول مبكر"
+    },
+    "actions": {
+      "reset": "إعادة تعيين التغييرات",
+      "downloadJson": "تنزيل JSON",
+      "generatePdf": "توليد PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "ضبط النص تلقائياً ليتناسب مع الصناديق",
+        "description": "يضبط النص أفقياً تلقائياً ليتناسب مع صندوق الاحتواء الأصلي عند اختلاف عرض الخط عن PDF."
+      },
+      "groupingMode": {
+        "title": "وضع تجميع النص",
+        "autoDescription": "يكتشف نوع الصفحة تلقائياً ويجمع النص بالشكل المناسب.",
+        "paragraphDescription": "يجمع السطور المتراصة في صناديق نص متعددة الأسطر.",
+        "singleLineDescription": "يبقي كل سطر نص PDF في صندوق نص منفصل."
+      },
+      "manualGrouping": {
+        "descriptionInline": "نصيحة: اضغط Ctrl (Cmd) أو Shift لتحديد عدة صناديق نص. سيظهر شريط أدوات عائم فوق التحديد لتتمكن من الدمج أو إلغاء التجميع أو ضبط العرض."
+      },
+      "forceSingleElement": {
+        "title": "قفل النص المُحرّر ضمن عنصر PDF واحد",
+        "description": "عند التفعيل، يصدّر المحرر كل صندوق نص مُحرّر كعنصر نص PDF واحد لتجنب تراكب المحارف أو اختلاط الخطوط."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "دمج الصناديق المحددة",
+      "merge": "دمج التحديد",
+      "ungroupTooltip": "تفكيك الفقرة إلى سطور",
+      "ungroup": "إلغاء تجميع التحديد",
+      "widthMenu": "خيارات العرض",
+      "expandWidth": "توسيع حتى حافة الصفحة",
+      "resetWidth": "إعادة تعيين العرض",
+      "resizeHandle": "ضبط عرض النص"
+    },
+    "disclaimer": {
+      "heading": "قيود المعاينة",
+      "textFocus": "تركّز مساحة العمل هذه على تحرير النص وإعادة تموضع الصور المضمّنة. يتم الحفاظ على الأعمال الفنية المعقّدة وعناصر النماذج والرسومات الطبقية للتصدير ولكنها ليست قابلة للتحرير بالكامل هنا.",
+      "previewVariance": "قد لا تظهر بعض العناصر المرئية (مثل حدود الجداول أو الأشكال أو مظاهر التعليقات) تماماً كما في المعاينة. يحتفظ PDF المصدّر بأوامر الرسم الأصلية كلما أمكن.",
+      "alpha": "هذا العارض بنسخة ألفا ولا يزال يتطور—قد تتغير بعض الخطوط والألوان وتأثيرات الشفافية وتفاصيل التخطيط قليلاً. يرجى التحقق من ملف PDF المُنشأ قبل المشاركة."
+    },
+    "empty": {
+      "title": "لم يتم تحميل مستند",
+      "subtitle": "حمّل ملف PDF أو JSON لبدء تحرير محتوى النص."
+    },
+    "welcomeBanner": {
+      "title": "مرحباً بك في محرر نصوص PDF (وصول مبكر)",
+      "experimental": "هذه ميزة تجريبية قيد التطوير النشط. توقّع بعض عدم الاستقرار والمشكلات أثناء الاستخدام.",
+      "howItWorks": "تحوّل هذه الأداة ملف PDF إلى صيغة قابلة للتحرير حيث يمكنك تعديل محتوى النص وإعادة تموضع الصور. تُحفظ التغييرات كملف PDF جديد.",
+      "bestFor": "يعمل بشكل أفضل مع:",
+      "bestFor1": "ملفات PDF البسيطة التي تحتوي أساساً على نصوص وصور",
+      "bestFor2": "المستندات ذات تنسيق الفقرات القياسي",
+      "bestFor3": "الرسائل والمقالات والتقارير والمستندات الأساسية",
+      "notIdealFor": "غير مناسب لـ:",
+      "notIdealFor1": "ملفات PDF ذات تنسيق خاص مثل التعداد النقطي والجداول أو التخطيطات متعددة الأعمدة",
+      "notIdealFor2": "المجلات، الكتيبات، أو المستندات ذات التصميم المكثف",
+      "notIdealFor3": "أدلة الاستخدام ذات التخطيطات المعقّدة",
+      "limitations": "القيود الحالية:",
+      "limitation1": "قد يختلف عرض الخطوط قليلًا عن ملف PDF الأصلي",
+      "limitation2": "يتم الحفاظ على الرسومات المعقّدة وحقول النماذج والتعليقات، لكنها غير قابلة للتحرير",
+      "limitation3": "قد تستغرق الملفات الكبيرة وقتًا للتحويل والمعالجة",
+      "knownIssues": "مشكلات معروفة (قيد الإصلاح):",
+      "issue1": "لا يُحفَظ لون النص حاليًا (سيُضاف قريبًا)",
+      "issue2": "وضع الفقرة يعاني مشكلات أكثر في المحاذاة والتباعد - يُوصى بوضع السطر الواحد",
+      "issue3": "تختلف معاينة العرض عن ملف PDF المُصدَّر - ملفات PDF المُصدَّرة أقرب إلى الأصل",
+      "issue4": "قد تحتاج محاذاة النص المُدوَّر إلى ضبط يدوي",
+      "issue5": "قد تختلف تأثيرات الشفافية والطبقات عن الأصل",
+      "feedback": "هذه ميزة وصول مبكر. يُرجى الإبلاغ عن أي مشكلات تصادفها لمساعدتنا على التحسين!",
+      "gotIt": "حسنًا",
+      "dontShowAgain": "لا تُظهر هذا مجددًا"
+    },
+    "modeChange": {
+      "title": "تأكيد تغيير الوضع",
+      "warning": "سيؤدي تغيير وضع تجميع النص إلى إعادة ضبط كل التغييرات غير المحفوظة. هل تريد المتابعة بالتأكيد؟",
+      "cancel": "إلغاء",
+      "confirm": "إعادة الضبط وتغيير الوضع"
+    },
+    "fontAnalysis": {
+      "details": "تفاصيل الخط",
+      "embedded": "مضمَّن",
+      "type": "النوع",
+      "webFormat": "تنسيق الويب",
+      "warnings": "تحذيرات",
+      "suggestions": "ملاحظات",
+      "currentPageFonts": "الخطوط في هذه الصفحة",
+      "allFonts": "كل الخطوط",
+      "fallback": "بديل",
+      "missing": "مفقود",
+      "perfectMessage": "يمكن إعادة إنتاج جميع الخطوط بشكل مثالي.",
+      "warningMessage": "قد لا تُعرَض بعض الخطوط بشكل صحيح.",
+      "infoMessage": "تتوفر معلومات حول إعادة إنتاج الخطوط.",
+      "perfect": "مثالي",
+      "subset": "فرعي"
+    },
+    "errors": {
+      "invalidJson": "تعذّر قراءة ملف JSON. تأكّد من أنه تم إنشاؤه بواسطة أداة PDF إلى JSON.",
+      "pdfConversion": "تعذّر تحويل ملف JSON المُحرَّر إلى PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "انتهت الجلسة",
+    "pleaseLoginAgain": "يرجى تسجيل الدخول مرة أخرى.",
+    "accessDenied": "تم رفض الوصول",
+    "insufficientPermissions": "ليست لديك صلاحية لتنفيذ هذا الإجراء."
+  },
+  "addText": {
+    "title": "إضافة نص",
+    "header": "إضافة نص إلى ملفات PDF",
+    "text": {
+      "name": "محتوى النص",
+      "placeholder": "أدخل النص الذي تريد إضافته",
+      "fontLabel": "الخط",
+      "fontSizeLabel": "حجم الخط",
+      "fontSizePlaceholder": "اكتب أو اختر حجم الخط (8-200)",
+      "colorLabel": "لون النص"
+    },
+    "steps": {
+      "configure": "إعداد النص"
+    },
+    "step": {
+      "createDesc": "أدخل النص الذي تريد إضافته",
+      "place": "ضع النص",
+      "placeDesc": "انقر على ملف PDF لإضافة نصك"
+    },
+    "instructions": {
+      "title": "طريقة إضافة النص",
+      "text": "بعد إدخال نصك أعلاه، انقر في أي مكان على ملف PDF لوضعه.",
+      "paused": "تم إيقاف الوضع مؤقتًا",
+      "resumeHint": "استأنف الوضع للنقر وإضافة نصك.",
+      "noSignature": "أدخل نصًا أعلاه لتمكين الوضع."
+    },
+    "mode": {
+      "move": "تحريك النص",
+      "place": "وضع النص",
+      "pause": "إيقاف الوضع مؤقتًا",
+      "resume": "استئناف الوضع"
+    },
+    "results": {
+      "title": "نتائج إضافة النص"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إضافة النص إلى ملف PDF."
+    },
+    "tags": "نص,تعليق,تسمية",
+    "applySignatures": "تطبيق النص"
   }
 }

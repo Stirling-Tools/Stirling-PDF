@@ -17,6 +17,8 @@
       "comingSoon": "Ag teacht go luath:",
       "favorite": "Cuir le Ceanáin",
       "favorites": "Ceanáin",
+      "unavailable": "Díchumasaithe ag riarthóir freastalaí:",
+      "unavailableDependency": "Níl ar fáil - uirlis riachtanach ar iarraidh ar an bhfreastalaí:",
       "heading": "Gach uirlis (radharc lánscáileáin)",
       "noResults": "Bain triail as do chuardach a choigeartú nó tuairiscí a scoránaigh chun an rud atá uait a aimsiú.",
       "recommended": "Molta",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Athraigh go mód lánscáileáin",
       "sidebar": "Athraigh go mód barra taoibh"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Gné Préimhe:",
+    "comingSoon": "Ag teacht go luath:"
   },
   "unsavedChanges": "Tá athruithe gan sábháil agat ar do PDF.",
   "areYouSure": "An bhfuil tú cinnte gur mian leat imeacht?",
@@ -40,6 +45,30 @@
     "message": "Tá {{count}} comhad sa ZIP seo. An mbaineann tú amach mar sin féin?",
     "cancel": "Cealaigh",
     "confirm": "Bain Amach"
+  },
+  "defaultApp": {
+    "title": "Socraigh mar Aip PDF Réamhshocraithe",
+    "message": "Ar mhaith leat Stirling PDF a shocrú mar d’eagarthóir réamhshocraithe PDF?",
+    "description": "Is féidir leat é seo a athrú níos déanaí i socruithe do chórais.",
+    "notNow": "Ní Anois",
+    "setDefault": "Socraigh mar Réamhshocraithe",
+    "dismiss": "Dún",
+    "prompt": {
+      "title": "Socraigh mar Eagarthóir PDF Réamhshocraithe",
+      "message": "Déan Stirling PDF mar d’fheidhmchlár réamhshocraithe chun comhaid PDF a oscailt."
+    },
+    "success": {
+      "title": "Aip Réamhshocraithe Socraithe",
+      "message": "Is é Stirling PDF d’eagarthóir PDF réamhshocraithe anois"
+    },
+    "settingsOpened": {
+      "title": "Socruithe Oscailte",
+      "message": "Roghnaigh Stirling PDF i socruithe do chórais"
+    },
+    "error": {
+      "title": "Earráid",
+      "message": "Theip ar shocrú láimhseálaí PDF réamhshocraithe"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Sábháil",
   "saveToBrowser": "Sábháil go Brabhsálaí",
   "download": "Íosluchtaigh",
+  "downloadUnavailable": "Níl íoslódáil ar fáil don mhír seo",
+  "saveUnavailable": "Níl sábháil ar fáil don mhír seo",
   "pin": "Pionnáil Comhad (coinnigh gníomhach tar éis rith na huirlise)",
   "unpin": "Díphionnáil Comhad (cuir ina ionad tar éis rith na huirlise)",
   "undoOperationTooltip": "Cliceáil chun an oibríocht dheireanach a chur ar ceal agus na bunchomhaid a athchóiriú",
@@ -168,6 +199,7 @@
   },
   "edit": "Cuir in eagar",
   "delete": "Scrios",
+  "never": "Riamh",
   "username": "Ainm úsáideora",
   "password": "Pasfhocal",
   "welcome": "Fáilte",
@@ -262,7 +294,8 @@
     "learnMore": "Tuilleadh eolais",
     "enable": "Cumasaigh anailísíocht",
     "disable": "Díchumasaigh anailísíocht",
-    "settings": "Is féidir leat na socruithe don anailísíocht a athrú sa chomhad config/settings.yml"
+    "settings": "Is féidir leat na socruithe don anailísíocht a athrú sa chomhad config/settings.yml",
+    "privacyAssurance": "Ní dhéanaimid rianú ar aon fhaisnéis phearsanta ná ar ábhar do chuid comhad."
   },
   "navbar": {
     "favorite": "Ceanáin",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Socruithe",
-    "update": "Nuashonrú ar fáil",
-    "updateAvailable": "Is é {0} an leagan suiteáilte reatha. Tá leagan nua ({1}) ar fáil.",
-    "appVersion": "Leagan Aipe:",
-    "downloadOption": {
-      "title": "Roghnaigh rogha íoslódála (Le haghaidh íoslódálacha comhad amháin seachas zip):",
-      "1": "Oscail sa bhfuinneog chéanna",
-      "2": "Oscail i bhfuinneog nua",
-      "3": "Íoslódáil an comhad"
-    },
-    "zipThreshold": "Comhaid zip nuair a sháraíonn líon na gcomhad íoslódála",
-    "signOut": "Logáil Amach",
-    "accountSettings": "Socruithe cuntas",
-    "bored": {
-      "help": "Cumasaíonn sé cluiche uibheacha Cásca"
-    },
-    "cacheInputs": {
-      "name": "Sábháil ionchuir fhoirm",
-      "help": "Cumasaigh ionchuir a úsáideadh roimhe seo a stóráil le haghaidh ritheanna amach anseo"
+    "connection": {
+      "title": "Mód Ceangail",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Féin-óstáilte"
+      },
+      "server": "Freastalaí",
+      "user": "Logáilte isteach mar",
+      "logout": "Logáil Amach"
     },
     "general": {
       "title": "Ginearálta",
       "description": "Cumraigh sainroghanna ginearálta an fheidhmchláir.",
-      "account": "Cuntas",
-      "accountDescription": "Bainistigh socruithe do chuntais",
       "user": "Úsáideoir",
-      "signedInAs": "Sínithe isteach mar",
       "logout": "Logáil amach",
       "enableFeatures": {
+        "dismiss": "Díbhe",
         "title": "Do Riarthóirí Córais",
         "intro": "Cumasaigh fíordheimhniú úsáideoirí, bainistíocht foirne, agus gnéithe spáis oibre do d’eagraíocht.",
         "action": "Cumraigh",
         "and": "agus",
         "benefit": "Cumasaíonn róil úsáideora, comhoibriú foirne, rialuithe riarthóra, agus gnéithe fiontraíochta.",
-        "learnMore": "Tuilleadh eolais sa doiciméadú",
-        "dismiss": "Díbhe"
+        "learnMore": "Tuilleadh eolais sa doiciméadú"
       },
-      "autoUnzip": "Dífhuascailt uathoibríoch freagraí API",
-      "autoUnzipDescription": "Bain comhaid as freagraí ZIP go huathoibríoch",
-      "autoUnzipTooltip": "Baineann sé comhaid ZIP a fhilleann ó oibríochtaí API go huathoibríoch. Díchumasaigh chun comhaid ZIP a choinneáil slán. Ní théann sé seo i bhfeidhm ar shreafaí oibre uathoibrithe.",
-      "autoUnzipFileLimit": "Teorainn chomhaid dífhuascailte uathoibríoch",
-      "autoUnzipFileLimitDescription": "Uasmhéid comhad le baint as ZIP",
-      "autoUnzipFileLimitTooltip": "Dífhuascail ach amháin má tá an oiread seo comhad sa ZIP nó níos lú. Socraigh níos airde chun ZIPanna níos mó a bhaint.",
       "defaultToolPickerMode": "Mód réamhshocraithe roghnóra uirlisí",
       "defaultToolPickerModeDescription": "Roghnaigh an oscailfidh an roghnóir uirlisí i lánscáileán nó i mbarra taoibh de réir réamhshocraithe",
       "mode": {
-        "fullscreen": "Lánscáileán",
-        "sidebar": "Barra taoibh"
-      }
+        "sidebar": "Barra taoibh",
+        "fullscreen": "Lánscáileán"
+      },
+      "autoUnzipTooltip": "Baineann sé comhaid ZIP a fhilleann ó oibríochtaí API go huathoibríoch. Díchumasaigh chun comhaid ZIP a choinneáil slán. Ní théann sé seo i bhfeidhm ar shreafaí oibre uathoibrithe.",
+      "autoUnzip": "Dífhuascailt uathoibríoch freagraí API",
+      "autoUnzipDescription": "Bain comhaid as freagraí ZIP go huathoibríoch",
+      "autoUnzipFileLimitTooltip": "Dífhuascail ach amháin má tá an oiread seo comhad sa ZIP nó níos lú. Socraigh níos airde chun ZIPanna níos mó a bhaint.",
+      "autoUnzipFileLimit": "Teorainn chomhaid dífhuascailte uathoibríoch",
+      "autoUnzipFileLimitDescription": "Uasmhéid comhad le baint as ZIP",
+      "defaultPdfEditor": "Eagarthóir PDF réamhshocraithe",
+      "defaultPdfEditorActive": "Is é Stirling PDF d’eagarthóir PDF réamhshocraithe",
+      "defaultPdfEditorInactive": "Tá feidhmchlár eile socraithe mar réamhshocrú",
+      "defaultPdfEditorChecking": "Á sheiceáil...",
+      "defaultPdfEditorSet": "Réamhshocraithe Cheana",
+      "setAsDefault": "Socraigh mar Réamhshocraithe",
+      "updates": {
+        "title": "Nuashonruithe Bogearraí",
+        "description": "Seiceáil le haghaidh nuashonruithe agus féach faisnéis leagain",
+        "currentVersion": "Leagan Reatha",
+        "latestVersion": "Leagan is Déanaí",
+        "checkForUpdates": "Seiceáil le haghaidh Nuashonruithe",
+        "viewDetails": "Féach Sonraí"
+      },
+      "hideUnavailableTools": "Folaigh uirlisí nach bhfuil ar fáil",
+      "hideUnavailableToolsDescription": "Bain uirlisí a díchumasaíodh ag do fhreastalaí seachas iad a thaispeáint i liath.",
+      "hideUnavailableConversions": "Folaigh tiontaithe nach bhfuil ar fáil",
+      "hideUnavailableConversionsDescription": "Bain roghanna tiontaithe díchumasaithe san uirlis Convert seachas iad a thaispeáint i liath."
     },
     "hotkeys": {
-      "title": "Aicearraí Mearchlár",
-      "description": "Cuir an luch os cionn uirlise chun a aicearra a fheiceáil nó é a shaincheapadh thíos. Cliceáil \"Athraigh aicearra\" agus brúigh teaglaim eochracha nua. Brúigh Esc chun cealú.",
-      "errorModifier": {
-        "mac": "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile san áireamh san aicearra.",
-        "windows": "Cuir Ctrl, Alt, nó modhnóir eile san áireamh san aicearra."
-      },
       "errorConflict": "Tá an t-aicearra in úsáid cheana ag {{tool}}.",
+      "searchPlaceholder": "Cuardaigh uirlisí...",
       "none": "Gan sannadh",
       "customBadge": "Saincheaptha",
       "defaultLabel": "Réamhshocrú: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Athraigh aicearra",
       "reset": "Athshocraigh",
       "shortcut": "Aicearra",
-      "noShortcut": "Níl aicearra socraithe",
-      "searchPlaceholder": "Cuardaigh uirlisí..."
+      "noShortcut": "Níl aicearra socraithe"
     }
+  },
+  "update": {
+    "modalTitle": "Nuashonrú ar Fáil",
+    "current": "Leagan Reatha",
+    "latest": "Leagan is Déanaí",
+    "latestStable": "Leagan is Déanaí Cobhsaí",
+    "priorityLabel": "Tosaíocht",
+    "recommendedAction": "Gníomh Molta",
+    "breakingChangesDetected": "Aimsíodh Athruithe Bristeacha",
+    "breakingChangesMessage": "Tá athruithe bristeacha i roinnt leaganacha. Déan athbhreithniú ar na treoracha imirce thíos sula nuashonraíonn tú.",
+    "migrationGuides": "Treoracha Imirce",
+    "viewGuide": "Féach Treoir",
+    "loadingDetailedInfo": "Ag lódáil eolas mionsonraithe...",
+    "close": "Dún",
+    "viewAllReleases": "Féach Gach Eisiúint",
+    "downloadLatest": "Íoslódáil an ceann is déanaí",
+    "availableUpdates": "Nuashonruithe ar Fáil",
+    "unableToLoadDetails": "Ní féidir eolas mionsonraithe a lódáil.",
+    "version": "Leagan",
+    "urgentUpdateAvailable": "Nuashonrú Práinneach",
+    "updateAvailable": "Nuashonrú ar Fáil",
+    "releaseNotes": "Nótaí Eisiúna",
+    "priority": {
+      "urgent": "Práinneach",
+      "normal": "Gnáth",
+      "minor": "Mion",
+      "low": "Íseal"
+    },
+    "breakingChanges": "Athruithe Bristeacha",
+    "breakingChangesDefault": "Tá athruithe bristeacha sa leagan seo.",
+    "migrationGuide": "Treoir Imirce"
   },
   "changeCreds": {
     "title": "Athraigh Dintiúir",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Forleagain PDF ar bharr PDF eile",
       "title": "Forleagan PDF"
+    },
+    "pdfTextEditor": {
+      "title": "Eagarthóir Téacs PDF",
+      "desc": "Athbhreithnigh agus cuir in eagar onnmhairí JSON ó Stirling PDF le heagarthóireacht téacs ghrúpáilte agus athghiniúint PDF"
+    },
+    "addText": {
+      "tags": "téacs,anótáil,lipéad",
+      "title": "Cuir Téacs Leis",
+      "desc": "Cuir téacs saincheaptha in áit ar bith i do PDF"
     }
   },
   "landing": {
     "addFiles": "Cuir Comhaid Leis",
-    "uploadFromComputer": "Uaslódáil ón ríomhaire"
+    "uploadFromComputer": "Uaslódáil ón ríomhaire",
+    "openFromComputer": "Oscail ón ríomhaire"
   },
   "viewPdf": {
     "tags": "amharc, léamh, anótáil, téacs, íomhá",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "Tharla earráid agus na PDFanna á gcumasc."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Forbhreathnú ar Shocruithe Cumaisc"
+      }
     }
   },
   "split": {
@@ -1182,9 +1260,43 @@
     "tags": "img, jpg, pictiúr, grianghraf",
     "title": "Cuir Íomhá leis",
     "header": "Cuir íomhá i bhformáid PDF",
-    "everyPage": "Gach Leathanach?",
-    "upload": "Cuir íomhá leis",
-    "submit": "Cuir íomhá leis"
+    "image": {
+      "name": "Íomhá",
+      "placeholder": "Uaslódáil íomhá",
+      "label": "Comhad íomhá"
+    },
+    "steps": {
+      "configure": "Cumraigh Íomhá"
+    },
+    "step": {
+      "createDesc": "Uaslódáil an íomhá is mian leat a chur leis",
+      "place": "Cuir íomhá",
+      "placeDesc": "Cliceáil ar an PDF chun d’íomhá a chur leis"
+    },
+    "instructions": {
+      "title": "Conas íomhánna a chur leis",
+      "text": "Tar éis d’íomhá a uaslódáil thuas, cliceáil áit ar bith ar an PDF chun í a chur.",
+      "paused": "Suíniú ar sos",
+      "resumeHint": "Lean ar aghaidh leis an suíniú chun cliceáil agus d’íomhá a chur.",
+      "noSignature": "Uaslódáil íomhá thuas chun suíniú a chumasú."
+    },
+    "mode": {
+      "move": "Bog Íomhá",
+      "place": "Cuir Íomhá",
+      "pause": "Cuir suíniú ar sos",
+      "resume": "Atosaigh suíniú"
+    },
+    "results": {
+      "title": "Torthaí Cuir Íomhá Leis"
+    },
+    "error": {
+      "failed": "Tharla earráid agus íomhá á cur leis an PDF."
+    },
+    "saved": {
+      "defaultLabel": "Íomhá",
+      "defaultImageLabel": "Íomhá uaslódáilte"
+    },
+    "applySignatures": "Cuir Íomhánna i bhFeidhm"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1396,6 +1508,93 @@
       "10": "Cosc a chur ar phriontáil bhformáidí éagsúla"
     },
     "submit": "Athrú"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Leabharmharcanna & imlíne",
+      "replaceExisting": "Cuir na leabharmharcanna reatha in ionad (bain an tic chun cur leis)",
+      "replaceExistingHint": "Nuair atá sé díchumasaithe, cuirfear an imlíne nua leis i ndiaidh na leabharmharcanna reatha."
+    },
+    "actions": {
+      "source": "Luchtaigh leabharmharcanna",
+      "selectedFile": "Luchtaithe ó {{file}}",
+      "noFile": "Roghnaigh PDF chun leabharmharcanna atá ann a bhaint.",
+      "loadFromPdf": "Luchtaigh ón PDF roghnaithe",
+      "importJson": "Iompórtáil JSON",
+      "importClipboard": "Greamaigh JSON ón gearrthaisce",
+      "export": "Easpórtáil leabharmharcanna",
+      "exportJson": "Íoslódáil JSON",
+      "exportClipboard": "Cóipeáil JSON go dtí an gearrthaisce",
+      "clipboardUnavailable": "Níl rochtain ar an ngearrthaisce ar fáil sa bhrabhsálaí seo."
+    },
+    "info": {
+      "line1": "Teastaíonn teideal tuairisciúil agus an leathanach le hoscailt do gach leabharmharc.",
+      "line2": "Úsáid leabharmharcanna linbh chun ordlathas a thógáil do chaibidlí, rannóga nó fo-rannóga.",
+      "line3": "Iompórtáil leabharmharcanna ón PDF roghnaithe nó ó chomhad JSON chun am a shábháil."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Oscail an uirlis chun eagarthóireacht a thosú",
+        "description": "Roghnaigh an uirlis Cuir Clár Ábhair in Eagar chun a spás oibre a lódáil."
+      },
+      "tabTitle": "Spás oibre imlíne",
+      "subtitle": "Iompórtáil leabharmharcanna, tóg ordlathais, agus cuir an imlíne i bhfeidhm gan painéil chúnga taoibh.",
+      "noFile": "Níl PDF roghnaithe",
+      "fileLabel": "Cuirfear na hathruithe i bhfeidhm ar an PDF atá roghnaithe faoi láthair.",
+      "filePrompt": "Roghnaigh PDF ó do leabharlann nó uaslódáil ceann nua chun tosú.",
+      "changeFile": "Athraigh PDF",
+      "selectFile": "Roghnaigh PDF"
+    },
+    "editor": {
+      "heading": "Eagarthóir leabharmharc",
+      "description": "Cuir, neadaigh, agus athordaigh leabharmharcanna chun imlíne do PDF a chruthú.",
+      "addTopLevel": "Cuir leabharmharc barrleibhéil leis",
+      "empty": {
+        "title": "Níl leabharmharcanna ann fós",
+        "description": "Iompórtáil leabharmharcanna atá ann cheana nó tosaigh trí do chéad iontráil a chur leis.",
+        "action": "Cuir an chéad leabharmharc leis"
+      },
+      "defaultTitle": "Leabharmharc nua",
+      "defaultChildTitle": "Leabharmharc linbh",
+      "defaultSiblingTitle": "Leabharmharc nua",
+      "untitled": "Leabharmharc gan teideal",
+      "childBadge": "Leanbh",
+      "pagePreview": "Leathanach {{page}}",
+      "field": {
+        "title": "Teideal an leabharmhairc",
+        "page": "Uimhir leathanaigh sprice"
+      },
+      "actions": {
+        "toggle": "Scoránaigh leanaí",
+        "addChild": "Cuir leabharmharc linbh leis",
+        "addSibling": "Cuir leabharmharc comhleibhéil leis",
+        "remove": "Bain leabharmharc"
+      },
+      "confirmRemove": "Bain an leabharmharc seo agus a pháistí go léir?"
+    },
+    "messages": {
+      "loadedTitle": "Leabharmharcanna eastósctha",
+      "loadedBody": "Luchtáladh leabharmharcanna atá ann ón PDF isteach san eagarthóir.",
+      "noBookmarks": "Níor aimsíodh leabharmharcanna sa PDF roghnaithe.",
+      "loadFailed": "Níorbh fhéidir leabharmharcanna a eastóscadh ón PDF roghnaithe.",
+      "imported": "Leabharmharcanna iompórtáilte",
+      "importedBody": "Chuir d’imlíne JSON ábhar reatha an eagarthóra in ionad.",
+      "importedClipboard": "Chuir sonraí an ghearrthaisce an liosta leabharmharc reatha in ionad.",
+      "invalidJson": "Struchtúr JSON neamhbhailí",
+      "invalidJsonBody": "Tabhair comhad JSON leabharmharc bailí agus bain triail eile as, le do thoil.",
+      "exported": "Íoslódáil JSON réidh",
+      "copied": "Cóipeáladh chuig an ngearrthaisce",
+      "copiedBody": "Cóipeáladh JSON leabharmharc go rathúil.",
+      "copyFailed": "Theip ar chóipeáil"
+    },
+    "error": {
+      "failed": "Theip ar nuashonrú an chláir ábhair"
+    },
+    "submit": "Cuir clár ábhair i bhfeidhm",
+    "results": {
+      "title": "PDF nuashonraithe le leabharmharcanna",
+      "subtitle": "Íoslódáil an comhad próiseáilte nó cealaigh an oibríocht thíos."
+    }
   },
   "removePages": {
     "tags": "Bain leathanaigh, scrios leathanaigh",
@@ -1978,13 +2177,54 @@
       "title": "Tarraing do shíniú",
       "clear": "Glan"
     },
+    "canvas": {
+      "heading": "Déan do shíniú a tharraingt",
+      "clickToOpen": "Cliceáil chun an chanbhás líníochta a oscailt",
+      "modalTitle": "Déan do shíniú a tharraingt",
+      "colorLabel": "Dath",
+      "penSizeLabel": "Méid peann",
+      "penSizePlaceholder": "Méid",
+      "clear": "Glan canbhás",
+      "colorPickerTitle": "Roghnaigh dath stríoca"
+    },
     "text": {
       "name": "Ainm an tsínitheora",
-      "placeholder": "Iontráil d’ainm iomlán"
+      "placeholder": "Iontráil d’ainm iomlán",
+      "fontLabel": "Cló",
+      "fontSizeLabel": "Méid cló",
+      "fontSizePlaceholder": "Clóscríobh nó roghnaigh méid cló (8-200)",
+      "colorLabel": "Dath téacs"
     },
     "clear": "Glan",
     "add": "Cuir",
-    "saved": "Sínithe Sínithe",
+    "saved": {
+      "heading": "Sínithe sábháilte",
+      "description": "Úsáid arís sínithe sábháilte am ar bith.",
+      "emptyTitle": "Níl aon síniú sábháilte fós",
+      "emptyDescription": "Tarraing, uaslódáil, nó clóscríobh síniú thuas, ansin úsáid \"Sábháil sa leabharlann\" chun suas le {{max}} rogha is fearr a choinneáil réidh le húsáid.",
+      "type": {
+        "canvas": "Líníocht",
+        "image": "Uaslódáil",
+        "text": "Téacs"
+      },
+      "limitTitle": "Sroichtear an teorainn",
+      "limitDescription": "Bain síniú sábháilte sula gcuireann tú cinn nua leis (uas {{max}}).",
+      "carouselPosition": "{{current}} as {{total}}",
+      "prev": "Roimhe Seo",
+      "next": "Ar Aghaidh",
+      "delete": "Bain",
+      "label": "Lipéad",
+      "defaultLabel": "Síniú",
+      "defaultCanvasLabel": "Síniú líníochta",
+      "defaultImageLabel": "Síniú uaslódáilte",
+      "defaultTextLabel": "Síniú clóscríofa",
+      "saveButton": "Sábháil síniú",
+      "saveUnavailable": "Cruthaigh síniú ar dtús chun é a shábháil.",
+      "noChanges": "Tá an síniú reatha sábháilte cheana.",
+      "status": {
+        "saved": "Sábháilte"
+      }
+    },
     "save": "Sábháil an Síniú",
     "applySignatures": "Cuir Síntithe i bhFeidhm",
     "personalSigs": "Sínithe Pearsanta",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Cumraigh Síniú"
     },
+    "step": {
+      "createDesc": "Roghnaigh conas is mian leat an síniú a chruthú",
+      "place": "Cuir & sábháil",
+      "placeDesc": "Cuir an síniú ar do PDF"
+    },
     "type": {
       "title": "Cineál Sínithe",
       "draw": "Tarraing",
       "canvas": "Canbhás",
       "image": "Íomhá",
-      "text": "Téacs"
+      "text": "Téacs",
+      "saved": "Sábháilte"
     },
     "image": {
       "label": "Uaslódáil íomhá sínithe",
@@ -2019,11 +2265,17 @@
       "title": "Conas síniú a chur leis",
       "canvas": "Tar éis duit do shíniú a tharraingt sa chanbhás, dún an mhodal ansin cliceáil áit ar bith ar an PDF chun é a chur.",
       "image": "Tar éis duit d’íomhá shínithe a uaslódáil thuas, cliceáil áit ar bith ar an PDF chun í a chur.",
-      "text": "Tar éis duit d’ainm a chur isteach thuas, cliceáil áit ar bith ar an PDF chun do shíniú a chur."
+      "saved": "Roghnaigh síniú sábháilte thuas, ansin cliceáil áit ar bith ar an PDF chun é a chur.",
+      "text": "Tar éis duit d’ainm a chur isteach thuas, cliceáil áit ar bith ar an PDF chun do shíniú a chur.",
+      "paused": "Suíniú ar sos",
+      "resumeHint": "Lean ar aghaidh leis an suíniú chun cliceáil agus do shíniú a chur.",
+      "noSignature": "Cruthaigh síniú thuas chun uirlisí suínithe a chumasú."
     },
     "mode": {
       "move": "Bog an Síniú",
-      "place": "Cuir an Síniú"
+      "place": "Cuir an Síniú",
+      "pause": "Cuir suíniú ar sos",
+      "resume": "Atosaigh suíniú"
     },
     "updateAndPlace": "Nuashonraigh agus Cuir",
     "activate": "Gníomhachtaigh Suí an tSínithe",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Maidir le Baint Anótálacha",
       "description": "Bainfidh an uirlis seo gach anótáil (tráchtanna, aibhsithe, nótaí, srl.) ó do dhoiciméid PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Maidir le Bain Anótálacha"
+      },
+      "description": {
+        "title": "Cad a dhéanann sé"
+      }
     },
     "error": {
       "failed": "Tharla earráid agus anótálacha á mbaint as an PDF."
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Conas a Oibríonn Athainmnú Uathoibríoch"
       },
+      "description": {
+        "title": "Cad a dhéanann sé"
+      },
       "howItWorks": {
         "title": "Athainmniú Cliste",
         "text": "Aimsíonn sé an teideal ó ábhar do PDF go huathoibríoch agus úsáideann sé é mar ainm an chomhaid.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Cruthaíonn sé ainm comhaid glan, bailí ón teideal aimsithe",
         "bullet3": "Coinníonn sé an t-ainm bunaidh mura bhfaightear teideal oiriúnach"
       }
+    },
+    "settings": {
+      "title": "Maidir leis"
     }
   },
   "adjust-contrast": {
@@ -3598,7 +3864,9 @@
     "exportAll": "Easpórtáil an PDF",
     "downloadSelected": "Íoslódáil na Comhaid Roghnaithe",
     "downloadAll": "Íoslódáil Uile",
+    "saveAll": "Sábháil Uile",
     "toggleTheme": "Athraigh an Téama",
+    "toggleBookmarks": "Scoránaigh Leabharmharcanna",
     "language": "Teanga",
     "search": "Cuardaigh an PDF",
     "panMode": "Mód Pánála",
@@ -4212,9 +4480,21 @@
         "title": "Préimh & Fiontar",
         "description": "Cumraigh do eochair cheadúnais préimhe nó fiontair.",
         "license": "Cumraíocht Ceadúnais",
+        "licenseKey": {
+          "toggle": "An bhfuil eochair cheadúnais nó comhad teastais agat?",
+          "info": "Má tá eochair cheadúnais nó comhad teastais agat ó cheannach díreach, is féidir leat é a chur isteach anseo chun gnéithe préimhe nó fiontraíochta a ghníomhachtú."
+        },
         "key": {
           "label": "Eochair Ceadúnais",
-          "description": "Iontráil d’eochair cheadúnais préimhe nó fiontair"
+          "description": "Iontráil d’eochair cheadúnais préimhe nó fiontair",
+          "success": "Eochair Ceadúnais Sábháilte",
+          "successMessage": "Gníomhaíodh d’eochair cheadúnais go rathúil. Ní gá atosú.",
+          "overwriteWarning": {
+            "title": "⚠️ Rabhadh: Braitheadh Ceadúnas Reatha",
+            "line1": "Ní féidir forshcríobh ar do eochair cheadúnais reatha a chealú.",
+            "line2": "Caillefar do cheadúnas roimhe seo go buan mura bhfuil cúltaca de in áit eile agat.",
+            "line3": "Tábhachtach: Coinnigh eochracha ceadúnais príobháideach agus slán. Ná roinn go poiblí riamh."
+          }
         },
         "enabled": {
           "label": "Cumasaigh Gnéithe Préimhe",
@@ -4278,12 +4558,17 @@
     "or": "nó",
     "dropFileHere": "Scaoil an comhad anseo nó cliceáil chun uaslódáil",
     "dropFilesHere": "Scaoil comhaid anseo nó cliceáil an cnaipe uaslódála",
+    "dropFilesHereOpen": "Scaoil comhaid anseo nó cliceáil an cnaipe Oscail",
     "pdfFilesOnly": "Comhaid PDF amháin",
     "supportedFileTypes": "Cineálacha comhaid a dtacaítear leo",
     "upload": "Uaslódáil",
     "uploadFile": "Uaslódáil Comhad",
     "uploadFiles": "Uaslódáil Comhaid",
+    "open": "Oscail",
+    "openFile": "Oscail Comhad",
+    "openFiles": "Oscail Comhaid",
     "noFilesInStorage": "Níl comhaid ar fáil sa stóráil. Uaslódáil roinnt comhad ar dtús.",
+    "noFilesInStorageOpen": "Níl comhaid ar fáil sa stóráil. Oscail roinnt comhad ar dtús.",
     "selectFromStorage": "Roghnaigh ón Stóráil",
     "backToTools": "Ar ais go hUirlisí",
     "addFiles": "Cuir Comhaid Leis",
@@ -4329,6 +4614,8 @@
     "myFiles": "Mo Chomhaid",
     "noRecentFiles": "Níor aimsíodh comhaid le déanaí",
     "googleDriveNotAvailable": "Níl comhtháthú Google Drive ar fáil",
+    "downloadSelected": "Íoslódáil Roghnaithe",
+    "saveSelected": "Sábháil Roghnaithe",
     "openFiles": "Oscail Comhaid",
     "openFile": "Oscail Comhad",
     "details": "Sonraí an Chomhaid",
@@ -4341,7 +4628,6 @@
     "selectAll": "Roghnaigh Uile",
     "deselectAll": "Díroghnaigh Uile",
     "deleteSelected": "Scrios Roghnaithe",
-    "downloadSelected": "Íoslódáil Roghnaithe",
     "selectedCount": "{{count}} roghnaithe",
     "download": "Íosluchtaigh",
     "delete": "Scrios",
@@ -4621,8 +4907,13 @@
       "secureWorkflow": "Sreabhadh Oibre Slándála",
       "secureWorkflowDesc": "Slánaíonn sé doiciméid PDF trí ábhar dainséarach féideartha mar JavaScript agus comhaid leabaithe a bhaint, ansin cuireann sé cosaint le focal faire chun rochtain neamhdhleathach a chosc. Socraítear an focal faire mar 'password' de réir réamhshocraithe.",
       "processImages": "Próiseáil Íomhánna",
-      "processImagesDesc": "Tiontaíonn sé iliomad comhad íomhá ina dhoiciméad PDF amháin, agus ansin cuireann sé teicneolaíocht OCR i bhfeidhm chun téacs inchuardaithe a bhaint as na híomhánna."
+      "processImagesDesc": "Tiontaíonn sé iliomad comhad íomhá ina dhoiciméad PDF amháin, agus ansin cuireann sé teicneolaíocht OCR i bhfeidhm chun téacs inchuardaithe a bhaint as na híomhánna.",
+      "prePublishSanitization": "Sláintíocht Réamhfhoilsithe",
+      "prePublishSanitizationDesc": "Sreabhadh oibre sláintíochta a bhaintear gach meiteashonraí ceilte, JavaScript, comhaid leabaithe, anótálacha, agus comhréidiaíonn sé foirmeacha chun sceitheadh sonraí a chosc sula bhfoilsítear PDFs ar líne."
     }
+  },
+  "colorPicker": {
+    "title": "Roghnaigh dath"
   },
   "common": {
     "previous": "Roimhe Seo",
@@ -4639,7 +4930,13 @@
     "used": "úsáidte",
     "available": "ar fáil",
     "cancel": "Cealaigh",
-    "preview": "Réamhamharc"
+    "preview": "Réamhamharc",
+    "close": "Dún",
+    "done": "Déanta",
+    "loading": "Á lódáil...",
+    "back": "Siar",
+    "continue": "Lean ar aghaidh",
+    "error": "Earráid"
   },
   "config": {
     "overview": {
@@ -4705,6 +5002,14 @@
     "addMoreFiles": "Cuir tuilleadh comhad leis...",
     "selectedFiles": "Comhaid Roghnaithe",
     "submit": "Cuir Iatáin Leis",
+    "tooltip": {
+      "header": {
+        "title": "Maidir le Cuir Iatáin Leis"
+      },
+      "description": {
+        "title": "Cad a dhéanann sé"
+      }
+    },
     "results": {
       "title": "Torthaí na nIatán"
     },
@@ -4724,7 +5029,6 @@
   },
   "customPosition": "Suíomh Saincheaptha",
   "details": "Sonraí",
-  "downloadUnavailable": "Níl íoslódáil ar fáil don mhír seo",
   "invalidUndoData": "Ní féidir a chealú: sonraí oibríochta neamhbhailí",
   "margin": {
     "large": "Mór",
@@ -4801,6 +5105,10 @@
       "maybeLater": "B'fhéidir Níos Déanaí",
       "dontShowAgain": "Ná Taispeáin Arís"
     },
+    "welcomeSlide": {
+      "title": "Fáilte go Stirling",
+      "body": "Tá Stirling PDF réidh anois do fhoirne de gach méid. Cuimsíonn an nuashonrú seo leagan amach nua, cumais riaracháin chumhachtacha nua, agus ár ngné is mó a iarradh - <strong>Cuir Téacs in Eagar</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Roghnaímis an uirlis <strong>Bearradh</strong> chun a léiriú conas ceann de na huirlisí a úsáid.",
     "toolInterface": "Seo comhéadan na huirlise <strong>Bearradh</strong>. Mar a fheiceann tú, níl mórán ann fós mar nár chuir muid aon chomhaid PDF leis le hoibriú leo go fóill.",
@@ -4823,7 +5131,39 @@
     "next": "Ar Aghaidh",
     "finish": "Críochnaigh",
     "startTour": "Tosaigh an Turas",
-    "startTourDescription": "Téigh ar thuras treoraithe de phríomhghnéithe Stirling PDF"
+    "startTourDescription": "Téigh ar thuras treoraithe de phríomhghnéithe Stirling PDF",
+    "buttons": {
+      "next": "Ar aghaidh →",
+      "back": "Siar",
+      "skipForNow": "Scipeáil faoi láthair",
+      "download": "Íoslódáil →",
+      "showMeAround": "Taispeáin timpeall dom",
+      "skipTheTour": "Scipeáil an turas"
+    },
+    "serverLicense": {
+      "skip": "Scipeáil faoi láthair",
+      "seePlans": "Féach ar Phleananna →",
+      "upgrade": "Uasghrádaigh anois →",
+      "freeTitle": "Ceadúnas Freastalaí",
+      "overLimitTitle": "Ceadúnas Freastalaí de dhíth",
+      "overLimitBody": "Ceadaíonn ár gceadúnú suas le <strong>{{freeTierLimit}}</strong> úsáideoir in aisce in aghaidh freastalaí. Tá <strong>{{overLimitUserCopy}}</strong> úsáideoir Stirling agat. Chun leanúint gan bhriseadh, uasghrádaigh go plean Freastalaí Stirling - <strong>suíocháin neamhtheoranta</strong>, eagarthóireacht téacs PDF, agus lánrialú riaracháin ar $99/freastalaí/mí.",
+      "freeBody": "Ceadaíonn ár gceadúnú <strong>Open-Core</strong> suas le <strong>{{freeTierLimit}}</strong> úsáideoir in aisce in aghaidh freastalaí. Chun méadú gan bhriseadh agus rochtain luath a fháil ar ár <strong>uirlis eagarthóireachta téacs PDF</strong> nua, molaimid Plean Freastalaí Stirling - eagarthóireacht iomlán agus <strong>suíocháin neamhtheoranta</strong> ar $99/freastalaí/mí."
+    },
+    "desktopInstall": {
+      "title": "Íoslódáil",
+      "titleWithOs": "Íoslódáil do {{osLabel}}",
+      "body": "Oibríonn Stirling is fearr mar aip deisce. Is féidir leat é a úsáid as líne, rochtain níos tapúla a fháil ar dhoiciméid, agus eagarthóireacht a dhéanamh go háitiúil ar do ríomhaire."
+    },
+    "planOverview": {
+      "adminTitle": "Forbhreathnú Riarthóra",
+      "userTitle": "Forbhreathnú Plean",
+      "adminBodyLoginEnabled": "Mar riarthóir, is féidir leat úsáideoirí a bhainistiú, socruithe a chumrú, agus sláinte an fhreastalaí a mheas. Faigheann an chéad <strong>{{freeTierLimit}}</strong> duine ar do fhreastalaí Stirling saor in aisce.",
+      "adminBodyLoginDisabled": "Nuair a chumasaíonn tú mód logála isteach, is féidir leat úsáideoirí a bhainistiú, socruithe a chumrú, agus sláinte an fhreastalaí a mheas. Faigheann an chéad <strong>{{freeTierLimit}}</strong> duine ar do fhreastalaí Stirling saor in aisce.",
+      "userBody": "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoiciméid eagraithe in aon spás oibre slán amháin. Cumasaigh mód logála isteach aon uair is mian leat dul thar úsáid aonair."
+    },
+    "securityCheck": {
+      "message": "Rinneadh athruithe suntasacha ar an bhfeidhmchlár le déanaí. D’fhéadfadh aird do riarthóra freastalaí a bheith de dhíth. Deimhnigh do ról le do thoil chun leanúint ar aghaidh."
+    }
   },
   "adminOnboarding": {
     "welcome": "Fáilte go dtí an <strong>Admin Tour</strong>! Déanaimis iniúchadh ar na gnéithe agus na socruithe fiontraíochta cumhachtacha atá ar fáil do riarthóirí córais.",
@@ -4852,7 +5192,10 @@
       "role": "Ról",
       "team": "Foireann",
       "status": "Stádas",
-      "actions": "Gníomhartha",
+      "actions": {
+        "label": "Gníomhartha",
+        "upgrade": "Uasghrádú"
+      },
       "noMembersFound": "Níor aimsíodh baill",
       "active": "Gníomhach",
       "disabled": "Díchumasaithe",
@@ -4964,7 +5307,8 @@
         "slotsAvailable": "{{count}} áit(í) úsáideora ar fáil",
         "noSlotsAvailable": "Níl aon áiteanna ar fáil",
         "currentUsage": "Faoi láthair tá {{current}} as {{max}} ceadúnas úsáideora in úsáid"
-      }
+      },
+      "loginRequired": "Cumasaigh mód logála isteach ar dtús"
     },
     "teams": {
       "title": "Foirne",
@@ -5057,6 +5401,17 @@
     "showComparison": "Cuir Gach Gné i gComparáid",
     "hideComparison": "Folaigh Comparáid Gnéithe",
     "featureComparison": "Comparáid Gnéithe",
+    "from": "Ó",
+    "perMonth": "/mí",
+    "perSeat": "/suíochán",
+    "withServer": "+ Plean Freastalaí",
+    "licensedSeats": "Ceadúnaithe: {{count}} suíochán",
+    "includedInCurrent": "San Áireamh i do Phlean",
+    "selectPlan": "Roghnaigh Plean",
+    "manage": "Bainistigh",
+    "manageSubscription": {
+      "description": "Bainistigh do shíntiús, billeáil, agus modhanna íocaíochta"
+    },
     "activePlan": {
       "title": "Plean Gníomhach",
       "subtitle": "Mionsonraí do shínithe reatha"
@@ -5074,13 +5429,16 @@
       "upTo": "Suas le"
     },
     "period": {
-      "month": "mí"
+      "month": "mí",
+      "perUserPerMonth": "/úsáideoir/mí"
     },
     "free": {
       "name": "Saor",
       "highlight1": "Úsáid Teoranta Uirlisí in aghaidh na seachtaine",
       "highlight2": "Rochtain ar gach uirlis",
-      "highlight3": "Tacaíocht phobail"
+      "highlight3": "Tacaíocht phobail",
+      "forever": "Saor go deo",
+      "included": "San áireamh"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5450,9 @@
       "name": "Enterprise",
       "highlight1": "Praghsáil shaincheaptha",
       "highlight2": "Tacaíocht thiomnaithe",
-      "highlight3": "Na gnéithe is déanaí"
+      "highlight3": "Na gnéithe is déanaí",
+      "requiresServer": "Teastaíonn Freastalaí",
+      "requiresServerMessage": "Uasghrádaigh go dtí an plean Freastalaí ar dtús sula n-uasghrádaíonn tú go Enterprise."
     },
     "feature": {
       "title": "Gné",
@@ -5102,6 +5462,12 @@
       "api": "Rochtain API",
       "priority": "Tacaíocht Thosaíochta",
       "customPricing": "Praghsáil Shaincheaptha"
+    },
+    "licenseWarning": {
+      "title": "Sroichtear teorainn féin-óstáilte saor in aisce",
+      "body": "Tá {{total}} úsáideoir agat ach ní thacaíonn an sraith saor in aisce ach le {{limit}} in aghaidh an fhreastalaí. Uasghrádaigh chun Stirling PDF a choinneáil ag rith go réidh.",
+      "overLimit": "níos mó ná {{limit}}",
+      "cta": "Féach ar phleananna"
     }
   },
   "subscription": {
@@ -5120,7 +5486,34 @@
     "manageBilling": "Bainistigh Billeáil",
     "portal": {
       "error": "Theip ar an bportál billeála a oscailt"
-    }
+    },
+    "updateSeats": "Nuashonraigh Suíocháin",
+    "updateEnterpriseSeats": "Nuashonraigh Suíocháin Enterprise",
+    "currentSeats": "Suíocháin Reatha",
+    "minimumSeats": "Íosmhéid Suíochán",
+    "basedOnUsers": "(úsáideoirí reatha)",
+    "newSeatCount": "Líon Nua Suíochán",
+    "newSeatCountDescription": "Roghnaigh líon na suíochán do do cheadúnas fiontraíochta",
+    "whatHappensNext": "Cad a tharlaíonn ansin?",
+    "stripePortalRedirect": "Díreofar tú go tairseach billeála Stripe chun an t-athrú suíocháin a athbhreithniú agus a dhearbhú. Ríomhfar an méid comhréireach go huathoibríoch.",
+    "preparingUpdate": "Ag ullmhú nuashonraithe suíochán...",
+    "seatCountTooLow": "Ní mór don líon suíochán a bheith ar a laghad {{minimum}} (líon reatha úsáideoirí)",
+    "seatCountUnchanged": "Roghnaigh líon suíochán difriúil le do thoil",
+    "seatsUpdated": "Suíocháin Nuashonraithe",
+    "seatsUpdatedMessage": "Nuashonraíodh do shuíocháin fiontraíochta go {{seats}}",
+    "updateProcessing": "Nuashonrú á Phróiseáil",
+    "updateProcessingMessage": "Tá d’athrú suíochán á phróiseáil. Athnuaigh i gceann cúpla soicind.",
+    "notEnterprise": "Níl bainistíocht suíochán ar fáil ach do cheadúnais fiontraíochta"
+  },
+  "upgradeBanner": {
+    "title": "Uasghrádaigh go Plean Freastalaí",
+    "message": "Bain an leas is fearr as Stirling PDF le húsáideoirí neamhtheoranta agus gnéithe ardleibhéil",
+    "upgradeButton": "Uasghrádaigh Anois",
+    "dismiss": "Dún meirge",
+    "attentionTitle": "Teastaíonn aird riarthóra ón bhfreastalaí seo",
+    "attentionBody": "Ní mór do d’riarthóir síniú isteach chun tuilleadh eolais a fheiceáil. Déan teagmháil leo láithreach.",
+    "attentionBodyAdmin": "Athbhreithnigh na riachtanais ceadúnais chun an freastalaí seo a choinneáil comhlíontach.",
+    "seeInfo": "Féach eolas"
   },
   "payment": {
     "preparing": "Do sheiceáil amach á ullmhú...",
@@ -5128,7 +5521,61 @@
     "success": "D’éirigh leis an Íocaíocht!",
     "successMessage": "Gníomhachtaíodh do shíntiús go rathúil. Gheobhaidh tú ríomhphost dearbhaithe go luath.",
     "autoClose": "Dúnfaidh an fhuinneog seo go huathoibríoch...",
-    "error": "Earráid Íocaíochta"
+    "error": "Earráid Íocaíochta",
+    "upgradeSuccess": "D’éirigh leis an íocaíocht! Uasghrádaíodh do shíntiús. Nuashonraíodh an ceadúnas ar do fhreastalaí. Gheobhaidh tú ríomhphost deimhnithe go luath.",
+    "paymentSuccess": "D’éirigh leis an íocaíocht! Eochair cheadúnais á baint amach...",
+    "licenseActivated": "Ceadúnas gníomhachtaithe! Sábháladh d’eochair cheadúnais. Seoladh ríomhphost deimhnithe chuig do sheoladh cláraithe.",
+    "licenseDelayed": "D’éirigh leis an íocaíocht! Tá do cheadúnas á ghiniúint. Gheobhaidh tú do eochair cheadúnais go luath trí ríomhphost. Mura bhfaigheann tú é laistigh de 10 nóiméad, téigh i dteagmháil le tacaíocht.",
+    "licensePollingError": "D’éirigh leis an íocaíocht ach níor éirigh linn d’eochair cheadúnais a fháil go huathoibríoch. Seiceáil do ríomhphost nó téigh i dteagmháil le tacaíocht le do dheimhniú íocaíochta.",
+    "licenseRetrievalError": "D’éirigh leis an íocaíocht ach theip ar aisghabháil an cheadúnais. Gheobhaidh tú d’eochair cheadúnais trí ríomhphost. Téigh i dteagmháil le tacaíocht mura bhfaigheann tú é laistigh de 10 nóiméad.",
+    "syncError": "D’éirigh leis an íocaíocht ach theip ar shioncronú an cheadúnais. Nuashonrófar do cheadúnas go luath. Déan teagmháil le tacaíocht má leanann fadhbanna.",
+    "licenseSaveError": "Theip ar shábháil eochrach ceadúnais. Téigh i dteagmháil le tacaíocht le d’eochair cheadúnais chun an ghníomhachtú a chur i gcrích.",
+    "paymentCanceled": "Cuireadh an íocaíocht ar ceal. Níor gearradh aon táillí.",
+    "syncingLicense": "Do cheadúnas uasghrádaithe á shioncronú...",
+    "generatingLicense": "D’eochair cheadúnais á giniúint...",
+    "upgradeComplete": "Uasghrádú Críochnaithe",
+    "upgradeCompleteMessage": "Uasghrádaíodh do shíntiús go rathúil. Nuashonraíodh d’eochair cheadúnais atá ann cheana.",
+    "stripeNotConfigured": "Stripe Gan Cumraíocht",
+    "stripeNotConfiguredMessage": "Níl comhtháthú íocaíochta Stripe cumraithe. Déan teagmháil le d’riarthóir.",
+    "monthly": "Míosúil",
+    "yearly": "Bliantúil",
+    "billingPeriod": "Tréimhse Billeála",
+    "enterpriseNote": "Is féidir suíocháin a choigeartú ag an tseiceáil amach (1-1000).",
+    "installationId": "Aitheantas Suiteála",
+    "licenseKey": "D’Eochair Ceadúnais",
+    "licenseInstructions": "Cuireadh é seo le do shuiteáil. Gheobhaidh tú cóip i do ríomhphost freisin.",
+    "canCloseWindow": "Is féidir leat an fhuinneog seo a dhúnadh anois.",
+    "licenseKeyProcessing": "Eochair Ceadúnais á Próiseáil",
+    "licenseDelayedMessage": "Tá d’eochair cheadúnais á ghiniúint. Seiceáil do ríomhphost go luath nó téigh i dteagmháil le tacaíocht.",
+    "perYear": "/bliain",
+    "perMonth": "/mí",
+    "emailInvalid": "Cuir isteach seoladh ríomhphoist bailí",
+    "emailStage": {
+      "title": "Cuir isteach do Ríomhphost",
+      "description": "Úsáidfimid é seo chun d’eochair cheadúnais agus admhálacha a sheoladh.",
+      "emailLabel": "Seoladh Ríomhphoist",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Lean ar aghaidh",
+      "modalTitle": "Tosaigh - {{planName}}"
+    },
+    "planStage": {
+      "title": "Roghnaigh Do Thréimhse Billeála",
+      "savingsNote": "Sábháil {{percent}}% le billeáil bhliantúil",
+      "basePrice": "Praghas Bonn",
+      "seatPrice": "In aghaidh an tsuíocháin",
+      "totalForSeats": "Iomlán ({{count}} suíochán)",
+      "selectMonthly": "Roghnaigh Míosúil",
+      "selectYearly": "Roghnaigh Bliantúil",
+      "savePercent": "Sábháil {{percent}}%",
+      "savingsAmount": "Sábhálann tú {{amount}}",
+      "modalTitle": "Roghnaigh Tréimhse Billeála - {{planName}}",
+      "billedYearly": "Billeáilte go bliantúil ag {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Siar go Roghnú Plean",
+      "selectedPlan": "Plean Roghnaithe",
+      "modalTitle": "Críochnaigh Íocaíocht - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "An Chéad Logáil Isteach",
@@ -5287,5 +5734,281 @@
     "offline": "Cúlchóras as líne",
     "starting": "Cúlchóras á thosú...",
     "wait": "Fan go mbeidh an cúlchóras tosaithe go hiomlán agus bain triail eile as."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Díghlasáil PDF chun leanúint",
+    "title": "Bain pasfhocal chun leanúint",
+    "description": "Tá an PDF seo cosanta le pasfhocal. Cuir isteach an pasfhocal ionas gur féidir leat leanúint ag obair leis.",
+    "password": {
+      "label": "Pasfhocal PDF",
+      "placeholder": "Cuir isteach pasfhocal an PDF"
+    },
+    "skip": "Scipeáil faoi láthair",
+    "unlock": "Díghlasáil & Lean ar aghaidh",
+    "incorrectPassword": "Pasfhocal mícheart",
+    "missingFile": "Níl an comhad roghnaithe ar fáil a thuilleadh.",
+    "emptyResponse": "Níor tháirg baint an phasfhocail comhad.",
+    "required": "Cuir isteach an pasfhocal chun leanúint.",
+    "successTitle": "Baineadh an pasfhocal",
+    "successBodyWithName": "Baineadh pasfhocal ó {{fileName}}",
+    "successBody": "Baineadh an pasfhocal go rathúil."
+  },
+  "setup": {
+    "welcome": "Fáilte go Stirling PDF",
+    "description": "Tosaigh trí roghnú conas is mian leat Stirling PDF a úsáid",
+    "step1": {
+      "label": "Roghnaigh Mód",
+      "description": "As líne nó Freastalaí"
+    },
+    "step2": {
+      "label": "Roghnaigh Freastalaí",
+      "description": "Féin-óstáilte"
+    },
+    "step3": {
+      "label": "Logáil Isteach",
+      "description": "Cuir isteach dintiúir"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Sínigh isteach le do chuntas Stirling"
+      },
+      "selfhosted": {
+        "title": "Freastalaí Féin-Óstáilte",
+        "description": "Ceangail le do fhreastalaí Stirling PDF féin"
+      }
+    },
+    "saas": {
+      "title": "Sínigh isteach i Stirling",
+      "subtitle": "Sínigh isteach le do chuntas Stirling"
+    },
+    "selfhosted": {
+      "title": "Sínigh isteach chuig an bhFreastalaí",
+      "subtitle": "Cuir isteach dintiúir do fhreastalaí"
+    },
+    "server": {
+      "title": "Ceangail leis an bhFreastalaí",
+      "subtitle": "Cuir isteach URL do fhreastalaí féin-óstáilte",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Freastalaí féin-óstáilte"
+      },
+      "url": {
+        "label": "URL an fhreastalaí",
+        "description": "Cuir isteach URL iomlán do fhreastalaí Stirling PDF féin-óstáilte"
+      },
+      "error": {
+        "emptyUrl": "Cuir isteach URL freastalaí le do thoil",
+        "unreachable": "Níorbh fhéidir ceangal leis an bhfreastalaí",
+        "testFailed": "Theip ar thástáil an cheangail"
+      },
+      "testing": "Ceangal á thástáil..."
+    },
+    "login": {
+      "title": "Sínigh Isteach",
+      "subtitle": "Cuir isteach do dhintiúir chun leanúint ar aghaidh",
+      "connectingTo": "Ag ceangal le:",
+      "username": {
+        "label": "Ainm Úsáideora",
+        "placeholder": "Cuir isteach d’ainm úsáideora"
+      },
+      "email": {
+        "label": "Ríomhphost",
+        "placeholder": "Cuir isteach do ríomhphost"
+      },
+      "password": {
+        "label": "Pasfhocal",
+        "placeholder": "Cuir isteach do phasfhocal"
+      },
+      "error": {
+        "emptyUsername": "Cuir isteach d’ainm úsáideora",
+        "emptyEmail": "Cuir isteach do ríomhphost",
+        "emptyPassword": "Cuir isteach do phasfhocal",
+        "oauthFailed": "Theip ar logáil isteach OAuth. Bain triail eile as."
+      },
+      "submit": "Logáil Isteach",
+      "signInWith": "Sínigh isteach le",
+      "oauthPending": "Brabhsálaí á oscailt le haghaidh fíordheimhnithe...",
+      "orContinueWith": "Nó lean ar aghaidh le ríomhphost"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Fíordheimhniú Rathúil",
+      "message": "Is féidir leat an fhuinneog seo a dhúnadh agus filleadh ar Stirling PDF."
+    },
+    "error": {
+      "title": "Theip ar an bhfíordheimhniú",
+      "message": "Níor éirigh leis an bhfíordheimhniú. Is féidir leat an fhuinneog seo a dhúnadh agus triail eile a bhaint as."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Eagarthóir PDF JSON",
+    "viewLabel": "Eagarthóir PDF",
+    "converting": "PDF á thiontú go formáid in-eagarthóireachta...",
+    "conversionFailed": "Theip ar thiontú PDF. Bain triail eile as.",
+    "currentFile": "Comhad reatha: {{name}}",
+    "pageSummary": "Leathanach {{number}} as {{total}}",
+    "pagePreviewAlt": "Réamhamharc leathanaigh",
+    "imageLabel": "Íomhá curtha",
+    "noTextOnPage": "Níor braitheadh aon téacs in-eagarthóireachta ar an leathanach seo.",
+    "pageType": {
+      "paragraph": "Leathanach míre",
+      "sparse": "Téacs scaipthe"
+    },
+    "groupingMode": {
+      "auto": "Uathoibríoch",
+      "paragraph": "Mír",
+      "singleLine": "Líne Aonair"
+    },
+    "badges": {
+      "unsaved": "Athraithe",
+      "modified": "Athraithe",
+      "earlyAccess": "Rochtain Luath"
+    },
+    "actions": {
+      "reset": "Athshocraigh Athruithe",
+      "downloadJson": "Íoslódáil JSON",
+      "generatePdf": "Gin PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú",
+        "description": "Scálaíonn sé téacs go cothrománach go huathoibríoch chun feistiú dá bhosca teorann bunaidh nuair a bhíonn rindreáil cló difriúil ón PDF."
+      },
+      "groupingMode": {
+        "title": "Mód Grúpála Téacs",
+        "autoDescription": "Aimsíonn sé go huathoibríoch cineál leathanaigh agus grúpálann sé téacs mar is cuí.",
+        "paragraphDescription": "Grúpálann sé línte ailínithe i mboscaí téacs míre il-líne.",
+        "singleLineDescription": "Coinníonn sé gach líne téacs PDF mar bhosca téacs ar leith."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Leid: Coinnigh Ctrl (Cmd) nó Shift chun boscaí téacs a roghnú iolrach. Beidh barra uirlisí ar snámh le feiceáil os cionn na roghnúcháin ionas gur féidir leat cumaisc, díghrúpa, nó leitheadanna a choigeartú."
+      },
+      "forceSingleElement": {
+        "title": "Glasáil téacs curtha in eagar le heilimint PDF aonair",
+        "description": "Nuair atá cumasaithe, easpórtálann an t-eagarthóir gach bosca téacs curtha in eagar mar eilimint téacs PDF amháin chun glifaí forluiteacha nó clónna measctha a sheachaint."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Cumaisc na boscaí roghnaithe",
+      "merge": "Cumaisc an roghnú",
+      "ungroupTooltip": "Roinn an mhír ar ais ina línte",
+      "ungroup": "Díghrúpáil an roghnúchán",
+      "widthMenu": "Roghanna leithead",
+      "expandWidth": "Leathnaigh go himill an leathanaigh",
+      "resetWidth": "Athshocraigh an leithead",
+      "resizeHandle": "Coigeartaigh leithead an téacs"
+    },
+    "disclaimer": {
+      "heading": "Teorainneacha Réamhamhairc",
+      "textFocus": "Díríonn an spás oibre seo ar eagarthóireacht téacs agus ar athshuíomh íomhánna leabaithe. Caomhnaítear saothar ealaíne casta an leathanaigh, giuirléidí foirme, agus grafaicí sraithe le haghaidh easpórtála ach ní féidir iad a chur in eagar go hiomlán anseo.",
+      "previewVariance": "D’fhéadfadh roinnt eilimintí amhairc (m.sh. imill tábla, cruthanna, nó cuma na n-anótálacha) gan taispeáint go beacht sa réamhamharc. Coinníonn an PDF easpórtáilte na horduithe líníochta bunaidh a fhad is féidir.",
+      "alpha": "Tá an t-amharcóir alfa seo fós ag forbairt — d’fhéadfadh clónna áirithe, dathanna, éifeachtaí trédhearcachta, agus sonraí leagain amach athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
+    },
+    "empty": {
+      "title": "Níl aon cháipéis luchtaithe",
+      "subtitle": "Luchtaigh comhad PDF nó JSON chun eagarthóireacht ar ábhar téacs a thosú."
+    },
+    "welcomeBanner": {
+      "title": "Fáilte go dtí Eagarthóir Téacs PDF (Rochtain Luath)",
+      "experimental": "Is gné thurgnamhach í seo atá i mbun forbartha. Bí ag súil le heaspa cobhsaíochta agus le fadhbanna áirithe le linn úsáide.",
+      "howItWorks": "Tiontaíonn an uirlis seo do PDF go formáid in-eagarthóireachta ina féidir leat ábhar téacs a mhodhnú agus íomhánna a athshuíomh. Sábháiltear na hathruithe ar ais mar PDF nua.",
+      "bestFor": "Is fearr a oibríonn le:",
+      "bestFor1": "PDFanna simplí a bhfuil téacs agus íomhánna iontu den chuid is mó",
+      "bestFor2": "Cáipéisí le formáidiú caighdeánach míreanna",
+      "bestFor3": "Litreacha, aistí, tuairiscí agus doiciméid bhunúsacha",
+      "notIdealFor": "Ní oiriúnach do:",
+      "notIdealFor1": "PDFanna le formáidiú speisialta ar nós pointí liosta, táblaí, nó leagan amach ilcholúin",
+      "notIdealFor2": "Irisí, bróisiúir, nó doiciméid le dearadh trom",
+      "notIdealFor3": "Lámhleabhair treoracha le leagan amach casta",
+      "limitations": "Teorainneacha Reatha:",
+      "limitation1": "Féadfaidh rindreáil cló a bheith beagán difriúil ón PDF bunaidh",
+      "limitation2": "Caomhnaítear grafaicí casta, réimsí foirme agus anótálacha ach ní féidir iad a chur in eagar",
+      "limitation3": "D’fhéadfadh go dtógfadh tiontú agus próiseáil comhaid mhóra tamall",
+      "knownIssues": "Fadhbanna Aitheanta (Á Socrú):",
+      "issue1": "Ní chaomhnaítear dath téacs faoi láthair (cuirfear leis go luath)",
+      "issue2": "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre — moltar Mód Líne Aonair",
+      "issue3": "Tá an réamhamharc difriúil ón PDF easpórtáilte — tá PDFanna easpórtáilte níos gaire don bhunleagan",
+      "issue4": "D’fhéadfadh go mbeadh coigeartú láimhe de dhíth ar ailíniú téacs rothlaithe",
+      "issue5": "D’fhéadfadh éifeachtaí trédhearcachta agus sraithe a bheith éagsúil ón mbunleagan",
+      "feedback": "Is gné rochtana luaithe í seo. Tabhair tuairisc ar aon fhadhb a mbuaileann tú léi chun cabhrú linn feabhsú!",
+      "gotIt": "Tuigim",
+      "dontShowAgain": "Ná taispeáin arís"
+    },
+    "modeChange": {
+      "title": "Deimhnigh Athrú Móid",
+      "warning": "Athshocróidh athrú ar mhód grúpála téacs gach athrú gan sábháil. An bhfuil tú cinnte gur mian leat leanúint ar aghaidh?",
+      "cancel": "Cealaigh",
+      "confirm": "Athshocraigh agus Athraigh an Mód"
+    },
+    "fontAnalysis": {
+      "details": "Sonraí Cló",
+      "embedded": "Leabaithe",
+      "type": "Cineál",
+      "webFormat": "Formáid Gréasáin",
+      "warnings": "Rabhaidh",
+      "suggestions": "Nótaí",
+      "currentPageFonts": "Clónna ar an leathanach seo",
+      "allFonts": "Gach cló",
+      "fallback": "cúltaca",
+      "missing": "ar iarraidh",
+      "perfectMessage": "Is féidir gach cló a atáirgeadh go foirfe.",
+      "warningMessage": "D’fhéadfadh roinnt clónna gan rindreáil i gceart.",
+      "infoMessage": "Eolas faoi atáirgeadh clónna ar fáil.",
+      "perfect": "foirfe",
+      "subset": "fo-thacar"
+    },
+    "errors": {
+      "invalidJson": "Ní féidir an comhad JSON a léamh. Cinntigh gur gineadh é leis an uirlis PDF go JSON.",
+      "pdfConversion": "Ní féidir an JSON curtha in eagar a thiontú ar ais go PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Seisiún imithe in éag",
+    "pleaseLoginAgain": "Logáil isteach arís, le do thoil.",
+    "accessDenied": "Rochtain diúltaithe",
+    "insufficientPermissions": "Níl cead agat an gníomh seo a dhéanamh."
+  },
+  "addText": {
+    "title": "Cuir Téacs Leis",
+    "header": "Cuir téacs le PDFanna",
+    "text": {
+      "name": "Ábhar téacs",
+      "placeholder": "Iontráil an téacs is mian leat a chur leis",
+      "fontLabel": "Cló",
+      "fontSizeLabel": "Méid cló",
+      "fontSizePlaceholder": "Clóscríobh nó roghnaigh méid cló (8-200)",
+      "colorLabel": "Dath téacs"
+    },
+    "steps": {
+      "configure": "Cumraigh Téacs"
+    },
+    "step": {
+      "createDesc": "Iontráil an téacs is mian leat a chur leis",
+      "place": "Cuir téacs",
+      "placeDesc": "Cliceáil ar an PDF chun do théacs a chur leis"
+    },
+    "instructions": {
+      "title": "Conas téacs a chur leis",
+      "text": "Tar éis duit do théacs a iontráil thuas, cliceáil áit ar bith ar an PDF chun é a chur.",
+      "paused": "Cur ar sos",
+      "resumeHint": "Atosaigh an cur chun cliceáil agus do théacs a chur leis.",
+      "noSignature": "Iontráil téacs thuas chun cur a chumasú."
+    },
+    "mode": {
+      "move": "Bog Téacs",
+      "place": "Cuir Téacs",
+      "pause": "Cuir an cur ar sos",
+      "resume": "Atosaigh an cur"
+    },
+    "results": {
+      "title": "Torthaí Cur Téacs"
+    },
+    "error": {
+      "failed": "Tharla earráid agus téacs á chur leis an PDF."
+    },
+    "tags": "téacs,anótáil,lipéad",
+    "applySignatures": "Cuir Téacs i bhFeidhm"
   }
 }
