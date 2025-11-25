@@ -48,22 +48,22 @@ pub fn set_as_default_pdf_handler() -> Result<String, String> {
 
 #[cfg(target_os = "windows")]
 fn check_default_windows() -> Result<bool, String> {
-    use windows::core::{HSTRING, PWSTR};
+    use windows::core::HSTRING;
     use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
+        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
+        COINIT_APARTMENTTHREADED, RPC_E_CHANGED_MODE,
     };
     use windows::Win32::UI::Shell::{
         IApplicationAssociationRegistration, ApplicationAssociationRegistration,
-        ASSOCIATIONTYPE,
+        ASSOCIATIONTYPE, ASSOCIATIONLEVEL,
     };
 
     unsafe {
         // Initialize COM for this thread
-        if let Err(e) = CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
-            // RPC_E_CHANGED_MODE (0x80010106) means COM is already initialized, which is fine
-            if e.code().0 != 0x80010106u32 as i32 {
-                return Err(format!("Failed to initialize COM: {}", e));
-            }
+        let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+        // RPC_E_CHANGED_MODE means COM is already initialized, which is fine
+        if hr.is_err() && hr != RPC_E_CHANGED_MODE {
+            return Err(format!("Failed to initialize COM: {:?}", hr));
         }
 
         let result = (|| -> Result<bool, String> {
@@ -74,33 +74,17 @@ fn check_default_windows() -> Result<bool, String> {
 
             // Query the current default handler for .pdf extension
             let extension = HSTRING::from(".pdf");
-            let mut default_app: PWSTR = PWSTR::null();
 
-            reg.QueryCurrentDefault(
+            let default_app = reg.QueryCurrentDefault(
                 &extension,
                 ASSOCIATIONTYPE(0), // AT_FILEEXTENSION
-                1, // AL_EFFECTIVE - gets the effective default (user or machine level)
-                &mut default_app,
+                ASSOCIATIONLEVEL(1), // AL_EFFECTIVE - gets the effective default (user or machine level)
             )
             .map_err(|e| format!("Failed to query current default: {}", e))?;
 
-            if default_app.is_null() {
-                add_log("No default PDF handler found".to_string());
-                return Ok(false);
-            }
-
-            // Convert PWSTR to String and free memory regardless of conversion success
-            use windows::Win32::System::Com::CoTaskMemFree;
-            let default_str = match default_app.to_string() {
-                Ok(s) => {
-                    CoTaskMemFree(Some(default_app.as_ptr() as *const _));
-                    s
-                }
-                Err(e) => {
-                    CoTaskMemFree(Some(default_app.as_ptr() as *const _));
-                    return Err(format!("Failed to convert default app string: {}", e));
-                }
-            };
+            // Convert PWSTR to String
+            let default_str = default_app.to_string()
+                .map_err(|e| format!("Failed to convert default app string: {}", e))?;
 
             add_log(format!("Windows PDF handler ProgID: {}", default_str));
 
@@ -119,9 +103,10 @@ fn check_default_windows() -> Result<bool, String> {
 
 #[cfg(target_os = "windows")]
 fn set_default_windows() -> Result<String, String> {
-    use windows::core::{HSTRING, Interface};
+    use windows::core::HSTRING;
     use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
+        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
+        COINIT_APARTMENTTHREADED, RPC_E_CHANGED_MODE,
     };
     use windows::Win32::UI::Shell::{
         IApplicationAssociationRegistrationUI, ApplicationAssociationRegistrationUI,
@@ -129,11 +114,10 @@ fn set_default_windows() -> Result<String, String> {
 
     unsafe {
         // Initialize COM for this thread
-        if let Err(e) = CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
-            // RPC_E_CHANGED_MODE (0x80010106) means COM is already initialized, which is fine
-            if e.code().0 != 0x80010106u32 as i32 {
-                return Err(format!("Failed to initialize COM: {}", e));
-            }
+        let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+        // RPC_E_CHANGED_MODE means COM is already initialized, which is fine
+        if hr.is_err() && hr != RPC_E_CHANGED_MODE {
+            return Err(format!("Failed to initialize COM: {:?}", hr));
         }
 
         let result = (|| -> Result<String, String> {
