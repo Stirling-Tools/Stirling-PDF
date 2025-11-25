@@ -62,6 +62,7 @@ public class InitialSecuritySetup {
     private void initializeUserLicenseSettings() {
         licenseSettingsService.initializeGrandfatheredCount();
         licenseSettingsService.updateLicenseMaxUsers();
+        licenseSettingsService.grandfatherExistingOAuthUsers();
     }
 
     private void configureJWTSettings() {

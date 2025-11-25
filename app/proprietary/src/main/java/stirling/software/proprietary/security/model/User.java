@@ -71,6 +71,9 @@ public class User implements UserDetails, Serializable {
     @Column(name = "sso_provider")
     private String ssoProvider;
 
+    @Column(name = "oauth_grandfathered")
+    private Boolean oauthGrandfathered = false;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -134,5 +137,13 @@ public class User implements UserDetails, Serializable {
 
     public boolean hasPassword() {
         return this.password != null && !this.password.isEmpty();
+    }
+
+    public boolean isOauthGrandfathered() {
+        return oauthGrandfathered != null && oauthGrandfathered;
+    }
+
+    public void setOauthGrandfathered(boolean oauthGrandfathered) {
+        this.oauthGrandfathered = oauthGrandfathered;
     }
 }

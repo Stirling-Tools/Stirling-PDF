@@ -70,7 +70,7 @@ export interface LicenseKeyResponse {
 }
 
 export interface LicenseInfo {
-  licenseType: 'NORMAL' | 'PRO' | 'ENTERPRISE';
+  licenseType: 'NORMAL' | 'SERVER' | 'ENTERPRISE';
   enabled: boolean;
   maxUsers: number;
   hasKey: boolean;
@@ -496,8 +496,8 @@ export const mapLicenseToTier = (licenseInfo: LicenseInfo | null): 'free' | 'ser
     return 'free';
   }
 
-  // PRO type (no seats) = Server tier
-  if (licenseInfo.licenseType === 'PRO') {
+  // SERVER type (unlimited users) = Server tier
+  if (licenseInfo.licenseType === 'SERVER') {
     return 'server';
   }
 

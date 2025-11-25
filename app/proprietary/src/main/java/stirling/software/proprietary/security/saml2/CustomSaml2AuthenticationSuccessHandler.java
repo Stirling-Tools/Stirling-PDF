@@ -49,6 +49,8 @@ public class CustomSaml2AuthenticationSuccessHandler
     private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
     private final JwtServiceInterface jwtService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -62,6 +64,26 @@ public class CustomSaml2AuthenticationSuccessHandler
         if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {
             String username = saml2Principal.name();
             log.debug("Authenticated principal found for user: {}", username);
+
+            boolean userExists = userService.usernameExistsIgnoreCase(username);
+
+            // Check if user is eligible for SAML (grandfathered or system has paid license)
+            if (userExists) {
+                stirling.software.proprietary.security.model.User user =
+                        userService.findByUsernameIgnoreCase(username).orElse(null);
+
+                if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
+                    // User is not grandfathered and no paid license - block SAML login
+                    response.sendRedirect(
+                            request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                    return;
+                }
+            } else if (!licenseSettingsService.isOAuthEligible(null)) {
+                // No existing user and no paid license -> block auto creation
+                response.sendRedirect(
+                        request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                return;
+            }
 
             HttpSession session = request.getSession(false);
             String contextPath = request.getContextPath();
@@ -96,7 +118,6 @@ public class CustomSaml2AuthenticationSuccessHandler
                             "Your account has been locked due to too many failed login attempts.");
                 }
 
-                boolean userExists = userService.usernameExistsIgnoreCase(username);
                 boolean hasPassword = userExists && userService.hasPassword(username);
                 boolean isSSOUser =
                         userExists && userService.isAuthenticationTypeByUsername(username, SSO);
@@ -127,6 +148,10 @@ public class CustomSaml2AuthenticationSuccessHandler
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
+                        return;
+                    }
+                    if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
+                        response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
                         return;
                     }
 

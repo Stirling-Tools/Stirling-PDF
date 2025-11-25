@@ -32,7 +32,8 @@ public class EEAppConfig {
     @Bean(name = "runningProOrHigher")
     @Primary
     public boolean runningProOrHigher() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
+        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+        return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     @Profile("security")

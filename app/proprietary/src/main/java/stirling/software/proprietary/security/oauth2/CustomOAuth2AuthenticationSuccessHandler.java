@@ -50,6 +50,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -64,6 +66,25 @@ public class CustomOAuth2AuthenticationSuccessHandler
             username = oAuth2User.getName();
         } else if (principal instanceof UserDetails detailsUser) {
             username = detailsUser.getUsername();
+        }
+
+        boolean userExists = userService.usernameExistsIgnoreCase(username);
+
+        // Check if user is eligible for OAuth (grandfathered or system has paid license)
+        if (userExists) {
+            stirling.software.proprietary.security.model.User user =
+                    userService.findByUsernameIgnoreCase(username).orElse(null);
+
+            if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
+                // User is not grandfathered and no paid license - block OAuth login
+                response.sendRedirect(
+                        request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
+                return;
+            }
+        } else if (!licenseSettingsService.isOAuthEligible(null)) {
+            // No existing user and no paid license -> block auto creation
+            response.sendRedirect(request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
+            return;
         }
 
         // Get the saved request
@@ -91,7 +112,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
-            if (userService.usernameExistsIgnoreCase(username)
+            if (userExists
                     && userService.hasPassword(username)
                     && (!userService.isAuthenticationTypeByUsername(username, SSO)
                             || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
@@ -104,6 +125,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 if (oauth2Properties.getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
+                    return;
+                }
+                if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
+                    response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
                     return;
                 }
                 if (principal instanceof OAuth2User oAuth2User) {

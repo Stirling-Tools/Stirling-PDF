@@ -101,8 +101,8 @@ export class UpdateService {
   async getUpdateSummary(currentVersion: string, machineInfo: MachineInfo): Promise<UpdateSummary | null> {
     // Map Java License enum to API types
     let type = 'normal';
-    if (machineInfo.licenseType === 'PRO') {
-      type = 'pro';
+    if (machineInfo.licenseType === 'SERVER') {
+      type = 'server';
     } else if (machineInfo.licenseType === 'ENTERPRISE') {
       type = 'enterprise';
     }
@@ -133,8 +133,8 @@ export class UpdateService {
   async getFullUpdateInfo(currentVersion: string, machineInfo: MachineInfo): Promise<FullUpdateInfo | null> {
     // Map Java License enum to API types
     let type = 'normal';
-    if (machineInfo.licenseType === 'PRO') {
-      type = 'pro';
+    if (machineInfo.licenseType === 'SERVER') {
+      type = 'server';
     } else if (machineInfo.licenseType === 'ENTERPRISE') {
       type = 'enterprise';
     }

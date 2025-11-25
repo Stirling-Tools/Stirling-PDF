@@ -397,7 +397,8 @@ public class ProprietaryUIDataController {
         Map<Long, Date> teamLastRequest = new HashMap<>();
         for (Object[] result : teamActivities) {
             Long teamId = (Long) result[0];
-            Date lastActivity = (Date) result[1];
+            Instant instant = (Instant) result[1];
+            Date lastActivity = instant != null ? Date.from(instant) : null;
             teamLastRequest.put(teamId, lastActivity);
         }
 
@@ -441,7 +442,8 @@ public class ProprietaryUIDataController {
         Map<String, Date> userLastRequest = new HashMap<>();
         for (Object[] result : userSessions) {
             String username = (String) result[0];
-            Date lastRequest = (Date) result[1];
+            Instant instant = (Instant) result[1];
+            Date lastRequest = instant != null ? Date.from(instant) : null;
             userLastRequest.put(username, lastRequest);
         }
 

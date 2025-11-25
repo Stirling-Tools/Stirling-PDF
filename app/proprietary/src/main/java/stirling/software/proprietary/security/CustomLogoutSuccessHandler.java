@@ -238,6 +238,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             path = "errorOAuth=oAuth2AutoCreateDisabled";
         } else if (request.getParameter("oAuth2AdminBlockedUser") != null) {
             path = "errorOAuth=oAuth2AdminBlockedUser";
+        } else if (request.getParameter("oAuth2RequiresLicense") != null) {
+            path = "errorOAuth=oAuth2RequiresLicense";
+        } else if (request.getParameter("saml2RequiresLicense") != null) {
+            path = "errorOAuth=saml2RequiresLicense";
+        } else if (request.getParameter("maxUsersReached") != null) {
+            path = "errorOAuth=maxUsersReached";
         } else if (request.getParameter("userIsDisabled") != null) {
             path = "errorOAuth=userIsDisabled";
         } else if ((errorMessage = request.getParameter("error")) != null) {

@@ -103,6 +103,9 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
         when(request.getParameter("oAuth2AdminBlockedUser")).thenReturn(null);
+        when(request.getParameter("oAuth2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("saml2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("maxUsersReached")).thenReturn(null);
         when(request.getParameter(error)).thenReturn("true");
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
@@ -208,6 +211,9 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
         when(request.getParameter("oAuth2AdminBlockedUser")).thenReturn(null);
+        when(request.getParameter("oAuth2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("saml2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("maxUsersReached")).thenReturn(null);
         when(request.getParameter("userIsDisabled")).thenReturn(null);
         when(request.getParameter("error")).thenReturn("!@$!@£" + error + "£$%^*$");
         when(request.getScheme()).thenReturn("http");
@@ -237,6 +243,9 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
         when(request.getParameter("oAuth2AdminBlockedUser")).thenReturn(null);
+        when(request.getParameter("oAuth2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("saml2RequiresLicense")).thenReturn(null);
+        when(request.getParameter("maxUsersReached")).thenReturn(null);
         when(request.getParameter("userIsDisabled")).thenReturn(null);
         when(request.getParameter("error")).thenReturn(null);
         when(request.getParameter(error)).thenReturn("true");

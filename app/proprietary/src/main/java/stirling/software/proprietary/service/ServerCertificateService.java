@@ -69,7 +69,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     private boolean hasProOrEnterpriseAccess() {
         License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
-        return license == License.PRO || license == License.ENTERPRISE;
+        return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     public boolean isEnabled() {
