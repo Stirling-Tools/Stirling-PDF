@@ -64,11 +64,4 @@ public interface JwtServiceInterface {
      * @return JWT token if found, null otherwise
      */
     String extractToken(HttpServletRequest request);
-
-    /**
-     * Check if JWT authentication is enabled
-     *
-     * @return true if JWT is enabled, false otherwise
-     */
-    boolean isJwtEnabled();
 }

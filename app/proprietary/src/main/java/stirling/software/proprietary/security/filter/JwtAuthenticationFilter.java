@@ -64,10 +64,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!jwtService.isJwtEnabled()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;

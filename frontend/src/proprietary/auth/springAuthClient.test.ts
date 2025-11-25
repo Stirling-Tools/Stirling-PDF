@@ -19,46 +19,7 @@ describe('SpringAuthClient', () => {
   });
 
   describe('getSession', () => {
-    it('should return null session when no JWT in localStorage', async () => {
-      const result = await springAuth.getSession();
-
-      expect(result.data.session).toBeNull();
-      expect(result.error).toBeNull();
-      expect(apiClient.get).not.toHaveBeenCalled();
-    });
-
-    it('should validate JWT and return session when JWT exists', async () => {
-      const mockToken = 'mock-jwt-token';
-      const mockUser = {
-        id: '123',
-        email: 'test@example.com',
-        username: 'testuser',
-        role: 'USER',
-      };
-
-      localStorage.setItem('stirling_jwt', mockToken);
-
-      vi.mocked(apiClient.get).mockResolvedValueOnce({
-        status: 200,
-        data: { user: mockUser },
-      } as any);
-
-      const result = await springAuth.getSession();
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me', {
-        headers: { Authorization: `Bearer ${mockToken}` },
-        suppressErrorToast: true,
-      });
-      expect(result.data.session).toBeTruthy();
-      expect(result.data.session?.user).toEqual(mockUser);
-      expect(result.data.session?.access_token).toBe(mockToken);
-      expect(result.error).toBeNull();
-    });
-
-    it('should clear invalid JWT on 401 error', async () => {
-      const mockToken = 'invalid-jwt-token';
-      localStorage.setItem('stirling_jwt', mockToken);
-
+    it('should return null session when not authenticated', async () => {
       const mockError = new AxiosError(
         'Unauthorized',
         'ERR_BAD_REQUEST',
@@ -77,16 +38,61 @@ describe('SpringAuthClient', () => {
 
       const result = await springAuth.getSession();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
+      expect(result.data.session).toBeNull();
+      expect(result.error).toBeNull();
+    });
+
+    it('should validate session and return user when JWT cookie exists', async () => {
+      const mockUser = {
+        id: '123',
+        email: 'test@example.com',
+        username: 'testuser',
+        role: 'USER',
+      };
+
+      // JWT is in HttpOnly cookie - backend reads it automatically
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        status: 200,
+        data: { user: mockUser },
+      } as any);
+
+      const result = await springAuth.getSession();
+
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me', {
+        withCredentials: true,
+        suppressErrorToast: true,
+      });
+      expect(result.data.session).toBeTruthy();
+      expect(result.data.session?.user).toEqual(mockUser);
+      expect(result.data.session?.expires_in).toBe(21600);
+      expect(result.error).toBeNull();
+    });
+
+    it('should return null session on 401 error', async () => {
+      const mockError = new AxiosError(
+        'Unauthorized',
+        'ERR_BAD_REQUEST',
+        undefined,
+        undefined,
+        {
+          status: 401,
+          statusText: 'Unauthorized',
+          data: {},
+          headers: {},
+          config: {} as any,
+        }
+      );
+
+      vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+
+      const result = await springAuth.getSession();
+
       expect(result.data.session).toBeNull();
       // 401 is handled gracefully, so error should be null
       expect(result.error).toBeNull();
     });
 
-    it('should clear invalid JWT on 403 error', async () => {
-      const mockToken = 'forbidden-jwt-token';
-      localStorage.setItem('stirling_jwt', mockToken);
-
+    it('should return null session on 403 error', async () => {
       const mockError = new AxiosError(
         'Forbidden',
         'ERR_BAD_REQUEST',
@@ -105,7 +111,6 @@ describe('SpringAuthClient', () => {
 
       const result = await springAuth.getSession();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
       expect(result.data.session).toBeNull();
       // 403 is handled gracefully, so error should be null
       expect(result.error).toBeNull();
@@ -119,7 +124,6 @@ describe('SpringAuthClient', () => {
         password: 'password123',
       };
 
-      const mockToken = 'new-jwt-token';
       const mockUser = {
         id: '123',
         email: credentials.email,
@@ -127,19 +131,13 @@ describe('SpringAuthClient', () => {
         role: 'USER',
       };
 
+      // JWT is now in HttpOnly cookie - no token in response body
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {
           user: mockUser,
-          session: {
-            access_token: mockToken,
-            expires_in: 3600,
-          },
         },
       } as any);
-
-      // Spy on window.dispatchEvent
-      const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
 
       const result = await springAuth.signInWithPassword(credentials);
 
@@ -151,12 +149,9 @@ describe('SpringAuthClient', () => {
         },
         { withCredentials: true }
       );
-      expect(localStorage.getItem('stirling_jwt')).toBe(mockToken);
-      expect(dispatchEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'jwt-available' })
-      );
       expect(result.user).toEqual(mockUser);
-      expect(result.session?.access_token).toBe(mockToken);
+      expect(result.session?.user).toEqual(mockUser);
+      expect(result.session?.expires_in).toBe(21600);
       expect(result.error).toBeNull();
     });
 
@@ -247,10 +242,7 @@ describe('SpringAuthClient', () => {
   });
 
   describe('signOut', () => {
-    it('should successfully sign out and clear JWT', async () => {
-      const mockToken = 'jwt-to-clear';
-      localStorage.setItem('stirling_jwt', mockToken);
-
+    it('should successfully sign out', async () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {},
@@ -263,14 +255,10 @@ describe('SpringAuthClient', () => {
         null,
         expect.objectContaining({ withCredentials: true })
       );
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
       expect(result.error).toBeNull();
     });
 
-    it('should clear JWT even if logout request fails', async () => {
-      const mockToken = 'jwt-to-clear';
-      localStorage.setItem('stirling_jwt', mockToken);
-
+    it('should return error if logout request fails', async () => {
       vi.mocked(apiClient.post).mockRejectedValueOnce({
         isAxiosError: true,
         response: { status: 500 },
@@ -279,14 +267,12 @@ describe('SpringAuthClient', () => {
 
       const result = await springAuth.signOut();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
       expect(result.error).toBeTruthy();
     });
   });
 
   describe('refreshSession', () => {
     it('should refresh JWT token successfully', async () => {
-      const newToken = 'refreshed-jwt-token';
       const mockUser = {
         id: '123',
         email: 'test@example.com',
@@ -294,41 +280,44 @@ describe('SpringAuthClient', () => {
         role: 'USER',
       };
 
+      // JWT is refreshed in HttpOnly cookie by server
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
-        data: {
-          user: mockUser,
-          session: {
-            access_token: newToken,
-            expires_in: 3600,
-          },
-        },
+        data: {},
       } as any);
 
-      const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
+      // Mock getSession call after refresh
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        status: 200,
+        data: { user: mockUser },
+      } as any);
 
       const result = await springAuth.refreshSession();
 
-      expect(localStorage.getItem('stirling_jwt')).toBe(newToken);
-      expect(dispatchEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'jwt-available' })
-      );
-      expect(result.data.session?.access_token).toBe(newToken);
+      expect(result.data.session?.user).toEqual(mockUser);
+      expect(result.data.session?.expires_in).toBe(21600);
       expect(result.error).toBeNull();
     });
 
-    it('should clear JWT and return error on 401', async () => {
-      localStorage.setItem('stirling_jwt', 'expired-token');
+    it('should return error on 401', async () => {
+      const mockError = new AxiosError(
+        'Unauthorized',
+        'ERR_BAD_REQUEST',
+        undefined,
+        undefined,
+        {
+          status: 401,
+          statusText: 'Unauthorized',
+          data: {},
+          headers: {},
+          config: {} as any,
+        }
+      );
 
-      vi.mocked(apiClient.post).mockRejectedValueOnce({
-        isAxiosError: true,
-        response: { status: 401 },
-        message: 'Token expired',
-      });
+      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
 
       const result = await springAuth.refreshSession();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
       expect(result.data.session).toBeNull();
       expect(result.error).toBeTruthy();
     });

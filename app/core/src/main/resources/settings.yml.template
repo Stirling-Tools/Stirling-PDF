@@ -64,6 +64,7 @@ security:
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
+    secure: true # Set to false for HTTP (development only)
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
