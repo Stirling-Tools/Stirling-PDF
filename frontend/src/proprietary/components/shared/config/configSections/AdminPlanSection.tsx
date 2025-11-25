@@ -223,17 +223,6 @@ const AdminPlanSection: React.FC = () => {
           buttonColor="orange.7"
         />
       )}
-      {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-      {licenseInfo?.licenseKey && isSupabaseConfigured && (
-        <Paper withBorder p="md" radius="md">
-          <Group justify="space-between" align="center">
-            <Text size="sm" c="dimmed">
-              {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-            </Text>
-            <ManageBillingButton />
-          </Group>
-        </Paper>
-      )}
 
       <AvailablePlansSection
         plans={plans}
