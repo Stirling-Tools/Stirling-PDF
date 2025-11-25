@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
 import buildLoginSlides from '@app/components/shared/loginSlides';
 import styles from '@app/routes/authShared/AuthLayout.module.css';
@@ -9,10 +10,11 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
   const logoVariant = useLogoVariant();
-  const imageSlides = useMemo(() => buildLoginSlides(logoVariant), [logoVariant]);
+  const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
 
   // Force light mode on auth pages
   useEffect(() => {
