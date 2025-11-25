@@ -224,78 +224,10 @@ jobs:
           path: |
             ./binaries/*
 
-  sign_verify:
-    needs: [read_versions, build-installers]
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win-
-          - os: macos-latest
-            platform: mac-
-          # - os: ubuntu-latest
-          #   platform: linux-
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
-        with:
-          egress-policy: audit
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
-        with:
-          name: ${{ matrix.platform }}binaries
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Install Cosign
-        if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-
-      - name: Generate key pair
-        if: matrix.os == 'windows-latest'
-        run: cosign generate-key-pair
-
-      - name: Sign and generate attestations
-        if: matrix.os == 'windows-latest'
-        run: |
-          cosign sign-blob \
-            --key ./cosign.key \
-            --yes \
-            --output-signature ./Stirling-PDF-win-installer.exe.sig \
-            ./Stirling-PDF-win-installer.exe
-
-          cosign attest-blob \
-            --predicate - \
-            --key ./cosign.key \
-            --yes \
-            --output-attestation ./Stirling-PDF-win-installer.exe.intoto.jsonl \
-            ./Stirling-PDF-win-installer.exe
-
-          cosign verify-blob \
-            --key ./cosign.pub \
-            --signature ./Stirling-PDF-win-installer.exe.sig \
-            ./Stirling-PDF-win-installer.exe
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Upload signed artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ matrix.platform }}signed
-          path: |
-            ./Stirling-PDF-${{ matrix.platform }}installer.*
-            ./Stirling-PDF-${{ matrix.platform }}x86_64-installer.*
-            !cosign.*
 
   create-release:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
-    needs: [read_versions, sign_verify, sign_verify-portable]
+    needs: [read_versions, sign_verify-portable]
     runs-on: ubuntu-latest
     permissions:
       contents: write
