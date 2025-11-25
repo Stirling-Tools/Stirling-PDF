@@ -63,7 +63,7 @@
     },
     "settingsOpened": {
       "title": "Settings Opened",
-      "message": "Please select Stirling PDF in your system settings"
+      "message": "In Windows Settings, search for 'PDF' and select Stirling PDF as your default app"
     },
     "error": {
       "title": "Error",
