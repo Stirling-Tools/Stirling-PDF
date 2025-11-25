@@ -294,7 +294,8 @@
     "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
-    "settings": "You can change the settings for analytics in the config/settings.yml file"
+    "settings": "You can change the settings for analytics in the config/settings.yml file",
+    "privacyAssurance": "We do not track any personal information or the contents of your files."
   },
   "navbar": {
     "favorite": "Favorites",
@@ -5123,6 +5124,10 @@
       "maybeLater": "Maybe Later",
       "dontShowAgain": "Don't Show Again"
     },
+    "welcomeSlide": {
+      "title": "Welcome to Stirling",
+      "body": "Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+    },
     "allTools": "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
@@ -5145,7 +5150,39 @@
     "next": "Next",
     "finish": "Finish",
     "startTour": "Start Tour",
-    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+    "startTourDescription": "Take a guided tour of Stirling PDF's key features",
+    "buttons": {
+      "next": "Next →",
+      "back": "Back",
+      "skipForNow": "Skip for now",
+      "download": "Download →",
+      "showMeAround": "Show me around",
+      "skipTheTour": "Skip the tour"
+    },
+    "serverLicense": {
+      "skip": "Skip for now",
+      "seePlans": "See Plans →",
+      "upgrade": "Upgrade now →",
+      "freeTitle": "Server License",
+      "overLimitTitle": "Server License Needed",
+      "overLimitBody": "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo.",
+      "freeBody": "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+    },
+    "desktopInstall": {
+      "title": "Download",
+      "titleWithOs": "Download for {{osLabel}}",
+      "body": "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
+    },
+    "planOverview": {
+      "adminTitle": "Admin Overview",
+      "userTitle": "Plan Overview",
+      "adminBodyLoginEnabled": "As an admin, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "adminBodyLoginDisabled": "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge.",
+      "userBody": "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
+    },
+    "securityCheck": {
+      "message": "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."
+    }
   },
   "adminOnboarding": {
     "welcome": "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
@@ -5174,7 +5211,10 @@
       "role": "Role",
       "team": "Team",
       "status": "Status",
-      "actions": "Actions",
+      "actions": {
+        "label": "Actions",
+        "upgrade": "Upgrade"
+      },
       "noMembersFound": "No members found",
       "active": "Active",
       "disabled": "Disabled",
@@ -5286,7 +5326,8 @@
         "slotsAvailable": "{{count}} user slot(s) available",
         "noSlotsAvailable": "No slots available",
         "currentUsage": "Currently using {{current}} of {{max}} user licences"
-      }
+      },
+      "loginRequired": "Enable login mode first"
     },
     "teams": {
       "title": "Teams",
@@ -5440,6 +5481,12 @@
       "api": "API Access",
       "priority": "Priority Support",
       "customPricing": "Custom Pricing"
+    },
+    "licenseWarning": {
+      "title": "Free self-hosted limit reached",
+      "body": "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly.",
+      "overLimit": "more than {{limit}}",
+      "cta": "See plans"
     }
   },
   "subscription": {
@@ -5481,7 +5528,11 @@
     "title": "Upgrade to Server Plan",
     "message": "Get the most out of Stirling PDF with unlimited users and advanced features",
     "upgradeButton": "Upgrade Now",
-    "dismiss": "Dismiss banner"
+    "dismiss": "Dismiss banner",
+    "attentionTitle": "This server needs admin attention",
+    "attentionBody": "Your admin needs to sign in to see more info. Please contact them immediately.",
+    "attentionBodyAdmin": "Review the license requirements to keep this server compliant.",
+    "seeInfo": "See info"
   },
   "payment": {
     "preparing": "Preparing your checkout...",

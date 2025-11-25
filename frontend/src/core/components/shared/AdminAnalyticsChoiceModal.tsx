@@ -1,4 +1,13 @@
-import { Modal, Stack, Button, Text, Title, Anchor } from '@mantine/core';
+import {
+  Modal,
+  Stack,
+  Button,
+  Text,
+  Title,
+  Anchor,
+  useMantineTheme,
+  useComputedColorScheme,
+} from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Z_ANALYTICS_MODAL } from '@app/styles/zIndex';
@@ -15,6 +24,21 @@ export default function AdminAnalyticsChoiceModal({ opened, onClose }: AdminAnal
   const { refetch } = useAppConfig();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useMantineTheme();
+  const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
+  const isDark = computedColorScheme === 'dark';
+  const privacyHighlightStyles = {
+    color: isDark ? '#FFFFFF' : theme.colors.blue[7],
+    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+    borderRadius: theme.radius.md,
+    fontWeight: 700,
+    textAlign: 'center' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    letterSpacing: 0.3,
+  };
 
   const handleChoice = async (enableAnalytics: boolean) => {
     setLoading(true);
@@ -60,7 +84,10 @@ export default function AdminAnalyticsChoiceModal({ opened, onClose }: AdminAnal
         <Title order={2}>{t('analytics.title', 'Do you want make Stirling PDF better?')}</Title>
 
         <Text size="sm" c="dimmed">
-          {t('analytics.paragraph1', 'Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.')}
+          {t('analytics.paragraph1', 'Stirling PDF has opt in analytics to help us improve the product.')}
+        </Text>
+        <Text size="sm" style={privacyHighlightStyles}>
+          • {t('analytics.privacyAssurance', 'We do not track any personal information or the contents of your files.')} •
         </Text>
 
         <Text size="sm" c="dimmed">

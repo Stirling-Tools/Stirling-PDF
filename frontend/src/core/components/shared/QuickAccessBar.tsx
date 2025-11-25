@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider, Menu } from "@mantine/core";
+import { ActionIcon, Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -16,6 +16,7 @@ import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolBu
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
+import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 
 import {
   isNavButtonActive,
@@ -34,6 +35,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const { startTour } = useOnboarding();
+  const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -314,9 +316,27 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 );
               }
 
+              const buttonNode = renderNavButton(buttonConfig, index);
+              const shouldShowSettingsBadge =
+                buttonConfig.id === 'config' &&
+                licenseAlert.active &&
+                licenseAlert.audience === 'admin';
+
               return (
                 <React.Fragment key={buttonConfig.id}>
-                  {renderNavButton(buttonConfig, index)}
+                  {shouldShowSettingsBadge ? (
+                    <Indicator
+                      inline
+                      size={12}
+                      color="orange"
+                      position="top-end"
+                      offset={4}
+                    >
+                      {buttonNode}
+                    </Indicator>
+                  ) : (
+                    buttonNode
+                  )}
                 </React.Fragment>
               );
             })}
