@@ -49,9 +49,10 @@ pub fn set_as_default_pdf_handler() -> Result<String, String> {
 #[cfg(target_os = "windows")]
 fn check_default_windows() -> Result<bool, String> {
     use windows::core::HSTRING;
+    use windows::Win32::Foundation::RPC_E_CHANGED_MODE;
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
-        COINIT_APARTMENTTHREADED, RPC_E_CHANGED_MODE,
+        COINIT_APARTMENTTHREADED,
     };
     use windows::Win32::UI::Shell::{
         IApplicationAssociationRegistration, ApplicationAssociationRegistration,
@@ -104,9 +105,10 @@ fn check_default_windows() -> Result<bool, String> {
 #[cfg(target_os = "windows")]
 fn set_default_windows() -> Result<String, String> {
     use windows::core::HSTRING;
+    use windows::Win32::Foundation::RPC_E_CHANGED_MODE;
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
-        COINIT_APARTMENTTHREADED, RPC_E_CHANGED_MODE,
+        COINIT_APARTMENTTHREADED,
     };
     use windows::Win32::UI::Shell::{
         IApplicationAssociationRegistrationUI, ApplicationAssociationRegistrationUI,
