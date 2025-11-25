@@ -57,7 +57,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div
         ref={cardRef}
         className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ''}`}
-        style={{ marginBottom: 'auto' }}
       >
         <div className={styles.authLeftPanel}>
           <div className={styles.authContent}>
