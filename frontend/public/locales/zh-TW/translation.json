@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "偏好設定"
+    },
+    "workspace": {
+      "title": "工作空間",
+      "people": "成員",
+      "teams": "團隊"
+    },
+    "configuration": {
+      "title": "組態",
+      "systemSettings": "系統設定",
+      "features": "功能",
+      "endpoints": "端點",
+      "database": "資料庫",
+      "advanced": "進階"
+    },
+    "securityAuth": {
+      "title": "安全性與身分驗證",
+      "security": "安全性",
+      "connections": "連線"
+    },
+    "licensingAnalytics": {
+      "title": "授權與分析",
+      "plan": "方案",
+      "audit": "稽核",
+      "usageAnalytics": "使用分析"
+    },
+    "policiesPrivacy": {
+      "title": "政策與隱私",
+      "legal": "法務",
+      "privacy": "隱私"
+    },
+    "developer": {
+      "title": "開發者",
+      "apiKeys": "API 金鑰"
+    },
+    "tooltips": {
+      "enableLoginFirst": "先啟用登入模式",
+      "requiresEnterprise": "需要 Enterprise 授權"
+    },
     "connection": {
       "title": "連線模式",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "在「轉換」工具中移除已停用的轉換選項，而非以灰色顯示。"
     },
     "hotkeys": {
+      "title": "鍵盤快速鍵",
+      "description": "自訂鍵盤快速鍵以快速存取工具。按「變更快速鍵」，然後按下新的按鍵組合。按 Esc 取消。",
       "errorConflict": "快捷鍵已被 {{tool}} 使用。",
+      "errorModifier": {
+        "mac": "請在快速鍵中包含 ⌘（Command）、⌥（Option）或其他修飾鍵。",
+        "windows": "請在快速鍵中包含 Ctrl、Alt 或其他修飾鍵。"
+      },
       "searchPlaceholder": "搜尋工具...",
       "none": "未指派",
       "customBadge": "自訂",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "可用語言",
-          "description": "使用者可選擇的語言（留空以啟用所有語言）"
+          "description": "使用者可選擇的語言（留空以啟用所有語言）",
+          "placeholder": "選擇語言"
         },
         "customMetadata": {
           "label": "自訂中繼資料",
@@ -4061,7 +4108,9 @@
           "label": "標誌樣式",
           "description": "在現代極簡標誌與經典 S 圖示之間選擇",
           "classic": "經典",
-          "modern": "現代"
+          "classicAlt": "經典 Logo",
+          "modern": "現代",
+          "modernAlt": "現代 Logo"
         },
         "customPaths": {
           "label": "自訂路徑",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "應用程式設定",
-      "description": "目前的應用程式設定與詳細資訊。"
+      "description": "目前的應用程式設定與詳細資訊。",
+      "loading": "正在載入組態...",
+      "error": "錯誤",
+      "warning": "組態警告",
+      "sections": {
+        "basic": "基本組態",
+        "security": "安全性組態",
+        "system": "系統組態",
+        "integration": "整合組態"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "管理團隊並組織工作空間成員",
       "loading": "正在載入團隊...",
       "loadingDetails": "正在載入團隊詳細資料...",
+      "loadError": "無法載入團隊詳細資料",
       "createNewTeam": "建立新團隊",
       "teamName": "團隊名稱",
       "totalMembers": "成員總數",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "正在準備結帳...",
+    "redirecting": "正在重新導向至安全結帳...",
     "upgradeTitle": "升級至 {{planName}}",
     "success": "付款成功！",
     "successMessage": "您的訂閱已成功啟用。您將很快收到確認電子郵件。",
