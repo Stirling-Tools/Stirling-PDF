@@ -17,6 +17,8 @@
       "comingSoon": "Properament:",
       "favorite": "Afegeix als preferits",
       "favorites": "Preferits",
+      "unavailable": "Desactivat per l'administrador del servidor:",
+      "unavailableDependency": "No disponible: falta l'eina necessària al servidor:",
       "heading": "Totes les eines (vista a pantalla completa)",
       "noResults": "Prova d'ajustar la cerca o activa/desactiva les descripcions per trobar el que necessites.",
       "recommended": "Recomanat",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Canvia al mode de pantalla completa",
       "sidebar": "Canvia al mode de barra lateral"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Funció premium:",
+    "comingSoon": "Aviat disponible:"
   },
   "unsavedChanges": "Tens canvis sense desar al teu PDF.",
   "areYouSure": "Segur que vols sortir?",
@@ -40,6 +45,30 @@
     "message": "Aquest ZIP conté {{count}} fitxers. Vols extreure'l igualment?",
     "cancel": "Cancel·la",
     "confirm": "Extreu"
+  },
+  "defaultApp": {
+    "title": "Estableix com a aplicació PDF per defecte",
+    "message": "Vols establir Stirling PDF com a editor PDF per defecte?",
+    "description": "Pots canviar-ho més endavant a la configuració del sistema.",
+    "notNow": "Ara no",
+    "setDefault": "Estableix per defecte",
+    "dismiss": "Descarta",
+    "prompt": {
+      "title": "Estableix com a editor PDF per defecte",
+      "message": "Fes que Stirling PDF sigui l'aplicació per defecte per obrir fitxers PDF."
+    },
+    "success": {
+      "title": "Aplicació per defecte establerta",
+      "message": "Stirling PDF ara és el teu editor PDF per defecte"
+    },
+    "settingsOpened": {
+      "title": "Configuració oberta",
+      "message": "Selecciona Stirling PDF a la configuració del sistema"
+    },
+    "error": {
+      "title": "Error",
+      "message": "No s'ha pogut establir el gestor PDF per defecte"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Desa",
   "saveToBrowser": "Desa al navegador",
   "download": "Descarrega",
+  "downloadUnavailable": "Descàrrega no disponible per a aquest element",
+  "saveUnavailable": "No es pot desar aquest element",
   "pin": "Fixa el fitxer (mantén-lo actiu després d'executar l'eina)",
   "unpin": "Desfixa el fitxer (substitueix-lo després d'executar l'eina)",
   "undoOperationTooltip": "Fes clic per desfer l'última operació i restaurar els fitxers originals",
@@ -168,6 +199,7 @@
   },
   "edit": "Edita",
   "delete": "Esborra",
+  "never": "Mai",
   "username": "Usuari",
   "password": "Contrasenya",
   "welcome": "Benvingut",
@@ -262,7 +294,8 @@
     "learnMore": "Més informació",
     "enable": "Habilita analítiques",
     "disable": "Desactiva analítiques",
-    "settings": "Pots canviar la configuració de les analítiques al fitxer config/settings.yml"
+    "settings": "Pots canviar la configuració de les analítiques al fitxer config/settings.yml",
+    "privacyAssurance": "No rastregem cap informació personal ni el contingut dels teus fitxers."
   },
   "navbar": {
     "favorite": "Favorits",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Opcions",
-    "update": "Actualització Disponible",
-    "updateAvailable": "La versió actual instal·lada és {0}. Una nova versió ({1}) està disponible.",
-    "appVersion": "Versió de l'App:",
-    "downloadOption": {
-      "title": "Trieu l'opció de descàrrega (per a descàrregues d'un sol fitxer no comprimit):",
-      "1": "Obre en la mateixa finestra",
-      "2": "Obre en una finestra nova",
-      "3": "Descarrega fitxer"
-    },
-    "zipThreshold": "Comprimiu els fitxers quan el nombre de fitxers baixats superi",
-    "signOut": "Sortir",
-    "accountSettings": "Configuració del Compte",
-    "bored": {
-      "help": "Activa un joc ocult"
-    },
-    "cacheInputs": {
-      "name": "Desa els valors del formulari",
-      "help": "Habilita per guardar els valors utilitzats prèviament per a futures execucions"
+    "connection": {
+      "title": "Mode de connexió",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Autoallotjat"
+      },
+      "server": "Servidor",
+      "user": "Sessió iniciada com",
+      "logout": "Tancar sessió"
     },
     "general": {
       "title": "General",
       "description": "Configura les preferències generals de l'aplicació.",
-      "account": "Compte",
-      "accountDescription": "Gestiona la configuració del teu compte",
       "user": "Usuari",
-      "signedInAs": "Has iniciat sessió com a",
       "logout": "Tanca la sessió",
       "enableFeatures": {
+        "dismiss": "Tanca",
         "title": "Per als administradors del sistema",
         "intro": "Habilita l'autenticació d'usuaris, la gestió d'equips i funcions d'espai de treball per a la teva organització.",
         "action": "Configura",
         "and": "i",
         "benefit": "Activa rols d'usuari, col·laboració d'equip, controls d'administració i funcions d'empresa.",
-        "learnMore": "Més informació a la documentació",
-        "dismiss": "Tanca"
+        "learnMore": "Més informació a la documentació"
       },
-      "autoUnzip": "Descomprimeix automàticament respostes de l'API",
-      "autoUnzipDescription": "Extreu automàticament els fitxers de respostes ZIP",
-      "autoUnzipTooltip": "Descomprimeix automàticament els fitxers ZIP retornats per operacions de l'API. Desactiva-ho per mantenir els fitxers ZIP intactes. Això no afecta els fluxos d'automatització.",
-      "autoUnzipFileLimit": "Límit de fitxers per a la descompressió automàtica",
-      "autoUnzipFileLimitDescription": "Nombre màxim de fitxers a extreure del ZIP",
-      "autoUnzipFileLimitTooltip": "Només descomprimeix si el ZIP conté aquest nombre de fitxers o menys. Augmenta'l per extreure ZIPs més grans.",
       "defaultToolPickerMode": "Mode per defecte del selector d'eines",
       "defaultToolPickerModeDescription": "Tria si el selector d'eines s'obre per defecte a pantalla completa o a la barra lateral",
       "mode": {
-        "fullscreen": "Pantalla completa",
-        "sidebar": "Barra lateral"
-      }
+        "sidebar": "Barra lateral",
+        "fullscreen": "Pantalla completa"
+      },
+      "autoUnzipTooltip": "Descomprimeix automàticament els fitxers ZIP retornats per operacions de l'API. Desactiva-ho per mantenir els fitxers ZIP intactes. Això no afecta els fluxos d'automatització.",
+      "autoUnzip": "Descomprimeix automàticament respostes de l'API",
+      "autoUnzipDescription": "Extreu automàticament els fitxers de respostes ZIP",
+      "autoUnzipFileLimitTooltip": "Només descomprimeix si el ZIP conté aquest nombre de fitxers o menys. Augmenta'l per extreure ZIPs més grans.",
+      "autoUnzipFileLimit": "Límit de fitxers per a la descompressió automàtica",
+      "autoUnzipFileLimitDescription": "Nombre màxim de fitxers a extreure del ZIP",
+      "defaultPdfEditor": "Editor PDF per defecte",
+      "defaultPdfEditorActive": "Stirling PDF és el teu editor PDF per defecte",
+      "defaultPdfEditorInactive": "Una altra aplicació està establerta per defecte",
+      "defaultPdfEditorChecking": "Comprovant...",
+      "defaultPdfEditorSet": "Ja és per defecte",
+      "setAsDefault": "Estableix per defecte",
+      "updates": {
+        "title": "Actualitzacions de programari",
+        "description": "Comprova actualitzacions i informació de la versió",
+        "currentVersion": "Versió actual",
+        "latestVersion": "Última versió",
+        "checkForUpdates": "Comprova actualitzacions",
+        "viewDetails": "Veure detalls"
+      },
+      "hideUnavailableTools": "Amaga les eines no disponibles",
+      "hideUnavailableToolsDescription": "Elimina les eines que el teu servidor ha desactivat en lloc de mostrar-les en gris.",
+      "hideUnavailableConversions": "Amaga les conversions no disponibles",
+      "hideUnavailableConversionsDescription": "Elimina les opcions de conversió desactivades a l'eina Convertir en lloc de mostrar-les en gris."
     },
     "hotkeys": {
-      "title": "Dreceres de teclat",
-      "description": "Passa el cursor per sobre d'una eina per veure la seva drecera o personalitza-la a continuació. Fes clic a \"Canvia la drecera\" i prem una nova combinació de tecles. Prem Esc per cancel·lar.",
-      "errorModifier": {
-        "mac": "Inclou ⌘ (Command), ⌥ (Option) o un altre modificador a la drecera.",
-        "windows": "Inclou Ctrl, Alt o un altre modificador a la drecera."
-      },
       "errorConflict": "Drecera ja utilitzada per {{tool}}.",
+      "searchPlaceholder": "Cerca eines...",
       "none": "Sense assignar",
       "customBadge": "Personalitzada",
       "defaultLabel": "Per defecte: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Canvia la drecera",
       "reset": "Restableix",
       "shortcut": "Drecera",
-      "noShortcut": "Cap drecera definida",
-      "searchPlaceholder": "Cerca eines..."
+      "noShortcut": "Cap drecera definida"
     }
+  },
+  "update": {
+    "modalTitle": "Actualització disponible",
+    "current": "Versió actual",
+    "latest": "Última versió",
+    "latestStable": "Última estable",
+    "priorityLabel": "Prioritat",
+    "recommendedAction": "Acció recomanada",
+    "breakingChangesDetected": "S'han detectat canvis incompatibles",
+    "breakingChangesMessage": "Algunes versions contenen canvis incompatibles. Revisa les guies de migració abans d'actualitzar.",
+    "migrationGuides": "Guies de migració",
+    "viewGuide": "Veure guia",
+    "loadingDetailedInfo": "Carregant informació detallada...",
+    "close": "Tanca",
+    "viewAllReleases": "Veure totes les versions",
+    "downloadLatest": "Baixa l'última",
+    "availableUpdates": "Actualitzacions disponibles",
+    "unableToLoadDetails": "No s'ha pogut carregar la informació detallada.",
+    "version": "Versió",
+    "urgentUpdateAvailable": "Actualització urgent",
+    "updateAvailable": "Actualització disponible",
+    "releaseNotes": "Notes de llançament",
+    "priority": {
+      "urgent": "Urgent",
+      "normal": "Normal",
+      "minor": "Menor",
+      "low": "Baixa"
+    },
+    "breakingChanges": "Canvis incompatibles",
+    "breakingChangesDefault": "Aquesta versió conté canvis incompatibles.",
+    "migrationGuide": "Guia de migració"
   },
   "changeCreds": {
     "title": "Canvia les Credencials",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Superposa PDFs sobre un altre PDF",
       "title": "Superposar PDFs"
+    },
+    "pdfTextEditor": {
+      "title": "Editor de text PDF",
+      "desc": "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
+    },
+    "addText": {
+      "tags": "text,anotació,etiqueta",
+      "title": "Afegeix text",
+      "desc": "Afegeix text personalitzat a qualsevol lloc del teu PDF"
     }
   },
   "landing": {
     "addFiles": "Afegeix fitxers",
-    "uploadFromComputer": "Puja des de l'ordinador"
+    "uploadFromComputer": "Puja des de l'ordinador",
+    "openFromComputer": "Obre des de l'ordinador"
   },
   "viewPdf": {
     "tags": "veure,llegir,anotar,text,imatge",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "S'ha produït un error en combinar els PDFs."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Resum de la configuració de combinació"
+      }
     }
   },
   "split": {
@@ -1047,7 +1125,7 @@
     "settings": "Opcions",
     "conversionCompleted": "Conversió completada",
     "results": "Resultats",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "fitxer_convertit",
     "conversionResults": "Resultats de la conversió",
     "convertFrom": "Converteix de",
     "convertTo": "Converteix a",
@@ -1087,9 +1165,9 @@
     "fileFormat": "Format de fitxer",
     "wordDoc": "Document de Word",
     "wordDocExt": "Document de Word (.docx)",
-    "odtExt": "OpenDocument Text (.odt)",
+    "odtExt": "Text OpenDocument (.odt)",
     "pptExt": "PowerPoint (.pptx)",
-    "odpExt": "OpenDocument Presentation (.odp)",
+    "odpExt": "Presentació OpenDocument (.odp)",
     "txtExt": "Text pla (.txt)",
     "rtfExt": "Format de text enriquit (.rtf)",
     "selectedFiles": "Fitxers seleccionats",
@@ -1182,9 +1260,43 @@
     "tags": "img,jpg,imatge,foto",
     "title": "Afegir Imatge",
     "header": "Afegir Imatge a PDF (en construcció)",
-    "everyPage": "Totes les pàgines?",
-    "upload": "Afegir Imatge",
-    "submit": "Afegir Imatge"
+    "image": {
+      "name": "Imatge",
+      "placeholder": "Puja una imatge",
+      "label": "Fitxer d'imatge"
+    },
+    "steps": {
+      "configure": "Configura la imatge"
+    },
+    "step": {
+      "createDesc": "Puja la imatge que vols afegir",
+      "place": "Col·loca la imatge",
+      "placeDesc": "Fes clic al PDF per afegir la imatge"
+    },
+    "instructions": {
+      "title": "Com afegir imatges",
+      "text": "Després de pujar la imatge, fes clic a qualsevol lloc del PDF per col·locar-la.",
+      "paused": "Col·locació en pausa",
+      "resumeHint": "Reprèn la col·locació per poder fer clic i afegir la imatge.",
+      "noSignature": "Puja una imatge per habilitar la col·locació."
+    },
+    "mode": {
+      "move": "Mou la imatge",
+      "place": "Col·loca la imatge",
+      "pause": "Pausa la col·locació",
+      "resume": "Reprèn la col·locació"
+    },
+    "results": {
+      "title": "Resultats d'afegir imatge"
+    },
+    "error": {
+      "failed": "S'ha produït un error en afegir la imatge al PDF."
+    },
+    "saved": {
+      "defaultLabel": "Imatge",
+      "defaultImageLabel": "Imatge pujada"
+    },
+    "applySignatures": "Aplica les imatges"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1200,7 +1312,7 @@
     "desc": "Afegeix marques d'aigua de text o d'imatge als fitxers PDF",
     "completed": "Marca d'aigua afegida",
     "submit": "Afegir Marca d'Aigua",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "amb_marca_d_aigua",
     "error": {
       "failed": "S'ha produït un error en afegir la marca d'aigua al PDF."
     },
@@ -1396,6 +1508,93 @@
       "10": "Evita impressió en diferents formats"
     },
     "submit": "Canviar Permissos"
+  },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Marcadors i esquema",
+      "replaceExisting": "Substitueix els marcadors existents (desmarca per afegir)",
+      "replaceExistingHint": "Si està desactivat, l'esquema nou s'afegirà després dels marcadors actuals."
+    },
+    "actions": {
+      "source": "Carrega marcadors",
+      "selectedFile": "Carregat des de {{file}}",
+      "noFile": "Selecciona un PDF per extreure els marcadors existents.",
+      "loadFromPdf": "Carrega des del PDF seleccionat",
+      "importJson": "Importa JSON",
+      "importClipboard": "Enganxa JSON del porta-retalls",
+      "export": "Exporta marcadors",
+      "exportJson": "Baixa JSON",
+      "exportClipboard": "Copia JSON al porta-retalls",
+      "clipboardUnavailable": "Aquest navegador no permet accedir al porta-retalls."
+    },
+    "info": {
+      "line1": "Cada marcador necessita un títol descriptiu i la pàgina que ha d'obrir.",
+      "line2": "Utilitza marcadors fills per construir una jerarquia per a capítols, seccions o subseccions.",
+      "line3": "Importa marcadors del PDF seleccionat o d'un fitxer JSON per estalviar temps."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Obre l'eina per començar a editar",
+        "description": "Selecciona l'eina Editar taula de continguts per carregar-ne l'espai de treball."
+      },
+      "tabTitle": "Espai de treball de l'esquema",
+      "subtitle": "Importa marcadors, crea jerarquies i aplica l'esquema sense panells laterals estrets.",
+      "noFile": "Cap PDF seleccionat",
+      "fileLabel": "Els canvis s'aplicaran al PDF seleccionat actualment.",
+      "filePrompt": "Selecciona un PDF de la biblioteca o puja'n un de nou per començar.",
+      "changeFile": "Canvia el PDF",
+      "selectFile": "Selecciona PDF"
+    },
+    "editor": {
+      "heading": "Editor de marcadors",
+      "description": "Afegeix, niua i reordena marcadors per crear l'esquema del teu PDF.",
+      "addTopLevel": "Afegeix un marcador de primer nivell",
+      "empty": {
+        "title": "Encara no hi ha marcadors",
+        "description": "Importa els marcadors existents o comença afegint la primera entrada.",
+        "action": "Afegeix el primer marcador"
+      },
+      "defaultTitle": "Marcador nou",
+      "defaultChildTitle": "Marcador fill",
+      "defaultSiblingTitle": "Marcador nou",
+      "untitled": "Marcador sense títol",
+      "childBadge": "Fill",
+      "pagePreview": "Pàgina {{page}}",
+      "field": {
+        "title": "Títol del marcador",
+        "page": "Número de pàgina de destinació"
+      },
+      "actions": {
+        "toggle": "Mostra/amaga fills",
+        "addChild": "Afegeix marcador fill",
+        "addSibling": "Afegeix marcador germà",
+        "remove": "Elimina marcador"
+      },
+      "confirmRemove": "Vols eliminar aquest marcador i tots els seus fills?"
+    },
+    "messages": {
+      "loadedTitle": "Marcadors extrets",
+      "loadedBody": "S'han carregat a l'editor els marcadors existents del PDF.",
+      "noBookmarks": "No s'han trobat marcadors al PDF seleccionat.",
+      "loadFailed": "No s'han pogut extreure els marcadors del PDF seleccionat.",
+      "imported": "Marcadors importats",
+      "importedBody": "El teu esquema JSON ha substituït el contingut actual de l'editor.",
+      "importedClipboard": "Les dades del porta-retalls han substituït la llista actual de marcadors.",
+      "invalidJson": "Estructura JSON no vàlida",
+      "invalidJsonBody": "Proporciona un fitxer JSON de marcadors vàlid i torna-ho a provar.",
+      "exported": "Baixada de JSON a punt",
+      "copied": "Copiat al porta-retalls",
+      "copiedBody": "JSON de marcadors copiat correctament.",
+      "copyFailed": "No s'ha pogut copiar"
+    },
+    "error": {
+      "failed": "No s'ha pogut actualitzar la taula de continguts"
+    },
+    "submit": "Aplica la taula de continguts",
+    "results": {
+      "title": "PDF actualitzat amb marcadors",
+      "subtitle": "Baixa el fitxer processat o desfés l'operació a continuació."
+    }
   },
   "removePages": {
     "tags": "eliminar pàgines,suprimir pàgines",
@@ -1601,7 +1800,7 @@
     "tags": "estrènyer,petit,minúscul"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "elimina,esborra,formulari,camp,noméslectura",
     "title": "Elimina el mode de només lectura dels camps de formulari",
     "header": "Desbloqueja formularis PDF",
     "submit": "Remove",
@@ -1978,13 +2177,54 @@
       "title": "Dibuixa la teva signatura",
       "clear": "Esborra"
     },
+    "canvas": {
+      "heading": "Dibuixa la teva signatura",
+      "clickToOpen": "Fes clic per obrir el llenç de dibuix",
+      "modalTitle": "Dibuixa la teva signatura",
+      "colorLabel": "Color",
+      "penSizeLabel": "Mida del traç",
+      "penSizePlaceholder": "Mida",
+      "clear": "Neteja el llenç",
+      "colorPickerTitle": "Tria el color del traç"
+    },
     "text": {
       "name": "Nom del signant",
-      "placeholder": "Introdueix el teu nom complet"
+      "placeholder": "Introdueix el teu nom complet",
+      "fontLabel": "Tipus de lletra",
+      "fontSizeLabel": "Mida del tipus de lletra",
+      "fontSizePlaceholder": "Escriu o selecciona la mida (8-200)",
+      "colorLabel": "Color del text"
     },
     "clear": "Esborra",
     "add": "Afegeix",
-    "saved": "Signatures Desades",
+    "saved": {
+      "heading": "Signatures desades",
+      "description": "Reutilitza signatures desades en qualsevol moment.",
+      "emptyTitle": "Encara no hi ha signatures desades",
+      "emptyDescription": "Dibuixa, puja o escriu una signatura a dalt i usa \"Desa a la biblioteca\" per guardar fins a {{max}} preferides a punt per usar.",
+      "type": {
+        "canvas": "Dibuix",
+        "image": "Pujada",
+        "text": "Text"
+      },
+      "limitTitle": "S'ha assolit el límit",
+      "limitDescription": "Elimina una signatura desada abans d'afegir-ne de noves (màx. {{max}}).",
+      "carouselPosition": "{{current}} de {{total}}",
+      "prev": "Anterior",
+      "next": "Següent",
+      "delete": "Elimina",
+      "label": "Etiqueta",
+      "defaultLabel": "Signatura",
+      "defaultCanvasLabel": "Signatura dibuixada",
+      "defaultImageLabel": "Signatura pujada",
+      "defaultTextLabel": "Signatura teclejada",
+      "saveButton": "Desa la signatura",
+      "saveUnavailable": "Crea una signatura primer per poder-la desar.",
+      "noChanges": "La signatura actual ja està desada.",
+      "status": {
+        "saved": "Desada"
+      }
+    },
     "save": "Desa Signatura",
     "applySignatures": "Aplica les signatures",
     "personalSigs": "Signatures Personals",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "Configura la signatura"
     },
+    "step": {
+      "createDesc": "Tria com vols crear la signatura",
+      "place": "Col·loca i desa",
+      "placeDesc": "Posiciona la signatura al teu PDF"
+    },
     "type": {
       "title": "Tipus de signatura",
       "draw": "Dibuixa",
-      "canvas": "Canvas",
+      "canvas": "Llenç",
       "image": "Imatge",
-      "text": "Text"
+      "text": "Text",
+      "saved": "Desades"
     },
     "image": {
       "label": "Carrega la imatge de la signatura",
@@ -2019,11 +2265,17 @@
       "title": "Com afegir la signatura",
       "canvas": "Després de dibuixar la signatura al canvas, tanca la finestra modal i fes clic en qualsevol lloc del PDF per col·locar-la.",
       "image": "Després de carregar la imatge de la signatura a dalt, fes clic en qualsevol lloc del PDF per col·locar-la.",
-      "text": "Després d'introduir el teu nom a dalt, fes clic en qualsevol lloc del PDF per col·locar la signatura."
+      "saved": "Selecciona una signatura desada a dalt i fes clic a qualsevol lloc del PDF per col·locar-la.",
+      "text": "Després d'introduir el teu nom a dalt, fes clic en qualsevol lloc del PDF per col·locar la signatura.",
+      "paused": "Col·locació en pausa",
+      "resumeHint": "Reprèn la col·locació per poder fer clic i afegir la signatura.",
+      "noSignature": "Crea una signatura a dalt per habilitar les eines de col·locació."
     },
     "mode": {
       "move": "Mou la signatura",
-      "place": "Col·loca la signatura"
+      "place": "Col·loca la signatura",
+      "pause": "Pausa la col·locació",
+      "resume": "Reprèn la col·locació"
     },
     "updateAndPlace": "Actualitza i col·loca",
     "activate": "Activa la col·locació de la signatura",
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Sobre eliminar anotacions",
       "description": "Aquesta eina eliminarà totes les anotacions (comentaris, ressaltats, notes, etc.) dels teus documents PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Quant a Eliminar anotacions"
+      },
+      "description": {
+        "title": "Què fa"
+      }
     },
     "error": {
       "failed": "S'ha produït un error en eliminar les anotacions del PDF."
@@ -2577,7 +2837,7 @@
     "pageSize": {
       "label": "Mida de pàgina de destinació",
       "keep": "Mantén la mida original",
-      "letter": "Letter",
+      "letter": "Carta",
       "legal": "Legal"
     },
     "submit": "Ajusta l'escala de pàgina",
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Com funciona el canvi de nom automàtic"
       },
+      "description": {
+        "title": "Què fa"
+      },
       "howItWorks": {
         "title": "Canvi de nom intel·ligent",
         "text": "Troba automàticament el títol del contingut del vostre PDF i l'utilitza com a nom de fitxer.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Crea un nom de fitxer net i vàlid a partir del títol detectat",
         "bullet3": "Manté el nom original si no es troba cap títol adequat"
       }
+    },
+    "settings": {
+      "title": "Quant a"
     }
   },
   "adjust-contrast": {
@@ -3227,7 +3493,26 @@
     "unexpectedError": "Error inesperat: {{message}}",
     "accountCreatedSuccess": "Compte creat correctament! Ara podeu iniciar sessió.",
     "passwordChangedSuccess": "Contrasenya canviada correctament! Inicieu sessió amb la nova contrasenya.",
-    "credentialsUpdated": "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
+    "credentialsUpdated": "S'han actualitzat les vostres credencials. Torneu a iniciar sessió.",
+    "defaultCredentials": "Credencials d'inici de sessió predeterminades",
+    "changePasswordWarning": "Canvia la contrasenya després d'iniciar sessió per primera vegada",
+    "slides": {
+      "overview": {
+        "alt": "Visió general de Stirling PDF",
+        "title": "Tot el que necessites per als teus PDF en un sol lloc.",
+        "subtitle": "Una suite al núvol centrada en la privadesa per a PDF que et permet convertir, signar, censurar i gestionar documents, amb més de 50 eines potents."
+      },
+      "edit": {
+        "alt": "Edita PDF",
+        "title": "Edita PDF per mostrar/protegir la informació que vulguis",
+        "subtitle": "Amb més d'una dotzena d'eines per censurar, signar, llegir i manipular PDF, segur que hi trobaràs el que busques."
+      },
+      "secure": {
+        "alt": "Protegeix PDF",
+        "title": "Protegeix la informació sensible dels teus PDF",
+        "subtitle": "Afegeix contrasenyes, censura contingut i gestiona certificats amb facilitat."
+      }
+    }
   },
   "signup": {
     "title": "Crea un compte",
@@ -3598,7 +3883,9 @@
     "exportAll": "Exporta el PDF",
     "downloadSelected": "Descarrega els fitxers seleccionats",
     "downloadAll": "Descarrega-ho tot",
+    "saveAll": "Desa-ho tot",
     "toggleTheme": "Canvia el tema",
+    "toggleBookmarks": "Mostra/amaga marcadors",
     "language": "Idioma",
     "search": "Cerca al PDF",
     "panMode": "Mode de desplaçament",
@@ -3685,8 +3972,16 @@
       "saved": "Configuració desada correctament",
       "saveSuccess": "Configuració desada correctament",
       "save": "Desa els canvis",
+      "discard": "Descarta",
       "restartRequired": "Cal reiniciar",
       "loginRequired": "Heu d'activar el mode d'inici de sessió per modificar la configuració d'administració",
+      "unsavedChanges": {
+        "title": "Canvis no desats",
+        "message": "Tens canvis no desats. Vols descartar-los?",
+        "cancel": "Continua editant",
+        "discard": "Descarta els canvis",
+        "hint": "Tens canvis no desats"
+      },
       "loginDisabled": {
         "title": "Cal el mode d'inici de sessió",
         "message": "S'ha d'activar el mode d'inici de sessió per modificar la configuració d'administració. Si us plau, establiu SECURITY_ENABLELOGIN=true al vostre entorn o security.enableLogin: true a settings.yml, i després reinicieu el servidor.",
@@ -4132,12 +4427,12 @@
             "description": "Temps màxim d'execució"
           },
           "libreOffice": "LibreOffice",
-          "pdfToHtml": "PDF to HTML",
+          "pdfToHtml": "PDF a HTML",
           "qpdf": "QPDF",
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Instal·la l'app",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4507,21 @@
         "title": "Premium i Enterprise",
         "description": "Configureu la clau de llicència Premium o Enterprise.",
         "license": "Configuració de llicència",
+        "licenseKey": {
+          "toggle": "Tens una clau de llicència o un fitxer de certificat?",
+          "info": "Si tens una clau de llicència o un fitxer de certificat d'una compra directa, pots introduir-los aquí per activar funcions premium o enterprise."
+        },
         "key": {
           "label": "Clau de llicència",
-          "description": "Introduïu la vostra clau de llicència Premium o Enterprise"
+          "description": "Introduïu la vostra clau de llicència Premium o Enterprise",
+          "success": "Clau de llicència desada",
+          "successMessage": "La clau de llicència s'ha activat correctament. No cal reiniciar.",
+          "overwriteWarning": {
+            "title": "⚠️ Avís: s'ha detectat una llicència existent",
+            "line1": "Sobreescriure la clau de llicència actual no es pot desfer.",
+            "line2": "La llicència anterior es perdrà permanentment si no en tens una còpia de seguretat.",
+            "line3": "Important: mantén les claus de llicència privades i segures. No les comparteixis mai públicament."
+          }
         },
         "enabled": {
           "label": "Habilita les funcions Premium",
@@ -4278,12 +4585,17 @@
     "or": "o",
     "dropFileHere": "Deixeu anar el fitxer aquí o feu clic per pujar-lo",
     "dropFilesHere": "Deixeu anar els fitxers aquí o feu clic al botó de pujada",
+    "dropFilesHereOpen": "Arrossega fitxers aquí o fes clic al botó d'obrir",
     "pdfFilesOnly": "Només fitxers PDF",
     "supportedFileTypes": "Tipus de fitxer compatibles",
     "upload": "Puja",
     "uploadFile": "Puja fitxer",
     "uploadFiles": "Puja fitxers",
+    "open": "Obre",
+    "openFile": "Obre fitxer",
+    "openFiles": "Obre fitxers",
     "noFilesInStorage": "No hi ha fitxers disponibles a l'emmagatzematge. Pugeu alguns fitxers primer.",
+    "noFilesInStorageOpen": "No hi ha fitxers disponibles a l'emmagatzematge. Obre alguns fitxers primer.",
     "selectFromStorage": "Seleccioneu de l'emmagatzematge",
     "backToTools": "Torna a les eines",
     "addFiles": "Afegeix fitxers",
@@ -4329,6 +4641,8 @@
     "myFiles": "Els meus fitxers",
     "noRecentFiles": "No s'han trobat fitxers recents",
     "googleDriveNotAvailable": "La integració amb Google Drive no està disponible",
+    "downloadSelected": "Descarrega els seleccionats",
+    "saveSelected": "Desa la selecció",
     "openFiles": "Obre fitxers",
     "openFile": "Obre fitxer",
     "details": "Detalls del fitxer",
@@ -4341,7 +4655,6 @@
     "selectAll": "Selecciona-ho tot",
     "deselectAll": "Desselecciona-ho tot",
     "deleteSelected": "Suprimeix seleccionades",
-    "downloadSelected": "Descarrega els seleccionats",
     "selectedCount": "{{count}} seleccionats",
     "download": "Descarrega",
     "delete": "Esborra",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "Flux de seguretat",
       "secureWorkflowDesc": "Assegura els documents PDF eliminant contingut potencialment maliciós com JavaScript i fitxers incrustats, i després afegeix protecció amb contrasenya per evitar accessos no autoritzats. Per defecte, la contrasenya és 'password'.",
       "processImages": "Processa imatges",
-      "processImagesDesc": "Converteix múltiples fitxers d’imatge en un sol document PDF, i després aplica tecnologia OCR per extreure text cercable de les imatges."
+      "processImagesDesc": "Converteix múltiples fitxers d’imatge en un sol document PDF, i després aplica tecnologia OCR per extreure text cercable de les imatges.",
+      "prePublishSanitization": "Sanitització prèvia a la publicació",
+      "prePublishSanitizationDesc": "Flux de sanitització que elimina totes les metadades ocultes, JavaScript, fitxers incrustats i anotacions, i aplana els formularis per evitar fugues de dades abans de publicar PDFs en línia."
     }
+  },
+  "colorPicker": {
+    "title": "Tria el color"
   },
   "common": {
     "previous": "Anterior",
@@ -4639,7 +4957,13 @@
     "used": "utilitzats",
     "available": "disponibles",
     "cancel": "Cancel·la",
-    "preview": "Vista prèvia"
+    "preview": "Vista prèvia",
+    "close": "Tanca",
+    "done": "Fet",
+    "loading": "Carregant...",
+    "back": "Enrere",
+    "continue": "Continua",
+    "error": "Error"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "Afegeix més fitxers...",
     "selectedFiles": "Fitxers seleccionats",
     "submit": "Afegeix adjunts",
+    "tooltip": {
+      "header": {
+        "title": "Quant a Afegir adjunts"
+      },
+      "description": {
+        "title": "Què fa"
+      }
+    },
     "results": {
       "title": "Resultats dels adjunts"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "Posició personalitzada",
   "details": "Detalls",
-  "downloadUnavailable": "Descàrrega no disponible per a aquest element",
   "invalidUndoData": "No es pot desfer: dades d’operació no vàlides",
   "margin": {
     "large": "Gran",
@@ -4801,6 +5132,10 @@
       "maybeLater": "Més tard",
       "dontShowAgain": "No ho tornis a mostrar"
     },
+    "welcomeSlide": {
+      "title": "Benvingut a Stirling",
+      "body": "Stirling PDF ara està llest per a equips de totes les mides. Aquesta actualització inclou un disseny nou, potents capacitats d'administració i la funció més demanada: <strong>Editar text</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Seleccionem l’eina de <strong>Retalla</strong> per demostrar com utilitzar una de les eines.",
     "toolInterface": "Aquesta és la interfície de l’eina de <strong>Retalla</strong>. Com podeu veure, no hi ha gaire res perquè encara no hem afegit cap fitxer PDF per treballar-hi.",
@@ -4823,7 +5158,39 @@
     "next": "Següent",
     "finish": "Finalitza",
     "startTour": "Inicia la visita",
-    "startTourDescription": "Feu una visita guiada per les funcions clau de Stirling PDF"
+    "startTourDescription": "Feu una visita guiada per les funcions clau de Stirling PDF",
+    "buttons": {
+      "next": "Següent →",
+      "back": "Enrere",
+      "skipForNow": "Omet per ara",
+      "download": "Baixa →",
+      "showMeAround": "Fes-me un recorregut",
+      "skipTheTour": "Omet la visita guiada"
+    },
+    "serverLicense": {
+      "skip": "Omet per ara",
+      "seePlans": "Veure plans →",
+      "upgrade": "Actualitza ara →",
+      "freeTitle": "Llicència del servidor",
+      "overLimitTitle": "Cal una llicència de servidor",
+      "overLimitBody": "La nostra llicència permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Tens <strong>{{overLimitUserCopy}}</strong> usuaris de Stirling. Per continuar sense interrupcions, actualitza al pla Stirling Server: <strong>seients il·limitats</strong>, edició de text de PDF i control d'administració complet per 99 $/servidor/mes.",
+      "freeBody": "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions i obtenir accés anticipat a la nova <strong>eina d'edició de text PDF</strong>, recomanem el pla Stirling Server: edició completa i <strong>seients il·limitats</strong> per 99 $/servidor/mes."
+    },
+    "desktopInstall": {
+      "title": "Baixa",
+      "titleWithOs": "Baixa per a {{osLabel}}",
+      "body": "Stirling funciona millor com a aplicació d'escriptori. Pots usar-la fora de línia, accedir als documents més ràpid i fer edicions localment a l'ordinador."
+    },
+    "planOverview": {
+      "adminTitle": "Resum d'administració",
+      "userTitle": "Resum del pla",
+      "adminBodyLoginEnabled": "Com a administrador, pots gestionar usuaris, configurar paràmetres i supervisar la salut del servidor. Les primeres <strong>{{freeTierLimit}}</strong> persones del teu servidor poden usar Stirling gratuïtament.",
+      "adminBodyLoginDisabled": "Quan habilitis el mode d'inici de sessió, podràs gestionar usuaris, configurar paràmetres i supervisar la salut del servidor. Les primeres <strong>{{freeTierLimit}}</strong> persones del teu servidor poden usar Stirling gratuïtament.",
+      "userBody": "Convida companys, assigna rols i mantén els documents organitzats en un espai de treball segur. Habilita el mode d'inici de sessió quan estiguis llest per anar més enllà de l'ús individual."
+    },
+    "securityCheck": {
+      "message": "L'aplicació ha patit canvis importants recentment. Pot ser necessària l'atenció de l'administrador del servidor. Confirma el teu rol per continuar."
+    }
   },
   "adminOnboarding": {
     "welcome": "Benvinguts a la <strong>Visita d’administració</strong>! Explorem les potents funcionalitats i paràmetres d’empresa disponibles per als administradors del sistema.",
@@ -4852,7 +5219,10 @@
       "role": "Rol",
       "team": "Equip",
       "status": "Estat",
-      "actions": "Accions",
+      "actions": {
+        "label": "Accions",
+        "upgrade": "Actualitza"
+      },
       "noMembersFound": "No s’han trobat membres",
       "active": "Actiu",
       "disabled": "Desactivat",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "{{count}} plaça(es) d’usuari disponibles",
         "noSlotsAvailable": "No hi ha places disponibles",
         "currentUsage": "Actualment s’estan utilitzant {{current}} de {{max}} llicències d’usuari"
-      }
+      },
+      "loginRequired": "Habilita primer el mode d'inici de sessió"
     },
     "teams": {
       "title": "Equips",
@@ -5057,6 +5428,17 @@
     "showComparison": "Compara totes les funcions",
     "hideComparison": "Amaga la comparativa de funcions",
     "featureComparison": "Comparativa de funcions",
+    "from": "Des de",
+    "perMonth": "/mes",
+    "perSeat": "/seient",
+    "withServer": "+ Pla Server",
+    "licensedSeats": "Llicenciats: {{count}} seients",
+    "includedInCurrent": "Inclòs al teu pla",
+    "selectPlan": "Selecciona el pla",
+    "manage": "Gestiona",
+    "manageSubscription": {
+      "description": "Gestiona la subscripció, la facturació i els mètodes de pagament"
+    },
     "activePlan": {
       "title": "Pla actiu",
       "subtitle": "Detalls de la vostra subscripció actual"
@@ -5074,13 +5456,16 @@
       "upTo": "Fins a"
     },
     "period": {
-      "month": "mes"
+      "month": "mes",
+      "perUserPerMonth": "/usuari/mes"
     },
     "free": {
       "name": "Gratuït",
       "highlight1": "Ús limitat d’eines per setmana",
       "highlight2": "Accés a totes les eines",
-      "highlight3": "Suport de la comunitat"
+      "highlight3": "Suport de la comunitat",
+      "forever": "Gratuït per sempre",
+      "included": "Inclòs"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5477,9 @@
       "name": "Enterprise",
       "highlight1": "Preus personalitzats",
       "highlight2": "Suport dedicat",
-      "highlight3": "Funcions més recents"
+      "highlight3": "Funcions més recents",
+      "requiresServer": "Requereix servidor",
+      "requiresServerMessage": "Actualitza primer al pla Server abans de passar a Enterprise."
     },
     "feature": {
       "title": "Funció",
@@ -5102,6 +5489,12 @@
       "api": "Accés a l’API",
       "priority": "Suport prioritari",
       "customPricing": "Preus personalitzats"
+    },
+    "licenseWarning": {
+      "title": "S'ha assolit el límit gratuït d'autoallotjats",
+      "body": "Tens {{total}} usuaris, però el nivell gratuït només admet {{limit}} per servidor. Actualitza per mantenir Stirling PDF funcionant sense problemes.",
+      "overLimit": "més de {{limit}}",
+      "cta": "Veure plans"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "Gestiona la facturació",
     "portal": {
       "error": "No s’ha pogut obrir el portal de facturació"
-    }
+    },
+    "updateSeats": "Actualitza seients",
+    "updateEnterpriseSeats": "Actualitza seients Enterprise",
+    "currentSeats": "Seients actuals",
+    "minimumSeats": "Seients mínims",
+    "basedOnUsers": "(usuaris actuals)",
+    "newSeatCount": "Nou nombre de seients",
+    "newSeatCountDescription": "Selecciona el nombre de seients per a la llicència enterprise",
+    "whatHappensNext": "Què passa després?",
+    "stripePortalRedirect": "Se't redirigirà al portal de facturació de Stripe per revisar i confirmar el canvi de seients. L'import prorratejat es calcularà automàticament.",
+    "preparingUpdate": "Preparant l'actualització de seients...",
+    "seatCountTooLow": "El nombre de seients ha de ser com a mínim {{minimum}} (nombre actual d'usuaris)",
+    "seatCountUnchanged": "Selecciona un nombre de seients diferent",
+    "seatsUpdated": "Seients actualitzats",
+    "seatsUpdatedMessage": "Els seients Enterprise s'han actualitzat a {{seats}}",
+    "updateProcessing": "Actualització en processament",
+    "updateProcessingMessage": "S'està processant l'actualització de seients. Actualitza en uns moments.",
+    "notEnterprise": "La gestió de seients només està disponible per a llicències Enterprise"
+  },
+  "upgradeBanner": {
+    "title": "Actualitza al pla Server",
+    "message": "Treu el màxim rendiment de Stirling PDF amb usuaris il·limitats i funcions avançades",
+    "upgradeButton": "Actualitza ara",
+    "dismiss": "Descarta el bàner",
+    "attentionTitle": "Aquest servidor requereix atenció d'administrador",
+    "attentionBody": "L'administrador ha d'iniciar sessió per veure més informació. Contacta-hi immediatament.",
+    "attentionBodyAdmin": "Revisa els requisits de llicència per mantenir aquest servidor complint la normativa.",
+    "seeInfo": "Veure informació"
   },
   "payment": {
     "preparing": "S’està preparant el pagament...",
@@ -5128,7 +5548,61 @@
     "success": "Pagament correcte!",
     "successMessage": "La vostra subscripció s’ha activat correctament. Rebreu un correu de confirmació en breu.",
     "autoClose": "Aquesta finestra es tancarà automàticament...",
-    "error": "Error de pagament"
+    "error": "Error de pagament",
+    "upgradeSuccess": "Pagament correcte! La subscripció s'ha actualitzat. La llicència s'ha actualitzat al servidor. Rebràs un correu de confirmació aviat.",
+    "paymentSuccess": "Pagament correcte! Recuperant la clau de llicència...",
+    "licenseActivated": "Llicència activada! La clau de llicència s'ha desat. S'ha enviat un correu de confirmació a l'adreça registrada.",
+    "licenseDelayed": "Pagament correcte! S'està generant la llicència. Rebràs un correu amb la teva clau de llicència aviat. Si no el reps en 10 minuts, contacta amb el suport.",
+    "licensePollingError": "Pagament correcte, però no s'ha pogut recuperar automàticament la clau de llicència. Revisa el correu o contacta amb el suport amb la confirmació de pagament.",
+    "licenseRetrievalError": "Pagament correcte, però la recuperació de la llicència ha fallat. Rebràs la clau de llicència per correu. Contacta amb el suport si no la reps en 10 minuts.",
+    "syncError": "Pagament correcte, però la sincronització de la llicència ha fallat. La llicència s'actualitzarà en breu. Contacta amb el suport si el problema persisteix.",
+    "licenseSaveError": "No s'ha pogut desar la clau de llicència. Contacta amb el suport amb la teva clau per completar l'activació.",
+    "paymentCanceled": "S'ha cancel·lat el pagament. No s'ha realitzat cap càrrec.",
+    "syncingLicense": "Sincronitzant la llicència actualitzada...",
+    "generatingLicense": "Generant la clau de llicència...",
+    "upgradeComplete": "Actualització completada",
+    "upgradeCompleteMessage": "La subscripció s'ha actualitzat correctament. La clau de llicència existent s'ha actualitzat.",
+    "stripeNotConfigured": "Stripe no està configurat",
+    "stripeNotConfiguredMessage": "La integració de pagaments de Stripe no està configurada. Contacta amb l'administrador.",
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "billingPeriod": "Període de facturació",
+    "enterpriseNote": "Els seients es poden ajustar al checkout (1-1000).",
+    "installationId": "ID d'instal·lació",
+    "licenseKey": "La teva clau de llicència",
+    "licenseInstructions": "Això s'ha afegit a la teva instal·lació. També en rebràs una còpia per correu.",
+    "canCloseWindow": "Ara pots tancar aquesta finestra.",
+    "licenseKeyProcessing": "Processant la clau de llicència",
+    "licenseDelayedMessage": "S'està generant la teva clau de llicència. Revisa el correu aviat o contacta amb el suport.",
+    "perYear": "/any",
+    "perMonth": "/mes",
+    "emailInvalid": "Introdueix una adreça de correu vàlida",
+    "emailStage": {
+      "title": "Introdueix el teu correu electrònic",
+      "description": "L'usarem per enviar-te la clau de llicència i els rebuts.",
+      "emailLabel": "Adreça de correu",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Continua",
+      "modalTitle": "Comença - {{planName}}"
+    },
+    "planStage": {
+      "title": "Tria el període de facturació",
+      "savingsNote": "Estalvia un {{percent}}% amb la facturació anual",
+      "basePrice": "Preu base",
+      "seatPrice": "Per seient",
+      "totalForSeats": "Total ({{count}} seients)",
+      "selectMonthly": "Selecciona mensual",
+      "selectYearly": "Selecciona anual",
+      "savePercent": "Estalvia {{percent}}%",
+      "savingsAmount": "Estalvies {{amount}}",
+      "modalTitle": "Selecciona el període de facturació - {{planName}}",
+      "billedYearly": "Facturat anualment a {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Torna a la selecció del pla",
+      "selectedPlan": "Pla seleccionat",
+      "modalTitle": "Completa el pagament - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "Primer inici de sessió",
@@ -5287,5 +5761,281 @@
     "offline": "Backend fora de línia",
     "starting": "El backend s'està iniciant...",
     "wait": "Espereu que el backend acabi d'engegar i torneu-ho a provar."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Desbloqueja el PDF per continuar",
+    "title": "Elimina la contrasenya per continuar",
+    "description": "Aquest PDF està protegit amb contrasenya. Introdueix-la per poder continuar treballant-hi.",
+    "password": {
+      "label": "Contrasenya del PDF",
+      "placeholder": "Introdueix la contrasenya del PDF"
+    },
+    "skip": "Omet per ara",
+    "unlock": "Desbloqueja i continua",
+    "incorrectPassword": "Contrasenya incorrecta",
+    "missingFile": "El fitxer seleccionat ja no està disponible.",
+    "emptyResponse": "L'eliminació de la contrasenya no ha produït cap fitxer.",
+    "required": "Introdueix la contrasenya per continuar.",
+    "successTitle": "Contrasenya eliminada",
+    "successBodyWithName": "Contrasenya eliminada de {{fileName}}",
+    "successBody": "Contrasenya eliminada correctament."
+  },
+  "setup": {
+    "welcome": "Benvingut a Stirling PDF",
+    "description": "Comença triant com vols usar Stirling PDF",
+    "step1": {
+      "label": "Tria el mode",
+      "description": "Fora de línia o servidor"
+    },
+    "step2": {
+      "label": "Selecciona el servidor",
+      "description": "Servidor autoallotjat"
+    },
+    "step3": {
+      "label": "Inicia sessió",
+      "description": "Introdueix les credencials"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Inicia sessió amb el teu compte de Stirling"
+      },
+      "selfhosted": {
+        "title": "Servidor autoallotjat",
+        "description": "Connecta't al teu servidor de Stirling PDF"
+      }
+    },
+    "saas": {
+      "title": "Inicia sessió a Stirling",
+      "subtitle": "Inicia sessió amb el teu compte de Stirling"
+    },
+    "selfhosted": {
+      "title": "Inicia sessió al servidor",
+      "subtitle": "Introdueix les credencials del servidor"
+    },
+    "server": {
+      "title": "Connecta't al servidor",
+      "subtitle": "Introdueix la URL del servidor autoallotjat",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Servidor autoallotjat"
+      },
+      "url": {
+        "label": "URL del servidor",
+        "description": "Introdueix la URL completa del teu servidor autoallotjat de Stirling PDF"
+      },
+      "error": {
+        "emptyUrl": "Introdueix una URL de servidor",
+        "unreachable": "No s'ha pogut connectar amb el servidor",
+        "testFailed": "Ha fallat la prova de connexió"
+      },
+      "testing": "Provant la connexió..."
+    },
+    "login": {
+      "title": "Inicia sessió",
+      "subtitle": "Introdueix les credencials per continuar",
+      "connectingTo": "Connectant amb:",
+      "username": {
+        "label": "Nom d'usuari",
+        "placeholder": "Introdueix el nom d'usuari"
+      },
+      "email": {
+        "label": "Correu electrònic",
+        "placeholder": "Introdueix el correu electrònic"
+      },
+      "password": {
+        "label": "Contrasenya",
+        "placeholder": "Introdueix la contrasenya"
+      },
+      "error": {
+        "emptyUsername": "Introdueix el teu nom d'usuari",
+        "emptyEmail": "Introdueix el teu correu electrònic",
+        "emptyPassword": "Introdueix la teva contrasenya",
+        "oauthFailed": "Ha fallat l'inici de sessió OAuth. Torna-ho a provar."
+      },
+      "submit": "Inicia sessió",
+      "signInWith": "Inicia sessió amb",
+      "oauthPending": "Obrint el navegador per autenticar-te...",
+      "orContinueWith": "O continua amb el correu electrònic"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Autenticació correcta",
+      "message": "Pots tancar aquesta finestra i tornar a Stirling PDF."
+    },
+    "error": {
+      "title": "Ha fallat l'autenticació",
+      "message": "L'autenticació no ha estat correcta. Pots tancar aquesta finestra i tornar-ho a provar."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "Editor JSON de PDF",
+    "viewLabel": "Editor de PDF",
+    "converting": "Convertint el PDF a format editable...",
+    "conversionFailed": "No s'ha pogut convertir el PDF. Torna-ho a provar.",
+    "currentFile": "Fitxer actual: {{name}}",
+    "pageSummary": "Pàgina {{number}} de {{total}}",
+    "pagePreviewAlt": "Vista prèvia",
+    "imageLabel": "Imatge col·locada",
+    "noTextOnPage": "No s'ha detectat text editable en aquesta pàgina.",
+    "pageType": {
+      "paragraph": "Pàgina de paràgrafs",
+      "sparse": "Text dispers"
+    },
+    "groupingMode": {
+      "auto": "Automàtic",
+      "paragraph": "Paràgraf",
+      "singleLine": "Línia única"
+    },
+    "badges": {
+      "unsaved": "Editat",
+      "modified": "Editat",
+      "earlyAccess": "Accés anticipat"
+    },
+    "actions": {
+      "reset": "Restableix els canvis",
+      "downloadJson": "Descarrega JSON",
+      "generatePdf": "Genera PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Autoajusta el text a les caixes",
+        "description": "Ajusta automàticament el text horitzontalment perquè encaixi dins del seu quadre delimitador original quan la representació del tipus de lletra difereix del PDF."
+      },
+      "groupingMode": {
+        "title": "Mode d'agrupació del text",
+        "autoDescription": "Detecta automàticament el tipus de pàgina i agrupa el text adequadament.",
+        "paragraphDescription": "Agrupa línies alineades en quadres de text de paràgraf multilínia.",
+        "singleLineDescription": "Manté cada línia de text del PDF com un quadre de text separat."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Consell: Mantén premut Ctrl (Cmd) o Shift per seleccionar diversos quadres de text. Apareixerà una barra d'eines flotant sobre la selecció per fusionar, desagrupar o ajustar les amplades."
+      },
+      "forceSingleElement": {
+        "title": "Bloqueja el text editat a un únic element del PDF",
+        "description": "Quan s'habilita, l'editor exporta cada quadre de text editat com un sol element de text del PDF per evitar glifs superposats o tipus de lletra barrejats."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Fusiona els quadres seleccionats",
+      "merge": "Fusiona la selecció",
+      "ungroupTooltip": "Separa el paràgraf de nou en línies",
+      "ungroup": "Desagrupa la selecció",
+      "widthMenu": "Opcions d'amplada",
+      "expandWidth": "Amplia fins a la vora de la pàgina",
+      "resetWidth": "Restableix l'amplada",
+      "resizeHandle": "Ajusta l'amplada del text"
+    },
+    "disclaimer": {
+      "heading": "Limitacions de la vista prèvia",
+      "textFocus": "Aquest espai de treball se centra en editar text i reposicionar imatges incrustades. Les il·lustracions de pàgina complexes, els controls de formulari i els gràfics en capes es conserven per a l'exportació però aquí no són totalment editables.",
+      "previewVariance": "Alguns elements visuals (com ara vores de taula, formes o aparences d'anotacions) poden no mostrar-se exactament a la vista prèvia. El PDF exportat manté les ordres de dibuix originals sempre que sigui possible.",
+      "alpha": "Aquest visor alfa encara evoluciona—certs tipus de lletra, colors, efectes de transparència i detalls de disposició poden variar lleugerament. Revisa el PDF generat abans de compartir-lo."
+    },
+    "empty": {
+      "title": "No s'ha carregat cap document",
+      "subtitle": "Carrega un fitxer PDF o JSON per començar a editar el contingut de text."
+    },
+    "welcomeBanner": {
+      "title": "Benvingut a l'Editor de text PDF (accés anticipat)",
+      "experimental": "Funció experimental en desenvolupament actiu. Espera una certa inestabilitat i problemes durant l'ús.",
+      "howItWorks": "Aquesta eina converteix el PDF a un format editable on pots modificar el contingut del text i reposicionar imatges. Els canvis es guarden com un nou PDF.",
+      "bestFor": "Funciona millor amb:",
+      "bestFor1": "PDF simples amb principalment text i imatges",
+      "bestFor2": "Documents amb format de paràgraf estàndard",
+      "bestFor3": "Cartes, assaigs, informes i documents bàsics",
+      "notIdealFor": "No és ideal per a:",
+      "notIdealFor1": "PDF amb formats especials com vinyetes, taules o dissenys multicolumna",
+      "notIdealFor2": "Revistes, fullets o documents molt dissenyats",
+      "notIdealFor3": "Manuals d'instruccions amb dissenys complexos",
+      "limitations": "Limitacions actuals:",
+      "limitation1": "La representació del tipus de lletra pot diferir lleugerament del PDF original",
+      "limitation2": "Els gràfics complexos, els camps de formulari i les anotacions es conserven però no són editables",
+      "limitation3": "Els fitxers grans poden trigar a convertir-se i processar-se",
+      "knownIssues": "Problemes coneguts (en procés de correcció):",
+      "issue1": "El color del text no es conserva actualment (s'afegirà aviat)",
+      "issue2": "El mode Paràgraf té més problemes d'alineació i espaiat; es recomana el mode Línia única",
+      "issue3": "La vista prèvia difereix del PDF exportat; els PDF exportats s'assemblen més a l'original",
+      "issue4": "L'alineació del text girat pot requerir ajust manual",
+      "issue5": "La transparència i els efectes de capes poden variar respecte a l'original",
+      "feedback": "Aquesta és una funció d'accés anticipat. Si us plau, informa de qualsevol problema que trobis per ajudar-nos a millorar!",
+      "gotIt": "D'acord",
+      "dontShowAgain": "No ho tornis a mostrar"
+    },
+    "modeChange": {
+      "title": "Confirma el canvi de mode",
+      "warning": "Canviar el mode d'agrupació del text restablirà tots els canvis no desats. Segur que vols continuar?",
+      "cancel": "Cancel·la",
+      "confirm": "Restableix i canvia el mode"
+    },
+    "fontAnalysis": {
+      "details": "Detalls del tipus de lletra",
+      "embedded": "Incrustada",
+      "type": "Tipus",
+      "webFormat": "Format web",
+      "warnings": "Avisos",
+      "suggestions": "Notes",
+      "currentPageFonts": "Tipus de lletra en aquesta pàgina",
+      "allFonts": "Tots els tipus de lletra",
+      "fallback": "alternativa",
+      "missing": "absent",
+      "perfectMessage": "Tots els tipus de lletra es poden reproduir perfectament.",
+      "warningMessage": "Alguns tipus de lletra poden no representar-se correctament.",
+      "infoMessage": "Informació disponible sobre la reproducció de tipus de lletra.",
+      "perfect": "perfecte",
+      "subset": "subconjunt"
+    },
+    "errors": {
+      "invalidJson": "No es pot llegir el fitxer JSON. Assegura't que s'hagi generat amb l'eina de PDF a JSON.",
+      "pdfConversion": "No es pot convertir el JSON editat de nou a PDF."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sessió caducada",
+    "pleaseLoginAgain": "Si us plau, torna a iniciar sessió.",
+    "accessDenied": "Accés denegat",
+    "insufficientPermissions": "No tens permís per fer aquesta acció."
+  },
+  "addText": {
+    "title": "Afegeix text",
+    "header": "Afegeix text als PDF",
+    "text": {
+      "name": "Contingut del text",
+      "placeholder": "Introdueix el text que vols afegir",
+      "fontLabel": "Tipus de lletra",
+      "fontSizeLabel": "Mida de la lletra",
+      "fontSizePlaceholder": "Escriu o selecciona la mida de la lletra (8-200)",
+      "colorLabel": "Color del text"
+    },
+    "steps": {
+      "configure": "Configura el text"
+    },
+    "step": {
+      "createDesc": "Introdueix el text que vols afegir",
+      "place": "Col·loca el text",
+      "placeDesc": "Fes clic al PDF per afegir-hi el text"
+    },
+    "instructions": {
+      "title": "Com afegir text",
+      "text": "Després d'introduir el text a dalt, fes clic en qualsevol lloc del PDF per col·locar-lo.",
+      "paused": "Col·locació en pausa",
+      "resumeHint": "Reprèn la col·locació per fer clic i afegir el text.",
+      "noSignature": "Introdueix el text a dalt per habilitar la col·locació."
+    },
+    "mode": {
+      "move": "Mou el text",
+      "place": "Col·loca el text",
+      "pause": "Pausa la col·locació",
+      "resume": "Reprèn la col·locació"
+    },
+    "results": {
+      "title": "Resultats d'afegir text"
+    },
+    "error": {
+      "failed": "S'ha produït un error en afegir text al PDF."
+    },
+    "tags": "text,anotació,etiqueta",
+    "applySignatures": "Aplica el text"
   }
 }
