@@ -14,14 +14,14 @@ on:
           - macos
           - linux
   pull_request:
-    branches: [main, V2, V2-tauri-windows]
+    branches: [main, V2, V2-tauri-windows, V2-windows-default-app]
     paths:
       - 'frontend/src-tauri/**'
       - 'frontend/src/desktop/**'
       - 'frontend/tsconfig.desktop.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, V2]
+    branches: [main, V2, V2-windows-default-app]
 
 permissions:
   contents: read
@@ -178,7 +178,7 @@ jobs:
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         uses: digicert/ssm-code-signing@v1.1.0
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -188,7 +188,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -223,7 +223,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -312,8 +312,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          # Only enable Windows signing in Tauri when on main
-          SIGN: ${{ github.ref == 'refs/heads/main' && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          # Windows signing enabled (branch check removed for testing - revert before merge)
+          SIGN: ${{ (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
@@ -322,7 +322,7 @@ jobs:
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
         shell: pwsh
         run: |
           Write-Host "=== DigiCert KeyLocker Signing ==="
@@ -513,7 +513,7 @@ jobs:
           fi
 
       - name: Verify Windows Code Signature
-        if: matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main'
+        if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
           Write-Host "Verifying Windows code signatures..."
