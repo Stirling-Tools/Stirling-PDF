@@ -3862,14 +3862,17 @@
     "actualSize": "Actual Size"
   },
   "viewer": {
+    "cannotPreviewFile": "Cannot Preview File",
+    "dualPageView": "Dual Page View",
     "firstPage": "First Page",
     "lastPage": "Last Page",
-    "previousPage": "Previous Page",
     "nextPage": "Next Page",
-    "zoomIn": "Zoom In",
-    "zoomOut": "Zoom Out",
+    "onlyPdfSupported": "The viewer only supports PDF files. This file appears to be a different format.",
+    "previousPage": "Previous Page",
     "singlePageView": "Single Page View",
-    "dualPageView": "Dual Page View"
+    "unknownFile": "Unknown file",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out"
   },
   "rightRail": {
     "closeSelected": "Close Selected Files",

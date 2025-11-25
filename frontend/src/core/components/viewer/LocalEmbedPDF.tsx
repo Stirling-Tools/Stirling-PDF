@@ -42,6 +42,7 @@ import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerType
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
+import { useTranslation } from 'react-i18next';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -53,6 +54,7 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+  const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
@@ -174,20 +176,22 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
   // Check if the file is actually a PDF
   if (file && !isPdfFile(file)) {
-    const fileName = 'name' in file ? file.name : 'Unknown file';
+    const fileName = 'name' in file ? file.name : t('viewer.unknownFile');
     return (
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
           <div style={{ fontSize: '48px' }}>📄</div>
           <Text size="lg" fw={600} c="dimmed">
-            Cannot Preview File
+            {t('viewer.cannotPreviewFile')}
           </Text>
           <Text c="dimmed" size="sm" style={{ textAlign: 'center', maxWidth: '400px' }}>
-            The viewer only supports PDF files. This file appears to be a different format.
+            {t('viewer.onlyPdfSupported')}
           </Text>
-          <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
-            {fileName}
-          </Text>
+          <PrivateContent>
+            <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
+              {fileName}
+            </Text>
+          </PrivateContent>
         </Stack>
       </Center>
     );

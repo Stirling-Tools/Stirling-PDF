@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isPdfFile, detectFileExtension, formatFileSize } from './fileUtils';
+import { isPdfFile, detectFileExtension, formatFileSize } from '@app/utils/fileUtils';
 
 describe('fileUtils', () => {
   describe('isPdfFile', () => {
