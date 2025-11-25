@@ -63,7 +63,7 @@
     },
     "settingsOpened": {
       "title": "Settings Opened",
-      "message": "Please select Stirling PDF in your system settings"
+      "message": "Please select Stirling PDF in the file association dialogue"
     },
     "error": {
       "title": "Error",

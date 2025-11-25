@@ -1,8 +1,5 @@
 use crate::utils::add_log;
 
-#[cfg(any(target_os = "windows", target_os = "linux"))]
-use std::process::Command;
-
 /// Check if Stirling PDF is the default PDF handler
 #[tauri::command]
 pub fn is_default_pdf_handler() -> Result<bool, String> {
@@ -51,50 +48,114 @@ pub fn set_as_default_pdf_handler() -> Result<String, String> {
 
 #[cfg(target_os = "windows")]
 fn check_default_windows() -> Result<bool, String> {
-    use std::os::windows::process::CommandExt;
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    use windows::core::{HSTRING, PWSTR};
+    use windows::Win32::System::Com::{
+        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
+    };
+    use windows::Win32::UI::Shell::{
+        IApplicationAssociationRegistration, ApplicationAssociationRegistration,
+        ASSOCIATIONTYPE,
+    };
 
-    // Query the default handler for .pdf extension
-    let output = Command::new("cmd")
-        .args(["/C", "assoc .pdf"])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("Failed to check default app: {}", e))?;
+    unsafe {
+        // Initialize COM for this thread
+        if let Err(e) = CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
+            // RPC_E_CHANGED_MODE (0x80010106) means COM is already initialized, which is fine
+            if e.code().0 != 0x80010106u32 as i32 {
+                return Err(format!("Failed to initialize COM: {}", e));
+            }
+        }
 
-    let assoc = String::from_utf8_lossy(&output.stdout);
-    add_log(format!("Windows PDF association: {}", assoc.trim()));
+        let result = (|| -> Result<bool, String> {
+            // Create the IApplicationAssociationRegistration instance
+            let reg: IApplicationAssociationRegistration =
+                CoCreateInstance(&ApplicationAssociationRegistration, None, CLSCTX_INPROC_SERVER)
+                    .map_err(|e| format!("Failed to create COM instance: {}", e))?;
 
-    // Get the ProgID for .pdf files
-    if let Some(prog_id) = assoc.trim().strip_prefix(".pdf=") {
-        // Query what application handles this ProgID
-        let output = Command::new("cmd")
-            .args(["/C", &format!("ftype {}", prog_id)])
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-            .map_err(|e| format!("Failed to query file type: {}", e))?;
+            // Query the current default handler for .pdf extension
+            let extension = HSTRING::from(".pdf");
+            let mut default_app: PWSTR = PWSTR::null();
 
-        let ftype = String::from_utf8_lossy(&output.stdout);
-        add_log(format!("Windows file type: {}", ftype.trim()));
+            reg.QueryCurrentDefault(
+                &extension,
+                ASSOCIATIONTYPE(0), // AT_FILEEXTENSION
+                1, // AL_EFFECTIVE - gets the effective default (user or machine level)
+                &mut default_app,
+            )
+            .map_err(|e| format!("Failed to query current default: {}", e))?;
 
-        // Check if it contains "Stirling" or our app name
-        let is_default = ftype.to_lowercase().contains("stirling");
-        Ok(is_default)
-    } else {
-        Ok(false)
+            if default_app.is_null() {
+                add_log("No default PDF handler found".to_string());
+                return Ok(false);
+            }
+
+            // Convert PWSTR to String and free memory regardless of conversion success
+            use windows::Win32::System::Com::CoTaskMemFree;
+            let default_str = match default_app.to_string() {
+                Ok(s) => {
+                    CoTaskMemFree(Some(default_app.as_ptr() as *const _));
+                    s
+                }
+                Err(e) => {
+                    CoTaskMemFree(Some(default_app.as_ptr() as *const _));
+                    return Err(format!("Failed to convert default app string: {}", e));
+                }
+            };
+
+            add_log(format!("Windows PDF handler ProgID: {}", default_str));
+
+            // Check if it contains "Stirling" (case-insensitive)
+            // Note: This checks the ProgID registered by the installer
+            let is_default = default_str.to_lowercase().contains("stirling");
+            Ok(is_default)
+        })();
+
+        // Clean up COM
+        CoUninitialize();
+
+        result
     }
 }
 
 #[cfg(target_os = "windows")]
 fn set_default_windows() -> Result<String, String> {
-    // On Windows 10+, we need to open the Default Apps settings
-    // as programmatic setting requires a signed installer
-    Command::new("cmd")
-        .args(["/C", "start", "ms-settings:defaultapps"])
-        .spawn()
-        .map_err(|e| format!("Failed to open default apps settings: {}", e))?;
+    use windows::core::{HSTRING, Interface};
+    use windows::Win32::System::Com::{
+        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
+    };
+    use windows::Win32::UI::Shell::{
+        IApplicationAssociationRegistrationUI, ApplicationAssociationRegistrationUI,
+    };
 
-    add_log("Opened Windows Default Apps settings".to_string());
-    Ok("opened_settings".to_string())
+    unsafe {
+        // Initialize COM for this thread
+        if let Err(e) = CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
+            // RPC_E_CHANGED_MODE (0x80010106) means COM is already initialized, which is fine
+            if e.code().0 != 0x80010106u32 as i32 {
+                return Err(format!("Failed to initialize COM: {}", e));
+            }
+        }
+
+        let result = (|| -> Result<String, String> {
+            // Create the IApplicationAssociationRegistrationUI instance
+            let ui: IApplicationAssociationRegistrationUI =
+                CoCreateInstance(&ApplicationAssociationRegistrationUI, None, CLSCTX_INPROC_SERVER)
+                    .map_err(|e| format!("Failed to create COM instance: {}", e))?;
+
+            // Launch the file association UI for .pdf extension
+            let extension = HSTRING::from(".pdf");
+            ui.LaunchAdvancedAssociationUI(&extension)
+                .map_err(|e| format!("Failed to launch association UI: {}", e))?;
+
+            add_log("Launched Windows file association dialog for PDF".to_string());
+            Ok("opened_dialog".to_string())
+        })();
+
+        // Clean up COM
+        CoUninitialize();
+
+        result
+    }
 }
 
 // ============================================================================
@@ -184,6 +245,8 @@ fn set_default_macos() -> Result<String, String> {
 
 #[cfg(target_os = "linux")]
 fn check_default_linux() -> Result<bool, String> {
+    use std::process::Command;
+
     // Use xdg-mime to check the default application for PDF files
     let output = Command::new("xdg-mime")
         .args(["query", "default", "application/pdf"])
@@ -200,6 +263,8 @@ fn check_default_linux() -> Result<bool, String> {
 
 #[cfg(target_os = "linux")]
 fn set_default_linux() -> Result<String, String> {
+    use std::process::Command;
+
     // Use xdg-mime to set the default application for PDF files
     let result = Command::new("xdg-mime")
         .args(["default", "stirling-pdf.desktop", "application/pdf"])
