@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
 import { mergePendingSettings, isFieldPending, hasPendingChanges } from '@app/utils/settingsPendingHelper';
 
@@ -51,7 +51,7 @@ export function useAdminSettings<T = any>(
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -87,7 +87,8 @@ export function useAdminSettings<T = any>(
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionName]);
 
   const saveSettings = async () => {
     try {
