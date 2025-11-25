@@ -25,7 +25,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
 
     // Validation
     if (!username.trim()) {
-      setValidationError(t('setup.login.error.emptyUsername', 'Please enter your username'));
+      setValidationError(isSaaS
+        ? t('setup.login.error.emptyEmail', 'Please enter your email')
+        : t('setup.login.error.emptyUsername', 'Please enter your username'));
       return;
     }
 
@@ -132,8 +134,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
         )}
 
         <TextInput
-          label={t('setup.login.username.label', 'Username')}
-          placeholder={t('setup.login.username.placeholder', 'Enter your username')}
+          label={isSaaS
+            ? t('setup.login.email.label', 'Email')
+            : t('setup.login.username.label', 'Username')}
+          placeholder={isSaaS
+            ? t('setup.login.email.placeholder', 'Enter your email')
+            : t('setup.login.username.placeholder', 'Enter your username')}
           value={username}
           onChange={(e) => {
             setUsername(e.target.value);

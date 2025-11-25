@@ -16,6 +16,7 @@ import {
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useTranslation } from 'react-i18next';
 import { FileId } from '@app/types/file';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 
 interface FilePickerModalProps {
   opened: boolean;
@@ -31,6 +32,7 @@ const FilePickerModal = ({
   onSelectFiles,
 }: FilePickerModalProps) => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
 
   // Reset selection when modal opens
@@ -130,7 +132,7 @@ const FilePickerModal = ({
       <Stack gap="md">
         {storedFiles.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
-            {t("fileUpload.noFilesInStorage", "No files available in storage. Upload some files first.")}
+            {terminology.noFilesInStorage}
           </Text>
         ) : (
           <>
@@ -253,7 +255,7 @@ const FilePickerModal = ({
             disabled={selectedFileIds.length === 0}
           >
             {selectedFileIds.length > 0
-              ? `${t("fileUpload.loadFromStorage", "Load")} ${selectedFileIds.length} ${t("fileUpload.uploadFiles", "Files")}`
+              ? `${t("fileUpload.loadFromStorage", "Load")} ${selectedFileIds.length} ${terminology.uploadFiles}`
               : t("fileUpload.loadFromStorage", "Load Files")
             }
           </Button>

@@ -5,12 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { BASE_PATH } from '@app/constants/app';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 const EmptyFilesState: React.FC = () => {
   const { t } = useTranslation();
   const { colorScheme } = useMantineColorScheme();
   const { onLocalFileClick } = useFileManagerContext();
   const [isUploadHover, setIsUploadHover] = useState(false);
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
 
   const handleUploadClick = () => {
     onLocalFileClick();
@@ -91,10 +95,10 @@ const EmptyFilesState: React.FC = () => {
             onClick={handleUploadClick}
             onMouseEnter={() => setIsUploadHover(true)}
           >
-            <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+            <LocalIcon icon={icons.uploadIconName} width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
             {isUploadHover && (
               <span style={{ marginLeft: '.5rem' }}>
-                {t('landing.uploadFromComputer', 'Upload from computer')}
+                {terminology.uploadFromComputer}
               </span>
             )}
           </Button>
@@ -105,7 +109,7 @@ const EmptyFilesState: React.FC = () => {
           className="text-[var(--accent-interactive)]"
           style={{ fontSize: '.8rem', textAlign: 'center' }}
         >
-          {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
+          {terminology.dropFilesHere}
         </span>
       </div>
     </div>

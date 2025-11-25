@@ -6,6 +6,7 @@ import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import "@app/components/tools/showJS/ShowJSView.css";
 import { useTranslation } from "react-i18next";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
 import {
   tokenizeToLines,
@@ -28,6 +29,7 @@ interface ShowJSViewProps {
 
 const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const text = useMemo(() => {
     if (typeof data === "string") return data;
     return data?.scriptText ?? "";
@@ -173,7 +175,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               disabled={!downloadUrl}
               leftSection={<DownloadRoundedIcon fontSize="small" />}
             >
-              {t("download", "Download")}
+              {terminology.download}
             </Button>
             <Button
               size="xs"
