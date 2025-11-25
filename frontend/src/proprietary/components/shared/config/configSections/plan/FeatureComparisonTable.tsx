@@ -12,9 +12,10 @@ interface PlanWithFeatures {
 
 interface FeatureComparisonTableProps {
   plans: PlanWithFeatures[];
+  currentTier?: 'free' | 'server' | 'enterprise' | null;
 }
 
-const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans }) => {
+const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, currentTier }) => {
   const { t } = useTranslation();
 
   return (
@@ -41,7 +42,7 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans }
                   }}
                 >
                   {plan.name}
-                  {plan.popular && (
+                  {plan.popular && !(plan.tier === 'server' && currentTier === 'enterprise') && (
                     <Badge
                       color="blue"
                       variant="filled"

@@ -74,6 +74,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     gcompat \
     libc6-compat \
     libreoffice \
+    ghostscript \
+    fontforge \
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced featues)

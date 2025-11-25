@@ -28,7 +28,10 @@
     "toggle": {
       "fullscreen": "Switch to fullscreen mode",
       "sidebar": "Switch to sidebar mode"
-    }
+    },
+    "alpha": "Alpha",
+    "premiumFeature": "Premium feature:",
+    "comingSoon": "Coming soon:"
   },
   "unsavedChanges": "You have unsaved changes to your PDF.",
   "areYouSure": "Are you sure you want to leave?",
@@ -194,6 +197,7 @@
   },
   "edit": "Edit",
   "delete": "Delete",
+  "never": "Never",
   "username": "Username",
   "password": "Password",
   "welcome": "Welcome",
@@ -855,6 +859,15 @@
     "overlay-pdfs": {
       "desc": "Overlay one PDF on top of another",
       "title": "Overlay PDFs"
+    },
+    "pdfTextEditor": {
+      "title": "PDF Text Editor",
+      "desc": "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
+    },
+    "addText": {
+      "tags": "text,annotation,label",
+      "title": "Add Text",
+      "desc": "Add custom text anywhere in your PDF"
     }
   },
   "landing": {
@@ -1257,10 +1270,44 @@
   "addImage": {
     "tags": "img,jpg,picture,photo",
     "title": "Add Image",
-    "header": "Add image to PDF",
-    "everyPage": "Every Page?",
-    "upload": "Add image",
-    "submit": "Add image"
+    "header": "Add images to PDFs",
+    "image": {
+      "name": "Image",
+      "placeholder": "Upload an image",
+      "label": "Image file"
+    },
+    "steps": {
+      "configure": "Configure Image"
+    },
+    "step": {
+      "createDesc": "Upload the image you want to add",
+      "place": "Place image",
+      "placeDesc": "Click on the PDF to add your image"
+    },
+    "instructions": {
+      "title": "How to add images",
+      "text": "After uploading your image above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your image.",
+      "noSignature": "Upload an image above to enable placement."
+    },
+    "mode": {
+      "move": "Move Image",
+      "place": "Place Image",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "results": {
+      "title": "Add Image Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding image to the PDF."
+    },
+    "saved": {
+      "defaultLabel": "Image",
+      "defaultImageLabel": "Uploaded image"
+    },
+    "applySignatures": "Apply Images"
   },
   "attachments": {
     "tags": "attachments,add,remove,embed,file",
@@ -2152,8 +2199,8 @@
       "colorPickerTitle": "Choose stroke colour"
     },
     "text": {
-      "name": "Signer Name",
-      "placeholder": "Enter your full name",
+      "name": "Text",
+      "placeholder": "Enter text",
       "fontLabel": "Font",
       "fontSizeLabel": "Font size",
       "fontSizePlaceholder": "Type or select font size (8-200)",
@@ -2421,8 +2468,12 @@
     "selection": {
       "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "original": { "label": "Original PDF" },
-    "edited": { "label": "Edited PDF" },
+    "original": {
+      "label": "Original PDF"
+    },
+    "edited": {
+      "label": "Edited PDF"
+    },
     "swap": {
       "confirmTitle": "Re-run comparison?",
       "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
@@ -4890,7 +4941,8 @@
     "done": "Done",
     "loading": "Loading...",
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "error": "Error"
   },
   "config": {
     "overview": {
@@ -5318,9 +5370,12 @@
     "featureComparison": "Feature Comparison",
     "from": "From",
     "perMonth": "/month",
+    "perSeat": "/seat",
+    "withServer": "+ Server Plan",
     "licensedSeats": "Licensed: {{count}} seats",
     "includedInCurrent": "Included in Your Plan",
     "selectPlan": "Select Plan",
+    "manage": "Manage",
     "manageSubscription": {
       "description": "Manage your subscription, billing, and payment methods"
     },
@@ -5362,7 +5417,9 @@
       "name": "Enterprise",
       "highlight1": "Custom pricing",
       "highlight2": "Dedicated support",
-      "highlight3": "Latest features"
+      "highlight3": "Latest features",
+      "requiresServer": "Requires Server",
+      "requiresServerMessage": "Please upgrade to the Server plan first before upgrading to Enterprise."
     },
     "feature": {
       "title": "Feature",
@@ -5390,7 +5447,24 @@
     "manageBilling": "Manage Billing",
     "portal": {
       "error": "Failed to open billing portal"
-    }
+    },
+    "updateSeats": "Update Seats",
+    "updateEnterpriseSeats": "Update Enterprise Seats",
+    "currentSeats": "Current Seats",
+    "minimumSeats": "Minimum Seats",
+    "basedOnUsers": "(current users)",
+    "newSeatCount": "New Seat Count",
+    "newSeatCountDescription": "Select the number of seats for your enterprise licence",
+    "whatHappensNext": "What happens next?",
+    "stripePortalRedirect": "You will be redirected to Stripe's billing portal to review and confirm the seat change. The prorated amount will be calculated automatically.",
+    "preparingUpdate": "Preparing seat update...",
+    "seatCountTooLow": "Seat count must be at least {{minimum}} (current number of users)",
+    "seatCountUnchanged": "Please select a different seat count",
+    "seatsUpdated": "Seats Updated",
+    "seatsUpdatedMessage": "Your enterprise seats have been updated to {{seats}}",
+    "updateProcessing": "Update Processing",
+    "updateProcessingMessage": "Your seat update is being processed. Please refresh in a few moments.",
+    "notEnterprise": "Seat management is only available for enterprise licences"
   },
   "upgradeBanner": {
     "title": "Upgrade to Server Plan",
@@ -5426,10 +5500,39 @@
     "enterpriseNote": "Seats can be adjusted in checkout (1-1000).",
     "installationId": "Installation ID",
     "licenseKey": "Your License Key",
-    "licenseInstructions": "Enter this key in Settings → Admin Plan → License Key section",
+    "licenseInstructions": "This has been added to your installation. You will receive a copy in your email as well.",
     "canCloseWindow": "You can now close this window.",
     "licenseKeyProcessing": "License Key Processing",
-    "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support."
+    "licenseDelayedMessage": "Your license key is being generated. Please check your email shortly or contact support.",
+    "perYear": "/year",
+    "perMonth": "/month",
+    "emailInvalid": "Please enter a valid email address",
+    "emailStage": {
+      "title": "Enter Your Email",
+      "description": "We'll use this to send your license key and receipts.",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Continue",
+      "modalTitle": "Get Started - {{planName}}"
+    },
+    "planStage": {
+      "title": "Choose Your Billing Period",
+      "savingsNote": "Save {{percent}}% with annual billing",
+      "basePrice": "Base Price",
+      "seatPrice": "Per Seat",
+      "totalForSeats": "Total ({{count}} seats)",
+      "selectMonthly": "Select Monthly",
+      "selectYearly": "Select Yearly",
+      "savePercent": "Save {{percent}}%",
+      "savingsAmount": "You save {{amount}}",
+      "modalTitle": "Select Billing Period - {{planName}}",
+      "billedYearly": "Billed yearly at {{currency}}{{amount}}"
+    },
+    "paymentStage": {
+      "backToPlan": "Back to Plan Selection",
+      "selectedPlan": "Selected Plan",
+      "modalTitle": "Complete Payment - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "First Time Login",
@@ -5746,10 +5849,173 @@
       "noShortcut": "No shortcut set"
     }
   },
+  "pdfTextEditor": {
+    "title": "PDF JSON Editor",
+    "viewLabel": "PDF Editor",
+    "converting": "Converting PDF to editable format...",
+    "conversionFailed": "Failed to convert PDF. Please try again.",
+    "currentFile": "Current file: {{name}}",
+    "pageSummary": "Page {{number}} of {{total}}",
+    "pagePreviewAlt": "Page preview",
+    "imageLabel": "Placed image",
+    "noTextOnPage": "No editable text was detected on this page.",
+    "pageType": {
+      "paragraph": "Paragraph page",
+      "sparse": "Sparse text"
+    },
+    "groupingMode": {
+      "auto": "Auto",
+      "paragraph": "Paragraph",
+      "singleLine": "Single Line"
+    },
+    "badges": {
+      "unsaved": "Edited",
+      "modified": "Edited",
+      "earlyAccess": "Early Access"
+    },
+    "actions": {
+      "reset": "Reset Changes",
+      "downloadJson": "Download JSON",
+      "generatePdf": "Generate PDF"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Auto-scale text to fit boxes",
+        "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
+      },
+      "groupingMode": {
+        "title": "Text Grouping Mode",
+        "autoDescription": "Automatically detects page type and groups text appropriately.",
+        "paragraphDescription": "Groups aligned lines into multi-line paragraph text boxes.",
+        "singleLineDescription": "Keeps each PDF text line as a separate text box."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths."
+      },
+      "forceSingleElement": {
+        "title": "Lock edited text to a single PDF element",
+        "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Merge selected boxes",
+      "merge": "Merge selection",
+      "ungroupTooltip": "Split paragraph back into lines",
+      "ungroup": "Ungroup selection",
+      "widthMenu": "Width options",
+      "expandWidth": "Expand to page edge",
+      "resetWidth": "Reset width",
+      "resizeHandle": "Adjust text width"
+    },
+    "disclaimer": {
+      "heading": "Preview Limitations",
+      "textFocus": "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
+      "previewVariance": "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",
+      "alpha": "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+    },
+    "empty": {
+      "title": "No document loaded",
+      "subtitle": "Load a PDF or JSON file to begin editing text content."
+    },
+    "welcomeBanner": {
+      "title": "Welcome to PDF Text Editor (Early Access)",
+      "experimental": "This is an experimental feature in active development. Expect some instability and issues during use.",
+      "howItWorks": "This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.",
+      "bestFor": "Works Best With:",
+      "bestFor1": "Simple PDFs containing primarily text and images",
+      "bestFor2": "Documents with standard paragraph formatting",
+      "bestFor3": "Letters, essays, reports, and basic documents",
+      "notIdealFor": "Not Ideal For:",
+      "notIdealFor1": "PDFs with special formatting like bullet points, tables, or multi-column layouts",
+      "notIdealFor2": "Magazines, brochures, or heavily designed documents",
+      "notIdealFor3": "Instruction manuals with complex layouts",
+      "limitations": "Current Limitations:",
+      "limitation1": "Font rendering may differ slightly from the original PDF",
+      "limitation2": "Complex graphics, form fields, and annotations are preserved but not editable",
+      "limitation3": "Large files may take time to convert and process",
+      "knownIssues": "Known Issues (Being Fixed):",
+      "issue1": "Text colour is not currently preserved (will be added soon)",
+      "issue2": "Paragraph mode has more alignment and spacing issues - Single Line mode recommended",
+      "issue3": "The preview display differs from the exported PDF - exported PDFs are closer to the original",
+      "issue4": "Rotated text alignment may need manual adjustment",
+      "issue5": "Transparency and layering effects may vary from original",
+      "feedback": "This is an early access feature. Please report any issues you encounter to help us improve!",
+      "gotIt": "Got it",
+      "dontShowAgain": "Don't show again"
+    },
+    "modeChange": {
+      "title": "Confirm Mode Change",
+      "warning": "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
+      "cancel": "Cancel",
+      "confirm": "Reset and Change Mode"
+    },
+    "fontAnalysis": {
+      "details": "Font Details",
+      "embedded": "Embedded",
+      "type": "Type",
+      "webFormat": "Web Format",
+      "warnings": "Warnings",
+      "suggestions": "Notes",
+      "currentPageFonts": "Fonts on this page",
+      "allFonts": "All fonts",
+      "fallback": "fallback",
+      "missing": "missing",
+      "perfectMessage": "All fonts can be reproduced perfectly.",
+      "warningMessage": "Some fonts may not render correctly.",
+      "infoMessage": "Font reproduction information available.",
+      "perfect": "perfect",
+      "subset": "subset"
+    },
+    "errors": {
+      "invalidJson": "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool.",
+      "pdfConversion": "Unable to convert the edited JSON back into a PDF."
+    }
+  },
   "auth": {
     "sessionExpired": "Session Expired",
     "pleaseLoginAgain": "Please login again.",
     "accessDenied": "Access Denied",
     "insufficientPermissions": "You do not have permission to perform this action."
+  },
+  "addText": {
+    "title": "Add Text",
+    "header": "Add text to PDFs",
+    "text": {
+      "name": "Text content",
+      "placeholder": "Enter the text you want to add",
+      "fontLabel": "Font",
+      "fontSizeLabel": "Font size",
+      "fontSizePlaceholder": "Type or select font size (8-200)",
+      "colorLabel": "Text colour"
+    },
+    "steps": {
+      "configure": "Configure Text"
+    },
+    "step": {
+      "createDesc": "Enter the text you want to add",
+      "place": "Place text",
+      "placeDesc": "Click on the PDF to add your text"
+    },
+    "instructions": {
+      "title": "How to add text",
+      "text": "After entering your text above, click anywhere on the PDF to place it.",
+      "paused": "Placement paused",
+      "resumeHint": "Resume placement to click and add your text.",
+      "noSignature": "Enter text above to enable placement."
+    },
+    "mode": {
+      "move": "Move Text",
+      "place": "Place Text",
+      "pause": "Pause placement",
+      "resume": "Resume placement"
+    },
+    "results": {
+      "title": "Add Text Results"
+    },
+    "error": {
+      "failed": "An error occurred while adding text to the PDF."
+    },
+    "tags": "text,annotation,label",
+    "applySignatures": "Apply Text"
   }
 }
