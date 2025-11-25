@@ -71,9 +71,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -83,7 +85,10 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Slf4j
 @Tag(name = "Convert", description = "Convert APIs")
+@RequiredArgsConstructor
 public class ConvertPDFToPDFA {
+
+    private final RuntimePathConfig runtimePathConfig;
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int PDFA_COMPATIBILITY_POLICY = 1;
@@ -1043,26 +1048,33 @@ public class ConvertPDFToPDFA {
                         ? "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"2\"}}"
                         : "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"1\"}}";
 
-        // Prepare LibreOffice command
-        List<String> command =
-                new ArrayList<>(
-                        Arrays.asList(
-                                "soffice",
-                                "--headless",
-                                "--nologo",
-                                "--convert-to",
-                                pdfFilter,
-                                "--outdir",
-                                tempOutputDir.toString(),
-                                tempInputFile.toString()));
+        Path libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+        try {
+            // Prepare LibreOffice command
+            List<String> command =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    runtimePathConfig.getSOfficePath(),
+                                    "-env:UserInstallation="
+                                            + libreOfficeProfile.toUri().toString(),
+                                    "--headless",
+                                    "--nologo",
+                                    "--convert-to",
+                                    pdfFilter,
+                                    "--outdir",
+                                    tempOutputDir.toString(),
+                                    tempInputFile.toString()));
 
-        ProcessExecutorResult returnCode =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                        .runCommandWithOutputHandling(command);
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                            .runCommandWithOutputHandling(command);
 
-        if (returnCode.getRc() != 0) {
-            log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
-            throw ExceptionUtils.createPdfaConversionFailedException();
+            if (returnCode.getRc() != 0) {
+                log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
+                throw ExceptionUtils.createPdfaConversionFailedException();
+            }
+        } finally {
+            FileUtils.deleteQuietly(libreOfficeProfile.toFile());
         }
 
         // Get the output file
