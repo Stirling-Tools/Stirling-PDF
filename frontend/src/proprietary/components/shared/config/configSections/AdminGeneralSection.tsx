@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
 import { alert } from '@app/components/toast';
@@ -9,6 +9,8 @@ import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 
 interface GeneralSettingsData {
   ui: {
@@ -45,6 +47,13 @@ export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { preferences, updatePreference } = usePreferences();
+  const { setIsDirty, markClean } = useUnsavedChanges();
+  
+  // Track original settings for dirty detection
+  const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
+  const [isDirty, setLocalIsDirty] = useState(false);
+  const isInitialLoad = useRef(true);
 
   const {
     settings,
@@ -149,8 +158,78 @@ export default function AdminGeneralSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
+  // Snapshot original settings after initial load and sync local preference with server
+  useEffect(() => {
+    if (!loading && isInitialLoad.current && Object.keys(settings).length > 0) {
+      setOriginalSettingsSnapshot(JSON.stringify(settings));
+      
+      // Sync local preference with server setting on initial load to ensure they're in sync
+      // This ensures localStorage always reflects the server's authoritative value
+      if (loginEnabled && settings.ui?.logoStyle) {
+        updatePreference('logoVariant', settings.ui.logoStyle);
+      }
+      
+      isInitialLoad.current = false;
+    }
+  }, [loading, settings, loginEnabled, updatePreference]);
+
+  // Track dirty state by comparing current settings to snapshot
+  useEffect(() => {
+    if (!originalSettingsSnapshot || loading) return;
+    
+    const currentSnapshot = JSON.stringify(settings);
+    const dirty = currentSnapshot !== originalSettingsSnapshot;
+    setLocalIsDirty(dirty);
+    setIsDirty(dirty);
+  }, [settings, originalSettingsSnapshot, loading, setIsDirty]);
+
+  // Clean up dirty state on unmount
+  useEffect(() => {
+    return () => {
+      setIsDirty(false);
+    };
+  }, [setIsDirty]);
+
+  const handleDiscard = useCallback(() => {
+    if (originalSettingsSnapshot) {
+      try {
+        const original = JSON.parse(originalSettingsSnapshot);
+        setSettings(original);
+        setLocalIsDirty(false);
+        setIsDirty(false);
+      } catch (e) {
+        console.error('Failed to parse original settings:', e);
+      }
+    }
+  }, [originalSettingsSnapshot, setSettings, setIsDirty]);
+
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
+
+  // Show the server setting when loaded (for admin config), otherwise show user's preference
+  // Note: User's preference in localStorage is separate and takes precedence in the app via useLogoVariant hook
+  const logoStyleValue = loginEnabled 
+    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? 'classic')
+    : (preferences.logoVariant ?? 'classic');
+
+  const handleLogoStyleChange = (value: string) => {
+    const nextValue = value === 'modern' ? 'modern' : 'classic';
+    
+    // Only update local settings state - don't update the actual preference until save
+    // When login is disabled, update preference immediately since there's no server to save to
+    if (!loginEnabled) {
+      updatePreference('logoVariant', nextValue);
+      return;
+    }
+
+    setSettings({
+      ...settings,
+      ui: {
+        ...settings.ui,
+        logoStyle: nextValue,
+      }
+    });
+  };
 
   const handleSave = async () => {
     // Block save if login is disabled
@@ -160,6 +239,16 @@ export default function AdminGeneralSection() {
 
     try {
       await saveSettings();
+      
+      // Update local preference after successful save so the app reflects the saved logo style
+      if (settings.ui?.logoStyle) {
+        updatePreference('logoVariant', settings.ui.logoStyle);
+      }
+      
+      // Update snapshot to current settings after successful save
+      setOriginalSettingsSnapshot(JSON.stringify(settings));
+      setLocalIsDirty(false);
+      markClean();
       showRestartModal();
     } catch (_error) {
       alert({
@@ -179,8 +268,9 @@ export default function AdminGeneralSection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Text fw={600} size="lg">{t('admin.settings.general.title', 'System Settings')}</Text>
@@ -221,15 +311,15 @@ export default function AdminGeneralSection() {
               {t('admin.settings.general.logoStyle.description', 'Choose between the modern minimalist logo or the classic S icon')}
             </Text>
             <SegmentedControl
-              value={settings.ui?.logoStyle || 'classic'}
-              onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, logoStyle: value as 'modern' | 'classic' } })}
+              value={logoStyleValue}
+              onChange={handleLogoStyleChange}
               data={[
                 {
                   value: 'classic',
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/branding/old/favicon.svg"
+                        src="/classic-logo/favicon.ico"
                         alt="Classic logo"
                         style={{ width: '24px', height: '24px' }}
                       />
@@ -242,7 +332,7 @@ export default function AdminGeneralSection() {
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/branding/StirlingPDFLogoNoTextLight.svg"
+                        src="/modern-logo/StirlingPDFLogoNoTextLight.svg"
                         alt="Modern logo"
                         style={{ width: '24px', height: '24px' }}
                       />
@@ -251,7 +341,6 @@ export default function AdminGeneralSection() {
                   )
                 },
               ]}
-              disabled={!loginEnabled}
             />
           </div>
 
@@ -586,12 +675,26 @@ export default function AdminGeneralSection() {
         </Stack>
       </Paper>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      </Stack>
+
+      {/* Sticky Save Footer - only shows when there are changes */}
+      {isDirty && loginEnabled && (
+        <div className="settings-sticky-footer">
+          <Group justify="space-between" w="100%">
+            <Text size="sm" c="dimmed">
+              {t('admin.settings.unsavedChanges.hint', 'You have unsaved changes')}
+            </Text>
+            <Group gap="sm">
+              <Button variant="default" onClick={handleDiscard} size="sm">
+                {t('admin.settings.discard', 'Discard')}
+              </Button>
+              <Button onClick={handleSave} loading={saving} size="sm">
+                {t('admin.settings.save', 'Save Changes')}
+              </Button>
+            </Group>
+          </Group>
+        </div>
+      )}
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -599,6 +702,6 @@ export default function AdminGeneralSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }
