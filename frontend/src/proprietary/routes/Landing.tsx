@@ -30,8 +30,6 @@ export default function Landing() {
   const [username, setUsername] = useState('');
 
   const loading = authLoading || configLoading || backendProbe.loading;
-  // Only consider login enabled when explicitly true; default to disabled/anonymous when unknown
-  const loginEnabled = config?.enableLogin === true && backendProbe.loginDisabled !== true;
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -42,7 +40,7 @@ export default function Landing() {
       const result = await backendProbe.probe();
       if (result.status === 'up') {
         await refetch();
-        if (loginDisabled) {
+        if (result.loginDisabled) {
           navigate('/', { replace: true });
         }
       }
@@ -51,7 +49,7 @@ export default function Landing() {
       void tick();
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch, loginDisabled]);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch]);
 
   // Check if user needs to change password on first login
   useEffect(() => {
@@ -93,7 +91,7 @@ export default function Landing() {
     pathname: location.pathname,
     loading,
     hasSession: !!session,
-    loginEnabled,
+    loginEnabled: config?.enableLogin === true && !backendProbe.loginDisabled,
   });
 
   // Show loading while checking auth and config
@@ -171,7 +169,7 @@ export default function Landing() {
 
   // No session - redirect to login page
   // This ensures the URL always shows /login when not authenticated
-  return loginEnabled
+  return (config?.enableLogin === true && !backendProbe.loginDisabled)
     ? <Navigate to="/login" replace state={{ from: location }} />
     : <HomePage />;
 }
