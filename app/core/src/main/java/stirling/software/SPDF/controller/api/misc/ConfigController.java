@@ -35,6 +35,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
     public ConfigController(
             ApplicationProperties applicationProperties,
@@ -43,12 +44,14 @@ public class ConfigController {
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     ServerCertificateServiceInterface serverCertificateService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    UserServiceInterface userService) {
+                    UserServiceInterface userService,
+            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.externalAppDepConfig = externalAppDepConfig;
     }
 
     @GetMapping("/app-config")
@@ -56,6 +59,9 @@ public class ConfigController {
         Map<String, Object> configData = new HashMap<>();
 
         try {
+            // Add dependency check status
+            configData.put("dependenciesReady", externalAppDepConfig.isDependenciesChecked());
+
             // Get AppConfig bean
             AppConfig appConfig = applicationContext.getBean(AppConfig.class);
 
