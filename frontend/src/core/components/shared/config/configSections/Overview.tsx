@@ -1,9 +1,11 @@
 import React from 'react';
 import { Stack, Text, Code, Group, Badge, Alert, Loader } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { OverviewHeader } from '@app/components/shared/config/OverviewHeader';
 
 const Overview: React.FC = () => {
+  const { t } = useTranslation();
   const { config, loading, error } = useAppConfig();
 
   const renderConfigSection = (title: string, data: any) => {
@@ -58,14 +60,14 @@ const Overview: React.FC = () => {
     return (
       <Stack align="center" py="md">
         <Loader size="sm" />
-        <Text size="sm" c="dimmed">Loading configuration...</Text>
+        <Text size="sm" c="dimmed">{t('config.overview.loading', 'Loading configuration...')}</Text>
       </Stack>
     );
   }
 
   if (error) {
     return (
-      <Alert color="red" title="Error">
+      <Alert color="red" title={t('config.overview.error', 'Error')}>
         {error}
       </Alert>
     );
@@ -77,13 +79,13 @@ const Overview: React.FC = () => {
 
       {config && (
         <>
-          {renderConfigSection('Basic Configuration', basicConfig)}
-          {renderConfigSection('Security Configuration', securityConfig)}
-          {renderConfigSection('System Configuration', systemConfig)}
-          {renderConfigSection('Integration Configuration', integrationConfig)}
+          {renderConfigSection(t('config.overview.sections.basic', 'Basic Configuration'), basicConfig)}
+          {renderConfigSection(t('config.overview.sections.security', 'Security Configuration'), securityConfig)}
+          {renderConfigSection(t('config.overview.sections.system', 'System Configuration'), systemConfig)}
+          {renderConfigSection(t('config.overview.sections.integration', 'Integration Configuration'), integrationConfig)}
 
           {config.error && (
-            <Alert color="yellow" title="Configuration Warning">
+            <Alert color="yellow" title={t('config.overview.warning', 'Configuration Warning')}>
               {config.error}
             </Alert>
           )}

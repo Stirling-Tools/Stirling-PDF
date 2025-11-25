@@ -72,7 +72,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       });
     } catch (error) {
       console.error('Failed to fetch team details:', error);
-      alert({ alertType: 'error', title: 'Failed to load team details' });
+      alert({ alertType: 'error', title: t('workspace.teams.loadError', 'Failed to load team details') });
       onBack();
     } finally {
       setLoading(false);

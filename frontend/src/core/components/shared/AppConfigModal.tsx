@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
+import { useConfigNavSections } from '@app/components/shared/config/configNavSections';
 import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
@@ -74,13 +74,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
-  const configNavSections = useMemo(() =>
-    createConfigNavSections(
-      isAdmin,
-      runningEE,
-      loginEnabled
-    ),
-    [isAdmin, runningEE, loginEnabled]
+  const configNavSections = useConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled
   );
 
   const activeLabel = useMemo(() => {
