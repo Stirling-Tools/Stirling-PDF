@@ -329,7 +329,7 @@ public class UserLicenseSettingsService {
      *
      * <ul>
      *   <li>They are grandfathered for OAuth (existing user before policy change), OR
-     *   <li>The system has a paid license (SERVER or ENTERPRISE)
+     *   <li>The system has an ENTERPRISE license (SSO is enterprise-only)
      * </ul>
      *
      * @param user The user to check
@@ -342,10 +342,10 @@ public class UserLicenseSettingsService {
             return true;
         }
 
-        // Users can use OAuth if system has a paid license (SERVER or ENTERPRISE)
-        boolean hasPaidLicense = hasPaidLicense();
-        log.debug("OAuth eligibility check: hasPaidLicense={}", hasPaidLicense);
-        return hasPaidLicense;
+        // Users can use OAuth/SAML only if system has ENTERPRISE license
+        boolean hasEnterpriseLicense = hasEnterpriseLicense();
+        log.debug("OAuth eligibility check: hasEnterpriseLicense={}", hasEnterpriseLicense);
+        return hasEnterpriseLicense;
     }
 
     /**
@@ -489,5 +489,20 @@ public class UserLicenseSettingsService {
         }
         License license = checker.getPremiumLicenseEnabledResult();
         return license == License.SERVER || license == License.ENTERPRISE;
+    }
+
+    /**
+     * Checks if the system has an ENTERPRISE license.
+     * Used for enterprise-only features like SSO (OAuth/SAML).
+     *
+     * @return true if ENTERPRISE license is active
+     */
+    private boolean hasEnterpriseLicense() {
+        LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
+        if (checker == null) {
+            return false;
+        }
+        License license = checker.getPremiumLicenseEnabledResult();
+        return license == License.ENTERPRISE;
     }
 }
