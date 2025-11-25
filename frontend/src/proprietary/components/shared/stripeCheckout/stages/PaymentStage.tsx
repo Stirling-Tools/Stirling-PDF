@@ -6,7 +6,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import { PlanTier } from '@app/services/licenseService';
 
 // Load Stripe once
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51Q56W2P9mY5IAnSnp3kcxG50uyFMLuhM4fFs774DAP3t88KmlwUrUo31CecpnAZ9FHsNp8xJyOnYNYNVVP6z4oi500q5sFYPEp';
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 interface PaymentStageProps {

@@ -9,7 +9,7 @@
  * @returns true if key exists and has valid format
  */
 export function isStripeConfigured(): boolean {
-  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51Q56W2P9mY5IAnSnp3kcxG50uyFMLuhM4fFs774DAP3t88KmlwUrUo31CecpnAZ9FHsNp8xJyOnYNYNVVP6z4oi500q5sFYPEp';
   return !!stripeKey && stripeKey.startsWith('pk_');
 }
 
