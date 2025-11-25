@@ -104,43 +104,23 @@ fn check_default_windows() -> Result<bool, String> {
 
 #[cfg(target_os = "windows")]
 fn set_default_windows() -> Result<String, String> {
-    use windows::core::HSTRING;
-    use windows::Win32::Foundation::RPC_E_CHANGED_MODE;
-    use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
-        COINIT_APARTMENTTHREADED,
-    };
-    use windows::Win32::UI::Shell::{
-        IApplicationAssociationRegistrationUI, ApplicationAssociationRegistrationUI,
-    };
+    use std::process::Command;
 
-    unsafe {
-        // Initialize COM for this thread
-        let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
-        // RPC_E_CHANGED_MODE means COM is already initialized, which is fine
-        if hr.is_err() && hr != RPC_E_CHANGED_MODE {
-            return Err(format!("Failed to initialize COM: {:?}", hr));
-        }
+    // Windows 10+ approach: Open Settings app directly to default apps
+    // This is more reliable than COM APIs which require pre-registration
+    // ms-settings:defaultapps opens the default apps settings page
+    let result = Command::new("cmd")
+        .args(["/C", "start", "ms-settings:defaultapps"])
+        .output()
+        .map_err(|e| format!("Failed to open Windows Settings: {}", e))?;
 
-        let result = (|| -> Result<String, String> {
-            // Create the IApplicationAssociationRegistrationUI instance
-            let ui: IApplicationAssociationRegistrationUI =
-                CoCreateInstance(&ApplicationAssociationRegistrationUI, None, CLSCTX_INPROC_SERVER)
-                    .map_err(|e| format!("Failed to create COM instance: {}", e))?;
-
-            // Launch the file association UI for .pdf extension
-            let extension = HSTRING::from(".pdf");
-            ui.LaunchAdvancedAssociationUI(&extension)
-                .map_err(|e| format!("Failed to launch association UI: {}", e))?;
-
-            add_log("Launched Windows file association dialog for PDF".to_string());
-            Ok("opened_dialog".to_string())
-        })();
-
-        // Clean up COM
-        CoUninitialize();
-
-        result
+    if result.status.success() {
+        add_log("Opened Windows default apps settings".to_string());
+        Ok("opened_dialog".to_string())
+    } else {
+        let error = String::from_utf8_lossy(&result.stderr);
+        add_log(format!("Failed to open settings: {}", error));
+        Err(format!("Failed to open default apps settings: {}", error))
     }
 }
 
