@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
+import { STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
   username: string;
@@ -12,7 +13,13 @@ interface LoginResponse {
   email: string | null;
 }
 
-export type AuthStatus = 'authenticated' | 'unauthenticated' | 'refreshing';
+interface OAuthCallbackResult {
+  access_token: string;
+  refresh_token: string | null;
+  expires_in: number | null;
+}
+
+export type AuthStatus = 'authenticated' | 'unauthenticated' | 'refreshing' | 'oauth_pending';
 
 export class AuthService {
   private static instance: AuthService;
@@ -50,11 +57,23 @@ export class AuthService {
     try {
       console.log('Logging in to:', serverUrl);
 
+      // Validate SaaS configuration if connecting to SaaS
+      if (serverUrl === STIRLING_SAAS_URL) {
+        if (!STIRLING_SAAS_URL) {
+          throw new Error('VITE_SAAS_SERVER_URL is not configured');
+        }
+        if (!SUPABASE_KEY) {
+          throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+        }
+      }
+
       // Call Rust login command (bypasses CORS)
       const response = await invoke<LoginResponse>('login', {
         serverUrl,
         username,
         password,
+        supabaseKey: SUPABASE_KEY,
+        saasServerUrl: STIRLING_SAAS_URL,
       });
 
       const { token, username: returnedUsername, email } = response;
@@ -80,13 +99,7 @@ export class AuthService {
     } catch (error) {
       console.error('Login failed:', error);
       this.setAuthStatus('unauthenticated', null);
-
-      // Rust commands return string errors
-      if (typeof error === 'string') {
-        throw new Error(error);
-      }
-
-      throw new Error('Login failed. Please try again.');
+      throw error;
     }
   }
 
@@ -193,6 +206,89 @@ export class AuthService {
       this.setAuthStatus('unauthenticated', null);
     }
   }
+
+  /**
+   * Start OAuth login flow by opening system browser with localhost callback
+   */
+  async loginWithOAuth(provider: string, authServerUrl: string, successHtml: string, errorHtml: string): Promise<UserInfo> {
+    try {
+      console.log('Starting OAuth login with provider:', provider);
+      this.setAuthStatus('oauth_pending', null);
+
+      // Validate Supabase key is configured for OAuth
+      if (!SUPABASE_KEY) {
+        throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+      }
+
+      // Call Rust command which:
+      // 1. Starts localhost HTTP server on random port
+      // 2. Opens browser to OAuth provider
+      // 3. Waits for callback
+      // 4. Returns tokens
+      const result = await invoke<OAuthCallbackResult>('start_oauth_login', {
+        provider,
+        authServerUrl,
+        supabaseKey: SUPABASE_KEY,
+        successHtml,
+        errorHtml,
+      });
+
+      console.log('OAuth authentication successful, storing tokens');
+
+      // Save the access token to keyring
+      await invoke('save_auth_token', { token: result.access_token });
+
+      // Fetch user info from Supabase using the access token
+      const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
+
+      // Save user info to store
+      await invoke('save_user_info', {
+        username: userInfo.username,
+        email: userInfo.email || null,
+      });
+
+      this.setAuthStatus('authenticated', userInfo);
+      console.log('OAuth login successful');
+
+      return userInfo;
+    } catch (error) {
+      console.error('Failed to complete OAuth login:', error);
+      this.setAuthStatus('unauthenticated', null);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch user info from Supabase using access token
+   */
+  private async fetchSupabaseUserInfo(authServerUrl: string, accessToken: string): Promise<UserInfo> {
+    try {
+      const userEndpoint = `${authServerUrl}/auth/v1/user`;
+
+      const response = await axios.get(userEndpoint, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'apikey': SUPABASE_KEY,
+        },
+      });
+
+      const data = response.data;
+      console.log('User info fetched:', data.email);
+
+      return {
+        username: data.user_metadata?.full_name || data.email || 'Unknown',
+        email: data.email,
+      };
+    } catch (error) {
+      console.error('Failed to fetch user info from Supabase:', error);
+      // Fallback to basic info
+      return {
+        username: 'User',
+        email: undefined,
+      };
+    }
+  }
+
 }
 
 export const authService = AuthService.getInstance();

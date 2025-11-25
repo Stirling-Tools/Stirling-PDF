@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Divider, Loader, Alert, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
@@ -9,6 +9,8 @@ import AvailablePlansSection from '@app/components/shared/config/configSections/
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { InfoBanner } from '@app/components/shared/InfoBanner';
+import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
 
@@ -25,12 +27,13 @@ const AdminPlanSection: React.FC = () => {
   const [licenseKeyInput, setLicenseKeyInput] = useState<string>('');
   const [savingLicense, setSavingLicense] = useState(false);
   const { plans, loading, error, refetch } = usePlans(currency);
+  const licenseAlert = useLicenseAlert();
 
   // Check if we should use static version
   useEffect(() => {
-    // Check if Stripe and Supabase are configured
-    const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!stripeKey || !isSupabaseConfigured || error) {
+    // Only use static version if Supabase is not configured or there's an error
+    // Stripe key is not required - hosted checkout works without it
+    if (!isSupabaseConfigured || error) {
       setUseStaticVersion(true);
     }
   }, [error]);
@@ -84,8 +87,13 @@ const AdminPlanSection: React.FC = () => {
 
   const handleManageClick = useCallback(async () => {
     try {
+      // Only allow PRO or ENTERPRISE licenses to access billing portal
+      if (!licenseInfo?.licenseType || licenseInfo.licenseType === 'NORMAL') {
+        throw new Error('No valid license found. Please purchase a license before accessing the billing portal.');
+      }
+
       if (!licenseInfo?.licenseKey) {
-        throw new Error('No license key found. Please activate a license first.');
+        throw new Error('License key missing. Please contact support.');
       }
 
       // Create billing portal session with license key
@@ -146,6 +154,23 @@ const AdminPlanSection: React.FC = () => {
     [openCheckout, currency, refetch, licenseInfo, t]
   );
 
+  const shouldShowLicenseWarning = licenseAlert.active && licenseAlert.audience === 'admin';
+  const formattedUserCount = useMemo(() => {
+    if (licenseAlert.totalUsers == null) {
+      return t('plan.licenseWarning.overLimit', 'more than {{limit}}', {
+        limit: licenseAlert.freeTierLimit,
+      });
+    }
+    return licenseAlert.totalUsers.toLocaleString();
+  }, [licenseAlert.totalUsers, licenseAlert.freeTierLimit, t]);
+
+  const scrollToPlans = useCallback(() => {
+    const el = document.getElementById('available-plans-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   // Show static version if Stripe is not configured or there's an error
   if (useStaticVersion) {
     return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
@@ -175,6 +200,29 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {shouldShowLicenseWarning && (
+        <InfoBanner
+          icon="warning-rounded"
+          tone="warning"
+          title={t('plan.licenseWarning.title', 'Free self-hosted limit reached')}
+          message={t('plan.licenseWarning.body', {
+            total: formattedUserCount,
+            limit: licenseAlert.freeTierLimit,
+          })}
+          buttonText={t('plan.licenseWarning.cta', 'See plans')}
+          buttonIcon="upgrade-rounded"
+          onButtonClick={scrollToPlans}
+          dismissible={false}
+          minHeight={68}
+          background="#FFF4E6"
+          borderColor="var(--mantine-color-orange-7)"
+          textColor="#9A3412"
+          iconColor="#EA580C"
+          buttonVariant="filled"
+          buttonColor="orange.7"
+        />
+      )}
+
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}

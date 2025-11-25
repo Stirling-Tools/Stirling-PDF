@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { Modal, Text, Alert, Stack, Button, Group, ActionIcon } from '@mantine/core';
+import { Modal, Text, Group, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { loadStripe } from '@stripe/stripe-js';
 import licenseService from '@app/services/licenseService';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
@@ -20,7 +19,7 @@ import { SuccessStage } from '@app/components/shared/stripeCheckout/stages/Succe
 import { ErrorStage } from '@app/components/shared/stripeCheckout/stages/ErrorStage';
 
 // Validate Stripe key (static validation, no dynamic imports)
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51Q56W2P9mY5IAnSnp3kcxG50uyFMLuhM4fFs774DAP3t88KmlwUrUo31CecpnAZ9FHsNp8xJyOnYNYNVVP6z4oi500q5sFYPEp';
 
 if (!STRIPE_KEY) {
   console.error(
@@ -36,8 +35,6 @@ if (STRIPE_KEY && !STRIPE_KEY.startsWith('pk_')) {
     `Expected key starting with 'pk_', got: ${STRIPE_KEY.substring(0, 10)}...`
   );
 }
-
-const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   opened,
@@ -159,13 +156,14 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     const checkExistingLicense = async () => {
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        if (licenseInfo && licenseInfo.licenseKey) {
-          // Has existing license - skip email stage
-          console.log('Existing license detected - skipping email stage');
-          checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey);
+        // Only skip email if license is PRO or ENTERPRISE (not NORMAL/free tier)
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
+          // Has valid premium license - skip email stage
+          console.log('Valid premium license detected - skipping email stage');
+          checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
           checkoutState.setState({ currentStage: 'plan-selection', loading: false });
         } else {
-          // No license - start at email stage
+          // No valid premium license - start at email stage
           checkoutState.setState({ currentStage: 'email', loading: false });
         }
       } catch (error) {
@@ -191,25 +189,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   // Render stage content
   const renderContent = () => {
-    // Check if Stripe is configured
-    if (!stripePromise) {
-      return (
-        <Alert color="red" title={t('payment.stripeNotConfigured', 'Stripe Not Configured')}>
-          <Stack gap="md">
-            <Text size="sm">
-              {t(
-                'payment.stripeNotConfiguredMessage',
-                'Stripe payment integration is not configured. Please contact your administrator.'
-              )}
-            </Text>
-            <Button variant="outline" onClick={handleClose}>
-              {t('common.close', 'Close')}
-            </Button>
-          </Stack>
-        </Alert>
-      );
-    }
-
+    // Don't block checkout - hosted mode works without publishable key
+    // The checkout will automatically redirect to Stripe hosted page if key is missing
     switch (checkoutState.state.currentStage) {
       case 'email':
         return (

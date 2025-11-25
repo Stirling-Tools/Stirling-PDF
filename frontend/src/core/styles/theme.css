@@ -334,6 +334,19 @@
   --compare-page-label-fg: var(--text-secondary);
 }
 
+/* Onboarding (light mode) */
+:root {
+  --onboarding-title: #0A0A0A;
+  --onboarding-body: #4A5565;
+  --onboarding-primary-button-bg: #101828;
+  --onboarding-primary-button-text: #FFFFFF;
+  --onboarding-secondary-button-bg: #FFFFFF;
+  --onboarding-secondary-button-text: #6A7282;
+  --onboarding-secondary-button-border: #E5E5E5;
+  --onboarding-step-active: #1E2939;
+  --onboarding-step-inactive: #D1D5DC;
+}
+
 [data-mantine-color-scheme="dark"] {
   /* Dark theme gray scale (inverted) */
   --gray-50: 17 24 39;
@@ -554,6 +567,16 @@
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
+  /* Onboarding (dark mode) */
+  --onboarding-title: #F9FAFB;
+  --onboarding-body: #D1D5DB;
+  --onboarding-primary-button-bg: #FFFFFF;
+  --onboarding-primary-button-text: #0B1220;
+  --onboarding-secondary-button-bg: transparent;
+  --onboarding-secondary-button-text: #E5E7EB;
+  --onboarding-secondary-button-border: #3A4047;
+  --onboarding-step-active: #E5E7EB;
+  --onboarding-step-inactive: #4B5563;
   /* API Keys section colors (dark mode) */
   --api-keys-card-bg: #2A2F36;
   --api-keys-card-border: #3A4047;
