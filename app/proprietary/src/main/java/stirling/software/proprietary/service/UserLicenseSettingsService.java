@@ -492,8 +492,8 @@ public class UserLicenseSettingsService {
     }
 
     /**
-     * Checks if the system has an ENTERPRISE license.
-     * Used for enterprise-only features like SSO (OAuth/SAML).
+     * Checks if the system has an ENTERPRISE license. Used for enterprise-only features like SSO
+     * (OAuth/SAML).
      *
      * @return true if ENTERPRISE license is active
      */
