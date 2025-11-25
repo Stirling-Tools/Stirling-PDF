@@ -734,4 +734,48 @@ public class UserService implements UserServiceInterface {
     public void saveAll(List<User> users) {
         userRepository.saveAll(users);
     }
+
+    /**
+     * Counts the number of OAuth/SAML users. Includes users with sso_provider set OR
+     * authenticationType is sso/oauth2/saml2 (catches V1 users who never signed in).
+     *
+     * @return Count of OAuth users
+     */
+    public long countOAuthUsers() {
+        return userRepository.countSsoUsers();
+    }
+
+    /**
+     * Counts the number of OAuth users who are grandfathered.
+     *
+     * @return Count of grandfathered OAuth users
+     */
+    public long countGrandfatheredOAuthUsers() {
+        return userRepository.countByOauthGrandfatheredTrue();
+    }
+
+    /**
+     * Grandfathers all existing OAuth/SAML users. This marks all users with an SSO provider as
+     * grandfathered, allowing them to keep OAuth access even without a paid license.
+     *
+     * @return Number of users updated
+     */
+    @Transactional
+    public int grandfatherAllOAuthUsers() {
+        List<User> ssoUsers = userRepository.findAllSsoUsers();
+        int updated = 0;
+
+        for (User user : ssoUsers) {
+            if (!user.isOauthGrandfathered()) {
+                user.setOauthGrandfathered(true);
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            userRepository.saveAll(ssoUsers);
+        }
+
+        return updated;
+    }
 }
