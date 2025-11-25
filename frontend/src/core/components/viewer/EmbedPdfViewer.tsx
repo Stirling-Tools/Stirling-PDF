@@ -15,7 +15,7 @@ import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
-import { SignaturePlacementOverlay } from '@app/components/viewer/SignaturePlacementOverlay';
+import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 
 export interface EmbedPdfViewerProps {
@@ -82,7 +82,8 @@ const EmbedPdfViewerContent = ({
 
   // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
-  const isSignatureMode = selectedTool === 'sign';
+  // Tools that use the stamp/signature placement system with hover preview
+  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
@@ -328,7 +329,7 @@ const EmbedPdfViewerContent = ({
                 // Future: Handle signature completion
               }}
             />
-            <SignaturePlacementOverlay
+            <StampPlacementOverlay
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}

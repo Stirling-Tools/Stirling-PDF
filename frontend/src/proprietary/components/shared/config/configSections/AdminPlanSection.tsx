@@ -1,23 +1,25 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Divider, Loader, Alert, Select, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
+import { Divider, Loader, Alert, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup } from '@app/services/licenseService';
+import licenseService, { PlanTierGroup, mapLicenseToTier } from '@app/services/licenseService';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import { useLicense } from '@app/contexts/LicenseContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
 
 const AdminPlanSection: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { openCheckout } = useCheckout();
   const { licenseInfo, refetchLicense } = useLicense();
-  const [currency, setCurrency] = useState<string>('gbp');
+  const [currency, setCurrency] = useState<string>(() => {
+    // Initialize with auto-detected currency on first render
+    return getPreferredCurrency(i18n.language);
+  });
   const [useStaticVersion, setUseStaticVersion] = useState(false);
   const [showLicenseKey, setShowLicenseKey] = useState(false);
   const [licenseKeyInput, setLicenseKeyInput] = useState<string>('');
@@ -80,10 +82,54 @@ const AdminPlanSection: React.FC = () => {
     { value: 'idr', label: 'Indonesian rupiah (IDR, Rp)' },
   ];
 
+  const handleManageClick = useCallback(async () => {
+    try {
+      if (!licenseInfo?.licenseKey) {
+        throw new Error('No license key found. Please activate a license first.');
+      }
+
+      // Create billing portal session with license key
+      const response = await licenseService.createBillingPortalSession(
+        window.location.href,
+        licenseInfo.licenseKey
+      );
+
+      // Open billing portal in new tab
+      window.open(response.url, '_blank');
+    } catch (error: any) {
+      console.error('Failed to open billing portal:', error);
+      alert({
+        alertType: 'error',
+        title: t('billing.portal.error', 'Failed to open billing portal'),
+        body: error.message || 'Please try again or contact support.',
+      });
+    }
+  }, [licenseInfo, t]);
+
+  const handleCurrencyChange = useCallback((newCurrency: string) => {
+    setCurrency(newCurrency);
+    // Persist user's manual selection to localStorage
+    setCachedCurrency(newCurrency);
+  }, []);
+
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
       // Only allow upgrades for server and enterprise tiers
       if (planGroup.tier === 'free') {
+        return;
+      }
+
+      // Prevent free tier users from directly accessing enterprise (must have server first)
+      const currentTier = mapLicenseToTier(licenseInfo);
+      if (currentTier === 'free' && planGroup.tier === 'enterprise') {
+        alert({
+          alertType: 'warning',
+          title: t('plan.enterprise.requiresServer', 'Server Plan Required'),
+          body: t(
+            'plan.enterprise.requiresServerMessage',
+            'Please upgrade to the Server plan first before upgrading to Enterprise.'
+          ),
+        });
         return;
       }
 
@@ -97,7 +143,7 @@ const AdminPlanSection: React.FC = () => {
         },
       });
     },
-    [openCheckout, currency, refetch]
+    [openCheckout, currency, refetch, licenseInfo, t]
   );
 
   // Show static version if Stripe is not configured or there's an error
@@ -129,40 +175,14 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Currency Selection & Manage Subscription */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text size="lg" fw={600}>
-              {t('plan.currency', 'Currency')}
-            </Text>
-            <Select
-              value={currency}
-              onChange={(value) => setCurrency(value || 'gbp')}
-              data={currencyOptions}
-              searchable
-              clearable={false}
-              w={300}
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-            />
-          </Group>
-
-          {/* Manage Subscription Button - Only show if user has active license and Supabase is configured */}
-          {licenseInfo?.licenseKey && isSupabaseConfigured && (
-            <Group justify="space-between" align="center">
-              <Text size="sm" c="dimmed">
-                {t('plan.manageSubscription.description', 'Manage your subscription, billing, and payment methods')}
-              </Text>
-              <ManageBillingButton />
-            </Group>
-          )}
-        </Stack>
-      </Paper>
-
       <AvailablePlansSection
         plans={plans}
         currentLicenseInfo={licenseInfo}
         onUpgradeClick={handleUpgradeClick}
+        onManageClick={handleManageClick}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
+        currencyOptions={currencyOptions}
       />
 
       <Divider />

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@mantine/core";
+import { Button, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
@@ -13,6 +13,7 @@ import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -27,8 +28,10 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false }) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
+  const premiumEnabled = config?.premiumEnabled;
   const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
-  const disabledReason = getToolDisabledReason(id, tool, toolAvailability);
+  const disabledReason = getToolDisabledReason(id, tool, toolAvailability, premiumEnabled);
   const isUnavailable = disabledReason !== null;
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
@@ -77,13 +80,25 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
         opacity={isUnavailable ? 0.25 : 1}
       />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
-        <FitText
-          text={tool.name}
-          lines={1}
-          minimumFontScale={0.8}
-          as="span"
-          style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+          <FitText
+            text={tool.name}
+            lines={1}
+            minimumFontScale={0.8}
+            as="span"
+            style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
+          />
+          {tool.versionStatus === 'alpha' && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="orange"
+              style={{ flexShrink: 0, opacity: isUnavailable ? 0.25 : 1 }}
+            >
+              {t('toolPanel.alpha', 'Alpha')}
+            </Badge>
+          )}
+        </div>
         {matchedSynonym && (
           <span style={{
             fontSize: '0.75rem',
