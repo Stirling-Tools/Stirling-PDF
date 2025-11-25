@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Præferencer"
+    },
+    "workspace": {
+      "title": "Arbejdsområde",
+      "people": "Personer",
+      "teams": "Teams"
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "systemSettings": "Systemindstillinger",
+      "features": "Funktioner",
+      "endpoints": "Endpoints",
+      "database": "Database",
+      "advanced": "Avanceret"
+    },
+    "securityAuth": {
+      "title": "Sikkerhed og autentificering",
+      "security": "Sikkerhed",
+      "connections": "Forbindelser"
+    },
+    "licensingAnalytics": {
+      "title": "Licensering & Analytics",
+      "plan": "Plan",
+      "audit": "Audit",
+      "usageAnalytics": "Brugsanalyse"
+    },
+    "policiesPrivacy": {
+      "title": "Politikker & Privatliv",
+      "legal": "Juridisk",
+      "privacy": "Privatliv"
+    },
+    "developer": {
+      "title": "Udvikler",
+      "apiKeys": "API-nøgler"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Aktivér login-tilstand først",
+      "requiresEnterprise": "Kræver Enterprise-licens"
+    },
     "connection": {
       "title": "Forbindelsestilstand",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Fjern deaktiverede konverteringsmuligheder i Konverter-værktøjet i stedet for at vise dem nedtonet."
     },
     "hotkeys": {
+      "title": "Tastaturgenveje",
+      "description": "Tilpas tastaturgenveje for hurtig adgang til værktøjer. Klik på \"Skift genvej\" og tryk en ny tastekombination. Tryk Esc for at annullere.",
       "errorConflict": "Genvej bruges allerede af {{tool}}.",
+      "errorModifier": {
+        "mac": "Medtag ⌘ (Command), ⌥ (Option) eller en anden modifikatortast i din genvej.",
+        "windows": "Medtag Ctrl, Alt eller en anden modifikatortast i din genvej."
+      },
       "searchPlaceholder": "Søg værktøjer...",
       "none": "Ikke tildelt",
       "customBadge": "Brugerdefineret",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Tilgængelige sprog",
-          "description": "Sprog som brugere kan vælge imellem (lad være tomt for at aktivere alle sprog)"
+          "description": "Sprog som brugere kan vælge imellem (lad være tomt for at aktivere alle sprog)",
+          "placeholder": "Vælg sprog"
         },
         "customMetadata": {
           "label": "Brugerdefinerede metadata",
@@ -4061,7 +4108,9 @@
           "label": "Logostil",
           "description": "Vælg mellem det moderne minimalistiske logo eller det klassiske S-ikon",
           "classic": "Klassisk",
-          "modern": "Moderne"
+          "classicAlt": "Klassisk logo",
+          "modern": "Moderne",
+          "modernAlt": "Moderne logo"
         },
         "customPaths": {
           "label": "Brugerdefinerede stier",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Applikationskonfiguration",
-      "description": "Aktuelle indstillinger og konfigurationsdetaljer for applikationen."
+      "description": "Aktuelle indstillinger og konfigurationsdetaljer for applikationen.",
+      "loading": "Indlæser konfiguration...",
+      "error": "Fejl",
+      "warning": "Konfigurationsadvarsel",
+      "sections": {
+        "basic": "Basiskonfiguration",
+        "security": "Sikkerhedskonfiguration",
+        "system": "Systemkonfiguration",
+        "integration": "Integrationskonfiguration"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Administrér teams og organisér medlemmer i arbejdsområdet",
       "loading": "Indlæser teams...",
       "loadingDetails": "Indlæser teamdetaljer...",
+      "loadError": "Kunne ikke indlæse teamdetaljer",
       "createNewTeam": "Opret nyt team",
       "teamName": "Teamnavn",
       "totalMembers": "Samlet antal medlemmer",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Forbereder din betaling...",
+    "redirecting": "Viderestiller til sikker checkout...",
     "upgradeTitle": "Opgrader til {{planName}}",
     "success": "Betaling gennemført!",
     "successMessage": "Dit abonnement er blevet aktiveret. Du modtager snart en bekræftelsesmail.",

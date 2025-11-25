@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Tercihler"
+    },
+    "workspace": {
+      "title": "Çalışma Alanı",
+      "people": "Kişiler",
+      "teams": "Ekipler"
+    },
+    "configuration": {
+      "title": "Yapılandırma",
+      "systemSettings": "Sistem Ayarları",
+      "features": "Özellikler",
+      "endpoints": "Uç Noktalar",
+      "database": "Veritabanı",
+      "advanced": "Gelişmiş"
+    },
+    "securityAuth": {
+      "title": "Güvenlik ve Kimlik Doğrulama",
+      "security": "Güvenlik",
+      "connections": "Bağlantılar"
+    },
+    "licensingAnalytics": {
+      "title": "Lisanslama ve Analitik",
+      "plan": "Plan",
+      "audit": "Denetim",
+      "usageAnalytics": "Kullanım Analitiği"
+    },
+    "policiesPrivacy": {
+      "title": "Politikalar ve Gizlilik",
+      "legal": "Yasal",
+      "privacy": "Gizlilik"
+    },
+    "developer": {
+      "title": "Geliştirici",
+      "apiKeys": "API Anahtarları"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Önce oturum açma modunu etkinleştirin",
+      "requiresEnterprise": "Enterprise lisansı gerektirir"
+    },
     "connection": {
       "title": "Bağlantı Modu",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Gri gösterilmek yerine Dönüştür aracındaki devre dışı seçenekleri kaldırın."
     },
     "hotkeys": {
+      "title": "Klavye Kısayolları",
+      "description": "Araçlara hızlı erişim için klavye kısayollarını özelleştirin. \"Kısayolu değiştir\"e tıklayın ve yeni bir tuş kombinasyonuna basın. İptal etmek için Esc'ye basın.",
       "errorConflict": "Kısayol zaten {{tool}} tarafından kullanılıyor.",
+      "errorModifier": {
+        "mac": "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin.",
+        "windows": "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
+      },
       "searchPlaceholder": "Araçlarda ara...",
       "none": "Atanmadı",
       "customBadge": "Özel",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Kullanılabilir Diller",
-          "description": "Kullanıcıların seçebileceği diller (tüm dilleri etkinleştirmek için boş bırakın)"
+          "description": "Kullanıcıların seçebileceği diller (tüm dilleri etkinleştirmek için boş bırakın)",
+          "placeholder": "Dilleri seçin"
         },
         "customMetadata": {
           "label": "Özel Üstveri",
@@ -4061,7 +4108,9 @@
           "label": "Logo Stili",
           "description": "Modern minimalist logo ile klasik S simgesi arasında seçim yapın",
           "classic": "Klasik",
-          "modern": "Modern"
+          "classicAlt": "Klasik logo",
+          "modern": "Modern",
+          "modernAlt": "Modern logo"
         },
         "customPaths": {
           "label": "Özel Yollar",
@@ -4499,7 +4548,7 @@
           "description": "Çerez politikası için URL veya dosya adı"
         },
         "impressum": {
-          "label": "Impressum",
+          "label": "Künye",
           "description": "Impressum için URL veya dosya adı (bazı yargı bölgelerinde gereklidir)"
         }
       },
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Uygulama Yapılandırması",
-      "description": "Geçerli uygulama ayarları ve yapılandırma ayrıntıları."
+      "description": "Geçerli uygulama ayarları ve yapılandırma ayrıntıları.",
+      "loading": "Yapılandırma yükleniyor...",
+      "error": "Hata",
+      "warning": "Yapılandırma Uyarısı",
+      "sections": {
+        "basic": "Temel Yapılandırma",
+        "security": "Güvenlik Yapılandırması",
+        "system": "Sistem Yapılandırması",
+        "integration": "Entegrasyon Yapılandırması"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Takımları yönetin ve çalışma alanı üyelerini organize edin",
       "loading": "Takımlar yükleniyor...",
       "loadingDetails": "Takım ayrıntıları yükleniyor...",
+      "loadError": "Ekip ayrıntıları yüklenemedi",
       "createNewTeam": "Yeni Takım Oluştur",
       "teamName": "Takım Adı",
       "totalMembers": "Toplam Üye",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Ödeme hazırlanıyor...",
+    "redirecting": "Güvenli ödeme sayfasına yönlendiriliyor...",
     "upgradeTitle": "{{planName}} planına yükselt",
     "success": "Ödeme Başarılı!",
     "successMessage": "Aboneliğiniz başarıyla etkinleştirildi. Kısa süre içinde bir onay e-postası alacaksınız.",

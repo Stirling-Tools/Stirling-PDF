@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferencias"
+    },
+    "workspace": {
+      "title": "Espacio de trabajo",
+      "people": "Personas",
+      "teams": "Equipos"
+    },
+    "configuration": {
+      "title": "Configuración",
+      "systemSettings": "Ajustes del sistema",
+      "features": "Funciones",
+      "endpoints": "Endpoints",
+      "database": "Base de datos",
+      "advanced": "Avanzado"
+    },
+    "securityAuth": {
+      "title": "Seguridad y autenticación",
+      "security": "Seguridad",
+      "connections": "Conexiones"
+    },
+    "licensingAnalytics": {
+      "title": "Licencias y analítica",
+      "plan": "Plan",
+      "audit": "Auditoría",
+      "usageAnalytics": "Analítica de uso"
+    },
+    "policiesPrivacy": {
+      "title": "Políticas y privacidad",
+      "legal": "Legal",
+      "privacy": "Privacidad"
+    },
+    "developer": {
+      "title": "Desarrollador",
+      "apiKeys": "Claves API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Activa primero el modo de inicio de sesión",
+      "requiresEnterprise": "Requiere licencia Enterprise"
+    },
     "connection": {
       "title": "Modo de conexión",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Eliminar las opciones de conversión desactivadas en la herramienta Convertir en lugar de mostrarlas en gris."
     },
     "hotkeys": {
+      "title": "Atajos de teclado",
+      "description": "Personaliza los atajos de teclado para acceder rápido a las herramientas. Haz clic en \"Cambiar atajo\" y pulsa una nueva combinación de teclas. Pulsa Esc para cancelar.",
       "errorConflict": "Atajo ya utilizado por {{tool}}.",
+      "errorModifier": {
+        "mac": "Incluye ⌘ (Command), ⌥ (Option) u otro modificador en tu atajo.",
+        "windows": "Incluye Ctrl, Alt u otro modificador en tu atajo."
+      },
       "searchPlaceholder": "Buscar herramientas...",
       "none": "No asignado",
       "customBadge": "Personalizado",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Idiomas disponibles",
-          "description": "Idiomas que los usuarios pueden seleccionar (déjalo vacío para habilitar todos los idiomas)"
+          "description": "Idiomas que los usuarios pueden seleccionar (déjalo vacío para habilitar todos los idiomas)",
+          "placeholder": "Selecciona idiomas"
         },
         "customMetadata": {
           "label": "Metadatos personalizados",
@@ -4061,7 +4108,9 @@
           "label": "Estilo del logotipo",
           "description": "Elige entre el logotipo moderno minimalista o el icono S clásico",
           "classic": "Clásico",
-          "modern": "Moderno"
+          "classicAlt": "Logo clásico",
+          "modern": "Moderno",
+          "modernAlt": "Logo moderno"
         },
         "customPaths": {
           "label": "Rutas personalizadas",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configuración de la aplicación",
-      "description": "Ajustes actuales de la aplicación y detalles de configuración."
+      "description": "Ajustes actuales de la aplicación y detalles de configuración.",
+      "loading": "Cargando configuración...",
+      "error": "Error",
+      "warning": "Advertencia de configuración",
+      "sections": {
+        "basic": "Configuración básica",
+        "security": "Configuración de seguridad",
+        "system": "Configuración del sistema",
+        "integration": "Configuración de integración"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gestiona equipos y organiza a los miembros del espacio de trabajo",
       "loading": "Cargando equipos...",
       "loadingDetails": "Cargando detalles del equipo...",
+      "loadError": "Error al cargar los detalles del equipo",
       "createNewTeam": "Crear nuevo equipo",
       "teamName": "Nombre del equipo",
       "totalMembers": "Miembros totales",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "Preparando tu pago...",
+    "redirecting": "Redirigiendo al pago seguro...",
     "upgradeTitle": "Actualizar a {{planName}}",
     "success": "¡Pago realizado con éxito!",
     "successMessage": "Tu suscripción se ha activado correctamente. Recibirás un correo de confirmación en breve.",

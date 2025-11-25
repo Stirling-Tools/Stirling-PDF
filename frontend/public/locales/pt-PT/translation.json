@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "Preferências"
+    },
+    "workspace": {
+      "title": "Espaço de trabalho",
+      "people": "Pessoas",
+      "teams": "Equipas"
+    },
+    "configuration": {
+      "title": "Configuração",
+      "systemSettings": "Definições do sistema",
+      "features": "Funcionalidades",
+      "endpoints": "Endpoints",
+      "database": "Base de dados",
+      "advanced": "Avançado"
+    },
+    "securityAuth": {
+      "title": "Segurança e Autenticação",
+      "security": "Segurança",
+      "connections": "Ligações"
+    },
+    "licensingAnalytics": {
+      "title": "Licenciamento e Análises",
+      "plan": "Plano",
+      "audit": "Auditoria",
+      "usageAnalytics": "Análise de utilização"
+    },
+    "policiesPrivacy": {
+      "title": "Políticas e Privacidade",
+      "legal": "Legal",
+      "privacy": "Privacidade"
+    },
+    "developer": {
+      "title": "Programador",
+      "apiKeys": "API Keys"
+    },
+    "tooltips": {
+      "enableLoginFirst": "Ative primeiro o modo de login",
+      "requiresEnterprise": "Requer licença Enterprise"
+    },
     "connection": {
       "title": "Modo de ligação",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "Remover opções de conversão desativadas na ferramenta Converter em vez de as mostrar esbatidas."
     },
     "hotkeys": {
+      "title": "Atalhos de teclado",
+      "description": "Personalize os atalhos de teclado para acesso rápido às ferramentas. Clique \"Alterar atalho\" e prima uma nova combinação de teclas. Prima Esc para cancelar.",
       "errorConflict": "Atalho já utilizado por {{tool}}.",
+      "errorModifier": {
+        "mac": "Inclua ⌘ (Command), ⌥ (Option) ou outro modificador no seu atalho.",
+        "windows": "Inclua Ctrl, Alt ou outro modificador no seu atalho."
+      },
       "searchPlaceholder": "Procurar ferramentas...",
       "none": "Não atribuído",
       "customBadge": "Personalizado",
@@ -3821,7 +3867,7 @@
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
+        "title": "Análises",
         "description": "Estes cookies ajudam-nos a compreender como as nossas ferramentas estão a ser usadas, para que possamos focar-nos em construir as funcionalidades que a nossa comunidade mais valoriza. Fique descansado — o Stirling PDF não pode e nunca irá rastrear o conteúdo dos documentos com que trabalha."
       }
     },
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "Idiomas disponíveis",
-          "description": "Idiomas que os utilizadores podem selecionar (deixe vazio para ativar todos os idiomas)"
+          "description": "Idiomas que os utilizadores podem selecionar (deixe vazio para ativar todos os idiomas)",
+          "placeholder": "Selecionar idiomas"
         },
         "customMetadata": {
           "label": "Metadados personalizados",
@@ -4061,7 +4108,9 @@
           "label": "Estilo do logótipo",
           "description": "Escolha entre o logótipo minimalista moderno ou o ícone S clássico",
           "classic": "Clássico",
-          "modern": "Moderno"
+          "classicAlt": "Logótipo clássico",
+          "modern": "Moderno",
+          "modernAlt": "Logótipo moderno"
         },
         "customPaths": {
           "label": "Caminhos personalizados",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "Configuração da aplicação",
-      "description": "Definições atuais da aplicação e detalhes de configuração."
+      "description": "Definições atuais da aplicação e detalhes de configuração.",
+      "loading": "A carregar configuração...",
+      "error": "Erro",
+      "warning": "Aviso de configuração",
+      "sections": {
+        "basic": "Configuração básica",
+        "security": "Configuração de segurança",
+        "system": "Configuração do sistema",
+        "integration": "Configuração de integração"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "Gerir equipas e organizar membros do espaço de trabalho",
       "loading": "A carregar equipas...",
       "loadingDetails": "A carregar detalhes da equipa...",
+      "loadError": "Falha ao carregar detalhes da equipa",
       "createNewTeam": "Criar nova equipa",
       "teamName": "Nome da equipa",
       "totalMembers": "Total de membros",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "A preparar o pagamento...",
+    "redirecting": "A redirecionar para o checkout seguro...",
     "upgradeTitle": "Atualizar para {{planName}}",
     "success": "Pagamento bem-sucedido!",
     "successMessage": "A sua subscrição foi ativada com sucesso. Irá receber um email de confirmação em breve.",

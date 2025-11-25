@@ -317,6 +317,46 @@
     }
   },
   "settings": {
+    "preferences": {
+      "title": "التفضيلات"
+    },
+    "workspace": {
+      "title": "مساحة العمل",
+      "people": "الأشخاص",
+      "teams": "الفرق"
+    },
+    "configuration": {
+      "title": "التهيئة",
+      "systemSettings": "إعدادات النظام",
+      "features": "الميزات",
+      "endpoints": "نقاط النهاية",
+      "database": "قاعدة البيانات",
+      "advanced": "متقدم"
+    },
+    "securityAuth": {
+      "title": "الأمان والمصادقة",
+      "security": "الأمان",
+      "connections": "الاتصالات"
+    },
+    "licensingAnalytics": {
+      "title": "الترخيص والتحليلات",
+      "plan": "الخطة",
+      "audit": "التدقيق",
+      "usageAnalytics": "تحليلات الاستخدام"
+    },
+    "policiesPrivacy": {
+      "title": "السياسات والخصوصية",
+      "legal": "قانوني",
+      "privacy": "الخصوصية"
+    },
+    "developer": {
+      "title": "المطور",
+      "apiKeys": "مفاتيح API"
+    },
+    "tooltips": {
+      "enableLoginFirst": "فعّل وضع تسجيل الدخول أولاً",
+      "requiresEnterprise": "يتطلّب ترخيص Enterprise"
+    },
     "connection": {
       "title": "وضع الاتصال",
       "mode": {
@@ -373,7 +413,13 @@
       "hideUnavailableConversionsDescription": "إزالة خيارات التحويل المعطّلة في أداة التحويل بدلاً من عرضها باللون الرمادي."
     },
     "hotkeys": {
+      "title": "اختصارات لوحة المفاتيح",
+      "description": "خصّص اختصارات لوحة المفاتيح للوصول السريع إلى الأدوات. انقر \"تغيير الاختصار\" واضغط مجموعة مفاتيح جديدة. اضغط Esc للإلغاء.",
       "errorConflict": "الاختصار مستخدم بالفعل بواسطة {{tool}}.",
+      "errorModifier": {
+        "mac": "ضمّن ⌘ (Command) أو ⌥ (Option) أو معدِّلاً آخر في اختصارك.",
+        "windows": "ضمّن Ctrl أو Alt أو معدِّلاً آخر في اختصارك."
+      },
       "searchPlaceholder": "ابحث في الأدوات...",
       "none": "غير معيّن",
       "customBadge": "مخصص",
@@ -4036,7 +4082,8 @@
         },
         "languages": {
           "label": "اللغات المتاحة",
-          "description": "اللغات التي يمكن للمستخدمين الاختيار منها (اتركه فارغًا لتمكين جميع اللغات)"
+          "description": "اللغات التي يمكن للمستخدمين الاختيار منها (اتركه فارغًا لتمكين جميع اللغات)",
+          "placeholder": "اختر اللغات"
         },
         "customMetadata": {
           "label": "بيانات وصفية مخصصة",
@@ -4061,7 +4108,9 @@
           "label": "نمط الشعار",
           "description": "اختر بين الشعار العصري البسيط أو أيقونة S الكلاسيكية",
           "classic": "كلاسيكي",
-          "modern": "حديث"
+          "classicAlt": "شعار كلاسيكي",
+          "modern": "حديث",
+          "modernAlt": "شعار حديث"
         },
         "customPaths": {
           "label": "مسارات مخصصة",
@@ -4968,7 +5017,16 @@
   "config": {
     "overview": {
       "title": "تهيئة التطبيق",
-      "description": "إعدادات التطبيق الحالية وتفاصيل التهيئة."
+      "description": "إعدادات التطبيق الحالية وتفاصيل التهيئة.",
+      "loading": "جارٍ تحميل التهيئة...",
+      "error": "خطأ",
+      "warning": "تحذير التهيئة",
+      "sections": {
+        "basic": "تهيئة أساسية",
+        "security": "تهيئة الأمان",
+        "system": "تهيئة النظام",
+        "integration": "تهيئة التكامل"
+      }
     },
     "account": {
       "overview": {
@@ -5342,6 +5400,7 @@
       "description": "إدارة الفرق وتنظيم أعضاء مساحة العمل",
       "loading": "جارٍ تحميل الفرق...",
       "loadingDetails": "جارٍ تحميل تفاصيل الفريق...",
+      "loadError": "فشل تحميل تفاصيل الفريق",
       "createNewTeam": "إنشاء فريق جديد",
       "teamName": "اسم الفريق",
       "totalMembers": "إجمالي الأعضاء",
@@ -5544,6 +5603,7 @@
   },
   "payment": {
     "preparing": "جارٍ تجهيز عملية الدفع...",
+    "redirecting": "جارٍ التحويل إلى الدفع الآمن...",
     "upgradeTitle": "الترقية إلى {{planName}}",
     "success": "تم الدفع بنجاح!",
     "successMessage": "تم تفعيل اشتراكك بنجاح. ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريبًا.",
