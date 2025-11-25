@@ -17,6 +17,8 @@
       "comingSoon": "곧 제공 예정:",
       "favorite": "즐겨찾기에 추가",
       "favorites": "즐겨찾기",
+      "unavailable": "서버 관리자에 의해 비활성화됨:",
+      "unavailableDependency": "사용 불가 - 서버에 필요한 도구가 없음:",
       "heading": "모든 도구(전체 화면 보기)",
       "noResults": "검색을 조정하거나 설명 토글을 사용해 보세요.",
       "recommended": "추천",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "전체 화면 모드로 전환",
       "sidebar": "사이드바 모드로 전환"
-    }
+    },
+    "alpha": "알파",
+    "premiumFeature": "프리미엄 기능:",
+    "comingSoon": "곧 제공:"
   },
   "unsavedChanges": "PDF에 저장되지 않은 변경 사항이 있습니다.",
   "areYouSure": "정말 떠나시겠습니까?",
@@ -40,6 +45,30 @@
     "message": "이 ZIP에는 {{count}}개의 파일이 포함되어 있습니다. 그래도 압축을 해제하시겠습니까?",
     "cancel": "취소",
     "confirm": "압축 해제"
+  },
+  "defaultApp": {
+    "title": "기본 PDF 앱으로 설정",
+    "message": "Stirling PDF를 기본 PDF 편집기로 설정하시겠습니까?",
+    "description": "나중에 시스템 설정에서 변경할 수 있습니다.",
+    "notNow": "나중에",
+    "setDefault": "기본값으로 설정",
+    "dismiss": "닫기",
+    "prompt": {
+      "title": "기본 PDF 편집기로 설정",
+      "message": "PDF 파일을 여는 기본 앱으로 Stirling PDF를 설정하세요."
+    },
+    "success": {
+      "title": "기본 앱 설정됨",
+      "message": "Stirling PDF가 기본 PDF 편집기로 설정되었습니다"
+    },
+    "settingsOpened": {
+      "title": "설정 열림",
+      "message": "시스템 설정에서 Stirling PDF를 선택하세요"
+    },
+    "error": {
+      "title": "오류",
+      "message": "기본 PDF 처리기 설정에 실패했습니다"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "저장",
   "saveToBrowser": "브라우저에 저장",
   "download": "다운로드",
+  "downloadUnavailable": "이 항목은 다운로드할 수 없습니다",
+  "saveUnavailable": "이 항목은 저장할 수 없습니다",
   "pin": "파일 고정(도구 실행 후에도 유지)",
   "unpin": "파일 고정 해제(도구 실행 후 교체)",
   "undoOperationTooltip": "마지막 작업을 실행 취소하고 원본 파일을 복원하려면 클릭",
@@ -168,6 +199,7 @@
   },
   "edit": "편집",
   "delete": "삭제",
+  "never": "안 함",
   "username": "사용자 이름",
   "password": "비밀번호",
   "welcome": "환영합니다",
@@ -262,7 +294,8 @@
     "learnMore": "자세히 알아보기",
     "enable": "분석 활성화",
     "disable": "분석 비활성화",
-    "settings": "config/settings.yml 파일에서 분석 설정을 변경할 수 있습니다"
+    "settings": "config/settings.yml 파일에서 분석 설정을 변경할 수 있습니다",
+    "privacyAssurance": "개인 정보나 파일 내용은 추적하지 않습니다."
   },
   "navbar": {
     "favorite": "즐겨찾기",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "설정",
-    "update": "업데이트 가능",
-    "updateAvailable": "{0}은(는) 현재 설치된 버전입니다. 새 버전({1})이 사용 가능합니다.",
-    "appVersion": "앱 버전:",
-    "downloadOption": {
-      "title": "다운로드 옵션 선택 (단일 파일 비압축 다운로드용):",
-      "1": "같은 창에서 열기",
-      "2": "새 창에서 열기",
-      "3": "파일 다운로드"
-    },
-    "zipThreshold": "다운로드 파일 수가 다음을 초과할 때 ZIP으로 압축",
-    "signOut": "로그아웃",
-    "accountSettings": "계정 설정",
-    "bored": {
-      "help": "이스터에그 게임 활성화"
-    },
-    "cacheInputs": {
-      "name": "입력 양식 저장",
-      "help": "다음 실행을 위해 이전에 사용한 입력을 저장하도록 활성화"
+    "connection": {
+      "title": "연결 모드",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "자가 호스팅"
+      },
+      "server": "서버",
+      "user": "로그인 사용자",
+      "logout": "로그아웃"
     },
     "general": {
       "title": "일반",
       "description": "일반 애플리케이션 기본 설정을 구성합니다.",
-      "account": "계정",
-      "accountDescription": "계정 설정 관리",
       "user": "사용자",
-      "signedInAs": "다음으로 로그인됨",
       "logout": "로그아웃",
       "enableFeatures": {
+        "dismiss": "닫기",
         "title": "시스템 관리자용",
         "intro": "조직을 위한 사용자 인증, 팀 관리, 워크스페이스 기능을 활성화합니다.",
         "action": "구성",
         "and": "및",
         "benefit": "사용자 역할, 팀 협업, 관리자 제어 및 엔터프라이즈 기능을 활성화합니다.",
-        "learnMore": "문서에서 자세히 알아보기",
-        "dismiss": "닫기"
+        "learnMore": "문서에서 자세히 알아보기"
       },
-      "autoUnzip": "API 응답 자동 압축 해제",
-      "autoUnzipDescription": "ZIP 응답에서 파일을 자동으로 추출",
-      "autoUnzipTooltip": "API 작업에서 반환된 ZIP 파일을 자동으로 추출합니다. 비활성화하면 ZIP 파일을 그대로 유지합니다. 이는 자동화 워크플로에는 영향을 주지 않습니다.",
-      "autoUnzipFileLimit": "자동 압축 해제 파일 제한",
-      "autoUnzipFileLimitDescription": "ZIP에서 추출할 최대 파일 수",
-      "autoUnzipFileLimitTooltip": "ZIP에 포함된 파일 수가 이 값 이하일 때만 압축을 풉니다. 더 크게 설정하면 더 큰 ZIP을 추출할 수 있습니다.",
       "defaultToolPickerMode": "기본 도구 선택기 모드",
       "defaultToolPickerModeDescription": "도구 선택기를 기본으로 전체 화면 또는 사이드바 중 어떤 모드로 열지 선택하세요",
       "mode": {
-        "fullscreen": "전체 화면",
-        "sidebar": "사이드바"
-      }
+        "sidebar": "사이드바",
+        "fullscreen": "전체 화면"
+      },
+      "autoUnzipTooltip": "API 작업에서 반환된 ZIP 파일을 자동으로 추출합니다. 비활성화하면 ZIP 파일을 그대로 유지합니다. 이는 자동화 워크플로에는 영향을 주지 않습니다.",
+      "autoUnzip": "API 응답 자동 압축 해제",
+      "autoUnzipDescription": "ZIP 응답에서 파일을 자동으로 추출",
+      "autoUnzipFileLimitTooltip": "ZIP에 포함된 파일 수가 이 값 이하일 때만 압축을 풉니다. 더 크게 설정하면 더 큰 ZIP을 추출할 수 있습니다.",
+      "autoUnzipFileLimit": "자동 압축 해제 파일 제한",
+      "autoUnzipFileLimitDescription": "ZIP에서 추출할 최대 파일 수",
+      "defaultPdfEditor": "기본 PDF 편집기",
+      "defaultPdfEditorActive": "Stirling PDF가 기본 PDF 편집기입니다",
+      "defaultPdfEditorInactive": "다른 앱이 기본값으로 설정됨",
+      "defaultPdfEditorChecking": "확인 중...",
+      "defaultPdfEditorSet": "이미 기본값",
+      "setAsDefault": "기본값으로 설정",
+      "updates": {
+        "title": "소프트웨어 업데이트",
+        "description": "업데이트 확인 및 버전 정보 보기",
+        "currentVersion": "현재 버전",
+        "latestVersion": "최신 버전",
+        "checkForUpdates": "업데이트 확인",
+        "viewDetails": "자세히 보기"
+      },
+      "hideUnavailableTools": "사용 불가 도구 숨기기",
+      "hideUnavailableToolsDescription": "회색으로 표시하는 대신 서버에서 비활성화된 도구를 숨깁니다.",
+      "hideUnavailableConversions": "사용 불가 변환 숨기기",
+      "hideUnavailableConversionsDescription": "회색으로 표시하는 대신 변환 도구의 비활성화된 옵션을 숨깁니다."
     },
     "hotkeys": {
-      "title": "키보드 단축키",
-      "description": "도구 위에 마우스를 올리면 단축키를 볼 수 있으며, 아래에서 사용자 지정할 수 있습니다. \"단축키 변경\"을 클릭하고 새 키 조합을 누르세요. Esc로 취소합니다.",
-      "errorModifier": {
-        "mac": "단축키에 ⌘(Command), ⌥(Option) 또는 다른 보조 키를 포함하세요.",
-        "windows": "단축키에 Ctrl, Alt 또는 다른 보조 키를 포함하세요."
-      },
       "errorConflict": "단축키가 {{tool}}에서 이미 사용 중입니다.",
+      "searchPlaceholder": "도구 검색...",
       "none": "미지정",
       "customBadge": "사용자 지정",
       "defaultLabel": "기본값: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "단축키 변경",
       "reset": "재설정",
       "shortcut": "단축키",
-      "noShortcut": "설정된 단축키 없음",
-      "searchPlaceholder": "도구 검색..."
+      "noShortcut": "설정된 단축키 없음"
     }
+  },
+  "update": {
+    "modalTitle": "업데이트 사용 가능",
+    "current": "현재 버전",
+    "latest": "최신 버전",
+    "latestStable": "최신 안정판",
+    "priorityLabel": "우선순위",
+    "recommendedAction": "권장 작업",
+    "breakingChangesDetected": "호환성 파괴 변경 감지됨",
+    "breakingChangesMessage": "일부 버전에 호환성 파괴 변경이 포함되어 있습니다. 업데이트 전에 아래 마이그레이션 가이드를 검토하세요.",
+    "migrationGuides": "마이그레이션 가이드",
+    "viewGuide": "가이드 보기",
+    "loadingDetailedInfo": "상세 정보 로드 중...",
+    "close": "닫기",
+    "viewAllReleases": "모든 릴리스 보기",
+    "downloadLatest": "최신 버전 다운로드",
+    "availableUpdates": "사용 가능한 업데이트",
+    "unableToLoadDetails": "상세 정보를 불러올 수 없습니다.",
+    "version": "버전",
+    "urgentUpdateAvailable": "긴급 업데이트",
+    "updateAvailable": "업데이트 사용 가능",
+    "releaseNotes": "릴리스 노트",
+    "priority": {
+      "urgent": "긴급",
+      "normal": "보통",
+      "minor": "경미",
+      "low": "낮음"
+    },
+    "breakingChanges": "호환성 파괴 변경",
+    "breakingChangesDefault": "이 버전에는 호환성 파괴 변경이 포함되어 있습니다.",
+    "migrationGuide": "마이그레이션 가이드"
   },
   "changeCreds": {
     "title": "자격 증명 변경",
@@ -702,7 +765,7 @@
       "desc": "PDF 문서의 디지털 서명과 인증서 검증"
     },
     "swagger": {
-      "tags": "API,documentation,test",
+      "tags": "API,문서,테스트",
       "title": "API 문서",
       "desc": "API 문서를 보고 엔드포인트를 테스트합니다."
     },
@@ -751,7 +814,7 @@
       "desc": "PDF 문서의 색상을 교체하거나 반전합니다."
     },
     "devApi": {
-      "tags": "API,development,documentation",
+      "tags": "API,개발,문서",
       "title": "API",
       "desc": "API 문서로 이동"
     },
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "PDF를 다른 PDF 위에 오버레이",
       "title": "PDF 오버레이"
+    },
+    "pdfTextEditor": {
+      "title": "PDF 텍스트 편집기",
+      "desc": "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
+    },
+    "addText": {
+      "tags": "텍스트,주석,레이블",
+      "title": "텍스트 추가",
+      "desc": "PDF 어디에나 사용자 텍스트를 추가합니다"
     }
   },
   "landing": {
     "addFiles": "파일 추가",
-    "uploadFromComputer": "컴퓨터에서 업로드"
+    "uploadFromComputer": "컴퓨터에서 업로드",
+    "openFromComputer": "컴퓨터에서 열기"
   },
   "viewPdf": {
     "tags": "보기,읽기,주석,텍스트,이미지",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "PDF를 병합하는 동안 오류가 발생했습니다."
+    },
+    "tooltip": {
+      "header": {
+        "title": "병합 설정 개요"
+      }
     }
   },
   "split": {
@@ -1047,7 +1125,7 @@
     "settings": "설정",
     "conversionCompleted": "변환 완료",
     "results": "결과",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "변환된_파일",
     "conversionResults": "변환 결과",
     "convertFrom": "다음에서 변환",
     "convertTo": "다음으로 변환",
@@ -1182,9 +1260,43 @@
     "tags": "이미지,jpg,사진",
     "title": "이미지 추가",
     "header": "PDF에 이미지 추가",
-    "everyPage": "모든 페이지?",
-    "upload": "이미지 추가",
-    "submit": "이미지 추가"
+    "image": {
+      "name": "이미지",
+      "placeholder": "이미지 업로드",
+      "label": "이미지 파일"
+    },
+    "steps": {
+      "configure": "이미지 구성"
+    },
+    "step": {
+      "createDesc": "추가할 이미지를 업로드하세요",
+      "place": "이미지 배치",
+      "placeDesc": "PDF에서 클릭하여 이미지를 추가하세요"
+    },
+    "instructions": {
+      "title": "이미지 추가 방법",
+      "text": "위에서 이미지를 업로드한 뒤, PDF를 클릭하여 배치하세요.",
+      "paused": "배치 일시중지",
+      "resumeHint": "배치를 다시 시작하여 클릭 후 이미지를 추가하세요.",
+      "noSignature": "이미지를 업로드하면 배치할 수 있습니다."
+    },
+    "mode": {
+      "move": "이미지 이동",
+      "place": "이미지 배치",
+      "pause": "배치 일시중지",
+      "resume": "배치 재개"
+    },
+    "results": {
+      "title": "이미지 추가 결과"
+    },
+    "error": {
+      "failed": "PDF에 이미지를 추가하는 중 오류가 발생했습니다."
+    },
+    "saved": {
+      "defaultLabel": "이미지",
+      "defaultImageLabel": "업로드된 이미지"
+    },
+    "applySignatures": "이미지 적용"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1397,6 +1509,93 @@
     },
     "submit": "변경"
   },
+  "editTableOfContents": {
+    "settings": {
+      "title": "북마크 및 개요",
+      "replaceExisting": "기존 북마크 교체(해제 시 뒤에 추가)",
+      "replaceExistingHint": "비활성화하면 새 개요가 현재 북마크 뒤에 추가됩니다."
+    },
+    "actions": {
+      "source": "북마크 불러오기",
+      "selectedFile": "{{file}}에서 불러옴",
+      "noFile": "기존 북마크를 추출할 PDF를 선택하세요.",
+      "loadFromPdf": "선택한 PDF에서 불러오기",
+      "importJson": "JSON 가져오기",
+      "importClipboard": "클립보드에서 JSON 붙여넣기",
+      "export": "북마크 내보내기",
+      "exportJson": "JSON 다운로드",
+      "exportClipboard": "클립보드에 JSON 복사",
+      "clipboardUnavailable": "이 브라우저에서는 클립보드 접근을 사용할 수 없습니다."
+    },
+    "info": {
+      "line1": "각 북마크에는 설명 제목과 열 페이지 번호가 필요합니다.",
+      "line2": "하위 북마크를 사용하여 장, 절, 소절의 계층을 만드세요.",
+      "line3": "선택한 PDF 또는 JSON 파일에서 북마크를 가져와 시간을 절약하세요."
+    },
+    "workbench": {
+      "empty": {
+        "title": "도구를 열어 편집 시작",
+        "description": "목차 편집 도구를 선택하여 작업 공간을 불러오세요."
+      },
+      "tabTitle": "개요 작업 공간",
+      "subtitle": "북마크 가져오기, 계층 구성, 좁은 사이드 패널 없이 개요 적용.",
+      "noFile": "선택된 PDF가 없습니다",
+      "fileLabel": "변경 사항은 현재 선택된 PDF에 적용됩니다.",
+      "filePrompt": "라이브러리에서 PDF를 선택하거나 새로 업로드하여 시작하세요.",
+      "changeFile": "PDF 변경",
+      "selectFile": "PDF 선택"
+    },
+    "editor": {
+      "heading": "북마크 편집기",
+      "description": "북마크를 추가, 중첩, 재정렬하여 PDF 개요를 만드세요.",
+      "addTopLevel": "최상위 북마크 추가",
+      "empty": {
+        "title": "아직 북마크가 없습니다",
+        "description": "기존 북마크를 가져오거나 첫 항목을 추가해 시작하세요.",
+        "action": "첫 북마크 추가"
+      },
+      "defaultTitle": "새 북마크",
+      "defaultChildTitle": "하위 북마크",
+      "defaultSiblingTitle": "새 북마크",
+      "untitled": "제목 없는 북마크",
+      "childBadge": "하위",
+      "pagePreview": "페이지 {{page}}",
+      "field": {
+        "title": "북마크 제목",
+        "page": "대상 페이지 번호"
+      },
+      "actions": {
+        "toggle": "하위 토글",
+        "addChild": "하위 북마크 추가",
+        "addSibling": "동일 계층 북마크 추가",
+        "remove": "북마크 제거"
+      },
+      "confirmRemove": "이 북마크와 모든 하위를 제거하시겠습니까?"
+    },
+    "messages": {
+      "loadedTitle": "북마크 추출됨",
+      "loadedBody": "PDF의 기존 북마크를 편집기에 불러왔습니다.",
+      "noBookmarks": "선택한 PDF에서 북마크를 찾지 못했습니다.",
+      "loadFailed": "선택한 PDF에서 북마크를 추출할 수 없습니다.",
+      "imported": "북마크 가져옴",
+      "importedBody": "JSON 개요가 현재 편집기 내용을 대체했습니다.",
+      "importedClipboard": "클립보드 데이터가 현재 북마크 목록을 대체했습니다.",
+      "invalidJson": "잘못된 JSON 구조",
+      "invalidJsonBody": "올바른 북마크 JSON 파일을 제공한 후 다시 시도하세요.",
+      "exported": "JSON 다운로드 준비됨",
+      "copied": "클립보드에 복사됨",
+      "copiedBody": "북마크 JSON을 성공적으로 복사했습니다.",
+      "copyFailed": "복사 실패"
+    },
+    "error": {
+      "failed": "목차 업데이트에 실패했습니다"
+    },
+    "submit": "목차 적용",
+    "results": {
+      "title": "북마크가 포함된 PDF 업데이트됨",
+      "subtitle": "처리된 파일을 다운로드하거나 아래에서 실행 취소하세요."
+    }
+  },
   "removePages": {
     "tags": "페이지 제거,페이지 삭제",
     "title": "제거",
@@ -1405,7 +1604,7 @@
       "placeholder": "예: 1,3,5-8,10",
       "error": "잘못된 페이지 번호 형식입니다. 숫자, 범위(1-5) 또는 수학식(2n+1)을 사용하세요."
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "페이지_제거됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -1601,12 +1800,12 @@
     "tags": "압축,작게,매우 작게"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "제거,삭제,양식,필드,읽기 전용",
     "title": "양식 필드의 읽기 전용 제거",
     "header": "PDF 양식 잠금 해제",
     "submit": "Remove",
     "description": "이 도구는 PDF 양식 필드의 읽기 전용 제한을 제거하여 편집 및 입력 가능하도록 만듭니다.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "잠금해제된_양식",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -1620,7 +1819,7 @@
   "changeMetadata": {
     "header": "메타데이터 변경",
     "submit": "변경",
-    "filenamePrefix": "metadata",
+    "filenamePrefix": "메타데이터",
     "settings": {
       "title": "메타데이터 설정"
     },
@@ -1668,7 +1867,7 @@
     },
     "trapped": {
       "label": "트래핑 상태",
-      "unknown": "Unknown",
+      "unknown": "알 수 없음",
       "true": "True",
       "false": "False"
     },
@@ -1978,13 +2177,54 @@
       "title": "서명을 그리세요",
       "clear": "지우기"
     },
+    "canvas": {
+      "heading": "서명을 그리세요",
+      "clickToOpen": "그리기 캔버스 열기",
+      "modalTitle": "서명을 그리세요",
+      "colorLabel": "색상",
+      "penSizeLabel": "펜 크기",
+      "penSizePlaceholder": "크기",
+      "clear": "캔버스 지우기",
+      "colorPickerTitle": "선 색상 선택"
+    },
     "text": {
       "name": "서명자 이름",
-      "placeholder": "성명을 입력하세요"
+      "placeholder": "성명을 입력하세요",
+      "fontLabel": "글꼴",
+      "fontSizeLabel": "글꼴 크기",
+      "fontSizePlaceholder": "글꼴 크기 입력 또는 선택(8-200)",
+      "colorLabel": "텍스트 색상"
     },
     "clear": "지우기",
     "add": "추가",
-    "saved": "저장된 서명",
+    "saved": {
+      "heading": "저장된 서명",
+      "description": "저장된 서명을 언제든 재사용하세요.",
+      "emptyTitle": "저장된 서명이 없습니다",
+      "emptyDescription": "그리기, 업로드 또는 텍스트로 서명을 만든 뒤, \"라이브러리에 저장\"으로 최대 {{max}}개 즐겨찾기를 보관하세요.",
+      "type": {
+        "canvas": "그리기",
+        "image": "업로드",
+        "text": "텍스트"
+      },
+      "limitTitle": "한도에 도달함",
+      "limitDescription": "새로 추가하려면 저장된 서명을 제거하세요(최대 {{max}}).",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "이전",
+      "next": "다음",
+      "delete": "삭제",
+      "label": "레이블",
+      "defaultLabel": "서명",
+      "defaultCanvasLabel": "그린 서명",
+      "defaultImageLabel": "업로드된 서명",
+      "defaultTextLabel": "입력한 서명",
+      "saveButton": "서명 저장",
+      "saveUnavailable": "먼저 서명을 만든 후 저장하세요.",
+      "noChanges": "현재 서명이 이미 저장되어 있습니다.",
+      "status": {
+        "saved": "저장됨"
+      }
+    },
     "save": "서명 저장",
     "applySignatures": "서명 적용",
     "personalSigs": "개인 서명",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "서명 구성"
     },
+    "step": {
+      "createDesc": "서명을 만드는 방법을 선택하세요",
+      "place": "배치 및 저장",
+      "placeDesc": "PDF에 서명을 배치하세요"
+    },
     "type": {
       "title": "서명 유형",
       "draw": "그리기",
       "canvas": "캔버스",
       "image": "이미지",
-      "text": "텍스트"
+      "text": "텍스트",
+      "saved": "저장됨"
     },
     "image": {
       "label": "서명 이미지 업로드",
@@ -2019,11 +2265,17 @@
       "title": "서명 추가 방법",
       "canvas": "캔버스에서 서명을 그린 후 창을 닫고, PDF의 아무 곳이나 클릭하여 배치하세요.",
       "image": "위에서 서명 이미지를 업로드한 후, PDF의 아무 곳이나 클릭하여 배치하세요.",
-      "text": "위에 이름을 입력한 후, PDF의 아무 곳이나 클릭하여 서명을 배치하세요."
+      "saved": "위에서 저장된 서명을 선택한 뒤, PDF를 클릭하여 배치하세요.",
+      "text": "위에 이름을 입력한 후, PDF의 아무 곳이나 클릭하여 서명을 배치하세요.",
+      "paused": "배치 일시중지",
+      "resumeHint": "배치를 다시 시작하여 클릭 후 서명을 추가하세요.",
+      "noSignature": "위에서 서명을 만들면 배치 도구가 활성화됩니다."
     },
     "mode": {
       "move": "서명 이동",
-      "place": "서명 배치"
+      "place": "서명 배치",
+      "pause": "배치 일시중지",
+      "resume": "배치 재개"
     },
     "updateAndPlace": "업데이트 후 배치",
     "activate": "서명 배치 활성화",
@@ -2040,7 +2292,7 @@
     "header": "PDF 평면화",
     "flattenOnlyForms": "양식만 평면화",
     "submit": "평면화",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "평탄화됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -2090,7 +2342,7 @@
     "header": "PDF 복구",
     "submit": "복구",
     "description": "손상되었거나 오류가 있는 PDF 파일을 복구 시도합니다. 추가 설정은 필요하지 않습니다.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "복구됨",
     "files": {
       "placeholder": "시작하려면 기본 화면에서 PDF 파일을 선택하세요"
     },
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "주석 제거 안내",
       "description": "이 도구는 PDF 문서에서 모든 주석(댓글, 강조 표시, 노트 등)을 제거합니다."
+    },
+    "tooltip": {
+      "header": {
+        "title": "주석 제거 정보"
+      },
+      "description": {
+        "title": "기능"
+      }
     },
     "error": {
       "failed": "PDF에서 주석 제거 중 오류가 발생했습니다."
@@ -2293,7 +2553,7 @@
   "certSign": {
     "tags": "인증,PEM,P12,공식,암호화",
     "title": "인증서 서명",
-    "filenamePrefix": "signed",
+    "filenamePrefix": "서명됨",
     "signMode": {
       "stepTitle": "서명 모드",
       "tooltip": {
@@ -2467,7 +2727,7 @@
     }
   },
   "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "tags": "소책자,쇄배열,인쇄,제본,접지,시그니처",
     "title": "소책자 면배열",
     "header": "소책자 면배열",
     "submit": "소책자 생성",
@@ -2568,7 +2828,7 @@
     "submit": "제출"
   },
   "adjustPageScale": {
-    "tags": "resize,modify,dimension,adapt",
+    "tags": "크기 조정,수정,치수,맞춤",
     "title": "페이지 배율 조정",
     "header": "페이지 배율 조정",
     "scaleFactor": {
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "자동 이름 변경 방식"
       },
+      "description": {
+        "title": "기능"
+      },
       "howItWorks": {
         "title": "스마트 이름 변경",
         "text": "PDF 콘텐츠에서 제목을 자동으로 찾아 파일명으로 사용합니다.",
@@ -2634,6 +2897,9 @@
         "bullet2": "감지된 제목으로 깔끔하고 유효한 파일명을 생성합니다",
         "bullet3": "적합한 제목을 찾지 못하면 원래 이름을 유지합니다"
       }
+    },
+    "settings": {
+      "title": "정보"
     }
   },
   "adjust-contrast": {
@@ -3124,7 +3390,7 @@
     "totalSignatures": "총 서명 수"
   },
   "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side",
+    "tags": "색상 교체,페이지 작업,백엔드,서버 측",
     "labels": {
       "settings": "설정",
       "colourOperation": "색상 작업"
@@ -3227,7 +3493,26 @@
     "unexpectedError": "예기치 않은 오류: {{message}}",
     "accountCreatedSuccess": "계정이 성공적으로 생성되었습니다! 이제 로그인할 수 있습니다.",
     "passwordChangedSuccess": "비밀번호가 성공적으로 변경되었습니다! 새 비밀번호로 로그인하세요.",
-    "credentialsUpdated": "자격 증명이 업데이트되었습니다. 다시 로그인하세요."
+    "credentialsUpdated": "자격 증명이 업데이트되었습니다. 다시 로그인하세요.",
+    "defaultCredentials": "기본 로그인 정보",
+    "changePasswordWarning": "첫 로그인 후 비밀번호를 변경하세요",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF 개요",
+        "title": "모든 PDF 작업을 한곳에서",
+        "subtitle": "개인정보 보호를 최우선으로 하는 PDF 클라우드 제품군으로, 변환, 서명, 가리기, 문서 관리 등 50개 이상의 강력한 도구를 제공합니다."
+      },
+      "edit": {
+        "alt": "PDF 편집",
+        "title": "원하는 정보를 표시/보호하도록 PDF를 편집하세요",
+        "subtitle": "PDF 가리기, 서명, 읽기 및 처리에 도움이 되는 십여 개 이상의 도구로 원하는 기능을 찾을 수 있습니다."
+      },
+      "secure": {
+        "alt": "PDF 보호",
+        "title": "PDF의 민감한 정보를 보호하세요",
+        "subtitle": "비밀번호 추가, 콘텐츠 가리기, 인증서 관리를 손쉽게."
+      }
+    }
   },
   "signup": {
     "title": "계정 만들기",
@@ -3502,7 +3787,7 @@
     "title": "API 문서",
     "header": "API 문서",
     "desc": "Stirling PDF API 엔드포인트를 조회하고 테스트하세요",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,문서,swagger,엔드포인트,개발"
   },
   "cookieBanner": {
     "popUp": {
@@ -3598,7 +3883,9 @@
     "exportAll": "PDF 내보내기",
     "downloadSelected": "선택한 파일 다운로드",
     "downloadAll": "전체 다운로드",
+    "saveAll": "모두 저장",
     "toggleTheme": "테마 전환",
+    "toggleBookmarks": "북마크 표시/숨기기",
     "language": "언어",
     "search": "PDF 검색",
     "panMode": "이동 모드",
@@ -3685,8 +3972,16 @@
       "saved": "설정이 성공적으로 저장되었습니다",
       "saveSuccess": "설정이 성공적으로 저장되었습니다",
       "save": "변경 사항 저장",
+      "discard": "버리기",
       "restartRequired": "재시작 필요",
       "loginRequired": "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다",
+      "unsavedChanges": {
+        "title": "저장되지 않은 변경 사항",
+        "message": "저장되지 않은 변경 사항이 있습니다. 버리시겠습니까?",
+        "cancel": "계속 편집",
+        "discard": "변경 사항 버리기",
+        "hint": "저장되지 않은 변경 사항이 있습니다"
+      },
       "loginDisabled": {
         "title": "로그인 모드 필요",
         "message": "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다. 환경 변수에서 SECURITY_ENABLELOGIN=true 또는 settings.yml에서 security.enableLogin: true 로 설정한 다음 서버를 재시작하세요.",
@@ -3951,11 +4246,11 @@
             "description": "OAuth2 제공자의 발급자 URL"
           },
           "clientId": {
-            "label": "Client ID",
+            "label": "클라이언트 ID",
             "description": "제공자에서 발급받은 OAuth2 Client ID"
           },
           "clientSecret": {
-            "label": "Client Secret",
+            "label": "클라이언트 시크릿",
             "description": "제공자에서 발급받은 OAuth2 Client Secret"
           },
           "useAsUsername": {
@@ -4137,7 +4432,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "앱 설치",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4507,21 @@
         "title": "프리미엄 및 엔터프라이즈",
         "description": "프리미엄 또는 엔터프라이즈 라이선스 키를 구성합니다.",
         "license": "라이선스 구성",
+        "licenseKey": {
+          "toggle": "라이선스 키나 인증서 파일이 있나요?",
+          "info": "직접 구매로 받은 라이선스 키 또는 인증서 파일이 있다면 여기에서 입력해 프리미엄 또는 엔터프라이즈 기능을 활성화하세요."
+        },
         "key": {
           "label": "라이선스 키",
-          "description": "프리미엄 또는 엔터프라이즈 라이선스 키를 입력하세요"
+          "description": "프리미엄 또는 엔터프라이즈 라이선스 키를 입력하세요",
+          "success": "라이선스 키 저장됨",
+          "successMessage": "라이선스 키가 성공적으로 활성화되었습니다. 재시작이 필요 없습니다.",
+          "overwriteWarning": {
+            "title": "⚠️ 경고: 기존 라이선스 감지됨",
+            "line1": "현재 라이선스 키를 덮어쓰면 되돌릴 수 없습니다.",
+            "line2": "다른 곳에 백업하지 않았다면 이전 라이선스는 영구적으로 손실됩니다.",
+            "line3": "중요: 라이선스 키는 개인적으로 안전하게 보관하세요. 공개적으로 공유하지 마세요."
+          }
         },
         "enabled": {
           "label": "프리미엄 기능 활성화",
@@ -4278,12 +4585,17 @@
     "or": "또는",
     "dropFileHere": "여기에 파일을 끌어다 놓거나 클릭하여 업로드",
     "dropFilesHere": "여기에 파일을 끌어다 놓거나 업로드 버튼을 클릭하세요",
+    "dropFilesHereOpen": "파일을 여기로 끌어오거나 열기 버튼을 클릭하세요",
     "pdfFilesOnly": "PDF 파일만",
     "supportedFileTypes": "지원되는 파일 형식",
     "upload": "업로드",
     "uploadFile": "파일 업로드",
     "uploadFiles": "파일 업로드",
+    "open": "열기",
+    "openFile": "파일 열기",
+    "openFiles": "여러 파일 열기",
     "noFilesInStorage": "저장소에 사용 가능한 파일이 없습니다. 먼저 몇 개의 파일을 업로드하세요.",
+    "noFilesInStorageOpen": "저장소에 파일이 없습니다. 먼저 파일을 여세요.",
     "selectFromStorage": "저장소에서 선택",
     "backToTools": "도구로 돌아가기",
     "addFiles": "파일 추가",
@@ -4325,10 +4637,12 @@
     "recent": "최근",
     "localFiles": "로컬 파일",
     "googleDrive": "Google Drive",
-    "googleDriveShort": "Drive",
+    "googleDriveShort": "드라이브",
     "myFiles": "내 파일",
     "noRecentFiles": "최근 파일이 없습니다",
     "googleDriveNotAvailable": "Google Drive 통합을 사용할 수 없습니다",
+    "downloadSelected": "선택 항목 다운로드",
+    "saveSelected": "선택 항목 저장",
     "openFiles": "파일 열기",
     "openFile": "파일 열기",
     "details": "파일 세부정보",
@@ -4341,7 +4655,6 @@
     "selectAll": "모두 선택",
     "deselectAll": "모두 선택 해제",
     "deleteSelected": "선택 항목 삭제",
-    "downloadSelected": "선택 항목 다운로드",
     "selectedCount": "{{count}}개 선택됨",
     "download": "다운로드",
     "delete": "삭제",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "보안 워크플로",
       "secureWorkflowDesc": "JavaScript 및 포함된 파일과 같은 잠재적으로 악성인 콘텐츠를 제거하고, 무단 접근을 방지하기 위해 비밀번호 보호를 추가하여 PDF 문서를 보호합니다. 기본 비밀번호는 'password'로 설정됩니다.",
       "processImages": "이미지 처리",
-      "processImagesDesc": "여러 이미지 파일을 하나의 PDF 문서로 변환한 뒤, OCR 기술을 적용하여 이미지에서 검색 가능한 텍스트를 추출합니다."
+      "processImagesDesc": "여러 이미지 파일을 하나의 PDF 문서로 변환한 뒤, OCR 기술을 적용하여 이미지에서 검색 가능한 텍스트를 추출합니다.",
+      "prePublishSanitization": "게시 전 Sanitization",
+      "prePublishSanitizationDesc": "PDF를 온라인에 게시하기 전에 데이터 유출을 방지하도록 숨겨진 메타데이터, JavaScript, 임베디드 파일, 주석을 모두 제거하고 양식을 평탄화하는 Sanitization 워크플로입니다."
     }
+  },
+  "colorPicker": {
+    "title": "색상 선택"
   },
   "common": {
     "previous": "이전",
@@ -4639,7 +4957,13 @@
     "used": "사용됨",
     "available": "사용 가능",
     "cancel": "취소",
-    "preview": "미리보기"
+    "preview": "미리보기",
+    "close": "닫기",
+    "done": "완료",
+    "loading": "불러오는 중...",
+    "back": "뒤로",
+    "continue": "계속",
+    "error": "오류"
   },
   "config": {
     "overview": {
@@ -4684,7 +5008,7 @@
       "nextReset": "다음 초기화",
       "lastApiUse": "마지막 API 사용",
       "overlayMessage": "크레딧과 사용 가능 크레딧을 보려면 키를 생성하세요",
-      "label": "API Key",
+      "label": "API 키",
       "guestInfo": "게스트 사용자는 API 키를 받을 수 없습니다. 애플리케이션에서 사용할 수 있는 API 키를 받으려면 계정을 생성하세요.",
       "goToAccount": "계정으로 이동",
       "refreshModal": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "파일 더 추가...",
     "selectedFiles": "선택된 파일",
     "submit": "첨부 추가",
+    "tooltip": {
+      "header": {
+        "title": "첨부 파일 추가 정보"
+      },
+      "description": {
+        "title": "기능"
+      }
+    },
     "results": {
       "title": "첨부 결과"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "사용자 지정 위치",
   "details": "세부 정보",
-  "downloadUnavailable": "이 항목은 다운로드할 수 없습니다",
   "invalidUndoData": "실행 취소할 수 없음: 잘못된 작업 데이터",
   "margin": {
     "large": "크게",
@@ -4801,6 +5132,10 @@
       "maybeLater": "나중에",
       "dontShowAgain": "다시 보지 않기"
     },
+    "welcomeSlide": {
+      "title": "Stirling에 오신 것을 환영합니다",
+      "body": "Stirling PDF는 이제 모든 규모의 팀을 지원합니다. 이번 업데이트에는 새로운 레이아웃, 강력한 관리자 기능, 그리고 가장 많은 요청을 받은 기능 - <strong>텍스트 편집</strong>이 포함됩니다."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "도구 사용 방법을 보여주기 위해 <strong>자르기</strong> 도구를 선택해 보겠습니다.",
     "toolInterface": "여기가 <strong>자르기</strong> 도구 인터페이스입니다. 아직 작업할 PDF 파일을 추가하지 않았기 때문에 볼 내용이 많지 않습니다.",
@@ -4823,7 +5158,39 @@
     "next": "다음",
     "finish": "완료",
     "startTour": "투어 시작",
-    "startTourDescription": "Stirling PDF의 주요 기능을 둘러보는 가이드 투어"
+    "startTourDescription": "Stirling PDF의 주요 기능을 둘러보는 가이드 투어",
+    "buttons": {
+      "next": "다음 →",
+      "back": "뒤로",
+      "skipForNow": "나중에 건너뛰기",
+      "download": "다운로드 →",
+      "showMeAround": "둘러보기",
+      "skipTheTour": "투어 건너뛰기"
+    },
+    "serverLicense": {
+      "skip": "나중에 건너뛰기",
+      "seePlans": "요금제 보기 →",
+      "upgrade": "지금 업그레이드 →",
+      "freeTitle": "서버 라이선스",
+      "overLimitTitle": "서버 라이선스 필요",
+      "overLimitBody": "당사의 라이선스는 서버당 무료로 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속 사용하려면 Stirling Server 플랜으로 업그레이드하세요 - <strong>무제한 좌석</strong>, PDF 텍스트 편집, 전체 관리자 제어 제공, $99/서버/월.",
+      "freeBody": "당사의 <strong>Open-Core</strong> 라이선스는 서버당 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 중단 없이 확장하고 새로운 <strong>PDF 텍스트 편집 도구</strong>에 조기 액세스하려면 Stirling Server 플랜을 권장합니다 - 전체 편집과 <strong>무제한 좌석</strong>을 $99/서버/월에 제공합니다."
+    },
+    "desktopInstall": {
+      "title": "다운로드",
+      "titleWithOs": "{{osLabel}}용 다운로드",
+      "body": "Stirling은 데스크톱 앱으로 사용할 때 가장 잘 작동합니다. 오프라인으로 사용하고, 문서를 더 빠르게 열며, 컴퓨터에서 로컬로 편집할 수 있습니다."
+    },
+    "planOverview": {
+      "adminTitle": "관리자 개요",
+      "userTitle": "플랜 개요",
+      "adminBodyLoginEnabled": "관리자로서 사용자 관리, 설정 구성, 서버 상태 모니터링을 할 수 있습니다. 서버의 첫 <strong>{{freeTierLimit}}</strong>명은 무료로 Stirling을 사용할 수 있습니다.",
+      "adminBodyLoginDisabled": "로그인 모드를 활성화하면 사용자 관리, 설정 구성, 서버 상태 모니터링을 할 수 있습니다. 서버의 첫 <strong>{{freeTierLimit}}</strong>명은 무료로 Stirling을 사용할 수 있습니다.",
+      "userBody": "팀원을 초대하고 역할을 지정하며 문서를 하나의 안전한 작업 공간에서 정리하세요. 솔로 사용을 넘어 성장할 준비가 되면 언제든 로그인 모드를 활성화하세요."
+    },
+    "securityCheck": {
+      "message": "애플리케이션에 최근 큰 변경이 있었습니다. 서버 관리자의 확인이 필요할 수 있습니다. 계속하려면 본인의 역할을 확인하세요."
+    }
   },
   "adminOnboarding": {
     "welcome": "<strong>관리자 투어</strong>에 오신 것을 환영합니다! 시스템 관리자를 위한 강력한 엔터프라이즈 기능과 설정을 살펴보겠습니다.",
@@ -4852,7 +5219,10 @@
       "role": "역할",
       "team": "팀",
       "status": "상태",
-      "actions": "작업",
+      "actions": {
+        "label": "작업",
+        "upgrade": "업그레이드"
+      },
       "noMembersFound": "멤버를 찾을 수 없습니다",
       "active": "활성",
       "disabled": "비활성화됨",
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "사용자 슬롯 {{count}}개 사용 가능",
         "noSlotsAvailable": "가용 슬롯 없음",
         "currentUsage": "현재 사용자 라이선스 {{max}}개 중 {{current}}개 사용 중"
-      }
+      },
+      "loginRequired": "먼저 로그인 모드를 활성화하세요"
     },
     "teams": {
       "title": "팀",
@@ -5057,6 +5428,17 @@
     "showComparison": "모든 기능 비교",
     "hideComparison": "기능 비교 숨기기",
     "featureComparison": "기능 비교",
+    "from": "시작가",
+    "perMonth": "/월",
+    "perSeat": "/좌석",
+    "withServer": "+ Server 플랜",
+    "licensedSeats": "라이선스: {{count}} 좌석",
+    "includedInCurrent": "현재 플랜에 포함됨",
+    "selectPlan": "플랜 선택",
+    "manage": "관리",
+    "manageSubscription": {
+      "description": "구독, 결제, 결제 수단을 관리합니다"
+    },
     "activePlan": {
       "title": "활성 요금제",
       "subtitle": "현재 구독 세부 정보"
@@ -5074,13 +5456,16 @@
       "upTo": "최대"
     },
     "period": {
-      "month": "월"
+      "month": "월",
+      "perUserPerMonth": "/사용자/월"
     },
     "free": {
       "name": "무료",
       "highlight1": "주당 제한된 도구 사용량",
       "highlight2": "모든 도구 사용 가능",
-      "highlight3": "커뮤니티 지원"
+      "highlight3": "커뮤니티 지원",
+      "forever": "영구 무료",
+      "included": "포함"
     },
     "pro": {
       "name": "프로",
@@ -5092,7 +5477,9 @@
       "name": "엔터프라이즈",
       "highlight1": "맞춤 가격",
       "highlight2": "전담 지원",
-      "highlight3": "최신 기능"
+      "highlight3": "최신 기능",
+      "requiresServer": "서버 필요",
+      "requiresServerMessage": "Enterprise로 업그레이드하기 전에 먼저 Server 플랜으로 업그레이드하세요."
     },
     "feature": {
       "title": "기능",
@@ -5102,6 +5489,12 @@
       "api": "API 접근",
       "priority": "우선 지원",
       "customPricing": "맞춤 가격"
+    },
+    "licenseWarning": {
+      "title": "무료 자가 호스팅 한도 도달",
+      "body": "사용자가 {{total}}명이며 무료 플랜은 서버당 {{limit}}명만 지원합니다. 원활한 사용을 위해 업그레이드하세요.",
+      "overLimit": "{{limit}} 초과",
+      "cta": "요금제 보기"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "결제 관리",
     "portal": {
       "error": "결제 포털을 열지 못했습니다"
-    }
+    },
+    "updateSeats": "좌석 수 업데이트",
+    "updateEnterpriseSeats": "Enterprise 좌석 수 업데이트",
+    "currentSeats": "현재 좌석 수",
+    "minimumSeats": "최소 좌석 수",
+    "basedOnUsers": "(현재 사용자 수)",
+    "newSeatCount": "새 좌석 수",
+    "newSeatCountDescription": "Enterprise 라이선스의 좌석 수를 선택하세요",
+    "whatHappensNext": "다음 단계",
+    "stripePortalRedirect": "Stripe 결제 포털로 이동하여 좌석 변경을 검토하고 확인합니다. 일할 계산 금액은 자동으로 계산됩니다.",
+    "preparingUpdate": "좌석 업데이트 준비 중...",
+    "seatCountTooLow": "좌석 수는 최소 {{minimum}}(현재 사용자 수) 이상이어야 합니다",
+    "seatCountUnchanged": "다른 좌석 수를 선택하세요",
+    "seatsUpdated": "좌석 수 업데이트됨",
+    "seatsUpdatedMessage": "Enterprise 좌석 수가 {{seats}}로 업데이트되었습니다",
+    "updateProcessing": "업데이트 처리 중",
+    "updateProcessingMessage": "좌석 업데이트가 처리되고 있습니다. 잠시 후 새로고침하세요.",
+    "notEnterprise": "좌석 관리는 Enterprise 라이선스에서만 가능합니다"
+  },
+  "upgradeBanner": {
+    "title": "Server 플랜으로 업그레이드",
+    "message": "무제한 사용자와 고급 기능으로 Stirling PDF를 최대한 활용하세요",
+    "upgradeButton": "지금 업그레이드",
+    "dismiss": "배너 닫기",
+    "attentionTitle": "이 서버에 관리자 확인이 필요합니다",
+    "attentionBody": "자세한 정보를 보려면 관리자가 로그인해야 합니다. 즉시 연락하세요.",
+    "attentionBodyAdmin": "이 서버가 규정을 준수하도록 라이선스 요구 사항을 검토하세요.",
+    "seeInfo": "정보 보기"
   },
   "payment": {
     "preparing": "결제 준비 중...",
@@ -5128,7 +5548,61 @@
     "success": "결제 성공!",
     "successMessage": "구독이 성공적으로 활성화되었습니다. 확인 이메일이 곧 발송됩니다.",
     "autoClose": "이 창은 자동으로 닫힙니다...",
-    "error": "결제 오류"
+    "error": "결제 오류",
+    "upgradeSuccess": "결제가 완료되었습니다! 구독이 업그레이드되었습니다. 라이선스가 서버에 업데이트되었습니다. 곧 확인 이메일이 발송됩니다.",
+    "paymentSuccess": "결제가 완료되었습니다! 라이선스 키를 가져오는 중...",
+    "licenseActivated": "라이선스가 활성화되었습니다! 라이선스 키가 저장되었습니다. 등록된 이메일 주소로 확인 메일을 보냈습니다.",
+    "licenseDelayed": "결제가 완료되었습니다! 라이선스가 생성되고 있습니다. 곧 라이선스 키가 포함된 이메일을 받게 됩니다. 10분 내에 받지 못하면 지원팀에 문의하세요.",
+    "licensePollingError": "결제는 완료되었지만 라이선스 키를 자동으로 가져오지 못했습니다. 이메일을 확인하거나 결제 확인과 함께 지원팀에 문의하세요.",
+    "licenseRetrievalError": "결제는 완료되었지만 라이선스 가져오기에 실패했습니다. 라이선스 키는 이메일로 발송됩니다. 10분 내에 받지 못하면 지원팀에 문의하세요.",
+    "syncError": "결제는 완료되었지만 라이선스 동기화에 실패했습니다. 곧 라이선스가 업데이트됩니다. 문제가 지속되면 지원팀에 문의하세요.",
+    "licenseSaveError": "라이선스 키 저장에 실패했습니다. 활성화를 완료하려면 라이선스 키와 함께 지원팀에 문의하세요.",
+    "paymentCanceled": "결제가 취소되었습니다. 결제는 청구되지 않았습니다.",
+    "syncingLicense": "업그레이드된 라이선스를 동기화하는 중...",
+    "generatingLicense": "라이선스 키를 생성하는 중...",
+    "upgradeComplete": "업그레이드 완료",
+    "upgradeCompleteMessage": "구독이 성공적으로 업그레이드되었습니다. 기존 라이선스 키가 업데이트되었습니다.",
+    "stripeNotConfigured": "Stripe 미구성",
+    "stripeNotConfiguredMessage": "Stripe 결제 연동이 구성되지 않았습니다. 관리자에게 문의하세요.",
+    "monthly": "월간",
+    "yearly": "연간",
+    "billingPeriod": "청구 주기",
+    "enterpriseNote": "좌석 수는 결제 시 조정할 수 있습니다(1-1000).",
+    "installationId": "설치 ID",
+    "licenseKey": "귀하의 라이선스 키",
+    "licenseInstructions": "설치에 추가되었습니다. 이메일로도 사본이 전송됩니다.",
+    "canCloseWindow": "이제 이 창을 닫아도 됩니다.",
+    "licenseKeyProcessing": "라이선스 키 처리 중",
+    "licenseDelayedMessage": "라이선스 키를 생성 중입니다. 곧 이메일을 확인하시거나 지원팀에 문의하세요.",
+    "perYear": "/년",
+    "perMonth": "/월",
+    "emailInvalid": "유효한 이메일 주소를 입력하세요",
+    "emailStage": {
+      "title": "이메일 입력",
+      "description": "라이선스 키와 영수증을 보내드릴 때 사용합니다.",
+      "emailLabel": "이메일 주소",
+      "emailPlaceholder": "your@email.com",
+      "continue": "계속",
+      "modalTitle": "시작하기 - {{planName}}"
+    },
+    "planStage": {
+      "title": "청구 주기 선택",
+      "savingsNote": "연간 결제로 {{percent}}% 절약",
+      "basePrice": "기본 가격",
+      "seatPrice": "좌석당",
+      "totalForSeats": "합계({{count}} 좌석)",
+      "selectMonthly": "월간 선택",
+      "selectYearly": "연간 선택",
+      "savePercent": "{{percent}}% 절약",
+      "savingsAmount": "{{amount}} 절약",
+      "modalTitle": "청구 주기 선택 - {{planName}}",
+      "billedYearly": "연간 {{currency}}{{amount}} 청구"
+    },
+    "paymentStage": {
+      "backToPlan": "플랜 선택으로 돌아가기",
+      "selectedPlan": "선택한 플랜",
+      "modalTitle": "결제 완료 - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "첫 로그인",
@@ -5287,5 +5761,281 @@
     "offline": "백엔드 오프라인",
     "starting": "백엔드 시작 중...",
     "wait": "백엔드가 실행을 마칠 때까지 기다린 후 다시 시도하세요."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "계속하려면 PDF 잠금을 해제하세요",
+    "title": "계속하려면 비밀번호 제거",
+    "description": "이 PDF는 비밀번호로 보호되어 있습니다. 계속 작업하려면 비밀번호를 입력하세요.",
+    "password": {
+      "label": "PDF 비밀번호",
+      "placeholder": "PDF 비밀번호 입력"
+    },
+    "skip": "나중에 건너뛰기",
+    "unlock": "잠금 해제 및 계속",
+    "incorrectPassword": "비밀번호가 올바르지 않습니다",
+    "missingFile": "선택한 파일을 더 이상 사용할 수 없습니다.",
+    "emptyResponse": "비밀번호 제거에서 파일이 생성되지 않았습니다.",
+    "required": "계속하려면 비밀번호를 입력하세요.",
+    "successTitle": "비밀번호 제거됨",
+    "successBodyWithName": "{{fileName}}에서 비밀번호가 제거되었습니다",
+    "successBody": "비밀번호가 성공적으로 제거되었습니다."
+  },
+  "setup": {
+    "welcome": "Stirling PDF에 오신 것을 환영합니다",
+    "description": "Stirling PDF를 사용하는 방식을 선택하여 시작하세요",
+    "step1": {
+      "label": "모드 선택",
+      "description": "오프라인 또는 서버"
+    },
+    "step2": {
+      "label": "서버 선택",
+      "description": "자가 호스팅 서버"
+    },
+    "step3": {
+      "label": "로그인",
+      "description": "자격 증명 입력"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Stirling 계정으로 로그인"
+      },
+      "selfhosted": {
+        "title": "자가 호스팅 서버",
+        "description": "자체 Stirling PDF 서버에 연결"
+      }
+    },
+    "saas": {
+      "title": "Stirling에 로그인",
+      "subtitle": "Stirling 계정으로 로그인"
+    },
+    "selfhosted": {
+      "title": "서버에 로그인",
+      "subtitle": "서버 자격 증명을 입력하세요"
+    },
+    "server": {
+      "title": "서버에 연결",
+      "subtitle": "자가 호스팅 서버 URL을 입력하세요",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "자가 호스팅 서버"
+      },
+      "url": {
+        "label": "서버 URL",
+        "description": "자가 호스팅 Stirling PDF 서버의 전체 URL을 입력하세요"
+      },
+      "error": {
+        "emptyUrl": "서버 URL을 입력하세요",
+        "unreachable": "서버에 연결할 수 없습니다",
+        "testFailed": "연결 테스트에 실패했습니다"
+      },
+      "testing": "연결 테스트 중..."
+    },
+    "login": {
+      "title": "로그인",
+      "subtitle": "계속하려면 자격 증명을 입력하세요",
+      "connectingTo": "연결 대상:",
+      "username": {
+        "label": "사용자 이름",
+        "placeholder": "사용자 이름을 입력하세요"
+      },
+      "email": {
+        "label": "이메일",
+        "placeholder": "이메일을 입력하세요"
+      },
+      "password": {
+        "label": "비밀번호",
+        "placeholder": "비밀번호를 입력하세요"
+      },
+      "error": {
+        "emptyUsername": "사용자 이름을 입력하세요",
+        "emptyEmail": "이메일을 입력하세요",
+        "emptyPassword": "비밀번호를 입력하세요",
+        "oauthFailed": "OAuth 로그인에 실패했습니다. 다시 시도하세요."
+      },
+      "submit": "로그인",
+      "signInWith": "다음으로 로그인",
+      "oauthPending": "인증을 위해 브라우저를 여는 중...",
+      "orContinueWith": "또는 이메일로 계속"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "인증 성공",
+      "message": "이 창을 닫고 Stirling PDF로 돌아가도 됩니다."
+    },
+    "error": {
+      "title": "인증 실패",
+      "message": "인증에 성공하지 못했습니다. 이 창을 닫고 다시 시도하세요."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON 편집기",
+    "viewLabel": "PDF 편집기",
+    "converting": "PDF를 편집 가능한 형식으로 변환하는 중...",
+    "conversionFailed": "PDF 변환에 실패했습니다. 다시 시도하세요.",
+    "currentFile": "현재 파일: {{name}}",
+    "pageSummary": "페이지 {{number}} / {{total}}",
+    "pagePreviewAlt": "페이지 미리보기",
+    "imageLabel": "배치된 이미지",
+    "noTextOnPage": "이 페이지에서 편집 가능한 텍스트를 찾지 못했습니다.",
+    "pageType": {
+      "paragraph": "문단 페이지",
+      "sparse": "성긴 텍스트"
+    },
+    "groupingMode": {
+      "auto": "자동",
+      "paragraph": "문단",
+      "singleLine": "한 줄"
+    },
+    "badges": {
+      "unsaved": "편집됨",
+      "modified": "편집됨",
+      "earlyAccess": "얼리 액세스"
+    },
+    "actions": {
+      "reset": "변경 사항 초기화",
+      "downloadJson": "JSON 다운로드",
+      "generatePdf": "PDF 생성"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "텍스트 자동 크기 조정",
+        "description": "폰트 렌더링이 PDF와 다를 때 원래 경계 상자 안에 맞도록 텍스트를 가로로 자동 조정합니다."
+      },
+      "groupingMode": {
+        "title": "텍스트 그룹화 모드",
+        "autoDescription": "페이지 유형을 자동 감지하여 적절히 텍스트를 그룹화합니다.",
+        "paragraphDescription": "정렬된 라인을 묶어 여러 줄 문단 텍스트 상자로 만듭니다.",
+        "singleLineDescription": "각 PDF 텍스트 라인을 개별 텍스트 상자로 유지합니다."
+      },
+      "manualGrouping": {
+        "descriptionInline": "팁: Ctrl(Cmd) 또는 Shift를 눌러 텍스트 상자를 다중 선택하세요. 선택 위에 떠 있는 도구 모음에서 병합, 그룹 해제, 너비 조정을 할 수 있습니다."
+      },
+      "forceSingleElement": {
+        "title": "편집된 텍스트를 단일 PDF 요소로 고정",
+        "description": "활성화하면 겹치는 글리프나 혼합 폰트를 피하기 위해 편집된 각 텍스트 상자를 하나의 PDF 텍스트 요소로 내보냅니다."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "선택 항목 병합",
+      "merge": "선택 병합",
+      "ungroupTooltip": "문단을 다시 줄로 분할",
+      "ungroup": "선택 항목 그룹 해제",
+      "widthMenu": "너비 옵션",
+      "expandWidth": "페이지 가장자리까지 확장",
+      "resetWidth": "너비 재설정",
+      "resizeHandle": "텍스트 너비 조정"
+    },
+    "disclaimer": {
+      "heading": "미리보기 제한사항",
+      "textFocus": "이 작업 공간은 텍스트 편집과 삽입된 이미지의 재배치에 중점을 둡니다. 복잡한 페이지 아트워크, 폼 위젯, 레이어드 그래픽은 내보낼 때 보존되지만 여기서는 완전히 편집할 수 없습니다.",
+      "previewVariance": "일부 시각 요소(표 테두리, 도형, 주석 표시 등)는 미리보기에서 정확히 표시되지 않을 수 있습니다. 내보낸 PDF는 가능한 한 원본 그리기 명령을 유지합니다.",
+      "alpha": "이 알파 뷰어는 아직 발전 중입니다—일부 글꼴, 색상, 투명 효과, 레이아웃 세부가 약간 달라질 수 있습니다. 공유 전에 생성된 PDF를 다시 확인해 주세요."
+    },
+    "empty": {
+      "title": "로드된 문서 없음",
+      "subtitle": "텍스트 편집을 시작하려면 PDF 또는 JSON 파일을 로드하세요."
+    },
+    "welcomeBanner": {
+      "title": "PDF 텍스트 편집기(얼리 액세스)에 오신 것을 환영합니다",
+      "experimental": "현재 개발 중인 실험적 기능입니다. 사용 중 불안정과 문제가 발생할 수 있습니다.",
+      "howItWorks": "이 도구는 PDF를 편집 가능한 형식으로 변환하여 텍스트를 수정하고 이미지를 재배치할 수 있게 합니다. 변경 내용은 새 PDF로 저장됩니다.",
+      "bestFor": "다음에 가장 적합:",
+      "bestFor1": "주로 텍스트와 이미지로 구성된 단순한 PDF",
+      "bestFor2": "표준 문단 서식을 사용하는 문서",
+      "bestFor3": "편지, 에세이, 보고서 등 기본 문서",
+      "notIdealFor": "다음에는 권장하지 않음:",
+      "notIdealFor1": "글머리표, 표, 다단 레이아웃 등 특수 서식이 있는 PDF",
+      "notIdealFor2": "잡지, 브로셔, 디자인이 많은 문서",
+      "notIdealFor3": "복잡한 레이아웃의 매뉴얼",
+      "limitations": "현재 제한 사항:",
+      "limitation1": "글꼴 렌더링이 원본 PDF와 약간 다를 수 있음",
+      "limitation2": "복잡한 그래픽, 폼 필드, 주석은 보존되지만 편집할 수 없음",
+      "limitation3": "대용량 파일은 변환과 처리에 시간이 걸릴 수 있음",
+      "knownIssues": "알려진 문제(수정 중):",
+      "issue1": "텍스트 색상이 현재 보존되지 않음(곧 추가 예정)",
+      "issue2": "문단 모드는 정렬/간격 문제가 더 많음 - 단일 줄 모드 권장",
+      "issue3": "미리보기 표시가 내보낸 PDF와 다를 수 있음 - 내보낸 PDF가 원본에 더 가까움",
+      "issue4": "회전된 텍스트 정렬은 수동 조정이 필요할 수 있음",
+      "issue5": "투명도 및 레이어 효과가 원본과 다를 수 있음",
+      "feedback": "이 기능은 얼리 액세스입니다. 개선을 위해 문제를 발견하면 알려주세요!",
+      "gotIt": "확인",
+      "dontShowAgain": "다시 보지 않기"
+    },
+    "modeChange": {
+      "title": "모드 변경 확인",
+      "warning": "텍스트 그룹화 모드를 변경하면 저장되지 않은 변경 사항이 모두 초기화됩니다. 계속하시겠습니까?",
+      "cancel": "취소",
+      "confirm": "초기화 후 모드 변경"
+    },
+    "fontAnalysis": {
+      "details": "글꼴 정보",
+      "embedded": "내장",
+      "type": "유형",
+      "webFormat": "웹 형식",
+      "warnings": "경고",
+      "suggestions": "참고",
+      "currentPageFonts": "이 페이지의 글꼴",
+      "allFonts": "모든 글꼴",
+      "fallback": "대체",
+      "missing": "누락",
+      "perfectMessage": "모든 글꼴을 완벽하게 재현할 수 있습니다.",
+      "warningMessage": "일부 글꼴이 올바르게 렌더링되지 않을 수 있습니다.",
+      "infoMessage": "글꼴 재현 정보 제공.",
+      "perfect": "완벽",
+      "subset": "서브셋"
+    },
+    "errors": {
+      "invalidJson": "JSON 파일을 읽을 수 없습니다. PDF to JSON 도구로 생성되었는지 확인하세요.",
+      "pdfConversion": "편집된 JSON을 PDF로 다시 변환할 수 없습니다."
+    }
+  },
+  "auth": {
+    "sessionExpired": "세션이 만료되었습니다",
+    "pleaseLoginAgain": "다시 로그인해 주세요.",
+    "accessDenied": "접근 거부",
+    "insufficientPermissions": "이 작업을 수행할 권한이 없습니다."
+  },
+  "addText": {
+    "title": "텍스트 추가",
+    "header": "PDF에 텍스트 추가",
+    "text": {
+      "name": "텍스트 내용",
+      "placeholder": "추가할 텍스트를 입력하세요",
+      "fontLabel": "글꼴",
+      "fontSizeLabel": "글꼴 크기",
+      "fontSizePlaceholder": "글꼴 크기 입력 또는 선택 (8-200)",
+      "colorLabel": "텍스트 색상"
+    },
+    "steps": {
+      "configure": "텍스트 설정"
+    },
+    "step": {
+      "createDesc": "추가할 텍스트를 입력하세요",
+      "place": "텍스트 배치",
+      "placeDesc": "PDF를 클릭하여 텍스트를 추가하세요"
+    },
+    "instructions": {
+      "title": "텍스트 추가 방법",
+      "text": "위에 텍스트를 입력한 후 PDF의 아무 위치나 클릭해 배치하세요.",
+      "paused": "배치 일시 중지",
+      "resumeHint": "배치를 재개하여 클릭 후 텍스트를 추가하세요.",
+      "noSignature": "배치를 활성화하려면 위에 텍스트를 입력하세요."
+    },
+    "mode": {
+      "move": "텍스트 이동",
+      "place": "텍스트 배치",
+      "pause": "배치 일시 중지",
+      "resume": "배치 재개"
+    },
+    "results": {
+      "title": "텍스트 추가 결과"
+    },
+    "error": {
+      "failed": "PDF에 텍스트를 추가하는 중 오류가 발생했습니다."
+    },
+    "tags": "텍스트,주석,레이블",
+    "applySignatures": "텍스트 적용"
   }
 }
