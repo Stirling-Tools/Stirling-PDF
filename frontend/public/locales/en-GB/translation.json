@@ -3517,6 +3517,8 @@
     "accountCreatedSuccess": "Account created successfully! You can now sign in.",
     "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
     "credentialsUpdated": "Your credentials have been updated. Please sign in again.",
+    "defaultCredentials": "Default Login Credentials",
+    "changePasswordWarning": "Please change your password after logging in for the first time",
     "slides": {
       "overview": {
         "alt": "Stirling PDF overview",
@@ -5567,6 +5569,7 @@
   },
   "payment": {
     "preparing": "Preparing your checkout...",
+    "redirecting": "Redirecting to secure checkout...",
     "upgradeTitle": "Upgrade to {{planName}}",
     "success": "Payment Successful!",
     "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",

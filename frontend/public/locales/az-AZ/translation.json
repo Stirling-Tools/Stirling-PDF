@@ -17,6 +17,8 @@
       "comingSoon": "Tezliklə:",
       "favorite": "Seçilmişlərə əlavə et",
       "favorites": "Seçilmişlər",
+      "unavailable": "Server administratoru tərəfindən deaktiv edilib:",
+      "unavailableDependency": "Mövcud deyil - serverdə tələb olunan alət yoxdur:",
       "heading": "Bütün alətlər (tam ekran görünüşü)",
       "noResults": "Lazımi aləti tapmaq üçün axtarışı tənzimləyin və ya təsvirləri dəyişin.",
       "recommended": "Tövsiyə olunur",
@@ -26,7 +28,10 @@
     "toggle": {
       "fullscreen": "Tam ekran rejiminə keç",
       "sidebar": "Yan panel rejiminə keç"
-    }
+    },
+    "alpha": "Alfa",
+    "premiumFeature": "Premium xüsusiyyət:",
+    "comingSoon": "Tezliklə:"
   },
   "unsavedChanges": "PDF-də saxlanmamış dəyişiklikləriniz var.",
   "areYouSure": "Çıxmaq istədiyinizə əminsiniz?",
@@ -40,6 +45,30 @@
     "message": "Bu ZIP {{count}} fayl ehtiva edir. Yenə də çıxarılsın?",
     "cancel": "Ləğv et",
     "confirm": "Çıxart"
+  },
+  "defaultApp": {
+    "title": "Standart PDF tətbiqi kimi təyin et",
+    "message": "Stirling PDF-i standart PDF redaktorunuz kimi təyin etmək istəyirsiniz?",
+    "description": "Bunu sonra sistem ayarlarında dəyişə bilərsiniz.",
+    "notNow": "İndi yox",
+    "setDefault": "Standart et",
+    "dismiss": "Gözardı et",
+    "prompt": {
+      "title": "Standart PDF redaktoru kimi təyin et",
+      "message": "PDF fayllarını açmaq üçün Stirling PDF-i standart tətbiqiniz edin."
+    },
+    "success": {
+      "title": "Standart tətbiq təyin edildi",
+      "message": "Stirling PDF artıq standart PDF redaktorunuzdur"
+    },
+    "settingsOpened": {
+      "title": "Ayarlar açıldı",
+      "message": "Zəhmət olmasa sistem ayarlarında Stirling PDF-i seçin"
+    },
+    "error": {
+      "title": "Xəta",
+      "message": "Standart PDF işləyicisini təyin etmək alınmadı"
+    }
   },
   "language": {
     "direction": "ltr"
@@ -101,6 +130,8 @@
   "save": "Saxla",
   "saveToBrowser": "Brauzerdə Saxla",
   "download": "Endir",
+  "downloadUnavailable": "Bu element üçün endirmə mövcud deyil",
+  "saveUnavailable": "Bu element üçün saxlama mövcud deyil",
   "pin": "Faylı bərkid (alət icrasından sonra aktiv saxla)",
   "unpin": "Faylın bərkidilməsini ləğv et (alət icrasından sonra əvəzlə)",
   "undoOperationTooltip": "Son əməliyyatı geri qaytarmaq və orijinal faylları bərpa etmək üçün klikləyin",
@@ -168,6 +199,7 @@
   },
   "edit": "Redaktə et",
   "delete": "Sil",
+  "never": "Heç vaxt",
   "username": "İstifadəçi Adı",
   "password": "Şifr",
   "welcome": "Xoş gəldiniz",
@@ -262,7 +294,8 @@
     "learnMore": "Daha ətraflı öyrənin",
     "enable": "Analitikanı aktivləşdir",
     "disable": "Analitikanı deaktivləşdir",
-    "settings": "Analitikanın parametrlərini config/settings.yml faylından dəyişə bilərsiniz."
+    "settings": "Analitikanın parametrlərini config/settings.yml faylından dəyişə bilərsiniz.",
+    "privacyAssurance": "Heç bir şəxsi məlumatınızı və ya fayllarınızın məzmununu izləmirik."
   },
   "navbar": {
     "favorite": "Sevimlilər",
@@ -284,64 +317,64 @@
     }
   },
   "settings": {
-    "title": "Parametrlər",
-    "update": "Yeniləmə mövcuddur",
-    "updateAvailable": "{0} cari quraşdırılmış versiyadır. Yeni ({1}) versiyası mövcuddur.",
-    "appVersion": "Proqram Versiyası:",
-    "downloadOption": {
-      "title": "Yükləmə versiyasını seçin (Tək fayllı zip olmayan yükləmələr üçün):",
-      "1": "Eyni pəncərədə açın",
-      "2": "Yeni pəncərədə açın",
-      "3": "Faylı endirin"
-    },
-    "zipThreshold": "Yüklənmiş faylların sayı artıq olduqda zip faylları",
-    "signOut": "Çıxın",
-    "accountSettings": "Hesab Parametrləri",
-    "bored": {
-      "help": "Easter egg oyununu aktivləşdirir"
-    },
-    "cacheInputs": {
-      "name": "Formada daxil edilən bilgiləri yadda saxlayın",
-      "help": "Gələcək əməliyyatlar üçün əvvəllər istifadə edilmiş daxil edilmiş bilgiləri saxlamağa imkan verin"
+    "connection": {
+      "title": "Bağlantı rejimi",
+      "mode": {
+        "saas": "Stirling Cloud",
+        "selfhosted": "Öz serverində"
+      },
+      "server": "Server",
+      "user": "Daxil olub:",
+      "logout": "Çıxış"
     },
     "general": {
       "title": "Ümumi",
       "description": "Tətbiqin ümumi parametrlərini konfiqurasiya edin.",
-      "account": "Hesab",
-      "accountDescription": "Hesab ayarlarınızı idarə edin",
       "user": "İstifadəçi",
-      "signedInAs": "Daxil olmusunuz:",
       "logout": "Hesabdan çıx",
       "enableFeatures": {
+        "dismiss": "Bağla",
         "title": "Sistem administratorları üçün",
         "intro": "Təşkilatınız üçün istifadəçi identifikasiyası, komanda idarəetməsi və iş sahəsi funksiyalarını aktiv edin.",
         "action": "Konfiqurasiya et",
         "and": "və",
         "benefit": "İstifadəçi rolları, komanda əməkdaşlığı, admin nəzarəti və müəssisə funksiyalarını aktivləşdirir.",
-        "learnMore": "Daha çoxu üçün sənədlərə baxın",
-        "dismiss": "Bağla"
+        "learnMore": "Daha çoxu üçün sənədlərə baxın"
       },
-      "autoUnzip": "API cavablarını avtomatik aç",
-      "autoUnzipDescription": "ZIP cavablarından faylları avtomatik çıxart",
-      "autoUnzipTooltip": "API əməliyyatlarından qaytarılan ZIP fayllarını avtomatik çıxarın. ZIP fayllarını toxunulmaz saxlamaq üçün bunu deaktiv edin. Bu, avtomatlaşdırma iş axınlarına təsir etmir.",
-      "autoUnzipFileLimit": "Avtomatik açma fayl limiti",
-      "autoUnzipFileLimitDescription": "ZIP-dən çıxarılacaq maksimum fayl sayı",
-      "autoUnzipFileLimitTooltip": "Yalnız ZIP bu qədər və ya daha az fayl ehtiva edirsə çıxarın. Daha böyük ZIP-ləri çıxarmaq üçün dəyəri artırın.",
       "defaultToolPickerMode": "Standart alət seçicisi rejimi",
       "defaultToolPickerModeDescription": "Alət seçicisinin ilkin olaraq tam ekranda, yoxsa yan paneldə açılacağını seçin",
       "mode": {
-        "fullscreen": "Tam ekran",
-        "sidebar": "Yan panel"
-      }
+        "sidebar": "Yan panel",
+        "fullscreen": "Tam ekran"
+      },
+      "autoUnzipTooltip": "API əməliyyatlarından qaytarılan ZIP fayllarını avtomatik çıxarın. ZIP fayllarını toxunulmaz saxlamaq üçün bunu deaktiv edin. Bu, avtomatlaşdırma iş axınlarına təsir etmir.",
+      "autoUnzip": "API cavablarını avtomatik aç",
+      "autoUnzipDescription": "ZIP cavablarından faylları avtomatik çıxart",
+      "autoUnzipFileLimitTooltip": "Yalnız ZIP bu qədər və ya daha az fayl ehtiva edirsə çıxarın. Daha böyük ZIP-ləri çıxarmaq üçün dəyəri artırın.",
+      "autoUnzipFileLimit": "Avtomatik açma fayl limiti",
+      "autoUnzipFileLimitDescription": "ZIP-dən çıxarılacaq maksimum fayl sayı",
+      "defaultPdfEditor": "Standart PDF redaktoru",
+      "defaultPdfEditorActive": "Stirling PDF standart PDF redaktorunuzdur",
+      "defaultPdfEditorInactive": "Başqa tətbiq standart kimi təyin edilib",
+      "defaultPdfEditorChecking": "Yoxlanılır...",
+      "defaultPdfEditorSet": "Artıq standartdır",
+      "setAsDefault": "Standart et",
+      "updates": {
+        "title": "Proqram yeniləmələri",
+        "description": "Yeniləmələri yoxlayın və versiya məlumatlarını görün",
+        "currentVersion": "Cari versiya",
+        "latestVersion": "Ən son versiya",
+        "checkForUpdates": "Yeniləmələri yoxla",
+        "viewDetails": "Ətraflı bax"
+      },
+      "hideUnavailableTools": "Mövcud olmayan alətləri gizlət",
+      "hideUnavailableToolsDescription": "Serveriniz tərəfindən deaktiv edilən alətləri boz göstərmək əvəzinə siyahıdan çıxarın.",
+      "hideUnavailableConversions": "Mövcud olmayan çevirmələri gizlət",
+      "hideUnavailableConversionsDescription": "Convert alətində deaktiv edilmiş çevirmə seçimlərini boz göstərmək əvəzinə siyahıdan çıxarın."
     },
     "hotkeys": {
-      "title": "Klaviatura qısayolları",
-      "description": "Qısayolu görmək üçün alətin üzərinə gəlin və ya aşağıda fərdiləşdirin. \"Qısayolu dəyişdir\" düyməsini klikləyin və yeni kombinasiyanı basın. Ləğv üçün Esc.",
-      "errorModifier": {
-        "mac": "Qısayolunuza ⌘ (Command), ⌥ (Option) və ya başqa bir modifikator daxil edin.",
-        "windows": "Qısayolunuza Ctrl, Alt və ya başqa bir modifikator daxil edin."
-      },
       "errorConflict": "Qısayol artıq {{tool}} tərəfindən istifadə olunur.",
+      "searchPlaceholder": "Alətlərdə axtarın...",
       "none": "Təyin edilməyib",
       "customBadge": "Fərdi",
       "defaultLabel": "Standart: {{shortcut}}",
@@ -349,9 +382,39 @@
       "change": "Qısayolu dəyişdir",
       "reset": "Sıfırla",
       "shortcut": "Qısayol",
-      "noShortcut": "Qısayol təyin edilməyib",
-      "searchPlaceholder": "Alətlərdə axtarın..."
+      "noShortcut": "Qısayol təyin edilməyib"
     }
+  },
+  "update": {
+    "modalTitle": "Yeniləmə mövcuddur",
+    "current": "Cari versiya",
+    "latest": "Ən son versiya",
+    "latestStable": "Ən son sabit",
+    "priorityLabel": "Prioritet",
+    "recommendedAction": "Tövsiyə olunan əməl",
+    "breakingChangesDetected": "Uyğunluğu pozan dəyişikliklər aşkarlandı",
+    "breakingChangesMessage": "Bəzi versiyalar uyğunluğu pozan dəyişikliklər ehtiva edir. Yeniləməzdən əvvəl aşağıdakı miqrasiya bələdçilərini nəzərdən keçirin.",
+    "migrationGuides": "Miqrasiya bələdçiləri",
+    "viewGuide": "Bələdçiyə bax",
+    "loadingDetailedInfo": "Ətraflı məlumat yüklənir...",
+    "close": "Bağla",
+    "viewAllReleases": "Bütün buraxılışlara bax",
+    "downloadLatest": "Ən sonunu yüklə",
+    "availableUpdates": "Mövcud yeniləmələr",
+    "unableToLoadDetails": "Ətraflı məlumatı yükləmək mümkün olmadı.",
+    "version": "Versiya",
+    "urgentUpdateAvailable": "Təcili yeniləmə",
+    "updateAvailable": "Yeniləmə mövcuddur",
+    "releaseNotes": "Buraxılış qeydləri",
+    "priority": {
+      "urgent": "Təcili",
+      "normal": "Normal",
+      "minor": "Kiçik",
+      "low": "Aşağı"
+    },
+    "breakingChanges": "Uyğunluğu pozan dəyişikliklər",
+    "breakingChangesDefault": "Bu versiya uyğunluğu pozan dəyişikliklər ehtiva edir.",
+    "migrationGuide": "Miqrasiya bələdçisi"
   },
   "changeCreds": {
     "title": "Məlumatları dəyişdirin",
@@ -784,11 +847,21 @@
     "overlay-pdfs": {
       "desc": "Bir PDF-i digərinin üstünə qoyur",
       "title": "Üst-Üstə Qoy"
+    },
+    "pdfTextEditor": {
+      "title": "PDF Mətn Redaktoru",
+      "desc": "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
+    },
+    "addText": {
+      "tags": "mətn,şərh,etiket",
+      "title": "Mətn əlavə et",
+      "desc": "PDF faylınıza istənilən yerə mətn əlavə edin"
     }
   },
   "landing": {
     "addFiles": "Fayllar əlavə et",
-    "uploadFromComputer": "Kompüterdən yüklə"
+    "uploadFromComputer": "Kompüterdən yüklə",
+    "openFromComputer": "Komputerdən aç"
   },
   "viewPdf": {
     "tags": "bax,oxu,sitat götür,mətn,şəkil",
@@ -849,6 +922,11 @@
     },
     "error": {
       "failed": "PDF-ləri birləşdirərkən xəta baş verdi."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Birləşdirmə ayarlarına ümumi baxış"
+      }
     }
   },
   "split": {
@@ -1047,7 +1125,7 @@
     "settings": "Parametrlər",
     "conversionCompleted": "Çevirma tamamlandı",
     "results": "Nəticələr",
-    "defaultFilename": "converted_file",
+    "defaultFilename": "çevrilmiş_fayl",
     "conversionResults": "Konvertasiya nəticələri",
     "convertFrom": "Bundan çevir",
     "convertTo": "Buna çevir",
@@ -1182,9 +1260,43 @@
     "tags": "şəkil,jpg,fotoşəkil,foto",
     "title": "Şəkli Əlavə Et",
     "header": "Şəkli PDF-ə Əlavə Et",
-    "everyPage": "Bütün Səhifələr?",
-    "upload": "Şəkli Əlavə Et",
-    "submit": "Şəkli Əlavə Et"
+    "image": {
+      "name": "Şəkil",
+      "placeholder": "Şəkil yükləyin",
+      "label": "Şəkil faylı"
+    },
+    "steps": {
+      "configure": "Şəkili tənzimlə"
+    },
+    "step": {
+      "createDesc": "Əlavə etmək istədiyiniz şəkli yükləyin",
+      "place": "Şəkli yerləşdirin",
+      "placeDesc": "Şəkli əlavə etmək üçün PDF üzərinə klikləyin"
+    },
+    "instructions": {
+      "title": "Şəkilləri necə əlavə etməli",
+      "text": "Şəkli yüklədikdən sonra onu yerləşdirmək üçün PDF-in istənilən yerinə klikləyin.",
+      "paused": "Yerləşdirmə dayandırılıb",
+      "resumeHint": "Şəkli əlavə etmək üçün yerləşdirməni davam etdirin.",
+      "noSignature": "Yerləşdirməni aktivləşdirmək üçün yuxarıda şəkil yükləyin."
+    },
+    "mode": {
+      "move": "Şəkli hərəkət etdir",
+      "place": "Şəkli yerləşdir",
+      "pause": "Yerləşdirməni dayandır",
+      "resume": "Yerləşdirməni davam etdir"
+    },
+    "results": {
+      "title": "Şəkil əlavə etmə nəticələri"
+    },
+    "error": {
+      "failed": "Şəkli PDF-ə əlavə edərkən xəta baş verdi."
+    },
+    "saved": {
+      "defaultLabel": "Şəkil",
+      "defaultImageLabel": "Yüklənmiş şəkil"
+    },
+    "applySignatures": "Şəkilləri tətbiq et"
   },
   "attachments": {
     "tags": "embed,attach,file,attachment,attachments",
@@ -1200,7 +1312,7 @@
     "desc": "PDF fayllarına mətn və ya şəkil su nişanları əlavə edin",
     "completed": "Su nişanı əlavə olundu",
     "submit": "Watermark Əlavə Et",
-    "filenamePrefix": "watermarked",
+    "filenamePrefix": "filigranlı",
     "error": {
       "failed": "PDF-ə su nişanı əlavə edərkən xəta baş verdi."
     },
@@ -1397,6 +1509,93 @@
     },
     "submit": "Dəyiş"
   },
+  "editTableOfContents": {
+    "settings": {
+      "title": "Əlfəcinlər və mündəricat",
+      "replaceExisting": "Mövcud əlfəcinləri əvəz et (əlavə etmək üçün işarəni silin)",
+      "replaceExistingHint": "Söndürüləndə yeni mündəricat mövcud əlfəcinlərin ardınca əlavə olunur."
+    },
+    "actions": {
+      "source": "Əlfəcinləri yüklə",
+      "selectedFile": "{{file}} faylından yükləndi",
+      "noFile": "Mövcud əlfəcinləri çıxarmaq üçün PDF seçin.",
+      "loadFromPdf": "Seçilmiş PDF-dən yüklə",
+      "importJson": "JSON idxal et",
+      "importClipboard": "JSON-u mübadilə buferindən yapışdır",
+      "export": "Əlfəcinləri ixrac et",
+      "exportJson": "JSON yüklə",
+      "exportClipboard": "JSON-u mübadilə buferinə kopyala",
+      "clipboardUnavailable": "Bu brauzerdə mübadilə buferinə çıxış mövcud deyil."
+    },
+    "info": {
+      "line1": "Hər əlfəcin üçün təsviri başlıq və açılmalı olduğu səhifə lazımdır.",
+      "line2": "Fəsillər və bölmələr üçün iyerarxiya qurmaq məqsədilə alt əlfəcinlərdən istifadə edin.",
+      "line3": "Vaxt qazanmaq üçün əlfəcinləri seçilmiş PDF-dən və ya JSON faylından idxal edin."
+    },
+    "workbench": {
+      "empty": {
+        "title": "Redaktəyə başlamaq üçün aləti açın",
+        "description": "İş sahəsini yükləmək üçün Mündəricatı Redaktə et alətini seçin."
+      },
+      "tabTitle": "Mündəricat iş sahəsi",
+      "subtitle": "Əlfəcinləri idxal edin, iyerarxiya qurun və dar yan panellər olmadan mündəricatı tətbiq edin.",
+      "noFile": "PDF seçilməyib",
+      "fileLabel": "Dəyişikliklər hazırda seçilmiş PDF-ə tətbiq olunacaq.",
+      "filePrompt": "Başlamaq üçün kitabxanadan PDF seçin və ya yenisini yükləyin.",
+      "changeFile": "PDF-i dəyiş",
+      "selectFile": "PDF seç"
+    },
+    "editor": {
+      "heading": "Əlfəcin redaktoru",
+      "description": "PDF mündəricatınız üçün əlfəcinləri əlavə edin, iç-içə düzün və yenidən sıralayın.",
+      "addTopLevel": "Yüksək səviyyəli əlfəcin əlavə et",
+      "empty": {
+        "title": "Hələ əlfəcin yoxdur",
+        "description": "Mövcud əlfəcinləri idxal edin və ya ilkini əlavə etməklə başlayın.",
+        "action": "İlk əlfəcini əlavə et"
+      },
+      "defaultTitle": "Yeni əlfəcin",
+      "defaultChildTitle": "Alt əlfəcin",
+      "defaultSiblingTitle": "Yeni əlfəcin",
+      "untitled": "Adsız əlfəcin",
+      "childBadge": "Alt",
+      "pagePreview": "Səhifə {{page}}",
+      "field": {
+        "title": "Əlfəcin başlığı",
+        "page": "Hədəf səhifə nömrəsi"
+      },
+      "actions": {
+        "toggle": "Altları aç/bağla",
+        "addChild": "Alt əlfəcin əlavə et",
+        "addSibling": "Eyni səviyyəli əlfəcin əlavə et",
+        "remove": "Əlfəcini sil"
+      },
+      "confirmRemove": "Bu əlfəcini və bütün altlarını silək?"
+    },
+    "messages": {
+      "loadedTitle": "Əlfəcinlər çıxarıldı",
+      "loadedBody": "PDF-dəki mövcud əlfəcinlər redaktora yükləndi.",
+      "noBookmarks": "Seçilmiş PDF-də əlfəcin tapılmadı.",
+      "loadFailed": "Seçilmiş PDF-dən əlfəcinləri çıxarmaq mümkün olmadı.",
+      "imported": "Əlfəcinlər idxal edildi",
+      "importedBody": "JSON mündəricatınız cari redaktor məzmununu əvəz etdi.",
+      "importedClipboard": "Mübadilə buferi məlumatı cari əlfəcin siyahısını əvəz etdi.",
+      "invalidJson": "Yanlış JSON strukturu",
+      "invalidJsonBody": "Zəhmət olmasa, düzgün əlfəcin JSON faylı təqdim edin və yenidən cəhd edin.",
+      "exported": "JSON yükləməsi hazırdır",
+      "copied": "Mübadilə buferinə kopyalandı",
+      "copiedBody": "Əlfəcin JSON-u uğurla kopyalandı.",
+      "copyFailed": "Kopyalama uğursuz oldu"
+    },
+    "error": {
+      "failed": "Mündəricatı yeniləmək alınmadı"
+    },
+    "submit": "Mündəricatı tətbiq et",
+    "results": {
+      "title": "Əlfəcinlərlə yenilənmiş PDF",
+      "subtitle": "Emal olunmuş faylı yükləyin və ya aşağıdan əməliyyatı geri alın."
+    }
+  },
   "removePages": {
     "tags": "Səhifələri təmizlə,səhifələri sil",
     "title": "Sil",
@@ -1405,7 +1604,7 @@
       "placeholder": "məs., 1,3,5-8,10",
       "error": "Yanlış səhifə nömrəsi formatı. Sayılar, aralıqlar (1-5) və ya riyazi ifadələr (2n+1) istifadə edin"
     },
-    "filenamePrefix": "pages_removed",
+    "filenamePrefix": "səhifələr_silinib",
     "files": {
       "placeholder": "Başlamaq üçün əsas görünüşdə bir PDF faylı seçin"
     },
@@ -1601,12 +1800,12 @@
     "tags": "sıx,balaca,kiçik"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
+    "tags": "sil,poz,forma,sahə,yalnızoxu",
     "title": "Form sahələrindən \"yalnız oxu\" rejimini silin",
     "header": "PDF formalarını kiliddən çıxarın",
     "submit": "Remove",
     "description": "Bu alət PDF forma sahələrindəki yalnız-oxu məhdudiyyətlərini siləcək, beləliklə onlar redaktə və doldurula bilən olacaq.",
-    "filenamePrefix": "unlocked_forms",
+    "filenamePrefix": "kilidi_açılmış_formalar",
     "files": {
       "placeholder": "Başlamaq üçün əsas görünüşdə bir PDF faylı seçin"
     },
@@ -1620,7 +1819,7 @@
   "changeMetadata": {
     "header": "Metadata-nı Dəyiş",
     "submit": "Dəyiş",
-    "filenamePrefix": "metadata",
+    "filenamePrefix": "metaməlumat",
     "settings": {
       "title": "Metadata ayarları"
     },
@@ -1978,13 +2177,54 @@
       "title": "İmzanızı çəkin",
       "clear": "Təmizlə"
     },
+    "canvas": {
+      "heading": "İmzanızı çəkin",
+      "clickToOpen": "Rəsm kətanını açmaq üçün klikləyin",
+      "modalTitle": "İmzanızı çəkin",
+      "colorLabel": "Rəng",
+      "penSizeLabel": "Qələm ölçüsü",
+      "penSizePlaceholder": "Ölçü",
+      "clear": "Kətanı təmizlə",
+      "colorPickerTitle": "Xətt rəngini seçin"
+    },
     "text": {
       "name": "İmzalayanın adı",
-      "placeholder": "Tam adınızı daxil edin"
+      "placeholder": "Tam adınızı daxil edin",
+      "fontLabel": "Şrift",
+      "fontSizeLabel": "Şrift ölçüsü",
+      "fontSizePlaceholder": "Şrift ölçüsünü yazın və ya seçin (8-200)",
+      "colorLabel": "Mətn rəngi"
     },
     "clear": "Təmizləmək",
     "add": "Əlavə et",
-    "saved": "Saxlanan İmzalar",
+    "saved": {
+      "heading": "Saxlanmış imzalar",
+      "description": "Saxlanmış imzalardan istənilən vaxt istifadə edin.",
+      "emptyTitle": "Hələ saxlanmış imza yoxdur",
+      "emptyDescription": "Yuxarıda imza çəkin, yükləyin və ya yazın, sonra \"Kitabxanaya saxla\" ilə {{max}}-ə qədər sevimlini hazır saxlayın.",
+      "type": {
+        "canvas": "Rəsm",
+        "image": "Yükləmə",
+        "text": "Mətn"
+      },
+      "limitTitle": "Limitə çatıldı",
+      "limitDescription": "Yenisini əlavə etməzdən əvvəl saxlanmış imzalardan birini silin (maks. {{max}}).",
+      "carouselPosition": "{{current}} / {{total}}",
+      "prev": "Əvvəlki",
+      "next": "Növbəti",
+      "delete": "Sil",
+      "label": "Etiket",
+      "defaultLabel": "İmza",
+      "defaultCanvasLabel": "Çəkilmiş imza",
+      "defaultImageLabel": "Yüklənmiş imza",
+      "defaultTextLabel": "Yazılmış imza",
+      "saveButton": "İmzanı saxla",
+      "saveUnavailable": "Saxlamaq üçün əvvəlcə imza yaradın.",
+      "noChanges": "Cari imza artıq saxlanıb.",
+      "status": {
+        "saved": "Saxlanıldı"
+      }
+    },
     "save": "İmzanı yadda Saxla",
     "applySignatures": "İmzaları tətbiq et",
     "personalSigs": "Şəxsi İmzalar",
@@ -2003,12 +2243,18 @@
     "steps": {
       "configure": "İmzanı konfiqurasiya et"
     },
+    "step": {
+      "createDesc": "İmzanı necə yaratmaq istədiyinizi seçin",
+      "place": "Yerləşdir və saxla",
+      "placeDesc": "İmzanı PDF üzərində yerləşdirin"
+    },
     "type": {
       "title": "İmza növü",
       "draw": "Çək",
       "canvas": "Kətan",
       "image": "Şəkil",
-      "text": "Mətn"
+      "text": "Mətn",
+      "saved": "Saxlanmış"
     },
     "image": {
       "label": "İmza şəklini yüklə",
@@ -2019,11 +2265,17 @@
       "title": "İmza necə əlavə olunur",
       "canvas": "İmzanızı kətanda çəkdikdən sonra pəncərəni bağlayın, sonra PDF üzərində istənilən yerə klikləyərək yerləşdirin.",
       "image": "Yuxarıda imza şəklinizi yüklədikdən sonra, PDF üzərində istənilən yerə klikləyərək yerləşdirin.",
-      "text": "Yuxarıda adınızı daxil etdikdən sonra, imzanızı yerləşdirmək üçün PDF üzərində istənilən yerə klikləyin."
+      "saved": "Yuxarıdan saxlanmış imza seçin, sonra yerləşdirmək üçün PDF-in istənilən yerinə klikləyin.",
+      "text": "Yuxarıda adınızı daxil etdikdən sonra, imzanızı yerləşdirmək üçün PDF üzərində istənilən yerə klikləyin.",
+      "paused": "Yerləşdirmə dayandırılıb",
+      "resumeHint": "İmzanı əlavə etmək üçün yerləşdirməni davam etdirin.",
+      "noSignature": "Yerləşdirmə alətlərini aktivləşdirmək üçün yuxarıda imza yaradın."
     },
     "mode": {
       "move": "İmzanı hərəkət etdir",
-      "place": "İmzanı yerləşdir"
+      "place": "İmzanı yerləşdir",
+      "pause": "Yerləşdirməni dayandır",
+      "resume": "Yerləşdirməni davam etdir"
     },
     "updateAndPlace": "Yenilə və yerləşdir",
     "activate": "İmza yerləşdirməni aktiv et",
@@ -2040,7 +2292,7 @@
     "header": "PDF-i düzləşdirin",
     "flattenOnlyForms": "Yalnız formaları düzəldin",
     "submit": "Düzləşdirin",
-    "filenamePrefix": "flattened",
+    "filenamePrefix": "yastılanmış",
     "files": {
       "placeholder": "Başlamaq üçün əsas görünüşdə bir PDF faylı seçin"
     },
@@ -2090,7 +2342,7 @@
     "header": "PDFləri Bərpa Et",
     "submit": "Bərpa Et",
     "description": "Bu alət zədələnmiş və ya korlanmış PDF fayllarını bərpa etməyə cəhd edəcək. Əlavə ayarlar tələb olunmur.",
-    "filenamePrefix": "repaired",
+    "filenamePrefix": "bərpa_edilmiş",
     "files": {
       "placeholder": "Başlamaq üçün əsas görünüşdə bir PDF faylı seçin"
     },
@@ -2162,6 +2414,14 @@
     "info": {
       "title": "Annotasiyaların silinməsi haqqında",
       "description": "Bu alət PDF sənədlərinizdən bütün annotasiyaları (şərhlər, vurğular, qeydlər və s.) siləcək."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Annotasiyaların silinməsi haqqında"
+      },
+      "description": {
+        "title": "Nə edir"
+      }
     },
     "error": {
       "failed": "PDF-dən annotasiyalar silinərkən xəta baş verdi."
@@ -2265,7 +2525,7 @@
       "body": "Bu müqayisə adətənkindən daha uzun çəkir. Davam etməsinə icazə verə və ya ləğv edə bilərsiniz.",
       "cancel": "Müqayisəni ləğv et"
     },
-    "newLine": "new-line",
+    "newLine": "yeni-sətir",
     "complex": {
       "message": "Fayllardan biri və ya ikisi də böyük fayldır. Müqayisə effektivliyi azala bilər."
     },
@@ -2293,7 +2553,7 @@
   "certSign": {
     "tags": "Doğrula,PEM,P12,rəsmi,şifrlə",
     "title": "Sertifikatla İmzala",
-    "filenamePrefix": "signed",
+    "filenamePrefix": "imzalanmış",
     "signMode": {
       "stepTitle": "İmzalama rejimi",
       "tooltip": {
@@ -2627,6 +2887,9 @@
       "header": {
         "title": "Avto-adlandırma necə işləyir"
       },
+      "description": {
+        "title": "Nə edir"
+      },
       "howItWorks": {
         "title": "Ağıllı adlandırma",
         "text": "PDF məzmunundan başlığı avtomatik tapır və onu fayl adı kimi istifadə edir.",
@@ -2634,6 +2897,9 @@
         "bullet2": "Aşkarlanmış başlıqdan təmiz və düzgün fayl adı yaradır",
         "bullet3": "Uyğun başlıq tapılmazsa orijinal adı saxlayır"
       }
+    },
+    "settings": {
+      "title": "Haqqında"
     }
   },
   "adjust-contrast": {
@@ -3023,7 +3289,7 @@
     "tags": "böl,fəsillər,əlfəcinlər,nizamla"
   },
   "validateSignature": {
-    "tags": "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate",
+    "tags": "imza,yoxla,doğrula,pdf,sertifikat,rəqəmsal imza,İmzanı Doğrula,Sertifikatı Doğrula",
     "title": "PDF imzalarını doğrula",
     "header": "Rəqəmsal imzaları doğrula",
     "selectPDF": "İmzalanmış PDF faylı seçin",
@@ -3106,7 +3372,7 @@
         "signatureDate": "İmza tarixi"
       },
       "filesEvaluated": "{{count}} fayl qiymətləndirildi",
-      "footer": "Validated via Stirling PDF",
+      "footer": "Stirling PDF vasitəsilə təsdiqlənib",
       "generatedAt": "Yaradılma vaxtı",
       "noPdf": "PDF hesabatı uğurlu doğrulamadan sonra əlçatan olacaq.",
       "page": "Səhifə",
@@ -3227,7 +3493,26 @@
     "unexpectedError": "Gözlənilməz xəta: {{message}}",
     "accountCreatedSuccess": "Hesab uğurla yaradıldı! İndi daxil ola bilərsiniz.",
     "passwordChangedSuccess": "Parol uğurla dəyişdirildi! Zəhmət olmasa yeni parolunuzla daxil olun.",
-    "credentialsUpdated": "Giriş məlumatlarınız yeniləndi. Zəhmət olmasa yenidən daxil olun."
+    "credentialsUpdated": "Giriş məlumatlarınız yeniləndi. Zəhmət olmasa yenidən daxil olun.",
+    "defaultCredentials": "Standart giriş məlumatları",
+    "changePasswordWarning": "İlk dəfə daxil olduqdan sonra şifrənizi dəyişin",
+    "slides": {
+      "overview": {
+        "alt": "Stirling PDF icmalı",
+        "title": "PDF ehtiyaclarınız üçün tək ünvan.",
+        "subtitle": "PDF-lər üçün məxfilik-öncəli bulud paketi: sənədləri çevirməyə, imzalamağa, məzmunu məxfiləşdirməyə və idarə etməyə, üstəlik 50+ güclü alət."
+      },
+      "edit": {
+        "alt": "PDF-ləri redaktə et",
+        "title": "İstədiyiniz məlumatı göstərmək/qorumaq üçün PDF-ləri redaktə edin",
+        "subtitle": "PDF-ləri məxfiləşdirmək, imzalamaq, oxumaq və onlarla işləmək üçün onlarla alətlə axtardığınızı tapacaqsınız."
+      },
+      "secure": {
+        "alt": "PDF-ləri qoruyun",
+        "title": "PDF-lərinizdə həssas məlumatları qoruyun",
+        "subtitle": "Şifrələr əlavə edin, məzmunu məxfiləşdirin və sertifikatları asanlıqla idarə edin."
+      }
+    }
   },
   "signup": {
     "title": "Hesab yaradın",
@@ -3262,7 +3547,7 @@
     "header": "PDF-dən Tək Səhifəyə",
     "submit": "Tək Səhifəyə Çevir",
     "description": "Bu alət PDF-inizin bütün səhifələrini bir böyük tək səhifədə birləşdirəcək. En orijinal səhifələrlə eyni qalacaq, lakin hündürlük bütün səhifə hündürlüklərinin cəmi olacaq.",
-    "filenamePrefix": "single_page",
+    "filenamePrefix": "tək_səhifə",
     "files": {
       "placeholder": "Başlamaq üçün əsas görünüşdə bir PDF faylı seçin"
     },
@@ -3502,7 +3787,7 @@
     "title": "API sənədləşməsi",
     "header": "API sənədləşməsi",
     "desc": "Stirling PDF API endpoint-lərini görüntüləyin və test edin",
-    "tags": "api,documentation,swagger,endpoints,development"
+    "tags": "api,sənədləşmə,swagger,endpointlər,inkişaf"
   },
   "cookieBanner": {
     "popUp": {
@@ -3598,7 +3883,9 @@
     "exportAll": "PDF-i ixrac et",
     "downloadSelected": "Seçilmiş faylları yüklə",
     "downloadAll": "Hamısını yüklə",
+    "saveAll": "Hamısını saxla",
     "toggleTheme": "Mövzunu dəyiş",
+    "toggleBookmarks": "Əlfəcinləri aç/bağla",
     "language": "Dil",
     "search": "PDF-də axtar",
     "panMode": "Sürüşdürmə rejimi",
@@ -3685,8 +3972,16 @@
       "saved": "Ayarlar uğurla yadda saxlanıldı",
       "saveSuccess": "Ayarlar uğurla yadda saxlanıldı",
       "save": "Dəyişiklikləri yadda saxla",
+      "discard": "Ləğv et",
       "restartRequired": "Yenidən başlatmaq tələb olunur",
       "loginRequired": "Admin ayarlarını dəyişmək üçün giriş rejimi aktiv olmalıdır",
+      "unsavedChanges": {
+        "title": "Yadda saxlanmamış dəyişikliklər",
+        "message": "Yadda saxlanmamış dəyişiklikləriniz var. Ləğv etmək istəyirsiniz?",
+        "cancel": "Redaktəyə davam et",
+        "discard": "Dəyişiklikləri ləğv et",
+        "hint": "Yadda saxlanmamış dəyişiklikləriniz var"
+      },
       "loginDisabled": {
         "title": "Giriş rejimi tələb olunur",
         "message": "Admin ayarlarını dəyişmək üçün giriş rejimi aktiv olmalıdır. Zəhmət olmasa mühitinizdə SECURITY_ENABLELOGIN=true və ya settings.yml faylında security.enableLogin: true olaraq təyin edin, sonra serveri yenidən başladın.",
@@ -4137,7 +4432,7 @@
           "tesseract": "Tesseract OCR",
           "pythonOpenCv": "Python OpenCV",
           "weasyPrint": "WeasyPrint",
-          "installApp": "Install App",
+          "installApp": "Tətbiqi quraşdır",
           "calibre": "Calibre",
           "ghostscript": "Ghostscript",
           "ocrMyPdf": "OCRmyPDF"
@@ -4212,9 +4507,21 @@
         "title": "Premium və Enterprise",
         "description": "Premium və ya enterprise lisenziya açarınızı konfiqurasiya edin.",
         "license": "Lisenziya Konfiqurasiyası",
+        "licenseKey": {
+          "toggle": "Lisenziya açarınız və ya sertifikat faylınız var?",
+          "info": "Birbaşa satınalmadan lisenziya açarı və ya sertifikat faylınız varsa, premium və ya enterprise xüsusiyyətləri aktivləşdirmək üçün onu burada daxil edə bilərsiniz."
+        },
         "key": {
           "label": "Lisenziya Açarı",
-          "description": "Premium və ya enterprise lisenziya açarınızı daxil edin"
+          "description": "Premium və ya enterprise lisenziya açarınızı daxil edin",
+          "success": "Lisenziya açarı saxlanıldı",
+          "successMessage": "Lisenziya açarınız uğurla aktivləşdirildi. Yenidən başlatmaq tələb olunmur.",
+          "overwriteWarning": {
+            "title": "⚠️ Xəbərdarlıq: Mövcud lisenziya aşkarlandı",
+            "line1": "Cari lisenziya açarının üzərinə yazmaq geri alına bilməz.",
+            "line2": "Ehtiyat nüsxəsi yoxdursa, əvvəlki lisenziyanız birdəfəlik itəcək.",
+            "line3": "Vacibdir: Lisenziya açarlarını məxfi və təhlükəsiz saxlayın. Heç vaxt onları ictimai paylaşmayın."
+          }
         },
         "enabled": {
           "label": "Premium Xüsusiyyətlərini aktiv et",
@@ -4278,12 +4585,17 @@
     "or": "və ya",
     "dropFileHere": "Faylı bura atın və ya yükləmək üçün klikləyin",
     "dropFilesHere": "Faylları bura atın və ya yükləmə düyməsinə klikləyin",
+    "dropFilesHereOpen": "Faylları bura atın və ya aç düyməsini klikləyin",
     "pdfFilesOnly": "Yalnız PDF faylları",
     "supportedFileTypes": "Dəstəklənən fayl növləri",
     "upload": "Yüklə",
     "uploadFile": "Fayl yüklə",
     "uploadFiles": "Faylları yüklə",
+    "open": "Aç",
+    "openFile": "Faylı aç",
+    "openFiles": "Faylları aç",
     "noFilesInStorage": "Saxlamada mövcud fayl yoxdur. Öncə bəzi fayllar yükləyin.",
+    "noFilesInStorageOpen": "Yaddaşda fayl yoxdur. Əvvəlcə bəzi faylları açın.",
     "selectFromStorage": "Saxlamadan seç",
     "backToTools": "Alətlərə qayıt",
     "addFiles": "Fayllar əlavə et",
@@ -4329,6 +4641,8 @@
     "myFiles": "Fayllarım",
     "noRecentFiles": "Son fayl tapılmadı",
     "googleDriveNotAvailable": "Google Drive inteqrasiyası mövcud deyil",
+    "downloadSelected": "Seçilmişləri yüklə",
+    "saveSelected": "Seçilənləri saxla",
     "openFiles": "Faylları aç",
     "openFile": "Faylı aç",
     "details": "Fayl təfərrüatları",
@@ -4341,7 +4655,6 @@
     "selectAll": "Hamısını Seç",
     "deselectAll": "Hamısını Seçməni Ləğv Et",
     "deleteSelected": "Seçilmişi Sil",
-    "downloadSelected": "Seçilmişləri yüklə",
     "selectedCount": "{{count}} seçildi",
     "download": "Endir",
     "delete": "Sil",
@@ -4621,8 +4934,13 @@
       "secureWorkflow": "Təhlükəsizlik İş Axını",
       "secureWorkflowDesc": "PDF sənədlərini JavaScript və daxil edilmiş fayllar kimi potensial zərərli məzmunu silməklə təhlükəsizləşdirir, sonra icazəsiz girişin qarşısını almaq üçün parol mühafizəsi əlavə edir. Parol standart olaraq 'password' olaraq təyin edilir.",
       "processImages": "Şəkilləri Emal Et",
-      "processImagesDesc": "Bir neçə şəkil faylını tək PDF sənədinə çevirir, sonra şəkillərdən axtarıla bilən mətn çıxarmaq üçün OCR tətbiq edir."
+      "processImagesDesc": "Bir neçə şəkil faylını tək PDF sənədinə çevirir, sonra şəkillərdən axtarıla bilən mətn çıxarmaq üçün OCR tətbiq edir.",
+      "prePublishSanitization": "Yayınlamadan əvvəl təmizləmə",
+      "prePublishSanitizationDesc": "PDF-ləri onlayn dərc etməzdən əvvəl məlumat sızmasının qarşısını almaq üçün bütün gizli metadata, JavaScript, quraşdırılmış faylları, annotasiyaları silən və formaları düzləşdirən təmizləmə axını."
     }
+  },
+  "colorPicker": {
+    "title": "Rəng seçin"
   },
   "common": {
     "previous": "Əvvəlki",
@@ -4639,7 +4957,13 @@
     "used": "istifadə edilib",
     "available": "mövcuddur",
     "cancel": "Ləğv et",
-    "preview": "Önizləmə"
+    "preview": "Önizləmə",
+    "close": "Bağla",
+    "done": "Bitdi",
+    "loading": "Yüklənir...",
+    "back": "Geri",
+    "continue": "Davam et",
+    "error": "Xəta"
   },
   "config": {
     "overview": {
@@ -4705,6 +5029,14 @@
     "addMoreFiles": "Daha çox fayl əlavə edin...",
     "selectedFiles": "Seçilmiş Fayllar",
     "submit": "Qoşmaları əlavə et",
+    "tooltip": {
+      "header": {
+        "title": "Qoşmaların əlavə edilməsi haqqında"
+      },
+      "description": {
+        "title": "Nə edir"
+      }
+    },
     "results": {
       "title": "Qoşma Nəticələri"
     },
@@ -4724,7 +5056,6 @@
   },
   "customPosition": "Xüsusi mövqe",
   "details": "Təfərrüatlar",
-  "downloadUnavailable": "Bu element üçün endirmə mövcud deyil",
   "invalidUndoData": "Geri alma mümkün deyil: etibarsız əməliyyat məlumatı",
   "margin": {
     "large": "Böyük",
@@ -4801,6 +5132,10 @@
       "maybeLater": "Bəlkə sonra",
       "dontShowAgain": "Bir də göstərmə"
     },
+    "welcomeSlide": {
+      "title": "Stirling-ə xoş gəlmisiniz",
+      "body": "Stirling PDF artıq hər ölçüdə komanda üçün hazırdır. Bu yeniləmə yeni düzən, güclü admin imkanları və ən çox tələb olunan xüsusiyyətimizi ehtiva edir - <strong>Mətni redaktə et</strong>."
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Gəlin, <strong>Kəsmə</strong> alətini seçərək alətlərdən birinin istifadəsini nümayiş etdirək.",
     "toolInterface": "Bu, <strong>Kəsmə</strong> alətinin interfeysidir. Gördüyünüz kimi, hələ işləmək üçün PDF faylı əlavə etmədiyimiz üçün burada çox şey yoxdur.",
@@ -4823,7 +5158,39 @@
     "next": "Növbəti",
     "finish": "Bitir",
     "startTour": "Tura başla",
-    "startTourDescription": "Stirling PDF-in əsas xüsusiyyətləri üzrə bələdçili tura başlayın"
+    "startTourDescription": "Stirling PDF-in əsas xüsusiyyətləri üzrə bələdçili tura başlayın",
+    "buttons": {
+      "next": "Növbəti →",
+      "back": "Geri",
+      "skipForNow": "Hələlik ötür",
+      "download": "Yüklə →",
+      "showMeAround": "Turu göstər",
+      "skipTheTour": "Turu keç"
+    },
+    "serverLicense": {
+      "skip": "Hələlik ötür",
+      "seePlans": "Planlara baxın →",
+      "upgrade": "İndi yüksəlt →",
+      "freeTitle": "Server lisenziyası",
+      "overLimitTitle": "Server lisenziyası tələb olunur",
+      "overLimitBody": "Lisenziyalaşmamız hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Sizdə <strong>{{overLimitUserCopy}}</strong> Stirling istifadəçisi var. Fasiləsiz davam etmək üçün Stirling Server planına yüksəldin - <strong>limitsiz yerlər</strong>, PDF mətn redaktəsi və tam admin nəzarəti cəmi $99/server/ay.",
+      "freeBody": "Bizim <strong>Open-Core</strong> lisenziyası hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslanmaq və yeni <strong>PDF mətn redaktəsi alətimizə</strong> erkən çıxış əldə etmək üçün Stirling Server planını tövsiyə edirik — tam redaktə və <strong>limitsiz yerlər</strong> $99/server/ay."
+    },
+    "desktopInstall": {
+      "title": "Yüklə",
+      "titleWithOs": "{{osLabel}} üçün yüklə",
+      "body": "Stirling masaüstü tətbiq kimi ən yaxşı işləyir. Onu oflayn istifadə edə, sənədlərə daha sürətli baxa və düzəlişləri yerli olaraq kompüterinizdə edə bilərsiniz."
+    },
+    "planOverview": {
+      "adminTitle": "Admin icmalı",
+      "userTitle": "Plan icmalı",
+      "adminBodyLoginEnabled": "Admin kimi istifadəçiləri idarə edə, ayarları konfiqurasiya edə və serverin vəziyyətini izləyə bilərsiniz. Serverinizdə ilk <strong>{{freeTierLimit}}</strong> nəfər Stirling-dən pulsuz istifadə edir.",
+      "adminBodyLoginDisabled": "Giriş rejimini aktivləşdirdikdən sonra istifadəçiləri idarə edə, ayarları konfiqurasiya edə və serverin vəziyyətini izləyə bilərsiniz. Serverinizdə ilk <strong>{{freeTierLimit}}</strong> nəfər Stirling-dən pulsuz istifadə edir.",
+      "userBody": "Komanda yoldaşlarını dəvət edin, rollar təyin edin və sənədlərinizi bir təhlükəsiz iş mühitində səliqəli saxlayın. Tək istifadədən böyüməyə hazır olduqda giriş rejimini aktivləşdirin."
+    },
+    "securityCheck": {
+      "message": "Tətbiq son vaxtlar əhəmiyyətli dəyişikliklərdən keçib. Server administratorunun müdaxiləsi tələb oluna bilər. Davam etmək üçün rolunuzu təsdiqləyin."
+    }
   },
   "adminOnboarding": {
     "welcome": "<strong>Admin Turuna</strong> xoş gəlmisiniz! Gəlin, sistem administratorları üçün əlçatan güclü müəssisə xüsusiyyətləri və ayarları araşdıraq.",
@@ -4852,7 +5219,10 @@
       "role": "Rol",
       "team": "Komanda",
       "status": "Status",
-      "actions": "Hərəkətlər",
+      "actions": {
+        "label": "Əməliyyatlar",
+        "upgrade": "Yüksəlt"
+      },
       "noMembersFound": "Üzv tapılmadı",
       "active": "Aktiv",
       "disabled": "Deaktiv",
@@ -4952,7 +5322,7 @@
       "inviteMode": {
         "username": "İstifadəçi adı",
         "email": "E-poçt",
-        "link": "Link",
+        "link": "Keçid",
         "emailDisabled": "E-poçt dəvətləri üçün ayarlarda SMTP konfiqurasiyası və mail.enableInvites=true tələb olunur"
       },
       "license": {
@@ -4964,7 +5334,8 @@
         "slotsAvailable": "{{count}} istifadəçi yeri mövcuddur",
         "noSlotsAvailable": "Mövcud yer yoxdur",
         "currentUsage": "Hazırda {{max}} istifadəçi lisenziyasından {{current}} istifadə olunur"
-      }
+      },
+      "loginRequired": "Əvvəlcə giriş rejimini aktivləşdirin"
     },
     "teams": {
       "title": "Komandalar",
@@ -5057,6 +5428,17 @@
     "showComparison": "Bütün xüsusiyyətləri müqayisə et",
     "hideComparison": "Xüsusiyyət müqayisəsini gizlət",
     "featureComparison": "Xüsusiyyət Müqayisəsi",
+    "from": "Başlayır",
+    "perMonth": "/ay",
+    "perSeat": "/yer",
+    "withServer": "+ Server Planı",
+    "licensedSeats": "Lisenziyalı: {{count}} yer",
+    "includedInCurrent": "Cari planınıza daxildir",
+    "selectPlan": "Plan seç",
+    "manage": "İdarə et",
+    "manageSubscription": {
+      "description": "Abunəliyi, ödənişləri və ödəmə üsullarını idarə edin"
+    },
     "activePlan": {
       "title": "Aktiv Plan",
       "subtitle": "Cari abunəlik detalları"
@@ -5074,13 +5456,16 @@
       "upTo": "Maksimum"
     },
     "period": {
-      "month": "ay"
+      "month": "ay",
+      "perUserPerMonth": "/istifadəçi/ay"
     },
     "free": {
       "name": "Pulsuz",
       "highlight1": "Həftəlik məhdud alət istifadəsi",
       "highlight2": "Bütün alətlərə çıxış",
-      "highlight3": "İcma dəstəyi"
+      "highlight3": "İcma dəstəyi",
+      "forever": "Həmişə pulsuz",
+      "included": "Daxildir"
     },
     "pro": {
       "name": "Pro",
@@ -5092,7 +5477,9 @@
       "name": "Enterprise",
       "highlight1": "Fərdi qiymətləndirmə",
       "highlight2": "Həsr olunmuş dəstək",
-      "highlight3": "Ən son xüsusiyyətlər"
+      "highlight3": "Ən son xüsusiyyətlər",
+      "requiresServer": "Server tələb edir",
+      "requiresServerMessage": "Enterprise-a yüksəltmədən əvvəl əvvəlcə Server planına keçin."
     },
     "feature": {
       "title": "Xüsusiyyət",
@@ -5102,6 +5489,12 @@
       "api": "API Girişi",
       "priority": "Prioritet Dəstək",
       "customPricing": "Fərdi Qiymətləndirmə"
+    },
+    "licenseWarning": {
+      "title": "Pulsuz self-hosted limiti çatıb",
+      "body": "Sizdə {{total}} istifadəçi var, lakin pulsuz səviyyə hər server üçün yalnız {{limit}}-ni dəstəkləyir. Stirling PDF-in fasiləsiz işləməsi üçün yüksəldin.",
+      "overLimit": "{{limit}}-dən çox",
+      "cta": "Planlara bax"
     }
   },
   "subscription": {
@@ -5120,7 +5513,34 @@
     "manageBilling": "Ödənişləri idarə et",
     "portal": {
       "error": "Ödəniş portalını açmaq alınmadı"
-    }
+    },
+    "updateSeats": "Yerləri yenilə",
+    "updateEnterpriseSeats": "Enterprise yerlərini yenilə",
+    "currentSeats": "Cari yerlər",
+    "minimumSeats": "Minimum yerlər",
+    "basedOnUsers": "(cari istifadəçilər)",
+    "newSeatCount": "Yeni yer sayı",
+    "newSeatCountDescription": "Enterprise lisenziyası üçün yerlərin sayını seçin",
+    "whatHappensNext": "Sonra nə olacaq?",
+    "stripePortalRedirect": "Yerlərin dəyişməsini yoxlamaq və təsdiqləmək üçün Stripe ödəniş portalına yönləndiriləcəksiniz. Nisbətli məbləğ avtomatik hesablanacaq.",
+    "preparingUpdate": "Yer yeniləməsi hazırlanır...",
+    "seatCountTooLow": "Yer sayı ən azı {{minimum}} olmalıdır (cari istifadəçi sayı)",
+    "seatCountUnchanged": "Zəhmət olmasa, başqa yer sayı seçin",
+    "seatsUpdated": "Yerlər yeniləndi",
+    "seatsUpdatedMessage": "Enterprise yerləriniz {{seats}} olaraq yeniləndi",
+    "updateProcessing": "Yeniləmə işlənir",
+    "updateProcessingMessage": "Yer yeniləməniz işlənir. Bir neçə dəqiqəyə yeniləyin.",
+    "notEnterprise": "Yer idarəsi yalnız Enterprise lisenziyaları üçün mövcuddur"
+  },
+  "upgradeBanner": {
+    "title": "Server planına yüksəldin",
+    "message": "Limitsiz istifadəçi və qabaqcıl xüsusiyyətlərlə Stirling PDF-dən maksimum yararlanın",
+    "upgradeButton": "İndi yüksəlt",
+    "dismiss": "Baneri gizlət",
+    "attentionTitle": "Bu server admin diqqəti tələb edir",
+    "attentionBody": "Daha çox məlumat üçün admin daxil olmalıdır. Zəhmət olmasa, dərhal əlaqə saxlayın.",
+    "attentionBodyAdmin": "Bu serverin uyğunluğunu qorumaq üçün lisenziya tələblərini nəzərdən keçirin.",
+    "seeInfo": "Məlumata bax"
   },
   "payment": {
     "preparing": "Ödənişiniz hazırlanır...",
@@ -5128,7 +5548,61 @@
     "success": "Ödəniş uğurludur!",
     "successMessage": "Abunəliyiniz uğurla aktivləşdirildi. Tezliklə təsdiq e-poçtu alacaqsınız.",
     "autoClose": "Bu pəncərə avtomatik bağlanacaq...",
-    "error": "Ödəniş xətası"
+    "error": "Ödəniş xətası",
+    "upgradeSuccess": "Ödəniş uğurludur! Abunəliyiniz yüksəldildi. Lisenziya serverinizdə yeniləndi. Tezliklə təsdiq e-poçtu alacaqsınız.",
+    "paymentSuccess": "Ödəniş uğurludur! Lisenziya açarınız alınır...",
+    "licenseActivated": "Lisenziya aktivləşdirildi! Lisenziya açarınız saxlanıldı. Qeydiyyat e-poçt ünvanınıza təsdiq göndərildi.",
+    "licenseDelayed": "Ödəniş uğurludur! Lisenziyanız yaradılır. Tezliklə lisenziya açarınızla e-poçt alacaqsınız. 10 dəqiqə ərzində gəlməzsə, dəstək ilə əlaqə saxlayın.",
+    "licensePollingError": "Ödəniş uğurludur, lakin lisenziya açarınızı avtomatik ala bilmədik. Zəhmət olmasa e-poçtunuzu yoxlayın və ya ödəniş təsdiqi ilə dəstək ilə əlaqə saxlayın.",
+    "licenseRetrievalError": "Ödəniş uğurludur, lakin lisenziyanın alınması uğursuz oldu. Lisenziya açarınız e-poçtla göndəriləcək. 10 dəqiqə ərzində gəlməzsə, dəstək ilə əlaqə saxlayın.",
+    "syncError": "Ödəniş uğurludur, lakin lisenziyanın sinxronizasiyası uğursuz oldu. Lisenziyanız tezliklə yenilənəcək. Problem davam edərsə, dəstəyə müraciət edin.",
+    "licenseSaveError": "Lisenziya açarını saxlamaq alınmadı. Aktivləşdirməni tamamlamaq üçün lisenziya açarınızla dəstəyə müraciət edin.",
+    "paymentCanceled": "Ödəniş ləğv edildi. Heç bir ödəniş tutulmadı.",
+    "syncingLicense": "Yüksəldilmiş lisenziyanız sinxronlaşdırılır...",
+    "generatingLicense": "Lisenziya açarınız yaradılır...",
+    "upgradeComplete": "Yeniləmə tamamlandı",
+    "upgradeCompleteMessage": "Abunəliyiniz uğurla yüksəldildi. Mövcud lisenziya açarınız yeniləndi.",
+    "stripeNotConfigured": "Stripe konfiqurasiya olunmayıb",
+    "stripeNotConfiguredMessage": "Stripe ödəniş inteqrasiyası konfiqurasiya olunmayıb. Zəhmət olmasa administratorla əlaqə saxlayın.",
+    "monthly": "Aylıq",
+    "yearly": "İllik",
+    "billingPeriod": "Ödəniş dövrü",
+    "enterpriseNote": "Yerləri checkout zamanı tənzimləyə bilərsiniz (1-1000).",
+    "installationId": "Quraşdırma ID-si",
+    "licenseKey": "Lisenziya açarınız",
+    "licenseInstructions": "Bu, quraşdırmanıza əlavə edildi. Bir nüsxə e-poçtunuza da göndəriləcək.",
+    "canCloseWindow": "Bu pəncərəni indi bağlaya bilərsiniz.",
+    "licenseKeyProcessing": "Lisenziya açarı işlənir",
+    "licenseDelayedMessage": "Lisenziya açarınız yaradılır. Tezliklə e-poçtunuzu yoxlayın və ya dəstəyə müraciət edin.",
+    "perYear": "/il",
+    "perMonth": "/ay",
+    "emailInvalid": "Zəhmət olmasa düzgün e-poçt ünvanı daxil edin",
+    "emailStage": {
+      "title": "E-poçtunuzu daxil edin",
+      "description": "Lisenziya açarınızı və qəbzləri göndərmək üçün bunu istifadə edəcəyik.",
+      "emailLabel": "E-poçt ünvanı",
+      "emailPlaceholder": "your@email.com",
+      "continue": "Davam et",
+      "modalTitle": "Başlayaq - {{planName}}"
+    },
+    "planStage": {
+      "title": "Ödəniş dövrünü seçin",
+      "savingsNote": "İllik ödənişlə {{percent}}% qənaət edin",
+      "basePrice": "Baza qiymət",
+      "seatPrice": "Hər yer üçün",
+      "totalForSeats": "Cəmi ({{count}} yer)",
+      "selectMonthly": "Aylığı seç",
+      "selectYearly": "İlliyi seç",
+      "savePercent": "{{percent}}% qənaət edin",
+      "savingsAmount": "{{amount}} qənaət edirsiniz",
+      "modalTitle": "Ödəniş dövrünü seçin - {{planName}}",
+      "billedYearly": "İllik olaraq {{currency}}{{amount}} hesablanır"
+    },
+    "paymentStage": {
+      "backToPlan": "Plan seçiminə qayıt",
+      "selectedPlan": "Seçilmiş plan",
+      "modalTitle": "Ödənişi tamamlayın - {{planName}}"
+    }
   },
   "firstLogin": {
     "title": "İlk dəfə giriş",
@@ -5287,5 +5761,281 @@
     "offline": "Backend oflayndır",
     "starting": "Backend işə düşür...",
     "wait": "Zəhmət olmasa backend-in işə düşməsini gözləyin və yenidən cəhd edin."
+  },
+  "encryptedPdfUnlock": {
+    "unlockPrompt": "Davam etmək üçün PDF-i açın",
+    "title": "Davam etmək üçün şifrəni silin",
+    "description": "Bu PDF parol ilə qorunur. Onunla işləməyə davam etmək üçün parolu daxil edin.",
+    "password": {
+      "label": "PDF parolu",
+      "placeholder": "PDF parolunu daxil edin"
+    },
+    "skip": "Hələlik ötür",
+    "unlock": "Kilidi aç və davam et",
+    "incorrectPassword": "Yanlış parol",
+    "missingFile": "Seçilmiş fayl artıq mövcud deyil.",
+    "emptyResponse": "Parolun silinməsi fayl yaratmadı.",
+    "required": "Davam etmək üçün parolu daxil edin.",
+    "successTitle": "Parol silindi",
+    "successBodyWithName": "Parol {{fileName}} faylından silindi",
+    "successBody": "Parol uğurla silindi."
+  },
+  "setup": {
+    "welcome": "Stirling PDF-ə xoş gəlmisiniz",
+    "description": "Stirling PDF-dən necə istifadə edəcəyinizi seçərək başlayın",
+    "step1": {
+      "label": "Rejimi seçin",
+      "description": "Oflayn və ya Server"
+    },
+    "step2": {
+      "label": "Server seçin",
+      "description": "Öz serveriniz"
+    },
+    "step3": {
+      "label": "Giriş",
+      "description": "Məlumatları daxil edin"
+    },
+    "mode": {
+      "saas": {
+        "title": "Stirling Cloud",
+        "description": "Stirling hesabınızla daxil olun"
+      },
+      "selfhosted": {
+        "title": "Öz serveriniz",
+        "description": "Öz Stirling PDF serverinizə qoşulun"
+      }
+    },
+    "saas": {
+      "title": "Stirling-ə daxil olun",
+      "subtitle": "Stirling hesabınızla daxil olun"
+    },
+    "selfhosted": {
+      "title": "Serverə daxil olun",
+      "subtitle": "Server məlumatlarınızı daxil edin"
+    },
+    "server": {
+      "title": "Serverə qoşulun",
+      "subtitle": "Öz serverinizin URL ünvanını daxil edin",
+      "type": {
+        "saas": "Stirling PDF SaaS",
+        "selfhosted": "Öz serveriniz"
+      },
+      "url": {
+        "label": "Server URL",
+        "description": "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
+      },
+      "error": {
+        "emptyUrl": "Zəhmət olmasa server URL-i daxil edin",
+        "unreachable": "Serverə qoşulmaq mümkün olmadı",
+        "testFailed": "Bağlantı testi uğursuz oldu"
+      },
+      "testing": "Bağlantı yoxlanılır..."
+    },
+    "login": {
+      "title": "Daxil ol",
+      "subtitle": "Davam etmək üçün məlumatlarınızı daxil edin",
+      "connectingTo": "Qoşulur:",
+      "username": {
+        "label": "İstifadəçi adı",
+        "placeholder": "İstifadəçi adınızı daxil edin"
+      },
+      "email": {
+        "label": "E-poçt",
+        "placeholder": "E-poçtunuzu daxil edin"
+      },
+      "password": {
+        "label": "Parol",
+        "placeholder": "Parolunuzu daxil edin"
+      },
+      "error": {
+        "emptyUsername": "Zəhmət olmasa istifadəçi adınızı daxil edin",
+        "emptyEmail": "Zəhmət olmasa e-poçtunuzu daxil edin",
+        "emptyPassword": "Zəhmət olmasa parolunuzu daxil edin",
+        "oauthFailed": "OAuth girişi uğursuz oldu. Yenidən cəhd edin."
+      },
+      "submit": "Daxil ol",
+      "signInWith": "Bununla daxil ol",
+      "oauthPending": "Təsdiqləmə üçün brauzer açılır...",
+      "orContinueWith": "Və ya e-poçt ilə davam edin"
+    }
+  },
+  "oauth": {
+    "success": {
+      "title": "Təsdiqləmə uğurlu oldu",
+      "message": "Bu pəncərəni bağlayıb Stirling PDF-ə qayıda bilərsiniz."
+    },
+    "error": {
+      "title": "Təsdiqləmə uğursuz oldu",
+      "message": "Təsdiqləmə uğurlu olmadı. Bu pəncərəni bağlayıb yenidən cəhd edə bilərsiniz."
+    }
+  },
+  "pdfTextEditor": {
+    "title": "PDF JSON Redaktoru",
+    "viewLabel": "PDF redaktoru",
+    "converting": "PDF redaktə edilə bilən formata çevrilir...",
+    "conversionFailed": "PDF-i çevirmək alınmadı. Yenidən cəhd edin.",
+    "currentFile": "Cari fayl: {{name}}",
+    "pageSummary": "Səhifə {{number}}/{{total}}",
+    "pagePreviewAlt": "Səhifə önbaxışı",
+    "imageLabel": "Yerləşdirilmiş şəkil",
+    "noTextOnPage": "Bu səhifədə redaktə oluna bilən mətn aşkar edilmədi.",
+    "pageType": {
+      "paragraph": "Paraqraf səhifəsi",
+      "sparse": "Seyrək mətn"
+    },
+    "groupingMode": {
+      "auto": "Avto",
+      "paragraph": "Paraqraf",
+      "singleLine": "Tək sətir"
+    },
+    "badges": {
+      "unsaved": "Redaktə edilib",
+      "modified": "Redaktə edilib",
+      "earlyAccess": "Erkən Giriş"
+    },
+    "actions": {
+      "reset": "Dəyişiklikləri sıfırla",
+      "downloadJson": "JSON-u endir",
+      "generatePdf": "PDF yarat"
+    },
+    "options": {
+      "autoScaleText": {
+        "title": "Mətni avtomatik miqyasla",
+        "description": "Şrift göstərilişi PDF-dən fərqləndikdə, mətni orijinal sərhəd qutusuna üfüqi sığdırmaq üçün avtomatik miqyaslayır."
+      },
+      "groupingMode": {
+        "title": "Mətn qruplaşdırma rejimi",
+        "autoDescription": "Səhifə növünü avtomatik aşkar edir və mətni uyğun qruplaşdırır.",
+        "paragraphDescription": "Düzülmüş sətirləri çoxsətirli abzas mətn qutularına qruplaşdırır.",
+        "singleLineDescription": "Hər PDF mətn sətrini ayrı mətn qutusu kimi saxlayır."
+      },
+      "manualGrouping": {
+        "descriptionInline": "Məsləhət: Mətn qutularını çoxseçim üçün Ctrl (Cmd) və ya Shift basılı saxlayın. Seçimin üstündə üzən alət paneli görünəcək ki, birləşdirə, qruplaşdırmanı ləğv edə və ya enləri tənzimləyə biləsiniz."
+      },
+      "forceSingleElement": {
+        "title": "Redaktə olunmuş mətni tək PDF elementinə kilidlə",
+        "description": "Aktiv olduqda, redaktor hər redaktə edilmiş mətn qutusunu üst-üstə düşən qliflərdən və ya qarışıq şriftlərdən qaçmaq üçün bir PDF mətn elementi kimi ixrac edir."
+      }
+    },
+    "manual": {
+      "mergeTooltip": "Seçilmiş qutuları birləşdir",
+      "merge": "Seçimi birləşdir",
+      "ungroupTooltip": "Abzası yenidən sətirlərə böl",
+      "ungroup": "Seçimi qruplaşdırmadan çıxar",
+      "widthMenu": "En seçimləri",
+      "expandWidth": "Səhifə kənarınadək genişləndir",
+      "resetWidth": "Eni sıfırla",
+      "resizeHandle": "Mətnin enini tənzimlə"
+    },
+    "disclaimer": {
+      "heading": "Önizləmə məhdudiyyətləri",
+      "textFocus": "Bu iş sahəsi mətnin redaktəsinə və yerləşdirilmiş şəkillərin yerinin dəyişdirilməsinə fokuslanır. Mürəkkəb səhifə qrafikası, forma vidcetləri və qatlı qrafika ixrac üçün saxlanılır, lakin burada tam redaktə olunmur.",
+      "previewVariance": "Bəzi vizuallar (məsələn, cədvəl çərçivələri, fiqurlar və ya annotasiya görünüşləri) önizləmədə tam dəqiq göstərilməyə bilər. İxrac olunan PDF mümkün olduqda orijinal çəkmə əmrlərini saxlayır.",
+      "alpha": "Bu alfa görüntüləyici hələ inkişaf edir—bəzi şriftlər, rənglər, şəffaflıq effektləri və yerləşim detalları cüzi dəyişə bilər. Paylaşmadan əvvəl yaradılan PDF-i bir daha yoxlayın."
+    },
+    "empty": {
+      "title": "Sənəd yüklənməyib",
+      "subtitle": "Mətn məzmununu redaktə etməyə başlamaq üçün PDF və ya JSON faylı yükləyin."
+    },
+    "welcomeBanner": {
+      "title": "PDF Text Editor-ə xoş gəldiniz (Erkən Giriş)",
+      "experimental": "Bu, aktiv inkişafda olan eksperimental funksiyadır. İstifadə zamanı müəyyən qeyri-sabitlik və problemlər gözləniləndir.",
+      "howItWorks": "Bu alət PDF-inizi redaktə edilə bilən formata çevirir, burada mətni dəyişə və şəkillərin yerini dəyişə bilərsiniz. Dəyişikliklər yeni PDF kimi saxlanılır.",
+      "bestFor": "Ən yaxşı uyğun:",
+      "bestFor1": "Əsasən mətn və şəkillərdən ibarət sadə PDF-lər",
+      "bestFor2": "Standart abzas formatlı sənədlər",
+      "bestFor3": "Məktublar, esselər, hesabatlar və əsas sənədlər",
+      "notIdealFor": "Aşağıdakılar üçün uyğun deyil:",
+      "notIdealFor1": "Markerli siyahılar, cədvəllər və ya çoxsütunlu yerləşim kimi xüsusi formatlı PDF-lər",
+      "notIdealFor2": "Jurnallar, broşürlər və ya dizaynı mürəkkəb sənədlər",
+      "notIdealFor3": "Mürəkkəb yerləşimli təlimat kitabçaları",
+      "limitations": "Cari məhdudiyyətlər:",
+      "limitation1": "Şrift göstərilməsi orijinal PDF-dən azca fərqlənə bilər",
+      "limitation2": "Mürəkkəb qrafika, forma sahələri və annotasiyalar saxlanılır, lakin redaktə olunmur",
+      "limitation3": "Böyük faylların çevrilməsi və işlənməsi vaxt apara bilər",
+      "knownIssues": "Məlum problemlər (düzəldilir):",
+      "issue1": "Mətn rəngi hazırda saxlanmır (tezliklə əlavə olunacaq)",
+      "issue2": "Abzas rejimində düzülüş və aralıq problemləri daha çoxdur - Tək sətir rejimi tövsiyə olunur",
+      "issue3": "Önizləmə görüntüsü ixrac olunan PDF-dən fərqlənir - ixrac olunan PDF-lər orijinala daha yaxındır",
+      "issue4": "Döndərilmiş mətnin düzülüşü əl ilə tənzimləmə tələb edə bilər",
+      "issue5": "Şəffaflıq və qat effektləri orijinaldan fərqlənə bilər",
+      "feedback": "Bu, erkən giriş funksiyasıdır. Təkmilləşdirməyə kömək üçün rast gəldiyiniz problemləri bildirin!",
+      "gotIt": "Anladım",
+      "dontShowAgain": "Bir daha göstərmə"
+    },
+    "modeChange": {
+      "title": "Rejim dəyişikliyini təsdiqlə",
+      "warning": "Mətn qruplaşdırma rejimini dəyişmək yadda saxlanmamış bütün dəyişiklikləri sıfırlayacaq. Davam etmək istədiyinizə əminsiniz?",
+      "cancel": "Ləğv et",
+      "confirm": "Sıfırla və rejimi dəyiş"
+    },
+    "fontAnalysis": {
+      "details": "Şrift detalları",
+      "embedded": "Gömülü",
+      "type": "Növ",
+      "webFormat": "Veb formatı",
+      "warnings": "Xəbərdarlıqlar",
+      "suggestions": "Qeydlər",
+      "currentPageFonts": "Bu səhifədəki şriftlər",
+      "allFonts": "Bütün şriftlər",
+      "fallback": "ehtiyat",
+      "missing": "çatışmır",
+      "perfectMessage": "Bütün şriftlər mükəmməl şəkildə göstərilə bilər.",
+      "warningMessage": "Bəzi şriftlər düzgün göstərilməyə bilər.",
+      "infoMessage": "Şriftlərin göstərilməsi barədə məlumat var.",
+      "perfect": "mükəmməl",
+      "subset": "alt dəst"
+    },
+    "errors": {
+      "invalidJson": "JSON faylını oxumaq mümkün deyil. Onun PDF to JSON aləti ilə yaradıldığından əmin olun.",
+      "pdfConversion": "Redaktə olunmuş JSON-u yenidən PDF-ə çevirmək mümkün deyil."
+    }
+  },
+  "auth": {
+    "sessionExpired": "Sessiya başa çatdı",
+    "pleaseLoginAgain": "Zəhmət olmasa yenidən daxil olun.",
+    "accessDenied": "Giriş rədd edildi",
+    "insufficientPermissions": "Bu əməliyyatı yerinə yetirmək üçün icazəniz yoxdur."
+  },
+  "addText": {
+    "title": "Mətn əlavə et",
+    "header": "PDF-lərə mətn əlavə edin",
+    "text": {
+      "name": "Mətn məzmunu",
+      "placeholder": "Əlavə etmək istədiyiniz mətni daxil edin",
+      "fontLabel": "Şrift",
+      "fontSizeLabel": "Şrift ölçüsü",
+      "fontSizePlaceholder": "Şrift ölçüsünü yazın və ya seçin (8-200)",
+      "colorLabel": "Mətn rəngi"
+    },
+    "steps": {
+      "configure": "Mətni tənzimlə"
+    },
+    "step": {
+      "createDesc": "Əlavə etmək istədiyiniz mətni daxil edin",
+      "place": "Mətni yerləşdir",
+      "placeDesc": "Mətni əlavə etmək üçün PDF üzərinə klikləyin"
+    },
+    "instructions": {
+      "title": "Mətni necə əlavə etməli",
+      "text": "Yuxarıda mətni daxil etdikdən sonra onu yerləşdirmək üçün PDF-də istənilən yerə klikləyin.",
+      "paused": "Yerləşdirmə dayandırılıb",
+      "resumeHint": "Mətni əlavə etmək üçün yerləşdirməni davam etdirin.",
+      "noSignature": "Yerləşdirməni aktivləşdirmək üçün yuxarıda mətn daxil edin."
+    },
+    "mode": {
+      "move": "Mətni hərəkət etdir",
+      "place": "Mətni yerləşdir",
+      "pause": "Yerləşdirməni dayandır",
+      "resume": "Yerləşdirməni davam etdir"
+    },
+    "results": {
+      "title": "Mətn əlavə etmə nəticələri"
+    },
+    "error": {
+      "failed": "PDF-ə mətn əlavə edilərkən xəta baş verdi."
+    },
+    "tags": "mətn,annotasiya,etiket",
+    "applySignatures": "Mətni tətbiq et"
   }
 }
