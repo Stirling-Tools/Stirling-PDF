@@ -3,7 +3,8 @@ import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Sta
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
@@ -57,6 +58,9 @@ const FileEditorThumbnail = ({
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const DownloadOutlinedIcon = icons.download;
   const {
     pinFile,
     unpinFile,
@@ -204,7 +208,7 @@ const FileEditorThumbnail = ({
     {
       id: 'download',
       icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
-      label: t('download', 'Download'),
+      label: terminology.download,
       onClick: (e) => {
         e.stopPropagation();
         onDownloadFile(file.id);

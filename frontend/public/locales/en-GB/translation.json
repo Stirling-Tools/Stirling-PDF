@@ -130,6 +130,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "download": "Download",
+  "downloadUnavailable": "Download unavailable for this item",
+  "saveUnavailable": "Save unavailable for this item",
   "pin": "Pin File (keep active after tool run)",
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
@@ -873,7 +875,8 @@
   },
   "landing": {
     "addFiles": "Add Files",
-    "uploadFromComputer": "Upload from computer"
+    "uploadFromComputer": "Upload from computer",
+    "openFromComputer": "Open from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -3878,6 +3881,7 @@
     "exportAll": "Export PDF",
     "downloadSelected": "Download Selected Files",
     "downloadAll": "Download All",
+    "saveAll": "Save All",
     "toggleTheme": "Toggle Theme",
     "toggleBookmarks": "Toggle Bookmarks",
     "language": "Language",
@@ -4571,12 +4575,17 @@
     "or": "or",
     "dropFileHere": "Drop file here or click to upload",
     "dropFilesHere": "Drop files here or click the upload button",
+    "dropFilesHereOpen": "Drop files here or click the open button",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
     "upload": "Upload",
     "uploadFile": "Upload File",
     "uploadFiles": "Upload Files",
+    "open": "Open",
+    "openFile": "Open File",
+    "openFiles": "Open Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
+    "noFilesInStorageOpen": "No files available in storage. Open some files first.",
     "selectFromStorage": "Select from Storage",
     "backToTools": "Back to Tools",
     "addFiles": "Add Files",
@@ -4622,6 +4631,8 @@
     "myFiles": "My Files",
     "noRecentFiles": "No recent files found",
     "googleDriveNotAvailable": "Google Drive integration not available",
+    "downloadSelected": "Download Selected",
+    "saveSelected": "Save Selected",
     "openFiles": "Open Files",
     "openFile": "Open File",
     "details": "File Details",
@@ -5820,12 +5831,17 @@
         "label": "Username",
         "placeholder": "Enter your username"
       },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email"
+      },
       "password": {
         "label": "Password",
         "placeholder": "Enter your password"
       },
       "error": {
         "emptyUsername": "Please enter your username",
+        "emptyEmail": "Please enter your email",
         "emptyPassword": "Please enter your password",
         "oauthFailed": "OAuth login failed. Please try again."
       },

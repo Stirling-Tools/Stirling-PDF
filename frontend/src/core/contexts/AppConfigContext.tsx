@@ -43,6 +43,7 @@ export interface AppConfig {
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;
+  dependenciesReady?: boolean;
   error?: string;
   isNewServer?: boolean;
   isNewUser?: boolean;

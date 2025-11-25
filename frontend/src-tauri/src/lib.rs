@@ -6,7 +6,6 @@ mod state;
 
 use commands::{
     add_opened_file,
-    check_backend_health,
     cleanup_backend,
     clear_auth_token,
     clear_opened_files,
@@ -94,7 +93,6 @@ pub fn run() {
       set_as_default_pdf_handler,
       is_first_launch,
       reset_setup_completion,
-      check_backend_health,
       login,
       save_auth_token,
       get_auth_token,
@@ -119,6 +117,28 @@ pub fn run() {
           cleanup_backend();
           // Allow the window to close
         }
+        RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), .. } => {
+          use tauri::DragDropEvent;
+          match drag_drop_event {
+            DragDropEvent::Drop { paths, .. } => {
+              add_log(format!("📂 Files dropped: {:?}", paths));
+              let mut added_files = false;
+
+              for path in paths {
+                if let Some(path_str) = path.to_str() {
+                  add_log(format!("📂 Processing dropped file: {}", path_str));
+                  add_opened_file(path_str.to_string());
+                  added_files = true;
+                }
+              }
+
+              if added_files {
+                let _ = app_handle.emit("files-changed", ());
+              }
+            }
+            _ => {}
+          }
+        }
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
@@ -128,11 +148,9 @@ pub fn run() {
             let url_str = url.as_str();
             if url_str.starts_with("file://") {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
-              if file_path.ends_with(".pdf") {
-                add_log(format!("📂 Processing opened PDF: {}", file_path));
-                add_opened_file(file_path.to_string());
-                added_files = true;
-              }
+              add_log(format!("📂 Processing opened file: {}", file_path));
+              add_opened_file(file_path.to_string());
+              added_files = true;
             }
           }
           // Emit a generic notification that files were added (frontend will re-read storage)
