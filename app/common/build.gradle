@@ -33,14 +33,14 @@ dependencies {
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
-    api 'org.apache.commons:commons-lang3:3.19.0'
+    api 'org.apache.commons:commons-lang3:3.20.0'
     api 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api 'com.github.junrar:junrar:7.5.7' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:2.10'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14"
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 }

@@ -33,6 +33,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -60,13 +61,14 @@ public class ConvertOfficeController {
         // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("Missing original filename");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
         if (extension == null || !isValidFileExtension(extension)) {
-            throw new IllegalArgumentException("Invalid file extension");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.extension", "Invalid file extension: " + extension);
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
@@ -91,6 +93,7 @@ public class ConvertOfficeController {
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
+        Path libreOfficeProfile = null;
         try {
             ProcessExecutorResult result;
             // Run Unoconvert command
@@ -110,8 +113,10 @@ public class ConvertOfficeController {
                                 .runCommandWithOutputHandling(command);
             } // Run soffice command
             else {
+                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                 List<String> command = new ArrayList<>();
-                command.add("soffice");
+                command.add(runtimePathConfig.getSOfficePath());
+                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
                 command.add("--convert-to");
@@ -166,6 +171,9 @@ public class ConvertOfficeController {
                 Files.deleteIfExists(inputPath);
             } catch (IOException e) {
                 log.warn("Failed to delete temp input file: {}", inputPath, e);
+            }
+            if (libreOfficeProfile != null) {
+                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
     }
