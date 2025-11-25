@@ -3,6 +3,8 @@ import { AuthProvider } from "@app/auth/UseSession";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 import { UpdateSeatsProvider } from "@app/contexts/UpdateSeatsContext"
+import { UpgradeBannerInitializer } from "@app/components/shared/UpgradeBannerInitializer";
+import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 
 export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
   return (
@@ -12,11 +14,14 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
     >
       <AuthProvider>
         <LicenseProvider>
-          <CheckoutProvider>
-            <UpdateSeatsProvider>
-              {children}
-            </UpdateSeatsProvider>
-          </CheckoutProvider>
+          <UpdateSeatsProvider>
+            <ServerExperienceProvider>
+              <CheckoutProvider>
+                <UpgradeBannerInitializer />
+                {children}
+              </CheckoutProvider>
+            </ServerExperienceProvider>
+          </UpdateSeatsProvider>
         </LicenseProvider>
       </AuthProvider>
     </CoreAppProviders>

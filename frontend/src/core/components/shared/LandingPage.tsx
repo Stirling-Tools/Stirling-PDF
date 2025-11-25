@@ -9,6 +9,8 @@ import { useLogoPath } from '@app/hooks/useLogoPath';
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useLogoVariant } from '@app/hooks/useLogoVariant';
 import { useFileManager } from '@app/hooks/useFileManager';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -22,6 +24,8 @@ const LandingPage = () => {
   const { wordmark } = useLogoAssets();
   const { loadRecentFiles } = useFileManager();
   const [hasRecents, setHasRecents] = React.useState<boolean>(false);
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
 
   const handleFileDrop = async (files: File[]) => {
     await addFiles(files);
@@ -191,10 +195,10 @@ const LandingPage = () => {
                     onClick={handleNativeUploadClick}
                     onMouseEnter={() => setIsUploadHover(true)}
                   >
-                    <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                    <LocalIcon icon={icons.uploadIconName} width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
                     {isUploadHover && (
                       <span style={{ marginLeft: '.5rem' }}>
-                        {t('landing.uploadFromComputer', 'Upload from computer')}
+                        {terminology.uploadFromComputer}
                       </span>
                     )}
                   </Button>
@@ -243,7 +247,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
+            {terminology.dropFilesHere}
           </span>
         </div>
       </Dropzone>
