@@ -336,7 +336,7 @@ export default function AdminGeneralSection() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
                         src="/classic-logo/favicon.ico"
-                        alt="Classic logo"
+                        alt={t('admin.settings.general.logoStyle.classicAlt', 'Classic logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
                       <span>{t('admin.settings.general.logoStyle.classic', 'Classic')}</span>
@@ -349,7 +349,7 @@ export default function AdminGeneralSection() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
                         src="/modern-logo/StirlingPDFLogoNoTextLight.svg"
-                        alt="Modern logo"
+                        alt={t('admin.settings.general.logoStyle.modernAlt', 'Modern logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
                       <span>{t('admin.settings.general.logoStyle.modern', 'Modern')}</span>
@@ -385,7 +385,7 @@ export default function AdminGeneralSection() {
               ]}
               searchable
               clearable
-              placeholder="Select languages"
+              placeholder={t('admin.settings.general.languages.placeholder', 'Select languages')}
               comboboxProps={{ zIndex: 1400 }}
               disabled={!loginEnabled}
             />
