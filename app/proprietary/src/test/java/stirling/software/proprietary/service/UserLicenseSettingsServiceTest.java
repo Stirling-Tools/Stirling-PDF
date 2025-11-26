@@ -232,4 +232,27 @@ class UserLicenseSettingsServiceTest {
 
         verify(userService, never()).grandfatherAllOAuthUsers();
     }
+
+    @Test
+    void grandfatherExistingOAuthUsers_handlesPendingUsersWithoutSessions() {
+        when(userService.countOAuthUsers()).thenReturn(5L);
+        when(userService.countGrandfatheredOAuthUsers()).thenReturn(5L);
+        when(userService.grandfatherPendingSsoUsersWithoutSession()).thenReturn(3);
+
+        service.grandfatherExistingOAuthUsers();
+
+        verify(userService, never()).grandfatherAllOAuthUsers();
+        verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
+    }
+
+    @Test
+    void grandfatherExistingOAuthUsers_checksPendingUsersEvenWhenNoneExist() {
+        when(userService.countOAuthUsers()).thenReturn(0L);
+        when(userService.countGrandfatheredOAuthUsers()).thenReturn(0L);
+        when(userService.grandfatherPendingSsoUsersWithoutSession()).thenReturn(0);
+
+        service.grandfatherExistingOAuthUsers();
+
+        verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
+    }
 }

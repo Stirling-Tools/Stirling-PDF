@@ -776,6 +776,32 @@ public class UserService implements UserServiceInterface {
             userRepository.saveAll(ssoUsers);
         }
 
+         return updated;
+    }
+
+    /**
+     * Grandfathers SSO users who have never created a session (invited/pending accounts). These
+     * users would otherwise be blocked when SSO requires a paid license despite existing before the
+     * policy change.
+     *
+     * @return Number of pending users updated
+     */
+    @Transactional
+    public int grandfatherPendingSsoUsersWithoutSession() {
+        List<User> pendingUsers = userRepository.findPendingSsoUsersWithoutSession();
+        int updated = 0;
+
+        for (User user : pendingUsers) {
+            if (!user.isOauthGrandfathered()) {
+                user.setOauthGrandfathered(true);
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            userRepository.saveAll(pendingUsers);
+        }
+
         return updated;
     }
 }

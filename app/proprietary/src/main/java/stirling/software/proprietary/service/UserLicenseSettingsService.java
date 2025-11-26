@@ -198,6 +198,16 @@ public class UserLicenseSettingsService {
                         "OAuth grandfathering already completed: {} users grandfathered",
                         grandfatheredCount);
             }
+
+            int pendingUpdated = userService.grandfatherPendingSsoUsersWithoutSession();
+            if (pendingUpdated > 0) {
+                log.warn(
+                        "OAuth GRANDFATHERING: Marked {} pending SSO users (no prior sessions) as"
+                                + " grandfathered.",
+                        pendingUpdated);
+            } else {
+                log.debug("No pending SSO users required grandfathering");
+            }
         }
     }
 
