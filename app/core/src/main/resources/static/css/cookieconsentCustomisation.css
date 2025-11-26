@@ -77,3 +77,8 @@
         padding-top: 1rem !important;
     }
 }
+
+/* Lower z-index so cookie banner appears behind onboarding modals */
+#cc-main {
+    z-index: 100 !important;
+}
