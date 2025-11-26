@@ -34,6 +34,8 @@
       "icons/192x192.png"
     ],
     "resources": [
+      "libs/*.jar",
+      "runtime/jre/**/*"
     ],
     "fileAssociations": [
       {
