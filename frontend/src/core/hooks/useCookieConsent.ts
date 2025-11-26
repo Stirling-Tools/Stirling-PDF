@@ -10,7 +10,6 @@ declare global {
       show: (show?: boolean) => void;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
-      validConsent?: () => boolean;
     };
   }
 }
@@ -20,66 +19,46 @@ interface CookieConsentConfig {
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false,
+  analyticsEnabled = false
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasRespondedInternal, setHasRespondedInternal] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!analyticsEnabled) {
+      console.log('Cookie consent not enabled - analyticsEnabled is false');
       return;
     }
 
-    const markResponded = () => setHasRespondedInternal(true);
-    const removeConsentListeners = () => {
-      window.removeEventListener('cc:onFirstConsent', markResponded);
-      window.removeEventListener('cc:onConsent', markResponded);
-      window.removeEventListener('cc:onChange', markResponded);
-    };
-
-    window.addEventListener('cc:onFirstConsent', markResponded);
-    window.addEventListener('cc:onConsent', markResponded);
-    window.addEventListener('cc:onChange', markResponded);
-
-    if (analyticsEnabled) {
-      setHasRespondedInternal(window.CookieConsent?.validConsent?.() ?? false);
+    // Load the cookie consent CSS files first (always needed)
+    const mainCSS = document.createElement('link');
+    mainCSS.rel = 'stylesheet';
+    mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
+    if (!document.querySelector(`link[href="${mainCSS.href}"]`)) {
+      document.head.appendChild(mainCSS);
     }
 
-    if (!analyticsEnabled) {
-      console.log('Cookie consent not enabled - analyticsEnabled is false');
-      setHasRespondedInternal(false);
-      return () => {
-        removeConsentListeners();
-      };
+    const customCSS = document.createElement('link');
+    customCSS.rel = 'stylesheet';
+    customCSS.href = `${BASE_PATH}css/cookieconsentCustomisation.css`;
+    if (!document.querySelector(`link[href="${customCSS.href}"]`)) {
+      document.head.appendChild(customCSS);
     }
 
     // Prevent double initialization
     if (window.CookieConsent) {
       setIsInitialized(true);
-      if (window.CookieConsent.validConsent?.()) {
-        markResponded();
-      }
-      return () => {
-        removeConsentListeners();
-      };
+      // Force show the modal if it exists but isn't visible
+      setTimeout(() => {
+        window.CookieConsent?.show();
+      }, 100);
+      return;
     }
-
-    // Load the cookie consent CSS files first
-    const mainCSS = document.createElement('link');
-    mainCSS.rel = 'stylesheet';
-    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
-    document.head.appendChild(mainCSS);
-
-    const customCSS = document.createElement('link');
-    customCSS.rel = 'stylesheet';
-    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
-    document.head.appendChild(customCSS);
 
     // Load the cookie consent library
     const script = document.createElement('script');
-    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
+    script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
@@ -141,7 +120,7 @@ export const useCookieConsent = ({
         // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
-            autoShow: false,
+            autoShow: true,
             hideFromBots: false,
             guiOptions: {
               consentModal: {
@@ -227,21 +206,18 @@ export const useCookieConsent = ({
                   }
                 }
               }
-            },
-            onFirstConsent: markResponded,
-            onConsent: markResponded,
-            onChange: markResponded,
+            }
           });
+
+          // Force show after initialization
+          setTimeout(() => {
+            window.CookieConsent?.show();
+          }, 200);
 
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
-        if (window.CookieConsent?.validConsent?.()) {
-          markResponded();
-        } else {
-          setHasRespondedInternal(false);
-        }
-        setIsInitialized(true);
+      setIsInitialized(true);
       }, 100); // Small delay to ensure DOM is ready
     };
 
@@ -252,8 +228,6 @@ export const useCookieConsent = ({
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup event listeners
-      removeConsentListeners();
       // Cleanup script and CSS when component unmounts
       if (document.head.contains(script)) {
         document.head.removeChild(script);
@@ -267,17 +241,11 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
-  const showCookieConsent = useCallback(() => {
-    if (isInitialized && window.CookieConsent) {
-      window.CookieConsent?.show();
-    }
-  }, [isInitialized]);
-
-  const showCookiePreferences = useCallback(() => {
+  const showCookiePreferences = () => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  }, [isInitialized]);
+  };
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -286,13 +254,8 @@ export const useCookieConsent = ({
     return window.CookieConsent.acceptedService(service, category);
   }, []);
 
-  const effectiveHasResponded = analyticsEnabled ? hasRespondedInternal : true;
-
   return {
-    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted,
-    isInitialized,
-    hasResponded: effectiveHasResponded,
+    isServiceAccepted
   };
 };
