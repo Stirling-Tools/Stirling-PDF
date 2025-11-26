@@ -362,16 +362,16 @@ export default function Login() {
           mt="xl"
         >
           <Stack gap="xs" align="center">
-            <Text size="sm" fw={600} ta="center">
+            <Text size="sm" fw={600} ta="center" style={{ color: 'var(--text-always-dark)' }}>
               {t('login.defaultCredentials', 'Default Login Credentials')}
             </Text>
-            <Text size="sm" ta="center">
-              <Text component="span" fw={600}>{t('login.username', 'Username')}:</Text> admin
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.username', 'Username')}:</Text> admin
             </Text>
-            <Text size="sm" ta="center">
-              <Text component="span" fw={600}>{t('login.password', 'Password')}:</Text> stirling
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.password', 'Password')}:</Text> stirling
             </Text>
-            <Text size="xs" c="dimmed" ta="center" mt="xs">
+            <Text size="xs" ta="center" mt="xs" style={{ color: 'var(--text-always-dark-muted)' }}>
               {t('login.changePasswordWarning', 'Please change your password after logging in for the first time')}
             </Text>
           </Stack>
