@@ -158,9 +158,29 @@ export class TauriBackendService {
     // Check if backend is ready (dependencies checked)
     try {
       const configUrl = `${baseUrl}/api/v1/config/app-config`;
+
+      // For self-hosted mode, include auth token if available
+      const headers: Record<string, string> = {};
+      if (mode === 'selfhosted') {
+        // Check localStorage first (web layer token)
+        let token = localStorage.getItem('stirling_jwt');
+        if (!token) {
+          // Fallback to Tauri store
+          try {
+            token = await invoke<string | null>('get_auth_token');
+          } catch {
+            console.debug('[TauriBackendService] No auth token available for health check');
+          }
+        }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+
       const response = await fetch(configUrl, {
         method: 'GET',
         connectTimeout: 5000,
+        headers,
       });
 
       if (!response.ok) {

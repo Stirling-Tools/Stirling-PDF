@@ -1,4 +1,3 @@
-use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
@@ -11,8 +10,7 @@ use rand::distributions::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
-const KEYRING_SERVICE: &str = "stirling-pdf";
-const KEYRING_TOKEN_KEY: &str = "auth-token";
+const AUTH_TOKEN_KEY: &str = "auth_token";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
@@ -20,56 +18,62 @@ pub struct UserInfo {
     pub email: Option<String>,
 }
 
-fn get_keyring_entry() -> Result<Entry, String> {
-    Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
-        .map_err(|e| format!("Failed to access keyring: {}", e))
-}
-
 #[tauri::command]
-pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    log::info!("Saving auth token to keyring");
+pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(), String> {
+    log::info!("Saving auth token to store");
 
-    let entry = get_keyring_entry()?;
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
 
-    entry
-        .set_password(&token)
-        .map_err(|e| format!("Failed to save token to keyring: {}", e))?;
+    store.set(
+        AUTH_TOKEN_KEY,
+        serde_json::to_value(&token)
+            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+    );
 
-    log::info!("Auth token saved successfully");
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    log::info!("Auth token saved successfully to store");
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
-    log::debug!("Retrieving auth token from keyring");
+pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
+    log::debug!("Retrieving auth token from store");
 
-    let entry = get_keyring_entry()?;
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
 
-    match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
-        Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(format!("Failed to retrieve token: {}", e)),
+    match store.get(AUTH_TOKEN_KEY) {
+        Some(value) => {
+            let token: String = serde_json::from_value(value.clone())
+                .map_err(|e| format!("Failed to deserialize token: {}", e))?;
+            Ok(Some(token))
+        }
+        None => Ok(None),
     }
 }
 
 #[tauri::command]
-pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing auth token from keyring");
+pub async fn clear_auth_token(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Clearing auth token from store");
 
-    let entry = get_keyring_entry()?;
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
 
-    // Delete the token - ignore error if it doesn't exist
-    match entry.delete_credential() {
-        Ok(_) => {
-            log::info!("Auth token cleared successfully");
-            Ok(())
-        }
-        Err(keyring::Error::NoEntry) => {
-            log::info!("Auth token was already cleared");
-            Ok(())
-        }
-        Err(e) => Err(format!("Failed to clear token: {}", e)),
-    }
+    let _ = store.delete(AUTH_TOKEN_KEY);
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    log::info!("Auth token cleared successfully from store");
+    Ok(())
 }
 
 #[tauri::command]
