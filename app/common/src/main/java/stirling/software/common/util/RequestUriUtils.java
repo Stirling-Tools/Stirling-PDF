@@ -59,7 +59,8 @@ public class RequestUriUtils {
                 || normalizedUri.endsWith(".js")
                 || normalizedUri.endsWith(".css")
                 || normalizedUri.endsWith(".mjs")
-                || normalizedUri.endsWith(".html");
+                || normalizedUri.endsWith(".html")
+                || normalizedUri.endsWith(".toml");
     }
 
     public static boolean isFrontendRoute(String contextPath, String requestURI) {
@@ -122,6 +123,7 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".svg")
                 || requestURI.endsWith("popularity.txt")
                 || requestURI.endsWith(".js")
+                || requestURI.endsWith(".toml")
                 || requestURI.contains("swagger")
                 || requestURI.startsWith("/api/v1/info")
                 || requestURI.startsWith("/site.webmanifest")

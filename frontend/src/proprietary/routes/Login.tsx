@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
 import { useBackendProbe } from '@app/hooks/useBackendProbe';
+import apiClient from '@app/services/apiClient';
+import { BASE_PATH } from '@app/constants/app';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -16,7 +18,6 @@ import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import OAuthButtons, { DEBUG_SHOW_ALL_PROVIDERS, oauthProviderConfig } from '@app/routes/login/OAuthButtons';
 import DividerWithText from '@app/components/shared/DividerWithText';
 import LoggedInState from '@app/routes/login/LoggedInState';
-import { BASE_PATH } from '@app/constants/app';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -85,30 +86,28 @@ export default function Login() {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response = await fetch(`${BASE_PATH}/api/v1/proprietary/ui-data/login`);
-        if (response.ok) {
-          const data = await response.json();
+        const response = await apiClient.get('/api/v1/proprietary/ui-data/login');
+        const data = response.data;
 
-          // Check if login is disabled - if so, redirect to home
-          if (data.enableLogin === false) {
-            console.debug('[Login] Login disabled, redirecting to home');
-            navigate('/');
-            return;
-          }
-
-          setEnableLogin(data.enableLogin ?? true);
-
-          // Set first-time setup flags
-          setIsFirstTimeSetup(data.firstTimeSetup ?? false);
-          setShowDefaultCredentials(data.showDefaultCredentials ?? false);
-
-          // Extract provider IDs from the providerList map
-          // The keys are like "/oauth2/authorization/google" - extract the last part
-          const providerIds = Object.keys(data.providerList || {})
-            .map(key => key.split('/').pop())
-            .filter((id): id is string => id !== undefined);
-          setEnabledProviders(providerIds);
+        // Check if login is disabled - if so, redirect to home
+        if (data.enableLogin === false) {
+          console.debug('[Login] Login disabled, redirecting to home');
+          navigate('/');
+          return;
         }
+
+        setEnableLogin(data.enableLogin ?? true);
+
+        // Set first-time setup flags
+        setIsFirstTimeSetup(data.firstTimeSetup ?? false);
+        setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+
+        // Extract provider IDs from the providerList map
+        // The keys are like "/oauth2/authorization/google" - extract the last part
+        const providerIds = Object.keys(data.providerList || {})
+          .map(key => key.split('/').pop())
+          .filter((id): id is string => id !== undefined);
+        setEnabledProviders(providerIds);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -362,16 +361,16 @@ export default function Login() {
           mt="xl"
         >
           <Stack gap="xs" align="center">
-            <Text size="sm" fw={600} ta="center">
+            <Text size="sm" fw={600} ta="center" style={{ color: 'var(--text-always-dark)' }}>
               {t('login.defaultCredentials', 'Default Login Credentials')}
             </Text>
-            <Text size="sm" ta="center">
-              <Text component="span" fw={600}>{t('login.username', 'Username')}:</Text> admin
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.username', 'Username')}:</Text> admin
             </Text>
-            <Text size="sm" ta="center">
-              <Text component="span" fw={600}>{t('login.password', 'Password')}:</Text> stirling
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.password', 'Password')}:</Text> stirling
             </Text>
-            <Text size="xs" c="dimmed" ta="center" mt="xs">
+            <Text size="xs" ta="center" mt="xs" style={{ color: 'var(--text-always-dark-muted)' }}>
               {t('login.changePasswordWarning', 'Please change your password after logging in for the first time')}
             </Text>
           </Stack>

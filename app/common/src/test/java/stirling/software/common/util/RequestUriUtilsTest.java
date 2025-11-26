@@ -103,6 +103,7 @@ public class RequestUriUtilsTest {
                 "/favicon.ico",
                 "/icon.svg",
                 "/image.png",
+                "/locales/en/translation.toml",
                 "/site.webmanifest",
                 "/app/logo.svg",
                 "/downloads/document.png",
