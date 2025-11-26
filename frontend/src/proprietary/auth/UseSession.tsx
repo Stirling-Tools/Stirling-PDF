@@ -126,6 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
+    // Listen for jwt-available event (triggered by desktop auth or other sources)
+    const handleJwtAvailable = () => {
+      console.debug('[Auth] JWT available event received, refreshing session');
+      void initializeAuth();
+    };
+
+    window.addEventListener('jwt-available', handleJwtAvailable);
+
     // Subscribe to auth state changes
     const { data: { subscription } } = springAuth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
@@ -162,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      window.removeEventListener('jwt-available', handleJwtAvailable);
       subscription.unsubscribe();
     };
   }, []);

@@ -161,8 +161,8 @@ class SpringAuthClient {
         return { data: { session: null }, error: null };
       }
 
-      // Clear potentially invalid token on other errors too
-      localStorage.removeItem('stirling_jwt');
+      // Don't clear token for other errors (e.g., backend not ready, network issues)
+      // The token is still valid, just can't verify it right now
       return {
         data: { session: null },
         error: { message: getErrorMessage(error, 'Unknown error') },
