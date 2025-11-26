@@ -241,11 +241,17 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
-  const showCookiePreferences = () => {
+  const showCookieConsent = useCallback(() => {
+    if (isInitialized && window.CookieConsent) {
+      window.CookieConsent?.show();
+    }
+  }, [isInitialized]);
+
+  const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  };
+  }, [isInitialized]);
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -255,7 +261,9 @@ export const useCookieConsent = ({
   }, []);
 
   return {
+    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted
+    isServiceAccepted,
+    isInitialized,
   };
 };
