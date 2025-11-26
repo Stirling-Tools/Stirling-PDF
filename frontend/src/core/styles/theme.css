@@ -164,6 +164,9 @@
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
+  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
+  --text-always-dark: #1f2937;
+  --text-always-dark-muted: #6b7280;
   --border-subtle: #e5e7eb;
   --border-default: #E2E8F0;
   --border-strong: #9ca3af;
@@ -440,6 +443,9 @@
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
+  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
+  --text-always-dark: #1f2937;
+  --text-always-dark-muted: #6b7280;
   --border-subtle: #2A2F36;
   --border-default: #3A4047;
   --border-strong: #4b5563;
