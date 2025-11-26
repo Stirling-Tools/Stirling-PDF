@@ -7,10 +7,12 @@ use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
+use keyring::Entry;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
-const AUTH_TOKEN_KEY: &str = "auth_token";
+const KEYRING_SERVICE: &str = "com.stirlingpdf.app";
+const KEYRING_TOKEN_KEY: &str = "auth_token";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
@@ -19,61 +21,66 @@ pub struct UserInfo {
 }
 
 #[tauri::command]
-pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(), String> {
-    log::info!("Saving auth token to store");
+pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
+    log::info!("Saving auth token to OS keyring");
 
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
+    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
+        .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
 
-    store.set(
-        AUTH_TOKEN_KEY,
-        serde_json::to_value(&token)
-            .map_err(|e| format!("Failed to serialize token: {}", e))?,
-    );
+    entry
+        .set_password(&token)
+        .map_err(|e| format!("Failed to save token to keyring: {}", e))?;
 
-    store
-        .save()
-        .map_err(|e| format!("Failed to save store: {}", e))?;
-
-    log::info!("Auth token saved successfully to store");
+    log::info!("Auth token saved successfully to OS keyring");
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
-    log::debug!("Retrieving auth token from store");
+pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
+    log::debug!("Retrieving auth token from OS keyring");
 
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
+    let entry = match Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY) {
+        Ok(e) => e,
+        Err(e) => {
+            log::warn!("Failed to create keyring entry, returning None to allow localStorage fallback: {}", e);
+            return Ok(None);
+        }
+    };
 
-    match store.get(AUTH_TOKEN_KEY) {
-        Some(value) => {
-            let token: String = serde_json::from_value(value.clone())
-                .map_err(|e| format!("Failed to deserialize token: {}", e))?;
+    match entry.get_password() {
+        Ok(token) => {
+            log::debug!("Token retrieved from OS keyring (length: {})", token.len());
             Ok(Some(token))
         }
-        None => Ok(None),
+        Err(e) => {
+            // Return None for ANY keyring error to allow localStorage fallback
+            log::warn!("Keyring error (returning None to allow localStorage fallback): {}", e);
+            Ok(None)
+        }
     }
 }
 
 #[tauri::command]
-pub async fn clear_auth_token(app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing auth token from store");
+pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Clearing auth token from OS keyring");
 
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
+    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
+        .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
 
-    let _ = store.delete(AUTH_TOKEN_KEY);
-
-    store
-        .save()
-        .map_err(|e| format!("Failed to save store: {}", e))?;
-
-    log::info!("Auth token cleared successfully from store");
-    Ok(())
+    match entry.delete_credential() {
+        Ok(_) => {
+            log::info!("Auth token cleared successfully from OS keyring");
+            Ok(())
+        }
+        Err(keyring::Error::NoEntry) => {
+            log::info!("No token to clear from OS keyring");
+            Ok(())
+        }
+        Err(e) => {
+            log::warn!("Error clearing token from OS keyring: {}", e);
+            Err(format!("Failed to clear token from keyring: {}", e))
+        }
+    }
 }
 
 #[tauri::command]
