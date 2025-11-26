@@ -42,7 +42,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
             // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
             logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
             registry.addMapping("/**")
-                    .allowedOrigins(
+                    .allowedOriginPatterns(
                             "tauri://localhost",
                             "http://tauri.localhost",
                             "https://tauri.localhost")
