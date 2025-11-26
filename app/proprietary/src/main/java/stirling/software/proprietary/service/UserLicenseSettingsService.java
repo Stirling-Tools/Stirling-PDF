@@ -184,29 +184,27 @@ public class UserLicenseSettingsService {
             long oauthUsersCount = userService.countOAuthUsers();
             long grandfatheredCount = userService.countGrandfatheredOAuthUsers();
 
-            if (oauthUsersCount > 0 && grandfatheredCount < oauthUsersCount) {
-                // We have OAuth users but not all have been grandfathered - this is first run after
-                // upgrade
+            if (oauthUsersCount > 0 && grandfatheredCount == 0) {
+                // We have OAuth users but none are grandfathered - this is first run after upgrade
                 int updated = userService.grandfatherAllOAuthUsers();
                 log.warn(
                         "OAuth GRANDFATHERING: Marked {} existing OAuth/SAML users as grandfathered. "
                                 + "They will retain OAuth access even without a paid license. "
                                 + "New users will require a paid license for OAuth.",
                         updated);
+
+                // Also grandfather pending users (invited but never logged in) at the same time
+                int pendingUpdated = userService.grandfatherPendingSsoUsersWithoutSession();
+                if (pendingUpdated > 0) {
+                    log.warn(
+                            "OAuth GRANDFATHERING: Marked {} pending SSO users (no prior sessions) as"
+                                    + " grandfathered.",
+                            pendingUpdated);
+                }
             } else if (grandfatheredCount > 0) {
                 log.debug(
                         "OAuth grandfathering already completed: {} users grandfathered",
                         grandfatheredCount);
-            }
-
-            int pendingUpdated = userService.grandfatherPendingSsoUsersWithoutSession();
-            if (pendingUpdated > 0) {
-                log.warn(
-                        "OAuth GRANDFATHERING: Marked {} pending SSO users (no prior sessions) as"
-                                + " grandfathered.",
-                        pendingUpdated);
-            } else {
-                log.debug("No pending SSO users required grandfathering");
             }
         }
     }
