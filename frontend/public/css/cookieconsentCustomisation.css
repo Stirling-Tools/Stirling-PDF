@@ -176,3 +176,8 @@
     background: var(--cc-bg) !important;
     color: var(--cc-primary-color) !important;
 }
+
+/* Lower z-index so cookie banner appears behind onboarding modals */
+#cc-main {
+    z-index: 100 !important;
+}
