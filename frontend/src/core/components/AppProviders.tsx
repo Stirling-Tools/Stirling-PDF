@@ -17,7 +17,6 @@ import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContex
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
-import { CookieConsentProvider } from "@app/contexts/CookieConsentContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -83,12 +82,11 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
-                <CookieConsentProvider>
-                  <ScarfTrackingInitializer />
-                  <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                    <AppInitializer />
-                    <BrandingAssetManager />
-                    <ToolRegistryProvider>
+                <ScarfTrackingInitializer />
+                <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                  <AppInitializer />
+                  <BrandingAssetManager />
+                  <ToolRegistryProvider>
                       <NavigationProvider>
                         <FilesModalProvider>
                           <ToolWorkflowProvider>
@@ -114,7 +112,6 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                       </NavigationProvider>
                     </ToolRegistryProvider>
                   </FileContextProvider>
-                </CookieConsentProvider>
               </AppConfigProvider>
             </OnboardingProvider>
           </BannerProvider>
