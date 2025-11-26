@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import type { LicenseNotice } from '@app/types/types';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -39,7 +38,6 @@ interface ServerLicenseModalHandlers {
 export function useOnboardingFlow() {
   const { preferences, updatePreference } = usePreferences();
   const { config, loading: configLoading } = useAppConfig();
-  const { showCookieConsent, isReady: isCookieConsentReady } = useCookieConsentContext();
   const { completeTour, tourType, isOpen } = useOnboarding();
   const location = useLocation();
   
@@ -71,7 +69,6 @@ export function useOnboardingFlow() {
     isOverLimit: false,
     requiresLicense: false,
   });
-  const [cookieBannerPending, setCookieBannerPending] = useState(false);
   const [serverLicenseIntent, setServerLicenseIntent] = useState<'idle' | 'pending' | 'deferred'>('idle');
   const [serverLicenseSource, setServerLicenseSource] = useState<'config' | 'self-reported' | null>(null);
   const [isServerLicenseOpen, setIsServerLicenseOpen] = useState(false);
@@ -96,29 +93,6 @@ export function useOnboardingFlow() {
   const handleToolPromptComplete = useCallback(() => {
     setToolPromptCompleted(true);
   }, []);
-
-  const maybeShowCookieBanner = useCallback(() => {
-    if (preferences.hasSeenCookieBanner) {
-      return;
-    }
-
-    if (!isCookieConsentReady || isServerLicenseOpen || serverLicenseIntent !== 'idle' || !toolPromptCompleted) {
-      setCookieBannerPending(true);
-      return;
-    }
-
-    setCookieBannerPending(false);
-    showCookieConsent();
-    updatePreference('hasSeenCookieBanner', true);
-  }, [
-    isCookieConsentReady,
-    isServerLicenseOpen,
-    preferences.hasSeenCookieBanner,
-    serverLicenseIntent,
-    showCookieConsent,
-    toolPromptCompleted,
-    updatePreference,
-  ]);
 
   const requestServerLicense = useCallback(
     ({
@@ -192,25 +166,6 @@ export function useOnboardingFlow() {
   }, [requestServerLicense]);
 
   useEffect(() => {
-    if (
-      cookieBannerPending &&
-      isCookieConsentReady &&
-      serverLicenseIntent === 'idle' &&
-      !isServerLicenseOpen &&
-      toolPromptCompleted
-    ) {
-      maybeShowCookieBanner();
-    }
-  }, [
-    cookieBannerPending,
-    isCookieConsentReady,
-    isServerLicenseOpen,
-    serverLicenseIntent,
-    toolPromptCompleted,
-    maybeShowCookieBanner,
-  ]);
-
-  useEffect(() => {
     const isEligibleAdmin =
       isAdminUser || serverLicenseSource === 'self-reported' || licenseNotice.requiresLicense;
     if (
@@ -269,8 +224,7 @@ export function useOnboardingFlow() {
     setHasShownServerLicense(true);
     setServerLicenseIntent('idle');
     setServerLicenseSource(null);
-    maybeShowCookieBanner();
-  }, [maybeShowCookieBanner]);
+  }, []);
 
   useEffect(() => {
     if (onboardingSessionMarkedRef.current) {
@@ -309,11 +263,9 @@ export function useOnboardingFlow() {
       setServerLicenseSource((prev) => prev ?? (isAdminUser ? 'config' : 'self-reported'));
       setServerLicenseIntent((prev) => (prev === 'pending' ? prev : 'pending'));
     }
-    maybeShowCookieBanner();
   }, [
     completeTour,
     isAdminUser,
-    maybeShowCookieBanner,
     serverLicenseIntent,
     serverLicenseSource,
     tourType,
