@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - V2
-      - V2-demo
       - V2-master
 
 # cancel in-progress jobs if a new job is triggered
