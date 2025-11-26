@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
+import { parse } from 'smol-toml';
 
 const REPO_ROOT = path.join(__dirname, '../../../..');
 const SRC_ROOT = path.join(__dirname, '../..');
-const EN_GB_FILE = path.join(__dirname, '../../../public/locales/en-GB/translation.json');
+const EN_GB_FILE = path.join(__dirname, '../../../public/locales/en-GB/translation.toml');
 
 const IGNORED_DIRS = new Set([
   'tests',
@@ -150,7 +151,7 @@ describe('Missing translation coverage', () => {
     expect(fs.existsSync(EN_GB_FILE)).toBe(true);
 
     const localeContent = fs.readFileSync(EN_GB_FILE, 'utf8');
-    const enGb = JSON.parse(localeContent);
+    const enGb = parse(localeContent);
     const availableKeys = flattenKeys(enGb);
 
     const usedKeys = listSourceFiles()

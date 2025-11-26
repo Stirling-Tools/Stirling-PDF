@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { parse } from 'smol-toml';
 
 const LOCALES_DIR = path.join(__dirname, '../../../public/locales');
 
@@ -40,11 +41,11 @@ describe('Translation key structure', () => {
     expect(localeDirectories.length).toBeGreaterThan(0);
   });
 
-  test.each(localeDirectories)('should not contain dotted keys in %s/translation.json', (localeDir) => {
-    const translationFile = path.join(LOCALES_DIR, localeDir, 'translation.json');
+  test.each(localeDirectories)('should not contain dotted keys in %s/translation.toml', (localeDir) => {
+    const translationFile = path.join(LOCALES_DIR, localeDir, 'translation.toml');
     expect(fs.existsSync(translationFile)).toBe(true);
 
-    const data = JSON.parse(fs.readFileSync(translationFile, 'utf8'));
+    const data = parse(fs.readFileSync(translationFile, 'utf8'));
     const dottedKeys = findDottedKeys(data);
     expect(dottedKeys, `Dotted keys found in ${localeDir}: ${dottedKeys.join(', ')}`).toHaveLength(0);
   });
