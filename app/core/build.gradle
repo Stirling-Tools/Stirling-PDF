@@ -1,5 +1,7 @@
 apply plugin: 'org.springframework.boot'
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 repositories {
     maven { url = 'https://build.shibboleth.net/maven/releases' }
     maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
@@ -15,6 +17,7 @@ configurations {
 spotless {
     java {
         target 'src/**/java/**/*.java'
+        targetExclude 'src/main/resources/static/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
@@ -25,12 +28,14 @@ spotless {
     }
     yaml {
         target '**/*.yml', '**/*.yaml'
+        targetExclude 'src/main/resources/static/**'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
     }
     format 'gradle', {
         target '**/gradle/*.gradle', '**/*.gradle'
+        targetExclude 'src/main/resources/static/**'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -155,6 +160,107 @@ bootJar {
 // Configure main class for Spring Boot
 springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
+}
+
+// Frontend build tasks - only enabled with -PbuildWithFrontend=true
+def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
+def frontendDir = file('../../frontend')
+def frontendDistDir = file('../../frontend/dist')
+def resourcesStaticDir = file('src/main/resources/static')
+
+tasks.register('npmInstall', Exec) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Install frontend dependencies'
+    workingDir frontendDir
+    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'ci', '--prefer-offline'] : ['npm', 'ci', '--prefer-offline']
+    inputs.file(new File(frontendDir, 'package.json'))
+    inputs.file(new File(frontendDir, 'package-lock.json'))
+    outputs.dir(new File(frontendDir, 'node_modules'))
+
+    // Show live output
+    standardOutput = System.out
+    errorOutput = System.err
+
+    // Skip if node_modules exists and is up-to-date
+    onlyIf {
+        def nodeModules = new File(frontendDir, 'node_modules')
+        if (!nodeModules.exists()) {
+            println "node_modules not found, will install..."
+            return true
+        }
+        def packageJson = new File(frontendDir, 'package.json')
+        def packageLock = new File(frontendDir, 'package-lock.json')
+        def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
+                        nodeModules.lastModified() < packageLock.lastModified()
+        if (isOutdated) {
+            println "package.json or package-lock.json changed, will reinstall..."
+        } else {
+            println "node_modules is up-to-date, skipping npm install"
+        }
+        return isOutdated
+    }
+
+    doFirst {
+        println "Installing npm dependencies in ${frontendDir}..."
+    }
+}
+
+tasks.register('npmBuild', Exec) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Build frontend application'
+    workingDir frontendDir
+    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
+    dependsOn npmInstall
+    inputs.dir(new File(frontendDir, 'src'))
+    inputs.file(new File(frontendDir, 'package.json'))
+    outputs.dir(frontendDistDir)
+
+    // Show live output
+    standardOutput = System.out
+    errorOutput = System.err
+
+    // Override VITE_API_BASE_URL to use relative paths for production builds
+    // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
+    environment 'VITE_API_BASE_URL', '/'
+
+    doFirst {
+        println "Building frontend application for production (VITE_API_BASE_URL=/)"
+    }
+}
+
+tasks.register('copyFrontendAssets', Copy) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Copy frontend build to static resources'
+    dependsOn npmBuild
+    from(frontendDistDir) {
+        // Exclude files that conflict with backend static resources
+        exclude 'robots.txt'  // Backend already has this
+        exclude 'favicon.ico' // Backend already has this
+    }
+    into resourcesStaticDir
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
+    doFirst {
+        println "Copying frontend build from ${frontendDistDir} to ${resourcesStaticDir}..."
+        println "Backend static resources will be preserved"
+    }
+    doLast {
+        println "Frontend assets copied successfully!"
+    }
+}
+
+// Ensure copyFrontendAssets runs after spotless tasks
+tasks.named('copyFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
+if (buildWithFrontend) {
+    println "Frontend build enabled - JAR will include React frontend"
+    processResources.dependsOn copyFrontendAssets
+} else {
+    println "Frontend build disabled - JAR will be backend-only"
 }
 
 bootJar.dependsOn ':common:jar'
