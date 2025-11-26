@@ -9,7 +9,6 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
-import { useCookieConsentContext } from "@app/contexts/CookieConsentContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -49,7 +48,6 @@ export default function HomePage() {
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
-  const { hasResponded: cookieConsentResponded } = useCookieConsentContext();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
@@ -64,10 +62,10 @@ export default function HomePage() {
 
   // Show admin analytics choice modal if analytics settings not configured
   useEffect(() => {
-    if (config && config.enableAnalytics === null && cookieConsentResponded) {
+    if (config && config.enableAnalytics === null) {
       setShowAnalyticsModal(true);
     }
-  }, [config, cookieConsentResponded]);
+  }, [config]);
 
   // Auto-switch to viewer when going from 0 to 1 file
   useEffect(() => {

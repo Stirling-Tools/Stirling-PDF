@@ -1,6 +1,6 @@
 import { Flex } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
+import { useCookieConsent } from '@app/hooks/useCookieConsent';
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -20,7 +20,7 @@ export default function Footer({
   analyticsEnabled = false
 }: FooterProps) {
   const { t } = useTranslation();
-  const { showCookiePreferences } = useCookieConsentContext();
+  const { showCookiePreferences } = useCookieConsent({ analyticsEnabled });
 
   // Helper to check if a value is valid (not null/undefined/empty string)
   const isValidLink = (link?: string) => link && link.trim().length > 0;

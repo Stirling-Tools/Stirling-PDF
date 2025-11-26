@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useCookieConsentContext } from '@app/contexts/CookieConsentContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
@@ -22,7 +21,6 @@ const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { hasResponded: cookieChoiceMade } = useCookieConsentContext();
   const { isOpen: tourOpen } = useOnboarding();
   const { openCheckout } = useCheckout();
   const {
@@ -159,7 +157,6 @@ const UpgradeBanner: React.FC = () => {
         shouldShowFriendlyBase &&
           !licenseLoading &&
           effectiveTotalUsersLoaded &&
-          cookieChoiceMade &&
           !tourOpen &&
           !sessionBlocked,
       );
@@ -168,7 +165,6 @@ const UpgradeBanner: React.FC = () => {
     : Boolean(
         shouldShowUrgentBase &&
           !licenseLoading &&
-          cookieChoiceMade &&
           !tourOpen &&
           !sessionBlocked,
       );
