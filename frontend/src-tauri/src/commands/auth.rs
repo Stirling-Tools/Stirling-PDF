@@ -1,3 +1,4 @@
+use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
@@ -7,12 +8,11 @@ use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
-use keyring::Entry;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
-const KEYRING_SERVICE: &str = "com.stirlingpdf.app";
-const KEYRING_TOKEN_KEY: &str = "auth_token";
+const KEYRING_SERVICE: &str = "stirling-pdf";
+const KEYRING_TOKEN_KEY: &str = "auth-token";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
@@ -20,66 +20,55 @@ pub struct UserInfo {
     pub email: Option<String>,
 }
 
+fn get_keyring_entry() -> Result<Entry, String> {
+    Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
+        .map_err(|e| format!("Failed to access keyring: {}", e))
+}
+
 #[tauri::command]
 pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    log::info!("Saving auth token to OS keyring");
+    log::info!("Saving auth token to keyring");
 
-    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
-        .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
+    let entry = get_keyring_entry()?;
 
     entry
         .set_password(&token)
         .map_err(|e| format!("Failed to save token to keyring: {}", e))?;
 
-    log::info!("Auth token saved successfully to OS keyring");
+    log::info!("Auth token saved successfully");
     Ok(())
 }
 
 #[tauri::command]
 pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
-    log::debug!("Retrieving auth token from OS keyring");
+    log::debug!("Retrieving auth token from keyring");
 
-    let entry = match Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY) {
-        Ok(e) => e,
-        Err(e) => {
-            log::warn!("Failed to create keyring entry, returning None to allow localStorage fallback: {}", e);
-            return Ok(None);
-        }
-    };
+    let entry = get_keyring_entry()?;
 
     match entry.get_password() {
-        Ok(token) => {
-            log::debug!("Token retrieved from OS keyring (length: {})", token.len());
-            Ok(Some(token))
-        }
-        Err(e) => {
-            // Return None for ANY keyring error to allow localStorage fallback
-            log::warn!("Keyring error (returning None to allow localStorage fallback): {}", e);
-            Ok(None)
-        }
+        Ok(token) => Ok(Some(token)),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(format!("Failed to retrieve token: {}", e)),
     }
 }
 
 #[tauri::command]
 pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing auth token from OS keyring");
+    log::info!("Clearing auth token from keyring");
 
-    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
-        .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
+    let entry = get_keyring_entry()?;
 
+    // Delete the token - ignore error if it doesn't exist
     match entry.delete_credential() {
         Ok(_) => {
-            log::info!("Auth token cleared successfully from OS keyring");
+            log::info!("Auth token cleared successfully");
             Ok(())
         }
         Err(keyring::Error::NoEntry) => {
-            log::info!("No token to clear from OS keyring");
+            log::info!("Auth token was already cleared");
             Ok(())
         }
-        Err(e) => {
-            log::warn!("Error clearing token from OS keyring: {}", e);
-            Err(format!("Failed to clear token from keyring: {}", e))
-        }
+        Err(e) => Err(format!("Failed to clear token: {}", e)),
     }
 }
 
