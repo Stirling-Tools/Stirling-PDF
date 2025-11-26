@@ -192,8 +192,11 @@ public class UserLicenseSettingsService {
                                 + "They will retain OAuth access even without a paid license. "
                                 + "New users will require a paid license for OAuth.",
                         updated);
+            }
 
-                // Also grandfather pending users (invited but never logged in) at the same time
+            // Grandfather pending users (invited but never logged in)
+            // The query filters to non-grandfathered users only, so this is idempotent
+            if (grandfatheredCount > 0 || oauthUsersCount > 0) {
                 int pendingUpdated = userService.grandfatherPendingSsoUsersWithoutSession();
                 if (pendingUpdated > 0) {
                     log.warn(
@@ -201,10 +204,6 @@ public class UserLicenseSettingsService {
                                     + " grandfathered.",
                             pendingUpdated);
                 }
-            } else if (grandfatheredCount > 0) {
-                log.debug(
-                        "OAuth grandfathering already completed: {} users grandfathered",
-                        grandfatheredCount);
             }
         }
     }

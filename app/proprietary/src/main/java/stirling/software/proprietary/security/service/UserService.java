@@ -776,7 +776,7 @@ public class UserService implements UserServiceInterface {
             userRepository.saveAll(ssoUsers);
         }
 
-         return updated;
+        return updated;
     }
 
     /**

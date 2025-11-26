@@ -204,7 +204,7 @@ class UserLicenseSettingsServiceTest {
 
     @Test
     void grandfatherExistingOAuthUsers_runsOnlyWhenNoneGrandfathered() {
-        // With grandfatheredCount == 0, should run grandfathering
+        // With grandfatheredCount == 0, should run grandfathering for all users
         when(userService.countOAuthUsers()).thenReturn(10L);
         when(userService.countGrandfatheredOAuthUsers()).thenReturn(0L);
         when(userService.grandfatherAllOAuthUsers()).thenReturn(10);
@@ -217,26 +217,29 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
-    void grandfatherExistingOAuthUsers_skipsWhenSomeAlreadyGrandfathered() {
-        // If any users are already grandfathered, skip (grandfathering already happened)
+    void grandfatherExistingOAuthUsers_skipsMainButRunsPendingWhenSomeAlreadyGrandfathered() {
+        // V2→V2.1 upgrade: some users already grandfathered, but pending users need to be checked
         when(userService.countOAuthUsers()).thenReturn(10L);
         when(userService.countGrandfatheredOAuthUsers()).thenReturn(4L);
+        when(userService.grandfatherPendingSsoUsersWithoutSession()).thenReturn(2);
 
         service.grandfatherExistingOAuthUsers();
 
         verify(userService, never()).grandfatherAllOAuthUsers();
-        verify(userService, never()).grandfatherPendingSsoUsersWithoutSession();
+        verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
     }
 
     @Test
-    void grandfatherExistingOAuthUsers_skipsWhenAllUsersGrandfathered() {
+    void grandfatherExistingOAuthUsers_stillChecksPendingWhenAllUsersGrandfathered() {
+        // All active users grandfathered, but still check for pending users
         when(userService.countOAuthUsers()).thenReturn(10L);
         when(userService.countGrandfatheredOAuthUsers()).thenReturn(10L);
+        when(userService.grandfatherPendingSsoUsersWithoutSession()).thenReturn(0);
 
         service.grandfatherExistingOAuthUsers();
 
         verify(userService, never()).grandfatherAllOAuthUsers();
-        verify(userService, never()).grandfatherPendingSsoUsersWithoutSession();
+        verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
     }
 
     @Test
@@ -253,7 +256,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void grandfatherExistingOAuthUsers_grandfathersPendingUsersOnFirstRun() {
         // Pending users (invited but never logged in) should be grandfathered
-        // only during the initial grandfathering run (when grandfatheredCount == 0)
+        // during the initial grandfathering run (when grandfatheredCount == 0)
         when(userService.countOAuthUsers()).thenReturn(5L);
         when(userService.countGrandfatheredOAuthUsers()).thenReturn(0L);
         when(userService.grandfatherAllOAuthUsers()).thenReturn(5);
