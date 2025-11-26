@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { parse } from 'smol-toml';
 
 const LOCALES_DIR = path.join(__dirname, '../../../public/locales');
 
@@ -17,7 +18,7 @@ const getLocaleDirectories = () => {
 
 const localeDirectories = getLocaleDirectories();
 
-describe('Translation JSON Validation', () => {
+describe('Translation TOML Validation', () => {
   test('should find the locales directory', () => {
     expect(fs.existsSync(LOCALES_DIR)).toBe(true);
   });
@@ -26,8 +27,8 @@ describe('Translation JSON Validation', () => {
     expect(localeDirectories.length).toBeGreaterThan(0);
   });
 
-  test.each(localeDirectories)('should have valid JSON in %s/translation.json', (localeDir) => {
-    const translationFile = path.join(LOCALES_DIR, localeDir, 'translation.json');
+  test.each(localeDirectories)('should have valid TOML in %s/translation.toml', (localeDir) => {
+    const translationFile = path.join(LOCALES_DIR, localeDir, 'translation.toml');
 
     // Check if file exists
     expect(fs.existsSync(translationFile)).toBe(true);
@@ -36,15 +37,15 @@ describe('Translation JSON Validation', () => {
     const content = fs.readFileSync(translationFile, 'utf8');
     expect(content.trim()).not.toBe('');
 
-    // Parse JSON - this will throw if invalid JSON
-    let jsonData;
+    // Parse TOML - this will throw if invalid TOML
+    let tomlData;
     expect(() => {
-      jsonData = JSON.parse(content);
+      tomlData = parse(content);
     }).not.toThrow();
 
     // Ensure it's an object at root level
-    expect(typeof jsonData).toBe('object');
-    expect(jsonData).not.toBeNull();
-    expect(Array.isArray(jsonData)).toBe(false);
+    expect(typeof tomlData).toBe('object');
+    expect(tomlData).not.toBeNull();
+    expect(Array.isArray(tomlData)).toBe(false);
   });
 });

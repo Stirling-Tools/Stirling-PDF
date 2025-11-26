@@ -1,0 +1,5995 @@
+unsavedChanges = "您的 PDF 有未保存的更改。您想做什么?"
+areYouSure = "确定要离开吗？"
+unsavedChangesTitle = "未保存的更改"
+keepWorking = "继续工作"
+discardChanges = "放弃更改"
+applyAndContinue = "应用并继续"
+exportAndContinue = "导出并继续"
+cancel = "取消"
+pageSelectionPrompt = "自定义页面选择（输入以逗号分隔的页码列表或函数：1,5,6、2n+1）："
+startingNumberTooltip = "要显示的第一个数字。后续页面将从此数字递增。"
+marginTooltip = "页码与页面边缘的距离。"
+fontSizeTooltip = "页码文本的点数大小。数值越大文字越大。"
+fontTypeTooltip = "页码的字体族。根据文档风格选择。"
+customTextTooltip = "可选的自定义页码格式。使用 {n} 作为数字占位符。例如：“第 {n} 页”将显示“第 1 页”“第 2 页”等。"
+pdfPrompt = "选择 PDF"
+multiPdfPrompt = "选择多个 PDF（2个或更多）"
+multiPdfDropPrompt = "选择（或拖拽）所需的 PDF"
+imgPrompt = "选择图像"
+genericSubmit = "提交"
+uploadLimit = "最大文件大小："
+uploadLimitExceededSingular = "文件过大。最大允许大小为"
+uploadLimitExceededPlural = "文件过大。最大允许大小为"
+processTimeWarning = "警告：此过程可能需要多达一分钟，具体时间取决于文件大小"
+pageOrderPrompt = "页面顺序（输入逗号分隔的页码列表或函数）："
+goToPage = "到"
+true = "对"
+false = "错"
+unknown = "未知"
+save = "保存"
+saveToBrowser = "保存到浏览器"
+download = "下载"
+downloadUnavailable = "此项不支持下载"
+saveUnavailable = "此项目无法保存"
+pin = "固定文件（在工具运行后保持激活）"
+unpin = "取消固定文件（在工具运行后替换）"
+undoOperationTooltip = "点击撤销上一次操作并还原原始文件"
+undo = "撤销"
+back = "返回"
+nothingToUndo = "没有可撤销的操作"
+moreOptions = "更多选项"
+editYourNewFiles = "编辑您的新文件"
+close = "关闭"
+openInViewer = "在查看器中打开"
+confirmClose = "确认关闭"
+confirmCloseMessage = "确定要关闭此文件吗？"
+confirmCloseCancel = "取消"
+confirmCloseConfirm = "关闭文件"
+fileSelected = "已选：{{filename}}"
+chooseFile = "选择文件"
+filesSelected = "选中的文件"
+noFavourites = "没有添加收藏夹"
+downloadComplete = "下载完成"
+bored = "等待时觉得无聊？"
+alphabet = "字母表"
+downloadPdf = "下载 PDF"
+text = "文本"
+font = "字体"
+selectFillter = "-- 选择--"
+pageNum = "页码"
+edit = "编辑"
+delete = "删除"
+never = "从不"
+username = "用户名"
+password = "密码"
+welcome = "欢迎"
+property = "资产"
+black = "黑色"
+white = "白色"
+red = "红色"
+green = "绿色"
+blue = "蓝色"
+custom = "自定义..."
+comingSoon = "即将推出"
+WorkInProgess = "工作正在进行中，可能无法工作或有错误，请报告任何问题！"
+poweredBy = "服务来源："
+yes = "是"
+no = "否"
+changedCredsMessage = "凭证已更改！"
+notAuthenticatedMessage = "用户未经过身份验证。"
+userNotFoundMessage = "未找到用户。"
+incorrectPasswordMessage = "当前密码不正确。"
+usernameExistsMessage = "新用户名已存在。"
+invalidUsernameMessage = "用户名无效，用户名只能包含字母、数字和以下特殊字符@._+- 或必须是有效的电子邮件地址。"
+invalidPasswordMessage = "密码不能为空且开头和结尾不能有空格。"
+confirmPasswordErrorMessage = "两次密码不一致。"
+deleteCurrentUserMessage = "无法删除当前登录的用户。"
+deleteUsernameExistsMessage = "用户名不存在，无法删除。"
+downgradeCurrentUserMessage = "无法降级当前用户的角色"
+disabledCurrentUserMessage = "无法禁用当前用户。"
+downgradeCurrentUserLongMessage = "无法降级当前用户的角色。因此，当前用户将不会显示。"
+userAlreadyExistsOAuthMessage = "该用户已作为 OAuth2 用户存在。"
+userAlreadyExistsWebMessage = "该用户已作为 Web 用户存在。"
+oops = "哎呀！"
+help = "帮助"
+goHomepage = "返回主页"
+joinDiscord = "加入我们的 Discord 服务器"
+seeDockerHub = "查看 Docker Hub"
+visitGithub = "访问 Github 仓库"
+donate = "捐款"
+color = "颜色"
+sponsor = "赞助"
+info = "信息"
+pro = "专业版"
+page = "页面"
+pages = "页码"
+loading = "加载中..."
+review = "审核"
+addToDoc = "添加至文件"
+reset = "重置"
+apply = "应用"
+noFileSelected = "未选择文件，请上传一个文件。"
+termsAndConditions = "条款与条件"
+logOut = "退出登录"
+customPosition = "自定义位置"
+details = "详情"
+invalidUndoData = "无法撤销：操作数据无效"
+noFilesToUndo = "无法撤销：上一次操作未处理任何文件"
+noOperationToUndo = "没有可撤销的操作"
+noValidFiles = "没有可处理的有效文件"
+operationCancelled = "操作已取消"
+quickPosition = "快速定位"
+size = "大小"
+submit = "提交"
+success = "成功"
+undoDataMismatch = "无法撤销：操作数据已损坏"
+undoFailed = "撤销操作失败"
+undoQuotaError = "无法撤销：存储空间不足"
+undoStorageError = "已撤销，但部分文件无法保存到存储中"
+undoSuccess = "已成功撤销操作"
+unsupported = "不受支持"
+
+[toolPanel]
+placeholder = "选择一个工具以开始"
+alpha = "Alpha"
+premiumFeature = "高级功能："
+comingSoon = "即将推出："
+
+[toolPanel.modePrompt]
+title = "选择浏览工具的方式"
+description = "预览两种布局并决定如何探索 Stirling PDF 工具。"
+sidebarTitle = "侧边栏模式"
+sidebarDescription = "将工具与您的工作区并列，便于快速切换。"
+recommended = "推荐"
+chooseSidebar = "使用侧边栏模式"
+fullscreenTitle = "全屏模式 -（旧版）"
+fullscreenDescription = "在覆盖工作区的目录中浏览每个工具，直到您选定一个。"
+chooseFullscreen = "使用全屏模式"
+dismiss = "稍后再说"
+
+[toolPanel.fullscreen]
+showDetails = "显示详情"
+comingSoon = "即将推出："
+favorite = "添加到收藏"
+favorites = "收藏"
+unavailable = "由服务器管理员禁用："
+unavailableDependency = "不可用 - 服务器缺少所需工具："
+heading = "所有工具（全屏视图）"
+noResults = "尝试调整搜索或切换描述显示以找到所需内容。"
+recommended = "推荐"
+unfavorite = "从收藏中移除"
+
+[toolPanel.toggle]
+fullscreen = "切换到全屏模式"
+sidebar = "切换到侧边栏模式"
+
+[zipWarning]
+title = "大型 ZIP 文件"
+message = "此 ZIP 包含 {{count}} 个文件。仍要解压？"
+cancel = "取消"
+confirm = "解压"
+
+[defaultApp]
+title = "设为默认 PDF 应用"
+message = "是否将 Stirling PDF 设为默认 PDF 编辑器？"
+description = "您可稍后在系统设置中更改。"
+notNow = "暂不"
+setDefault = "设为默认"
+dismiss = "忽略"
+
+[defaultApp.prompt]
+title = "设为默认 PDF 编辑器"
+message = "将 Stirling PDF 设为打开 PDF 文件的默认应用。"
+
+[defaultApp.success]
+title = "已设为默认应用"
+message = "Stirling PDF 现为您的默认 PDF 编辑器"
+
+[defaultApp.settingsOpened]
+title = "已打开设置"
+message = "请在系统设置中选择 Stirling PDF"
+
+[defaultApp.error]
+title = "错误"
+message = "设置默认 PDF 处理程序失败"
+
+[language]
+direction = "ltr"
+
+[addPageNumbers]
+fontSize = "字体大小"
+fontName = "字体名称"
+title = "添加页码"
+header = "添加页码"
+customTextDesc = "自定义文本"
+numberPagesDesc = "要添加页码的页数，默认为“所有”，也可以接受1-5或2,5,9等"
+customNumberDesc = "默认为 {n}，也可以接受“第 {n} 页/共 {total} 页”，“文本-{n}”，“{filename}-{n}”"
+submit = "添加页码"
+configuration = "配置"
+customize = "自定义外观"
+pagesAndStarting = "页面与起始编号"
+positionAndPages = "位置与页面"
+preview = "位置选择"
+previewDisclaimer = "预览为近似效果。最终输出可能因 PDF 字体度量而有所不同。"
+
+[addPageNumbers.selectText]
+1 = "选择PDF文件："
+2 = "边距大小"
+3 = "位置"
+4 = "起始页码"
+5 = "添加页码的页数"
+6 = "自定义文本"
+
+[addPageNumbers.error]
+failed = "添加页码操作失败"
+
+[addPageNumbers.results]
+title = "页码结果"
+
+[app]
+description = "免费的 Adobe Acrobat 替代品（下载量 1000 万+）"
+
+[files]
+title = "文件"
+upload = "上传"
+uploadFiles = "上传文件"
+addFiles = "添加文件"
+selectFromWorkbench = "从工作台中选择文件或 "
+selectMultipleFromWorkbench = "从工作台中至少选择 {{count}} 个文件或 "
+created = "创建时间"
+size = "文件大小"
+
+[sizes]
+small = "小型尺寸"
+medium = "中型尺寸"
+large = "大型尺寸"
+x-large = "超大型尺寸"
+
+[error]
+pdfPassword = "PDF文档有密码，未提供密码或密码不正确"
+encryptedPdfMustRemovePassword = "此 PDF 已加密或受密码保护。请在转换为 PDF/A 之前将其解锁。"
+incorrectPasswordProvided = "PDF 密码不正确或未提供。"
+_value = "错误"
+dismissAllErrors = "关闭所有错误"
+sorry = "对此问题感到抱歉！"
+needHelp = "需要帮助 / 发现问题？"
+contactTip = "如果你仍然遇到问题，不要犹豫，向我们寻求帮助。你可以在我们的 GitHub 页面上提交工单，或者通过 Discord 与我们联系："
+github = "在 GitHub 上提交工单"
+showStack = "显示堆栈跟踪"
+copyStack = "复制堆栈跟踪"
+githubSubmit = "GitHub - 提交工单"
+discordSubmit = "Discord - 提交支持帖子"
+
+[error.404]
+head = "404 - 页面未找到 | 哎呀，我们在代码中触发了错误！"
+1 = "我们似乎找不到你寻找的页面。"
+2 = "出了些问题"
+
+[warning]
+tooltipTitle = "警告"
+
+[legal]
+privacy = "隐私政策"
+iAgreeToThe = "我同意所有"
+terms = "服务条款"
+accessibility = "无障碍"
+cookie = "Cookie 政策"
+impressum = "版权声明"
+showCookieBanner = "Cookie 偏好设置"
+
+[pipeline]
+header = "流水线菜单（Beta）"
+uploadButton = "上传自定义流水线"
+configureButton = "配置"
+defaultOption = "自定义"
+submitButton = "提交"
+help = "工作流帮助"
+scanHelp = "文件夹扫描帮助"
+deletePrompt = "确认删除该工作流？"
+tags = "自动化、顺序、脚本化、批处理"
+title = "流水线"
+
+[pipelineOptions]
+header = "流水线配置"
+pipelineNameLabel = "流水线名称"
+saveSettings = "保存设置"
+pipelineNamePrompt = "请输入流水线名称"
+selectOperation = "选择操作"
+addOperationButton = "添加操作"
+pipelineHeader = "流水线:"
+saveButton = "下载"
+validateButton = "验证"
+
+[enterpriseEdition]
+button = "升级到 Pro 版本"
+warning = "此功能仅适用于 Pro 版本"
+yamlAdvert = "Stirling PDF Pro支持YAML配置文件和其他SSO功能。"
+ssoAdvert = "寻找更多的用户管理功能？查看Stirling PDF Pro"
+
+[analytics]
+title = "你想协助改善Stirling PDF吗"
+paragraph1 = "Stirling PDF有选择性分析功能，可以帮助我们改进产品。我们不跟踪任何个人信息或文件内容。"
+paragraph2 = "请考虑启用分析来帮助Stirling-PDF的发展，并让我们更好地了解我们的用户。"
+learnMore = "了解详情"
+enable = "启用分析功能"
+disable = "禁用分析功能"
+settings = "您可以在 config/settings.yml 文件中变更分析功能的设定"
+privacyAssurance = "我们不会跟踪任何个人信息或您的文件内容。"
+
+[navbar]
+favorite = "收藏"
+recent = "新功能和最近更新"
+darkmode = "暗黑模式"
+language = "语言"
+settings = "设置"
+allTools = "工具箱"
+multiTool = "多功能工具"
+search = "搜索"
+
+[navbar.sections]
+organize = "组织"
+convertTo = "转换成PDF"
+convertFrom = "从PDF转换"
+security = "签名和安全"
+advance = "高级功能"
+edit = "查看和编辑"
+popular = "热门"
+
+[settings.preferences]
+title = "首选项"
+
+[settings.workspace]
+title = "工作区"
+people = "成员"
+teams = "团队"
+
+[settings.configuration]
+title = "配置"
+systemSettings = "系统设置"
+features = "功能"
+endpoints = "端点"
+database = "数据库"
+advanced = "高级"
+
+[settings.securityAuth]
+title = "安全与认证"
+security = "安全"
+connections = "连接"
+
+[settings.licensingAnalytics]
+title = "许可与分析"
+plan = "套餐"
+audit = "审计"
+usageAnalytics = "使用分析"
+
+[settings.policiesPrivacy]
+title = "策略与隐私"
+legal = "法律"
+privacy = "隐私"
+
+[settings.developer]
+title = "开发者"
+apiKeys = "API 密钥"
+
+[settings.tooltips]
+enableLoginFirst = "请先启用登录模式"
+requiresEnterprise = "需要企业版许可证"
+
+[settings.connection]
+title = "连接模式"
+server = "服务器"
+user = "登录身份"
+logout = "退出登录"
+
+[settings.connection.mode]
+saas = "Stirling Cloud"
+selfhosted = "自托管"
+
+[settings.general]
+title = "通用"
+description = "配置通用应用偏好。"
+user = "用户"
+logout = "退出登录"
+defaultToolPickerMode = "默认工具选择器模式"
+defaultToolPickerModeDescription = "选择工具选择器默认以全屏或侧边栏打开"
+autoUnzipTooltip = "自动解压 API 操作返回的 ZIP 文件。禁用以保持 ZIP 文件不变。这不会影响自动化工作流。"
+autoUnzip = "自动解压 API 响应"
+autoUnzipDescription = "自动从 ZIP 响应中提取文件"
+autoUnzipFileLimitTooltip = "仅当 ZIP 包含不超过此数量的文件时才解压。调高以提取更大的 ZIP。"
+autoUnzipFileLimit = "自动解压文件数量上限"
+autoUnzipFileLimitDescription = "从 ZIP 中提取的最大文件数"
+defaultPdfEditor = "默认 PDF 编辑器"
+defaultPdfEditorActive = "Stirling PDF 是您的默认 PDF 编辑器"
+defaultPdfEditorInactive = "其他应用被设为默认"
+defaultPdfEditorChecking = "正在检查..."
+defaultPdfEditorSet = "已为默认"
+setAsDefault = "设为默认"
+hideUnavailableTools = "隐藏不可用工具"
+hideUnavailableToolsDescription = "将服务器禁用的工具从列表中移除，而非灰显显示。"
+hideUnavailableConversions = "隐藏不可用转换"
+hideUnavailableConversionsDescription = "在“转换”工具中移除已禁用的转换选项，而非灰显显示。"
+
+[settings.general.enableFeatures]
+dismiss = "关闭"
+title = "面向系统管理员"
+intro = "为您的组织启用用户认证、团队管理和工作区功能。"
+action = "配置"
+and = "和"
+benefit = "启用用户角色、团队协作、管理员控制和企业功能。"
+learnMore = "在文档中了解更多"
+
+[settings.general.mode]
+sidebar = "侧边栏"
+fullscreen = "全屏"
+
+[settings.general.updates]
+title = "软件更新"
+description = "检查更新并查看版本信息"
+currentVersion = "当前版本"
+latestVersion = "最新版本"
+checkForUpdates = "检查更新"
+viewDetails = "查看详情"
+
+[settings.hotkeys]
+title = "键盘快捷键"
+description = "自定义键盘快捷键以快速访问工具。点击 \"更改快捷键\"，然后按下新的按键组合。按 Esc 取消。"
+errorConflict = "快捷键已被 {{tool}} 使用。"
+searchPlaceholder = "搜索工具..."
+none = "未分配"
+customBadge = "自定义"
+defaultLabel = "默认：{{shortcut}}"
+capturing = "按下按键…（按 Esc 取消）"
+change = "更改快捷键"
+reset = "重置"
+shortcut = "快捷键"
+noShortcut = "未设置快捷键"
+
+[settings.hotkeys.errorModifier]
+mac = "请在快捷键中包含 ⌘（Command）、⌥（Option）或其他修饰键。"
+windows = "请在快捷键中包含 Ctrl、Alt 或其他修饰键。"
+
+[update]
+modalTitle = "有可用更新"
+current = "当前版本"
+latest = "最新版本"
+latestStable = "最新稳定版"
+priorityLabel = "优先级"
+recommendedAction = "建议操作"
+breakingChangesDetected = "检测到重大变更"
+breakingChangesMessage = "某些版本包含重大变更。请在更新前查看下方迁移指南。"
+migrationGuides = "迁移指南"
+viewGuide = "查看指南"
+loadingDetailedInfo = "正在加载详细信息..."
+close = "关闭"
+viewAllReleases = "查看所有版本"
+downloadLatest = "下载最新"
+availableUpdates = "可用更新"
+unableToLoadDetails = "无法加载详细信息。"
+version = "版本"
+urgentUpdateAvailable = "紧急更新"
+updateAvailable = "有可用更新"
+releaseNotes = "发行说明"
+breakingChanges = "重大变更"
+breakingChangesDefault = "此版本包含重大变更。"
+migrationGuide = "迁移指南"
+
+[update.priority]
+urgent = "紧急"
+normal = "正常"
+minor = "次要"
+low = "低"
+
+[changeCreds]
+title = "更改凭证"
+header = "更新您的账户详情"
+changePassword = "您正在使用默认登录凭证，请输入新密码"
+newUsername = "新用户名"
+oldPassword = "当前密码"
+newPassword = "新密码"
+confirmNewPassword = "确认新密码"
+submit = "提交更改"
+
+[account]
+title = "账号设定"
+accountSettings = "账号设定"
+adminSettings = "管理员设置 - 查看和添加用户"
+userControlSettings = "用户控制设置"
+changeUsername = "更改用户名"
+newUsername = "新用户名"
+password = "确认密码"
+oldPassword = "旧密码"
+newPassword = "新密码"
+changePassword = "更改密码"
+confirmNewPassword = "确认新密码"
+signOut = "退出登录"
+yourApiKey = "您的 API 密钥"
+syncTitle = "将浏览器设置与账户同步"
+settingsCompare = "设置比较："
+property = "属性"
+webBrowserSettings = "Web 浏览器设置"
+syncToBrowser = "同步账户 -> 浏览器"
+syncToAccount = "同步账户 <- 浏览器"
+
+[adminUserSettings]
+title = "用户控制设置"
+header = "管理员用户控制设置"
+admin = "管理员"
+user = "用户"
+addUser = "添加新用户"
+deleteUser = "删除用户"
+confirmDeleteUser = "确认删除该用户？"
+confirmChangeUserStatus = "是否应禁用/启用该用户？"
+usernameInfo = "用户名只能包含字母、数字和以下特殊字符@._+-，或者必须是有效的电子邮件地址。"
+roles = "角色"
+role = "角色"
+actions = "操作"
+apiUser = "受限制的 API 用户"
+extraApiUser = "额外受限制的 API 用户"
+webOnlyUser = "仅限 Web 用户"
+demoUser = "演示用户(无自定义设置)"
+internalApiUser = "内部 API 用户"
+forceChange = "强制用户在登录时更改用户名/密码"
+submit = "保存用户"
+changeUserRole = "更改用户角色"
+authenticated = "已验证"
+editOwnProfil = "编辑个人资料"
+enabledUser = "启用用户"
+disabledUser = "禁用用户"
+activeUsers = "激活用户:"
+disabledUsers = "禁用用户:"
+totalUsers = "总用户:"
+lastRequest = "最后登录"
+usage = "查看使用情况"
+
+[endpointStatistics]
+title = "端点统计"
+header = "端点统计"
+top10 = "前10"
+top20 = "前20"
+all = "全部"
+refresh = "刷新"
+dataTypeLabel = "数据类型："
+dataTypeAll = "全部"
+dataTypeApi = "API"
+dataTypeUi = "UI"
+totalEndpoints = "端点总数"
+totalVisits = "访问总数"
+showing = "显示"
+selectedVisits = "选中访问数"
+endpoint = "端点"
+visits = "访问次数"
+percentage = "百分比"
+loading = "加载中..."
+failedToLoad = "加载端点数据失败。请尝试刷新。"
+home = "主页"
+login = "登录"
+top = "顶部"
+numberOfVisits = "访问次数"
+visitsTooltip = "访问次数：{0}(占总数的{1}%)"
+retry = "重试"
+
+[database]
+title = "数据库 导入/导出"
+header = "数据库 导入/导出"
+fileName = "文件名"
+creationDate = "创建时间"
+fileSize = "文件大小"
+deleteBackupFile = "删除备份文件"
+importBackupFile = "导入备份文件"
+createBackupFile = "创建备份文件"
+downloadBackupFile = "下载备份文件"
+info_1 = "导入数据时，确保结构正确至关重要。如果您不确定自己在做什么，请寻求专业人士的建议和支持。结构错误会导致应用程序故障，甚至完全无法运行应用程序。"
+info_2 = "上传文件时，文件名并不重要。上传后，文件名将重命名为 backup_user_yyyyMMddHHmm.sql，以确保命名规范的一致性。"
+submit = "导入备份"
+importIntoDatabaseSuccessed = "导入数据库成功"
+backupCreated = "数据库备份成功"
+fileNotFound = "未找到文件"
+fileNullOrEmpty = "文件不能为空"
+failedImportFile = "导入文件失败"
+notSupported = "此功能不适用于您的数据库连接。"
+
+[session]
+expired = "您的会话已过期。请刷新页面并重试。"
+refreshPage = "刷新页面"
+
+[home]
+desc = "本地部署的一站式服务，满足您的所有 PDF 需求。"
+searchBar = "搜索您需要的功能..."
+setFavorites = "编辑收藏夹"
+hideFavorites = "隐藏收藏夹"
+showFavorites = "显示收藏夹"
+legacyHomepage = "使用旧版主页"
+newHomePage = "试用新版主页!"
+alphabetical = "按字母顺序"
+globalPopularity = "按全球热度"
+sortBy = "排序:"
+
+[home.viewPdf]
+title = "浏览/编辑 PDF"
+desc = "浏览、注释、添加文本或图像"
+
+[home.mobile]
+brandAlt = "Stirling PDF 标志"
+openFiles = "打开文件"
+swipeHint = "左右滑动以切换视图"
+tools = "工具"
+toolsSlide = "工具选择面板"
+viewSwitcher = "切换工作区视图"
+workbenchSlide = "工作区面板"
+workspace = "工作区"
+
+[home.multiTool]
+tags = "多个,工具"
+title = "PDF 多功能工具"
+desc = "合并、旋转、重新排列和删除 PDF 页面"
+
+[home.merge]
+tags = "组合,合并,联合"
+title = "合并"
+desc = "轻松将多个 PDF 合并成一个。"
+
+[home.split]
+tags = "分割,分离,拆分"
+title = "拆分"
+desc = "将 PDF 拆分为多个文档。"
+
+[home.rotate]
+tags = "旋转,翻转,定向"
+title = "旋转"
+desc = "旋转 PDF。"
+
+[home.convert]
+tags = "转换,更改"
+title = "转换"
+desc = "在不同格式之间转换文件"
+
+[home.pdfOrganiser]
+tags = "组织,重新排列,重新排序"
+title = "整理"
+desc = "按任意顺序删除/重新排列页面。"
+
+[home.addImage]
+tags = "插入,嵌入,放置"
+title = "在 PDF 中添加图片"
+desc = "将图像添加到 PDF 的指定位置。"
+
+[home.addAttachments]
+tags = "嵌入,附加,包含"
+title = "添加附件"
+desc = "向 PDF 添加或移除嵌入文件（附件）"
+
+[home.watermark]
+tags = "印章,标记,叠加"
+title = "添加水印"
+desc = "在 PDF 中添加自定义水印。"
+
+[home.removePassword]
+tags = "解锁"
+title = "删除密码"
+desc = "从 PDF 文档中移除密码保护。"
+
+[home.compress]
+tags = "缩小,减少,优化"
+title = "压缩"
+desc = "压缩 PDF 文件以减小文件大小。"
+
+[home.unlockPDFForms]
+tags = "解锁,启用,编辑"
+title = "解锁PDF表单"
+desc = "移除表单字段只读属性"
+
+[home.changeMetadata]
+tags = "编辑,修改,更新"
+title = "更改元数据"
+desc = "更改/删除/添加 PDF 文档的元数据。"
+
+[home.ocr]
+tags = "提取,扫描"
+title = "运行 OCR /清理扫描"
+desc = "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。"
+
+[home.extractImages]
+tags = "提取,保存,导出"
+title = "提取图像"
+desc = "从 PDF 中提取所有图像并保存到压缩包中。"
+
+[home.scannerImageSplit]
+tags = "检测,拆分,照片"
+title = "检测/拆分扫描照片"
+desc = "从照片/PDF 中拆分出多张照片"
+
+[home.sign]
+tags = "签名,亲笔签名"
+title = "签名"
+desc = "通过绘图、文字或图像向 PDF 添加签名"
+
+[home.flatten]
+tags = "简化,删除,交互式"
+title = "展平"
+desc = "从 PDF 中删除所有互动元素和表单"
+
+[home.certSign]
+tags = "认证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动"
+title = "使用证书签名"
+desc = "使用证书/密钥（PEM/P12）对PDF进行签名"
+
+[home.repair]
+tags = "修复,恢复"
+title = "修复"
+desc = "尝试修复损坏/损坏的 PDF"
+
+[home.removeBlanks]
+tags = "删除,清理,空白"
+title = "删除空白页"
+desc = "检测并删除文档中的空白页"
+
+[home.removeAnnotations]
+tags = "删除,清理,删除"
+title = "删除标注"
+desc = "删除 PDF 中的所有标注/评论"
+
+[home.compare]
+tags = "差异"
+title = "比较"
+desc = "比较并显示两个 PDF 文档之间的差异"
+
+[home.removeCertSign]
+tags = "删除,删除,解锁"
+title = "移除证书签名"
+desc = "移除 PDF 的证书签名"
+
+[home.pageLayout]
+tags = "布局,排列,组合"
+title = "多页布局"
+desc = "将 PDF 文档的多个页面合并成一页"
+
+[home.bookletImposition]
+tags = "小册子,打印,装订"
+title = "小册子拼版"
+desc = "创建具有正确页面顺序和多页布局的小册子，用于打印和装订"
+
+[home.scalePages]
+tags = "调整大小,调整,缩放"
+title = "调整页面尺寸/缩放"
+desc = "调整页面及/或其内容的尺寸/缩放"
+
+[home.addPageNumbers]
+tags = "编号,分页,计数"
+title = "添加页码"
+desc = "在文档的指定位置添加页码"
+
+[home.autoRename]
+tags = "自动检测,基于标题,组织,重新标记"
+title = "自动重命名 PDF 文件"
+desc = "基于检测到的页眉自动重命名 PDF 文件"
+
+[home.adjustContrast]
+tags = "对比度,亮度,饱和度"
+title = "调整颜色/对比度"
+desc = "调整 PDF 的对比度、饱和度和亮度"
+
+[home.crop]
+tags = "裁剪,剪切,调整大小"
+title = "裁剪 PDF"
+desc = "裁剪 PDF 以减小其文件大小（保留文本！）"
+
+[home.autoSplitPDF]
+tags = "自动,拆分,QR"
+title = "自动拆分页面"
+desc = "使用物理扫描页面分割器 QR 代码自动拆分扫描的 PDF"
+
+[home.sanitize]
+tags = "清理,清除,删除"
+title = "安全清理"
+desc = "移除 PDF 文件中的潜在有害元素"
+
+[home.getPdfInfo]
+tags = "信息,元数据,详细信息"
+title = "获取 PDF 的所有信息"
+desc = "获取 PDF 的所有可能的信息"
+
+[home.pdfToSinglePage]
+tags = "组合,合并,单页"
+title = "PDF 转单一大页"
+desc = "将所有 PDF 页面合并为一个大的单页"
+
+[home.showJS]
+tags = "javascript,代码,脚本"
+title = "显示 JavaScript"
+desc = "搜索并显示嵌入到 PDF 中的任何 JavaScript 代码"
+
+[home.redact]
+tags = "审查,涂黑,隐藏"
+title = "手动修订"
+desc = "根据选定的文本、绘制的形状和/或选定的页面编辑PDF"
+
+[home.splitBySections]
+tags = "拆分,部分,分割"
+title = "按区块拆分 PDF"
+desc = "将 PDF 的每一页分割为更小的横向与纵向区块"
+
+[home.addStamp]
+tags = "印章,标记,盖章"
+title = "向 PDF 添加印章"
+desc = "在指定位置添加文本或图像印章"
+
+[home.removeImage]
+tags = "删除,删除,清理"
+title = "删除图像"
+desc = "删除图像减少 PDF 大小"
+
+[home.splitByChapters]
+tags = "拆分,章节,结构"
+title = "按章节拆分 PDF"
+desc = "根据其章节结构将 PDF 拆分为多个文件。"
+
+[home.validateSignature]
+tags = "验证,核实,证书"
+title = "验证 PDF 签名"
+desc = "验证 PDF 文档中的数字签名和证书"
+
+[home.swagger]
+tags = "API,文档,测试"
+title = "API 文档"
+desc = "查看 API 文档并测试端点"
+
+[home.scannerEffect]
+tags = "扫描,模拟,创建"
+title = "扫描仪效果"
+desc = "创建看起来像扫描的 PDF"
+
+[home.editTableOfContents]
+tags = "书签,目录,编辑"
+title = "编辑目录"
+desc = "为 PDF 文档添加或编辑目录和书签"
+
+[home.manageCertificates]
+tags = "证书,导入,导出"
+title = "管理证书"
+desc = "导入、导出或删除用于签名 PDF 的数字证书文件。"
+
+[home.read]
+tags = "查看,打开,显示"
+title = "阅读"
+desc = "查看与批注 PDF。高亮、绘制或插入评论以便审阅协作。"
+
+[home.reorganizePages]
+tags = "重新排列,重新排序,组织"
+title = "重组页面"
+desc = "通过可视化拖放控制重新排列、复制或删除 PDF 页面。"
+
+[home.extractPages]
+tags = "提取,选择,复制"
+title = "提取页面"
+desc = "从 PDF 文档中提取特定页面"
+
+[home.removePages]
+tags = "删除,提取,排除"
+title = "删除"
+desc = "从 PDF 文档中删除不需要的页面。"
+
+[home.autoSizeSplitPDF]
+tags = "自动,拆分,大小"
+title = "自动根据大小/数目拆分 PDF"
+desc = "将单个 PDF 拆分为多个文档，基于大小、页数或文档数"
+
+[home.replaceColor]
+title = "替换和反转颜色"
+desc = "替换或反转 PDF 文档中的颜色"
+
+[home.devApi]
+tags = "API,开发,文档"
+title = "API"
+desc = "跳转至 API 文档"
+
+[home.devFolderScanning]
+tags = "自动化,文件夹,扫描"
+title = "自动文件夹扫描"
+desc = "跳转至自动文件夹扫描指南"
+
+[home.devSsoGuide]
+title = "SSO 指南"
+desc = "跳转至 SSO 指南"
+
+[home.devAirgapped]
+title = "离线/隔离部署"
+desc = "跳转至隔离部署指南"
+
+[home.addPassword]
+title = "添加密码"
+desc = "使用密码对 PDF 文档进行加密。"
+
+[home.changePermissions]
+title = "更改权限"
+desc = "更改文档限制与权限"
+
+[home.automate]
+tags = "工作流,序列,自动化"
+title = "自动化"
+desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
+
+[home.overlay-pdfs]
+desc = "将一个 PDF 叠加在另一个之上"
+title = "叠加 PDF"
+
+[home.pdfTextEditor]
+title = "PDF 文本编辑器"
+desc = "审阅并编辑 Stirling PDF 导出的 JSON，支持分组文本编辑并重新生成 PDF"
+
+[home.addText]
+tags = "文本,注释,标签"
+title = "添加文本"
+desc = "在 PDF 任意位置添加自定义文本"
+
+[landing]
+addFiles = "添加文件"
+uploadFromComputer = "从电脑上传"
+openFromComputer = "从电脑打开"
+
+[viewPdf]
+tags = "浏览、阅读、注释、文本、图像"
+title = "浏览/编辑 PDF"
+header = "浏览 PDF"
+
+[multiTool]
+tags = "多工具，多操作，用户界面，点击拖动，前端，客户端"
+title = "PDF 多功能工具"
+header = "PDF 多功能工具"
+uploadPrompts = "文件名"
+selectAll = "选择所有"
+deselectAll = "取消选择所有"
+selectPages = "页面选择"
+selectedPages = "已选择的页面"
+page = "页面"
+deleteSelected = "删除已选"
+downloadAll = "导出全部"
+downloadSelected = "导出已选"
+insertPageBreak = "插入分页符"
+addFile = "添加文件"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+split = "分割"
+moveLeft = "向做移动"
+moveRight = "向右移动"
+delete = "删除"
+dragDropMessage = "选择页面"
+undo = "Undo"
+redo = "Redo"
+
+[merge]
+tags = "合并，页面操作，后端，服务器端"
+title = "合并"
+submit = "合并"
+
+[merge.removeDigitalSignature]
+label = "在合并的文件中删除数字签名?"
+
+[merge.removeDigitalSignature.tooltip]
+title = "移除数字签名"
+description = "合并文件时数字签名会失效。勾选此项以从最终合并的 PDF 中移除它们。"
+
+[merge.generateTableOfContents]
+label = "在合并的文件中生成目录?"
+
+[merge.generateTableOfContents.tooltip]
+title = "生成目录"
+description = "根据原始文件名和页码，自动在合并后的 PDF 中创建可点击的目录。"
+
+[merge.sortBy]
+description = "文件将按选择顺序合并。您可以拖动重新排序，或在下方进行排序。"
+label = "排序方式"
+filename = "文件名"
+dateModified = "修改日期"
+ascending = "升序"
+descending = "降序"
+sort = "排序"
+
+[merge.error]
+failed = "合并 PDF 时发生错误。"
+
+[merge.tooltip.header]
+title = "合并设置概览"
+
+[split]
+title = "拆分 PDF"
+header = "拆分 PDF"
+splitPages = "输入要分割的页面："
+submit = "拆分"
+selectMethod = "选择一种拆分方法"
+resultsTitle = "拆分结果"
+
+[split.desc]
+1 = "选择希望进行分割的页数"
+2 = "如选择1,3,7-9将把一个 10 页的文件分割成6个独立的PDF："
+3 = "文档 #1：第 1 页"
+4 = "文档 #2：第 2 页和第 3 页"
+5 = "文档 #3：第 4 页、第 5 页、第 6 页和第 7 页"
+6 = "文档 #4：第 7 页"
+7 = "文档 #5：第 8 页"
+8 = "文档 #6：第 9 页和第 10 页"
+
+[split.steps]
+chooseMethod = "选择方式"
+settings = "设置"
+
+[split.settings]
+selectMethodFirst = "请先选择一种拆分方式"
+
+[split.error]
+failed = "拆分 PDF 时发生错误。"
+
+[split.method]
+label = "选择拆分方式"
+placeholder = "选择如何拆分 PDF"
+
+[split.methods.prefix]
+splitAt = "拆分于"
+splitBy = "拆分依据"
+
+[split.methods.byPages]
+name = "页码"
+desc = "提取特定页面（1,3,5-10）"
+tooltip = "输入用逗号分隔的页码或带连字符的范围"
+
+[split.methods.bySections]
+name = "区块"
+desc = "将页面划分为网格区块"
+tooltip = "将每一页拆分为横向与纵向的多个区块"
+
+[split.methods.bySize]
+name = "文件大小"
+desc = "限制最大文件大小"
+tooltip = "指定最大文件大小（如 10MB、500KB）"
+
+[split.methods.byPageCount]
+name = "页数"
+desc = "每个文件固定页数"
+tooltip = "输入每个拆分文件的页数"
+
+[split.methods.byDocCount]
+name = "文件数量"
+desc = "创建指定数量的文件"
+tooltip = "输入您想创建的文件数量"
+
+[split.methods.byChapters]
+name = "章节"
+desc = "在书签边界处拆分"
+tooltip = "使用 PDF 书签来确定拆分位置"
+
+[split.methods.byPageDivider]
+name = "分隔页"
+desc = "使用分隔页自动拆分"
+tooltip = "扫描时在文档间放置带二维码的分隔页"
+
+[split.value.fileSize]
+label = "文件大小"
+placeholder = "例如：10MB，500KB"
+
+[split.value.pageCount]
+label = "每个文件的页数"
+placeholder = "例如：5，10"
+
+[split.value.docCount]
+label = "文件数量"
+placeholder = "例如：3，5"
+
+[split.tooltip.header]
+title = "拆分方式概览"
+
+[split.tooltip.byPages]
+title = "按页码拆分"
+text = "在指定页码处拆分 PDF。使用“n”表示在第 n 页之后拆分；使用“n-m”表示在第 n 页之前与第 m 页之后拆分。"
+bullet1 = "单一拆分点：3,7（在第 3 与第 7 页后拆分）"
+bullet2 = "范围拆分点：3-8（在第 3 页前与第 8 页后拆分）"
+bullet3 = "混合：2,5-10,15（在第 2 页后、第 5 页前、第 10 页后与第 15 页后拆分）"
+
+[split.tooltip.bySections]
+title = "按网格区块拆分"
+text = "将每一页划分为网格区块。适用于多栏文档的拆分或提取特定区域。"
+bullet1 = "水平：要创建的行数"
+bullet2 = "垂直：要创建的列数"
+bullet3 = "合并：将所有区块合并为一个 PDF"
+
+[split.tooltip.bySize]
+title = "按文件大小拆分"
+text = "创建多个不超过指定大小的 PDF。适用于大小限制或邮件附件。"
+bullet1 = "较大文件使用 MB（如 10MB）"
+bullet2 = "较小文件使用 KB（如 500KB）"
+bullet3 = "系统会在页面边界进行拆分"
+
+[split.tooltip.byCount]
+title = "按数量拆分"
+text = "创建多个 PDF，每个包含特定页数或生成特定数量的文档。"
+bullet1 = "页数：每个文件固定页数"
+bullet2 = "文件数量：固定输出文件数量"
+bullet3 = "适合批处理工作流"
+
+[split.tooltip.byChapters]
+title = "按章节拆分"
+text = "使用 PDF 书签在章节边界处自动拆分。需要 PDF 具有书签结构。"
+bullet1 = "书签层级：在第几级书签处拆分（1=顶级）"
+bullet2 = "包含元数据：保留文档属性"
+bullet3 = "允许重复：处理重复的书签名称"
+
+[split.tooltip.byDocCount]
+bullet1 = "输入所需的输出文件数量"
+bullet2 = "页面将尽可能均匀分配"
+bullet3 = "当您需要特定数量的文件时很有用"
+text = "通过将页面均匀分配到多个文件，创建指定数量的输出文件。"
+title = "按文档数量拆分"
+
+[split.tooltip.byPageCount]
+bullet1 = "输入每个输出文件的页数"
+bullet2 = "如果无法整除，最后一个文件的页数可能较少"
+bullet3 = "适用于批处理工作流"
+text = "创建多个具有特定页数的 PDF。非常适合制作均匀的文档分段。"
+title = "按页数拆分"
+
+[split.tooltip.byPageDivider]
+bullet1 = "从下载链接打印分隔页"
+bullet2 = "在文档之间插入分隔页"
+bullet3 = "将所有文档一起扫描为一个 PDF"
+bullet4 = "上传——会自动检测并移除分隔页"
+bullet5 = "如果扫描分隔页的双面，请启用双工模式"
+text = "使用带有 QR 码的实体分隔页自动拆分扫描文档。非常适合处理合并扫描的多份文档。"
+title = "按分隔页拆分"
+
+[split.methodSelection.tooltip]
+bullet1 = "点击方法卡片进行选择"
+bullet2 = "将鼠标悬停在每张卡片上查看简要说明"
+bullet3 = "选择方法后会显示设置步骤"
+bullet4 = "在处理前可随时更改方法"
+title = "选择您的拆分方法"
+
+[split.methodSelection.tooltip.header]
+text = "选择您希望如何拆分 PDF 文档。每种方法都针对不同用例和文档类型进行了优化。"
+title = "拆分方法选择"
+
+[rotate]
+title = "旋转 PDF"
+submit = "旋转"
+selectRotation = "选择旋转角度（顺时针）"
+rotateLeft = "逆时针旋转"
+rotateRight = "顺时针旋转"
+
+[rotate.error]
+failed = "旋转 PDF 时发生错误。"
+
+[rotate.preview]
+title = "旋转预览"
+
+[rotate.tooltip.header]
+title = "旋转设置概览"
+
+[rotate.tooltip.description]
+text = "以 90° 为增量顺时针或逆时针旋转 PDF 页面。PDF 中所有页面都会被旋转。预览会显示旋转后的效果。"
+
+[rotate.tooltip.controls]
+title = "控件"
+text = "使用旋转按钮调整方向。左键逆时针，右键顺时针。每次点击旋转 90°。"
+
+[convert]
+title = "转换"
+desc = "在不同格式之间转换文件"
+files = "文件"
+selectFilesPlaceholder = "在主视图中选择文件以开始"
+settings = "设置"
+conversionCompleted = "转换完成"
+results = "结果"
+defaultFilename = "已转换文件"
+conversionResults = "转换结果"
+convertFrom = "转换来源"
+convertTo = "转换为"
+sourceFormatPlaceholder = "源格式"
+targetFormatPlaceholder = "目标格式"
+selectSourceFormatFirst = "请先选择源格式"
+outputOptions = "输出选项"
+pdfOptions = "PDF 选项"
+imageOptions = "图像选项"
+colorType = "颜色类型"
+color = "颜色"
+greyscale = "灰度"
+blackwhite = "黑白"
+dpi = "DPI"
+output = "输出"
+single = "单个"
+multiple = "多个"
+fitOption = "适配选项"
+maintainAspectRatio = "保持纵横比"
+fitDocumentToPage = "适配页面"
+fillPage = "填充页面"
+autoRotate = "自动旋转"
+autoRotateDescription = "自动旋转图像以更好地适配 PDF 页面"
+combineImages = "合并图像"
+combineImagesDescription = "将所有图像合并为一个 PDF，或为每个图像创建单独的 PDF"
+webOptions = "网页转 PDF 选项"
+zoomLevel = "缩放级别"
+emailOptions = "邮件转 PDF 选项"
+includeAttachments = "包含邮件附件"
+maxAttachmentSize = "最大附件大小（MB）"
+includeAllRecipients = "在页眉中包含抄送（CC）与密送（BCC）收件人"
+downloadHtml = "下载 HTML 中间文件（而非 PDF）"
+pdfaOptions = "PDF/A 选项"
+outputFormat = "输出格式"
+pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持的功能更多。"
+pdfaDigitalSignatureWarning = "该PDF包含数字签名，下一步将移除该签名。"
+fileFormat = "文件格式"
+wordDoc = "Word 文档"
+wordDocExt = "Word 文档（.docx）"
+odtExt = "OpenDocument 文本（.odt）"
+pptExt = "PowerPoint（.pptx）"
+odpExt = "OpenDocument 演示文稿（.odp）"
+txtExt = "纯文本（.txt）"
+rtfExt = "富文本（.rtf）"
+selectedFiles = "已选文件"
+noFileSelected = "未选择文件。请使用文件面板添加文件。"
+convertFiles = "转换文件"
+converting = "正在转换…"
+downloadConverted = "下载转换后的文件"
+errorNoFiles = "请至少选择一个要转换的文件。"
+errorNoFormat = "请选择源格式和目标格式。"
+errorNotSupported = "不支持从 {{from}} 转换为 {{to}}。"
+images = "图像"
+officeDocs = "Office 文档（Word、Excel、PowerPoint）"
+imagesExt = "图像（JPG、PNG 等）"
+markdown = "Markdown"
+textRtf = "文本/RTF"
+grayscale = "灰度"
+errorConversion = "转换文件时发生错误。"
+cbzOptions = "CBZ 转 PDF 选项"
+optimizeForEbook = "为电子书阅读器优化 PDF（使用 Ghostscript）"
+cbzOutputOptions = "PDF 转 CBZ 选项"
+cbzDpi = "图像渲染的 DPI"
+
+[imageToPdf]
+tags = "转换、图像、JPG、图片、照片"
+
+[pdfToImage]
+tags = "转换、图像、JPG、图片、照片"
+title = "PDF 转图片"
+header = "将 PDF 转换为图片"
+selectText = "图像格式"
+singleOrMultiple = "图像结果类型"
+single = "单张图片"
+multi = "多张图片"
+colorType = "颜色类型"
+color = "颜色"
+grey = "灰度"
+blackwhite = "黑白（可能会丢失数据！）。"
+submit = "转换"
+info = "WebP 转换需要安装 Python"
+placeholder = "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
+
+[pdfOrganiser]
+tags = "双面、偶数、奇数、排序、移动"
+title = "页面排序"
+header = "PDF 页面排序"
+submit = "重新排列页面"
+placeholder = "（例如：1,3,2 或 4-8,2,10-12 或 2n-1）"
+
+[pdfOrganiser.mode]
+_value = "模式"
+1 = "自定义页面顺序"
+2 = "反向顺序"
+3 = "双面排序"
+4 = "小册子排序"
+5 = "侧装订小册子排序"
+6 = "奇偶拆分"
+7 = "删除第一页"
+8 = "删除最后一页"
+9 = "删除第一页和最后一页"
+10 = "奇偶合并"
+11 = "复制所有页面"
+
+[pdfOrganiser.mode.desc]
+BOOKLET_SORT = "为小册子打印排列页面（最后、第一、第二、倒数第二，…）。"
+CUSTOM = "使用自定义的页面编号或表达式序列来定义新顺序。"
+DUPLEX_SORT = "如同双面扫描仪先扫所有正面，再扫所有背面进行交错（1, n, 2, n-1, …）。"
+DUPLICATE = "根据自定义顺序计数复制每一页（例如：每页复制 4 次，4×）。"
+ODD_EVEN_MERGE = "通过交替页面合并两个 PDF：第一个取奇数页，第二个取偶数页。"
+ODD_EVEN_SPLIT = "将文档拆分为两个输出：所有奇数页和所有偶数页。"
+REMOVE_FIRST = "从文档中移除第一页。"
+REMOVE_FIRST_AND_LAST = "同时移除文档的第一页和最后一页。"
+REMOVE_LAST = "从文档中移除最后一页。"
+REVERSE_ORDER = "将文档翻转，使最后一页变为第一页，依此类推。"
+SIDE_STITCH_BOOKLET_SORT = "用于侧订小册子打印的页面排列（针对侧边装订优化）。"
+
+[pdfOrganiser.desc]
+CUSTOM = "使用自定义的页码序列或表达式来定义新顺序。"
+REVERSE_ORDER = "翻转文档,使最后一页变为第一页,依此类推。"
+DUPLEX_SORT = "交错正面然后背面,就像双面扫描仪扫描了所有正面,然后所有背面(1, n, 2, n-1, ...)。"
+BOOKLET_SORT = "排列页面以进行小册子打印(最后,第一,第二,倒数第二,...)。"
+SIDE_STITCH_BOOKLET_SORT = "排列页面以进行侧缝小册子打印(针对侧面装订进行了优化)。"
+ODD_EVEN_SPLIT = "将文档拆分为两个输出:所有奇数页和所有偶数页。"
+ODD_EVEN_MERGE = "通过交替页面合并两个 PDF:第一个的奇数页,第二个的偶数页。"
+DUPLICATE = "根据自定义顺序计数复制每页(例如,4 复制每页 4×)。"
+REMOVE_FIRST = "从文档中删除第一页。"
+REMOVE_LAST = "从文档中删除最后一页。"
+REMOVE_FIRST_AND_LAST = "从文档中删除第一页和最后一页。"
+
+[addImage]
+tags = "图像、JPG、图片、照片"
+title = "添加图像"
+header = "添加图片到 PDF"
+applySignatures = "应用图片"
+
+[addImage.image]
+name = "图片"
+placeholder = "上传图片"
+label = "图片文件"
+
+[addImage.steps]
+configure = "配置图片"
+
+[addImage.step]
+createDesc = "上传要添加的图片"
+place = "放置图片"
+placeDesc = "在 PDF 上点击以添加图片"
+
+[addImage.instructions]
+title = "如何添加图片"
+text = "在上方上传图片后，点击 PDF 任意位置进行放置。"
+paused = "放置已暂停"
+resumeHint = "继续放置后点击添加图片。"
+noSignature = "请先在上方上传图片以启用放置。"
+
+[addImage.mode]
+move = "移动图片"
+place = "放置图片"
+pause = "暂停放置"
+resume = "继续放置"
+
+[addImage.results]
+title = "添加图片结果"
+
+[addImage.error]
+failed = "向 PDF 添加图片时发生错误。"
+
+[addImage.saved]
+defaultLabel = "图片"
+defaultImageLabel = "已上传图片"
+
+[attachments]
+tags = "嵌入、附件、文件、附加"
+title = "添加附件"
+header = "添加附件"
+add = "添加附件"
+remove = "移除附件"
+embed = "嵌入附件"
+submit = "添加附件"
+
+[watermark]
+title = "添加水印"
+desc = "向 PDF 添加文本或图像水印"
+completed = "已添加水印"
+submit = "添加水印"
+filenamePrefix = "已加水印"
+
+[watermark.error]
+failed = "向 PDF 添加水印时发生错误。"
+
+[watermark.watermarkType]
+text = "文本"
+image = "图像"
+
+[watermark.settings]
+type = "水印类型"
+fontSize = "字体大小"
+size = "大小"
+alphabet = "字体/语言"
+color = "水印颜色"
+rotation = "旋转（度）"
+opacity = "不透明度（%）"
+convertToImage = "将 PDF 页面转为图像"
+
+[watermark.settings.text]
+label = "水印文本"
+placeholder = "输入水印文本"
+
+[watermark.settings.image]
+label = "水印图像"
+choose = "选择图像"
+selected = "已选：{{filename}}"
+
+[watermark.settings.spacing]
+horizontal = "水平间距"
+vertical = "垂直间距"
+height = "高度间距"
+width = "宽度间距"
+
+[watermark.alphabet]
+roman = "罗马/拉丁"
+arabic = "阿拉伯语"
+japanese = "日语"
+korean = "韩语"
+chinese = "中文"
+thai = "泰语"
+
+[watermark.steps]
+type = "水印类型"
+wording = "措辞"
+textStyle = "样式"
+formatting = "格式"
+file = "水印文件"
+
+[watermark.results]
+title = "水印结果"
+
+[watermark.tooltip.language]
+title = "语言支持"
+text = "选择合适的语言设置以确保文本的正确字体呈现。"
+
+[watermark.tooltip.appearance]
+title = "外观设置"
+text = "控制水印的外观及与文档的融合效果。"
+bullet1 = "旋转：-360° 至 360°，可创建倾斜水印"
+bullet2 = "不透明度：0-100% 控制透明度"
+bullet3 = "较低不透明度可获得更柔和的水印"
+
+[watermark.tooltip.spacing]
+title = "间距控制"
+text = "调整页面上重复水印之间的间距。"
+bullet1 = "宽度间距：水平方向的距离"
+bullet2 = "高度间距：垂直方向的距离"
+bullet3 = "数值越大，图案越稀疏"
+
+[watermark.tooltip.type.header]
+title = "水印类型选择"
+
+[watermark.tooltip.type.description]
+title = "选择您的水印类型"
+text = "根据需求在文本水印与图像水印之间进行选择。"
+
+[watermark.tooltip.type.text]
+title = "文本水印"
+text = "非常适合添加版权声明、公司名称或保密标记。支持多语言与自定义颜色。"
+bullet1 = "可自定义字体与语言"
+bullet2 = "可调整颜色与透明度"
+bullet3 = "适用于法律声明或品牌文字"
+
+[watermark.tooltip.type.image]
+title = "图像水印"
+text = "使用徽标、印章或任意图像作为水印。非常适合品牌与视觉识别。"
+bullet1 = "上传任意图像格式"
+bullet2 = "保持图像质量"
+bullet3 = "非常适合徽标与印章"
+
+[watermark.tooltip.wording.header]
+title = "文本内容"
+
+[watermark.tooltip.wording.text]
+title = "水印文本"
+text = "输入将作为水印显示在整个文档上的文本。"
+bullet1 = "保持简洁以提升可读性"
+bullet2 = "常见示例：“CONFIDENTIAL”“DRAFT”、公司名称"
+bullet3 = "不支持表情符号字符，会被过滤"
+
+[watermark.tooltip.textStyle.header]
+title = "文本样式"
+
+[watermark.tooltip.textStyle.color]
+title = "颜色选择"
+text = "选择与文档内容形成良好对比的颜色。"
+bullet1 = "浅灰（#d3d3d3）用于柔和水印"
+bullet2 = "黑色或深色用于高对比度"
+bullet3 = "自定义颜色用于品牌诉求"
+
+[watermark.tooltip.textStyle.language]
+title = "语言支持"
+text = "选择合适的语言设置以确保正确的字体渲染。"
+
+[watermark.tooltip.file.header]
+title = "图像上传"
+
+[watermark.tooltip.file.upload]
+title = "选择图像"
+text = "上传一张图像作为水印。"
+bullet1 = "支持常见格式：PNG、JPG、GIF、BMP"
+bullet2 = "带透明背景的 PNG 效果最佳"
+bullet3 = "更高分辨率可更好地保持质量"
+
+[watermark.tooltip.file.recommendations]
+title = "最佳实践"
+text = "获得最佳图像水印效果的提示。"
+bullet1 = "使用带透明背景的徽标或印章"
+bullet2 = "简单设计优于复杂图形"
+bullet3 = "选择分辨率时请考虑最终文档大小"
+
+[watermark.tooltip.formatting.header]
+title = "格式与布局"
+
+[watermark.tooltip.formatting.size]
+title = "大小控制"
+text = "调整水印（文本或图像）的大小。"
+bullet1 = "更大的尺寸会使水印更显眼"
+
+[watermark.tooltip.formatting.appearance]
+title = "外观设置"
+text = "控制水印的外观及与文档的融合效果。"
+bullet1 = "旋转：-360° 至 360°，用于倾斜水印"
+bullet2 = "不透明度：0-100% 控制透明度"
+bullet3 = "较低不透明度可获得更柔和的水印"
+
+[watermark.tooltip.formatting.spacing]
+title = "间距控制"
+text = "调整页面上重复水印之间的间距。"
+bullet1 = "水平间距：水印左右间的距离"
+bullet2 = "垂直间距：水印上下间的距离"
+bullet3 = "更高数值会使图案更稀疏"
+
+[watermark.tooltip.formatting.security]
+title = "安全选项"
+text = "将最终 PDF 转换为基于图像的格式以增强安全性。"
+bullet1 = "防止文本选择与复制"
+bullet2 = "使水印更难移除"
+bullet3 = "会导致文件体积增大"
+bullet4 = "适用于敏感或受版权保护的内容"
+
+[watermark.type]
+1 = "文本"
+2 = "图像"
+
+[permissions]
+tags = "阅读、写入、编辑、打印"
+title = "更改权限"
+header = "改变权限"
+warning = "警告，为了使这些权限不能被改变，建议通过添加密码页面设置密码。"
+submit = "改变"
+
+[permissions.selectText]
+1 = "选择 PDF 来改变权限"
+2 = "要设置的权限"
+3 = "防止文件的拼接"
+4 = "防止内容提取"
+5 = "防止提取内容的可访问性"
+6 = "防止填写表格"
+7 = "防止修改"
+8 = "防止修改注释"
+9 = "防止打印"
+10 = "防止打印不同的格式"
+
+[editTableOfContents]
+submit = "应用目录"
+
+[editTableOfContents.settings]
+title = "书签与大纲"
+replaceExisting = "替换现有书签（取消勾选则追加）"
+replaceExistingHint = "禁用时，新大纲将追加在当前书签之后。"
+
+[editTableOfContents.actions]
+source = "加载书签"
+selectedFile = "已从 {{file}} 加载"
+noFile = "选择一个 PDF 以提取现有书签。"
+loadFromPdf = "从所选 PDF 加载"
+importJson = "导入 JSON"
+importClipboard = "从剪贴板粘贴 JSON"
+export = "导出书签"
+exportJson = "下载 JSON"
+exportClipboard = "复制 JSON 到剪贴板"
+clipboardUnavailable = "此浏览器不支持访问剪贴板。"
+
+[editTableOfContents.info]
+line1 = "每个书签需要描述性标题和打开的目标页。"
+line2 = "使用子书签为章、节或小节构建层级结构。"
+line3 = "从所选 PDF 或 JSON 文件导入书签以节省时间。"
+
+[editTableOfContents.workbench]
+tabTitle = "大纲工作区"
+subtitle = "导入书签、构建层级，并在无需狭窄侧栏的情况下应用大纲。"
+noFile = "未选择 PDF"
+fileLabel = "更改将应用于当前选中的 PDF。"
+filePrompt = "从库中选择 PDF 或上传新文件开始。"
+changeFile = "更换 PDF"
+selectFile = "选择 PDF"
+
+[editTableOfContents.workbench.empty]
+title = "打开工具开始编辑"
+description = "选择“编辑目录”工具以加载其工作区。"
+
+[editTableOfContents.editor]
+heading = "书签编辑器"
+description = "添加、嵌套并重排书签，以创建 PDF 大纲。"
+addTopLevel = "添加顶级书签"
+defaultTitle = "新书签"
+defaultChildTitle = "子书签"
+defaultSiblingTitle = "新书签"
+untitled = "未命名书签"
+childBadge = "子项"
+pagePreview = "第 {{page}} 页"
+confirmRemove = "移除此书签及其所有子项？"
+
+[editTableOfContents.editor.empty]
+title = "尚无书签"
+description = "导入现有书签或从添加首个条目开始。"
+action = "添加首个书签"
+
+[editTableOfContents.editor.field]
+title = "书签标题"
+page = "目标页码"
+
+[editTableOfContents.editor.actions]
+toggle = "切换子项"
+addChild = "添加子书签"
+addSibling = "添加同级书签"
+remove = "移除书签"
+
+[editTableOfContents.messages]
+loadedTitle = "已提取书签"
+loadedBody = "已将 PDF 中的现有书签到编辑器中。"
+noBookmarks = "所选 PDF 中未找到书签。"
+loadFailed = "无法从所选 PDF 提取书签。"
+imported = "已导入书签"
+importedBody = "您的 JSON 大纲已替换当前编辑器内容。"
+importedClipboard = "剪贴板数据已替换当前书签列表。"
+invalidJson = "无效的 JSON 结构"
+invalidJsonBody = "请提供有效的书签 JSON 文件并重试。"
+exported = "JSON 下载就绪"
+copied = "已复制到剪贴板"
+copiedBody = "书签 JSON 复制成功。"
+copyFailed = "复制失败"
+
+[editTableOfContents.error]
+failed = "更新目录失败"
+
+[editTableOfContents.results]
+title = "已更新含书签的 PDF"
+subtitle = "在下方下载处理后的文件或撤销操作。"
+
+[removePages]
+tags = "删除页面、删除"
+title = "删除"
+filenamePrefix = "已删除页面"
+submit = "删除"
+
+[removePages.pageNumbers]
+label = "要移除的页面"
+placeholder = "例如：1,3,5-8,10"
+error = "无效的页码格式。使用数字、范围（1-5）或数学表达式（2n+1）"
+
+[removePages.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[removePages.settings]
+title = "设置"
+
+[removePages.tooltip.header]
+title = "移除页面设置"
+
+[removePages.tooltip.pageNumbers]
+title = "页面选择"
+text = "指定要从 PDF 中移除的页面。您可以选择单个页、范围，或使用数学表达式。"
+bullet1 = "单个页面：1,3,5（移除第 1、3、5 页）"
+bullet2 = "页码范围：1-5,10-15（移除第 1-5 与 10-15 页）"
+bullet3 = "数学表达：2n+1（移除奇数页）"
+bullet4 = "开放范围：5-（移除从第 5 页至末尾）"
+
+[removePages.tooltip.examples]
+title = "常见示例"
+text = "以下是一些常见的页面选择模式："
+bullet1 = "移除第一页：1"
+bullet2 = "移除最后 3 页：-3"
+bullet3 = "每隔一页移除：2n"
+bullet4 = "移除散落的特定页：1,5,10,15"
+
+[removePages.tooltip.safety]
+title = "安全提示"
+text = "移除页面时的重要注意事项："
+bullet1 = "处理前请始终预览您的选择"
+bullet2 = "保留原文件的备份"
+bullet3 = "页码从 1 开始而非 0"
+bullet4 = "无效页码将被忽略"
+
+[removePages.error]
+failed = "移除页面时发生错误。"
+
+[removePages.results]
+title = "移除页面结果"
+
+[extractPages]
+title = "提取页面"
+submit = "提取页面"
+
+[extractPages.pageNumbers]
+label = "要提取的页面"
+placeholder = "例如：1,3,5-8 或 odd & 1-10"
+
+[extractPages.settings]
+title = "设置"
+
+[extractPages.tooltip]
+description = "将所选页面提取到新的 PDF，保留顺序。"
+
+[extractPages.error]
+failed = "提取页面失败"
+
+[extractPages.results]
+title = "已提取的页面"
+
+[pageSelection.tooltip]
+description = "选择要用于操作的页面。支持单页、范围、公式以及 all 关键字。"
+
+[pageSelection.tooltip.header]
+title = "页面选择指南"
+
+[pageSelection.tooltip.basic]
+title = "基础用法"
+text = "使用简单语法从 PDF 文档中选择特定页面。"
+bullet1 = "单页：1,3,5"
+bullet2 = "范围：3-6 或 10-15"
+bullet3 = "全部：all"
+
+[pageSelection.tooltip.advanced]
+title = "高级功能"
+
+[pageSelection.tooltip.tips]
+title = "提示"
+text = "请牢记以下指南："
+bullet1 = "页码从 1 开始（不是 0）"
+bullet2 = "空格会被自动移除"
+bullet3 = "无效表达式会被忽略"
+
+[pageSelection.tooltip.syntax]
+title = "语法基础"
+text = "使用数字、范围、关键字和等差表达式（n 从 0 开始）。支持括号。"
+
+[pageSelection.tooltip.syntax.bullets]
+numbers = "数字/范围：5，10-20"
+keywords = "关键字：odd、even"
+progressions = "等差：3n，4n+1"
+
+[pageSelection.tooltip.operators]
+title = "运算符"
+text = "AND 优先级高于逗号。NOT 在文档范围内生效。"
+and = "AND：& 或 “and” — 同时满足（如 1-50 & even）"
+comma = "逗号：, 或 | — 合并选择（如 1-10, 20）"
+not = "NOT：! 或 “not” — 排除（如 3n & not 30）"
+
+[pageSelection.tooltip.examples]
+title = "示例"
+
+[pageSelection.tooltip.complex]
+bullet1 = "<strong>1,3-5,8,2n</strong> → 第 1、3–5、8 页，加上所有偶数页"
+bullet2 = "<strong>10-,2n-1</strong> → 第 10 页到末尾 + 奇数页"
+description = "混合不同类型。"
+title = "复杂组合"
+
+[pageSelection.tooltip.individual]
+bullet1 = "<strong>1,3,5</strong> → 选择第 1、3、5 页"
+bullet2 = "<strong>2,7,12</strong> → 选择第 2、7、12 页"
+description = "输入用逗号分隔的数字。"
+title = "单个页面"
+
+[pageSelection.tooltip.mathematical]
+bullet1 = "<strong>2n</strong> → 所有偶数页（2、4、6…）"
+bullet2 = "<strong>2n-1</strong> → 所有奇数页（1、3、5…）"
+bullet3 = "<strong>3n</strong> → 每隔 3 页（3、6、9…）"
+bullet4 = "<strong>4n-1</strong> → 第 3、7、11、15 页…"
+description = "在公式中使用 n 表示模式。"
+title = "数学函数"
+
+[pageSelection.tooltip.ranges]
+bullet1 = "<strong>3-6</strong> → 选择第 3–6 页"
+bullet2 = "<strong>10-15</strong> → 选择第 10–15 页"
+bullet3 = "<strong>5-</strong> → 选择第 5 页到末尾"
+description = "使用 - 表示连续页面。"
+title = "页面范围"
+
+[pageSelection.tooltip.special]
+bullet1 = "<strong>all</strong> → 选择所有页面"
+title = "特殊关键字"
+
+[bulkSelection]
+syntaxError = "存在语法问题。请参阅页面选择提示以获得帮助。"
+
+[bulkSelection.header]
+title = "页面选择指南"
+
+[bulkSelection.syntax]
+title = "语法基础"
+text = "使用数字、范围、关键字与等差表达式（n 从 0 开始）。支持括号。"
+
+[bulkSelection.syntax.bullets]
+numbers = "数字/范围：5，10-20"
+keywords = "关键字：odd、even"
+progressions = "等差：3n，4n+1"
+
+[bulkSelection.operators]
+title = "运算符"
+text = "AND 优先级高于逗号。NOT 在文档范围内生效。"
+and = "AND：& 或 “and” — 同时满足（如 1-50 & even）"
+comma = "逗号：, 或 | — 合并选择（如 1-10, 20）"
+not = "NOT：! 或 “not” — 排除（如 3n & not 30）"
+
+[bulkSelection.examples]
+title = "示例"
+first50 = "前 50 页"
+last50 = "后 50 页"
+every3rd = "每隔 3 页"
+oddWithinExcluding = "1-20 内的奇数页，排除 5-7"
+combineSets = "合并集合"
+
+[bulkSelection.firstNPages]
+title = "前 N 页"
+placeholder = "页数"
+
+[bulkSelection.lastNPages]
+title = "后 N 页"
+placeholder = "页数"
+
+[bulkSelection.everyNthPage]
+title = "每 N 页"
+placeholder = "步长"
+
+[bulkSelection.range]
+title = "范围"
+fromPlaceholder = "起始"
+toPlaceholder = "结束"
+
+[bulkSelection.keywords]
+title = "关键字"
+
+[bulkSelection.advanced]
+title = "高级"
+
+[compressPdfs]
+tags = "压缩、小、微小"
+
+[unlockPDFForms]
+tags = "移除,删除,表单,字段,只读"
+title = "移除表单字段只读属性"
+header = "解锁 PDF 表单"
+submit = "Remove"
+description = "该工具将移除 PDF 表单字段的只读限制，使其可编辑、可填写。"
+filenamePrefix = "已解锁表单"
+
+[unlockPDFForms.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[unlockPDFForms.error]
+failed = "解锁 PDF 表单时发生错误。"
+
+[unlockPDFForms.results]
+title = "表单解锁结果"
+
+[changeMetadata]
+header = "更改元数据"
+submit = "更改"
+filenamePrefix = "元数据"
+
+[changeMetadata.settings]
+title = "元数据设置"
+
+[changeMetadata.standardFields]
+title = "标准字段"
+
+[changeMetadata.deleteAll]
+label = "移除现有元数据"
+checkbox = "删除所有元数据"
+
+[changeMetadata.title]
+label = "标题"
+placeholder = "文档标题"
+
+[changeMetadata.author]
+label = "作者"
+placeholder = "文档作者"
+
+[changeMetadata.subject]
+label = "主题"
+placeholder = "文档主题"
+
+[changeMetadata.keywords]
+label = "关键字"
+placeholder = "文档关键字"
+
+[changeMetadata.creator]
+label = "创建者"
+placeholder = "文档创建者"
+
+[changeMetadata.producer]
+label = "生产者"
+placeholder = "文档生产者"
+
+[changeMetadata.dates]
+title = "日期字段"
+
+[changeMetadata.creationDate]
+label = "创建日期"
+placeholder = "创建日期"
+
+[changeMetadata.modificationDate]
+label = "修改日期"
+placeholder = "修改日期"
+
+[changeMetadata.trapped]
+label = "陷印状态"
+unknown = "未知"
+true = "是"
+false = "否"
+
+[changeMetadata.advanced]
+title = "高级选项"
+
+[changeMetadata.customFields]
+title = "自定义元数据"
+description = "向文档添加自定义元数据字段"
+add = "添加字段"
+key = "键"
+keyPlaceholder = "自定义键"
+value = "值"
+valuePlaceholder = "自定义值"
+remove = "移除"
+
+[changeMetadata.results]
+title = "已更新的 PDF"
+
+[changeMetadata.error]
+failed = "更改 PDF 元数据时发生错误。"
+
+[changeMetadata.tooltip.header]
+title = "PDF 元数据概览"
+
+[changeMetadata.tooltip.standardFields]
+title = "标准字段"
+text = "描述文档的常见 PDF 元数据字段。"
+bullet1 = "标题：文档名称或题名"
+bullet2 = "作者：创建文档的人"
+bullet3 = "主题：对内容的简要描述"
+bullet4 = "关键字：文档的搜索词"
+bullet5 = "创建者/生产者：用于创建 PDF 的软件"
+
+[changeMetadata.tooltip.dates]
+title = "日期字段"
+text = "文档的创建与修改时间。"
+bullet1 = "创建日期：文档最初创建的时间"
+bullet2 = "修改日期：文档上次更改的时间"
+
+[changeMetadata.tooltip.options]
+title = "附加选项"
+text = "自定义字段与隐私控制。"
+bullet1 = "自定义元数据：添加自定义键值对"
+bullet2 = "陷印状态：高质量印刷设置"
+bullet3 = "全部删除：为隐私移除所有元数据"
+
+[changeMetadata.tooltip.deleteAll]
+title = "移除现有元数据"
+text = "完全删除元数据以确保隐私。"
+
+[changeMetadata.tooltip.customFields]
+title = "自定义元数据"
+text = "添加您自己的自定义键值对元数据。"
+bullet1 = "添加与文档相关的任何自定义字段"
+bullet2 = "示例：部门、项目、版本、状态"
+bullet3 = "每个条目都需要键和值"
+
+[changeMetadata.tooltip.advanced]
+title = "高级选项"
+
+[changeMetadata.tooltip.advanced.trapped]
+title = "陷印状态"
+description = "指示文档是否已为高质量印刷做准备。"
+bullet1 = "True：文档已进行陷印处理"
+bullet2 = "False：文档未进行陷印处理"
+bullet3 = "Unknown：未指定陷印状态"
+
+[fileToPDF]
+tags = "转换、格式、文档、图片、幻灯片、文本、转换、Office、Docs、Word、Excel、PowerPoint"
+title = "文件转换为 PDF"
+header = "将任何文件转换为 PDF。"
+credit = "此服务使用 LibreOffice 和 Unoconv 进行文件转换。"
+supportedFileTypesInfo = "支持的文件类型"
+supportedFileTypes = "支持的文件类型应该包括以下几种，但是，对于支持的格式的完整更新列表，请参考 LibreOffice 文档。"
+submit = "转换为 PDF"
+
+[ocr]
+tags = "识别、文本、图像、扫描、阅读、识别、检测、可编辑"
+title = "OCR/扫描清理"
+desc = "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。"
+header = "清理扫描件/OCR（光学字符识别）。"
+help = "请阅读此文档，了解如何将其用于其他语言和/或不在 docker 中使用。"
+credit = "此服务使用 qpdf 和 Tesseract 进行 OCR。"
+submit = "用 OCR 处理 PDF"
+
+[ocr.selectText]
+1 = "选择要在 PDF 中检测的语言（列出的语言是目前检测到的）："
+2 = "生成包含 OCR 文本的文本文件，与 OCR 编辑的 PDF 一起。"
+3 = "通过将页面旋转回原位来纠正偏斜的扫描角度"
+4 = "清理页面，降低 OCR 在噪点中识别到文本的可能。(没有输出变化)"
+5 = "清洁页面，降低 OCR 在噪点中识别到文本的可能，保持输出的清洁。"
+6 = "忽略有交互式文本的页面，只对有图像的页面进行 OCR。"
+7 = "强制 OCR，将 OCR 每个页面，删除所有的原始文本元素。"
+8 = "正常 (如果 PDF 包含文本，将出现错误)"
+9 = "额外设置"
+10 = "OCR 模式"
+11 = "OCR 后移除图像（移除所有图像，只有在转换步骤中才有用）。"
+12 = "渲染类型（高级）"
+
+[ocr.operation]
+submit = "处理 OCR 并预览"
+
+[ocr.results]
+title = "OCR 结果"
+
+[ocr.languagePicker]
+additionalLanguages = "需要更多语言？"
+viewSetupGuide = "查看设置指南 →"
+
+[ocr.settings]
+title = "设置"
+
+[ocr.settings.ocrMode]
+label = "OCR 模式"
+auto = "自动（跳过已有文本层）"
+force = "强制（重新识别全部并替换文本）"
+strict = "严格（发现文本即中止）"
+
+[ocr.settings.languages]
+label = "语言"
+placeholder = "选择语言"
+
+[ocr.settings.compatibilityMode]
+label = "兼容模式"
+
+[ocr.settings.advancedOptions]
+label = "处理选项"
+sidecar = "创建文本文件"
+deskew = "页面纠偏"
+clean = "清理输入文件"
+cleanFinal = "清理最终输出"
+
+[ocr.tooltip.header]
+title = "OCR 设置概览"
+
+[ocr.tooltip.mode]
+title = "OCR 模式"
+text = "光学字符识别（OCR）可将扫描或截图页面转换为可搜索、可复制或可高亮的文本。"
+bullet1 = "自动：跳过已包含文本层的页面。"
+bullet2 = "强制：重新识别每一页并替换所有文本。"
+bullet3 = "严格：若发现可选择文本则终止。"
+
+[ocr.tooltip.languages]
+title = "语言"
+text = "指定预期语言可提升 OCR 准确度。可选择一种或多种语言以引导识别。"
+
+[ocr.tooltip.output]
+title = "输出"
+text = "决定文本输出的格式："
+bullet1 = "可搜索 PDF：在原图像背后嵌入文本。"
+bullet2 = "HOCR XML：返回结构化机器可读文件。"
+bullet3 = "纯文本边车：创建包含原始内容的独立 .txt 文件。"
+
+[ocr.tooltip.advanced.header]
+title = "高级 OCR 处理"
+
+[ocr.tooltip.advanced.compatibility]
+title = "兼容模式"
+text = "使用 OCR “夹层 PDF” 模式：文件更大，但在某些语言和旧版软件上更可靠。默认使用 hOCR，适合更小、更现代的 PDF。"
+
+[ocr.tooltip.advanced.sidecar]
+title = "创建文本文件"
+text = "在 PDF 旁生成一个独立的 .txt 文件，包含所有提取的文本，便于访问与处理。"
+
+[ocr.tooltip.advanced.deskew]
+title = "页面纠偏"
+text = "自动校正倾斜页面以提升 OCR 准确度。适合未完美对齐的扫描文档。"
+
+[ocr.tooltip.advanced.clean]
+title = "清理输入文件"
+text = "在处理前通过去噪、增强对比度和优化图像来提升 OCR 识别效果。"
+
+[ocr.tooltip.advanced.cleanFinal]
+title = "清理最终输出"
+text = "在生成的 PDF 上进行后处理，移除 OCR 伪影并优化文本层以提高可读性并减小体积。"
+
+[ocr.error]
+failed = "OCR 操作失败"
+
+[extractImages]
+tags = "图片、照片、保存、归档、压缩包、截取、抓取"
+title = "提取图像"
+header = "提取图像"
+selectText = "选择图像格式，将提取的图像转换为"
+allowDuplicates = "保存重复图像"
+submit = "提取"
+
+[extractImages.settings]
+title = "设置"
+
+[extractImages.error]
+failed = "从 PDF 提取图像时发生错误。"
+
+[pdfToPDFA]
+tags = "归档、长期、标准、转换、存储、保存"
+title = "PDF 转 PDF/A"
+header = "将 PDF 转换为 PDF/A"
+credit = "此服务使用 libreoffice 进行 PDF/A 转换"
+submit = "转换"
+tip = "目前不支持上传多个"
+outputFormat = "输出格式"
+pdfWithDigitalSignature = "该PDF包含数字签名，下一步将移除该签名。"
+
+[PDFToWord]
+tags = "doc、docx、odt、word、转换、格式、Office、Microsoft、文档"
+title = "PDF 转 Word"
+header = "将 PDF 转换为 Word"
+credit = "此服务使用 LibreOffice 进行文件转换。"
+submit = "转换"
+
+[PDFToWord.selectText]
+1 = "输出文件格式"
+
+[PDFToPresentation]
+tags = "幻灯片、展示、Office、Microsoft"
+title = "PDF 转演示文稿"
+header = "将 PDF 转换为演示文稿"
+credit = "此服务使用 LibreOffice 进行文件转换。"
+submit = "转换"
+
+[PDFToPresentation.selectText]
+1 = "输出文件格式"
+
+[PDFToText]
+tags = "富文本格式、RTF、富文本格式"
+title = "PDF 转文本/RTF"
+header = "将 PDF 转换为文本/RTF"
+credit = "此服务使用 LibreOffice 进行文件转换。"
+submit = "转换"
+
+[PDFToText.selectText]
+1 = "输出文件格式"
+
+[PDFToHTML]
+tags = "网页内容、浏览器友好"
+title = "PDF 转 HTML"
+header = "将 PDF 转换为 HTML"
+credit = "此服务使用 pdftohtml 进行文件转换。"
+submit = "转换"
+
+[PDFToXML]
+tags = "数据提取、结构化内容、互操作、转换"
+title = "PDF 转 XML"
+header = "将 PDF 转换为 XML"
+credit = "此服务使用 LibreOffice 进行文件转换。"
+submit = "转换"
+
+[ScannerImageSplit]
+tags = "分离、自动检测、扫描、多张照片、整理"
+info = "此功能需要安装 Python"
+
+[ScannerImageSplit.selectText]
+1 = "角度阈值："
+2 = "设置图像被旋转所需的最小绝对角度（默认：10）。"
+3 = "公差："
+4 = "确定估计背景颜色周围的颜色变化范围（默认值：30）。"
+5 = "最小面积："
+6 = "设置照片的最小面积阈值（默认：10000）。"
+7 = "最小轮廓面积："
+8 = "设置照片的最小轮廓面积阈值。"
+9 = "边框尺寸："
+10 = "设置添加和删除的边框大小，以防止输出中出现白边（默认值：1）。"
+
+[scannerImageSplit]
+title = "已提取的图像"
+submit = "提取图像扫描"
+
+[scannerImageSplit.error]
+failed = "提取图像扫描时发生错误。"
+
+[scannerImageSplit.tooltip]
+title = "照片分割器"
+whatThisDoes = "功能说明"
+whatThisDoesDesc = "自动查找并从扫描页面或合成图像中提取每张照片 - 无需手动裁剪。"
+whenToUse = "何时使用"
+useCase1 = "一次扫描整个相册页面"
+useCase2 = "将平板批次拆分为单独的文件"
+useCase3 = "将拼贴画拆分为单独的照片"
+useCase4 = "从文档中提取照片"
+quickFixes = "快速修复"
+problem1 = "未检测到照片 → 将容差增加到 30-50"
+problem2 = "误检测太多 → 将最小面积增加到 15,000-20,000"
+problem3 = "裁剪太紧 → 将边框大小增加到 5-10"
+problem4 = "倾斜的照片未矫正 → 将角度阈值降低到 ~5°"
+problem5 = "灰尘/噪声框 → 将最小轮廓面积增加到 1000-2000"
+setupTips = "设置提示"
+tip1 = "使用简单的浅色背景"
+tip2 = "在照片之间留出小间隙(≈1 厘米)"
+tip3 = "以 300-600 DPI 扫描"
+tip4 = "清洁扫描仪玻璃"
+headsUp = "注意"
+headsUpDesc = "重叠的照片或颜色与照片非常接近的背景会降低准确性 - 尝试使用更浅或更深的背景并留出更多空间。"
+
+[sign]
+title = "签名"
+header = "签署 PDF"
+upload = "上传图片"
+clear = "清除"
+add = "添加"
+save = "保存签名"
+applySignatures = "应用签名"
+personalSigs = "个人签名"
+sharedSigs = "共享签名"
+noSavedSigs = "未找到已保存的签名"
+addToAll = "添加到所有页面"
+delete = "删除"
+first = "首页"
+last = "末页"
+next = "下一页"
+previous = "上一页"
+maintainRatio = "切换保持长宽比"
+undo = "撤销"
+redo = "重做"
+submit = "签署文档"
+updateAndPlace = "更新并放置"
+activate = "激活签名放置"
+deactivate = "停止放置签名"
+
+[sign.draw]
+title = "绘制您的签名"
+clear = "清除"
+
+[sign.canvas]
+heading = "绘制您的签名"
+clickToOpen = "点击打开绘制画布"
+modalTitle = "绘制您的签名"
+colorLabel = "颜色"
+penSizeLabel = "笔粗"
+penSizePlaceholder = "大小"
+clear = "清空画布"
+colorPickerTitle = "选择笔画颜色"
+
+[sign.text]
+name = "签署人姓名"
+placeholder = "输入您的全名"
+fontLabel = "字体"
+fontSizeLabel = "字号"
+fontSizePlaceholder = "输入或选择字号 (8-200)"
+colorLabel = "文本颜色"
+
+[sign.saved]
+heading = "已保存的签名"
+description = "随时复用已保存的签名。"
+emptyTitle = "暂无已保存签名"
+emptyDescription = "在上方手写、上传或输入签名，然后使用“保存到库”以保留最多 {{max}} 个常用项以便使用。"
+limitTitle = "已达上限"
+limitDescription = "添加新签名前请先删除一个已保存的签名（最多 {{max}} 个）。"
+carouselPosition = "{{current}} / {{total}}"
+prev = "上一项"
+next = "下一项"
+delete = "移除"
+label = "标签"
+defaultLabel = "签名"
+defaultCanvasLabel = "手写签名"
+defaultImageLabel = "已上传签名"
+defaultTextLabel = "键入签名"
+saveButton = "保存签名"
+saveUnavailable = "请先创建签名再保存。"
+noChanges = "当前签名已保存。"
+
+[sign.saved.type]
+canvas = "手写"
+image = "上传"
+text = "文本"
+
+[sign.saved.status]
+saved = "已保存"
+
+[sign.steps]
+configure = "配置签名"
+
+[sign.step]
+createDesc = "选择创建签名的方式"
+place = "放置并保存"
+placeDesc = "将签名放置到 PDF 上"
+
+[sign.type]
+title = "签名类型"
+draw = "绘制"
+canvas = "画布"
+image = "图像"
+text = "文本"
+saved = "已保存"
+
+[sign.image]
+label = "上传签名图像"
+placeholder = "选择图像文件"
+hint = "上传 PNG 或 JPG 格式的签名图像"
+
+[sign.instructions]
+title = "如何添加签名"
+canvas = "在画布中绘制签名后，关闭弹窗，然后在 PDF 上任意位置点击以放置。"
+image = "在上方上传您的签名图像后，在 PDF 上任意位置点击以放置。"
+saved = "在上方选择一个已保存的签名，然后在 PDF 任意位置点击以放置。"
+text = "在上方输入您的姓名后，在 PDF 上任意位置点击以放置签名。"
+paused = "放置已暂停"
+resumeHint = "继续放置后点击添加签名。"
+noSignature = "请先在上方创建签名以启用放置工具。"
+
+[sign.mode]
+move = "移动签名"
+place = "放置签名"
+pause = "暂停放置"
+resume = "继续放置"
+
+[sign.results]
+title = "签名结果"
+
+[sign.error]
+failed = "签署 PDF 时发生错误。"
+
+[flatten]
+title = "展平"
+header = "展平 PDF"
+flattenOnlyForms = "仅展平表格"
+submit = "展平"
+filenamePrefix = "已扁平化"
+
+[flatten.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[flatten.steps]
+settings = "设置"
+
+[flatten.options]
+stepTitle = "扁平化选项"
+title = "扁平化选项"
+note = "扁平化会移除 PDF 的交互元素，使其不可编辑。"
+
+[flatten.options.flattenOnlyForms]
+label = "仅扁平化表单"
+desc = "仅扁平化表单字段，保留其他交互元素"
+
+[flatten.results]
+title = "扁平化结果"
+
+[flatten.error]
+failed = "扁平化 PDF 时发生错误。"
+
+[flatten.tooltip.header]
+title = "关于 PDF 扁平化"
+
+[flatten.tooltip.description]
+title = "扁平化有什么作用？"
+text = "扁平化会将可填写的表单和按钮转换为普通文本和图像，使 PDF 不可编辑。外观保持不变，但不能再更改或填写表单。适合共享完成的表单、创建存档文件或确保各处显示一致。"
+bullet1 = "文本框会变为普通文本（不可编辑）"
+bullet2 = "复选框和按钮会变为图片"
+bullet3 = "适用于不希望再更改的最终版本"
+bullet4 = "确保在所有设备上外观一致"
+
+[flatten.tooltip.formsOnly]
+title = "“仅扁平化表单”是什么意思？"
+text = "此选项仅移除填写表单的能力，保留其它功能，如点击链接、查看书签与批注等。"
+bullet1 = "表单将不可编辑"
+bullet2 = "链接仍可点击"
+bullet3 = "批注与备注仍可见"
+bullet4 = "书签仍可用于导航"
+
+[repair]
+tags = "修复、恢复、纠正、恢复"
+title = "修复"
+header = "修复 PDF"
+submit = "修复"
+description = "该工具将尝试修复损坏或受损的 PDF 文件。无需额外设置。"
+filenamePrefix = "已修复"
+
+[repair.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[repair.error]
+failed = "修复 PDF 时发生错误。"
+
+[repair.results]
+title = "修复结果"
+
+[removeBlanks]
+title = "删除空白"
+header = "删除空白页"
+submit = "删除空白"
+
+[removeBlanks.settings]
+title = "设置"
+
+[removeBlanks.threshold]
+label = "像素白度阈值"
+
+[removeBlanks.whitePercent]
+label = "白色百分比阈值"
+unit = "%"
+
+[removeBlanks.includeBlankPages]
+label = "包含检测到的空白页"
+
+[removeBlanks.tooltip.header]
+title = "移除空白页设置"
+
+[removeBlanks.tooltip.threshold]
+title = "像素白度阈值"
+text = "控制像素被视为“白色”的标准。这有助于判断页面上哪些区域算作空白。"
+bullet1 = "0 = 纯黑（最严格）"
+bullet2 = "128 = 中灰"
+bullet3 = "255 = 纯白（最宽松）"
+
+[removeBlanks.tooltip.whitePercent]
+title = "白色百分比阈值"
+text = "设置页面被视为空白并移除所需的最小白色像素百分比。"
+bullet1 = "较低值（如 80%）= 移除更多页面"
+bullet2 = "较高值（如 95%）= 仅移除非常空白的页面"
+bullet3 = "浅色背景文档建议使用较高值"
+
+[removeBlanks.tooltip.includeBlankPages]
+title = "包含已检测空白页"
+text = "启用后，将创建一个单独的 PDF，包含从原文档中检测并移除的所有空白页。"
+bullet1 = "有助于审查被移除的内容"
+bullet2 = "有助于验证检测准确性"
+bullet3 = "可关闭以减小输出文件大小"
+
+[removeBlanks.error]
+failed = "删除空白页失败"
+
+[removeBlanks.results]
+title = "已删除空白页"
+
+[removeAnnotations]
+tags = "评论、高亮、笔记、标注、删除"
+title = "删除标注"
+header = "删除标注"
+submit = "删除"
+
+[removeAnnotations.settings]
+title = "设置"
+
+[removeAnnotations.info]
+title = "关于删除注释"
+description = "此工具将从您的 PDF 文档中删除所有注释(评论、高亮、笔记等)。"
+
+[removeAnnotations.tooltip.header]
+title = "关于移除注释"
+
+[removeAnnotations.tooltip.description]
+title = "功能说明"
+
+[removeAnnotations.error]
+failed = "从 PDF 删除注释时发生错误。"
+
+[compare]
+tags = "区分、对比、更改、分析"
+title = "比较"
+header = "比较PDF"
+clearSelected = "清除已选择"
+addFilesHint = "在“文件”步骤中添加 PDF 以启用选择。"
+noFiles = "尚无可用 PDF"
+pages = "页面"
+cta = "比较"
+loading = "正在比较..."
+newLine = "换行"
+
+[compare.clear]
+confirmTitle = "清除所选 PDF？"
+confirmBody = "这将关闭当前比较并带您返回到“活动文件”。"
+confirm = "清除并返回"
+
+[compare.review]
+title = "比较结果"
+actionsHint = "查看比较、切换文档角色或导出摘要。"
+switchOrder = "切换顺序"
+exportSummary = "导出摘要"
+
+[compare.base]
+label = "原始文档"
+placeholder = "选择原始 PDF"
+
+[compare.comparison]
+label = "已编辑文档"
+placeholder = "选择编辑后的 PDF"
+
+[compare.selection]
+originalEditedTitle = "选择原始和已编辑的 PDF"
+
+[compare.original]
+label = "原始 PDF"
+
+[compare.edited]
+label = "已编辑 PDF"
+
+[compare.swap]
+confirmTitle = "重新运行比较？"
+confirmBody = "这将重新运行工具。确定要交换原始和已编辑的顺序吗？"
+confirm = "交换并重新运行"
+
+[compare.summary]
+baseHeading = "原始文档"
+comparisonHeading = "已编辑文档"
+pageLabel = "页"
+
+[compare.rendering]
+pageNotReadyTitle = "页面尚未渲染"
+pageNotReadyBody = "某些页面仍在渲染中。它们准备好后导航将自动对齐。"
+rendering = "正在渲染"
+inProgress = "至少有一个 PDF 体积很大，在渲染完成之前滚动不会很流畅"
+pagesRendered = "页已渲染"
+complete = "页面渲染完成"
+
+[compare.dropdown]
+deletionsLabel = "删除"
+additionsLabel = "新增"
+deletions = "删除（{{count}}）"
+additions = "新增（{{count}}）"
+searchPlaceholder = "搜索更改..."
+noResults = "未找到更改"
+
+[compare.actions]
+stackVertically = "垂直堆叠"
+placeSideBySide = "并排放置"
+zoomOut = "缩小"
+zoomIn = "放大"
+resetView = "重置视图"
+unlinkScrollPan = "取消链接滚动和平移"
+linkScrollPan = "链接滚动和平移"
+unlinkScroll = "取消链接滚动"
+linkScroll = "链接滚动"
+
+[compare.toasts]
+unlinkedTitle = "已启用独立滚动和平移"
+unlinkedBody = "提示：上/下箭头同时滚动两个窗格；平移只移动活动窗格。"
+
+[compare.error]
+selectRequired = "请选择一个原始和一个已编辑文档。"
+filesMissing = "无法找到所选文件。请重新选择。"
+generic = "无法比较这些文件。"
+
+[compare.status]
+extracting = "正在提取文本..."
+processing = "正在分析差异..."
+complete = "比较已就绪"
+
+[compare.longJob]
+title = "大型比较进行中"
+body = "这些 PDF 总页数超过 2,000。处理可能需要几分钟。"
+
+[compare.slowOperation]
+title = "仍在处理…"
+body = "此次比较比平常更久。您可以让其继续或取消。"
+cancel = "取消比较"
+
+[compare.complex]
+message = "提供的一份或两份文件是大文件，比较的准确性可能会降低。"
+
+[compare.large.file]
+message = "提供的文件中有一份或两份过大，无法处理。"
+
+[compare.no.text]
+message = "所选的 PDF 文件中有一个或两个没有文本内容。请选择包含文本的 PDF 文件进行对比。"
+
+[compare.too.dissimilar]
+message = "这些文档看起来差异很大。为节省时间，已停止比较。"
+
+[compare.earlyDissimilarity]
+title = "这些 PDF 看起来差异很大"
+body = "目前相似之处很少。如果它们并非相关文档，您可以停止比较。"
+stopButton = "停止比较"
+
+[certSign]
+tags = "身份验证、PEM、P12、官方、加密"
+title = "证书签名"
+filenamePrefix = "已签名"
+chooseCertificate = "选择证书文件"
+chooseJksFile = "选择 JKS 文件"
+chooseP12File = "选择 PKCS12 文件"
+choosePfxFile = "选择 PFX 文件"
+choosePrivateKey = "选择私钥文件"
+location = "位置"
+logoTitle = "Logo"
+name = "名称"
+noLogo = "无 Logo"
+pageNumber = "页码"
+password = "证书密码"
+passwordOptional = "如无密码则留空"
+reason = "原因"
+serverCertMessage = "使用服务器证书 - 无需文件或密码"
+showLogo = "显示 Logo"
+
+[certSign.signMode]
+stepTitle = "签名模式"
+
+[certSign.signMode.tooltip.header]
+title = "关于 PDF 签名"
+
+[certSign.signMode.tooltip.overview]
+title = "签名工作原理"
+text = "两种模式都会为文档加封（任何编辑都会被标记为篡改），并记录签署人/时间/方式以供审计。查看器的信任状态取决于证书链。"
+
+[certSign.signMode.tooltip.manual]
+title = "手动——自带证书"
+text = "使用您自己的证书文件以符合品牌身份。当 CA/链被识别时可显示<b>受信任</b>。"
+use = "适用：面向客户、法律、合规场景。"
+
+[certSign.signMode.tooltip.auto]
+title = "自动——零配置，系统即时封印"
+text = "使用服务器<b>自签名</b>证书签署。提供相同的<b>防篡改封印</b>与<b>审计追踪</b>；在查看器中通常显示为<b>未验证</b>。"
+use = "适用场景：需要快速、且在内部评审与归档中保持一致身份。"
+
+[certSign.signMode.tooltip.rule]
+title = "经验法则"
+text = "需要收件人显示<b>受信任</b>？选<b>手动</b>。需要零配置、快速的防篡改封印与审计追踪？选<b>自动</b>。"
+
+[certSign.certTypeStep]
+stepTitle = "证书格式"
+
+[certSign.certFiles]
+stepTitle = "证书文件"
+
+[certSign.appearance]
+stepTitle = "签名外观"
+invisible = "不可见"
+visible = "可见"
+
+[certSign.appearance.tooltip.header]
+title = "关于签名外观"
+
+[certSign.appearance.tooltip.invisible]
+title = "不可见签名"
+text = "签名会添加到 PDF 中以提升安全性，但在查看文档时不可见。适合满足合规要求而不改变外观的场景。"
+bullet1 = "在不改变视觉的情况下提供安全性"
+bullet2 = "满足数字签名的法律要求"
+bullet3 = "不影响文档版式或设计"
+
+[certSign.appearance.tooltip.visible]
+title = "可见签名"
+text = "在 PDF 上显示包含您的姓名、日期和可选信息的签名块。用于让读者清楚看到文档已签署。"
+bullet1 = "在文档上显示签署人姓名与日期"
+bullet2 = "可包含签署原因与地点"
+bullet3 = "可选择放置签名的页面"
+bullet4 = "可选添加徽标"
+
+[certSign.appearance.options]
+title = "签名详情"
+
+[certSign.sign]
+submit = "签署 PDF"
+results = "已签名 PDF"
+
+[certSign.error]
+failed = "处理签名时发生错误。"
+
+[certSign.tooltip.header]
+title = "签名管理说明"
+
+[certSign.tooltip.overview]
+title = "该工具能做什么？"
+text = "此工具可检查您的 PDF 是否已数字签名，并可添加新的数字签名。数字签名可证明文档的创建者或批准者，并显示签署后是否被更改。"
+bullet1 = "检查现有签名及其有效性"
+bullet2 = "查看签署人和证书的详细信息"
+bullet3 = "添加新的数字签名以保护文档"
+bullet4 = "支持多个文件并便于导航"
+
+[certSign.tooltip.validation]
+title = "检查签名"
+text = "检查签名时，工具会告诉您签名是否有效、谁签了名、何时签的，以及自签署后文档是否被更改。"
+bullet1 = "显示签名是否有效"
+bullet2 = "显示签署人信息与签署日期"
+bullet3 = "检查文档在签署后是否被修改"
+bullet4 = "可使用自定义证书进行验证"
+
+[certSign.tooltip.signing]
+title = "添加签名"
+text = "要对 PDF 进行签名，您需要数字证书（如 PEM、PKCS12 或 JKS）。您可以选择让签名在文档上可见，或仅用于安全而不可见。"
+bullet1 = "支持 PEM、PKCS12、JKS 以及服务器证书格式"
+bullet2 = "可选择在 PDF 上显示或隐藏签名"
+bullet3 = "可添加原因、地点和签署人姓名"
+bullet4 = "可选择放置可见签名的页面"
+bullet5 = "可使用服务器证书实现简便的“使用 Stirling-PDF 签名”选项"
+
+[certSign.certType.tooltip.header]
+title = "关于证书类型"
+
+[certSign.certType.tooltip.what]
+title = "什么是证书？"
+text = "它是您签名的安全身份标识，证明是您签署。除非要求使用证书签名，我们建议使用“键入、手写或上传”等其他安全方式。"
+
+[certSign.certType.tooltip.which]
+title = "我该选哪种格式？"
+text = "选择与您的证书文件格式相匹配的选项："
+bullet1 = "PKCS#12（.p12 / .pfx）— 合并文件（最常见）"
+bullet2 = "PFX（.pfx）— 微软的 PKCS12 版本"
+bullet3 = "PEM — 独立的私钥与证书 .pem 文件"
+bullet4 = "JKS — 面向开发/CI-CD 的 Java .jks 密钥库"
+
+[certSign.certType.tooltip.convert]
+title = "未看到密钥？"
+text = "使用 keytool 将文件转换为 Java 密钥库（.jks），然后选择 JKS。"
+
+[removeCertSign]
+tags = "身份验证、PEM、P12、官方、加密"
+title = "移除证书签名"
+header = "移除 PDF 的证书签名"
+selectPDF = "选择 PDF 文件："
+submit = "移除签名"
+description = "该工具将从您的 PDF 文档中移除数字证书签名。"
+filenamePrefix = "未签名"
+
+[removeCertSign.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[removeCertSign.error]
+failed = "移除证书签名时发生错误。"
+
+[removeCertSign.results]
+title = "证书移除结果"
+
+[pageLayout]
+tags = "合并、组合、单视图、整理"
+title = "多页布局"
+header = "多页布局"
+pagesPerSheet = "每页的页面数："
+addBorder = "添加边框"
+submit = "提交"
+
+[pageLayout.desc]
+2 = "将 2 页并排放在一张纸上。"
+3 = "将 3 页以单行放在一张纸上。"
+4 = "将 4 页放在一张纸上（2 × 2 网格）。"
+9 = "将 9 页放在一张纸上（3 × 3 网格）。"
+16 = "将 16 页放在一张纸上（4 × 4 网格）。"
+
+[pageLayout.error]
+failed = "创建多页布局时发生错误。"
+
+[bookletImposition]
+tags = "小册子,拼版,打印,装订,折叠,签名"
+title = "小册子拼版"
+header = "小册子拼版"
+submit = "创建小册子"
+paperSizeNote = "纸张大小将自动取自第一页。"
+
+[bookletImposition.spineLocation]
+label = "书脊位置"
+left = "左侧（标准）"
+right = "右侧（RTL）"
+
+[bookletImposition.doubleSided]
+label = "双面打印"
+tooltip = "生成正反两面，以便正确的小册子打印"
+
+[bookletImposition.manualDuplex]
+title = "手动双面模式"
+instructions = "适用于无自动双面的打印机。您需要运行两次："
+
+[bookletImposition.duplexPass]
+label = "打印走纸"
+first = "第 1 次走纸"
+second = "第 2 次走纸"
+firstInstructions = "先打印正面 → 叠放纸张（正面朝下）→ 进行第 2 次走纸"
+secondInstructions = "将已打印纸叠正面朝下放入 → 打印背面"
+
+[bookletImposition.rtlBinding]
+label = "从右向左装订"
+tooltip = "适用于阿拉伯语、希伯来语等从右到左的语言"
+
+[bookletImposition.addBorder]
+label = "在页面周围添加边框"
+tooltip = "在每个页面区块周围添加边框，便于裁切与对齐"
+
+[bookletImposition.addGutter]
+label = "添加装订边距"
+tooltip = "为装订添加内侧边距空间"
+
+[bookletImposition.gutterSize]
+label = "装订边距（点）"
+
+[bookletImposition.flipOnShortEdge]
+label = "短边翻转（仅自动双面）"
+tooltip = "用于短边翻转的自动双面打印（手动模式下忽略）"
+manualNote = "手动模式不需要——您将自行翻转纸堆"
+
+[bookletImposition.advanced]
+toggle = "高级选项"
+
+[bookletImposition.tooltip.header]
+title = "小册子制作指南"
+
+[bookletImposition.tooltip.description]
+title = "什么是小册子拼版？"
+text = "通过按正确的打印顺序排列页面来创建专业小册子。您的 PDF 页面将以横向纸张 2 合 1 的方式排布，折叠并装订后即可按顺序阅读。"
+
+[bookletImposition.tooltip.example]
+title = "示例：8 页小册子"
+text = "您的 8 页文档将变为 2 张纸："
+bullet1 = "第 1 张正面：第 8、1 页 | 反面：第 2、7 页"
+bullet2 = "第 2 张正面：第 6、3 页 | 反面：第 4、5 页"
+bullet3 = "折叠并堆叠后：阅读顺序 1→2→3→4→5→6→7→8"
+
+[bookletImposition.tooltip.printing]
+title = "打印与组装指南"
+text = "按照以下步骤获得完美小册子："
+bullet1 = "使用“长边翻转”的双面打印"
+bullet2 = "按顺序堆叠纸张，对折"
+bullet3 = "沿折痕装订或粘贴"
+bullet4 = "短边翻转打印机：启用“短边翻转”选项"
+
+[bookletImposition.tooltip.manualDuplex]
+title = "手动双面（单面打印机）"
+text = "适用于无自动双面的打印机："
+bullet1 = "关闭“双面打印”"
+bullet2 = "选择“第 1 次走纸”→ 打印 → 纸堆正面朝下"
+bullet3 = "选择“第 2 次走纸”→ 装入纸堆 → 打印背面"
+bullet4 = "如常折叠与装订"
+
+[bookletImposition.tooltip.advanced]
+title = "高级选项"
+text = "精细调整您的小册子："
+bullet1 = "RTL 装订：适用于阿拉伯语、希伯来语等"
+bullet2 = "边框：显示用于修边的裁切线"
+bullet3 = "装订边距：为装订/订书留出空间"
+bullet4 = "短边翻转：仅适用于自动双面打印机"
+
+[bookletImposition.error]
+failed = "创建小册子拼版时发生错误。"
+
+[scalePages]
+title = "调整页面缩放比例"
+header = "调整页面缩放比例"
+pageSize = "文档页面的尺寸。"
+keepPageSize = "保持页面原尺寸"
+scaleFactor = "页面的缩放级别（裁剪）。"
+submit = "提交"
+
+[adjustPageScale]
+tags = "调整大小,修改,尺寸,适应"
+title = "调整页面比例"
+header = "调整页面比例"
+submit = "调整页面比例"
+
+[adjustPageScale.scaleFactor]
+label = "缩放系数"
+
+[adjustPageScale.pageSize]
+label = "目标页面大小"
+keep = "保持原始大小"
+letter = "Letter（美式信纸）"
+legal = "Legal（美式政府纸）"
+
+[adjustPageScale.error]
+failed = "调整页面比例时发生错误。"
+
+[adjustPageScale.tooltip.header]
+title = "页面比例设置概览"
+
+[adjustPageScale.tooltip.description]
+title = "说明"
+text = "调整 PDF 内容尺寸并更改页面尺寸。"
+
+[adjustPageScale.tooltip.scaleFactor]
+title = "缩放系数"
+text = "控制页面上内容显示的大小。内容会按比例缩放并居中——若缩放后大于页面尺寸，可能会被裁切。"
+bullet1 = "1.0 = 原始大小"
+bullet2 = "0.5 = 一半大小（缩小 50%）"
+bullet3 = "2.0 = 两倍大小（放大 200%，可能裁切）"
+
+[adjustPageScale.tooltip.pageSize]
+title = "目标页面大小"
+text = "设置输出 PDF 页面的尺寸。“保持原始大小”维持当前尺寸，其它选项会调整为标准纸张大小。"
+
+[add-page-numbers]
+tags = "分页、标签、整理、索引"
+
+[auto-rename]
+tags = "自动检测、基于标题、整理、重新标记"
+title = "自动重命名"
+header = "自动重命名 PDF"
+description = "自动从 PDF 内容中查找标题，并将其用作文件名。"
+submit = "自动重命名"
+
+[auto-rename.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[auto-rename.error]
+failed = "自动重命名 PDF 时发生错误。"
+
+[auto-rename.results]
+title = "自动重命名结果"
+
+[auto-rename.tooltip.header]
+title = "自动重命名原理"
+
+[auto-rename.tooltip.description]
+title = "功能说明"
+
+[auto-rename.tooltip.howItWorks]
+title = "智能重命名"
+text = "自动从 PDF 内容中查找标题，并将其用作文件名。"
+bullet1 = "查找看起来像标题或标题级文本"
+bullet2 = "根据检测到的标题创建干净、合法的文件名"
+bullet3 = "若未找到合适标题，则保留原文件名"
+
+[auto-rename.settings]
+title = "关于"
+
+[adjust-contrast]
+tags = "颜色校正、调节、修改、增强"
+
+[crop]
+title = "裁剪"
+header = "裁剪 PDF"
+submit = "提交"
+noFileSelected = "选择一个 PDF 文件开始裁剪"
+reset = "重置为整页"
+
+[crop.preview]
+title = "裁剪区域选择"
+
+[crop.coordinates]
+title = "位置与尺寸"
+
+[crop.coordinates.x]
+label = "X 位置"
+desc = "左边缘（点）"
+
+[crop.coordinates.y]
+label = "Y 位置"
+desc = "下边缘（点）"
+
+[crop.coordinates.width]
+label = "宽度"
+desc = "裁剪宽度（点）"
+
+[crop.coordinates.height]
+label = "高度"
+desc = "裁剪高度（点）"
+
+[crop.error]
+invalidArea = "裁剪区域超出 PDF 边界"
+failed = "裁剪 PDF 失败"
+
+[crop.steps]
+selectArea = "选择裁剪区域"
+
+[crop.tooltip]
+title = "如何裁剪 PDF"
+description = "通过拖拽并调整缩略图上的蓝色覆盖层选择要裁剪的区域。"
+drag = "拖动覆盖层以移动裁剪区域"
+resize = "拖动角与边的手柄来调整大小"
+precision = "使用坐标输入以获得精确位置"
+
+[crop.results]
+title = "裁剪结果"
+
+[crop.automation]
+info = "以 PDF 点为单位输入裁剪坐标。原点 (0,0) 位于左下角。这些值将应用于此自动化中处理的所有 PDF。"
+reference = "参考：A4 页面为 595.28 × 841.89 点（210mm × 297mm）。1 英寸 = 72 点。"
+
+[autoSplitPDF]
+tags = "基于 QR 码、分离、扫描分割、整理"
+title = "自动拆分 PDF"
+header = "自动拆分 PDF"
+description = "打印、插入、扫描、上传，让我们自动分离您的文档。无需手动排序。"
+formPrompt = "提交包含 Stirling-PDF 分隔页的 PDF："
+duplexMode = "双面模式（正反面扫描）"
+dividerDownload2 = "下载“自动拆分分隔页（带指导说明）.pdf”"
+submit = "提交"
+
+[autoSplitPDF.selectText]
+1 = "从下面打印一些分隔页（黑白打印即可）。"
+2 = "在文档之间插入分隔页，一次性扫描所有文档。"
+3 = "上传单个大型扫描的 PDF 文件，让 Stirling PDF 处理剩下的事情。"
+4 = "分隔页会自动检测和删除，确保最终文档整洁。"
+
+[sanitizePdf]
+tags = "清理、安全、安全、删除威胁"
+
+[URLToPDF]
+tags = "网页捕获、保存网页、网页转文档、归档"
+title = "URL 转 PDF"
+header = "将 URL 转换为 PDF"
+submit = "转换"
+credit = "此服务使用 WeasyPrint 进行文件转换。"
+
+[HTMLToPDF]
+tags = "标记、网页内容、转换、转换"
+title = "HTML 转 PDF"
+header = "将 HTML 转换为 PDF"
+help = "接受 HTML 文件和包含所需的 html/css/images 等的 ZIP 文件"
+submit = "转换"
+credit = "此服务使用 WeasyPrint 进行文件转换。"
+zoom = "网站显示缩放级别"
+pageWidth = "页面宽度-以厘米为单位（填空则使用默认值）"
+pageHeight = "页面高度-以厘米为单位（填空则使用默认值）"
+marginTop = "页面上边距-以毫米为单位（填空则使用默认值）"
+marginBottom = "页面下边距-以毫米为单位（填空则使用默认值）"
+marginLeft = "页面左上边距-以毫米为单位（填空则使用默认值）"
+marginRight = "页面右边距-以毫米为单位（填空则使用默认值）"
+printBackground = "页面背景渲染"
+defaultHeader = "启用默认页头（文件名称和页码）"
+cssMediaType = "更换页面的 CSS 媒体类型。"
+none = "无"
+print = "打印"
+screen = "屏幕"
+
+[MarkdownToPDF]
+tags = "标记、网页内容、转换、转换"
+title = "Markdown 转 PDF"
+header = "将 Markdown 转换为 PDF"
+submit = "转换"
+help = "正在努力中"
+credit = "此服务使用 WeasyPrint 进行文件转换。"
+
+[PDFToMarkdown]
+tags = "标记,网页内容,转换,转档,md"
+title = "PDF转Markdown"
+header = "PDF转Markdown"
+submit = "转换"
+
+[getPdfInfo]
+tags = "信息、数据、统计、统计数据"
+title = "获取 PDF 信息"
+header = "获取 PDF 信息"
+submit = "获取信息"
+downloadJson = "下载 JSON"
+
+[extractPage]
+tags = "提取"
+
+[PdfToSinglePage]
+tags = "单页"
+
+[showJS]
+tags = "JavaScript"
+title = "显示 JavaScript"
+header = "显示 JavaScript"
+downloadJS = "下载 JavaScript"
+submit = "显示"
+results = "结果"
+processing = "正在提取 JavaScript..."
+done = "已提取 JavaScript"
+singleFileWarning = "此工具一次只支持一个文件。请选择单个文件。"
+
+[showJS.view]
+title = "已提取的 JavaScript"
+
+[redact]
+tags = "涂改,隐藏,涂黑,黑色,标记,遮蔽,手动"
+title = "手动纠正"
+submit = "纠正"
+
+[redact.error]
+failed = "涂黑 PDF 时发生错误。"
+
+[redact.modeSelector]
+title = "涂黑方式"
+mode = "模式"
+automatic = "自动"
+automaticDesc = "基于搜索词涂黑文本"
+manual = "手动"
+manualDesc = "点击并拖拽以涂黑特定区域"
+manualComingSoon = "手动涂黑即将推出"
+
+[redact.auto]
+header = "自动涂黑"
+colorLabel = "框颜色"
+useRegexLabel = "使用正则表达式"
+wholeWordSearchLabel = "整词匹配"
+customPaddingLabel = "自定义额外留白"
+convertPDFToImageLabel = "将 PDF 转为图像 PDF"
+
+[redact.auto.settings]
+title = "涂黑设置"
+advancedTitle = "高级功能"
+
+[redact.auto.wordsToRedact]
+title = "要涂黑的词语"
+placeholder = "输入一个词"
+add = "添加"
+examples = "示例：Confidential、Top-Secret"
+
+[redact.tooltip.mode.header]
+title = "涂黑方式"
+
+[redact.tooltip.mode.automatic]
+title = "自动涂黑"
+text = "在整个文档中自动查找并涂黑指定文本。非常适合移除一致的敏感信息，如姓名、地址或机密标记。"
+
+[redact.tooltip.mode.manual]
+title = "手动涂黑"
+text = "点击并拖拽以手动选择特定区域进行涂黑。可精确控制需要涂黑的内容。（即将推出）"
+
+[redact.tooltip.words]
+bullet1 = "一次添加一个词"
+bullet2 = "按 Enter 或点击“添加另一个”以添加"
+bullet3 = "点击 × 以移除词语"
+
+[redact.tooltip.words.header]
+title = "要涂黑的词语"
+
+[redact.tooltip.words.description]
+title = "文本匹配"
+text = "输入要在文档中查找并涂黑的词语或短语。每个词会单独搜索。"
+
+[redact.tooltip.words.examples]
+title = "常见示例"
+text = "常见涂黑词包括：银行信息、电子邮箱地址或特定姓名。"
+
+[redact.tooltip.advanced.header]
+title = "高级涂黑设置"
+
+[redact.tooltip.advanced.color]
+title = "框颜色与留白"
+text = "自定义涂黑框的外观。黑色为标准，但您可选择任意颜色。“留白”可在找到的文本周围添加额外空间。"
+
+[redact.tooltip.advanced.regex]
+title = "使用正则"
+text = "启用正则表达式以进行高级模式匹配。适用于查找电话号码、邮箱或复杂模式。"
+bullet1 = "示例：\\d{4}-\\d{2}-\\d{2} 匹配任意 YYYY-MM-DD 日期"
+bullet2 = "谨慎使用——请充分测试"
+
+[redact.tooltip.advanced.wholeWord]
+title = "整词匹配"
+text = "仅匹配完整单词，而非部分匹配。启用后，“John”不会匹配“Johnson”。"
+
+[redact.tooltip.advanced.convert]
+title = "转为图像 PDF"
+text = "在涂黑后将 PDF 转换为基于图像的 PDF。确保框下文字被完全移除且不可恢复。"
+
+[redact.manual]
+header = "手动涂黑"
+textBasedRedaction = "基于文本的涂黑"
+pageBasedRedaction = "基于页面的涂黑"
+convertPDFToImageLabel = "将 PDF 转为图像 PDF（用于移除框后面的文字）"
+export = "导出全部"
+upload = "上传"
+boxRedaction = "框选涂黑"
+zoom = "缩放"
+zoomIn = "放大"
+zoomOut = "缩小"
+nextPage = "下一页"
+previousPage = "上一页"
+toggleSidebar = "切换侧边栏"
+showThumbnails = "显示缩略图"
+showDocumentOutline = "显示文档大纲（双击可展开/折叠所有项目）"
+showAttachments = "显示附件"
+showLayers = "显示图层（双击可重置所有图层到默认状态）"
+colourPicker = "取色器"
+findCurrentOutlineItem = "定位当前大纲项"
+applyChanges = "应用更改"
+
+[redact.manual.pageRedactionNumbers]
+title = "页码"
+placeholder = "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
+
+[redact.manual.redactionColor]
+title = "涂黑颜色"
+
+[tableExtraxt]
+tags = "CSV、表格提取、提取、转换"
+
+[autoSizeSplitPDF]
+tags = "pdf、拆分、文件、组织"
+
+[overlay-pdfs]
+tags = "叠加"
+header = "叠加 PDF 文件"
+title = "叠加 PDF"
+desc = "将一个 PDF 叠加在另一个之上"
+submit = "提交"
+
+[overlay-pdfs.baseFile]
+label = "选择基础 PDF 文件"
+
+[overlay-pdfs.overlayFiles]
+label = "选择需要叠加在基础上的 PDF 文件"
+placeholder = "选择 PDF..."
+addMore = "添加更多 PDF..."
+
+[overlay-pdfs.mode]
+label = "选择叠加模式"
+sequential = "按顺序叠加"
+interleaved = "交错叠加"
+fixedRepeat = "固定重复叠加"
+
+[overlay-pdfs.counts]
+label = "叠加次数（仅限固定重复叠加模式）"
+placeholder = "输入用逗号分隔的次数（例如：2,3,1）"
+item = "文件计数"
+noFiles = "添加叠加文件以配置计数"
+
+[overlay-pdfs.position]
+label = "选择叠加位置"
+foreground = "前面（上面）"
+background = "后面（下面）"
+
+[overlay-pdfs.settings]
+title = "设置"
+
+[overlay-pdfs.results]
+title = "叠加结果"
+
+[overlay-pdfs.tooltip.header]
+title = "叠加 PDF 概览"
+
+[overlay-pdfs.tooltip.description]
+title = "说明"
+text = "将一个基础 PDF 与一个或多个叠加 PDF 组合。可按页以不同模式应用叠加，并放置在前景或背景。"
+
+[overlay-pdfs.tooltip.mode]
+title = "叠加模式"
+text = "选择如何将叠加页面分配到基础 PDF 的页面。"
+sequential = "顺序叠加：先使用第一个叠加 PDF 的页面直到结束，再转到下一个。"
+interleaved = "交错叠加：依次从每个叠加中取一页。"
+fixedRepeat = "固定重复叠加：在切换到下一个之前，从每个叠加中取固定数量的页面。使用“计数”设置数量。"
+
+[overlay-pdfs.tooltip.position]
+title = "叠加位置"
+text = "前景将叠加置于页面之上。背景将其置于页面之下。"
+
+[overlay-pdfs.tooltip.overlayFiles]
+title = "叠加文件"
+text = "选择一个或多个要叠加到基础上的 PDF。在顺序和固定重复模式下，这些文件的顺序会影响页面应用方式。"
+
+[overlay-pdfs.tooltip.counts]
+title = "计数（仅限固定重复）"
+text = "为每个叠加文件提供一个正数，表示在切换到下一个之前要取的页数。模式为固定重复时必填。"
+
+[overlay-pdfs.error]
+failed = "叠加 PDF 时发生错误。"
+
+[split-by-sections]
+tags = "章节拆分、分割、自定义"
+title = "按照块（Section）拆分 PDF"
+header = "将 PDF 拆分成块"
+submit = "分割 PDF"
+merge = "是否合并为一个 pdf"
+
+[split-by-sections.horizontal]
+label = "水平分割"
+placeholder = "输入水平分割数"
+
+[split-by-sections.vertical]
+label = "垂直分割"
+placeholder = "输入垂直分割数"
+
+[AddStampRequest]
+tags = "图章、添加图片、图片居中、水印、PDF、嵌入、自定义"
+header = "添加图章"
+title = "添加图章"
+stampSetup = "印章设置"
+stampType = "图章类型"
+stampText = "图章文字"
+stampImage = "图章图片"
+alphabet = "字母表"
+fontSize = "字体/图片大小"
+rotation = "旋转角度"
+opacity = "透明度"
+position = "定位"
+overrideX = "覆盖X坐标"
+overrideY = "覆盖Y坐标"
+customMargin = "自定义外边距"
+customColor = "自定义文本颜色"
+submit = "提交"
+noStampSelected = "未选择印章。返回到第 1 步。"
+customPosition = "在预览窗口中拖动图章到期望位置。"
+imageSize = "图像大小"
+margin = "边距"
+positionAndFormatting = "位置与格式"
+quickPosition = "选择页面上的一个位置以放置图章。"
+
+[AddStampRequest.error]
+failed = "向 PDF 添加图章时发生错误。"
+
+[AddStampRequest.results]
+title = "图章结果"
+
+[removeImagePdf]
+tags = "删除图像, 页面操作, 后端, 服务端"
+
+[splitPdfByChapters]
+tags = "分割,章节,书签,组织"
+
+[validateSignature]
+tags = "签名，验证，验证，PDF，证书，数字签名，验证签名，验证证书"
+title = "验证pdf签名"
+header = "验证数字签名"
+selectPDF = "选择已签名的pdf文件"
+submit = "验证签名"
+results = "验证结果"
+signer = "签署者"
+date = "日期"
+reason = "原因"
+location = "位置"
+noSignatures = "此文件中未找到电子签名"
+selectCustomCert = "X.509 自签名证书（可选）"
+downloadCsv = "下载 CSV"
+downloadJson = "下载 JSON"
+downloadPdf = "下载 PDF 报告"
+finalizing = "正在准备下载..."
+noResults = "运行验证以生成报告。"
+noSignaturesShort = "无签名"
+processing = "正在验证签名..."
+signatureDate = "签名日期"
+totalSignatures = "签名总数"
+
+[validateSignature.status]
+_value = "状态"
+valid = "有效"
+invalid = "无效"
+complete = "验证完成"
+
+[validateSignature.chain]
+invalid = "证书链验证失败 - 无法验证签名者的身份"
+
+[validateSignature.trust]
+invalid = "证书不在信任存储区中 - 无法验证来源"
+
+[validateSignature.cert]
+expired = "凭证已过期"
+revoked = "凭证已被撤销"
+info = "凭证信息"
+issuer = "发行者"
+subject = "主题"
+serialNumber = "序列号"
+validFrom = "有效期自"
+validUntil = "有效期至"
+algorithm = "算法"
+keySize = "密钥长度"
+version = "版本"
+keyUsage = "密钥用途"
+selfSigned = "自签名"
+bits = "比特"
+details = "证书详情"
+
+[validateSignature.signature]
+info = "签名信息"
+_value = "签名"
+mathValid = "签名在数学上有效，但:"
+
+[validateSignature.downloadType]
+csv = "CSV"
+json = "JSON"
+pdf = "PDF"
+
+[validateSignature.error]
+allFailed = "无法验证所选文件。"
+partial = "部分文件无法验证。"
+reportGeneration = "无法生成 PDF 报告。JSON 和 CSV 可用。"
+unexpected = "验证过程中出现意外错误。"
+
+[validateSignature.issue]
+certExpired = "证书已过期"
+certRevocationUnknown = "证书吊销状态未知"
+certRevoked = "证书已吊销"
+chainInvalid = "证书链无效"
+signatureInvalid = "签名加密校验失败"
+trustInvalid = "证书不受信任"
+
+[validateSignature.report]
+continued = "续"
+downloads = "下载"
+entryLabel = "签名摘要"
+filesEvaluated = "已评估 {{count}} 个文件"
+footer = "通过 Stirling PDF 验证"
+generatedAt = "生成时间"
+noPdf = "成功验证后将提供 PDF 报告。"
+page = "页"
+shortTitle = "签名摘要"
+signatureCountLabel = "{{count}} 个签名"
+signaturesFound = "检测到 {{count}} 个签名"
+signaturesValid = "{{count}} 个完全有效"
+title = "签名验证报告"
+
+[validateSignature.report.fields]
+created = "创建时间"
+fileSize = "文件大小"
+signatureCount = "签名总数"
+signatureDate = "签名日期"
+
+[validateSignature.settings]
+certHint = "上传受信任的 X.509 证书以针对自定义信任源进行验证。"
+title = "验证设置"
+
+[replaceColor]
+tags = "替换颜色,页面操作,后端,服务器端"
+
+[replaceColor.labels]
+settings = "设置"
+colourOperation = "颜色操作"
+
+[replaceColor.options]
+highContrast = "高对比度"
+invertAll = "反转所有颜色"
+custom = "自定义"
+cmyk = "转换为 CMYK"
+
+[replaceColor.tooltip.header]
+title = "替换与反转颜色设置概览"
+
+[replaceColor.tooltip.description]
+title = "说明"
+text = "转换 PDF 颜色以提升可读性和可访问性。可选择高对比度预设、反转所有颜色，或创建自定义配色方案。"
+
+[replaceColor.tooltip.highContrast]
+title = "高对比度"
+text = "应用预定义的高对比度配色组合，以提升可读性并符合无障碍规范。"
+bullet1 = "白字黑底——经典深色模式"
+bullet2 = "黑字白底——标准高对比度"
+bullet3 = "黄字黑底——高可见性选项"
+bullet4 = "绿字黑底——替代高对比度"
+
+[replaceColor.tooltip.invertAll]
+title = "反转所有颜色"
+text = "完全反转 PDF 中的所有颜色，形成类似底片的效果。用于创建文档的深色模式版本，或在弱光环境下减轻眼疲劳。"
+
+[replaceColor.tooltip.custom]
+title = "自定义颜色"
+text = "使用取色器定义自己的文本和背景颜色。非常适合创建品牌化文档或满足特定无障碍需求。"
+bullet1 = "文本颜色——选择文本元素的颜色"
+bullet2 = "背景颜色——设置文档的背景颜色"
+
+[replaceColor.tooltip.cmyk]
+title = "转换为 CMYK"
+text = "将 PDF 从 RGB 色彩空间转换为 CMYK 色彩空间，优化用于专业印刷。该过程将颜色转换为打印机使用的青、品红、黄、黑模型。"
+
+[replaceColor.error]
+failed = "处理颜色替换时发生错误。"
+
+[login]
+title = "登录"
+header = "登录"
+signin = "登录"
+signInWith = "使用以下方式登录"
+signInAnonymously = "以访客身份注册"
+rememberme = "记住我"
+invalid = "用户名或密码无效。"
+locked = "您的账户已被锁定。"
+sessionExpired = "您的会话已过期。请重新登录。"
+signinTitle = "请登录"
+ssoSignIn = "通过单点登录登录"
+oAuth2AutoCreateDisabled = "OAuth2 自动创建用户已禁用"
+oAuth2AdminBlockedUser = "目前已阻止未注册用户的注册或登录。请联系管理员。"
+oauth2RequestNotFound = "找不到验证请求"
+oauth2InvalidUserInfoResponse = "无效的用户信息响应"
+oauth2invalidRequest = "无效请求"
+oauth2AccessDenied = "拒绝访问"
+oauth2InvalidTokenResponse = "无效的 Token 响应"
+oauth2InvalidIdToken = "无效的 Token"
+relyingPartyRegistrationNotFound = "未找到依赖方注册信息"
+userIsDisabled = "用户被禁用，登录已被阻止。请联系管理员。"
+alreadyLoggedIn = "您已经登录到了"
+alreadyLoggedIn2 = "设备，请注销设备后重试。"
+toManySessions = "你已经有太多的会话了。请注销一些设备后重试。"
+logoutMessage = "您已退出登录。"
+youAreLoggedIn = "您已登录！"
+email = "邮箱"
+password = "密码"
+enterEmail = "输入您的邮箱"
+enterPassword = "输入您的密码"
+loggingIn = "正在登录…"
+username = "用户名"
+enterUsername = "输入用户名"
+useEmailInstead = "使用邮箱登录"
+forgotPassword = "忘记密码？"
+logIn = "登录"
+signingIn = "正在登录…"
+login = "登录"
+or = "或"
+useMagicLink = "改用魔法链接"
+enterEmailForMagicLink = "输入您的邮箱以获取魔法链接"
+sending = "正在发送…"
+sendMagicLink = "发送魔法链接"
+cancel = "取消"
+dontHaveAccount = "还没有账户？去注册"
+home = "首页"
+debug = "调试"
+signOut = "退出登录"
+pleaseEnterBoth = "请同时输入邮箱和密码"
+pleaseEnterEmail = "请输入您的邮箱地址"
+magicLinkSent = "魔法链接已发送至 {{email}}！请检查邮箱并点击链接登录。"
+passwordResetSent = "密码重置链接已发送至 {{email}}！请检查邮箱并按指引操作。"
+failedToSignIn = "使用 {{provider}} 登录失败：{{message}}"
+unexpectedError = "意外错误：{{message}}"
+accountCreatedSuccess = "账户创建成功！现在可以登录。"
+passwordChangedSuccess = "密码修改成功！请使用新密码登录。"
+credentialsUpdated = "您的凭据已更新。请重新登录。"
+defaultCredentials = "默认登录凭据"
+changePasswordWarning = "首次登录后请更改密码"
+
+[login.slides.overview]
+alt = "Stirling PDF 概览"
+title = "满足您全部 PDF 需求的一站式平台。"
+subtitle = "面向隐私优先的 PDF 云套件，支持转换、签名、涂黑与管理文档，并提供 50+ 个其他强大工具。"
+
+[login.slides.edit]
+alt = "编辑 PDF"
+title = "编辑 PDF，以展示/保护您所需的信息"
+subtitle = "拥有十余种工具，助您涂黑、签名、阅读并处理 PDF，定能满足您的需求。"
+
+[login.slides.secure]
+alt = "保护 PDF"
+title = "保护 PDF 中的敏感信息"
+subtitle = "轻松添加密码、涂黑内容并管理证书。"
+
+[signup]
+title = "创建账户"
+subtitle = "加入 Stirling PDF 开始使用"
+name = "姓名"
+email = "邮箱"
+password = "密码"
+confirmPassword = "确认密码"
+enterName = "输入您的姓名"
+enterEmail = "输入您的邮箱"
+enterPassword = "输入您的密码"
+confirmPasswordPlaceholder = "确认密码"
+or = "或"
+creatingAccount = "正在创建账户…"
+signUp = "注册"
+alreadyHaveAccount = "已经有账户？去登录"
+pleaseFillAllFields = "请填写所有字段"
+passwordsDoNotMatch = "两次输入的密码不一致"
+passwordTooShort = "密码至少为 6 个字符"
+invalidEmail = "请输入有效的邮箱地址"
+checkEmailConfirmation = "请检查邮箱中的确认链接以完成注册。"
+accountCreatedSuccessfully = "账户创建成功！您现在可以登录。"
+unexpectedError = "意外错误：{{message}}"
+useEmailInstead = "改用邮箱"
+nameRequired = "必须填写姓名"
+emailRequired = "必须填写邮箱"
+passwordRequired = "必须填写密码"
+confirmPasswordRequired = "请确认密码"
+
+[pdfToSinglePage]
+title = "PDF 转单页"
+header = "将 PDF 转换为单页"
+submit = "转为单页"
+description = "该工具会将 PDF 的所有页面合并为一张超长单页。宽度保持与原页面相同，高度为所有页面高度之和。"
+filenamePrefix = "单页"
+
+[pdfToSinglePage.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[pdfToSinglePage.error]
+failed = "转换为单页时发生错误。"
+
+[pdfToSinglePage.results]
+title = "单页结果"
+
+[pageExtracter]
+title = "提取页面"
+header = "提取页面"
+submit = "提取"
+placeholder = "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
+
+[sanitizePDF]
+title = "清理 PDF"
+header = "清理 PDF 文件"
+submit = "清理PDF"
+
+[sanitizePDF.selectText]
+1 = "移除 JavaScript 操作"
+2 = "移除嵌入的文件"
+3 = "移除 XMP 元数据"
+4 = "移除链接"
+5 = "移除字体"
+6 = "移除文档信息元数据"
+
+[adjustContrast]
+title = "调整对比度"
+header = "调整对比度"
+basic = "基本调整"
+contrast = "对比度："
+brightness = "亮度："
+saturation = "饱和度："
+download = "下载"
+adjustColors = "调整颜色"
+blue = "蓝色"
+confirm = "确认"
+green = "绿色"
+noPreview = "选择一个PDF进行预览"
+red = "红色"
+
+[adjustContrast.error]
+failed = "调整颜色/对比度失败"
+
+[adjustContrast.results]
+title = "已调整的PDF"
+
+[compress]
+title = "压缩"
+desc = "压缩 PDF 以减小文件大小。"
+header = "压缩 PDF"
+credit = "此服务使用qpdf进行 PDF 压缩/优化。"
+submit = "压缩"
+
+[compress.method]
+title = "压缩方式"
+quality = "质量"
+filesize = "文件大小"
+
+[compress.grayscale]
+label = "应用灰度进行压缩"
+
+[compress.tooltip.header]
+title = "压缩设置概览"
+
+[compress.tooltip.description]
+title = "说明"
+text = "压缩是减小文件大小的简便方法。选择“文件大小”可输入目标大小，我们将为您自动调整质量；选择“质量”可手动设置压缩强度。"
+
+[compress.tooltip.qualityAdjustment]
+title = "质量调整"
+text = "拖动滑块以调整压缩强度。较低值（1-3）可保留质量但文件较大；较高值（7-9）能缩小体积但会降低图像清晰度。"
+bullet1 = "较低数值更能保留质量"
+bullet2 = "较高数值能更大幅度减小文件"
+
+[compress.tooltip.grayscale]
+title = "灰度"
+text = "选择此选项将所有图像转换为黑白，这对扫描 PDF 或图片较多的文档可显著减小体积。"
+
+[compress.error]
+failed = "压缩 PDF 时发生错误。"
+
+[compress.selectText]
+2 = "优化级别："
+4 = "自动模式 - 自动调整质量以获得精确大小的PDF"
+5 = "预期PDF大小（例如：25MB、10.8MB、25KB）"
+
+[compress.selectText.1]
+_value = "压缩设置"
+1 = "1-3 PDF 压缩，</br> 4-6 轻度图像压缩，</br> 7-9 深度图像压缩（将显著降低图像质量）"
+
+[decrypt]
+passwordPrompt = "此文件受密码保护。请输入密码："
+cancelled = "PDF 操作已取消： {0}"
+noPassword = "未提供加密 PDF 的密码： {0}"
+invalidPassword = "请使用正确的密码重试。"
+invalidPasswordHeader = "密码错误或不支持的 PDF 加密： {0}"
+unexpectedError = "处理文件时发生错误。请再试一次。"
+serverError = "服务器解密时发生错误： {0}"
+success = "文件解密成功。"
+
+[multiTool-advert]
+message = "此功能也适用于我们的“<a href=\"{0}\">多功能工具页面</a>”。查看它以获得增强的逐页 UI 以及其他功能！"
+
+[pageRemover]
+title = "删除页面"
+header = "PDF 页面移除器"
+pagesToDelete = "要删除的页面（输入一个用逗号分隔的页码列表）："
+submit = "删除页面"
+placeholder = "（例如：1,2,6 或 1-10,15-30）"
+
+[imageToPDF]
+title = "图片转 PDF"
+header = "将图片转换为 PDF"
+submit = "转换"
+selectLabel = "图片适应选项"
+fillPage = "填充页面"
+fitDocumentToImage = "适应图片大小"
+maintainAspectRatio = "保持纵横比例"
+
+[imageToPDF.selectText]
+2 = "自动旋转 PDF"
+3 = "多文件逻辑（仅在处理多个图像时启用）"
+4 = "合并成一个 PDF 文件"
+5 = "转换为独立的 PDF 文件"
+
+[PDFToCSV]
+title = "PDF 转 CSV"
+header = "将 PDF 转换为 CSV"
+prompt = "选择需要提取表格的页面"
+submit = "提取"
+
+[split-by-size-or-count]
+title = "按照大小或数目拆分 PDF"
+header = "按照大小或数目拆分 PDF"
+submit = "提交"
+
+[split-by-size-or-count.type]
+label = "选择拆分类型"
+size = "按照大小"
+pageCount = "按照页数"
+docCount = "按照文档数"
+
+[split-by-size-or-count.value]
+label = "输入数值"
+placeholder = "输入大小（例如：2MB或3KB）或数目（例如：5）"
+
+[printFile]
+title = "打印文件"
+header = "使用打印机打印文件"
+submit = "打印"
+
+[printFile.selectText]
+1 = "选择要打印的文件"
+2 = "输入打印机名称"
+
+[licenses]
+nav = "许可证"
+title = "第三方许可证"
+header = "第三方许可证"
+module = "模块"
+version = "版本"
+license = "许可证"
+
+[survey]
+nav = "问卷调查"
+title = "Stirling-PDF 问卷调查"
+description = "Stirling-PDF 没有跟踪器，所以我们希望听取用户的意见来改进 Stirling-PDF！"
+changes = "自上次调查以来，Stirling-PDF 已经发生了变化！要了解更多信息，请在此处查看我们的博客文章："
+changes2 = "通过这些变化，我们得到了商业支持和资金援助。"
+please = "请考虑参加我们的调查！"
+disabled = "（调查弹出窗口将在后续更新中被禁用，但可在页脚处查看）"
+button = "参与调查"
+dontShowAgain = "不再显示"
+
+[survey.meeting]
+1 = "如果您在工作中使用 Stirling PDF，我们非常希望与您交流。我们正在提供技术支持服务，以换取一次 15 分钟的用户访谈。"
+2 = "这是一个机会："
+3 = "获取部署、集成或故障排除方面的帮助"
+4 = "提供直接反馈，包括性能、边缘案例和功能差距"
+5 = "帮助我们改进 Stirling PDF 以满足实际的企业使用需求"
+6 = "如果您有兴趣，可以直接与我们团队预约时间。（仅限英语）"
+7 = "期待深入了解您的使用案例，并使 Stirling PDF 变得更好！"
+notInterested = "不是企业或对会议不感兴趣？"
+button = "预约会议"
+
+[removeImage]
+title = "删除图像"
+header = "删除图像"
+removeImage = "删除图像"
+submit = "删除图像"
+
+[removeImage.error]
+failed = "从PDF中移除图像失败。"
+
+[removeImage.results]
+title = "移除图像结果"
+
+[splitByChapters]
+title = "按章节拆分 PDF"
+header = "按章节拆分 PDF"
+bookmarkLevel = "书签级别"
+includeMetadata = "包含元数据"
+allowDuplicates = "允许重复"
+submit = "拆分 PDF"
+
+[splitByChapters.desc]
+1 = "此工具根据章节结构将PDF文件拆分为多个PDF。"
+2 = "书签级别：选择用于拆分的书签级别（0表示顶级，1表示二级等）。"
+3 = "包含元数据：如果选中，原始PDF的元数据将包含在每个拆分的PDF中。"
+4 = "允许重复：如果选中，允许同一页面上的多个书签创建单独的PDF。"
+
+[fileChooser]
+click = "单击"
+or = "或"
+dragAndDrop = "拖放文件"
+dragAndDropPDF = "拖放PDF文件"
+dragAndDropImage = "拖放图片文件"
+hoveredDragAndDrop = "拖放文件到此处"
+extractPDF = "处理中..."
+
+[releases]
+footer = "版本"
+title = "版本说明"
+header = "版本说明"
+note = "版本说明仅提供英文版本"
+
+[releases.current]
+version = "当前版本"
+
+[swagger]
+title = "API 文档"
+header = "API 文档"
+desc = "查看并测试 Stirling PDF 的 API 端点"
+tags = "api,文档,swagger,端点,开发"
+
+[cookieBanner.popUp]
+title = "我们如何使用 Cookie"
+acceptAllBtn = "全部接受"
+acceptNecessaryBtn = "拒绝"
+showPreferencesBtn = "管理偏好设置"
+
+[cookieBanner.popUp.description]
+1 = "我们使用 Cookie 和其他技术来使 Stirling PDF 更好地为您服务——帮助我们改进工具并构建您喜爱的功能。"
+2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+
+[cookieBanner.preferencesModal]
+title = "隐私偏好设置中心"
+acceptAllBtn = "全部接受"
+acceptNecessaryBtn = "拒绝所有"
+savePreferencesBtn = "保存设置"
+closeIconLabel = "关闭弹窗"
+serviceCounterLabel = "服务"
+subtitle = "Cookie使用说明"
+
+[cookieBanner.preferencesModal.description]
+1 = "Stirling PDF通过Cookie及类似技术优化用户体验并分析工具使用情况，帮助我们提升性能、开发实用功能并提供持续支持。"
+2 = "我们承诺：Stirling PDF永远不会追踪或访问您使用的文档内容。"
+3 = "用户隐私与信任是我们一切工作的核心。"
+
+[cookieBanner.preferencesModal.necessary]
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+
+[cookieBanner.preferencesModal.necessary.title]
+1 = "必要Cookie"
+2 = "始终启用"
+
+[cookieBanner.preferencesModal.analytics]
+title = "分析统计"
+description = "这些Cookie帮助我们分析工具使用情况，以便聚焦开发用户最需要的功能。再次强调：Stirling PDF绝不会追踪您处理的文档内容。"
+
+[cookieBanner.services]
+posthog = "PostHog 分析"
+scarf = "Scarf Pixel"
+
+[removeMetadata]
+submit = "移除元数据"
+
+[sidebar]
+toggle = "切换侧栏"
+
+[theme]
+toggle = "切换主题"
+
+[view]
+viewer = "查看器"
+pageEditor = "页面编辑器"
+fileManager = "文件管理器"
+
+[pageEditor]
+title = "页面编辑器"
+save = "保存更改"
+noPdfLoaded = "未加载 PDF。请先上传以进行编辑。"
+rotatedLeft = "已向左旋转："
+rotatedRight = "已向右旋转："
+deleted = "已删除："
+movedLeft = "向左移动："
+movedRight = "向右移动："
+splitAt = "拆分于："
+insertedPageBreak = "已插入分页位置："
+addFileNotImplemented = "演示中未实现“添加文件”"
+closePdf = "关闭 PDF"
+reset = "重置更改"
+zoomIn = "放大"
+zoomOut = "缩小"
+fitToWidth = "适配宽度"
+actualSize = "实际大小"
+
+[viewer]
+firstPage = "第一页"
+lastPage = "最后一页"
+previousPage = "上一页"
+nextPage = "下一页"
+zoomIn = "放大"
+zoomOut = "缩小"
+singlePageView = "单页视图"
+dualPageView = "双页视图"
+
+[rightRail]
+closeSelected = "关闭所选文件"
+selectAll = "选择所有"
+deselectAll = "取消选择所有"
+selectByNumber = "按页码选择"
+deleteSelected = "删除所选页面"
+closePdf = "关闭 PDF"
+exportAll = "导出 PDF"
+downloadSelected = "下载所选文件"
+downloadAll = "全部下载"
+saveAll = "全部保存"
+toggleTheme = "切换主题"
+toggleBookmarks = "切换书签"
+language = "语言"
+search = "搜索 PDF"
+panMode = "平移模式"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+toggleSidebar = "切换侧边栏"
+exportSelected = "导出所选页面"
+toggleAnnotations = "切换注释可见性"
+annotationMode = "切换注释模式"
+draw = "绘制"
+save = "保存"
+saveChanges = "保存更改"
+
+[search]
+title = "搜索 PDF"
+placeholder = "输入搜索词…"
+noResults = "未找到结果"
+searching = "正在搜索..."
+
+[guestBanner]
+title = "您正在以访客身份使用 Stirling PDF！"
+message = "创建免费账户以保存您的工作、获取更多功能并支持项目。"
+dismiss = "关闭横幅"
+signUp = "免费注册"
+
+[toolPicker]
+searchPlaceholder = "搜索工具…"
+noToolsFound = "未找到工具"
+allTools = "所有工具"
+quickAccess = "快速访问"
+
+[toolPicker.categories]
+standardTools = "标准工具"
+advancedTools = "高级工具"
+recommendedTools = "推荐工具"
+
+[toolPicker.subcategories]
+signing = "签署"
+documentSecurity = "文档安全"
+verification = "验证"
+documentReview = "文档审阅"
+pageFormatting = "页面格式"
+extraction = "提取"
+removal = "移除"
+automation = "自动化"
+general = "通用"
+advancedFormatting = "高级排版"
+developerTools = "开发者工具"
+
+[quickAccess]
+read = "阅读"
+sign = "签名"
+automate = "自动化"
+files = "文件"
+activity = "活动"
+help = "帮助"
+account = "账户"
+config = "配置"
+settings = "设置"
+adminSettings = "管理设置"
+allTools = "全部工具"
+reader = "阅读器"
+
+[quickAccess.helpMenu]
+toolsTour = "工具导览"
+toolsTourDesc = "了解这些工具能做什么"
+adminTour = "管理导览"
+adminTourDesc = "浏览管理设置与功能"
+
+[admin]
+error = "错误"
+success = "成功"
+expand = "展开"
+close = "关闭"
+
+[admin.status]
+active = "启用"
+inactive = "未启用"
+
+[admin.settings]
+title = "管理设置"
+workspace = "工作区"
+fetchError = "加载设置失败"
+saveError = "保存设置失败"
+saved = "设置保存成功"
+saveSuccess = "设置保存成功"
+save = "保存更改"
+discard = "丢弃"
+restartRequired = "需要重启"
+loginRequired = "必须启用登录模式才能修改管理设置"
+restarting = "正在重启服务器"
+restartingMessage = "服务器正在重启。请稍候..."
+restartError = "重启服务器失败。请手动重启。"
+
+[admin.settings.unsavedChanges]
+title = "未保存的更改"
+message = "您有未保存的更改。要丢弃吗？"
+cancel = "继续编辑"
+discard = "丢弃更改"
+hint = "您有未保存的更改"
+
+[admin.settings.loginDisabled]
+title = "需要登录模式"
+message = "必须启用登录模式才能修改管理设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。"
+readOnly = "下方设置显示示例值供参考。启用登录模式以查看和编辑实际配置。"
+
+[admin.settings.restart]
+title = "需要重启"
+message = "设置已成功保存。需要重启服务器才能生效。"
+question = "现在重启服务器还是稍后？"
+now = "立即重启"
+later = "稍后重启"
+
+[admin.settings.general]
+title = "系统设置"
+description = "配置全局应用设置，包括品牌和默认行为。"
+ui = "用户界面"
+system = "系统"
+
+[admin.settings.general.appName]
+label = "应用名称"
+description = "在浏览器标签和主页显示的名称"
+
+[admin.settings.general.appNameNavbar]
+label = "导航栏品牌"
+description = "在导航栏显示的名称"
+
+[admin.settings.general.homeDescription]
+label = "主页描述"
+description = "主页上显示的描述文本"
+
+[admin.settings.general.defaultLocale]
+label = "默认语言区域"
+description = "新用户的默认语言（例如：en_US、es_ES）"
+
+[admin.settings.general.fileUploadLimit]
+label = "文件上传限制"
+description = "最大文件上传大小（例如：100MB、1GB）"
+
+[admin.settings.general.showUpdate]
+label = "显示更新通知"
+description = "当有新版本可用时显示通知"
+
+[admin.settings.general.showUpdateOnlyAdmin]
+label = "仅向管理员显示更新"
+description = "仅向管理员用户显示更新通知"
+
+[admin.settings.general.customHTMLFiles]
+label = "自定义HTML文件"
+description = "允许从 customFiles 目录提供自定义HTML文件"
+
+[admin.settings.general.languages]
+label = "可用语言"
+description = "用户可选择的语言（留空启用所有语言）"
+placeholder = "选择语言"
+
+[admin.settings.general.customMetadata]
+label = "自定义元数据"
+
+[admin.settings.general.customMetadata.autoUpdate]
+label = "自动更新元数据"
+description = "对所有处理的文档自动更新PDF元数据"
+
+[admin.settings.general.customMetadata.author]
+label = "默认作者"
+description = "PDF元数据的默认作者（例如：用户名）"
+
+[admin.settings.general.customMetadata.creator]
+label = "默认创建者"
+description = "PDF元数据的默认创建者"
+
+[admin.settings.general.customMetadata.producer]
+label = "默认生产者"
+description = "PDF元数据的默认生产者"
+
+[admin.settings.general.logoStyle]
+label = "徽标样式"
+description = "在现代极简徽标与经典S图标之间选择"
+classic = "经典"
+classicAlt = "经典 Logo"
+modern = "现代"
+modernAlt = "现代 Logo"
+
+[admin.settings.general.customPaths]
+label = "自定义路径"
+description = "配置用于流水线处理和外部工具的自定义文件系统路径"
+
+[admin.settings.general.customPaths.pipeline]
+label = "流水线目录"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDir]
+label = "监视文件夹目录"
+description = "监视流水线接收PDF的目录（留空为默认：/pipeline/watchedFolders）"
+
+[admin.settings.general.customPaths.pipeline.finishedFoldersDir]
+label = "已完成文件夹目录"
+description = "输出处理后PDF的目录（留空为默认：/pipeline/finishedFolders）"
+
+[admin.settings.general.customPaths.operations]
+label = "外部工具路径"
+
+[admin.settings.general.customPaths.operations.weasyprint]
+label = "WeasyPrint 可执行文件"
+description = "用于 HTML 转 PDF 的 WeasyPrint 可执行文件路径（留空为默认：/opt/venv/bin/weasyprint）"
+
+[admin.settings.general.customPaths.operations.unoconvert]
+label = "Unoconvert 可执行文件"
+description = "用于文档转换的 LibreOffice unoconvert 路径（留空为默认：/opt/venv/bin/unoconvert）"
+
+[admin.settings.security]
+title = "安全"
+description = "配置身份验证、登录行为和安全策略。"
+authentication = "身份验证"
+
+[admin.settings.security.ssoNotice]
+title = "正在查找 SSO/SAML 设置？"
+message = "OAuth2 和 SAML2 身份验证提供商已移动到“连接”菜单，便于管理。"
+
+[admin.settings.security.enableLogin]
+label = "启用登录"
+description = "访问应用前要求用户登录"
+
+[admin.settings.security.loginMethod]
+label = "登录方式"
+description = "用户登录使用的身份验证方式"
+all = "所有方式"
+normal = "仅用户名/密码"
+oauth2 = "仅 OAuth2"
+saml2 = "仅 SAML2"
+
+[admin.settings.security.loginAttemptCount]
+label = "登录尝试次数限制"
+description = "达到该失败次数后将锁定账户"
+
+[admin.settings.security.loginResetTimeMinutes]
+label = "登录重置时间（分钟）"
+description = "重置失败尝试计数的时间"
+
+[admin.settings.security.csrfDisabled]
+label = "禁用CSRF保护"
+description = "禁用跨站请求伪造保护（不建议）"
+
+[admin.settings.security.initialLogin]
+label = "初始登录"
+
+[admin.settings.security.initialLogin.username]
+label = "初始用户名"
+description = "初始管理员账户的用户名"
+
+[admin.settings.security.initialLogin.password]
+label = "初始密码"
+description = "初始管理员账户的密码"
+
+[admin.settings.security.jwt]
+label = "JWT 配置"
+
+[admin.settings.security.jwt.secureCookie]
+label = "安全 Cookie"
+description = "对 JWT Cookie 要求 HTTPS（生产环境推荐）"
+
+[admin.settings.security.jwt.keyRetentionDays]
+label = "密钥保留天数"
+description = "保留旧JWT密钥用于验证的天数"
+
+[admin.settings.security.jwt.persistence]
+label = "启用密钥持久化"
+description = "持久化存储 JWT 密钥以跨越服务器重启"
+
+[admin.settings.security.jwt.enableKeyRotation]
+label = "启用密钥轮换"
+description = "定期自动轮换 JWT 签名密钥"
+
+[admin.settings.security.jwt.enableKeyCleanup]
+label = "启用密钥清理"
+description = "自动移除过期的 JWT 密钥"
+
+[admin.settings.security.audit]
+label = "审计日志"
+
+[admin.settings.security.audit.enabled]
+label = "启用审计日志"
+description = "跟踪用户操作和系统事件以满足合规与安全监控"
+
+[admin.settings.security.audit.level]
+label = "审计级别"
+description = "0=OFF，1=BASIC，2=STANDARD，3=VERBOSE"
+
+[admin.settings.security.audit.retentionDays]
+label = "审计保留（天）"
+description = "审计日志的保留天数"
+
+[admin.settings.security.htmlUrlSecurity]
+label = "HTML URL 安全"
+description = "配置HTML处理的URL访问限制以防止SSRF攻击"
+advanced = "高级设置"
+networkBlocking = "网络阻断"
+
+[admin.settings.security.htmlUrlSecurity.enabled]
+label = "启用URL安全"
+description = "为 HTML 转 PDF 启用URL安全限制"
+
+[admin.settings.security.htmlUrlSecurity.level]
+label = "安全级别"
+description = "MAX：仅白名单，MEDIUM：阻止内网，OFF：不限制"
+max = "最高（仅白名单）"
+medium = "中等（阻止内网）"
+off = "关闭（无限制）"
+
+[admin.settings.security.htmlUrlSecurity.allowedDomains]
+label = "允许的域名（白名单）"
+description = "每行一个域名（例如：cdn.example.com）。当级别为 MAX 时仅允许这些域名"
+
+[admin.settings.security.htmlUrlSecurity.blockedDomains]
+label = "阻止的域名（黑名单）"
+description = "每行一个域名（例如：malicious.com）。需要额外阻止的域名"
+
+[admin.settings.security.htmlUrlSecurity.internalTlds]
+label = "内部 TLD"
+description = "每行一个 TLD（例如：.local、.internal）。阻止包含这些 TLD 模式的域名"
+
+[admin.settings.security.htmlUrlSecurity.blockPrivateNetworks]
+label = "阻止私有网络"
+description = "阻止 RFC 1918 私有网络（10.x.x.x、192.168.x.x、172.16-31.x.x）"
+
+[admin.settings.security.htmlUrlSecurity.blockLocalhost]
+label = "阻止本地主机"
+description = "阻止 localhost 和回环地址（127.x.x.x、::1）"
+
+[admin.settings.security.htmlUrlSecurity.blockLinkLocal]
+label = "阻止链路本地地址"
+description = "阻止链路本地地址（169.254.x.x、fe80::/10）"
+
+[admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
+label = "阻止云元数据端点"
+description = "阻止云提供商元数据端点（169.254.169.254）"
+
+[admin.settings.connections]
+title = "连接"
+description = "配置 OAuth2 和 SAML 等外部身份验证提供商。"
+linkedServices = "已连接的服务"
+unlinkedServices = "未连接的服务"
+connect = "连接"
+disconnect = "断开连接"
+disconnected = "已成功断开提供商"
+disconnectError = "断开提供商失败"
+
+[admin.settings.connections.ssoAutoLogin]
+label = "SSO 自动登录"
+enable = "启用 SSO 自动登录"
+description = "需要身份验证时自动重定向到 SSO 登录"
+
+[admin.settings.connections.oauth2]
+label = "OAuth2"
+
+[admin.settings.connections.oauth2.enabled]
+label = "启用 OAuth2"
+description = "允许用户使用 OAuth2 提供商进行身份验证"
+
+[admin.settings.connections.oauth2.provider]
+label = "提供商"
+description = "用于身份验证的 OAuth2 提供商"
+
+[admin.settings.connections.oauth2.issuer]
+label = "发行者 URL"
+description = "OAuth2 提供商发行者 URL"
+
+[admin.settings.connections.oauth2.clientId]
+label = "客户端 ID"
+description = "来自提供商的 OAuth2 客户端 ID"
+
+[admin.settings.connections.oauth2.clientSecret]
+label = "客户端密钥"
+description = "来自提供商的 OAuth2 客户端密钥"
+
+[admin.settings.connections.oauth2.useAsUsername]
+label = "用作用户名"
+description = "用作用户名的 OAuth2 claim（例如：email、sub）"
+
+[admin.settings.connections.oauth2.autoCreateUser]
+label = "自动创建用户"
+description = "首次通过 OAuth2 登录时自动创建用户账户"
+
+[admin.settings.connections.oauth2.blockRegistration]
+label = "阻止注册"
+description = "阻止通过 OAuth2 进行新用户注册"
+
+[admin.settings.connections.oauth2.scopes]
+label = "OAuth2 范围"
+description = "逗号分隔的 OAuth2 范围列表（例如：openid、profile、email）"
+
+[admin.settings.connections.saml2]
+label = "SAML2"
+
+[admin.settings.connections.saml2.enabled]
+label = "启用 SAML2"
+description = "允许用户使用 SAML2 提供商进行身份验证"
+
+[admin.settings.connections.saml2.provider]
+label = "提供商"
+description = "SAML2 提供商名称"
+
+[admin.settings.connections.saml2.registrationId]
+label = "注册 ID"
+description = "SAML2 注册标识符"
+
+[admin.settings.connections.saml2.autoCreateUser]
+label = "自动创建用户"
+description = "首次通过 SAML2 登录时自动创建用户账户"
+
+[admin.settings.connections.saml2.blockRegistration]
+label = "阻止注册"
+description = "阻止通过 SAML2 进行新用户注册"
+
+[admin.settings.database]
+title = "数据库"
+description = "为企业部署配置自定义数据库连接设置。"
+configuration = "数据库配置"
+
+[admin.settings.database.enableCustom]
+label = "启用自定义数据库"
+description = "使用自定义数据库配置，替代默认的内嵌数据库"
+
+[admin.settings.database.customUrl]
+label = "自定义数据库 URL"
+description = "完整 JDBC 连接字符串（例如：jdbc:postgresql://localhost:5432/postgres）。如果填写，将不使用下面的单独连接设置。"
+
+[admin.settings.database.type]
+label = "数据库类型"
+description = "数据库类型（提供自定义 URL 时不使用）"
+
+[admin.settings.database.hostName]
+label = "主机名"
+description = "数据库服务器主机名（提供自定义 URL 时不使用）"
+
+[admin.settings.database.port]
+label = "端口"
+description = "数据库服务器端口（提供自定义 URL 时不使用）"
+
+[admin.settings.database.name]
+label = "数据库名称"
+description = "数据库名称（提供自定义 URL 时不使用）"
+
+[admin.settings.database.username]
+label = "用户名"
+description = "数据库身份验证用户名"
+
+[admin.settings.database.password]
+label = "密码"
+description = "数据库身份验证密码"
+
+[admin.settings.privacy]
+title = "隐私"
+description = "配置隐私与数据收集设置。"
+analytics = "分析与跟踪"
+searchEngine = "搜索引擎可见性"
+
+[admin.settings.privacy.enableAnalytics]
+label = "启用分析"
+description = "收集匿名使用分析以帮助改进应用"
+
+[admin.settings.privacy.metricsEnabled]
+label = "启用指标"
+description = "启用性能与使用指标收集。为管理员提供 API 端点以访问指标数据"
+
+[admin.settings.privacy.googleVisibility]
+label = "Google 可见性"
+description = "允许搜索引擎索引此应用"
+
+[admin.settings.advanced]
+title = "高级"
+description = "配置高级功能与实验性功能。"
+features = "功能开关"
+processing = "处理"
+
+[admin.settings.advanced.endpoints]
+label = "端点"
+manage = "管理 API 端点"
+description = "端点管理通过 YAML 配置。详情参见文档以启用/禁用特定端点。"
+
+[admin.settings.advanced.enableAlphaFunctionality]
+label = "启用 Alpha 功能"
+description = "启用实验性与 Alpha 阶段功能（可能不稳定）"
+
+[admin.settings.advanced.enableUrlToPDF]
+label = "启用 URL 转 PDF"
+description = "允许将网页转换为 PDF 文档"
+
+[admin.settings.advanced.maxDPI]
+label = "最大 DPI"
+description = "图像处理的最大 DPI（0 = 不限）"
+
+[admin.settings.advanced.tessdataDir]
+label = "tessdata 目录"
+description = "OCR 语言文件的 tessdata 目录路径"
+
+[admin.settings.advanced.disableSanitize]
+label = "禁用 HTML 清理"
+description = "警告：存在安全风险——禁用 HTML 清理可能导致 XSS 漏洞"
+
+[admin.settings.advanced.tempFileManagement]
+label = "临时文件管理"
+description = "配置临时文件存储与清理行为"
+
+[admin.settings.advanced.tempFileManagement.baseTmpDir]
+label = "基础临时目录"
+description = "临时文件的基础目录（留空为默认：java.io.tmpdir/stirling-pdf）"
+
+[admin.settings.advanced.tempFileManagement.libreofficeDir]
+label = "LibreOffice 临时目录"
+description = "LibreOffice 临时文件目录（留空为默认：baseTmpDir/libreoffice）"
+
+[admin.settings.advanced.tempFileManagement.systemTempDir]
+label = "系统临时目录"
+description = "需要清理的系统临时目录（仅在启用 cleanupSystemTemp 时使用）"
+
+[admin.settings.advanced.tempFileManagement.prefix]
+label = "临时文件前缀"
+description = "临时文件名的前缀"
+
+[admin.settings.advanced.tempFileManagement.maxAgeHours]
+label = "最大保留时长（小时）"
+description = "临时文件清理前的最大小时数"
+
+[admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes]
+label = "清理间隔（分钟）"
+description = "运行清理的频率（分钟）"
+
+[admin.settings.advanced.tempFileManagement.startupCleanup]
+label = "启动时清理"
+description = "应用启动时清理旧临时文件"
+
+[admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
+label = "清理系统临时目录"
+description = "是否清理更广泛的系统临时目录（谨慎使用）"
+
+[admin.settings.advanced.processExecutor]
+label = "进程执行器限制"
+description = "为各进程执行器配置会话数量限制与超时"
+libreOffice = "LibreOffice"
+pdfToHtml = "PDF 转 HTML"
+qpdf = "QPDF"
+tesseract = "Tesseract OCR"
+pythonOpenCv = "Python OpenCV"
+weasyPrint = "WeasyPrint"
+installApp = "安装应用"
+calibre = "Calibre"
+ghostscript = "Ghostscript"
+ocrMyPdf = "OCRmyPDF"
+
+[admin.settings.advanced.processExecutor.sessionLimit]
+label = "会话上限"
+description = "最大并发实例数"
+
+[admin.settings.advanced.processExecutor.timeout]
+label = "超时（分钟）"
+description = "最大执行时间"
+
+[admin.settings.mail]
+title = "邮件服务器"
+description = "配置 SMTP，用于发送邮件通知。"
+smtp = "SMTP 配置"
+
+[admin.settings.mail.enabled]
+label = "启用邮件"
+description = "启用邮件通知与 SMTP 功能"
+
+[admin.settings.mail.host]
+label = "SMTP 主机"
+description = "您的 SMTP 服务器主机名或 IP 地址"
+
+[admin.settings.mail.port]
+label = "SMTP 端口"
+description = "SMTP 连接端口号（通常为 25、465 或 587）"
+
+[admin.settings.mail.username]
+label = "SMTP 用户名"
+description = "SMTP 身份验证用户名"
+
+[admin.settings.mail.password]
+label = "SMTP 密码"
+description = "SMTP 身份验证密码"
+
+[admin.settings.mail.from]
+label = "发件地址"
+description = "用作发件人的邮箱地址"
+
+[admin.settings.mail.enableInvites]
+label = "启用邮件邀请"
+description = "允许管理员通过邮件邀请用户并自动生成密码"
+
+[admin.settings.mail.frontendUrl]
+label = "前端 URL"
+description = "前端基础 URL（例如：https://pdf.example.com）。用于在邮件中生成邀请链接。留空则使用后端 URL。"
+
+[admin.settings.legal]
+title = "法律文档"
+description = "配置法律文档与政策的链接。"
+
+[admin.settings.legal.disclaimer]
+title = "法律责任警告"
+message = "通过自定义这些法律文档，您将对确保遵守所有适用的法律法规承担全部责任，包括但不限于 GDPR 及其他欧盟数据保护要求。仅在以下情况修改这些设置：（1）您运行的是个人/私有实例，（2）您不在欧盟管辖范围内并了解当地法律义务，或（3）您已获得适当的法律咨询，并接受对所有用户数据和法律合规承担全部责任。Stirling-PDF 及其开发者不对您的法律义务承担任何责任。"
+
+[admin.settings.legal.termsAndConditions]
+label = "条款与条件"
+description = "条款与条件的 URL 或文件名"
+
+[admin.settings.legal.privacyPolicy]
+label = "隐私政策"
+description = "隐私政策的 URL 或文件名"
+
+[admin.settings.legal.accessibilityStatement]
+label = "无障碍声明"
+description = "无障碍声明的 URL 或文件名"
+
+[admin.settings.legal.cookiePolicy]
+label = "Cookie 政策"
+description = "Cookie 政策的 URL 或文件名"
+
+[admin.settings.legal.impressum]
+label = "法律声明"
+description = "Impressum 的 URL 或文件名（某些司法辖区要求）"
+
+[admin.settings.premium]
+title = "高级版与企业版"
+description = "配置您的高级版或企业版许可证密钥。"
+license = "许可证配置"
+
+[admin.settings.premium.licenseKey]
+toggle = "有许可证密钥或证书文件吗？"
+info = "如果您从直接购买获得了许可证密钥或证书文件，可在此输入以激活高级或企业功能。"
+
+[admin.settings.premium.key]
+label = "许可证密钥"
+description = "输入您的高级版或企业版许可证密钥"
+success = "许可证密钥已保存"
+successMessage = "您的许可证密钥已成功激活。无需重启。"
+
+[admin.settings.premium.key.overwriteWarning]
+title = "⚠️ 警告：检测到现有许可证"
+line1 = "覆盖当前许可证密钥后将无法撤销。"
+line2 = "除非已在其他位置备份，否则您之前的许可证将被永久丢失。"
+line3 = "重要：请妥善保管许可证密钥，切勿公开分享。"
+
+[admin.settings.premium.enabled]
+label = "启用高级功能"
+description = "启用对专业/企业功能的许可证密钥检查"
+
+[admin.settings.premium.movedFeatures]
+title = "高级功能已分类"
+message = "高级版和企业版功能现已在各自的部分中进行组织："
+
+[admin.settings.features]
+title = "功能"
+description = "配置可选功能与特性。"
+
+[admin.settings.features.serverCertificate]
+label = "服务器证书"
+description = "配置“使用 Stirling-PDF 签名”功能的服务端证书生成"
+
+[admin.settings.features.serverCertificate.enabled]
+label = "启用服务器证书"
+description = "为“使用 Stirling-PDF 签名”选项启用服务端证书"
+
+[admin.settings.features.serverCertificate.organizationName]
+label = "组织名称"
+description = "生成证书的组织名称"
+
+[admin.settings.features.serverCertificate.validity]
+label = "证书有效期（天）"
+description = "证书的有效天数"
+
+[admin.settings.features.serverCertificate.regenerateOnStartup]
+label = "启动时重新生成"
+description = "每次应用启动时生成新证书"
+
+[admin.settings.endpoints]
+title = "API 端点"
+description = "控制可用的 API 端点及端点组。"
+management = "端点管理"
+note = "注意：禁用端点会限制 API 访问，但不会移除 UI 组件。更改生效需要重启。"
+
+[admin.settings.endpoints.toRemove]
+label = "已禁用的端点"
+description = "选择要禁用的单个端点"
+
+[admin.settings.endpoints.groupsToRemove]
+label = "已禁用的端点组"
+description = "选择要禁用的端点组"
+
+[fileUpload]
+selectFile = "选择文件"
+selectFiles = "选择文件"
+selectPdfToView = "选择一个 PDF 进行查看"
+selectPdfToEdit = "选择一个 PDF 进行编辑"
+chooseFromStorage = "从存储中选择或上传新的 PDF"
+chooseFromStorageMultiple = "从存储中选择文件或上传新的 PDF"
+loadFromStorage = "从存储加载"
+filesAvailable = "个可用文件"
+loading = "加载中..."
+or = "或"
+dropFileHere = "将文件拖到此处或点击上传"
+dropFilesHere = "将文件拖到此处或点击上传按钮"
+dropFilesHereOpen = "将文件拖到此处或点击打开按钮"
+pdfFilesOnly = "仅限 PDF 文件"
+supportedFileTypes = "支持的文件类型"
+upload = "上传"
+uploadFile = "上传文件"
+uploadFiles = "上传文件"
+open = "打开"
+openFile = "打开文件"
+openFiles = "打开文件"
+noFilesInStorage = "存储中没有可用文件。请先上传。"
+noFilesInStorageOpen = "存储中无可用文件。请先打开一些文件。"
+selectFromStorage = "从存储中选择"
+backToTools = "返回工具"
+addFiles = "添加文件"
+dragFilesInOrClick = "拖入文件或点击“添加文件”浏览"
+
+[fileEditor]
+addFiles = "添加文件"
+
+[fileManager]
+title = "上传 PDF 文件"
+subtitle = "将文件添加到您的存储，以便在各工具之间轻松访问"
+filesSelected = "个文件已选"
+clearSelection = "清除所选"
+openInFileEditor = "在文件编辑器中打开"
+uploadError = "部分文件上传失败。"
+failedToOpen = "无法打开文件。可能已从存储中移除。"
+failedToLoad = "无法将文件加载到活动集合。"
+storageCleared = "浏览器已清空存储。文件已被移除。请重新上传。"
+clearAll = "全部清除"
+reloadFiles = "重新加载文件"
+dragDrop = "拖放文件到此处"
+clickToUpload = "点击以上传文件"
+selectedFiles = "已选文件"
+storage = "存储"
+filesStored = "个文件已存储"
+storageError = "发生存储错误"
+storageLow = "存储空间不足。请考虑移除旧文件。"
+supportMessage = "由浏览器数据库存储提供支持，容量无限"
+noFileSelected = "未选择任何文件"
+showHistory = "显示历史"
+hideHistory = "隐藏历史"
+fileHistory = "文件历史"
+loadingHistory = "正在加载历史…"
+lastModified = "上次修改"
+toolChain = "已应用工具"
+restore = "恢复"
+unzip = "解压"
+searchFiles = "搜索文件…"
+recent = "最近"
+localFiles = "本地文件"
+googleDrive = "Google 云端硬盘"
+googleDriveShort = "Drive"
+myFiles = "我的文件"
+noRecentFiles = "未找到最近文件"
+googleDriveNotAvailable = "不可使用 Google 云端硬盘集成"
+downloadSelected = "下载所选"
+saveSelected = "保存已选"
+openFiles = "打开文件"
+openFile = "打开文件"
+details = "文件详情"
+fileName = "名称"
+fileFormat = "格式"
+fileSize = "大小"
+fileVersion = "版本"
+totalSelected = "合计已选"
+dropFilesHere = "将文件拖放到此处"
+selectAll = "选择所有"
+deselectAll = "取消选择所有"
+deleteSelected = "删除已选"
+selectedCount = "已选 {{count}}"
+download = "下载"
+delete = "删除"
+unsupported = "不支持"
+addToUpload = "添加至上传"
+deleteAll = "删除全部"
+loadingFiles = "正在加载文件..."
+noFiles = "没有可用的文件"
+noFilesFound = "未找到与搜索匹配的文件"
+openInPageEditor = "在页面编辑器中打开"
+showAll = "显示全部"
+sortByDate = "按日期排序"
+sortByName = "按名称排序"
+sortBySize = "按大小排序"
+
+[storage]
+temporaryNotice = "文件临时存储在您的浏览器中，可能会被自动清除"
+storageLimit = "存储限制"
+storageUsed = "已用临时存储"
+storageFull = "存储空间几乎已满。请考虑移除部分文件。"
+fileTooLarge = "文件过大。单个文件的最大大小为"
+storageQuotaExceeded = "超出存储配额。请移除部分文件后再上传。"
+approximateSize = "大约大小"
+
+[sanitize]
+title = "安全清理"
+desc = "移除 PDF 文件中的潜在有害元素。"
+submit = "清理 PDF"
+completed = "安全清理成功完成"
+filenamePrefix = "已清理"
+sanitizationResults = "安全清理结果"
+
+[sanitize.error]
+generic = "安全清理失败"
+failed = "安全清理 PDF 时发生错误。"
+
+[sanitize.steps]
+files = "文件"
+settings = "设置"
+results = "结果"
+
+[sanitize.files]
+placeholder = "在主视图中选择一个 PDF 文件以开始"
+
+[sanitize.options]
+title = "安全清理选项"
+note = "请选择要从 PDF 中移除的元素。至少需要选择一个选项。"
+
+[sanitize.options.removeJavaScript]
+label = "删除 JavaScript"
+desc = "移除 PDF 中的 JavaScript 操作与脚本"
+
+[sanitize.options.removeEmbeddedFiles]
+label = "删除嵌入文件"
+desc = "移除嵌入在 PDF 中的任何文件"
+
+[sanitize.options.removeXMPMetadata]
+label = "删除 XMP 元数据"
+desc = "从 PDF 中移除 XMP 元数据"
+
+[sanitize.options.removeMetadata]
+label = "删除文档元数据"
+desc = "移除文档信息元数据（标题、作者等）"
+
+[sanitize.options.removeLinks]
+label = "删除链接"
+desc = "移除外部链接与启动动作"
+
+[sanitize.options.removeFonts]
+label = "删除字体"
+desc = "从 PDF 中移除嵌入字体"
+
+[addPassword]
+title = "添加密码"
+desc = "使用密码加密您的 PDF 文档。"
+completed = "已应用密码保护"
+submit = "加密"
+filenamePrefix = "已加密"
+
+[addPassword.error]
+failed = "加密 PDF 时发生错误。"
+
+[addPassword.passwords]
+stepTitle = "密码与加密"
+completed = "密码已配置"
+
+[addPassword.passwords.user]
+label = "用户密码"
+placeholder = "输入用户密码"
+
+[addPassword.passwords.owner]
+label = "所有者密码"
+placeholder = "输入所有者密码"
+
+[addPassword.encryption.keyLength]
+label = "加密密钥长度"
+40bit = "40 位（低）"
+128bit = "128 位（标准）"
+256bit = "256 位（高）"
+
+[addPassword.results]
+title = "已加密的 PDF"
+
+[addPassword.tooltip.header]
+title = "密码保护概览"
+
+[addPassword.tooltip.passwords]
+title = "密码类型"
+text = "用户密码限制打开文档；所有者密码控制打开后可执行的操作。您可以同时设置或仅设置其中之一。"
+bullet1 = "用户密码：打开 PDF 时需要"
+bullet2 = "所有者密码：控制文档权限（并非所有查看器都支持）"
+
+[addPassword.tooltip.encryption]
+title = "加密级别"
+text = "更高的加密级别提供更好的安全性，但可能不被较旧的 PDF 查看器支持。"
+bullet1 = "40 位：基础安全性，与旧版查看器兼容"
+bullet2 = "128 位：标准安全性，广泛支持"
+bullet3 = "256 位：最高安全性，需要现代查看器"
+
+[addPassword.tooltip.permissions]
+title = "更改权限"
+text = "这些权限控制用户对 PDF 的操作。与所有者密码配合时效果最佳。"
+
+[changePermissions]
+title = "更改权限"
+desc = "更改文档限制与权限。"
+completed = "权限已更改"
+submit = "更改权限"
+
+[changePermissions.error]
+failed = "更改 PDF 权限时发生错误。"
+
+[changePermissions.permissions.preventAssembly]
+label = "防止文件的拼接"
+
+[changePermissions.permissions.preventExtractContent]
+label = "防止内容提取"
+
+[changePermissions.permissions.preventExtractForAccessibility]
+label = "防止提取内容的可访问性"
+
+[changePermissions.permissions.preventFillInForm]
+label = "防止填写表格"
+
+[changePermissions.permissions.preventModify]
+label = "防止修改"
+
+[changePermissions.permissions.preventModifyAnnotations]
+label = "防止修改注释"
+
+[changePermissions.permissions.preventPrinting]
+label = "防止打印"
+
+[changePermissions.permissions.preventPrintingFaithful]
+label = "防止打印不同的格式"
+
+[changePermissions.results]
+title = "已修改的 PDF"
+
+[changePermissions.tooltip.header]
+title = "更改权限"
+
+[changePermissions.tooltip.description]
+text = "更改文档权限，允许/禁止在 PDF 阅读器中的不同功能。"
+
+[changePermissions.tooltip.warning]
+text = "要使这些权限不可更改，请使用“添加密码”工具设置所有者密码。"
+
+[removePassword]
+title = "删除密码"
+desc = "从 PDF 文档中移除密码保护。"
+tags = "安全、解密、密码、安全性、删除密码"
+filenamePrefix = "已解密"
+submit = "删除"
+
+[removePassword.password]
+stepTitle = "删除密码"
+label = "当前密码"
+placeholder = "输入当前密码"
+completed = "密码已配置"
+
+[removePassword.error]
+failed = "移除 PDF 密码时发生错误。"
+
+[removePassword.tooltip]
+description = "移除密码保护需要用于加密 PDF 的原始密码。这样会解密文档，使其无需密码即可访问。"
+
+[removePassword.results]
+title = "已解密的 PDF"
+
+[automate]
+title = "自动化"
+desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
+invalidStep = "无效步骤"
+reviewTitle = "自动化结果"
+copyToSaved = "复制到“已保存”"
+
+[automate.files]
+placeholder = "选择要用此自动化处理的文件"
+
+[automate.selection]
+title = "自动化选择"
+
+[automate.selection.saved]
+title = "已保存"
+
+[automate.selection.createNew]
+title = "新建自动化"
+
+[automate.selection.suggested]
+title = "推荐"
+
+[automate.creation]
+createTitle = "创建自动化"
+editTitle = "编辑自动化"
+intro = "自动化会按顺序运行工具。开始前，请按希望的顺序添加工具。"
+save = "保存自动化"
+
+[automate.creation.name]
+label = "自动化名称"
+placeholder = "我的自动化"
+
+[automate.creation.description]
+label = "描述（可选）"
+placeholder = "描述此自动化的作用…"
+
+[automate.creation.tools]
+selectTool = "选择工具…"
+selected = "已选工具"
+remove = "移除工具"
+configure = "配置工具"
+notConfigured = "！未配置"
+addTool = "添加工具"
+add = "添加工具…"
+
+[automate.creation.unsavedChanges]
+title = "未保存的更改"
+message = "您有未保存的更改。确定要返回吗？所有更改都将丢失。"
+cancel = "取消"
+confirm = "返回"
+
+[automate.creation.icon]
+label = "图标"
+
+[automate.run]
+title = "运行自动化"
+
+[automate.sequence]
+unnamed = "未命名自动化"
+steps = "{{count}} 个步骤"
+running = "正在运行自动化…"
+run = "运行自动化"
+finish = "完成"
+
+[automate.config]
+loading = "正在加载工具配置…"
+noSettings = "此工具没有可配置的设置。"
+title = "配置 {{toolName}}"
+description = "配置此工具的设置。这些设置将在自动化运行时应用。"
+cancel = "取消"
+save = "保存配置"
+
+[automation.suggested]
+securePdfIngestion = "安全 PDF 采集"
+securePdfIngestionDesc = "全面的 PDF 处理流程：清理潜在风险内容、执行 OCR（含清理）、转换为 PDF/A 以便长期存档，并优化文件大小。"
+emailPreparation = "邮件准备"
+emailPreparationDesc = "通过压缩文件、将大型文档拆分为适合邮件的 20MB 块，并移除元数据来优化用于邮件分发的 PDF。"
+secureWorkflow = "安全工作流"
+secureWorkflowDesc = "通过移除可能的恶意内容（如 JavaScript 和嵌入文件），再添加密码保护来保护 PDF。默认密码为“password”。"
+processImages = "处理图像"
+processImagesDesc = "将多个图像文件合并为一个 PDF，然后应用 OCR 技术从图像中提取可搜索文本。"
+prePublishSanitization = "发布前清理"
+prePublishSanitizationDesc = "清理流程将在上线前移除所有隐藏的元数据、JavaScript、嵌入文件、注释，并扁平化表单以防止在线发布 PDF 时的数据泄露。"
+
+[colorPicker]
+title = "选择颜色"
+
+[common]
+previous = "上一页"
+next = "下一页"
+collapse = "折叠"
+expand = "展开"
+collapsed = "已折叠"
+lines = "行"
+copy = "复制"
+copied = "已复制！"
+refresh = "刷新"
+retry = "重试"
+remaining = "剩余"
+used = "已用"
+available = "可用"
+cancel = "取消"
+preview = "预览"
+close = "关闭"
+done = "完成"
+loading = "正在加载..."
+back = "返回"
+continue = "继续"
+error = "错误"
+
+[config.overview]
+title = "应用配置"
+description = "当前应用设置与配置信息。"
+loading = "正在加载配置..."
+error = "错误"
+warning = "配置警告"
+
+[config.overview.sections]
+basic = "基础配置"
+security = "安全配置"
+system = "系统配置"
+integration = "集成配置"
+
+[config.account.overview]
+title = "账户设置"
+manageAccountPreferences = "管理您的账户偏好"
+guestDescription = "您以访客身份登录。可考虑在上方升级您的账户。"
+
+[config.account.upgrade]
+title = "升级访客账户"
+description = "关联您的账户以保留历史并获得更多功能！"
+socialLogin = "使用社交账号升级"
+linkWith = "关联方式"
+emailPassword = "或输入您的邮箱与密码"
+email = "邮箱"
+emailPlaceholder = "输入您的邮箱"
+password = "密码（可选）"
+passwordPlaceholder = "设置密码"
+passwordNote = "留空则仅使用邮箱验证"
+upgradeButton = "升级账户"
+
+[config.apiKeys]
+intro = "使用您的 API 密钥以编程方式访问 Stirling PDF 的处理能力。"
+docsTitle = "API 文档"
+docsDescription = "了解如何与 Stirling PDF 集成："
+docsLink = "API 文档"
+schemaLink = "API 架构参考"
+usage = "在所有 API 请求中将此密钥放入 X-API-KEY 头中。"
+description = "用于访问 Stirling 一系列 PDF 工具的 API 密钥。可复制到您的项目，或刷新以生成新密钥。"
+publicKeyAriaLabel = "公共 API 密钥"
+copyKeyAriaLabel = "复制 API 密钥"
+refreshAriaLabel = "刷新 API 密钥"
+includedCredits = "包含积分"
+purchasedCredits = "已购积分"
+totalCredits = "总积分"
+chartAriaLabel = "积分使用：已用包含 {{includedUsed}} / {{includedTotal}}，已用购买 {{purchasedUsed}} / {{purchasedTotal}}"
+nextReset = "下次重置"
+lastApiUse = "上次 API 使用"
+overlayMessage = "生成密钥后可查看积分与可用额度"
+label = "API 密钥"
+guestInfo = "访客用户不提供 API 密钥。创建账户以获取可在应用中使用的密钥。"
+goToAccount = "前往账户"
+generateError = "我们无法生成您的 API 密钥。"
+
+[config.apiKeys.refreshModal]
+title = "刷新 API 密钥"
+warning = "⚠️ 警告：此操作将生成新的 API 密钥并使之前的密钥失效。"
+impact = "任何当前使用这些密钥的应用或服务将停止工作，直至您更新为新密钥。"
+confirmPrompt = "确定要继续吗？"
+confirmCta = "刷新密钥"
+
+[AddAttachmentsRequest]
+attachments = "选择附件"
+info = "选择要附加到 PDF 的文件。这些文件将被嵌入并可通过 PDF 的附件面板访问。"
+selectFiles = "选择要附加的文件"
+placeholder = "选择文件..."
+addMoreFiles = "添加更多文件..."
+selectedFiles = "已选择的文件"
+submit = "添加附件"
+
+[AddAttachmentsRequest.tooltip.header]
+title = "关于添加附件"
+
+[AddAttachmentsRequest.tooltip.description]
+title = "功能说明"
+
+[AddAttachmentsRequest.results]
+title = "附件结果"
+
+[AddAttachmentsRequest.error]
+failed = "添加附件操作失败"
+
+[addAttachments.error]
+failed = "向PDF添加附件时发生错误。"
+
+[autoRename]
+description = "此工具将基于内容自动重命名 PDF 文件。它会分析文档以从文本中找到最合适的标题。"
+
+[margin]
+large = "大"
+medium = "中"
+small = "小"
+xLarge = "特大"
+
+[pageEdit]
+deselectAll = "取消全选"
+selectAll = "全选"
+
+[reorganizePages]
+submit = "重新组织页面"
+
+[reorganizePages.error]
+failed = "重新组织页面失败"
+
+[reorganizePages.results]
+title = "页面已重新组织"
+
+[reorganizePages.settings]
+title = "设置"
+
+[replace-color]
+previewOverlayOpacity = "预览叠加层不透明度"
+previewOverlayTransparency = "预览叠加层透明度"
+previewOverlayVisibility = "显示预览叠加层"
+submit = "取代"
+title = "替换-反转-颜色"
+
+[replace-color.options]
+fill = "填充颜色"
+gradient = "渐变"
+
+[replace-color.selectText]
+1 = "替换或反转颜色选项"
+2 = "默认（默认高对比度颜色）"
+3 = "定制(定制的颜色)"
+4 = "全反转（反转所有颜色）"
+5 = "高对比度颜色选项"
+6 = "黑底白字"
+7 = "白底黑字"
+8 = "黑底黄字"
+9 = "黑底绿字"
+10 = "选择文本颜色"
+11 = "选择背景颜色"
+12 = "选择起始颜色"
+13 = "选择结束颜色"
+
+[tools]
+noSearchResults = "未找到工具"
+noTools = "没有可用的工具"
+
+[onboarding]
+allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+selectCropTool = "让我们选择 <strong>裁剪</strong> 工具，演示如何使用其中一个工具。"
+toolInterface = "这是 <strong>裁剪</strong> 工具界面。正如您所见，目前内容不多，因为我们还没有添加可处理的 PDF 文件。"
+filesButton = "快速访问栏上的 <strong>文件</strong> 按钮可用于上传 PDF，以便使用工具。"
+fileSources = "您可以在此上传新文件或访问最近的文件。本次导览将使用一个示例文件。"
+workbench = "这是 <strong>工作台</strong> - 用于查看和编辑 PDF 的主要区域。"
+viewSwitcher = "使用这些控件选择您希望如何查看 PDF。"
+viewer = "<strong>查看器</strong> 允许您阅读并注释 PDF。"
+pageEditor = "<strong>页面编辑器</strong> 可对 PDF 中的页面执行多种操作，如重新排序、旋转和删除。"
+activeFiles = "<strong>活动文件</strong> 视图显示您已加载到工具中的所有 PDF，并允许您选择要处理的文件。"
+fileCheckbox = "单击某个文件即可选择其进行处理。您可以选择多个文件以进行批量操作。"
+selectControls = "<strong>右侧栏</strong> 包含快速全选/取消全选所有活动 PDF 的按钮，以及更改应用主题或语言的按钮。"
+cropSettings = "现在我们已选择要裁剪的文件，可以配置裁剪工具，选择要将 PDF 裁剪到的区域。"
+runButton = "配置完成后，使用此按钮在所有选中的 PDF 上运行该工具。"
+results = "工具运行完成后，<strong>审阅</strong> 步骤会在此面板显示结果预览，并允许您撤销操作或下载文件。 "
+fileReplacement = "修改后的文件会自动替换工作台中的原始文件，方便您继续使用更多工具处理。"
+pinButton = "如果您希望在运行工具后文件仍保持为活动状态，可以使用 <strong>固定</strong> 按钮。"
+wrapUp = "一切就绪！您已了解应用的主要区域及其用法。随时点击 <strong>帮助</strong> 按钮重新查看本导览。"
+previous = "上一步"
+next = "下一步"
+finish = "完成"
+startTour = "开始导览"
+startTourDescription = "查看 Stirling PDF 的关键功能导览"
+
+[onboarding.welcomeModal]
+title = "欢迎使用 Stirling PDF！"
+description = "您想进行一个 1 分钟的快速导览，了解关键功能和如何开始使用吗？"
+helpHint = "您随时可以通过左下角的 <strong>帮助</strong> 按钮再次访问本导览。"
+startTour = "开始导览"
+maybeLater = "稍后再说"
+dontShowAgain = "不再显示"
+
+[onboarding.welcomeSlide]
+title = "欢迎使用 Stirling"
+body = "Stirling PDF 现已准备好为各类规模的团队服务。本次更新包含全新布局、强大的新管理功能，以及呼声最高的功能 - <strong>编辑文本</strong>。"
+
+[onboarding.buttons]
+next = "下一步 →"
+back = "返回"
+skipForNow = "暂时跳过"
+download = "下载 →"
+showMeAround = "带我看看"
+skipTheTour = "跳过导览"
+
+[onboarding.serverLicense]
+skip = "暂时跳过"
+seePlans = "查看方案 →"
+upgrade = "立即升级 →"
+freeTitle = "服务器许可证"
+overLimitTitle = "需要服务器许可证"
+overLimitBody = "我们的许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。您有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为不间断使用，请升级至 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及 $99/server/mo 的完整管理员控制。"
+freeBody = "我们的 <strong>Open-Core</strong> 许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。为无缝扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/server/mo。"
+
+[onboarding.desktopInstall]
+title = "下载"
+titleWithOs = "为 {{osLabel}} 下载"
+body = "Stirling 作为桌面应用效果最佳。可离线使用、更快访问文档，并在电脑本地进行编辑。"
+
+[onboarding.planOverview]
+adminTitle = "管理员概览"
+userTitle = "方案概览"
+adminBodyLoginEnabled = "作为管理员，您可以管理用户、配置设置并监控服务器健康。服务器上的前 <strong>{{freeTierLimit}}</strong> 位用户可免费使用 Stirling。"
+adminBodyLoginDisabled = "启用登录模式后，您可以管理用户、配置设置并监控服务器健康。服务器上的前 <strong>{{freeTierLimit}}</strong> 位用户可免费使用 Stirling。"
+userBody = "邀请队友、分配角色，并在一个安全的工作区中整理文档。准备好从单人使用扩展时，可随时启用登录模式。"
+
+[onboarding.securityCheck]
+message = "应用近期发生重大变更。可能需要您的服务器管理员关注。请确认您的角色以继续。"
+
+[adminOnboarding]
+welcome = "欢迎使用 <strong>管理员引导</strong>！让我们一起探索提供给系统管理员的强大企业功能和设置。"
+configButton = "点击 <strong>配置</strong> 按钮以访问所有系统设置和管理控制。"
+settingsOverview = "这是 <strong>设置面板</strong>。管理员设置按类别组织，便于导航。"
+teamsAndUsers = "在此管理 <strong>团队</strong> 和个人用户。您可以通过电子邮件、可共享链接邀请新用户，或自行为他们创建自定义账户。"
+systemCustomization = "我们提供丰富的界面自定义方式：<strong>系统设置</strong>可更改应用名称和语言，<strong>功能</strong>用于服务器证书管理，<strong>端点</strong>可为您的用户启用或禁用特定工具。"
+databaseSection = "针对高级生产环境，我们提供 <strong>外部数据库连接</strong> 设置，以便与您现有的基础设施集成。"
+connectionsSection = "<strong>连接</strong>部分支持多种登录方式，包括自定义 SSO 和 SAML 提供商（如 Google 和 GitHub），以及用于通知和通信的电子邮件集成。"
+adminTools = "最后，我们还提供高级管理工具，如用于跟踪系统活动的 <strong>审计</strong> 和用于监控用户与平台交互的 <strong>使用分析</strong>。"
+wrapUp = "这就是管理员导览！您已看到让 Stirling PDF 成为强大且可定制解决方案的企业功能。可随时从 <strong>帮助</strong> 菜单访问本导览。"
+
+[workspace]
+title = "工作区"
+
+[workspace.people]
+title = "成员"
+description = "管理工作区成员及其权限"
+loading = "正在加载成员..."
+searchMembers = "搜索成员..."
+addMembers = "添加成员"
+user = "用户"
+role = "角色"
+team = "团队"
+status = "状态"
+noMembersFound = "未找到成员"
+active = "启用"
+disabled = "已禁用"
+activeSession = "活动会话"
+member = "成员"
+admin = "管理员"
+editRole = "编辑角色"
+enable = "启用"
+disable = "禁用"
+deleteUser = "删除用户"
+deleteUserSuccess = "用户删除成功"
+deleteUserError = "删除用户失败"
+confirmDelete = "确定要删除此用户吗？此操作无法撤销。"
+loginRequired = "请先启用登录模式"
+
+[workspace.people.inviteMembers]
+label = "邀请成员"
+subtitle = "在下方输入或粘贴电子邮件地址，用逗号分隔。您的工作区将按成员计费。"
+
+[workspace.people.actions]
+label = "操作"
+upgrade = "升级"
+
+[workspace.people.roleDescriptions]
+admin = "可管理设置并邀请成员，具有完整管理权限。"
+member = "可查看和编辑共享文件，但不能管理工作区设置或成员。"
+user = "用户"
+
+[workspace.people.addMember]
+title = "添加成员"
+username = "用户名（电子邮件）"
+usernamePlaceholder = "user@example.com"
+password = "密码"
+passwordPlaceholder = "输入密码"
+role = "角色"
+team = "团队（可选）"
+teamPlaceholder = "选择团队"
+forcePasswordChange = "首次登录时强制修改密码"
+cancel = "取消"
+submit = "添加成员"
+usernameRequired = "必须填写用户名和密码"
+passwordTooShort = "密码长度至少为 6 个字符"
+success = "用户创建成功"
+error = "创建用户失败"
+
+[workspace.people.editMember]
+title = "编辑成员"
+editing = "正在编辑："
+role = "角色"
+team = "团队（可选）"
+teamPlaceholder = "选择团队"
+cancel = "取消"
+submit = "更新成员"
+success = "用户更新成功"
+error = "更新用户失败"
+
+[workspace.people.toggleEnabled]
+success = "用户状态更新成功"
+error = "更新用户状态失败"
+
+[workspace.people.delete]
+success = "用户删除成功"
+error = "删除用户失败"
+
+[workspace.people.emailInvite]
+tab = "电子邮件邀请"
+description = "在下方输入或粘贴电子邮件地址，用逗号分隔。用户将通过电子邮件收到登录凭据。"
+emails = "电子邮件地址"
+emailsPlaceholder = "user1@example.com, user2@example.com"
+emailsRequired = "至少需要一个电子邮件地址"
+submit = "发送邀请"
+success = "已成功邀请用户"
+partialSuccess = "部分邀请失败"
+allFailed = "邀请用户失败"
+error = "发送邀请失败"
+
+[workspace.people.directInvite]
+tab = "直接创建"
+
+[workspace.people.inviteLinkTab]
+tab = "邀请链接"
+
+[workspace.people.inviteLink]
+description = "生成一个安全链接，允许用户自行设置密码"
+email = "电子邮件地址"
+emailPlaceholder = "user@example.com（可选）"
+emailDescription = "可选 - 留空以生成任何人可使用的通用邀请链接"
+emailRequired = "必须填写电子邮件地址"
+emailOptional = "可选 - 留空以生成通用邀请链接"
+emailRequiredForSend = "发送电子邮件通知需要提供电子邮件地址"
+expiryHours = "有效期（小时）"
+expiryDescription = "链接多少小时后过期"
+sendEmail = "通过电子邮件发送邀请链接"
+sendEmailDescription = "如果启用，邀请链接将发送到指定的电子邮件地址"
+smtpRequired = "未配置 SMTP"
+generate = "生成链接"
+generated = "已生成邀请链接"
+copied = "链接已复制到剪贴板"
+success = "邀请链接生成成功"
+successWithEmail = "邀请链接已生成并通过电子邮件发送"
+emailSent = "邀请链接已生成并通过电子邮件发送"
+emailFailed = "邀请链接已生成，但邮件发送失败"
+emailFailedDetails = "错误：{0}。请手动分享邀请链接。"
+error = "生成邀请链接失败"
+submit = "生成邀请链接"
+
+[workspace.people.inviteMode]
+username = "用户名"
+email = "电子邮件"
+link = "链接"
+emailDisabled = "电子邮件邀请需要 SMTP 配置并在设置中将 mail.enableInvites=true"
+
+[workspace.people.license]
+users = "用户"
+availableSlots = "可用名额"
+grandfathered = "历史保留"
+grandfatheredShort = "{{count}} 个历史保留"
+fromLicense = "来自许可证"
+slotsAvailable = "{{count}} 个用户名额可用"
+noSlotsAvailable = "没有可用名额"
+currentUsage = "当前已使用 {{current}} / {{max}} 个用户许可证"
+
+[workspace.teams]
+title = "团队"
+description = "管理团队并组织工作区成员"
+loading = "正在加载团队..."
+loadingDetails = "正在加载团队详情..."
+loadError = "加载团队详情失败"
+createNewTeam = "创建新团队"
+teamName = "团队名称"
+totalMembers = "成员总数"
+actions = "操作"
+noTeamsFound = "未找到团队"
+noMembers = "此团队中没有成员"
+system = "系统"
+addMember = "添加成员"
+viewTeam = "查看团队"
+removeMember = "从团队移除"
+cannotRemoveFromSystemTeam = "不能从系统团队中移除"
+renameTeamLabel = "重命名团队"
+deleteTeamLabel = "删除团队"
+cannotDeleteInternal = "不能删除内部团队"
+confirmDelete = "确定要删除此团队吗？删除前该团队必须为空。"
+confirmRemove = "将该用户从此团队移除？"
+cannotRenameInternal = "不能重命名内部团队"
+cannotAddToInternal = "不能向内部团队添加成员"
+teamNotFound = "未找到团队"
+backToTeams = "返回团队列表"
+memberCount = "{{count}} 名成员"
+removeMemberSuccess = "已将用户从团队移除"
+removeMemberError = "从团队移除用户失败"
+
+[workspace.teams.createTeam]
+title = "创建新团队"
+teamName = "团队名称"
+teamNamePlaceholder = "输入团队名称"
+cancel = "取消"
+submit = "创建团队"
+nameRequired = "必须填写团队名称"
+success = "团队创建成功"
+error = "创建团队失败"
+
+[workspace.teams.renameTeam]
+title = "重命名团队"
+renaming = "正在重命名："
+newTeamName = "新团队名称"
+newTeamNamePlaceholder = "输入新团队名称"
+cancel = "取消"
+submit = "重命名团队"
+nameRequired = "必须填写团队名称"
+success = "团队重命名成功"
+error = "重命名团队失败"
+
+[workspace.teams.deleteTeam]
+success = "团队删除成功"
+error = "删除团队失败。请确保团队为空。"
+teamMustBeEmpty = "删除前团队必须为空"
+
+[workspace.teams.addMemberToTeam]
+title = "将成员添加到团队"
+addingTo = "添加到"
+selectUser = "选择用户"
+selectUserPlaceholder = "选择一个用户"
+selectUserRequired = "请选择一个用户"
+currentlyIn = "当前所在"
+willBeMoved = "注意：该用户将从其当前团队移动到此团队。"
+cancel = "取消"
+submit = "添加成员"
+userRequired = "请选择一个用户"
+success = "成功将成员添加到团队"
+error = "添加成员到团队失败"
+
+[workspace.teams.changeTeam]
+label = "更改团队"
+title = "更改团队"
+changing = "正在移动"
+selectTeam = "选择团队"
+selectTeamPlaceholder = "选择一个团队"
+selectTeamRequired = "请选择一个团队"
+success = "团队更改成功"
+error = "更改团队失败"
+submit = "更改团队"
+
+[plan]
+currency = "货币"
+popular = "热门"
+current = "当前套餐"
+upgrade = "升级"
+contact = "联系我们"
+customPricing = "自定义"
+showComparison = "比较全部功能"
+hideComparison = "隐藏功能对比"
+featureComparison = "功能对比"
+from = "起"
+perMonth = "/月"
+perSeat = "/席位"
+withServer = "+ 服务器方案"
+licensedSeats = "许可：{{count}} 席位"
+includedInCurrent = "您的方案已包含"
+selectPlan = "选择方案"
+manage = "管理"
+
+[plan.manageSubscription]
+description = "管理您的订阅、账单与支付方式"
+
+[plan.activePlan]
+title = "当前套餐"
+subtitle = "您当前的订阅详情"
+
+[plan.availablePlans]
+title = "可用套餐"
+subtitle = "选择符合您需求的套餐"
+
+[plan.static]
+title = "账单信息"
+message = "当前未配置在线计费。若要升级套餐或管理订阅，请直接联系我们。"
+contactSales = "联系销售"
+contactToUpgrade = "联系我们以升级或定制您的套餐"
+maxUsers = "最大用户数"
+upTo = "最多"
+
+[plan.period]
+month = "月"
+perUserPerMonth = "/用户/月"
+
+[plan.free]
+name = "免费"
+highlight1 = "每周工具使用次数有限"
+highlight2 = "可使用所有工具"
+highlight3 = "社区支持"
+forever = "永久免费"
+included = "已包含"
+
+[plan.pro]
+name = "专业版"
+highlight1 = "工具使用不限"
+highlight2 = "高级 PDF 工具"
+highlight3 = "无水印"
+
+[plan.enterprise]
+name = "企业版"
+highlight1 = "自定义定价"
+highlight2 = "专属支持"
+highlight3 = "最新功能"
+requiresServer = "需服务器"
+requiresServerMessage = "请先升级到服务器方案，再升级到企业版。"
+
+[plan.feature]
+title = "功能"
+pdfTools = "基础 PDF 工具"
+fileSize = "文件大小限制"
+automation = "工具流程自动化"
+api = "API 访问"
+priority = "优先支持"
+customPricing = "自定义定价"
+
+[plan.licenseWarning]
+title = "已达自托管免费上限"
+body = "您有 {{total}} 位用户，但免费层每台服务器仅支持 {{limit}} 位。升级以保持 Stirling PDF 顺畅运行。"
+overLimit = "超过 {{limit}}"
+cta = "查看方案"
+
+[subscription]
+renewsOn = "于 {{date}} 续订"
+cancelsOn = "于 {{date}} 取消"
+
+[subscription.status]
+active = "有效"
+pastDue = "逾期"
+canceled = "已取消"
+incomplete = "未完成"
+trialing = "试用"
+none = "无订阅"
+
+[billing]
+manageBilling = "管理账单"
+updateSeats = "更新席位数"
+updateEnterpriseSeats = "更新企业席位数"
+currentSeats = "当前席位数"
+minimumSeats = "最少席位数"
+basedOnUsers = "（当前用户数）"
+newSeatCount = "新席位数"
+newSeatCountDescription = "选择您的企业许可证席位数量"
+whatHappensNext = "接下来会怎样？"
+stripePortalRedirect = "将跳转至 Stripe 账单门户以审核并确认席位更改。按比例金额将自动计算。"
+preparingUpdate = "正在准备席位更新..."
+seatCountTooLow = "席位数至少为 {{minimum}}（当前用户数）"
+seatCountUnchanged = "请选择不同的席位数"
+seatsUpdated = "席位数已更新"
+seatsUpdatedMessage = "您的企业席位数已更新为 {{seats}}"
+updateProcessing = "正在更新"
+updateProcessingMessage = "您的席位更新正在处理中。请稍后刷新。"
+notEnterprise = "仅企业许可证可管理席位"
+
+[billing.portal]
+error = "无法打开计费门户"
+
+[upgradeBanner]
+title = "升级到服务器方案"
+message = "充分利用 Stirling PDF，享受无限用户与高级功能"
+upgradeButton = "立即升级"
+dismiss = "关闭横幅"
+attentionTitle = "此服务器需要管理员关注"
+attentionBody = "您的管理员需要登录以查看更多信息。请立即联系他们。"
+attentionBodyAdmin = "审核许可要求以保持此服务器合规。"
+seeInfo = "查看信息"
+
+[payment]
+preparing = "正在准备结账..."
+redirecting = "正在跳转到安全结账..."
+upgradeTitle = "升级到 {{planName}}"
+success = "支付成功！"
+successMessage = "您的订阅已成功激活。您将很快收到确认邮件。"
+autoClose = "此窗口将自动关闭..."
+error = "支付错误"
+upgradeSuccess = "支付成功！您的订阅已升级。服务器上的许可证已更新。您将很快收到确认 Email。"
+paymentSuccess = "支付成功！正在获取您的许可证密钥..."
+licenseActivated = "许可证已激活！您的许可证密钥已保存。确认 Email 已发送到您的注册邮箱。"
+licenseDelayed = "支付成功！正在生成您的许可证。您将很快收到包含许可证密钥的 Email。如 10 分钟内未收到，请联系支持。"
+licensePollingError = "支付成功，但我们未能自动获取您的许可证密钥。请检查 Email 或携带支付确认联系支持。"
+licenseRetrievalError = "支付成功，但获取许可证失败。您将通过 Email 收到许可证密钥。如 10 分钟内未收到，请联系支持。"
+syncError = "支付成功，但许可证同步失败。您的许可证将很快更新。如问题持续，请联系支持。"
+licenseSaveError = "保存许可证密钥失败。请使用您的许可证密钥联系支持以完成激活。"
+paymentCanceled = "支付已取消，未产生费用。"
+syncingLicense = "正在同步已升级的许可证..."
+generatingLicense = "正在生成您的许可证密钥..."
+upgradeComplete = "升级完成"
+upgradeCompleteMessage = "您的订阅已成功升级。现有许可证密钥已更新。"
+stripeNotConfigured = "未配置 Stripe"
+stripeNotConfiguredMessage = "未配置 Stripe 支付集成。请联系您的管理员。"
+monthly = "按月"
+yearly = "按年"
+billingPeriod = "计费周期"
+enterpriseNote = "可在结账时调整席位数（1-1000）。"
+installationId = "安装 ID"
+licenseKey = "您的许可证密钥"
+licenseInstructions = "已添加到您的安装中。您也会在 Email 中收到一份副本。"
+canCloseWindow = "您现在可以关闭此窗口。"
+licenseKeyProcessing = "许可证密钥处理中"
+licenseDelayedMessage = "正在生成您的许可证密钥。请稍后检查 Email 或联系支持。"
+perYear = "/年"
+perMonth = "/月"
+emailInvalid = "请输入有效的 Email 地址"
+
+[payment.emailStage]
+title = "输入您的 Email"
+description = "我们将用其发送您的许可证密钥与收据。"
+emailLabel = "Email 地址"
+emailPlaceholder = "your@email.com"
+continue = "继续"
+modalTitle = "开始 - {{planName}}"
+
+[payment.planStage]
+title = "选择您的计费周期"
+savingsNote = "按年计费可节省 {{percent}}%"
+basePrice = "基础价格"
+seatPrice = "每席位"
+totalForSeats = "合计（{{count}} 席位）"
+selectMonthly = "选择按月"
+selectYearly = "选择按年"
+savePercent = "节省 {{percent}}%"
+savingsAmount = "您共节省 {{amount}}"
+modalTitle = "选择计费周期 - {{planName}}"
+billedYearly = "按年计费：{{currency}}{{amount}}"
+
+[payment.paymentStage]
+backToPlan = "返回方案选择"
+selectedPlan = "已选方案"
+modalTitle = "完成支付 - {{planName}}"
+
+[firstLogin]
+title = "首次登录"
+welcomeTitle = "欢迎！"
+welcomeMessage = "出于安全原因，您必须在首次登录时修改密码。"
+loggedInAs = "当前登录为"
+error = "错误"
+currentPassword = "当前密码"
+enterCurrentPassword = "输入当前密码"
+newPassword = "新密码"
+enterNewPassword = "输入新密码（至少 8 个字符）"
+confirmPassword = "确认新密码"
+reEnterNewPassword = "再次输入新密码"
+changePassword = "更改密码"
+allFieldsRequired = "所有字段均为必填"
+passwordsDoNotMatch = "两次输入的新密码不一致"
+passwordTooShort = "密码长度至少为 8 个字符"
+passwordMustBeDifferent = "新密码必须不同于当前密码"
+passwordChangedSuccess = "密码修改成功！请重新登录。"
+passwordChangeFailed = "修改密码失败。请检查您的当前密码。"
+
+[invite]
+welcome = "欢迎使用 Stirling PDF"
+invalidToken = "无效的邀请链接"
+validationError = "验证邀请链接失败"
+passwordRequired = "必须填写密码"
+passwordTooShort = "密码长度至少为 6 个字符"
+passwordMismatch = "两次密码不一致"
+acceptError = "创建账户失败"
+validating = "正在验证邀请..."
+invalidInvitation = "无效的邀请"
+goToLogin = "前往登录"
+welcomeTitle = "您已被邀请！"
+welcomeSubtitle = "完成账户设置即可开始使用"
+accountFor = "正在为以下用户创建账户"
+linkExpires = "链接过期时间"
+email = "电子邮件地址"
+emailPlaceholder = "输入您的电子邮件地址"
+emailRequired = "必须填写电子邮件地址"
+invalidEmail = "无效的电子邮件地址"
+choosePassword = "选择密码"
+passwordPlaceholder = "输入您的密码"
+confirmPassword = "确认密码"
+confirmPasswordPlaceholder = "再次输入您的密码"
+createAccount = "创建账户"
+creating = "正在创建账户..."
+alreadyHaveAccount = "已经有账户？"
+signIn = "登录"
+
+[audit]
+notAvailable = "审计系统不可用"
+notAvailableMessage = "审计系统未配置或不可用。"
+disabled = "已禁用审计日志"
+disabledMessage = "请在应用配置中启用审计日志以跟踪系统事件。"
+
+[audit.error]
+title = "加载审计系统时出错"
+
+[audit.systemStatus]
+title = "系统状态"
+status = "审计日志"
+enabled = "已启用"
+disabled = "已禁用"
+level = "审计级别"
+retention = "保留期限"
+days = "天"
+totalEvents = "事件总数"
+
+[audit.tabs]
+dashboard = "仪表板"
+events = "审计事件"
+export = "导出"
+
+[audit.charts]
+title = "审计仪表板"
+error = "加载图表时出错"
+day = "日"
+week = "周"
+month = "月"
+byType = "按类型统计事件"
+byUser = "按用户统计事件"
+overTime = "事件随时间变化"
+
+[audit.events]
+title = "审计事件"
+filterByType = "按类型筛选"
+filterByUser = "按用户筛选"
+startDate = "开始日期"
+endDate = "结束日期"
+clearFilters = "清除"
+error = "加载事件时出错"
+noEvents = "未找到事件"
+timestamp = "时间戳"
+type = "类型"
+user = "用户"
+ipAddress = "IP 地址"
+actions = "操作"
+viewDetails = "查看详情"
+eventDetails = "事件详情"
+details = "详情"
+
+[audit.export]
+title = "导出审计数据"
+description = "将审计事件导出为 CSV 或 JSON 格式。使用筛选器限定导出数据。"
+format = "导出格式"
+filters = "筛选器（可选）"
+filterByType = "按类型筛选"
+filterByUser = "按用户筛选"
+startDate = "开始日期"
+endDate = "结束日期"
+clearFilters = "清除"
+exportButton = "导出数据"
+error = "导出数据失败"
+
+[usage]
+noData = "暂无数据"
+error = "加载使用统计时出错"
+noDataMessage = "当前暂无使用统计。"
+
+[usage.controls]
+top10 = "前 10"
+top20 = "前 20"
+all = "全部"
+refresh = "刷新"
+dataTypeLabel = "数据类型："
+
+[usage.controls.dataType]
+all = "全部"
+api = "API"
+ui = "UI"
+
+[usage.showing]
+top10 = "前 10"
+top20 = "前 20"
+all = "全部"
+
+[usage.stats]
+totalEndpoints = "端点总数"
+totalVisits = "访问总数"
+showing = "显示"
+selectedVisits = "所选访问次数"
+
+[usage.chart]
+title = "端点使用图表"
+
+[usage.table]
+title = "详细统计"
+endpoint = "端点"
+visits = "访问次数"
+percentage = "百分比"
+noData = "无可用数据"
+
+[backendHealth]
+checking = "正在检查后端状态..."
+online = "后端在线"
+offline = "后端离线"
+starting = "后端正在启动..."
+wait = "请等待后端完成启动后再试。"
+
+[encryptedPdfUnlock]
+unlockPrompt = "解锁 PDF 以继续"
+title = "移除密码以继续"
+description = "此 PDF 受密码保护。请输入密码以继续处理。"
+skip = "暂时跳过"
+unlock = "解锁并继续"
+incorrectPassword = "密码错误"
+missingFile = "所选文件已不可用。"
+emptyResponse = "移除密码未生成文件。"
+required = "请输入密码以继续。"
+successTitle = "已移除密码"
+successBodyWithName = "已从 {{fileName}} 移除密码"
+successBody = "已成功移除密码。"
+
+[encryptedPdfUnlock.password]
+label = "PDF 密码"
+placeholder = "输入 PDF 密码"
+
+[setup]
+welcome = "欢迎使用 Stirling PDF"
+description = "选择您希望使用 Stirling PDF 的方式开始"
+
+[setup.step1]
+label = "选择模式"
+description = "离线或服务器"
+
+[setup.step2]
+label = "选择服务器"
+description = "自托管服务器"
+
+[setup.step3]
+label = "登录"
+description = "输入凭据"
+
+[setup.mode.saas]
+title = "Stirling Cloud"
+description = "使用您的 Stirling 账户登录"
+
+[setup.mode.selfhosted]
+title = "自托管服务器"
+description = "连接到您自己的 Stirling PDF 服务器"
+
+[setup.saas]
+title = "登录 Stirling"
+subtitle = "使用您的 Stirling 账户登录"
+
+[setup.selfhosted]
+title = "登录到服务器"
+subtitle = "输入您的服务器凭据"
+
+[setup.server]
+title = "连接到服务器"
+subtitle = "输入您的自托管服务器 URL"
+testing = "正在测试连接..."
+
+[setup.server.type]
+saas = "Stirling PDF SaaS"
+selfhosted = "自托管服务器"
+
+[setup.server.url]
+label = "服务器 URL"
+description = "输入您自托管 Stirling PDF 服务器的完整 URL"
+
+[setup.server.error]
+emptyUrl = "请输入服务器 URL"
+unreachable = "无法连接到服务器"
+testFailed = "连接测试失败"
+
+[setup.login]
+title = "登录"
+subtitle = "输入凭据以继续"
+connectingTo = "正在连接到："
+submit = "登录"
+signInWith = "使用以下方式登录"
+oauthPending = "正在打开浏览器进行认证..."
+orContinueWith = "或使用 Email 继续"
+
+[setup.login.username]
+label = "用户名"
+placeholder = "输入用户名"
+
+[setup.login.email]
+label = "邮箱"
+placeholder = "输入 Email"
+
+[setup.login.password]
+label = "密码"
+placeholder = "输入密码"
+
+[setup.login.error]
+emptyUsername = "请输入用户名"
+emptyEmail = "请输入 Email"
+emptyPassword = "请输入密码"
+oauthFailed = "OAuth 登录失败。请重试。"
+
+[oauth.success]
+title = "认证成功"
+message = "您可以关闭此窗口并返回 Stirling PDF。"
+
+[oauth.error]
+title = "认证失败"
+message = "认证未成功。您可以关闭此窗口后重试。"
+
+[pdfTextEditor]
+title = "PDF JSON 编辑器"
+viewLabel = "PDF 编辑器"
+converting = "正在将 PDF 转换为可编辑格式..."
+conversionFailed = "PDF 转换失败。请重试。"
+currentFile = "当前文件：{{name}}"
+pageSummary = "第 {{number}}/{{total}} 页"
+pagePreviewAlt = "页面预览"
+imageLabel = "已放置的图片"
+noTextOnPage = "此页未检测到可编辑文本。"
+
+[pdfTextEditor.pageType]
+paragraph = "段落页"
+sparse = "稀疏文本"
+
+[pdfTextEditor.groupingMode]
+auto = "自动"
+paragraph = "段落"
+singleLine = "单行"
+
+[pdfTextEditor.badges]
+unsaved = "已编辑"
+modified = "已编辑"
+earlyAccess = "抢先体验"
+
+[pdfTextEditor.actions]
+reset = "重置更改"
+downloadJson = "下载 JSON"
+generatePdf = "生成 PDF"
+
+[pdfTextEditor.options.autoScaleText]
+title = "自动缩放文本以适配框体"
+description = "当字体渲染与 PDF 不同时，自动水平缩放文本以适配其原始边界框。"
+
+[pdfTextEditor.options.groupingMode]
+title = "文本分组模式"
+autoDescription = "自动检测页面类型并进行合适的分组。"
+paragraphDescription = "将对齐的行分组成多行段落文本框。"
+singleLineDescription = "将每一行 PDF 文本保留为独立文本框。"
+
+[pdfTextEditor.options.manualGrouping]
+descriptionInline = "提示：按住 Ctrl（Cmd）或 Shift 可多选文本框。选区上方会出现浮动工具栏，便于合并、取消分组或调整宽度。"
+
+[pdfTextEditor.options.forceSingleElement]
+title = "将已编辑文本锁定为单个 PDF 元素"
+description = "启用后，编辑器会将每个已编辑文本框导出为一个 PDF 文本元素，以避免字形重叠或混合字体。"
+
+[pdfTextEditor.manual]
+mergeTooltip = "合并所选框"
+merge = "合并所选"
+ungroupTooltip = "将段落拆分为行"
+ungroup = "取消分组所选"
+widthMenu = "宽度选项"
+expandWidth = "扩展到页面边缘"
+resetWidth = "重置宽度"
+resizeHandle = "调整文本宽度"
+
+[pdfTextEditor.disclaimer]
+heading = "预览限制"
+textFocus = "该工作区专注于编辑文本与重新定位嵌入图片。复杂页面艺术、表单控件与分层图形会在导出时保留，但此处不可完全编辑。"
+previewVariance = "某些视觉元素（如表格边框、形状或注释外观）在预览中可能显示不完全准确。导出的 PDF 会尽可能保留原始绘图指令。"
+alpha = "此 Alpha 预览器仍在演进中——某些字体、颜色、透明效果和布局细节可能略有偏差。分享前请再次检查生成的 PDF。"
+
+[pdfTextEditor.empty]
+title = "未加载文档"
+subtitle = "加载 PDF 或 JSON 文件以开始编辑文本内容。"
+
+[pdfTextEditor.welcomeBanner]
+title = "欢迎使用 PDF 文本编辑器（抢先体验）"
+experimental = "这是一个仍在积极开发中的实验性功能，使用过程中可能存在不稳定与问题。"
+howItWorks = "此工具会将您的 PDF 转换为可编辑格式，您可修改文本内容并重新定位图片。更改将另存为新的 PDF。"
+bestFor = "最佳适用："
+bestFor1 = "以文本和图片为主的简单 PDF"
+bestFor2 = "使用标准段落格式的文档"
+bestFor3 = "信件、论文、报告和基础文档"
+notIdealFor = "不适用于："
+notIdealFor1 = "包含项目符号、表格或多栏布局等特殊格式的 PDF"
+notIdealFor2 = "杂志、宣传册或重设计的文档"
+notIdealFor3 = "布局复杂的说明手册"
+limitations = "当前限制："
+limitation1 = "字体渲染可能与原PDF略有差异"
+limitation2 = "复杂图形、表单域和注释会被保留，但不可编辑"
+limitation3 = "大文件的转换和处理可能需要时间"
+knownIssues = "已知问题（修复中）："
+issue1 = "目前不会保留文本颜色（即将支持）"
+issue2 = "段落模式存在更多对齐和间距问题—建议使用单行模式"
+issue3 = "预览与导出的PDF显示不同—导出的PDF更接近原文件"
+issue4 = "旋转文本的对齐可能需要手动调整"
+issue5 = "透明度和分层效果可能与原件不同"
+feedback = "这是早期体验功能。请反馈遇到的问题以帮助我们改进！"
+gotIt = "知道了"
+dontShowAgain = "不再显示"
+
+[pdfTextEditor.modeChange]
+title = "确认更改模式"
+warning = "更改文本分组模式将重置所有未保存的更改。确定要继续吗？"
+cancel = "取消"
+confirm = "重置并更改模式"
+
+[pdfTextEditor.fontAnalysis]
+details = "字体详情"
+embedded = "已嵌入"
+type = "类型"
+webFormat = "Web 格式"
+warnings = "警告"
+suggestions = "说明"
+currentPageFonts = "本页字体"
+allFonts = "所有字体"
+fallback = "后备"
+missing = "缺失"
+perfectMessage = "所有字体都可完美复现。"
+warningMessage = "某些字体可能无法正确渲染。"
+infoMessage = "提供字体还原信息。"
+perfect = "完美"
+subset = "子集"
+
+[pdfTextEditor.errors]
+invalidJson = "无法读取JSON文件。请确保它由PDF转JSON工具生成。"
+pdfConversion = "无法将已编辑的JSON转换回PDF。"
+
+[auth]
+sessionExpired = "会话已过期"
+pleaseLoginAgain = "请重新登录。"
+accessDenied = "拒绝访问"
+insufficientPermissions = "您没有执行此操作的权限。"
+
+[addText]
+title = "添加文本"
+header = "向PDF添加文本"
+tags = "文本,注释,标签"
+applySignatures = "应用文本"
+
+[addText.text]
+name = "文本内容"
+placeholder = "输入要添加的文本"
+fontLabel = "字体"
+fontSizeLabel = "字体大小"
+fontSizePlaceholder = "输入或选择字体大小（8-200）"
+colorLabel = "文本颜色"
+
+[addText.steps]
+configure = "配置文本"
+
+[addText.step]
+createDesc = "输入要添加的文本"
+place = "放置文本"
+placeDesc = "在PDF上点击以添加文本"
+
+[addText.instructions]
+title = "如何添加文本"
+text = "在上方输入文本后，点击PDF任意位置进行放置。"
+paused = "放置已暂停"
+resumeHint = "恢复放置以点击并添加文本。"
+noSignature = "先在上方输入文本以启用放置。"
+
+[addText.mode]
+move = "移动文本"
+place = "放置文本"
+pause = "暂停放置"
+resume = "恢复放置"
+
+[addText.results]
+title = "添加文本结果"
+
+[addText.error]
+failed = "向PDF添加文本时发生错误。"

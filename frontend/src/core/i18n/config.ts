@@ -1,16 +1,16 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import Backend from 'i18next-http-backend';
+import TomlBackend from '@app/i18n/tomlBackend';
 
 i18n
-  .use(Backend)
+  .use(TomlBackend)
   .use(initReactI18next)
   .init({
     lng: 'en',
     fallbackLng: 'en',
     debug: false,
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      loadPath: '/locales/{{lng}}/{{ns}}.toml',
     },
     interpolation: {
       escapeValue: false,
@@ -29,7 +29,7 @@ i18n
           'convert.singleOrMultiple': 'Output',
           'convert.emailNote': 'Email attachments and embedded images will be included',
           'common.color': 'Color',
-          'common.grayscale': 'Grayscale', 
+          'common.grayscale': 'Grayscale',
           'common.blackWhite': 'Black & White',
           'common.single': 'Single Image',
           'common.multiple': 'Multiple Images',
