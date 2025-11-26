@@ -130,7 +130,7 @@ export class TauriBackendService {
     // Fallback to Tauri store
     try {
       return await invoke<string | null>('get_auth_token');
-    } catch (error) {
+    } catch {
       console.debug('[TauriBackendService] No auth token available');
       return null;
     }
