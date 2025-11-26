@@ -50,6 +50,26 @@ public class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsFrontendRoute() {
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/"), "Root path should be a frontend route");
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/app/dashboard"),
+                "React routes without extensions should be frontend routes");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/api/v1/users"),
+                "API routes should not be frontend routes");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/register"),
+                "Register should not be treated as a frontend route");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/pipeline/jobs"),
+                "Pipeline should not be treated as a frontend route");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/files/download"),
+                "Files path should not be treated as a frontend route");
+    }
+
+    @Test
     void testIsStaticResourceWithContextPath() {
         String contextPath = "/myapp";
 
@@ -83,6 +103,7 @@ public class RequestUriUtilsTest {
                 "/favicon.ico",
                 "/icon.svg",
                 "/image.png",
+                "/locales/en/translation.toml",
                 "/site.webmanifest",
                 "/app/logo.svg",
                 "/downloads/document.png",

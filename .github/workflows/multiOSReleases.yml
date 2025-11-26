@@ -90,12 +90,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        disable_security: [true, false]
-        include:
-          - disable_security: false
-            file_suffix: "-with-login"
-          - disable_security: true
+        variant:
+          - name: "default"
+            disable_security: true
+            build_frontend: true
             file_suffix: ""
+          - name: "with-login"
+            disable_security: false
+            build_frontend: true
+            file_suffix: "-with-login"
+          - name: "server-only"
+            disable_security: true
+            build_frontend: false
+            file_suffix: "-server"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -114,10 +121,18 @@ jobs:
         with:
           gradle-version: 8.14
 
+      - name: Setup Node.js
+        if: matrix.variant.build_frontend == true
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Build JAR
-        run: ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+        run: ./gradlew clean build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
-          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.variant.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Rename JAR
@@ -126,12 +141,12 @@ jobs:
           echo "Looking for: app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar"
           ls -la app/core/build/libs/
           mkdir -p ./jar-dist
-          cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.file_suffix }}.jar
+          cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.variant.file_suffix }}.jar
 
       - name: Upload JAR artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: jar${{ matrix.file_suffix }}
+          name: jar${{ matrix.variant.file_suffix }}
           path: ./jar-dist/*.jar
           retention-days: 1
 
@@ -524,7 +539,7 @@ jobs:
           pattern: Stirling-PDF-*
           path: ./artifacts/tauri
 
-      - name: Download JAR artifact (no login)
+      - name: Download JAR artifact (default)
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: jar
@@ -534,6 +549,12 @@ jobs:
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: jar-with-login
+          path: ./artifacts/jars
+
+      - name: Download JAR artifact (server only)
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: jar-server
           path: ./artifacts/jars
 
       - name: Display structure of downloaded files

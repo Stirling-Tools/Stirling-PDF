@@ -10,7 +10,9 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend .
-RUN DISABLE_ADDITIONAL_FEATURES=true npm run build
+# Override VITE_API_BASE_URL to use relative paths for production
+# This ensures frontend works with nginx proxy setup
+RUN DISABLE_ADDITIONAL_FEATURES=true VITE_API_BASE_URL=/ npm run build
 
 # Stage 2: Build Backend
 FROM gradle:8.14-jdk21 AS backend-build
@@ -76,7 +78,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=false \
     TMP=/tmp/stirling-pdf \
     MODE=BOTH \
     BACKEND_INTERNAL_PORT=8081 \
-    VITE_API_BASE_URL=http://localhost:8080 \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies

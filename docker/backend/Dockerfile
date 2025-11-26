@@ -17,7 +17,7 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
-# Build the application with DISABLE_ADDITIONAL_FEATURES=false
+# Build the application (server-only JAR - no UI, includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -44,8 +44,7 @@ LABEL org.opencontainers.image.version="${VERSION_TAG}"
 LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
 
 # Set Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=false \
-    VERSION_TAG=$VERSION_TAG \
+ENV VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
