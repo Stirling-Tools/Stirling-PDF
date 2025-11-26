@@ -167,6 +167,17 @@ def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.prop
 def frontendDir = file('../../frontend')
 def frontendDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
+def generatedFrontendPaths = [
+    'assets',
+    'index.html',
+    'locales',
+    'Login',
+    'classic-logo',
+    'modern-logo',
+    'og_images',
+    'samples',
+    'manifest-classic.json'
+]
 
 tasks.register('npmInstall', Exec) {
     enabled = buildWithFrontend
@@ -251,6 +262,12 @@ tasks.register('copyFrontendAssets', Copy) {
     }
 }
 
+tasks.register('cleanFrontendAssets', Delete) {
+    group = 'frontend'
+    description = 'Remove previously generated frontend assets from static resources'
+    delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
@@ -261,6 +278,8 @@ if (buildWithFrontend) {
     processResources.dependsOn copyFrontendAssets
 } else {
     println "Frontend build disabled - JAR will be backend-only"
+    // When not building the UI, ensure any stale frontend assets are removed
+    processResources.dependsOn cleanFrontendAssets
 }
 
 bootJar.dependsOn ':common:jar'
