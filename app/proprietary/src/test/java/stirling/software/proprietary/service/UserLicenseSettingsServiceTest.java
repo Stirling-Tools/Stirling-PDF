@@ -2,6 +2,9 @@ package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -197,5 +200,36 @@ class UserLicenseSettingsServiceTest {
         int result = service.calculateMaxAllowedUsers();
 
         assertEquals(5, result, "Should fall back to default 5 users if grandfathered is 0");
+    }
+
+    @Test
+    void grandfatherExistingOAuthUsers_runsWhenSomeUsersNotGrandfathered() {
+        when(userService.countOAuthUsers()).thenReturn(10L);
+        when(userService.countGrandfatheredOAuthUsers()).thenReturn(4L);
+        when(userService.grandfatherAllOAuthUsers()).thenReturn(6);
+
+        service.grandfatherExistingOAuthUsers();
+
+        verify(userService, times(1)).grandfatherAllOAuthUsers();
+    }
+
+    @Test
+    void grandfatherExistingOAuthUsers_skipsWhenAllUsersGrandfathered() {
+        when(userService.countOAuthUsers()).thenReturn(10L);
+        when(userService.countGrandfatheredOAuthUsers()).thenReturn(10L);
+
+        service.grandfatherExistingOAuthUsers();
+
+        verify(userService, never()).grandfatherAllOAuthUsers();
+    }
+
+    @Test
+    void grandfatherExistingOAuthUsers_skipsWhenNoOAuthUsers() {
+        when(userService.countOAuthUsers()).thenReturn(0L);
+        when(userService.countGrandfatheredOAuthUsers()).thenReturn(0L);
+
+        service.grandfatherExistingOAuthUsers();
+
+        verify(userService, never()).grandfatherAllOAuthUsers();
     }
 }

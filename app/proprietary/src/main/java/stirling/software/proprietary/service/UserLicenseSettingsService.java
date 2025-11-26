@@ -184,8 +184,9 @@ public class UserLicenseSettingsService {
             long oauthUsersCount = userService.countOAuthUsers();
             long grandfatheredCount = userService.countGrandfatheredOAuthUsers();
 
-            if (oauthUsersCount > 0 && grandfatheredCount == 0) {
-                // We have OAuth users but none are grandfathered - this is first run after upgrade
+            if (oauthUsersCount > 0 && grandfatheredCount < oauthUsersCount) {
+                // We have OAuth users but not all have been grandfathered - this is first run after
+                // upgrade
                 int updated = userService.grandfatherAllOAuthUsers();
                 log.warn(
                         "OAuth GRANDFATHERING: Marked {} existing OAuth/SAML users as grandfathered. "
