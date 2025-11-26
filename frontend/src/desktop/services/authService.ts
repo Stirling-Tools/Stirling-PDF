@@ -34,6 +34,55 @@ export class AuthService {
     return AuthService.instance;
   }
 
+  /**
+   * Save token to all storage locations and notify listeners
+   */
+  private async saveTokenEverywhere(token: string): Promise<void> {
+    // Save to Tauri store
+    await invoke('save_auth_token', { token });
+    console.log('[Desktop AuthService] Token saved to Tauri store');
+
+    // Sync to localStorage for web layer
+    localStorage.setItem('stirling_jwt', token);
+    console.log('[Desktop AuthService] Token saved to localStorage');
+
+    // Notify other parts of the system
+    window.dispatchEvent(new CustomEvent('jwt-available'));
+    console.log('[Desktop AuthService] Dispatched jwt-available event');
+  }
+
+  /**
+   * Get token from any available source (Tauri store or localStorage)
+   */
+  private async getTokenFromAnySource(): Promise<string | null> {
+    // Try Tauri store first
+    console.log('[Desktop AuthService] Retrieving token from Tauri store...');
+    const token = await invoke<string | null>('get_auth_token');
+
+    if (token) {
+      console.log(`[Desktop AuthService] Token found in Tauri store (length: ${token.length})`);
+      return token;
+    }
+
+    console.log('[Desktop AuthService] No token in Tauri store');
+
+    // Fallback to localStorage
+    const localStorageToken = localStorage.getItem('stirling_jwt');
+    if (localStorageToken) {
+      console.log('[Desktop AuthService] Token found in localStorage (length:', localStorageToken.length, ')');
+    }
+
+    return localStorageToken;
+  }
+
+  /**
+   * Clear token from all storage locations
+   */
+  private async clearTokenEverywhere(): Promise<void> {
+    await invoke('clear_auth_token');
+    localStorage.removeItem('stirling_jwt');
+  }
+
   subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
     this.authListeners.add(listener);
     // Immediately notify new listener of current state
@@ -80,22 +129,13 @@ export class AuthService {
 
       console.log('[Desktop AuthService] Login successful, saving token...');
 
-      // Save the token to Tauri store
+      // Save token to all storage locations
       try {
-        await invoke('save_auth_token', { token });
-        console.log('[Desktop AuthService] Token saved to Tauri store');
+        await this.saveTokenEverywhere(token);
       } catch (error) {
-        console.error('[Desktop AuthService] Failed to save token to Tauri store:', error);
+        console.error('[Desktop AuthService] Failed to save token:', error);
         throw new Error('Failed to save authentication token');
       }
-
-      // ALSO save to localStorage so the web auth layer (springAuth) can detect it
-      localStorage.setItem('stirling_jwt', token);
-      console.log('[Desktop AuthService] Token saved to localStorage');
-
-      // Notify other parts of the system that JWT is available
-      window.dispatchEvent(new CustomEvent('jwt-available'));
-      console.log('[Desktop AuthService] Dispatched jwt-available event');
 
       // Save user info to store
       await invoke('save_user_info', {
@@ -123,11 +163,8 @@ export class AuthService {
     try {
       console.log('Logging out');
 
-      // Clear token from Tauri store
-      await invoke('clear_auth_token');
-
-      // ALSO clear from localStorage
-      localStorage.removeItem('stirling_jwt');
+      // Clear token from all storage locations
+      await this.clearTokenEverywhere();
 
       // Clear user info from Tauri store
       await invoke('clear_user_info');
@@ -139,23 +176,16 @@ export class AuthService {
       console.error('Error during logout:', error);
       // Still set status to unauthenticated even if clear fails
       this.setAuthStatus('unauthenticated', null);
-      // Still try to clear localStorage even if keyring clear failed
-      localStorage.removeItem('stirling_jwt');
+      // Still try to clear token
+      await this.clearTokenEverywhere().catch(() => {});
     }
   }
 
   async getAuthToken(): Promise<string | null> {
     try {
-      console.log('[Desktop AuthService] Retrieving token from Tauri store...');
-      const token = await invoke<string | null>('get_auth_token');
-      if (token) {
-        console.log('[Desktop AuthService] Token found in Tauri store (length:', token.length, ')');
-      } else {
-        console.log('[Desktop AuthService] No token in Tauri store');
-      }
-      return token || null;
+      return await this.getTokenFromAnySource();
     } catch (error) {
-      console.error('[Desktop AuthService] Failed to get auth token from Tauri store:', error);
+      console.error('[Desktop AuthService] Failed to get auth token:', error);
       return null;
     }
   }
@@ -211,14 +241,8 @@ export class AuthService {
 
       const { token } = response.data;
 
-      // Save the new token to Tauri store
-      await invoke('save_auth_token', { token });
-
-      // ALSO update localStorage
-      localStorage.setItem('stirling_jwt', token);
-
-      // Notify other parts of the system that JWT is available
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      // Save token to all storage locations
+      await this.saveTokenEverywhere(token);
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
@@ -240,31 +264,19 @@ export class AuthService {
     console.log('[Desktop AuthService] Initializing auth state...');
     const token = await this.getAuthToken();
     const userInfo = await this.getUserInfo();
-    const existingLocalStorageToken = localStorage.getItem('stirling_jwt');
 
     if (token && userInfo) {
-      console.log('[Desktop AuthService] Found token in Tauri store, syncing to localStorage');
-      // Sync token to localStorage so web auth layer can detect it
-      localStorage.setItem('stirling_jwt', token);
+      console.log('[Desktop AuthService] Found token, syncing to all storage locations');
 
-      // Notify other parts of the system that JWT is available
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      // Ensure token is in both Tauri store and localStorage
+      await this.saveTokenEverywhere(token);
 
       this.setAuthStatus('authenticated', userInfo);
       console.log('[Desktop AuthService] Auth state initialized as authenticated');
-    } else if (!existingLocalStorageToken) {
-      // Only clear localStorage if there's no token there either
-      // This prevents clearing a valid token that was set by web login
-      console.log('[Desktop AuthService] No token found in Tauri store or localStorage');
-      localStorage.removeItem('stirling_jwt');
+    } else {
+      console.log('[Desktop AuthService] No token or user info found');
       this.setAuthStatus('unauthenticated', null);
       console.log('[Desktop AuthService] Auth state initialized as unauthenticated');
-    } else {
-      console.log('[Desktop AuthService] No token in Tauri store but found in localStorage, keeping it');
-      // There's a token in localStorage but not in Tauri store
-      // This can happen if user logged in via web layer
-      // Keep the unauthenticated status for desktop layer but don't clear localStorage
-      this.setAuthStatus('unauthenticated', null);
     }
   }
 
@@ -296,14 +308,8 @@ export class AuthService {
 
       console.log('OAuth authentication successful, storing tokens');
 
-      // Save the access token to Tauri store
-      await invoke('save_auth_token', { token: result.access_token });
-
-      // ALSO save to localStorage so the web auth layer (springAuth) can detect it
-      localStorage.setItem('stirling_jwt', result.access_token);
-
-      // Notify other parts of the system that JWT is available
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      // Save token to all storage locations
+      await this.saveTokenEverywhere(result.access_token);
 
       // Fetch user info from Supabase using the access token
       const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);

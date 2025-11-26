@@ -117,6 +117,25 @@ export class TauriBackendService {
     throw new Error('Failed to detect backend port after 15 seconds');
   }
 
+  /**
+   * Get auth token from any available source (localStorage or Tauri store)
+   */
+  private async getAuthToken(): Promise<string | null> {
+    // Check localStorage first (web layer token)
+    const localStorageToken = localStorage.getItem('stirling_jwt');
+    if (localStorageToken) {
+      return localStorageToken;
+    }
+
+    // Fallback to Tauri store
+    try {
+      return await invoke<string | null>('get_auth_token');
+    } catch (error) {
+      console.debug('[TauriBackendService] No auth token available');
+      return null;
+    }
+  }
+
   private beginHealthMonitoring() {
     if (this.healthMonitor) {
       return;
@@ -162,16 +181,7 @@ export class TauriBackendService {
       // For self-hosted mode, include auth token if available
       const headers: Record<string, string> = {};
       if (mode === 'selfhosted') {
-        // Check localStorage first (web layer token)
-        let token = localStorage.getItem('stirling_jwt');
-        if (!token) {
-          // Fallback to Tauri store
-          try {
-            token = await invoke<string | null>('get_auth_token');
-          } catch {
-            console.debug('[TauriBackendService] No auth token available for health check');
-          }
-        }
+        const token = await this.getAuthToken();
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
