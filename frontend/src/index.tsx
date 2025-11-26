@@ -12,8 +12,8 @@ import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
 import { BASE_PATH } from '@app/constants/app';
 
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+posthog.init('phc_VOdeYnlevc2T63m3myFGjeBlRcIusRgmhfx6XL5a1iz', {
+  api_host: 'https://eu.i.posthog.com',
   defaults: '2025-05-24',
   capture_exceptions: true, // This enables capturing exceptions using Error Tracking, set to false if you don't want this
   debug: false,
