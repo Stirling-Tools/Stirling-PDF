@@ -11,7 +11,7 @@ import type {
   AuthError,
   AuthResponse,
   AuthChangeCallback,
-} from '@proprietary/auth/types';
+} from '@app/auth/types';
 
 /**
  * Desktop Spring Auth Client - No-op implementation
@@ -93,12 +93,5 @@ export const getCurrentUser = async () => {
   console.debug('[Desktop SpringAuth] getCurrentUser called - desktop uses authService.getUserInfo()');
   return null;
 };
-
-// Re-export shared utilities
-export {
-  isUserAnonymous,
-  createAnonymousUser,
-  createAnonymousSession,
-} from '@proprietary/auth/utils';
 
 export default springAuth;

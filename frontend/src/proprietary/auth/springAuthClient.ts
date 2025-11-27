@@ -397,12 +397,5 @@ export const getCurrentUser = async () => {
   return data.session?.user || null;
 };
 
-// Re-export shared utilities
-export {
-  isUserAnonymous,
-  createAnonymousUser,
-  createAnonymousSession,
-} from '@app/auth/utils';
-
 // Export auth client as default for convenience
 export default springAuth;

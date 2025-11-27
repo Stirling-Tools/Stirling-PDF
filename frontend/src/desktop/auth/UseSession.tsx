@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import type { AuthContextType } from '@proprietary/auth/types';
+import type { AuthContextType } from '@app/auth/types';
 
 /**
  * Desktop-specific AuthProvider override
@@ -8,14 +8,7 @@ import type { AuthContextType } from '@proprietary/auth/types';
  * for handling both SaaS (Supabase) and self-hosted (Spring Boot) authentication.
  *
  * This provider is a no-op to prevent the proprietary Spring Boot auth client
- * from being used in desktop mode, which would cause issues like:
- * - Calling /api/v1/auth/me on Supabase server (which doesn't have that endpoint)
- * - Infinite token refresh loops
- *
- * The desktop app manages auth state through:
- * - authService.ts for token management
- * - useFirstLaunchCheck for initialization
- * - SetupWizard for login flows
+ * from being used in desktop mode.
  */
 
 const AuthContext = createContext<AuthContextType>({

@@ -173,6 +173,9 @@ class TauriHttpClient {
     }
 
     try {
+      // Debug logging
+      console.debug(`[tauriHttpClient] Fetch request:`, { url, method });
+
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       const response = await fetch(url, {
         method,
