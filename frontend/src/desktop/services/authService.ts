@@ -40,18 +40,27 @@ export class AuthService {
   private async saveTokenEverywhere(token: string, refreshToken?: string | null): Promise<void> {
     console.log(`[Desktop AuthService] Saving token (length: ${token.length})`);
 
-    // Save to Tauri store
+    // Save access token to Tauri secure store (primary)
     await invoke('save_auth_token', { token });
     console.log('[Desktop AuthService] Token saved to Tauri store');
 
-    // Sync to localStorage for web layer
+    // Sync to localStorage for web layer (fallback)
     localStorage.setItem('stirling_jwt', token);
     console.log('[Desktop AuthService] Token saved to localStorage');
 
-    // Save refresh token if provided
+    // Save refresh token if provided (Tauri store is primary, localStorage only as fallback)
     if (refreshToken) {
-      localStorage.setItem('stirling_refresh_token', refreshToken);
-      console.log('[Desktop AuthService] Refresh token saved');
+      try {
+        await invoke('save_refresh_token', { token: refreshToken });
+        console.log('[Desktop AuthService] Refresh token saved to Tauri secure store');
+        // Clear localStorage if Tauri store succeeded (prevent XSS access)
+        localStorage.removeItem('stirling_refresh_token');
+      } catch (error) {
+        console.warn('[Desktop AuthService] Failed to save refresh token to Tauri store, falling back to localStorage:', error);
+        // Only use localStorage if Tauri store failed
+        localStorage.setItem('stirling_refresh_token', refreshToken);
+        console.log('[Desktop AuthService] Refresh token saved to localStorage (fallback)');
+      }
     }
 
     // Notify other parts of the system
@@ -81,10 +90,40 @@ export class AuthService {
   }
 
   /**
+   * Get refresh token from any available source (Tauri store or localStorage)
+   */
+  private async getRefreshToken(): Promise<string | null> {
+    // Try Tauri secure store first (more secure than localStorage)
+    try {
+      const token = await invoke<string | null>('get_refresh_token');
+      if (token) {
+        console.log('[Desktop AuthService] Refresh token found in Tauri store');
+        return token;
+      }
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to get refresh token from Tauri store:', error);
+    }
+
+    // Fallback to localStorage
+    const localStorageToken = localStorage.getItem('stirling_refresh_token');
+    if (localStorageToken) {
+      console.log('[Desktop AuthService] Refresh token found in localStorage (fallback)');
+    }
+
+    return localStorageToken;
+  }
+
+  /**
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
     await invoke('clear_auth_token');
+    try {
+      await invoke('clear_refresh_token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear refresh token from Tauri store:', error);
+    }
+    // Always clear localStorage (handles both fallback case and cleanup)
     localStorage.removeItem('stirling_jwt');
     localStorage.removeItem('stirling_refresh_token');
   }
@@ -271,7 +310,7 @@ export class AuthService {
       console.log('Refreshing Supabase token');
       this.setAuthStatus('refreshing', this.userInfo);
 
-      const refreshToken = localStorage.getItem('stirling_refresh_token');
+      const refreshToken = await this.getRefreshToken();
       if (!refreshToken) {
         console.error('No refresh token available');
         this.setAuthStatus('unauthenticated', null);

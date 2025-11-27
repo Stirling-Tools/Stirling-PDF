@@ -35,22 +35,28 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
 
-      // Get the appropriate base URL for this request
-      const baseUrl = await operationRouter.getBaseUrl(extendedConfig.url);
+      try {
+        // Get the appropriate base URL for this request
+        const baseUrl = await operationRouter.getBaseUrl(extendedConfig.url);
 
-      // Build the full URL
-      if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
-        extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
-      }
-
-      // Add auth token for all remote requests (self-hosted or SaaS auth endpoints)
-      // Skip if this is a retry - the response interceptor already set the correct header
-      const target = await operationRouter.getExecutionTarget(extendedConfig.url);
-      if (target === 'remote' && !extendedConfig._retry) {
-        const token = await authService.getAuthToken();
-        if (token) {
-          extendedConfig.headers.Authorization = `Bearer ${token}`;
+        // Build the full URL
+        if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
+          extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
         }
+
+        // Add auth token for all remote requests (self-hosted or SaaS auth endpoints)
+        // Skip if this is a retry - the response interceptor already set the correct header
+        const target = await operationRouter.getExecutionTarget(extendedConfig.url);
+        if (target === 'remote' && !extendedConfig._retry) {
+          const token = await authService.getAuthToken();
+          if (token) {
+            extendedConfig.headers.Authorization = `Bearer ${token}`;
+          }
+        }
+      } catch (error) {
+        console.error('[apiClientSetup] Error in request interceptor:', error);
+        // Continue with request even if routing/auth logic fails
+        // This ensures requests aren't blocked by interceptor errors
       }
 
       // Backend readiness check (for local backend)
