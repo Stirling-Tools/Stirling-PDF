@@ -57,6 +57,9 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 // Server experience
 import { useServerExperience } from '@app/hooks/useServerExperience';
 
+// Auth
+import { useAuth } from '@app/auth/UseSession';
+
 // Analytics choice modal
 import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
 
@@ -72,6 +75,7 @@ export default function Onboarding() {
   const { state, actions } = useOnboardingOrchestrator();
   const serverExperience = useServerExperience();
   const { config } = useAppConfig();
+  const { refreshSession } = useAuth();
 
   // Check if we're on an auth route
   const onAuthRoute = isAuthRoute(location.pathname);
@@ -128,6 +132,17 @@ export default function Onboarding() {
     actions.updateRuntimeState({ selectedRole: role });
     serverExperience.setSelfReportedAdmin(role === 'admin');
   }, [actions, serverExperience]);
+
+  // First login password change handler
+  const handlePasswordChanged = useCallback(async () => {
+    // Password change successful - backend will log user out
+    // Clear the requiresPasswordChange flag first
+    actions.updateRuntimeState({ requiresPasswordChange: false });
+    // Refresh session to detect logout and redirect to login
+    // This matches the original FirstLoginModal behavior
+    await refreshSession();
+    // The auth system will automatically redirect to login when session is null
+  }, [actions, refreshSession]);
 
   const handleButtonAction = useCallback((action: ButtonAction) => {
     switch (action) {
@@ -329,8 +344,11 @@ export default function Onboarding() {
       onRoleSelect: handleRoleSelect,
       licenseNotice: runtimeState.licenseNotice,
       loginEnabled: serverExperience.loginEnabled,
+      // First login params
+      firstLoginUsername: runtimeState.firstLoginUsername,
+      onPasswordChanged: handlePasswordChanged,
     });
-  }, [currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl]);
+  }, [currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;

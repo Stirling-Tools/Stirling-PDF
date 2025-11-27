@@ -33,6 +33,7 @@ import {
   markStepSeen,
   migrateFromLegacyPreferences,
 } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { accountService } from '@app/services/accountService';
 
 // Auth routes where onboarding should NOT show
 const AUTH_ROUTES = ['/login', '/signup', '/auth', '/invite'];
@@ -216,6 +217,32 @@ export function useOnboardingOrchestrator(
     serverExperience.effectiveIsAdmin,
     serverExperience.userCountResolved,
   ]);
+
+  // Check for first login password change requirement
+  useEffect(() => {
+    const checkFirstLogin = async () => {
+      // Only check if login is enabled and user has a token
+      if (config?.enableLogin !== true || !hasAuthToken()) {
+        return;
+      }
+
+      try {
+        const accountData = await accountService.getAccountData();
+        setRuntimeState((prev) => ({
+          ...prev,
+          requiresPasswordChange: accountData.changeCredsFlag,
+          firstLoginUsername: accountData.username,
+        }));
+      } catch (err) {
+        // If account endpoint fails, user doesn't have security enabled or isn't logged in
+        console.debug('[Orchestrator] Could not fetch account data:', err);
+      }
+    };
+
+    if (!configLoading) {
+      checkFirstLogin();
+    }
+  }, [config?.enableLogin, configLoading]);
 
   // ============================================
   // Route-based checks

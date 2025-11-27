@@ -11,6 +11,7 @@
 import type { ServerExperienceValue } from '@core/hooks/useServerExperience';
 
 export type OnboardingStepId =
+  | 'first-login'
   | 'welcome'
   | 'desktop-install'
   | 'security-check'
@@ -54,6 +55,10 @@ export interface OnboardingRuntimeState {
     isOverLimit: boolean;
     requiresLicense: boolean;
   };
+  /** Whether user needs to change password on first login */
+  requiresPasswordChange: boolean;
+  /** Username for first login password change */
+  firstLoginUsername: string;
 }
 
 /**
@@ -73,7 +78,7 @@ export interface OnboardingStep {
    * For modal-slide type, specifies which slide to render.
    * This matches the SlideId from onboardingFlowConfig.
    */
-  slideId?: 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license';
+  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license';
 }
 
 /**
@@ -93,6 +98,8 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
     isOverLimit: false,
     requiresLicense: false,
   },
+  requiresPasswordChange: false,
+  firstLoginUsername: '',
 };
 
 /**
@@ -102,6 +109,17 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
  * Steps are filtered based on their conditions.
  */
 export const ONBOARDING_STEPS: OnboardingStep[] = [
+  // ============================================
+  // PHASE 0: First Login Password Change (if required)
+  // ============================================
+  {
+    id: 'first-login',
+    type: 'modal-slide',
+    slideId: 'first-login',
+    // Show when user needs to change password on first login
+    condition: (ctx) => ctx.requiresPasswordChange,
+  },
+
   // ============================================
   // PHASE 1: Initial Modal Slides
   // ============================================

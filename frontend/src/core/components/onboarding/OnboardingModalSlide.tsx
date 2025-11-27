@@ -59,6 +59,9 @@ export default function OnboardingModalSlide({
         {slideDefinition.hero.type === 'shield' && (
           <LocalIcon icon="verified-user-outline" width={64} height={64} className={styles.heroIcon} />
         )}
+        {slideDefinition.hero.type === 'lock' && (
+          <LocalIcon icon="lock-outline" width={64} height={64} className={styles.heroIcon} />
+        )}
         {slideDefinition.hero.type === 'diamond' && <DiamondOutlinedIcon sx={{ fontSize: 64, color: '#000000' }} />}
         {slideDefinition.hero.type === 'logo' && (
           <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
@@ -78,8 +81,8 @@ export default function OnboardingModalSlide({
       withCloseButton={false}
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       styles={{
-        body: { padding: 0 },
-        content: { overflow: 'hidden', border: 'none', background: 'var(--bg-surface)' },
+        body: { padding: 0, maxHeight: '90vh', overflow: 'hidden' },
+        content: { overflow: 'hidden', border: 'none', background: 'var(--bg-surface)', maxHeight: '90vh' },
       }}
     >
       <Stack gap={0} className={styles.modalContent}>
@@ -95,7 +98,7 @@ export default function OnboardingModalSlide({
           </div>
         </div>
 
-        <div className={styles.modalBody}>
+        <div className={styles.modalBody} style={{ overflowY: 'auto', maxHeight: 'calc(90vh - 220px)' }}>
           <Stack gap={16}>
             <div
               key={`title-${slideContent.key}`}
