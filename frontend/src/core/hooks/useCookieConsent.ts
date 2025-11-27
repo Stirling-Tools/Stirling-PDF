@@ -10,6 +10,8 @@ declare global {
     CookieConsent?: {
       run: (config: any) => void;
       show: (show?: boolean) => void;
+      hide: () => void;
+      getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };

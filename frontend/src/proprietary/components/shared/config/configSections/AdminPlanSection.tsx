@@ -13,9 +13,12 @@ import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@core/components/shared/config/LoginRequiredBanner';
 
 const AdminPlanSection: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { openCheckout } = useCheckout();
   const { licenseInfo, refetchLicense } = useLicense();
   const [currency, setCurrency] = useState<string>(() => {
@@ -39,6 +42,11 @@ const AdminPlanSection: React.FC = () => {
   }, [error]);
 
   const handleSaveLicense = async () => {
+    // Block save if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       setSavingLicense(true);
       // Allow empty string to clear/remove license
@@ -86,6 +94,11 @@ const AdminPlanSection: React.FC = () => {
   ];
 
   const handleManageClick = useCallback(async () => {
+    // Block access if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       // Only allow PRO or ENTERPRISE licenses to access billing portal
       if (!licenseInfo?.licenseType || licenseInfo.licenseType === 'NORMAL') {
@@ -112,7 +125,7 @@ const AdminPlanSection: React.FC = () => {
         body: error.message || 'Please try again or contact support.',
       });
     }
-  }, [licenseInfo, t]);
+  }, [licenseInfo, t, validateLoginEnabled]);
 
   const handleCurrencyChange = useCallback((newCurrency: string) => {
     setCurrency(newCurrency);
@@ -122,6 +135,11 @@ const AdminPlanSection: React.FC = () => {
 
   const handleUpgradeClick = useCallback(
     (planGroup: PlanTierGroup) => {
+      // Block access if login is disabled
+      if (!validateLoginEnabled()) {
+        return;
+      }
+
       // Only allow upgrades for server and enterprise tiers
       if (planGroup.tier === 'free') {
         return;
@@ -151,7 +169,7 @@ const AdminPlanSection: React.FC = () => {
         },
       });
     },
-    [openCheckout, currency, refetch, licenseInfo, t]
+    [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled]
   );
 
   const shouldShowLicenseWarning = licenseAlert.active && licenseAlert.audience === 'admin';
@@ -200,7 +218,9 @@ const AdminPlanSection: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {shouldShowLicenseWarning && (
+      <LoginRequiredBanner show={!loginEnabled} />
+
+      {shouldShowLicenseWarning && (
         <InfoBanner
           icon="warning-rounded"
           tone="warning"
@@ -231,6 +251,7 @@ const AdminPlanSection: React.FC = () => {
         currency={currency}
         onCurrencyChange={handleCurrencyChange}
         currencyOptions={currencyOptions}
+        loginEnabled={loginEnabled}
       />
 
       <Divider />
@@ -288,11 +309,11 @@ const AdminPlanSection: React.FC = () => {
                   onChange={(e) => setLicenseKeyInput(e.target.value)}
                   placeholder={licenseInfo?.licenseKey || '00000000-0000-0000-0000-000000000000'}
                   type="password"
-                  disabled={savingLicense}
+                  disabled={!loginEnabled || savingLicense}
                 />
 
                 <Group justify="flex-end">
-                  <Button onClick={handleSaveLicense} loading={savingLicense} size="sm">
+                  <Button onClick={handleSaveLicense} loading={savingLicense} size="sm" disabled={!loginEnabled}>
                     {t('admin.settings.save', 'Save Changes')}
                   </Button>
                 </Group>
