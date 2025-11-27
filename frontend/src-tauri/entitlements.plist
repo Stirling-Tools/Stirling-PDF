@@ -9,7 +9,7 @@
 	<!-- Keychain Access -->
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)com.stirlingpdf</string>
+		<string>$(AppIdentifierPrefix)stirling.pdf.dev</string>
 	</array>
 
 	<!-- Network (for OAuth and API calls) -->
