@@ -11,22 +11,12 @@ import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
 import type {
-  User,
   Session,
   AuthError,
   AuthResponse,
   AuthChangeEvent,
   AuthChangeCallback,
 } from '@app/auth/types';
-
-// Re-export types
-export type {
-  User,
-  Session,
-  AuthError,
-  AuthResponse,
-  AuthChangeEvent,
-};
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {

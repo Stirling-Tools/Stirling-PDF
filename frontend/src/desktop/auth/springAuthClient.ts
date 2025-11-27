@@ -7,23 +7,11 @@
  */
 
 import type {
-  User,
   Session,
   AuthError,
   AuthResponse,
-  AuthChangeEvent,
   AuthChangeCallback,
 } from '@proprietary/auth/types';
-
-// Re-export types for compatibility
-export type {
-  User,
-  Session,
-  AuthError,
-  AuthResponse,
-  AuthChangeEvent,
-  AuthChangeCallback,
-};
 
 /**
  * Desktop Spring Auth Client - No-op implementation

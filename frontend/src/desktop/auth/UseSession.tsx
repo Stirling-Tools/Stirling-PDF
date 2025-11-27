@@ -1,8 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import type { User, Session, AuthContextType } from '@proprietary/auth/types';
-
-// Re-export types for compatibility
-export type { User, Session };
+import type { AuthContextType } from '@proprietary/auth/types';
 
 /**
  * Desktop-specific AuthProvider override
