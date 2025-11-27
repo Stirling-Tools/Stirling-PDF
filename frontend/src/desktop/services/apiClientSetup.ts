@@ -6,6 +6,7 @@ import { createBackendNotReadyError } from '@app/constants/backendErrors';
 import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -34,27 +35,29 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
 
-      // Get the operation name from config if provided
-      const operation = extendedConfig.operationName;
-
-      // Get the appropriate base URL for this operation
-      const baseUrl = await operationRouter.getBaseUrl(operation);
+      // Get the appropriate base URL for this request
+      const baseUrl = await operationRouter.getBaseUrl(extendedConfig.url);
 
       // Build the full URL
       if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
         extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
       }
 
-      // Debug logging
-      console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
-
-      // Add auth token for remote requests
-      const isRemote = await operationRouter.isSelfHostedMode();
-      if (isRemote) {
+      // Add auth token for all remote requests (self-hosted or SaaS auth endpoints)
+      // Skip if this is a retry - the response interceptor already set the correct header
+      const target = await operationRouter.getExecutionTarget(extendedConfig.url);
+      if (target === 'remote' && !extendedConfig._retry) {
         const token = await authService.getAuthToken();
         if (token) {
           extendedConfig.headers.Authorization = `Bearer ${token}`;
+          console.debug(`[apiClientSetup] Added auth header for remote request to: ${extendedConfig.url}`);
+        } else {
+          console.debug(`[apiClientSetup] No token available for remote request to: ${extendedConfig.url}`);
         }
+      } else if (extendedConfig._retry) {
+        console.debug(`[apiClientSetup] Retry request - preserving existing auth header for: ${extendedConfig.url}`);
+      } else {
+        console.debug(`[apiClientSetup] Local request, no auth header needed: ${extendedConfig.url}`);
       }
 
       // Backend readiness check (for local backend)
@@ -93,23 +96,46 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
+        console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
+        const origAuth = originalRequest.headers.Authorization;
+        console.debug(`[apiClientSetup] Original auth header start: ${origAuth?.substring(0, 50)}...`);
+        console.debug(`[apiClientSetup] Original auth header end: ...${origAuth?.substring(origAuth.length - 50)}`);
+
         const isRemote = await operationRouter.isSelfHostedMode();
+        let refreshed = false;
+
         if (isRemote) {
+          // Self-hosted mode: use Spring Boot refresh endpoint
           const serverConfig = await connectionModeService.getServerConfig();
           if (serverConfig) {
-            const refreshed = await authService.refreshToken(serverConfig.url);
-            if (refreshed) {
-              // Retry the original request with new token
-              const token = await authService.getAuthToken();
-              if (token) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-              }
-              return client(originalRequest);
-            }
+            refreshed = await authService.refreshToken(serverConfig.url);
           }
+        } else {
+          // SaaS mode: use Supabase refresh endpoint
+          refreshed = await authService.refreshSupabaseToken(STIRLING_SAAS_URL);
         }
 
-        // Refresh failed or not in remote mode - user needs to login again
+        if (refreshed) {
+          // Retry the original request with new token
+          const token = await authService.getAuthToken();
+          console.debug(`[apiClientSetup] Got token after refresh (length: ${token?.length})`);
+          console.debug(`[apiClientSetup] New token start: ${token?.substring(0, 50)}...`);
+          console.debug(`[apiClientSetup] New token end: ...${token?.substring(token.length - 50)}`);
+
+          if (token) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            const newAuth = originalRequest.headers.Authorization;
+            console.debug(`[apiClientSetup] Set new Authorization header for retry (start): ${newAuth.substring(0, 50)}...`);
+            console.debug(`[apiClientSetup] Set new Authorization header for retry (end): ...${newAuth.substring(newAuth.length - 50)}`);
+          } else {
+            console.error(`[apiClientSetup] No token available after successful refresh!`);
+          }
+
+          console.debug(`[apiClientSetup] Retrying request to: ${originalRequest.url}`);
+          return client.request(originalRequest);
+        }
+
+        // Refresh failed - user needs to login again
         alert({
           alertType: 'error',
           title: i18n.t('auth.sessionExpired', 'Session Expired'),

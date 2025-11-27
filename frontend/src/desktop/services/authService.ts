@@ -37,7 +37,10 @@ export class AuthService {
   /**
    * Save token to all storage locations and notify listeners
    */
-  private async saveTokenEverywhere(token: string): Promise<void> {
+  private async saveTokenEverywhere(token: string, refreshToken?: string | null): Promise<void> {
+    console.log(`[Desktop AuthService] Saving token (length: ${token.length})`);
+    console.log(`[Desktop AuthService] Token end: ...${token.substring(token.length - 50)}`);
+
     // Save to Tauri store
     await invoke('save_auth_token', { token });
     console.log('[Desktop AuthService] Token saved to Tauri store');
@@ -45,6 +48,12 @@ export class AuthService {
     // Sync to localStorage for web layer
     localStorage.setItem('stirling_jwt', token);
     console.log('[Desktop AuthService] Token saved to localStorage');
+
+    // Save refresh token if provided
+    if (refreshToken) {
+      localStorage.setItem('stirling_refresh_token', refreshToken);
+      console.log('[Desktop AuthService] Refresh token saved');
+    }
 
     // Notify other parts of the system
     window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -61,6 +70,7 @@ export class AuthService {
 
     if (token) {
       console.log(`[Desktop AuthService] Token found in Tauri store (length: ${token.length})`);
+      console.log(`[Desktop AuthService] Token end: ...${token.substring(token.length - 50)}`);
       return token;
     }
 
@@ -70,6 +80,7 @@ export class AuthService {
     const localStorageToken = localStorage.getItem('stirling_jwt');
     if (localStorageToken) {
       console.log('[Desktop AuthService] Token found in localStorage (length:', localStorageToken.length, ')');
+      console.log(`[Desktop AuthService] Token end: ...${localStorageToken.substring(localStorageToken.length - 50)}`);
     }
 
     return localStorageToken;
@@ -81,6 +92,7 @@ export class AuthService {
   private async clearTokenEverywhere(): Promise<void> {
     await invoke('clear_auth_token');
     localStorage.removeItem('stirling_jwt');
+    localStorage.removeItem('stirling_refresh_token');
   }
 
   subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
@@ -260,6 +272,53 @@ export class AuthService {
     }
   }
 
+  async refreshSupabaseToken(authServerUrl: string): Promise<boolean> {
+    try {
+      console.log('Refreshing Supabase token');
+      this.setAuthStatus('refreshing', this.userInfo);
+
+      const refreshToken = localStorage.getItem('stirling_refresh_token');
+      if (!refreshToken) {
+        console.error('No refresh token available');
+        this.setAuthStatus('unauthenticated', null);
+        return false;
+      }
+
+      // Call Supabase refresh endpoint
+      const response = await axios.post(
+        `${authServerUrl}/auth/v1/token?grant_type=refresh_token`,
+        {
+          refresh_token: refreshToken,
+        },
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const { access_token, refresh_token: newRefreshToken } = response.data;
+
+      // Save new tokens
+      await this.saveTokenEverywhere(access_token, newRefreshToken);
+
+      const userInfo = await this.getUserInfo();
+      this.setAuthStatus('authenticated', userInfo);
+
+      console.log('Supabase token refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('Supabase token refresh failed:', error);
+      this.setAuthStatus('unauthenticated', null);
+
+      // Clear stored credentials on refresh failure
+      await this.logout();
+
+      return false;
+    }
+  }
+
   async initializeAuthState(): Promise<void> {
     console.log('[Desktop AuthService] Initializing auth state...');
     const token = await this.getAuthToken();
@@ -308,8 +367,8 @@ export class AuthService {
 
       console.log('OAuth authentication successful, storing tokens');
 
-      // Save token to all storage locations
-      await this.saveTokenEverywhere(result.access_token);
+      // Save token and refresh token to all storage locations
+      await this.saveTokenEverywhere(result.access_token, result.refresh_token);
 
       // Fetch user info from Supabase using the access token
       const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
