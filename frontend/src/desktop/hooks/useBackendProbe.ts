@@ -6,10 +6,17 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
 
 type BackendStatus = 'up' | 'starting' | 'down';
 
+type ConnectionMode = 'saas' | 'selfhosted';
+
 interface BackendProbeState {
   status: BackendStatus;
   loginDisabled: boolean;
   loading: boolean;
+}
+
+interface ProbeTarget {
+  baseUrl: string;
+  mode: ConnectionMode;
 }
 
 /**
@@ -24,8 +31,8 @@ export function useBackendProbe() {
   });
 
   const probe = useCallback(async () => {
-    const baseUrl = await resolveProbeBaseUrl();
-    if (!baseUrl) {
+    const target = await resolveProbeBaseUrl();
+    if (!target) {
       const pendingState: BackendProbeState = {
         status: 'starting',
         loginDisabled: false,
@@ -35,6 +42,7 @@ export function useBackendProbe() {
       return pendingState;
     }
 
+    const { baseUrl, mode } = target;
     const statusUrl = `${baseUrl}/api/v1/info/status`;
     const loginUrl = `${baseUrl}/api/v1/proprietary/ui-data/login`;
 
@@ -63,24 +71,28 @@ export function useBackendProbe() {
       next.status = 'down';
     }
 
-    try {
-      const res = await fetch(loginUrl, { method: 'GET', connectTimeout: 5000 });
-      if (res.ok) {
-        next.status = 'up';
-        const data = await res.json().catch(() => null);
-        if (data && data.enableLogin === false) {
+    // SaaS desktop always runs bundled backend with login disabled,
+    // so only check the login endpoint in self-hosted mode.
+    if (mode === 'selfhosted') {
+      try {
+        const res = await fetch(loginUrl, { method: 'GET', connectTimeout: 5000 });
+        if (res.ok) {
+          next.status = 'up';
+          const data = await res.json().catch(() => null);
+          if (data && data.enableLogin === false) {
+            next.loginDisabled = true;
+          }
+        } else if (res.status === 404) {
+          next.status = 'up';
           next.loginDisabled = true;
+        } else if (res.status === 503) {
+          next.status = 'starting';
+        } else {
+          next.status = 'down';
         }
-      } else if (res.status === 404) {
-        next.status = 'up';
-        next.loginDisabled = true;
-      } else if (res.status === 503) {
-        next.status = 'starting';
-      } else {
-        next.status = 'down';
+      } catch {
+        // keep existing inferred state (down/starting)
       }
-    } catch {
-      // keep existing inferred state (down/starting)
     }
 
     setState(next);
@@ -97,7 +109,7 @@ export function useBackendProbe() {
   };
 }
 
-async function resolveProbeBaseUrl(): Promise<string | null> {
+async function resolveProbeBaseUrl(): Promise<ProbeTarget | null> {
   try {
     const config = await connectionModeService.getCurrentConfig();
     if (config.mode === 'selfhosted') {
@@ -105,19 +117,28 @@ async function resolveProbeBaseUrl(): Promise<string | null> {
       if (!serverUrl) {
         return null;
       }
-      return stripTrailingSlash(serverUrl);
+      return {
+        baseUrl: stripTrailingSlash(serverUrl),
+        mode: 'selfhosted',
+      };
     }
 
     const directUrl = tauriBackendService.getBackendUrl();
     if (directUrl) {
-      return stripTrailingSlash(directUrl);
+      return {
+        baseUrl: stripTrailingSlash(directUrl),
+        mode: 'saas',
+      };
     }
 
     const port = await invoke<number | null>('get_backend_port').catch(() => null);
     if (!port) {
       return null;
     }
-    return stripTrailingSlash(`http://localhost:${port}`);
+    return {
+      baseUrl: stripTrailingSlash(`http://localhost:${port}`),
+      mode: 'saas',
+    };
   } catch (error) {
     console.error('[Desktop useBackendProbe] Failed to resolve backend URL:', error);
     return null;
