@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { tempOcrLanguages, getAutoOcrLanguage } from '@app/utils/languageMapping';
+import { getAutoOcrLanguage, getOcrDisplayName } from '@app/utils/languageMapping';
+import apiClient from '@app/services/apiClient';
 import DropdownListWithFooter, { DropdownItem } from '@app/components/shared/DropdownListWithFooter';
 
 export interface LanguageOption {
@@ -37,32 +38,22 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
-        const response = await fetch(languagesEndpoint);
+        const { data } = await apiClient.get<{ languages: string[] }>(languagesEndpoint);
 
-
-        if (response.ok) {
-          const data: { languages: string[] } = await response.json();
-          const languages = data.languages;
-
-
-          const languageOptions = languages.map(lang => {
-            // TODO: Use actual language translations when they become available
-            // For now, use temporary English translations
-            const translatedName = tempOcrLanguages.lang[lang as keyof typeof tempOcrLanguages.lang] || lang;
-            const displayName = translatedName;
+        const languageOptions = [...new Set(data.languages)]
+          .map((lang) => {
+            const displayName = getOcrDisplayName(lang);
+            const translatedName = t(`ocr.languages.${lang}`, displayName);
 
             return {
               value: lang,
-              name: displayName
+              name: translatedName,
+              label: translatedName
             };
-          });
+          })
+          .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
 
-          setAvailableLanguages(languageOptions);
-        } else {
-          console.error('[LanguagePicker] Response not OK:', response.status, response.statusText);
-          const errorText = await response.text();
-          console.error('[LanguagePicker] Error response body:', errorText);
-        }
+        setAvailableLanguages(languageOptions);
       } catch (error) {
         console.error('[LanguagePicker] Fetch failed with error:', error);
         console.error('[LanguagePicker] Error details:', {
