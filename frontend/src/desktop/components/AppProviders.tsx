@@ -31,10 +31,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
-  // Only start bundled backend if in SaaS mode (local backend) and setup is complete
-  // Self-hosted mode connects to remote server so doesn't need local backend
-  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
-  useBackendInitializer(shouldStartBackend);
+  // Initialize monitoring for bundled backend (already started in Rust)
+  // This sets up port detection and health checks
+  const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
+  useBackendInitializer(shouldMonitorBackend);
 
   // Show setup wizard on first launch
   if (isFirstLaunch && !setupComplete) {
@@ -51,23 +51,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <SetupWizard
-          onComplete={async () => {
-            // Wait for backend to become healthy before reloading
-            // This prevents reloading mid-startup which would interrupt the backend
-            const maxWaitTime = 60000; // 60 seconds max
-            const checkInterval = 1000; // Check every second
-            const startTime = Date.now();
-
-            while (Date.now() - startTime < maxWaitTime) {
-              if (tauriBackendService.isBackendHealthy()) {
-                window.location.reload();
-                return;
-              }
-              await new Promise(resolve => setTimeout(resolve, checkInterval));
-            }
-
-            // If we timeout, reload anyway
-            console.warn('[AppProviders] Backend health check timeout, reloading anyway...');
+          onComplete={() => {
             window.location.reload();
           }}
         />

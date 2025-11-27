@@ -398,10 +398,6 @@ pub async fn start_backend(
         e
     })?;
 
-    // Wait for the backend to start
-    println!("⏳ Waiting for backend startup...");
-    tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
-
     // Reset the starting flag since startup is complete
     reset_starting_flag();
     add_log("✅ Backend startup sequence completed, starting flag cleared".to_string());
