@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { isAuthRoute } from '@core/constants/routes';
 
 declare global {
   interface Window {
@@ -23,11 +25,23 @@ export const useCookieConsent = ({
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const location = useLocation();
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Check if we're on an auth route - don't auto-show cookie consent there
+  const onAuthRoute = isAuthRoute(location.pathname);
+
   useEffect(() => {
+    // Cookie consent initialization is now controlled by the onboarding system.
+    // This hook only provides utility functions - it does NOT auto-show the consent.
+    // The onboarding config determines when cookie consent appears in the flow.
+    
     if (!analyticsEnabled) {
-      console.log('Cookie consent not enabled - analyticsEnabled is false');
+      return;
+    }
+
+    // Don't initialize on auth routes
+    if (onAuthRoute) {
       return;
     }
 
@@ -46,13 +60,9 @@ export const useCookieConsent = ({
       document.head.appendChild(customCSS);
     }
 
-    // Prevent double initialization
+    // If already initialized, just mark as ready (do NOT auto-show)
     if (window.CookieConsent) {
       setIsInitialized(true);
-      // Force show the modal if it exists but isn't visible
-      setTimeout(() => {
-        window.CookieConsent?.show();
-      }, 100);
       return;
     }
 
@@ -120,7 +130,7 @@ export const useCookieConsent = ({
         // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
-            autoShow: true,
+            autoShow: false, // Controlled by onboarding system, not auto-shown
             hideFromBots: false,
             guiOptions: {
               consentModal: {
@@ -145,15 +155,11 @@ export const useCookieConsent = ({
                   ...(config?.enablePosthog !== false && {
                     posthog: {
                       label: t('cookieBanner.services.posthog', 'PostHog Analytics'),
-                      onAccept: () => console.log('PostHog service accepted'),
-                      onReject: () => console.log('PostHog service rejected')
                     }
                   }),
                   ...(config?.enableScarf !== false && {
                     scarf: {
                       label: t('cookieBanner.services.scarf', 'Scarf Pixel'),
-                      onAccept: () => console.log('Scarf service accepted'),
-                      onReject: () => console.log('Scarf service rejected')
                     }
                   })
                 }
@@ -209,10 +215,7 @@ export const useCookieConsent = ({
             }
           });
 
-          // Force show after initialization
-          setTimeout(() => {
-            window.CookieConsent?.show();
-          }, 200);
+          // Library is now initialized - onboarding system will call showCookieConsent() when ready
 
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
@@ -239,7 +242,7 @@ export const useCookieConsent = ({
         document.head.removeChild(customCSS);
       }
     };
-  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
+  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, onAuthRoute]);
 
   const showCookieConsent = useCallback(() => {
     if (isInitialized && window.CookieConsent) {

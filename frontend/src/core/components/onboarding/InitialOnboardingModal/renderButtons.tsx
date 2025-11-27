@@ -6,7 +6,7 @@ import { ButtonDefinition, type FlowState } from '@app/components/onboarding/onb
 import type { LicenseNotice } from '@app/types/types';
 import type { ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
 
-interface RenderButtonsProps {
+interface SlideButtonsProps {
   slideDefinition: {
     buttons: ButtonDefinition[];
     id: string;
@@ -16,7 +16,12 @@ interface RenderButtonsProps {
   onAction: (action: ButtonAction) => void;
 }
 
-export function renderButtons({ slideDefinition, licenseNotice, flowState, onAction }: RenderButtonsProps) {
+/**
+ * SlideButtons component - renders the buttons for an onboarding slide.
+ * This is a proper React component (not a function that uses hooks) to avoid
+ * React hook order violations when conditionally rendered.
+ */
+export function SlideButtons({ slideDefinition, licenseNotice, flowState, onAction }: SlideButtonsProps) {
   const { t } = useTranslation();
   const leftButtons = slideDefinition.buttons.filter((btn) => btn.group === 'left');
   const rightButtons = slideDefinition.buttons.filter((btn) => btn.group === 'right');
@@ -106,4 +111,3 @@ export function renderButtons({ slideDefinition, licenseNotice, flowState, onAct
     </Group>
   );
 }
-

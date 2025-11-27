@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { useOnboarding } from '@app/contexts/OnboardingContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { isAuthRoute } from '@core/constants/routes';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import {
@@ -21,7 +21,10 @@ const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isOpen: tourOpen } = useOnboarding();
+  const location = useLocation();
+
+  // Check if we're on an auth route (evaluated after hooks, used in render)
+  const onAuthRoute = isAuthRoute(location.pathname);
   const { openCheckout } = useCheckout();
   const {
     totalUsers,
@@ -35,26 +38,35 @@ const UpgradeBanner: React.FC = () => {
     scenarioKey,
   } = useServerExperience();
   const [sessionBlocked, setSessionBlocked] = useState(true);
-  const [friendlyVisible, setFriendlyVisible] = useState(false);
+  const [friendlyVisible, setFriendlyVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
+    if (!lastShownRaw) return false;
+    const lastShown = parseInt(lastShownRaw, 10);
+    if (!Number.isFinite(lastShown)) return false;
+    return Date.now() - lastShown >= WEEK_IN_MS;
+  });
   const isDev = import.meta.env.DEV;
   const [testScenario, setTestScenario] = useState<UpgradeBannerTestScenario>(null);
 
   // Track onboarding session flag so we don't show banner if onboarding ran this load
+  // Default to BLOCKED and only unblock when explicitly told to via 'false' value
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const evaluateBlock = () => {
-      const blocked = window.sessionStorage.getItem(ONBOARDING_SESSION_BLOCK_KEY) === 'true';
+      const value = window.sessionStorage.getItem(ONBOARDING_SESSION_BLOCK_KEY);
+      // Stay blocked if:
+      // 1. Key doesn't exist yet (onboarding hasn't initialized)
+      // 2. Key is explicitly 'true'
+      // Only unblock when key is explicitly 'false' (onboarding complete)
+      const blocked = value !== 'false';
       setSessionBlocked(blocked);
     };
 
     evaluateBlock();
-
-    const timer = window.setTimeout(() => {
-      evaluateBlock();
-    }, 1000);
 
     const handleOnboardingEvent = () => {
       evaluateBlock();
@@ -63,7 +75,6 @@ const UpgradeBanner: React.FC = () => {
     window.addEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
     };
   }, []);
@@ -157,27 +168,15 @@ const UpgradeBanner: React.FC = () => {
         shouldShowFriendlyBase &&
           !licenseLoading &&
           effectiveTotalUsersLoaded &&
-          !tourOpen &&
           !sessionBlocked,
       );
+  // Urgent banner should always show when over-limit 
   const shouldEvaluateUrgent = scenario
     ? Boolean(scenario && !scenarioIsFriendly)
     : Boolean(
         shouldShowUrgentBase &&
-          !licenseLoading &&
-          !tourOpen &&
-          !sessionBlocked,
+          !licenseLoading,
       );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    if (!shouldShowFriendlyBase && effectiveTotalUsersLoaded) {
-      window.localStorage.removeItem(FRIENDLY_LAST_SEEN_KEY);
-    }
-  }, [shouldShowFriendlyBase, effectiveTotalUsersLoaded]);
 
   useEffect(() => {
     if (scenario === 'friendly') {
@@ -197,8 +196,21 @@ const UpgradeBanner: React.FC = () => {
     const lastShown = lastShownRaw ? parseInt(lastShownRaw, 10) : 0;
     const now = Date.now();
     const due = !Number.isFinite(lastShown) || now - lastShown >= WEEK_IN_MS;
+    
+    // DEBUG: Log banner visibility decision
+    console.log('[UpgradeBanner] Evaluating friendly visibility', {
+      lastShownRaw,
+      lastShown,
+      now,
+      timeSinceLastShown: now - lastShown,
+      weekInMs: WEEK_IN_MS,
+      due,
+      sessionBlocked,
+      shouldEvaluateFriendly,
+    });
+    
     setFriendlyVisible(due);
-  }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading]);
+  }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading, sessionBlocked]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -213,16 +225,6 @@ const UpgradeBanner: React.FC = () => {
           freeTierLimit,
         }
       : { active: false };
-
-    console.debug('[UpgradeBanner] Dispatching alert event', {
-      shouldEvaluateUrgent,
-      detail,
-      totalUsers: effectiveTotalUsers,
-      freeTierLimit,
-      effectiveIsAdmin,
-      effectiveHasPaidLicense,
-      userCountLoaded: effectiveTotalUsersLoaded,
-    });
 
     window.dispatchEvent(
       new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail }),
@@ -245,12 +247,6 @@ const UpgradeBanner: React.FC = () => {
     }
     window.localStorage.setItem(FRIENDLY_LAST_SEEN_KEY, Date.now().toString());
   }, []);
-
-  useEffect(() => {
-    if (friendlyVisible) {
-      recordFriendlyLastShown();
-    }
-  }, [friendlyVisible, recordFriendlyLastShown]);
 
   const handleUpgrade = () => {
     recordFriendlyLastShown();
@@ -308,15 +304,8 @@ const UpgradeBanner: React.FC = () => {
 
   const renderUrgentBanner = () => {
     if (!shouldEvaluateUrgent) {
-      console.debug('[UpgradeBanner] renderUrgentBanner → hidden (shouldEvaluateUrgent=false)');
       return null;
     }
-    console.debug('[UpgradeBanner] renderUrgentBanner → visible', {
-      totalUsers: effectiveTotalUsers,
-      freeTierLimit,
-      effectiveIsAdmin,
-      effectiveHasPaidLicense,
-    });
 
     const buttonText = effectiveIsAdmin ? t('upgradeBanner.seeInfo', 'See info') : undefined;
 
@@ -351,7 +340,8 @@ const UpgradeBanner: React.FC = () => {
     );
   };
 
-  if (!friendlyVisible && !shouldEvaluateUrgent) {
+  // Don't show on auth routes or if neither banner type should show
+  if (onAuthRoute || (!friendlyVisible && !shouldEvaluateUrgent)) {
     return null;
   }
 

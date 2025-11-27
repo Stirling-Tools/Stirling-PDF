@@ -1,33 +1,44 @@
+/**
+ * OnboardingModalSlide Component
+ * 
+ * Renders a single modal slide in the onboarding flow.
+ * Handles the hero image, content, stepper, and button actions.
+ */
+
 import React from 'react';
 import { Modal, Stack } from '@mantine/core';
 import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
-import LocalIcon from '@app/components/shared/LocalIcon';
+
+import type { SlideDefinition, ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
+import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
+import type { SlideConfig } from '@app/types/types';
 import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedSlideBackground';
 import OnboardingStepper from '@app/components/onboarding/OnboardingStepper';
-import { renderButtons } from '@app/components/onboarding/InitialOnboardingModal/renderButtons';
-import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
-import type { InitialOnboardingModalProps } from '@app/components/onboarding/InitialOnboardingModal/types';
-import { useInitialOnboardingState } from '@app/components/onboarding/InitialOnboardingModal/useInitialOnboardingState';
+import { SlideButtons } from '@app/components/onboarding/InitialOnboardingModal/renderButtons';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { BASE_PATH } from '@app/constants/app';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
 
-export default function InitialOnboardingModal(props: InitialOnboardingModalProps) {
-  const flow = useInitialOnboardingState(props);
+interface OnboardingModalSlideProps {
+  slideDefinition: SlideDefinition;
+  slideContent: SlideConfig;
+  runtimeState: OnboardingRuntimeState;
+  modalSlideCount: number;
+  currentModalSlideIndex: number;
+  onSkip: () => void;
+  onAction: (action: ButtonAction) => void;
+}
 
-  if (!flow) {
-    return null;
-  }
-
-  const {
-    state,
-    totalSteps,
-    currentSlide,
-    slideDefinition,
-    licenseNotice,
-    flowState,
-    closeAndMarkSeen,
-    handleButtonAction,
-  } = flow;
+export default function OnboardingModalSlide({
+  slideDefinition,
+  slideContent,
+  runtimeState,
+  modalSlideCount,
+  currentModalSlideIndex,
+  onSkip,
+  onAction,
+}: OnboardingModalSlideProps) {
 
   const renderHero = () => {
     if (slideDefinition.hero.type === 'dual-icon') {
@@ -58,8 +69,8 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
 
   return (
     <Modal
-      opened={props.opened}
-      onClose={closeAndMarkSeen}
+      opened={true}
+      onClose={onSkip}
       closeOnClickOutside={false}
       centered
       size="lg"
@@ -74,12 +85,12 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
       <Stack gap={0} className={styles.modalContent}>
         <div className={styles.heroWrapper}>
           <AnimatedSlideBackground
-            gradientStops={currentSlide.background.gradientStops}
-            circles={currentSlide.background.circles}
+            gradientStops={slideContent.background.gradientStops}
+            circles={slideContent.background.circles}
             isActive
-            slideKey={currentSlide.key}
+            slideKey={slideContent.key}
           />
-          <div className={styles.heroLogo} key={`logo-${currentSlide.key}`}>
+          <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>
             {renderHero()}
           </div>
         </div>
@@ -87,28 +98,28 @@ export default function InitialOnboardingModal(props: InitialOnboardingModalProp
         <div className={styles.modalBody}>
           <Stack gap={16}>
             <div
-              key={`title-${currentSlide.key}`}
+              key={`title-${slideContent.key}`}
               className={`${styles.title} ${styles.titleText}`}
             >
-              {currentSlide.title}
+              {slideContent.title}
             </div>
 
             <div className={styles.bodyText}>
-              <div key={`body-${currentSlide.key}`} className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
-                {currentSlide.body}
+              <div key={`body-${slideContent.key}`} className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
+                {slideContent.body}
               </div>
               <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
             </div>
 
-            <OnboardingStepper totalSteps={totalSteps} activeStep={state.step} />
+            <OnboardingStepper totalSteps={modalSlideCount} activeStep={currentModalSlideIndex} />
 
             <div className={styles.buttonContainer}>
-              {renderButtons({
-                slideDefinition,
-                licenseNotice,
-                flowState,
-                onAction: handleButtonAction,
-              })}
+              <SlideButtons
+                slideDefinition={slideDefinition}
+                licenseNotice={runtimeState.licenseNotice}
+                flowState={{ selectedRole: runtimeState.selectedRole }}
+                onAction={onAction}
+              />
             </div>
           </Stack>
         </div>

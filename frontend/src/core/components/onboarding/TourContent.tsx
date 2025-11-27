@@ -1,21 +1,29 @@
 import React from 'react';
 import { useTour } from '@reactour/tour';
-import { useOnboarding } from '@app/contexts/OnboardingContext';
 
-export default function TourContent() {
-  const { isOpen } = useOnboarding();
+interface TourContentProps {
+  /** Whether the tour should be open */
+  forceOpen?: boolean;
+}
+
+/**
+ * TourContent - Controls the tour visibility
+ * 
+ * This component syncs the forceOpen prop with the reactour tour state.
+ */
+export default function TourContent({ forceOpen = false }: TourContentProps) {
   const { setIsOpen, setCurrentStep } = useTour();
-  const previousIsOpenRef = React.useRef(isOpen);
+  const previousIsOpenRef = React.useRef(forceOpen);
 
   React.useEffect(() => {
-    const wasClosedNowOpen = !previousIsOpenRef.current && isOpen;
-    previousIsOpenRef.current = isOpen;
+    const wasClosedNowOpen = !previousIsOpenRef.current && forceOpen;
+    previousIsOpenRef.current = forceOpen;
 
     if (wasClosedNowOpen) {
       setCurrentStep(0);
     }
-    setIsOpen(isOpen);
-  }, [isOpen, setIsOpen, setCurrentStep]);
+    setIsOpen(forceOpen);
+  }, [forceOpen, setIsOpen, setCurrentStep]);
 
   return null;
 }

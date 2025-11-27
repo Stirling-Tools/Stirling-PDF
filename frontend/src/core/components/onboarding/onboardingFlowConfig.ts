@@ -197,11 +197,3 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
 };
 
-export const FLOW_SEQUENCES = {
-  loginAdmin: ['welcome', 'desktop-install', 'admin-overview'] as SlideId[],
-  loginUser: ['welcome', 'desktop-install'] as SlideId[],
-  noLoginBase: ['welcome', 'desktop-install', 'security-check'] as SlideId[],
-  noLoginAdmin: ['admin-overview'] as SlideId[],
-};
-
-

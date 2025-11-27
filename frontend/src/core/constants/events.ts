@@ -5,6 +5,7 @@ export const ONBOARDING_SESSION_EVENT = 'stirling:onboarding-session-started';
 export const SERVER_LICENSE_REQUEST_EVENT = 'stirling:server-license-requested';
 export const UPGRADE_BANNER_TEST_EVENT = 'stirling:upgrade-banner-test';
 export const UPGRADE_BANNER_ALERT_EVENT = 'stirling:upgrade-banner-alert';
+export const START_TOUR_EVENT = 'stirling:start-tour';
 
 export interface ServerLicenseRequestPayload {
   licenseNotice?: Partial<LicenseNotice>;
@@ -23,5 +24,19 @@ export interface UpgradeBannerAlertPayload {
   audience?: 'admin' | 'user';
   totalUsers?: number | null;
   freeTierLimit?: number;
+}
+
+export type TourType = 'admin' | 'tools';
+
+export interface StartTourPayload {
+  tourType: TourType;
+}
+
+/** Helper to dispatch the start tour event */
+export function requestStartTour(tourType: TourType): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent<StartTourPayload>(START_TOUR_EVENT, { detail: { tourType } })
+  );
 }
 
