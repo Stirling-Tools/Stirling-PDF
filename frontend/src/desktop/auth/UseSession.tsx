@@ -1,4 +1,8 @@
 import { createContext, useContext, ReactNode } from 'react';
+import type { User, Session, AuthContextType } from '@proprietary/auth/types';
+
+// Re-export types for compatibility
+export type { User, Session };
 
 /**
  * Desktop-specific AuthProvider override
@@ -16,28 +20,6 @@ import { createContext, useContext, ReactNode } from 'react';
  * - useFirstLaunchCheck for initialization
  * - SetupWizard for login flows
  */
-
-// Minimal types to satisfy components that use useAuth()
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
-}
-
-export interface Session {
-  user: User;
-  access_token: string;
-}
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  error: null;
-  signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-}
 
 const AuthContext = createContext<AuthContextType>({
   session: null,

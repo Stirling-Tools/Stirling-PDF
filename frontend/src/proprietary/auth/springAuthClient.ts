@@ -10,6 +10,23 @@
 import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
+import type {
+  User,
+  Session,
+  AuthError,
+  AuthResponse,
+  AuthChangeEvent,
+  AuthChangeCallback,
+} from '@app/auth/types';
+
+// Re-export types
+export type {
+  User,
+  Session,
+  AuthError,
+  AuthResponse,
+  AuthChangeEvent,
+};
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -49,44 +66,6 @@ function persistRedirectPath(path: string): void {
     // console.warn('[SpringAuth] Failed to persist OAuth redirect path', _error);
   }
 }
-
-// Auth types
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
-  enabled?: boolean;
-  is_anonymous?: boolean;
-  isFirstLogin?: boolean;
-  app_metadata?: Record<string, any>;
-}
-
-export interface Session {
-  user: User;
-  access_token: string;
-  expires_in: number;
-  expires_at?: number;
-}
-
-export interface AuthError {
-  message: string;
-  status?: number;
-}
-
-export interface AuthResponse {
-  user: User | null;
-  session: Session | null;
-  error: AuthError | null;
-}
-
-export type AuthChangeEvent =
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'TOKEN_REFRESHED'
-  | 'USER_UPDATED';
-
-type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
@@ -428,42 +407,12 @@ export const getCurrentUser = async () => {
   return data.session?.user || null;
 };
 
-/**
- * Check if user is anonymous
- */
-export const isUserAnonymous = (user: User | null) => {
-  return user?.is_anonymous === true;
-};
-
-/**
- * Create an anonymous user object for use when login is disabled
- * This provides a consistent User interface throughout the app
- */
-export const createAnonymousUser = (): User => {
-  return {
-    id: 'anonymous',
-    email: 'anonymous@local',
-    username: 'Anonymous User',
-    role: 'USER',
-    enabled: true,
-    is_anonymous: true,
-    app_metadata: {
-      provider: 'anonymous',
-    },
-  };
-};
-
-/**
- * Create an anonymous session for use when login is disabled
- */
-export const createAnonymousSession = (): Session => {
-  return {
-    user: createAnonymousUser(),
-    access_token: '',
-    expires_in: Number.MAX_SAFE_INTEGER,
-    expires_at: Number.MAX_SAFE_INTEGER,
-  };
-};
+// Re-export shared utilities
+export {
+  isUserAnonymous,
+  createAnonymousUser,
+  createAnonymousSession,
+} from '@app/auth/utils';
 
 // Export auth client as default for convenience
 export default springAuth;

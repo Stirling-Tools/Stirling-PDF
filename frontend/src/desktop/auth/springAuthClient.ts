@@ -6,43 +6,24 @@
  * implementation to prevent Spring Boot auth calls in desktop mode.
  */
 
+import type {
+  User,
+  Session,
+  AuthError,
+  AuthResponse,
+  AuthChangeEvent,
+  AuthChangeCallback,
+} from '@proprietary/auth/types';
+
 // Re-export types for compatibility
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
-  enabled?: boolean;
-  is_anonymous?: boolean;
-  isFirstLogin?: boolean;
-  app_metadata?: Record<string, any>;
-}
-
-export interface Session {
-  user: User;
-  access_token: string;
-  expires_in: number;
-  expires_at?: number;
-}
-
-export interface AuthError {
-  message: string;
-  status?: number;
-}
-
-export interface AuthResponse {
-  user: User | null;
-  session: Session | null;
-  error: AuthError | null;
-}
-
-export type AuthChangeEvent =
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'TOKEN_REFRESHED'
-  | 'USER_UPDATED';
-
-type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
+export type {
+  User,
+  Session,
+  AuthError,
+  AuthResponse,
+  AuthChangeEvent,
+  AuthChangeCallback,
+};
 
 /**
  * Desktop Spring Auth Client - No-op implementation
@@ -125,40 +106,11 @@ export const getCurrentUser = async () => {
   return null;
 };
 
-/**
- * Check if user is anonymous
- */
-export const isUserAnonymous = (user: User | null) => {
-  return user?.is_anonymous === true;
-};
-
-/**
- * Create an anonymous user object
- */
-export const createAnonymousUser = (): User => {
-  return {
-    id: 'anonymous',
-    email: 'anonymous@local',
-    username: 'Anonymous User',
-    role: 'USER',
-    enabled: true,
-    is_anonymous: true,
-    app_metadata: {
-      provider: 'anonymous',
-    },
-  };
-};
-
-/**
- * Create an anonymous session
- */
-export const createAnonymousSession = (): Session => {
-  return {
-    user: createAnonymousUser(),
-    access_token: '',
-    expires_in: Number.MAX_SAFE_INTEGER,
-    expires_at: Number.MAX_SAFE_INTEGER,
-  };
-};
+// Re-export shared utilities
+export {
+  isUserAnonymous,
+  createAnonymousUser,
+  createAnonymousSession,
+} from '@proprietary/auth/utils';
 
 export default springAuth;
