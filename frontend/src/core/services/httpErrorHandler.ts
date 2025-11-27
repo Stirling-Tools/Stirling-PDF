@@ -88,7 +88,6 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
 export async function handleHttpError(error: any): Promise<boolean> {
-  const skipAuthRedirect = error?.config?.skipAuthRedirect === true;
   // Check if this error should skip the global toast (component will handle it)
   if (error?.config?.suppressErrorToast === true) {
     return false; // Don't show global toast, but continue rejection
@@ -106,19 +105,12 @@ export async function handleHttpError(error: any): Promise<boolean> {
                       pathname.includes('/invite/');
 
     // If not on auth page, redirect to login with expired session message
-    if (!isAuthPage && !skipAuthRedirect) {
+    if (!isAuthPage) {
       console.debug('[httpErrorHandler] 401 detected, redirecting to login');
       // Store the current location so we can redirect back after login
       const currentLocation = window.location.pathname + window.location.search;
-      // Redirect to login with state (only show expired when a JWT existed)
-      let hadStoredJwt = false;
-      try {
-        hadStoredJwt = Boolean(localStorage.getItem('stirling_jwt'));
-      } catch {
-        // ignore storage access failures
-      }
-      const expiredPrefix = hadStoredJwt ? 'expired=true&' : '';
-      window.location.href = `/login?${expiredPrefix}from=${encodeURIComponent(currentLocation)}`;
+      // Redirect to login with state
+      window.location.href = `/login?expired=true&from=${encodeURIComponent(currentLocation)}`;
       return true; // Suppress toast since we're redirecting
     }
 
