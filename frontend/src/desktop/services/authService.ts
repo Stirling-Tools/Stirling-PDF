@@ -48,19 +48,12 @@ export class AuthService {
     localStorage.setItem('stirling_jwt', token);
     console.log('[Desktop AuthService] Token saved to localStorage');
 
-    // Save refresh token if provided (Tauri store is primary, localStorage only as fallback)
+    // Save refresh token if provided (keyring with Tauri Store fallback)
     if (refreshToken) {
-      try {
-        await invoke('save_refresh_token', { token: refreshToken });
-        console.log('[Desktop AuthService] Refresh token saved to Tauri secure store');
-        // Clear localStorage if Tauri store succeeded (prevent XSS access)
-        localStorage.removeItem('stirling_refresh_token');
-      } catch (error) {
-        console.warn('[Desktop AuthService] Failed to save refresh token to Tauri store, falling back to localStorage:', error);
-        // Only use localStorage if Tauri store failed
-        localStorage.setItem('stirling_refresh_token', refreshToken);
-        console.log('[Desktop AuthService] Refresh token saved to localStorage (fallback)');
-      }
+      console.log('[Desktop AuthService] Saving refresh token to secure storage...');
+      await invoke('save_refresh_token', { token: refreshToken });
+      console.log('[Desktop AuthService] ✅ Refresh token saved to secure storage');
+      localStorage.removeItem('stirling_refresh_token');
     }
 
     // Notify other parts of the system
@@ -90,27 +83,16 @@ export class AuthService {
   }
 
   /**
-   * Get refresh token from any available source (Tauri store or localStorage)
+   * Get refresh token from secure storage (keyring or Tauri Store fallback)
    */
   private async getRefreshToken(): Promise<string | null> {
-    // Try Tauri secure store first (more secure than localStorage)
-    try {
-      const token = await invoke<string | null>('get_refresh_token');
-      if (token) {
-        console.log('[Desktop AuthService] Refresh token found in Tauri store');
-        return token;
-      }
-    } catch (error) {
-      console.warn('[Desktop AuthService] Failed to get refresh token from Tauri store:', error);
+    const token = await invoke<string | null>('get_refresh_token');
+    if (token) {
+      console.log('[Desktop AuthService] ✅ Refresh token retrieved from secure storage');
+    } else {
+      console.log('[Desktop AuthService] No refresh token in secure storage');
     }
-
-    // Fallback to localStorage
-    const localStorageToken = localStorage.getItem('stirling_refresh_token');
-    if (localStorageToken) {
-      console.log('[Desktop AuthService] Refresh token found in localStorage (fallback)');
-    }
-
-    return localStorageToken;
+    return token;
   }
 
   /**
@@ -118,12 +100,7 @@ export class AuthService {
    */
   private async clearTokenEverywhere(): Promise<void> {
     await invoke('clear_auth_token');
-    try {
-      await invoke('clear_refresh_token');
-    } catch (error) {
-      console.warn('[Desktop AuthService] Failed to clear refresh token from Tauri store:', error);
-    }
-    // Always clear localStorage (handles both fallback case and cleanup)
+    await invoke('clear_refresh_token');
     localStorage.removeItem('stirling_jwt');
     localStorage.removeItem('stirling_refresh_token');
   }
@@ -358,11 +335,7 @@ export class AuthService {
     const userInfo = await this.getUserInfo();
 
     if (token && userInfo) {
-      console.log('[Desktop AuthService] Found token, syncing to all storage locations');
-
-      // Ensure token is in both Tauri store and localStorage
-      await this.saveTokenEverywhere(token);
-
+      console.log('[Desktop AuthService] Found existing token and user info');
       this.setAuthStatus('authenticated', userInfo);
       console.log('[Desktop AuthService] Auth state initialized as authenticated');
     } else {
@@ -399,6 +372,9 @@ export class AuthService {
       });
 
       console.log('OAuth authentication successful, storing tokens');
+      console.log('[Desktop AuthService] OAuth result - has access_token:', !!result.access_token);
+      console.log('[Desktop AuthService] OAuth result - has refresh_token:', !!result.refresh_token);
+      console.log('[Desktop AuthService] OAuth result - expires_in:', result.expires_in);
 
       // Save token and refresh token to all storage locations
       await this.saveTokenEverywhere(result.access_token, result.refresh_token);

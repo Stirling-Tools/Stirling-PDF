@@ -59,7 +59,7 @@
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": null,
-      "entitlements": null,
+      "entitlements": "entitlements.plist",
       "providerShortName": null
     }
   },

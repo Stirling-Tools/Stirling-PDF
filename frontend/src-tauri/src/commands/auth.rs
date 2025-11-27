@@ -11,6 +11,8 @@ use rand::distributions::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
+const TOKENS_STORE_FILE: &str = "tokens.json";
+const REFRESH_TOKEN_STORE_KEY: &str = "refresh_token";
 const KEYRING_SERVICE: &str = "stirling-pdf";
 const KEYRING_TOKEN_KEY: &str = "auth-token";
 const KEYRING_REFRESH_TOKEN_KEY: &str = "refresh-token";
@@ -79,49 +81,109 @@ pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn save_refresh_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    log::info!("Saving refresh token to keyring");
+pub async fn save_refresh_token(app_handle: AppHandle, token: String) -> Result<(), String> {
+    log::info!("Saving refresh token - trying keyring first");
 
     let entry = get_refresh_token_keyring_entry()?;
 
-    entry
-        .set_password(&token)
-        .map_err(|e| format!("Failed to save refresh token to keyring: {}", e))?;
+    // Try keyring (works in production with code signing)
+    match entry.set_password(&token) {
+        Ok(_) => {
+            // Verify it persists (fails in unsigned dev builds)
+            match entry.get_password() {
+                Ok(saved) if saved == token => {
+                    log::info!("✅ Refresh token saved to keyring (production mode)");
+                    return Ok(());
+                }
+                _ => {
+                    log::info!("Keyring doesn't persist - using Tauri Store fallback (dev mode)");
+                }
+            }
+        }
+        Err(e) => {
+            log::info!("Keyring failed: {} - using Tauri Store fallback", e);
+        }
+    }
 
-    log::info!("Refresh token saved successfully");
+    // Fallback to Tauri Store (dev mode without code signing)
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.set(
+        REFRESH_TOKEN_STORE_KEY,
+        serde_json::to_value(&token)
+            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+    );
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
+
+    log::info!("✅ Refresh token saved to Tauri Store (fallback)");
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_refresh_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
-    log::debug!("Retrieving refresh token from keyring");
-
+pub async fn get_refresh_token(app_handle: AppHandle) -> Result<Option<String>, String> {
+    // Try keyring first (production)
     let entry = get_refresh_token_keyring_entry()?;
-
     match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
-        Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(format!("Failed to retrieve refresh token: {}", e)),
+        Ok(token) => {
+            log::info!("✅ Refresh token retrieved from keyring");
+            return Ok(Some(token));
+        }
+        Err(keyring::Error::NoEntry) => {
+            log::debug!("No token in keyring, trying Tauri Store");
+        }
+        Err(e) => {
+            log::warn!("Keyring error: {} - trying Tauri Store", e);
+        }
     }
+
+    // Fallback to Tauri Store (dev)
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    let token: Option<String> = store
+        .get(REFRESH_TOKEN_STORE_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok());
+
+    if token.is_some() {
+        log::info!("✅ Refresh token retrieved from Tauri Store");
+    } else {
+        log::info!("No refresh token found");
+    }
+
+    Ok(token)
 }
 
 #[tauri::command]
-pub async fn clear_refresh_token(_app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing refresh token from keyring");
+pub async fn clear_refresh_token(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Clearing refresh token from all storage");
 
+    // Clear from keyring
     let entry = get_refresh_token_keyring_entry()?;
-
     match entry.delete_credential() {
-        Ok(_) => {
-            log::info!("Refresh token cleared successfully");
-            Ok(())
-        }
-        Err(keyring::Error::NoEntry) => {
-            log::info!("Refresh token was already cleared");
-            Ok(())
-        }
-        Err(e) => Err(format!("Failed to clear refresh token: {}", e)),
+        Ok(_) => log::info!("Cleared from keyring"),
+        Err(keyring::Error::NoEntry) => log::debug!("Not in keyring"),
+        Err(e) => log::warn!("Keyring clear error: {}", e),
     }
+
+    // Clear from Tauri Store
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.delete(REFRESH_TOKEN_STORE_KEY);
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
+
+    log::info!("✅ Refresh token cleared");
+    Ok(())
 }
 
 #[tauri::command]
