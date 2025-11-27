@@ -39,7 +39,6 @@ export class AuthService {
    */
   private async saveTokenEverywhere(token: string, refreshToken?: string | null): Promise<void> {
     console.log(`[Desktop AuthService] Saving token (length: ${token.length})`);
-    console.log(`[Desktop AuthService] Token end: ...${token.substring(token.length - 50)}`);
 
     // Save to Tauri store
     await invoke('save_auth_token', { token });
@@ -65,22 +64,17 @@ export class AuthService {
    */
   private async getTokenFromAnySource(): Promise<string | null> {
     // Try Tauri store first
-    console.log('[Desktop AuthService] Retrieving token from Tauri store...');
     const token = await invoke<string | null>('get_auth_token');
 
     if (token) {
       console.log(`[Desktop AuthService] Token found in Tauri store (length: ${token.length})`);
-      console.log(`[Desktop AuthService] Token end: ...${token.substring(token.length - 50)}`);
       return token;
     }
-
-    console.log('[Desktop AuthService] No token in Tauri store');
 
     // Fallback to localStorage
     const localStorageToken = localStorage.getItem('stirling_jwt');
     if (localStorageToken) {
-      console.log('[Desktop AuthService] Token found in localStorage (length:', localStorageToken.length, ')');
-      console.log(`[Desktop AuthService] Token end: ...${localStorageToken.substring(localStorageToken.length - 50)}`);
+      console.log(`[Desktop AuthService] Token found in localStorage (length: ${localStorageToken.length})`);
     }
 
     return localStorageToken;

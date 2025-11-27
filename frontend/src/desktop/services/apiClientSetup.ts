@@ -50,14 +50,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         const token = await authService.getAuthToken();
         if (token) {
           extendedConfig.headers.Authorization = `Bearer ${token}`;
-          console.debug(`[apiClientSetup] Added auth header for remote request to: ${extendedConfig.url}`);
-        } else {
-          console.debug(`[apiClientSetup] No token available for remote request to: ${extendedConfig.url}`);
         }
-      } else if (extendedConfig._retry) {
-        console.debug(`[apiClientSetup] Retry request - preserving existing auth header for: ${extendedConfig.url}`);
-      } else {
-        console.debug(`[apiClientSetup] Local request, no auth header needed: ${extendedConfig.url}`);
       }
 
       // Backend readiness check (for local backend)
@@ -97,9 +90,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         originalRequest._retry = true;
 
         console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
-        const origAuth = originalRequest.headers.Authorization;
-        console.debug(`[apiClientSetup] Original auth header start: ${origAuth?.substring(0, 50)}...`);
-        console.debug(`[apiClientSetup] Original auth header end: ...${origAuth?.substring(origAuth.length - 50)}`);
 
         const isRemote = await operationRouter.isSelfHostedMode();
         let refreshed = false;
@@ -118,20 +108,14 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (refreshed) {
           // Retry the original request with new token
           const token = await authService.getAuthToken();
-          console.debug(`[apiClientSetup] Got token after refresh (length: ${token?.length})`);
-          console.debug(`[apiClientSetup] New token start: ${token?.substring(0, 50)}...`);
-          console.debug(`[apiClientSetup] New token end: ...${token?.substring(token.length - 50)}`);
+          console.debug(`[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`);
 
           if (token) {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            const newAuth = originalRequest.headers.Authorization;
-            console.debug(`[apiClientSetup] Set new Authorization header for retry (start): ${newAuth.substring(0, 50)}...`);
-            console.debug(`[apiClientSetup] Set new Authorization header for retry (end): ...${newAuth.substring(newAuth.length - 50)}`);
           } else {
             console.error(`[apiClientSetup] No token available after successful refresh!`);
           }
 
-          console.debug(`[apiClientSetup] Retrying request to: ${originalRequest.url}`);
           return client.request(originalRequest);
         }
 

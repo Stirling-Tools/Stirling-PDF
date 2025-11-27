@@ -173,13 +173,6 @@ class TauriHttpClient {
     }
 
     try {
-      // Debug logging
-      console.debug(`[tauriHttpClient] Fetch request:`, { url, method });
-      console.debug(`[tauriHttpClient] Request headers:`, headers);
-      if (headers.Authorization) {
-        console.debug(`[tauriHttpClient] Authorization header: ${headers.Authorization.substring(0, 50)}...`);
-      }
-
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       const response = await fetch(url, {
         method,
