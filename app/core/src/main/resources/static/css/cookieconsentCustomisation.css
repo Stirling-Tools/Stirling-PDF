@@ -1,53 +1,99 @@
+/* Light theme variables */
+:root {
+    --cc-bg: #ffffff;
+    --cc-primary-color: #1c1c1c;
+    --cc-secondary-color: #666666;
+
+    --cc-btn-primary-bg: #007BFF;
+    --cc-btn-primary-color: #ffffff;
+    --cc-btn-primary-border-color: #007BFF;
+    --cc-btn-primary-hover-bg: #0056b3;
+    --cc-btn-primary-hover-color: #ffffff;
+    --cc-btn-primary-hover-border-color: #0056b3;
+
+    --cc-btn-secondary-bg: #f1f3f4;
+    --cc-btn-secondary-color: #1c1c1c;
+    --cc-btn-secondary-border-color: #f1f3f4;
+    --cc-btn-secondary-hover-bg: #007BFF;
+    --cc-btn-secondary-hover-color: #ffffff;
+    --cc-btn-secondary-hover-border-color: #007BFF;
+
+    --cc-separator-border-color: #e0e0e0;
+
+    --cc-toggle-on-bg: #007BFF;
+    --cc-toggle-off-bg: #667481;
+    --cc-toggle-on-knob-bg: #ffffff;
+    --cc-toggle-off-knob-bg: #ffffff;
+
+    --cc-toggle-enabled-icon-color: #ffffff;
+    --cc-toggle-disabled-icon-color: #ffffff;
+
+    --cc-toggle-readonly-bg: #f1f3f4;
+    --cc-toggle-readonly-knob-bg: #79747E;
+    --cc-toggle-readonly-knob-icon-color: #f1f3f4;
+
+    --cc-section-category-border: #e0e0e0;
+
+    --cc-cookie-category-block-bg: #f1f3f4;
+    --cc-cookie-category-block-border: #f1f3f4;
+    --cc-cookie-category-block-hover-bg: #e9eff4;
+    --cc-cookie-category-block-hover-border: #e9eff4;
+
+    --cc-cookie-category-expanded-block-bg: #f1f3f4;
+    --cc-cookie-category-expanded-block-hover-bg: #e9eff4;
+
+    --cc-footer-bg: #ffffff;
+    --cc-footer-color: #1c1c1c;
+    --cc-footer-border-color: #ffffff;
+}
+
+/* Dark theme variables */
 .cc--darkmode{
-    --cc-bg: var(--md-sys-color-inverse-on-surface);
-    --cc-primary-color: var(--md-sys-color-on-surface);
-    --cc-secondary-color: var(--md-sys-color-on-surface);
+    --cc-bg: #2d2d2d;
+    --cc-primary-color: #e5e5e5;
+    --cc-secondary-color: #b0b0b0;
 
-    --cc-btn-primary-bg: var(--md-sys-color-secondary);
-    --cc-btn-primary-color: var(--cc-bg);
-    --cc-btn-primary-border-color: var(--cc-btn-primary-bg);
-    --cc-btn-primary-hover-bg: var(--md-sys-color-surface-3);
-    --cc-btn-primary-hover-color: var(--md-sys-color-on-secondary-container);
-    --cc-btn-primary-hover-border-color: var(--md-sys-color-surface-3);
+    --cc-btn-primary-bg: #4dabf7;
+    --cc-btn-primary-color: #2d2d2d;
+    --cc-btn-primary-border-color: #4dabf7;
+    --cc-btn-primary-hover-bg: #3d3d3d;
+    --cc-btn-primary-hover-color: #e5e5e5;
+    --cc-btn-primary-hover-border-color: #3d3d3d;
 
-    --cc-btn-secondary-bg: var(--md-sys-color-surface-3);
-    --cc-btn-secondary-color: var(--md-sys-color-on-secondary-container);
-    --cc-btn-secondary-border-color: var(--md-sys-color-surface-3);
-    --cc-btn-secondary-hover-bg:var(--md-sys-color-secondary);
-    --cc-btn-secondary-hover-color: var(--cc-bg);
-    --cc-btn-secondary-hover-border-color: var(--md-sys-color-secondary);
+    --cc-btn-secondary-bg: #3d3d3d;
+    --cc-btn-secondary-color: #e5e5e5;
+    --cc-btn-secondary-border-color: #3d3d3d;
+    --cc-btn-secondary-hover-bg: #4dabf7;
+    --cc-btn-secondary-hover-color: #2d2d2d;
+    --cc-btn-secondary-hover-border-color: #4dabf7;
 
-    --cc-separator-border-color: var(--md-sys-color-outline);
+    --cc-separator-border-color: #555555;
 
-    --cc-toggle-on-bg: var(--cc-btn-primary-bg);
-    --cc-toggle-off-bg: var(--md-sys-color-outline);
-    --cc-toggle-on-knob-bg: var(--cc-btn-primary-color);
-    --cc-toggle-off-knob-bg: var(--cc-btn-primary-color);
+    --cc-toggle-on-bg: #4dabf7;
+    --cc-toggle-off-bg: #667481;
+    --cc-toggle-on-knob-bg: #2d2d2d;
+    --cc-toggle-off-knob-bg: #2d2d2d;
 
-    --cc-toggle-enabled-icon-color: var(--cc-btn-primary-color);   
-    --cc-toggle-disabled-icon-color: var(--cc-btn-primary-color);  
+    --cc-toggle-enabled-icon-color: #2d2d2d;
+    --cc-toggle-disabled-icon-color: #2d2d2d;
 
-    --cc-toggle-readonly-bg: var(--md-sys-color-surface);
-    --cc-toggle-readonly-knob-bg: var(--md-sys-color-outline);
-    --cc-toggle-readonly-knob-icon-color: var(--cc-toggle-readonly-bg);
+    --cc-toggle-readonly-bg: #555555;
+    --cc-toggle-readonly-knob-bg: #8e8e8e;
+    --cc-toggle-readonly-knob-icon-color: #555555;
 
-    --cc-section-category-border: var(--md-sys-color-outline);
+    --cc-section-category-border: #555555;
 
-    --cc-cookie-category-block-bg: var(--cc-btn-secondary-bg);
-    --cc-cookie-category-block-border: var(--cc-btn-secondary-bg); 
-    --cc-cookie-category-block-hover-bg: var(--cc-btn-secondary-bg);
-    --cc-cookie-category-block-hover-border: var(--cc-btn-secondary-bg);
-    
-    --cc-cookie-category-expanded-block-bg: var(--cc-btn-secondary-bg);
-    --cc-cookie-category-expanded-block-hover-bg: var(--cc-toggle-readonly-bg);
+    --cc-cookie-category-block-bg: #3d3d3d;
+    --cc-cookie-category-block-border: #3d3d3d;
+    --cc-cookie-category-block-hover-bg: #4d4d4d;
+    --cc-cookie-category-block-hover-border: #4d4d4d;
 
-  /*  --cc-overlay-bg: rgba(0, 0, 0, 0.65);
-    --cc-webkit-scrollbar-bg: var(--cc-section-category-border);
-    --cc-webkit-scrollbar-hover-bg: var(--cc-btn-primary-hover-bg);
-*/
-    --cc-footer-bg: var(--cc-bg);
-    --cc-footer-color: var(--cc-primary-color);
-    --cc-footer-border-color: var(--cc-bg); 
+    --cc-cookie-category-expanded-block-bg: #3d3d3d;
+    --cc-cookie-category-expanded-block-hover-bg: #4d4d4d;
+
+    --cc-footer-bg: #2d2d2d;
+    --cc-footer-color: #e5e5e5;
+    --cc-footer-border-color: #2d2d2d;
 }
 .cm__body{
     max-width: 90% !important;
@@ -78,7 +124,87 @@
     }
 }
 
+/* Toggle visibility fixes */
+#cc-main .section__toggle {
+    opacity: 0 !important; /* Keep invisible but functional */
+}
+
+#cc-main .toggle__icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+#cc-main .toggle__icon-circle {
+    display: block !important;
+    position: absolute !important;
+    transition: transform 0.25s ease !important;
+}
+
+#cc-main .toggle__icon-on,
+#cc-main .toggle__icon-off {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: absolute !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Ensure toggles are visible in both themes */
+#cc-main .toggle__icon {
+    background: var(--cc-toggle-off-bg) !important;
+    border: 1px solid var(--cc-toggle-off-bg) !important;
+}
+
+#cc-main .section__toggle:checked ~ .toggle__icon {
+    background: var(--cc-toggle-on-bg) !important;
+    border: 1px solid var(--cc-toggle-on-bg) !important;
+}
+
+/* Ensure toggle text is visible */
+#cc-main .pm__section-title {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .pm__section-desc {
+    color: var(--cc-secondary-color) !important;
+}
+
+/* Make sure the modal has proper contrast */
+#cc-main .pm {
+    background: var(--cc-bg) !important;
+    color: var(--cc-primary-color) !important;
+}
+
 /* Lower z-index so cookie banner appears behind onboarding modals */
 #cc-main {
     z-index: 100 !important;
+}
+
+/* Ensure consent modal text is visible in both themes */
+#cc-main .cm {
+    background: var(--cc-bg) !important;
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__title {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__desc {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__btn {
+    color: var(--cc-btn-primary-color) !important;
+}
+
+#cc-main .cm__footer {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer-links a,
+#cc-main .cm__link {
+    color: var(--cc-primary-color) !important;
 }

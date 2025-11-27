@@ -181,3 +181,30 @@
 #cc-main {
     z-index: 100 !important;
 }
+
+/* Ensure consent modal text is visible in both themes */
+#cc-main .cm {
+    background: var(--cc-bg) !important;
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__title {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__desc {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__btn {
+    color: var(--cc-btn-primary-color) !important;
+}
+
+#cc-main .cm__footer {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer-links a,
+#cc-main .cm__link {
+    color: var(--cc-primary-color) !important;
+}

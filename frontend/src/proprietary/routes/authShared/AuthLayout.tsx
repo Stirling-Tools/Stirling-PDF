@@ -4,6 +4,8 @@ import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
 import buildLoginSlides from '@app/components/shared/loginSlides';
 import styles from '@app/routes/authShared/AuthLayout.module.css';
 import { useLogoVariant } from '@app/hooks/useLogoVariant';
+import Footer from '@app/components/shared/Footer';
+import apiClient from '@app/services/apiClient';
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -13,8 +15,22 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
+  const [enableAnalytics, setEnableAnalytics] = useState(false);
   const logoVariant = useLogoVariant();
   const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
+
+  // Fetch enableAnalytics from login endpoint
+  useEffect(() => {
+    const fetchLoginData = async () => {
+      try {
+        const response = await apiClient.get('/api/v1/proprietary/ui-data/login');
+        setEnableAnalytics(response.data.enableAnalytics ?? false);
+      } catch (err) {
+        console.error('[AuthLayout] Failed to fetch login data:', err);
+      }
+    };
+    fetchLoginData();
+  }, []);
 
   // Force light mode on auth pages
   useEffect(() => {
@@ -66,6 +82,12 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         {!hideRightPanel && (
           <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
         )}
+      </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', zIndex: 10 }}>
+        <Footer
+          analyticsEnabled={enableAnalytics}
+          forceLightMode={true}
+        />
       </div>
     </div>
   );
