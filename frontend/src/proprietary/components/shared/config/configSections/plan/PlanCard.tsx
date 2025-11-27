@@ -15,9 +15,10 @@ interface PlanCardProps {
   currentTier?: 'free' | 'server' | 'enterprise' | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
   onManageClick?: () => void;
+  loginEnabled?: boolean;
 }
 
-const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick, onManageClick }) => {
+const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick, onManageClick, loginEnabled = true }) => {
   const { t } = useTranslation();
 
   // Render Free plan
@@ -174,7 +175,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             variant={isCurrentTier ? 'filled' : isDowngrade ? 'filled' : isEnterpriseBlockedForFree ? 'light' : 'filled'}
             fullWidth
             onClick={() => isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup)}
-            disabled={isDowngrade || isEnterpriseBlockedForFree}
+            disabled={!loginEnabled || isDowngrade || isEnterpriseBlockedForFree}
           >
             {isCurrentTier
               ? t('plan.manage', 'Manage')
