@@ -280,6 +280,11 @@ public class AdminLicenseController {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "error", "Invalid filename"));
         }
+        // Prevent path traversal and enforce single filename component
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "error", "Filename must not contain path separators or '..'"));
+        }
 
         // Validate file extension
         if (!isValidLicenseFile(filename)) {
@@ -314,7 +319,12 @@ public class AdminLicenseController {
 
             // Get config directory and target path
             Path configPath = Paths.get(InstallationPathConfig.getConfigPath());
-            Path targetPath = configPath.resolve(filename);
+            Path targetPath = configPath.resolve(filename).normalize();
+            // Prevent directory traversal: ensure targetPath is inside configPath
+            if (!targetPath.startsWith(configPath.normalize().toAbsolutePath())) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "error", "Invalid file path"));
+            }
 
             // Backup existing file if present
             if (Files.exists(targetPath)) {
