@@ -66,7 +66,7 @@ pub fn run() {
       // Emit a generic notification that files were added (frontend will re-read storage)
       let _ = app.emit("files-changed", ());
     }))
-    .setup(|_app| {
+    .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
       // Process command line arguments on first launch
@@ -77,6 +77,17 @@ pub fn run() {
           add_opened_file(arg.clone());
         }
       }
+
+      // Start backend immediately, non-blocking
+      let app_handle = app.handle().clone();
+
+      tauri::async_runtime::spawn(async move {
+        add_log("🚀 Starting bundled backend in background".to_string());
+        let connection_state = app_handle.state::<AppConnectionState>();
+        if let Err(e) = commands::backend::start_backend(app_handle.clone(), connection_state).await {
+          add_log(format!("⚠️ Backend start failed: {}", e));
+        }
+      });
 
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
