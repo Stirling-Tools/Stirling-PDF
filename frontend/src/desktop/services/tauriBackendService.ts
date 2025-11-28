@@ -101,8 +101,8 @@ export class TauriBackendService {
     return this.startPromise;
   }
 
-  private async waitForPort(maxAttempts = 30): Promise<void> {
-    for (let i = 0; i < maxAttempts; i++) {
+  private async waitForPort(): Promise<void> {
+    while (true) {
       try {
         const port = await invoke<number | null>('get_backend_port');
         if (port) {
@@ -114,7 +114,25 @@ export class TauriBackendService {
       }
       await new Promise(resolve => setTimeout(resolve, 500));
     }
-    throw new Error('Failed to detect backend port after 15 seconds');
+  }
+
+  /**
+   * Get auth token from any available source (localStorage or Tauri store)
+   */
+  private async getAuthToken(): Promise<string | null> {
+    // Check localStorage first (web layer token)
+    const localStorageToken = localStorage.getItem('stirling_jwt');
+    if (localStorageToken) {
+      return localStorageToken;
+    }
+
+    // Fallback to Tauri store
+    try {
+      return await invoke<string | null>('get_auth_token');
+    } catch {
+      console.debug('[TauriBackendService] No auth token available');
+      return null;
+    }
   }
 
   private beginHealthMonitoring() {
@@ -133,7 +151,8 @@ export class TauriBackendService {
   async checkBackendHealth(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // For self-hosted mode, check the configured remote server
+    // Determine base URL based on mode
+    let baseUrl: string;
     if (mode === 'selfhosted') {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
@@ -141,62 +160,61 @@ export class TauriBackendService {
         this.setStatus('unhealthy');
         return false;
       }
+      baseUrl = serverConfig.url.replace(/\/$/, '');
+    } else {
+      // SaaS mode - check bundled local backend
+      if (!this.backendStarted) {
+        this.setStatus('stopped');
+        return false;
+      }
+      if (!this.backendPort) {
+        return false;
+      }
+      baseUrl = `http://localhost:${this.backendPort}`;
+    }
 
-      try {
-        const baseUrl = serverConfig.url.replace(/\/$/, '');
-        const healthUrl = `${baseUrl}/api/v1/info/status`;
-        const response = await fetch(healthUrl, {
-          method: 'GET',
-          connectTimeout: 5000,
-        });
+    // Check if backend is ready (dependencies checked)
+    try {
+      const configUrl = `${baseUrl}/api/v1/config/app-config`;
 
-        const isHealthy = response.ok;
-        this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-        return isHealthy;
-      } catch (error) {
-        const errorStr = String(error);
-        if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-          console.error('[TauriBackendService] Self-hosted server health check failed:', error);
+      // For self-hosted mode, include auth token if available
+      const headers: Record<string, string> = {};
+      if (mode === 'selfhosted') {
+        const token = await this.getAuthToken();
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
+      }
+
+      const response = await fetch(configUrl, {
+        method: 'GET',
+        connectTimeout: 5000,
+        headers,
+      });
+
+      if (!response.ok) {
         this.setStatus('unhealthy');
         return false;
       }
-    }
 
-    // For SaaS mode, check the bundled local backend via Rust
-    if (!this.backendStarted) {
-      this.setStatus('stopped');
-      return false;
-    }
-
-    if (!this.backendPort) {
-      return false;
-    }
-
-    try {
-      const isHealthy = await invoke<boolean>('check_backend_health', { port: this.backendPort });
-      this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-      return isHealthy;
-    } catch (error) {
-      const errorStr = String(error);
-      if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-        console.error('[TauriBackendService] Bundled backend health check failed:', error);
-      }
+      const data = await response.json();
+      const dependenciesReady = data.dependenciesReady === true;
+      this.setStatus(dependenciesReady ? 'healthy' : 'starting');
+      return dependenciesReady;
+    } catch {
       this.setStatus('unhealthy');
       return false;
     }
   }
 
-  private async waitForHealthy(maxAttempts = 60): Promise<void> {
-    for (let i = 0; i < maxAttempts; i++) {
+  private async waitForHealthy(): Promise<void> {
+    while (true) {
       const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    this.setStatus('unhealthy');
-    throw new Error('Backend failed to become healthy after 60 seconds');
   }
 
   /**

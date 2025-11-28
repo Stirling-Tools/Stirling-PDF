@@ -140,12 +140,15 @@ const AdminUsageSection: React.FC = () => {
     );
   }
 
-  const chartData = data?.endpoints?.map((e) => ({ label: e.endpoint, value: e.visits })) || [];
+  const endpoints = data?.endpoints ?? [];
+  const chartData = endpoints.map((e) => ({ label: e.endpoint, value: e.visits }));
 
-  const displayedVisits = data?.endpoints?.reduce((sum, e) => sum + e.visits, 0) || 0;
+  const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
+  const totalVisits = data?.totalVisits ?? displayedVisits ?? 0;
+  const totalEndpoints = data?.totalEndpoints ?? endpoints.length ?? 0;
 
-  const displayedPercentage = (data?.totalVisits || 0) > 0
-    ? ((displayedVisits / (data?.totalVisits || 1)) * 100).toFixed(1)
+  const displayedPercentage = totalVisits > 0
+    ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1)
     : '0';
 
   return (
@@ -220,7 +223,7 @@ const AdminUsageSection: React.FC = () => {
                 {t('usage.stats.totalEndpoints', 'Total Endpoints')}
               </Text>
               <Text size="lg" fw={600}>
-                {data.totalEndpoints}
+                {totalEndpoints}
               </Text>
             </div>
             <div>
@@ -228,7 +231,7 @@ const AdminUsageSection: React.FC = () => {
                 {t('usage.stats.totalVisits', 'Total Visits')}
               </Text>
               <Text size="lg" fw={600}>
-                {data.totalVisits.toLocaleString()}
+                {totalVisits.toLocaleString()}
               </Text>
             </div>
             <div>
@@ -253,7 +256,7 @@ const AdminUsageSection: React.FC = () => {
 
       {/* Chart and Table */}
       <UsageAnalyticsChart data={chartData} />
-      <UsageAnalyticsTable data={data.endpoints} />
+      <UsageAnalyticsTable data={endpoints} />
     </Stack>
   );
 };

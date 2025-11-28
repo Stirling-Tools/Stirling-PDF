@@ -15,6 +15,7 @@ interface AvailablePlansSectionProps {
   currency?: string;
   onCurrencyChange?: (currency: string) => void;
   currencyOptions?: { value: string; label: string }[];
+  loginEnabled?: boolean;
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
@@ -25,6 +26,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   currency,
   onCurrencyChange,
   currencyOptions,
+  loginEnabled = true,
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
@@ -91,6 +93,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             clearable={false}
             w={300}
             comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+            disabled={!loginEnabled}
           />
         )}
       </Group>
@@ -113,6 +116,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             currentTier={currentTier}
             onUpgradeClick={onUpgradeClick}
             onManageClick={onManageClick}
+            loginEnabled={loginEnabled}
           />
         ))}
       </div>

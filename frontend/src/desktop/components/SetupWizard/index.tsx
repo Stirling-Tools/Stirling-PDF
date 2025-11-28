@@ -53,9 +53,15 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      await authService.login(serverConfig.url, username, password);
+      // Only attempt password login if a password is provided
+      // If password is empty, assume OAuth login already completed
+      const isAlreadyAuthenticated = await authService.isAuthenticated();
+      if (!isAlreadyAuthenticated && password) {
+        await authService.login(serverConfig.url, username, password);
+      }
+
       await connectionModeService.switchToSaaS(serverConfig.url);
-      await tauriBackendService.startBackend();
+      tauriBackendService.startBackend().catch(console.error);
       onComplete();
     } catch (err) {
       console.error('SaaS login failed:', err);

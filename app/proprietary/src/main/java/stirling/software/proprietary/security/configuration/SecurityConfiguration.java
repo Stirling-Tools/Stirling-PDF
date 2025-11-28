@@ -84,6 +84,8 @@ public class SecurityConfiguration {
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -103,7 +105,9 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            stirling.software.proprietary.service.UserLicenseSettingsService
+                    licenseSettingsService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -120,10 +124,11 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.licenseSettingsService = licenseSettingsService;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -354,7 +359,8 @@ public class SecurityConfiguration {
                                                     loginAttemptService,
                                                     securityProperties.getOauth2(),
                                                     userService,
-                                                    jwtService))
+                                                    jwtService,
+                                                    licenseSettingsService))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(
@@ -395,7 +401,8 @@ public class SecurityConfiguration {
                                                                 loginAttemptService,
                                                                 securityProperties.getSaml2(),
                                                                 userService,
-                                                                jwtService))
+                                                                jwtService,
+                                                                licenseSettingsService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(

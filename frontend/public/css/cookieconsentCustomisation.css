@@ -54,17 +54,17 @@
     --cc-secondary-color: #b0b0b0;
 
     --cc-btn-primary-bg: #4dabf7;
-    --cc-btn-primary-color: #2d2d2d;
+    --cc-btn-primary-color: #ffffff;
     --cc-btn-primary-border-color: #4dabf7;
     --cc-btn-primary-hover-bg: #3d3d3d;
-    --cc-btn-primary-hover-color: #e5e5e5;
+    --cc-btn-primary-hover-color: #ffffff;
     --cc-btn-primary-hover-border-color: #3d3d3d;
 
     --cc-btn-secondary-bg: #3d3d3d;
-    --cc-btn-secondary-color: #e5e5e5;
+    --cc-btn-secondary-color: #ffffff;
     --cc-btn-secondary-border-color: #3d3d3d;
     --cc-btn-secondary-hover-bg: #4dabf7;
-    --cc-btn-secondary-hover-color: #2d2d2d;
+    --cc-btn-secondary-hover-color: #ffffff;
     --cc-btn-secondary-hover-border-color: #4dabf7;
 
     --cc-separator-border-color: #555555;
@@ -174,5 +174,33 @@
 /* Make sure the modal has proper contrast */
 #cc-main .pm {
     background: var(--cc-bg) !important;
+    color: var(--cc-primary-color) !important;
+}
+
+/* Lower z-index so cookie banner appears behind onboarding modals */
+#cc-main {
+    z-index: 100 !important;
+}
+
+/* Ensure consent modal text is visible in both themes */
+#cc-main .cm {
+    background: var(--cc-bg) !important;
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__title {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__desc {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer {
+    color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer-links a,
+#cc-main .cm__link {
     color: var(--cc-primary-color) !important;
 }
