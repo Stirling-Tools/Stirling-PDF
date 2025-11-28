@@ -8,7 +8,7 @@
  * - type: The type of step for rendering purposes
  */
 
-import type { ServerExperienceValue } from '@core/hooks/useServerExperience';
+import { ServerExperienceValue } from "@app/contexts/ServerExperienceContext";
 
 export type OnboardingStepId =
   | 'first-login'

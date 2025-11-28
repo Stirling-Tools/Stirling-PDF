@@ -53,8 +53,6 @@ import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 // Server experience
 import { useServerExperience } from '@app/hooks/useServerExperience';
 
-// Auth
-import { useAuth } from '@app/auth/UseSession';
 
 // Analytics choice modal
 import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
@@ -70,7 +68,6 @@ export default function Onboarding() {
   const location = useLocation();
   const { state, actions } = useOnboardingOrchestrator();
   const serverExperience = useServerExperience();
-  const { refreshSession } = useAuth();
 
   // Check if we're on an auth route
   const onAuthRoute = isAuthRoute(location.pathname);
@@ -117,15 +114,13 @@ export default function Onboarding() {
   }, [actions, serverExperience]);
 
   // First login password change handler
-  const handlePasswordChanged = useCallback(async () => {
+  const handlePasswordChanged = useCallback(() => {
     // Password change successful - backend will log user out
     // Clear the requiresPasswordChange flag first
     actions.updateRuntimeState({ requiresPasswordChange: false });
-    // Refresh session to detect logout and redirect to login
-    // This matches the original FirstLoginModal behavior
-    await refreshSession();
-    // The auth system will automatically redirect to login when session is null
-  }, [actions, refreshSession]);
+    // Force reload to ensure clean state after password change
+    window.location.href = '/login';
+  }, [actions]);
 
   const handleButtonAction = useCallback((action: ButtonAction) => {
     switch (action) {
