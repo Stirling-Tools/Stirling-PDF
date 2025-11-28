@@ -110,6 +110,42 @@ class ConverterWebControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("PDF to EPUB endpoint tests")
+    class PdfToEpubTests {
+
+        @Test
+        @DisplayName("Should return 404 when endpoint disabled")
+        void shouldReturn404WhenDisabled() throws Exception {
+            try (MockedStatic<ApplicationContextProvider> acp =
+                    org.mockito.Mockito.mockStatic(ApplicationContextProvider.class)) {
+                EndpointConfiguration endpointConfig = mock(EndpointConfiguration.class);
+                when(endpointConfig.isEndpointEnabled(eq("pdf-to-epub"))).thenReturn(false);
+                acp.when(() -> ApplicationContextProvider.getBean(EndpointConfiguration.class))
+                        .thenReturn(endpointConfig);
+
+                mockMvc.perform(get("/pdf-to-epub")).andExpect(status().isNotFound());
+            }
+        }
+
+        @Test
+        @DisplayName("Should return OK when endpoint enabled")
+        void shouldReturnOkWhenEnabled() throws Exception {
+            try (MockedStatic<ApplicationContextProvider> acp =
+                    org.mockito.Mockito.mockStatic(ApplicationContextProvider.class)) {
+                EndpointConfiguration endpointConfig = mock(EndpointConfiguration.class);
+                when(endpointConfig.isEndpointEnabled(eq("pdf-to-epub"))).thenReturn(true);
+                acp.when(() -> ApplicationContextProvider.getBean(EndpointConfiguration.class))
+                        .thenReturn(endpointConfig);
+
+                mockMvc.perform(get("/pdf-to-epub"))
+                        .andExpect(status().isOk())
+                        .andExpect(view().name("convert/pdf-to-epub"))
+                        .andExpect(model().attribute("currentPage", "pdf-to-epub"));
+            }
+        }
+    }
+
     @Test
     @DisplayName("Should handle pdf-to-img with default maxDPI=500")
     void shouldHandlePdfToImgWithDefaultMaxDpi() throws Exception {
