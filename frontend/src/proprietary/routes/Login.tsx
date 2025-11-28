@@ -32,6 +32,7 @@ export default function Login() {
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
@@ -102,12 +103,22 @@ export default function Login() {
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
         setShowDefaultCredentials(data.showDefaultCredentials ?? false);
 
-        // Extract provider IDs from the providerList map
+        // Extract provider IDs and labels from the providerList map
         // The keys are like "/oauth2/authorization/google" - extract the last part
-        const providerIds = Object.keys(data.providerList || {})
-          .map(key => key.split('/').pop())
-          .filter((id): id is string => id !== undefined);
+        const providerList = data.providerList || {};
+        const providerIds: string[] = [];
+        const labels: Record<string, string> = {};
+
+        Object.entries(providerList).forEach(([key, displayName]) => {
+          const id = key.split('/').pop();
+          if (id) {
+            providerIds.push(id);
+            labels[id] = displayName as string;
+          }
+        });
+
         setEnabledProviders(providerIds);
+        setProviderLabels(labels);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -225,16 +236,25 @@ export default function Login() {
     );
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
+  // Known OAuth providers that have dedicated backend support
+  const KNOWN_OAUTH_PROVIDERS = ['github', 'google', 'apple', 'azure', 'keycloak', 'oidc'] as const;
+  type KnownOAuthProvider = typeof KNOWN_OAUTH_PROVIDERS[number];
+
+  const signInWithProvider = async (provider: string) => {
     try {
       setIsSigningIn(true);
       setError(null);
 
-      console.log(`[Login] Signing in with ${provider}`);
+      // Map unknown providers to 'oidc' for the backend redirect
+      const backendProvider: KnownOAuthProvider = KNOWN_OAUTH_PROVIDERS.includes(provider as KnownOAuthProvider)
+        ? (provider as KnownOAuthProvider)
+        : 'oidc';
+
+      console.log(`[Login] Signing in with ${provider} (backend: ${backendProvider})`);
 
       // Redirect to Spring OAuth2 endpoint
       const { error } = await springAuth.signInWithOAuth({
-        provider,
+        provider: backendProvider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 
@@ -316,6 +336,7 @@ export default function Login() {
         isSubmitting={isSigningIn}
         layout="vertical"
         enabledProviders={enabledProviders}
+        providerLabels={providerLabels}
       />
 
       {/* Divider between OAuth and Email - only show if SSO is available */}
