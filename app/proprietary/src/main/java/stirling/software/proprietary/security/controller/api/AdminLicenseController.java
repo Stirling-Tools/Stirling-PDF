@@ -1,22 +1,32 @@
 package stirling.software.proprietary.security.controller.api;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier;
@@ -241,5 +251,145 @@ public class AdminLicenseController {
             return ResponseEntity.internalServerError()
                     .body(Map.of("error", "Failed to retrieve license information"));
         }
+    }
+
+    /**
+     * Upload a license certificate file for offline activation. Accepts .lic or .cert files,
+     * validates the certificate format, saves to configs directory, and activates the license.
+     *
+     * @param file The license certificate file to upload
+     * @return Response with success status, license type, and file information
+     */
+    @PostMapping(value = "/license-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Upload license certificate file",
+            description =
+                    "Upload a license certificate file (.lic, .cert) for offline activation."
+                            + " Validates the file format and activates the license.")
+    public ResponseEntity<Map<String, Object>> uploadLicenseFile(
+            @RequestParam("file") MultipartFile file) {
+
+        // Validate file exists
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "error", "File is empty"));
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || filename.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "error", "Invalid filename"));
+        }
+
+        // Validate file extension
+        if (!isValidLicenseFile(filename)) {
+            return ResponseEntity.badRequest()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Invalid file type. Expected .lic or .cert"));
+        }
+
+        // Check file size (max 1MB for license files)
+        if (file.getSize() > 1_048_576) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "error", "File too large. Maximum 1MB allowed"));
+        }
+
+        try {
+            // Validate certificate format by reading content
+            byte[] fileBytes = file.getBytes();
+            String content = new String(fileBytes, StandardCharsets.UTF_8);
+            if (!content.trim().startsWith("-----BEGIN LICENSE FILE-----")) {
+                return ResponseEntity.badRequest()
+                        .body(
+                                Map.of(
+                                        "success",
+                                        false,
+                                        "error",
+                                        "Invalid license certificate format"));
+            }
+
+            // Get config directory and target path
+            Path configPath = Paths.get(InstallationPathConfig.getConfigPath());
+            Path targetPath = configPath.resolve(filename);
+
+            // Backup existing file if present
+            if (Files.exists(targetPath)) {
+                Path backupDir = configPath.resolve("backup");
+                Files.createDirectories(backupDir);
+
+                String backupFilename = filename + ".bak." + System.currentTimeMillis();
+                Path backupPath = backupDir.resolve(backupFilename);
+
+                Files.copy(targetPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Backed up existing license file to: {}", backupPath);
+            }
+
+            // Write new license file
+            Files.write(targetPath, fileBytes);
+            log.info("License file saved to: {}", targetPath);
+
+            // assume premium enabled when setting license key
+            applicationProperties.getPremium().setEnabled(true);
+
+            // Update settings with file reference (relative path)
+            String fileReference = "file:configs/" + filename;
+            licenseKeyChecker.updateLicenseKey(fileReference);
+
+            // Get license status after activation
+            License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("licenseType", license.name());
+            response.put("filename", filename);
+            response.put("filePath", "configs/" + filename);
+            response.put("enabled", applicationProperties.getPremium().isEnabled());
+            response.put("maxUsers", applicationProperties.getPremium().getMaxUsers());
+            response.put("message", "License file uploaded and activated");
+
+            log.info(
+                    "License file uploaded and activated: filename={}, type={}",
+                    filename,
+                    license.name());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IOException e) {
+            log.error("Failed to save license file", e);
+            return ResponseEntity.internalServerError()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Failed to save license file: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to activate license from file", e);
+            return ResponseEntity.badRequest()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Failed to activate license: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Validates if the filename has a valid license file extension (.lic or .cert)
+     *
+     * @param filename The filename to validate
+     * @return true if the filename ends with .lic or .cert (case-insensitive)
+     */
+    private boolean isValidLicenseFile(String filename) {
+        if (filename == null) {
+            return false;
+        }
+        String lower = filename.toLowerCase();
+        return lower.endsWith(".lic") || lower.endsWith(".cert");
     }
 }
