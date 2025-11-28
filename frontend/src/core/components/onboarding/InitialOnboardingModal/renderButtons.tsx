@@ -16,11 +16,6 @@ interface SlideButtonsProps {
   onAction: (action: ButtonAction) => void;
 }
 
-/**
- * SlideButtons component - renders the buttons for an onboarding slide.
- * This is a proper React component (not a function that uses hooks) to avoid
- * React hook order violations when conditionally rendered.
- */
 export function SlideButtons({ slideDefinition, licenseNotice, flowState, onAction }: SlideButtonsProps) {
   const { t } = useTranslation();
   const leftButtons = slideDefinition.buttons.filter((btn) => btn.group === 'left');

@@ -7,14 +7,34 @@
  */
 
 import React from 'react';
-import { TourProvider, type StepType } from '@reactour/tour';
+import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { CloseButton, ActionIcon } from '@mantine/core';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import type { TFunction } from 'i18next';
 import i18n from '@app/i18n';
-import TourContent from '@app/components/onboarding/TourContent';
+
+/**
+ * TourContent - Controls the tour visibility
+ * Syncs the forceOpen prop with the reactour tour state.
+ */
+function TourContent({ forceOpen = false }: { forceOpen?: boolean }) {
+  const { setIsOpen, setCurrentStep } = useTour();
+  const previousIsOpenRef = React.useRef(forceOpen);
+
+  React.useEffect(() => {
+    const wasClosedNowOpen = !previousIsOpenRef.current && forceOpen;
+    previousIsOpenRef.current = forceOpen;
+
+    if (wasClosedNowOpen) {
+      setCurrentStep(0);
+    }
+    setIsOpen(forceOpen);
+  }, [forceOpen, setIsOpen, setCurrentStep]);
+
+  return null;
+}
 
 interface AdvanceArgs {
   setCurrentStep: (value: number | ((prev: number) => number)) => void;
