@@ -643,6 +643,7 @@ public class ApplicationProperties {
             private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
             private int calibreSessionLimit;
+            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
@@ -680,6 +681,10 @@ public class ApplicationProperties {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
 
+            public int getImageMagickSessionLimit() {
+                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
+            }
+
             public int getGhostscriptSessionLimit() {
                 return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
             }
@@ -708,6 +713,8 @@ public class ApplicationProperties {
 
             @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
+
+            private long imageMagickTimeoutMinutes;
 
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
@@ -744,6 +751,10 @@ public class ApplicationProperties {
 
             public long getCalibreTimeoutMinutes() {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
+            }
+
+            public long getImageMagickTimeoutMinutes() {
+                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
             }
 
             public long getGhostscriptTimeoutMinutes() {

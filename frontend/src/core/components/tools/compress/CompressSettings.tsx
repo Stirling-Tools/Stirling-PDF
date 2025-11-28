@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl, Group, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -13,6 +14,24 @@ interface CompressSettingsProps {
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
   const [isSliding, setIsSliding] = useState(false);
+  const { config } = useAppConfig();
+
+  const hasEnterprise = config?.runningEE === true || config?.license === 'ENTERPRISE';
+  const lineArtDisabled = disabled || !hasEnterprise;
+
+  const thicknessDescriptor =
+    parameters.lineArtThreshold < 40
+      ? t('compress.lineArt.thresholdHintFine', 'Finer lines')
+      : parameters.lineArtThreshold < 70
+        ? t('compress.lineArt.thresholdHintBalanced', 'Balanced')
+        : t('compress.lineArt.thresholdHintBold', 'Bolder lines');
+
+  const edgeDescriptor =
+    parameters.lineArtEdgeLevel === 1
+      ? t('compress.lineArt.edgeLow', 'Gentle')
+      : parameters.lineArtEdgeLevel === 2
+        ? t('compress.lineArt.edgeMedium', 'Balanced')
+        : t('compress.lineArt.edgeHigh', 'Strong');
 
   return (
     <Stack gap="md">
@@ -129,6 +148,91 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           disabled={disabled}
           label={t("compress.grayscale.label", "Apply Grayscale for compression")}
         />
+        <Checkbox
+          checked={parameters.lineArt}
+          onChange={(event) => {
+            if (!hasEnterprise) return;
+            onParameterChange('lineArt', event.currentTarget.checked);
+          }}
+          disabled={lineArtDisabled}
+          label={
+            <Group gap="xs" align="center" wrap="nowrap">
+              <Text fw={500}>{t("compress.lineArt.label", "Convert images to line art (bilevel)")}</Text>
+              <Badge size="sm" variant="light" color={hasEnterprise ? "indigo" : "gray"}>
+                {t('compress.lineArt.enterpriseTag', 'Enterprise')}
+              </Badge>
+            </Group>
+          }
+          description={t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")}
+        />
+        {!hasEnterprise && (
+          <Text size="xs" c="dimmed">
+            {t('compress.lineArt.enterpriseDisabled', 'Requires an Enterprise license to enable line art conversion.')}
+          </Text>
+        )}
+        {parameters.lineArt && (
+          <Stack gap="xs" style={{ opacity: lineArtDisabled ? 0.6 : 1 }}>
+            <Group justify="space-between" align="center">
+              <Text size="sm" fw={600}>{t('compress.lineArt.thresholdLabel', 'Line thickness')}</Text>
+              <Badge size="sm" variant="outline" color="blue">
+                {t('compress.lineArt.thresholdBadge', { defaultValue: '{value}%', value: parameters.lineArtThreshold })}
+              </Badge>
+            </Group>
+            <Slider
+              min={0}
+              max={100}
+              step={1}
+              value={parameters.lineArtThreshold}
+              onChange={(value) => onParameterChange('lineArtThreshold', value)}
+              disabled={lineArtDisabled}
+              label={null}
+              marks={[
+                { value: 25, label: t('compress.lineArt.thresholdHintFine', 'Finer lines') },
+                { value: 55, label: t('compress.lineArt.thresholdHintBalanced', 'Balanced') },
+                { value: 85, label: t('compress.lineArt.thresholdHintBold', 'Bolder lines') },
+              ]}
+              styles={{ markLabel: { whiteSpace: 'nowrap' } }}
+            />
+            <Text size="xs" c="dimmed">
+              {t('compress.lineArt.thresholdDescription', 'Lower percentages keep more subtle strokes; higher percentages favor stark black and white output.')}
+            </Text>
+
+            <Group justify="space-between" align="center">
+              <Text size="sm" fw={600}>{t('compress.lineArt.edgeLabel', 'Line detection strength')}</Text>
+              <Badge size="sm" variant="light" color="blue">
+                {edgeDescriptor}
+              </Badge>
+            </Group>
+            <SegmentedControl
+              fullWidth
+              disabled={lineArtDisabled}
+              data={[
+                { value: '1', label: t('compress.lineArt.edgeLow', 'Gentle') },
+                { value: '2', label: t('compress.lineArt.edgeMedium', 'Balanced') },
+                { value: '3', label: t('compress.lineArt.edgeHigh', 'Strong') },
+              ]}
+              value={parameters.lineArtEdgeLevel.toString()}
+              onChange={(value) => onParameterChange('lineArtEdgeLevel', parseInt(value) as 1 | 2 | 3)}
+            />
+            <Text size="xs" c="dimmed">
+              {t('compress.lineArt.edgeDescription', 'Controls how aggressively edges are detected before thresholding. Higher values emphasize outlines more.')}
+            </Text>
+            <Group gap="xs" wrap="wrap">
+              <Badge size="sm" variant="light" color="gray">
+                {thicknessDescriptor}
+              </Badge>
+              <Badge size="sm" variant="light" color="gray">
+                {edgeDescriptor}
+              </Badge>
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('compress.lineArt.previewSummary', {
+                thickness: thicknessDescriptor.toLowerCase(),
+                detection: edgeDescriptor.toLowerCase(),
+              })}
+            </Text>
+          </Stack>
+        )}
       </Stack>
     </Stack>
   );
