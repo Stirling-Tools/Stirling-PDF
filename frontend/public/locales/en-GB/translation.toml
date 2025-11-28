@@ -5777,7 +5777,7 @@ description = "Sign in with your Stirling account"
 
 [setup.mode.selfhosted]
 title = "Self-Hosted Server"
-description = "Connect to your own Stirling PDF server"
+description = "Connect to your own Stirling PDF server with your personal account"
 
 [setup.saas]
 title = "Sign in to Stirling"
