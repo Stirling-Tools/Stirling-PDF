@@ -159,6 +159,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith(
                         "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
                 // enableLogin)
+                || trimmedUri.startsWith(
+                        "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/v1/api-docs")
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
