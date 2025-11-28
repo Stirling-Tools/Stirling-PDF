@@ -216,14 +216,14 @@ export default function RightRail() {
             tooltipOffset
           )}
 
-          {renderWithTooltip(
-            <div style={{ display: 'inline-flex' }}>
-              <LanguageSelector position="left-start" offset={6} compact />
-            </div>,
-            t('rightRail.language', 'Language'),
-            tooltipPosition,
-            tooltipOffset
-          )}
+          <LanguageSelector
+            position="left-start"
+            offset={6}
+            compact
+            tooltip={t('rightRail.language', 'Language')}
+            tooltipPosition={tooltipPosition}
+            tooltipOffset={tooltipOffset}
+          />
 
           {renderWithTooltip(
             <ActionIcon
