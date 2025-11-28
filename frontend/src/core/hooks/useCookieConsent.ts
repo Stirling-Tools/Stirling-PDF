@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
 
 declare global {
   interface Window {
@@ -299,6 +300,32 @@ export const useCookieConsent = ({
       }
     };
   }, [forceLightMode, isInitialized]);
+
+  // Hide cookie banner when tour is active
+  useEffect(() => {
+    if (!isInitialized || !window.CookieConsent) {
+      return;
+    }
+
+    const handleTourState = (event: Event) => {
+      const { detail } = event as CustomEvent<TourStatePayload>;
+      
+      if (detail?.isOpen) {
+        // Hide the banner while tour is active
+        window.CookieConsent?.hide();
+      } else {
+        // Show the banner again if user hasn't made a choice yet
+        const consentCookie = window.CookieConsent?.getCookie?.();
+        const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
+        if (!hasConsented) {
+          window.CookieConsent?.show();
+        }
+      }
+    };
+
+    window.addEventListener(TOUR_STATE_EVENT, handleTourState);
+    return () => window.removeEventListener(TOUR_STATE_EVENT, handleTourState);
+  }, [isInitialized]);
 
   const showCookieConsent = useCallback(() => {
     if (isInitialized && window.CookieConsent) {

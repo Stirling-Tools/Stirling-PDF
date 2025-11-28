@@ -17,6 +17,7 @@ import { type StepType } from '@reactour/tour';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { isAuthRoute } from '@app/constants/routes';
+import { dispatchTourState } from '@app/constants/events';
 
 // Orchestrator
 import { useOnboardingOrchestrator } from '@app/components/onboarding/orchestrator/useOnboardingOrchestrator';
@@ -186,6 +187,11 @@ export default function Onboarding() {
   
   const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Dispatch tour state changes (for hiding cookie consent during tour)
+  useEffect(() => {
+    dispatchTourState(isTourOpen);
+  }, [isTourOpen]);
 
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const tourOrch = useTourOrchestration();
