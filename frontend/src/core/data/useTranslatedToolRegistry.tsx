@@ -40,6 +40,7 @@ import UnlockPdfForms from "@app/tools/UnlockPdfForms";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
+import SigningWorkflow from "@app/tools/SigningWorkflow";
 import BookletImposition from "@app/tools/BookletImposition";
 import Flatten from "@app/tools/Flatten";
 import Rotate from "@app/tools/Rotate";
@@ -64,6 +65,7 @@ import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOpera
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { signingWorkflowOperationConfig } from "@app/hooks/tools/certSign/useSigningWorkflowOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '@app/hooks/tools/merge/useMergeOperation';
 import { editTableOfContentsOperationConfig } from '@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation';
@@ -189,6 +191,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["cert-sign"],
         operationConfig: certSignOperationConfig,
         automationSettings: CertSignAutomationSettings,
+      },
+      signingWorkflow: {
+        icon: <LocalIcon icon="diversity-2-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.signingWorkflow.title", "Shared signing"),
+        component: SigningWorkflow,
+        description: t("home.signingWorkflow.desc", "Invite collaborators, issue notifications, and manage certificate collection."),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.SIGNING,
+        synonyms: getSynonyms(t, "signingWorkflow"),
+        maxFiles: -1,
+        endpoints: ["cert-sign/sessions"],
+        operationConfig: signingWorkflowOperationConfig,
+        automationSettings: null,
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
