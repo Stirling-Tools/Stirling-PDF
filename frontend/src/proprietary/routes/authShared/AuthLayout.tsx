@@ -4,6 +4,7 @@ import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
 import buildLoginSlides from '@app/components/shared/loginSlides';
 import styles from '@app/routes/authShared/AuthLayout.module.css';
 import { useLogoVariant } from '@app/hooks/useLogoVariant';
+import Footer from '@app/components/shared/Footer';
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -66,6 +67,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         {!hideRightPanel && (
           <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
         )}
+      </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', zIndex: 10 }}>
+        <Footer forceLightMode={true} />
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import Login from '@app/routes/Login';
 import { useAuth } from '@app/auth/UseSession';
 import { springAuth } from '@app/auth/springAuthClient';
 import { PreferencesProvider } from '@app/contexts/PreferencesContext';
+import { OnboardingProvider } from '@app/contexts/OnboardingContext';
 
 // Mock i18n to return fallback text
 vi.mock('react-i18next', () => ({
@@ -65,7 +66,9 @@ vi.mock('react-router-dom', async () => {
 // Test wrapper with MantineProvider
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>
-    <PreferencesProvider>{children}</PreferencesProvider>
+    <PreferencesProvider>
+      <OnboardingProvider>{children}</OnboardingProvider>
+    </PreferencesProvider>
   </MantineProvider>
 );
 
