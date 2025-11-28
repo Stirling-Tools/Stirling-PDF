@@ -64,7 +64,6 @@ export class TauriBackendService {
       return;
     }
 
-    console.log('[TauriBackendService] Initializing external backend monitoring');
     this.backendStarted = true; // Mark as active for health checks
     this.setStatus('starting');
     this.beginHealthMonitoring();
@@ -82,19 +81,17 @@ export class TauriBackendService {
     this.setStatus('starting');
 
     this.startPromise = invoke('start_backend', { backendUrl })
-      .then(async (result) => {
-        console.log('Backend started:', result);
+      .then(async () => {
         this.backendStarted = true;
         this.setStatus('starting');
 
         // Poll for the dynamically assigned port
         await this.waitForPort();
-
         this.beginHealthMonitoring();
       })
       .catch((error) => {
         this.setStatus('unhealthy');
-        console.error('Failed to start backend:', error);
+        console.error('[TauriBackendService] Failed to start backend:', error);
         throw error;
       })
       .finally(() => {
@@ -105,13 +102,11 @@ export class TauriBackendService {
   }
 
   private async waitForPort(maxAttempts = 30): Promise<void> {
-    console.log('[TauriBackendService] Waiting for backend port assignment...');
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const port = await invoke<number | null>('get_backend_port');
         if (port) {
           this.backendPort = port;
-          console.log(`[TauriBackendService] Backend port detected: ${port}`);
           return;
         }
       } catch (error) {
@@ -120,6 +115,25 @@ export class TauriBackendService {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     throw new Error('Failed to detect backend port after 15 seconds');
+  }
+
+  /**
+   * Get auth token from any available source (localStorage or Tauri store)
+   */
+  private async getAuthToken(): Promise<string | null> {
+    // Check localStorage first (web layer token)
+    const localStorageToken = localStorage.getItem('stirling_jwt');
+    if (localStorageToken) {
+      return localStorageToken;
+    }
+
+    // Fallback to Tauri store
+    try {
+      return await invoke<string | null>('get_auth_token');
+    } catch {
+      console.debug('[TauriBackendService] No auth token available');
+      return null;
+    }
   }
 
   private beginHealthMonitoring() {
@@ -138,56 +152,57 @@ export class TauriBackendService {
   async checkBackendHealth(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // For remote server mode, check the configured server
-    if (mode !== 'offline') {
+    // Determine base URL based on mode
+    let baseUrl: string;
+    if (mode === 'selfhosted') {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
-        console.error('[TauriBackendService] Server mode but no server URL configured');
+        console.error('[TauriBackendService] Self-hosted mode but no server URL configured');
         this.setStatus('unhealthy');
         return false;
       }
-
-      try {
-        const baseUrl = serverConfig.url.replace(/\/$/, '');
-        const healthUrl = `${baseUrl}/api/v1/info/status`;
-        const response = await fetch(healthUrl, {
-          method: 'GET',
-          connectTimeout: 5000,
-        });
-
-        const isHealthy = response.ok;
-        this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-        return isHealthy;
-      } catch (error) {
-        const errorStr = String(error);
-        if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-          console.error('[TauriBackendService] Server health check failed:', error);
-        }
-        this.setStatus('unhealthy');
+      baseUrl = serverConfig.url.replace(/\/$/, '');
+    } else {
+      // SaaS mode - check bundled local backend
+      if (!this.backendStarted) {
+        this.setStatus('stopped');
         return false;
       }
+      if (!this.backendPort) {
+        return false;
+      }
+      baseUrl = `http://localhost:${this.backendPort}`;
     }
 
-    // For offline mode, check the bundled backend via Rust
-    if (!this.backendStarted) {
-      this.setStatus('stopped');
-      return false;
-    }
-
-    if (!this.backendPort) {
-      console.debug('[TauriBackendService] Backend port not available yet');
-      return false;
-    }
-
+    // Check if backend is ready (dependencies checked)
     try {
-      const isHealthy = await invoke<boolean>('check_backend_health', { port: this.backendPort });
-      this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
-      return isHealthy;
-    } catch (error) {
-      const errorStr = String(error);
-      if (!errorStr.includes('connection refused') && !errorStr.includes('No connection could be made')) {
-        console.error('[TauriBackendService] Bundled backend health check failed:', error);
+      const configUrl = `${baseUrl}/api/v1/config/app-config`;
+
+      // For self-hosted mode, include auth token if available
+      const headers: Record<string, string> = {};
+      if (mode === 'selfhosted') {
+        const token = await this.getAuthToken();
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
       }
+
+      const response = await fetch(configUrl, {
+        method: 'GET',
+        connectTimeout: 5000,
+        headers,
+      });
+
+      if (!response.ok) {
+        this.setStatus('unhealthy');
+        return false;
+      }
+
+      const data = await response.json();
+      const dependenciesReady = data.dependenciesReady === true;
+      this.setStatus(dependenciesReady ? 'healthy' : 'starting');
+      return dependenciesReady;
+    } catch {
       this.setStatus('unhealthy');
       return false;
     }
@@ -197,7 +212,6 @@ export class TauriBackendService {
     for (let i = 0; i < maxAttempts; i++) {
       const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
-        console.log('Backend is healthy');
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -210,7 +224,6 @@ export class TauriBackendService {
    * Reset backend state (used when switching from external to local backend)
    */
   reset(): void {
-    console.log('[TauriBackendService] Resetting backend state');
     this.backendStarted = false;
     this.backendPort = null;
     this.setStatus('stopped');

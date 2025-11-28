@@ -10,7 +10,6 @@ class BackendHealthMonitor {
   private readonly intervalMs: number;
   private state: BackendHealthState = {
     status: tauriBackendService.getBackendStatus(),
-    isChecking: false,
     error: null,
     isHealthy: tauriBackendService.getBackendStatus() === 'healthy',
   };
@@ -26,20 +25,30 @@ class BackendHealthMonitor {
         message: status === 'healthy'
           ? i18n.t('backendHealth.online', 'Backend Online')
           : this.state.message ?? i18n.t('backendHealth.offline', 'Backend Offline'),
-        isChecking: status === 'healthy' ? false : this.state.isChecking,
       });
     });
   }
 
   private updateState(partial: Partial<BackendHealthState>) {
     const nextStatus = partial.status ?? this.state.status;
-    this.state = {
+    const nextState = {
       ...this.state,
       ...partial,
       status: nextStatus,
       isHealthy: nextStatus === 'healthy',
     };
-    this.listeners.forEach((listener) => listener(this.state));
+
+    // Only notify listeners if meaningful state changed
+    const meaningfulChange =
+      this.state.status !== nextState.status ||
+      this.state.error !== nextState.error ||
+      this.state.message !== nextState.message;
+
+    this.state = nextState;
+
+    if (meaningfulChange) {
+      this.listeners.forEach((listener) => listener(this.state));
+    }
   }
 
   private ensurePolling() {
@@ -60,29 +69,19 @@ class BackendHealthMonitor {
   }
 
   private async pollOnce(): Promise<boolean> {
-    this.updateState({
-      isChecking: true,
-      lastChecked: Date.now(),
-      error: this.state.error ?? 'Backend offline',
-    });
-
     try {
       const healthy = await tauriBackendService.checkBackendHealth();
       if (healthy) {
         this.updateState({
           status: 'healthy',
-          isChecking: false,
           message: i18n.t('backendHealth.online', 'Backend Online'),
           error: null,
-          lastChecked: Date.now(),
         });
       } else {
         this.updateState({
           status: 'unhealthy',
-          isChecking: false,
           message: i18n.t('backendHealth.offline', 'Backend Offline'),
           error: i18n.t('backendHealth.offline', 'Backend Offline'),
-          lastChecked: Date.now(),
         });
       }
       return healthy;
@@ -90,10 +89,8 @@ class BackendHealthMonitor {
       console.error('[BackendHealthMonitor] Health check failed:', error);
       this.updateState({
         status: 'unhealthy',
-        isChecking: false,
         message: 'Backend is unavailable',
         error: 'Backend offline',
-        lastChecked: Date.now(),
       });
       return false;
     }

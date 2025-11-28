@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,6 +37,9 @@ public class JobExecutorService {
     private final JobQueue jobQueue;
     private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
     private final long effectiveTimeoutMs;
+
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
 
     public JobExecutorService(
             TaskManager taskManager,
@@ -98,11 +102,17 @@ public class JobExecutorService {
             long customTimeoutMs,
             boolean queueable,
             int resourceWeight) {
-        String jobId = UUID.randomUUID().toString();
+        // Generate base UUID
+        String baseJobId = UUID.randomUUID().toString();
 
-        // Store the job ID in the request for potential use by other components
+        // Scope job to authenticated user if security is enabled
+        String scopedJobKey = getScopedJobKey(baseJobId);
+
+        log.debug("Generated jobId: {} (base: {})", scopedJobKey, baseJobId);
+
+        // Store the scoped job ID in the request for potential use by other components
         if (request != null) {
-            request.setAttribute("jobId", jobId);
+            request.setAttribute("jobId", scopedJobKey);
 
             // Also track this job ID in the user's session for authorization purposes
             // This ensures users can only cancel their own jobs
@@ -116,10 +126,12 @@ public class JobExecutorService {
                     request.getSession().setAttribute("userJobIds", userJobIds);
                 }
 
-                userJobIds.add(jobId);
-                log.debug("Added job ID {} to user session", jobId);
+                userJobIds.add(scopedJobKey);
+                log.debug("Added scoped job ID {} to user session", scopedJobKey);
             }
         }
+
+        String jobId = scopedJobKey;
 
         // Determine which timeout to use
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
@@ -149,17 +161,31 @@ public class JobExecutorService {
             taskManager.createTask(jobId);
 
             // Create a specialized wrapper that updates the TaskManager
+            final String capturedJobIdForQueue = jobId;
             Supplier<Object> wrappedWork =
                     () -> {
                         try {
+                            // Set jobId in ThreadLocal context for the queued job
+                            stirling.software.common.util.JobContext.setJobId(
+                                    capturedJobIdForQueue);
+                            log.debug(
+                                    "Set jobId {} in JobContext for queued job execution",
+                                    capturedJobIdForQueue);
+
                             Object result = work.get();
-                            processJobResult(jobId, result);
+                            processJobResult(capturedJobIdForQueue, result);
                             return result;
                         } catch (Exception e) {
                             log.error(
-                                    "Error executing queued job {}: {}", jobId, e.getMessage(), e);
-                            taskManager.setError(jobId, e.getMessage());
+                                    "Error executing queued job {}: {}",
+                                    capturedJobIdForQueue,
+                                    e.getMessage(),
+                                    e);
+                            taskManager.setError(capturedJobIdForQueue, e.getMessage());
                             throw e;
+                        } finally {
+                            // Clean up ThreadLocal to avoid memory leaks
+                            stirling.software.common.util.JobContext.clear();
                         }
                     };
 
@@ -171,21 +197,36 @@ public class JobExecutorService {
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
             taskManager.createTask(jobId);
+
+            // Capture the jobId for the async thread
+            final String capturedJobId = jobId;
+
             executor.execute(
                     () -> {
                         try {
                             log.debug(
-                                    "Running async job {} with timeout {} ms", jobId, timeoutToUse);
+                                    "Running async job {} with timeout {} ms",
+                                    capturedJobId,
+                                    timeoutToUse);
+
+                            // Set jobId in ThreadLocal context for the async thread
+                            stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                            log.debug(
+                                    "Set jobId {} in JobContext for async execution",
+                                    capturedJobId);
 
                             // Execute with timeout
                             Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
-                            processJobResult(jobId, result);
+                            processJobResult(capturedJobId, result);
                         } catch (TimeoutException te) {
                             log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
                             taskManager.setError(jobId, "Job timed out");
                         } catch (Exception e) {
                             log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
                             taskManager.setError(jobId, e.getMessage());
+                        } finally {
+                            // Clean up ThreadLocal to avoid memory leaks
+                            stirling.software.common.util.JobContext.clear();
                         }
                     });
 
@@ -193,6 +234,10 @@ public class JobExecutorService {
         } else {
             try {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
+
+                // Make jobId available to downstream components on the worker thread
+                stirling.software.common.util.JobContext.setJobId(jobId);
+                log.debug("Set jobId {} in JobContext for sync execution", jobId);
 
                 // Execute with timeout
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
@@ -213,6 +258,8 @@ public class JobExecutorService {
                 // Construct a JSON error response
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
+            } finally {
+                stirling.software.common.util.JobContext.clear();
             }
         }
     }
@@ -466,8 +513,23 @@ public class JobExecutorService {
             throws TimeoutException, Exception {
         // Use the same executor as other async jobs for consistency
         // This ensures all operations run on the same thread pool
+        String currentJobId = stirling.software.common.util.JobContext.getJobId();
+
         java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(supplier, executor);
+                java.util.concurrent.CompletableFuture.supplyAsync(
+                        () -> {
+                            if (currentJobId != null) {
+                                stirling.software.common.util.JobContext.setJobId(currentJobId);
+                            }
+                            try {
+                                return supplier.get();
+                            } finally {
+                                if (currentJobId != null) {
+                                    stirling.software.common.util.JobContext.clear();
+                                }
+                            }
+                        },
+                        executor);
 
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
@@ -482,5 +544,19 @@ public class JobExecutorService {
             Thread.currentThread().interrupt();
             throw new Exception("Execution was interrupted", e);
         }
+    }
+
+    /**
+     * Get a scoped job key that includes user ownership when security is enabled.
+     *
+     * @param baseJobId the base job identifier
+     * @return scoped job key, or just baseJobId if no ownership service available
+     */
+    private String getScopedJobKey(String baseJobId) {
+        if (jobOwnershipService != null) {
+            return jobOwnershipService.createScopedJobKey(baseJobId);
+        }
+        // Security disabled, return unsecured job key
+        return baseJobId;
     }
 }

@@ -14,6 +14,6 @@ export type RemoveCertificateSignParametersHook = BaseParametersHook<RemoveCerti
 export const useRemoveCertificateSignParameters = (): RemoveCertificateSignParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'remove-certificate-sign',
+    endpointName: 'remove-cert-sign',
   });
 };

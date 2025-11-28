@@ -98,6 +98,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/read': 'read',
   '/automate': 'automate',
   '/sign': 'sign',
+  '/add-text': 'addText',
 
   // Developer tools
   '/dev-api': 'devApi',

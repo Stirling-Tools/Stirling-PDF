@@ -51,3 +51,26 @@ export function detectFileExtension(filename: string): string {
 
   return extension;
 }
+
+/**
+ * Checks if a file is a PDF based on extension and MIME type
+ * @param file - File or file-like object with name and type properties
+ * @returns true if the file appears to be a PDF
+ */
+export function isPdfFile(file: { name?: string; type?: string } | File | Blob | null | undefined): boolean {
+  if (!file) return false;
+
+  const name = 'name' in file ? file.name : undefined;
+  const type = file.type;
+
+  // Check MIME type first (most reliable)
+  if (type === 'application/pdf') return true;
+
+  // Check file extension as fallback
+  if (name) {
+    const ext = detectFileExtension(name);
+    if (ext === 'pdf') return true;
+  }
+
+  return false;
+}

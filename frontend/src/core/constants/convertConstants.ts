@@ -35,7 +35,9 @@ export const CONVERSION_ENDPOINTS = {
   'markdown-pdf': '/api/v1/convert/markdown/pdf',
   'eml-pdf': '/api/v1/convert/eml/pdf',
   'cbr-pdf': '/api/v1/convert/cbr/pdf',
-  'pdf-cbr': '/api/v1/convert/pdf/cbr'
+  'pdf-cbr': '/api/v1/convert/pdf/cbr',
+  'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
+  'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -56,7 +58,9 @@ export const ENDPOINT_NAMES = {
   'markdown-pdf': 'markdown-to-pdf',
   'eml-pdf': 'eml-to-pdf',
   'cbr-pdf': 'cbr-to-pdf',
-  'pdf-cbr': 'pdf-to-cbr'
+  'pdf-cbr': 'pdf-to-cbr',
+  'pdf-text-editor': 'pdf-to-text-editor',
+  'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
 
 

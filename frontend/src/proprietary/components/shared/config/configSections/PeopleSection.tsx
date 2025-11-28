@@ -27,11 +27,16 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import InviteMembersModal from '@app/components/shared/InviteMembersModal';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useNavigate } from 'react-router-dom';
+import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
+import { useLicense } from '@app/contexts/LicenseContext';
 
 export default function PeopleSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
+  const navigate = useNavigate();
+  const { licenseInfo: globalLicenseInfo } = useLicense();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +55,24 @@ export default function PeopleSection() {
     premiumEnabled: boolean;
     totalUsers: number;
   } | null>(null);
+  const hasNoSlots = licenseInfo ? licenseInfo.availableSlots === 0 : false;
+  const handleAddMembersClick = () => {
+    if (!loginEnabled) {
+      return;
+    }
+    if (hasNoSlots) {
+      navigate('/settings/adminPlan');
+      return;
+    }
+    setInviteModalOpened(true);
+  };
+
+  const addMemberTooltip = !loginEnabled
+    ? t('workspace.people.loginRequired', 'Enable login mode first')
+    : hasNoSlots
+      ? t('workspace.people.license.noSlotsAvailable', 'No user slots available')
+      : null;
+
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -323,9 +346,18 @@ export default function PeopleSection() {
           </Text>
 
           {licenseInfo.availableSlots === 0 && (
-            <Badge color="red" variant="light" size="sm">
-              {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
-            </Badge>
+            <Group gap="xs" wrap="nowrap" align="center">
+              <Badge color="red" variant="light" size="sm">
+                {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
+              </Badge>
+              <Button
+                size="compact-sm"
+                variant="outline"
+                onClick={() => navigate('/settings/adminPlan')}
+              >
+                {t('workspace.people.actions.upgrade', 'Upgrade')}
+              </Button>
+            </Group>
           )}
 
           {licenseInfo.grandfatheredUserCount > 0 && (
@@ -342,6 +374,17 @@ export default function PeopleSection() {
               +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
             </Badge>
           )}
+
+          {/* Enterprise Seat Management Button */}
+          {globalLicenseInfo?.licenseType === 'ENTERPRISE' && (
+            <>
+              <Text size="sm" c="dimmed" span>•</Text>
+              <UpdateSeatsButton
+                size="xs"
+                onSuccess={fetchData}
+              />
+            </>
+          )}
         </Group>
       )}
 
@@ -355,14 +398,14 @@ export default function PeopleSection() {
           style={{ maxWidth: 300 }}
         />
         <Tooltip
-          label={!loginEnabled ? 'Enable login mode first' : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          label={addMemberTooltip || undefined}
           disabled={loginEnabled && (!licenseInfo || licenseInfo.availableSlots > 0)}
           position="bottom"
           withArrow
         >
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
-            onClick={() => setInviteModalOpened(true)}
+            onClick={handleAddMembersClick}
             disabled={!loginEnabled || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
           >
             {t('workspace.people.addMembers')}
@@ -494,9 +537,9 @@ export default function PeopleSection() {
                           <div>
                             <Text size="xs" fw={500}>Authentication: {user.authenticationType || 'Unknown'}</Text>
                             <Text size="xs">
-                              Last Activity: {user.lastRequest
+                              Last Activity: {user.lastRequest && new Date(user.lastRequest).getFullYear() >= 1980
                                 ? new Date(user.lastRequest).toLocaleString()
-                                : 'Never'}
+                                :t('never', 'Never')}
                             </Text>
                           </div>
                         }

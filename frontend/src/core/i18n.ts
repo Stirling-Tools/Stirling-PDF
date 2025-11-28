@@ -1,13 +1,11 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-http-backend';
+import TomlBackend from '@app/i18n/tomlBackend';
 
 // Define supported languages (based on your existing translations)
 export const supportedLanguages = {
-  'en': 'English',
-  'en-GB': 'English (UK)',
-  'en-US': 'English (US)',
+  'en-GB': 'English',
   'ar-AR': 'العربية',
   'az-AZ': 'Azərbaycan Dili',
   'bg-BG': 'Български',
@@ -53,7 +51,7 @@ export const supportedLanguages = {
 export const rtlLanguages = ['ar-AR', 'fa-IR'];
 
 i18n
-  .use(Backend)
+  .use(TomlBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -72,18 +70,21 @@ i18n
 
     backend: {
       loadPath: (lngs: string[], namespaces: string[]) => {
-        // Map 'en' to 'en-GB' for loading translations
-        const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
+        const lng = lngs[0];
         const basePath = import.meta.env.BASE_URL || '/';
         const cleanBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
-        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
       },
     },
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
-      convertDetectedLanguage: (lng: string) => lng === 'en' ? 'en-GB' : lng,
+      convertDetectedLanguage: (lng: string) => {
+        // Map en and en-US to en-GB
+        if (lng === 'en' || lng === 'en-US') return 'en-GB';
+        return lng;
+      },
     },
 
     react: {

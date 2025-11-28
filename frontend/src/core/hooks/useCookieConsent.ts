@@ -2,12 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 
 declare global {
   interface Window {
     CookieConsent?: {
       run: (config: any) => void;
       show: (show?: boolean) => void;
+      hide: () => void;
+      getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };
@@ -23,12 +26,28 @@ export const useCookieConsent = ({
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const { isOpen: tourIsOpen } = useOnboarding();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (!analyticsEnabled) {
       console.log('Cookie consent not enabled - analyticsEnabled is false');
       return;
+    }
+
+    // Load the cookie consent CSS files first (always needed)
+    const mainCSS = document.createElement('link');
+    mainCSS.rel = 'stylesheet';
+    mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
+    if (!document.querySelector(`link[href="${mainCSS.href}"]`)) {
+      document.head.appendChild(mainCSS);
+    }
+
+    const customCSS = document.createElement('link');
+    customCSS.rel = 'stylesheet';
+    customCSS.href = `${BASE_PATH}css/cookieconsentCustomisation.css`;
+    if (!document.querySelector(`link[href="${customCSS.href}"]`)) {
+      document.head.appendChild(customCSS);
     }
 
     // Prevent double initialization
@@ -41,20 +60,9 @@ export const useCookieConsent = ({
       return;
     }
 
-    // Load the cookie consent CSS files first
-    const mainCSS = document.createElement('link');
-    mainCSS.rel = 'stylesheet';
-    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
-    document.head.appendChild(mainCSS);
-
-    const customCSS = document.createElement('link');
-    customCSS.rel = 'stylesheet';
-    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
-    document.head.appendChild(customCSS);
-
     // Load the cookie consent library
     const script = document.createElement('script');
-    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
+    script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
@@ -237,11 +245,35 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
-  const showCookiePreferences = () => {
+  // Hide cookie banner when tour is active
+  useEffect(() => {
+    if (!isInitialized || !window.CookieConsent) {
+      return;
+    }
+
+    if (tourIsOpen) {
+      window.CookieConsent.hide();
+    } else {
+      // Only show if user hasn't made a choice yet
+      const consentCookie = window.CookieConsent.getCookie?.();
+      const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
+      if (!hasConsented) {
+        window.CookieConsent.show();
+      }
+    }
+  }, [tourIsOpen, isInitialized]);
+
+  const showCookieConsent = useCallback(() => {
+    if (isInitialized && window.CookieConsent) {
+      window.CookieConsent?.show();
+    }
+  }, [isInitialized]);
+
+  const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  };
+  }, [isInitialized]);
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -251,7 +283,9 @@ export const useCookieConsent = ({
   }, []);
 
   return {
+    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted
+    isServiceAccepted,
+    isInitialized,
   };
 };

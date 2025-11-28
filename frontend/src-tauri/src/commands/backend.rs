@@ -349,11 +349,11 @@ pub async fn start_backend(
     };
 
     match mode {
-        ConnectionMode::Offline => {
-            add_log("🔌 Running in Offline mode - starting local backend".to_string());
+        ConnectionMode::SaaS => {
+            add_log("☁️ Running in SaaS mode - starting local backend".to_string());
         }
-        ConnectionMode::Server => {
-            add_log("🌐 Running in Server mode - starting local backend (for hybrid execution support)".to_string());
+        ConnectionMode::SelfHosted => {
+            add_log("🌐 Running in Self-Hosted mode - starting local backend (for hybrid execution support)".to_string());
         }
     }
 
@@ -397,10 +397,6 @@ pub async fn start_backend(
         reset_starting_flag();
         e
     })?;
-
-    // Wait for the backend to start
-    println!("⏳ Waiting for backend startup...");
-    tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
 
     // Reset the starting flag since startup is complete
     reset_starting_flag();
