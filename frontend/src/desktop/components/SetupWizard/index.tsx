@@ -61,7 +61,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       }
 
       await connectionModeService.switchToSaaS(serverConfig.url);
-      await tauriBackendService.startBackend();
+      tauriBackendService.startBackend().catch(console.error);
       onComplete();
     } catch (err) {
       console.error('SaaS login failed:', err);
