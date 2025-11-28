@@ -58,6 +58,21 @@ public class UIDataController {
         this.runtimePathConfig = runtimePathConfig;
     }
 
+    @GetMapping("/footer-info")
+    @Operation(summary = "Get public footer configuration data")
+    public ResponseEntity<FooterData> getFooterData() {
+        FooterData data = new FooterData();
+        data.setAnalyticsEnabled(applicationProperties.getSystem().getEnableAnalytics());
+        data.setTermsAndConditions(applicationProperties.getLegal().getTermsAndConditions());
+        data.setPrivacyPolicy(applicationProperties.getLegal().getPrivacyPolicy());
+        data.setAccessibilityStatement(
+                applicationProperties.getLegal().getAccessibilityStatement());
+        data.setCookiePolicy(applicationProperties.getLegal().getCookiePolicy());
+        data.setImpressum(applicationProperties.getLegal().getImpressum());
+
+        return ResponseEntity.ok(data);
+    }
+
     @GetMapping("/home")
     @Operation(summary = "Get home page data")
     public ResponseEntity<HomeData> getHomeData() {
@@ -237,6 +252,16 @@ public class UIDataController {
     }
 
     // Data classes
+    @Data
+    public static class FooterData {
+        private Boolean analyticsEnabled;
+        private String termsAndConditions;
+        private String privacyPolicy;
+        private String accessibilityStatement;
+        private String cookiePolicy;
+        private String impressum;
+    }
+
     @Data
     public static class HomeData {
         private boolean showSurveyFromDocker;
