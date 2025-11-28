@@ -8,8 +8,6 @@
  * - type: The type of step for rendering purposes
  */
 
-import { ServerExperienceValue } from "@app/contexts/ServerExperienceContext";
-
 export type OnboardingStepId =
   | 'first-login'
   | 'welcome'
@@ -60,9 +58,15 @@ export interface OnboardingRuntimeState {
 }
 
 /**
- * Context passed to step condition functions
+ * Context passed to step condition functions.
+ * Combines runtime state with server experience properties.
  */
-export interface OnboardingConditionContext extends ServerExperienceValue, OnboardingRuntimeState {}
+export interface OnboardingConditionContext extends OnboardingRuntimeState {
+  /** Whether login is enabled on the server */
+  loginEnabled: boolean;
+  /** Whether the user is effectively an admin (via login or self-reported) */
+  effectiveIsAdmin: boolean;
+}
 
 export interface OnboardingStep {
   id: OnboardingStepId;
