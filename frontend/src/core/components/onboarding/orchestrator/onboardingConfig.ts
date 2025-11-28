@@ -59,6 +59,8 @@ export interface OnboardingRuntimeState {
   requiresPasswordChange: boolean;
   /** Username for first login password change */
   firstLoginUsername: string;
+  /** Whether user is using default credentials (admin/stirling) - can auto-fill current password */
+  usingDefaultCredentials: boolean;
 }
 
 /**
@@ -100,6 +102,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   },
   requiresPasswordChange: false,
   firstLoginUsername: '',
+  usingDefaultCredentials: false,
 };
 
 /**

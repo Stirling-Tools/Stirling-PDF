@@ -227,11 +227,18 @@ export function useOnboardingOrchestrator(
       }
 
       try {
-        const accountData = await accountService.getAccountData();
+        // Fetch account data and login page data in parallel
+        const [accountData, loginPageData] = await Promise.all([
+          accountService.getAccountData(),
+          accountService.getLoginPageData(),
+        ]);
+        
         setRuntimeState((prev) => ({
           ...prev,
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
+          // If showDefaultCredentials is true, we know the password is "stirling"
+          usingDefaultCredentials: loginPageData.showDefaultCredentials,
         }));
       } catch (err) {
         // If account endpoint fails, user doesn't have security enabled or isn't logged in

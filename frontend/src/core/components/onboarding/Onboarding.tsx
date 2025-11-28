@@ -347,6 +347,7 @@ export default function Onboarding() {
       // First login params
       firstLoginUsername: runtimeState.firstLoginUsername,
       onPasswordChanged: handlePasswordChanged,
+      usingDefaultCredentials: runtimeState.usingDefaultCredentials,
     });
   }, [currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
 

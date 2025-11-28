@@ -11,11 +11,15 @@ import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnb
 interface FirstLoginSlideProps {
   username: string;
   onPasswordChanged: () => void;
+  usingDefaultCredentials?: boolean;
 }
 
-function FirstLoginForm({ username, onPasswordChanged }: FirstLoginSlideProps) {
+const DEFAULT_PASSWORD = 'stirling';
+
+function FirstLoginForm({ username, onPasswordChanged, usingDefaultCredentials = false }: FirstLoginSlideProps) {
   const { t } = useTranslation();
-  const [currentPassword, setCurrentPassword] = useState('');
+  // If using default credentials, pre-fill with "stirling" - user won't see this field
+  const [currentPassword, setCurrentPassword] = useState(usingDefaultCredentials ? DEFAULT_PASSWORD : '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +27,7 @@ function FirstLoginForm({ username, onPasswordChanged }: FirstLoginSlideProps) {
 
   const handleSubmit = async () => {
     // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if ((!usingDefaultCredentials && !currentPassword) || !newPassword || !confirmPassword) {
       setError(t('firstLogin.allFieldsRequired', 'All fields are required'));
       return;
     }
@@ -104,16 +108,19 @@ function FirstLoginForm({ username, onPasswordChanged }: FirstLoginSlideProps) {
             </Alert>
           )}
 
-          <PasswordInput
-            label={t('firstLogin.currentPassword', 'Current Password')}
-            placeholder={t('firstLogin.enterCurrentPassword', 'Enter your current password')}
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.currentTarget.value)}
-            required
-            styles={{
-              input: { height: 44 },
-            }}
-          />
+          {/* Only show current password field if not using default credentials */}
+          {!usingDefaultCredentials && (
+            <PasswordInput
+              label={t('firstLogin.currentPassword', 'Current Password')}
+              placeholder={t('firstLogin.enterCurrentPassword', 'Enter your current password')}
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.currentTarget.value)}
+              required
+              styles={{
+                input: { height: 44 },
+              }}
+            />
+          )}
 
           <PasswordInput
             label={t('firstLogin.newPassword', 'New Password')}
@@ -141,7 +148,7 @@ function FirstLoginForm({ username, onPasswordChanged }: FirstLoginSlideProps) {
             fullWidth
             onClick={handleSubmit}
             loading={loading}
-            disabled={!currentPassword || !newPassword || !confirmPassword}
+            disabled={!newPassword || !confirmPassword}
             size="md"
             mt="xs"
           >
@@ -156,11 +163,18 @@ function FirstLoginForm({ username, onPasswordChanged }: FirstLoginSlideProps) {
 export default function FirstLoginSlide({
   username,
   onPasswordChanged,
+  usingDefaultCredentials = false,
 }: FirstLoginSlideProps): SlideConfig {
   return {
     key: 'first-login',
     title: 'Set Your Password',
-    body: <FirstLoginForm username={username} onPasswordChanged={onPasswordChanged} />,
+    body: (
+      <FirstLoginForm 
+        username={username} 
+        onPasswordChanged={onPasswordChanged} 
+        usingDefaultCredentials={usingDefaultCredentials}
+      />
+    ),
     background: {
       gradientStops: ['#059669', '#0891B2'], // Green to teal - security/trust colors
       circles: UNIFIED_CIRCLE_CONFIG,
