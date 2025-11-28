@@ -5813,6 +5813,13 @@ submit = "Login"
 signInWith = "Sign in with"
 oauthPending = "Opening browser for authentication..."
 orContinueWith = "Or continue with email"
+serverRequirement = "Note: The server must have login enabled."
+showInstructions = "How to enable?"
+hideInstructions = "Hide instructions"
+instructions = "To enable login on your Stirling PDF server:"
+instructionsEnvVar = "Set the environment variable:"
+instructionsOrYml = "Or in settings.yml:"
+instructionsRestart = "Then restart your server for the changes to take effect."
 
 [setup.login.username]
 label = "Username"
