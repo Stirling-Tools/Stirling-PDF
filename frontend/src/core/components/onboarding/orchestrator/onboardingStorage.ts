@@ -124,9 +124,6 @@ export function migrateFromLegacyPreferences(): void {
         markStepSeen('server-license');
       }
       
-      if (prefs.hasSeenCookieBanner === true) {
-        markStepSeen('cookie-consent');
-      }
     }
     
     // Mark migration complete

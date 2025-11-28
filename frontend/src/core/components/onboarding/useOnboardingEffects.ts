@@ -19,7 +19,7 @@ import {
   type TourType,
   type StartTourPayload,
 } from '@app/constants/events';
-import type { OnboardingStep, OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
+import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
 
 /**
  * Manages the session storage flag that blocks the UpgradeBanner
@@ -35,29 +35,6 @@ export function useUpgradeBannerBlock(onboardingFullyComplete: boolean) {
     );
     window.dispatchEvent(new CustomEvent(ONBOARDING_SESSION_EVENT));
   }, [onboardingFullyComplete]);
-}
-
-/**
- * Handles the cookie consent step - shows the consent modal and
- * listens for the consent event to complete the step.
- */
-export function useCookieConsentStep(
-  currentStep: OnboardingStep | null,
-  showCookieConsent: () => void,
-  onComplete: () => void
-) {
-  useEffect(() => {
-    if (currentStep?.id !== 'cookie-consent') return;
-
-    showCookieConsent();
-    
-    const handleConsent = () => {
-      onComplete();
-    };
-
-    window.addEventListener('cc:onConsent', handleConsent);
-    return () => window.removeEventListener('cc:onConsent', handleConsent);
-  }, [currentStep, showCookieConsent, onComplete]);
 }
 
 /**

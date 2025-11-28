@@ -19,14 +19,12 @@ export type OnboardingStepId =
   | 'tool-layout'
   | 'tour'
   | 'server-license'
-  | 'cookie-consent'
   | 'analytics-choice';
 
 export type OnboardingStepType =
   | 'modal-slide'
   | 'tool-prompt'
   | 'tour'
-  | 'cookie-consent'
   | 'analytics-modal';
 
 /**
@@ -44,8 +42,6 @@ export interface OnboardingRuntimeState {
   isDesktopApp: boolean;
   /** Whether analytics config needs admin decision */
   analyticsNotConfigured: boolean;
-  /** Whether cookie consent has been responded to */
-  cookieConsentResponded: boolean;
   /** Whether analytics is enabled on the server */
   analyticsEnabled: boolean;
   /** License notice for server license step */
@@ -92,7 +88,6 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   tourType: 'tools',
   isDesktopApp: false,
   analyticsNotConfigured: false,
-  cookieConsentResponded: false,
   analyticsEnabled: false,
   licenseNotice: {
     totalUsers: null,
@@ -191,23 +186,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 
   // ============================================
   // PHASE 5: Analytics Choice (Admins Only)
-  // Must come BEFORE cookie consent - admin needs to decide on analytics first
+  // Cookie consent is now shown immediately via useCookieConsent hook (not in onboarding)
   // ============================================
   {
     id: 'analytics-choice',
     type: 'analytics-modal',
     // Show for admins when analytics config is null (needs decision)
     condition: (ctx) => ctx.effectiveIsAdmin && ctx.analyticsNotConfigured,
-  },
-
-  // ============================================
-  // PHASE 6: Cookie Consent
-  // ============================================
-  {
-    id: 'cookie-consent',
-    type: 'cookie-consent',
-    // Show if analytics is explicitly enabled (not null) and user hasn't responded yet
-    condition: (ctx) => ctx.analyticsEnabled && !ctx.analyticsNotConfigured && !ctx.cookieConsentResponded,
   },
 ];
 

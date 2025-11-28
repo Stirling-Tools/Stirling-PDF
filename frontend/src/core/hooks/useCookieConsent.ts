@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { isAuthRoute } from '@core/constants/routes';
 
 declare global {
   interface Window {
@@ -20,30 +18,20 @@ declare global {
 
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
+  forceLightMode?: boolean;
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false
+  analyticsEnabled = false,
+  forceLightMode = false
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const location = useLocation();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check if we're on an auth route - don't auto-show cookie consent there
-  const onAuthRoute = isAuthRoute(location.pathname);
-
   useEffect(() => {
-    // Cookie consent initialization is now controlled by the onboarding system.
-    // This hook only provides utility functions - it does NOT auto-show the consent.
-    // The onboarding config determines when cookie consent appears in the flow.
-    
+    // Cookie consent shows immediately when analytics is enabled
     if (!analyticsEnabled) {
-      return;
-    }
-
-    // Don't initialize on auth routes
-    if (onAuthRoute) {
       return;
     }
 
@@ -62,7 +50,7 @@ export const useCookieConsent = ({
       document.head.appendChild(customCSS);
     }
 
-    // If already initialized, just mark as ready (do NOT auto-show)
+    // If already initialized, just mark as ready
     if (window.CookieConsent) {
       setIsInitialized(true);
       return;
@@ -77,6 +65,12 @@ export const useCookieConsent = ({
 
         // Detect current theme and set appropriate mode
         const detectTheme = () => {
+          // If forceLightMode is enabled, always use light mode
+          if (forceLightMode) {
+            document.documentElement.classList.remove('cc--darkmode');
+            return false;
+          }
+
           const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
           const hasLightClass = document.documentElement.classList.contains('light');
           const hasDarkClass = document.documentElement.classList.contains('dark');
@@ -112,27 +106,30 @@ export const useCookieConsent = ({
           return;
         }
 
-        // Listen for theme changes
-        const themeObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-mantine-color-scheme' ||
-                 mutation.attributeName === 'class')) {
-              detectTheme();
-            }
+        // Listen for theme changes (but not if forceLightMode is enabled)
+        let themeObserver: MutationObserver | null = null;
+        if (!forceLightMode) {
+          themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' &&
+                  (mutation.attributeName === 'data-mantine-color-scheme' ||
+                   mutation.attributeName === 'class')) {
+                detectTheme();
+              }
+            });
           });
-        });
 
-        themeObserver.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['data-mantine-color-scheme', 'class']
-        });
+          themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-mantine-color-scheme', 'class']
+          });
+        }
 
 
         // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
-            autoShow: false, // Controlled by onboarding system, not auto-shown
+            autoShow: true, // Show immediately when analytics is enabled
             hideFromBots: false,
             guiOptions: {
               consentModal: {
@@ -217,8 +214,6 @@ export const useCookieConsent = ({
             }
           });
 
-          // Library is now initialized - onboarding system will call showCookieConsent() when ready
-
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
@@ -244,7 +239,66 @@ export const useCookieConsent = ({
         document.head.removeChild(customCSS);
       }
     };
-  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, onAuthRoute]);
+  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, forceLightMode]);
+
+  // Update theme when forceLightMode changes
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const detectTheme = () => {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+        return false;
+      }
+
+      const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
+      const hasLightClass = document.documentElement.classList.contains('light');
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      let isDarkMode = false;
+      if (mantineScheme) {
+        isDarkMode = mantineScheme === 'dark';
+      } else if (hasLightClass) {
+        isDarkMode = false;
+      } else if (hasDarkClass) {
+        isDarkMode = true;
+      } else {
+        isDarkMode = systemPrefersDark;
+      }
+
+      document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
+      return isDarkMode;
+    };
+
+    // Update theme immediately
+    detectTheme();
+
+    // Set up or remove theme observer based on forceLightMode
+    let themeObserver: MutationObserver | null = null;
+    if (!forceLightMode) {
+      themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' &&
+              (mutation.attributeName === 'data-mantine-color-scheme' ||
+               mutation.attributeName === 'class')) {
+            detectTheme();
+          }
+        });
+      });
+
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-mantine-color-scheme', 'class']
+      });
+    }
+
+    return () => {
+      if (themeObserver) {
+        themeObserver.disconnect();
+      }
+    };
+  }, [forceLightMode, isInitialized]);
 
   const showCookieConsent = useCallback(() => {
     if (isInitialized && window.CookieConsent) {

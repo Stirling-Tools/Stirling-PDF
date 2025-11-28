@@ -10,7 +10,6 @@
  * - tool-prompt: Tool panel mode selection
  * - tour: Interactive guided tour
  * - analytics-modal: Admin analytics choice
- * - cookie-consent: Cookie consent banner
  */
 
 import React, { useEffect, useMemo, useCallback, useState } from 'react';
@@ -30,7 +29,6 @@ import OnboardingModalSlide from '@app/components/onboarding/OnboardingModalSlid
 // Extracted hooks
 import {
   useUpgradeBannerBlock,
-  useCookieConsentStep,
   useServerLicenseRequest,
   useTourRequest,
 } from '@app/components/onboarding/useOnboardingEffects';
@@ -50,9 +48,6 @@ import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsCon
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 
-// Cookie consent
-import { useCookieConsent } from '@app/hooks/useCookieConsent';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 // Server experience
 import { useServerExperience } from '@app/hooks/useServerExperience';
@@ -74,7 +69,6 @@ export default function Onboarding() {
   const location = useLocation();
   const { state, actions } = useOnboardingOrchestrator();
   const serverExperience = useServerExperience();
-  const { config } = useAppConfig();
   const { refreshSession } = useAuth();
 
   // Check if we're on an auth route
@@ -90,21 +84,9 @@ export default function Onboarding() {
   // Download logic for desktop install slide
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
 
-  // Cookie consent
-  const { showCookieConsent } = useCookieConsent({ 
-    analyticsEnabled: config?.enableAnalytics === true 
-  });
-
   // Upgrade banner blocking
   const onboardingFullyComplete = !isLoading && state.isComplete;
   useUpgradeBannerBlock(onboardingFullyComplete);
-
-  // Cookie consent step handling
-  const cookieConsentCompleteHandler = useCallback(() => {
-    markStepSeen('cookie-consent');
-    actions.complete();
-  }, [actions]);
-  useCookieConsentStep(currentStep, showCookieConsent, cookieConsentCompleteHandler);
 
   // Server license request handling (from UpgradeBanner "See info" click)
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
@@ -437,10 +419,6 @@ export default function Onboarding() {
           onClose={handleCloseTour}
         />
       );
-
-    case 'cookie-consent':
-      // Handled by useCookieConsentStep hook
-      return null;
 
     case 'analytics-modal':
       return (
