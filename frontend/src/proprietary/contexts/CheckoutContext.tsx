@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
-import StripeCheckout from '@app/components/shared/StripeCheckout';
+import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier, PlanTier } from '@app/services/licenseService';
+import { StripeCheckout } from '@app/components/shared/stripeCheckout';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
 import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 import { useLicense } from '@app/contexts/LicenseContext';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import { getPreferredCurrency } from '@app/utils/currencyDetection';
 
 export interface CheckoutOptions {
   minimumSeats?: number;      // Override calculated seats for enterprise
-  currency?: string;          // Optional currency override (defaults to 'gbp')
+  currency?: string;          // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void;  // Callback after successful payment
   onError?: (error: string) => void;  // Callback on error
 }
@@ -35,23 +35,51 @@ interface CheckoutProviderProps {
 
 export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
-  defaultCurrency = 'gbp'
+  defaultCurrency
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { refetchLicense } = useLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
-  const [currentCurrency, setCurrentCurrency] = useState(defaultCurrency);
+  const [currentCurrency, setCurrentCurrency] = useState(() => {
+    // Use provided default or auto-detect from locale
+    return defaultCurrency || getPreferredCurrency(i18n.language);
+  });
   const [currentOptions, setCurrentOptions] = useState<CheckoutOptions>({});
   const [hostedCheckoutSuccess, setHostedCheckoutSuccess] = useState<{
     isUpgrade: boolean;
     licenseKey?: string;
   } | null>(null);
 
-  // Load plans with current currency
-  const { plans, refetch: refetchPlans } = usePlans(currentCurrency);
+  // Lazy-loaded plans state (no fetch on mount)
+  const [plans, setPlans] = useState<PlanTier[]>([]);
+  const [plansLoaded, setPlansLoaded] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(false);
+
+  // Lazy fetch plans only when needed
+  const fetchPlansIfNeeded = useCallback(async (currency: string) => {
+    // Don't fetch if already loading
+    if (plansLoading) return;
+
+    try {
+      setPlansLoading(true);
+      const response = await licenseService.getPlans(currency);
+      setPlans(response.plans);
+      setPlansLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch plans:', error);
+      // Don't block - let components handle the error
+    } finally {
+      setPlansLoading(false);
+    }
+  }, [plansLoading]);
+
+  const refetchPlans = useCallback(() => {
+    setPlansLoaded(false); // Force refetch
+    return fetchPlansIfNeeded(currentCurrency);
+  }, [currentCurrency, fetchPlansIfNeeded]);
 
   // Handle return from hosted Stripe checkout
   useEffect(() => {
@@ -75,7 +103,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Check if this is an upgrade or new subscription
-        if (licenseInfo?.licenseKey) {
+        // Only treat as upgrade if there's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
           // UPGRADE: Resync existing license with Keygen
           console.log('Upgrade detected - resyncing existing license');
 
@@ -83,6 +112,11 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
           if (activation.success) {
             console.log('License synced successfully, refreshing license context');
+
+            // Ensure plans are loaded before using them
+            if (!plansLoaded) {
+              await fetchPlansIfNeeded(currentCurrency);
+            }
 
             // Refresh global license context
             await refetchLicense();
@@ -129,6 +163,11 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
               if (activation.success) {
                 console.log(`License key activated: ${activation.licenseType}`);
+
+                // Ensure plans are loaded before using them
+                if (!plansLoaded) {
+                  await fetchPlansIfNeeded(currentCurrency);
+                }
 
                 // Refresh global license context
                 await refetchLicense();
@@ -196,7 +235,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     };
 
     handleCheckoutReturn();
-  }, [t, refetchPlans, refetchLicense, plans]);
+  }, [t, refetchPlans, refetchLicense, plans, fetchPlansIfNeeded, plansLoaded, currentCurrency]);
 
   const openCheckout = useCallback(
     async (tier: 'server' | 'enterprise', options: CheckoutOptions = {}) => {
@@ -212,7 +251,11 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         const currency = options.currency || currentCurrency;
         if (currency !== currentCurrency) {
           setCurrentCurrency(currency);
-          // Plans will reload automatically via usePlans
+        }
+
+        // Fetch plans if not already loaded
+        if (!plansLoaded) {
+          await fetchPlansIfNeeded(currency);
         }
 
         // Fetch license info and user data for seat calculations
@@ -272,7 +315,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         setIsLoading(false);
       }
     },
-    [currentCurrency, plans]
+    [currentCurrency, plans, plansLoaded, fetchPlansIfNeeded]
   );
 
   const closeCheckout = useCallback(() => {

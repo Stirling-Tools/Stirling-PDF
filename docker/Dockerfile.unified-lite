@@ -1,0 +1,109 @@
+# Unified Ultra-Lite Dockerfile - Frontend + Backend in single container with minimal dependencies
+# Supports MODE parameter: BOTH (default), FRONTEND, BACKEND
+
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend .
+# Override VITE_API_BASE_URL to use relative paths for production
+# This ensures frontend works with nginx proxy setup
+RUN DISABLE_ADDITIONAL_FEATURES=true VITE_API_BASE_URL=/ npm run build
+
+# Stage 2: Build Backend
+FROM gradle:8.14-jdk21 AS backend-build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+WORKDIR /app
+COPY . .
+
+RUN DISABLE_ADDITIONAL_FEATURES=true \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Stage 3: Final unified ultra-lite image
+FROM alpine:3.22.1
+
+ARG VERSION_TAG
+
+# Labels
+LABEL org.opencontainers.image.title="Stirling-PDF Unified Ultra-Lite"
+LABEL org.opencontainers.image.description="Unified ultra-lite container for Stirling-PDF - Frontend + Backend with minimal dependencies"
+LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Stirling-Tools"
+LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
+LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
+LABEL maintainer="Stirling-Tools"
+LABEL org.opencontainers.image.authors="Stirling-Tools"
+LABEL org.opencontainers.image.version="${VERSION_TAG}"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, unified, ultra-lite, API, Spring Boot, React"
+
+# Copy backend files
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY --from=backend-build /app/app/core/build/libs/*.jar app.jar
+
+# Copy frontend files
+COPY --from=frontend-build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY docker/unified/nginx.conf /etc/nginx/nginx.conf
+COPY docker/unified/entrypoint.sh /entrypoint.sh
+
+# Environment Variables
+ENV DISABLE_ADDITIONAL_FEATURES=false \
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    MODE=BOTH \
+    BACKEND_INTERNAL_PORT=8081 \
+    ENDPOINTS_GROUPS_TO_REMOVE=CLI
+
+# Install minimal dependencies
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    shadow \
+    su-exec \
+    openjdk21-jre \
+    nginx && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p /usr/share/fonts/opentype/noto /var/lib/nginx/tmp /var/log/nginx && \
+    chmod +x /scripts/*.sh && \
+    chmod +x /entrypoint.sh && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+EXPOSE 8080/tcp
+
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]

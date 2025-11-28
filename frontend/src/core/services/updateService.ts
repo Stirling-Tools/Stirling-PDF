@@ -1,6 +1,8 @@
+import { DOWNLOAD_BASE_URL } from '@app/constants/downloads';
+
 export interface UpdateSummary {
-  latest_version: string;
-  latest_stable_version?: string;
+  latest_version: string | null;
+  latest_stable_version?: string | null;
   max_priority: 'urgent' | 'normal' | 'minor' | 'low';
   recommended_action?: string;
   any_breaking: boolean;
@@ -71,11 +73,9 @@ export class UpdateService {
       return null;
     }
 
-    const baseUrl = 'https://files.stirlingpdf.com/';
-
     // Determine file based on machine type and security
     if (machineInfo.machineType === 'Server-jar') {
-      return baseUrl + (machineInfo.activeSecurity ? 'Stirling-PDF-with-login.jar' : 'Stirling-PDF.jar');
+      return DOWNLOAD_BASE_URL + (machineInfo.activeSecurity ? 'Stirling-PDF-with-login.jar' : 'Stirling-PDF.jar');
     }
 
     // Client installations
@@ -84,11 +84,11 @@ export class UpdateService {
       const type = machineInfo.activeSecurity ? '-server-security' : '-server';
 
       if (os === 'unix') {
-        return baseUrl + os + type + '.jar';
+        return DOWNLOAD_BASE_URL + os + type + '.jar';
       } else if (os === 'win') {
-        return baseUrl + os + '-installer.exe';
+        return DOWNLOAD_BASE_URL + os + '-installer.exe';
       } else if (os === 'mac') {
-        return baseUrl + os + '-installer.dmg';
+        return DOWNLOAD_BASE_URL + os + '-installer.dmg';
       }
     }
 
@@ -101,8 +101,8 @@ export class UpdateService {
   async getUpdateSummary(currentVersion: string, machineInfo: MachineInfo): Promise<UpdateSummary | null> {
     // Map Java License enum to API types
     let type = 'normal';
-    if (machineInfo.licenseType === 'PRO') {
-      type = 'pro';
+    if (machineInfo.licenseType === 'SERVER') {
+      type = 'server';
     } else if (machineInfo.licenseType === 'ENTERPRISE') {
       type = 'enterprise';
     }
@@ -133,8 +133,8 @@ export class UpdateService {
   async getFullUpdateInfo(currentVersion: string, machineInfo: MachineInfo): Promise<FullUpdateInfo | null> {
     // Map Java License enum to API types
     let type = 'normal';
-    if (machineInfo.licenseType === 'PRO') {
-      type = 'pro';
+    if (machineInfo.licenseType === 'SERVER') {
+      type = 'server';
     } else if (machineInfo.licenseType === 'ENTERPRISE') {
       type = 'enterprise';
     }

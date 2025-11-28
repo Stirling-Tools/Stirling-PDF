@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
+import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
 import { connectionModeService } from '@desktop/services/connectionModeService';
+import type { AppConfig } from '@app/contexts/AppConfigContext';
+
 
 interface EndpointConfig {
   backendUrl: string;
@@ -26,6 +29,17 @@ function getErrorMessage(err: unknown): string {
   return 'Unknown error occurred';
 }
 
+async function checkDependenciesReady(): Promise<boolean> {
+  try {
+    const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', {
+      suppressErrorToast: true,
+    });
+    return response.data?.dependenciesReady ?? false;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Desktop-specific endpoint checker that hits the backend directly via axios.
  */
@@ -36,7 +50,7 @@ export function useEndpointEnabled(endpoint: string): {
   refetch: () => Promise<void>;
 } {
   const { t } = useTranslation();
-  const [enabled, setEnabled] = useState<boolean | null>(() => (endpoint ? true : null));
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -66,35 +80,39 @@ export function useEndpointEnabled(endpoint: string): {
       return;
     }
 
+    const dependenciesReady = await checkDependenciesReady();
+    if (!dependenciesReady) {
+      return; // Health monitor will trigger retry when truly ready
+    }
+
     try {
       setError(null);
 
-      const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
-        params: { endpoint },
+      const response = await apiClient.get<boolean>(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`, {
         suppressErrorToast: true,
       });
 
-      if (!isMountedRef.current) return;
       setEnabled(response.data);
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
-      if (!isMountedRef.current) return;
-      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
-      setEnabled(true);
 
-      if (!retryTimeoutRef.current) {
-        retryTimeoutRef.current = setTimeout(() => {
-          retryTimeoutRef.current = null;
-          fetchEndpointStatus();
-        }, RETRY_DELAY_MS);
+      if (isBackendStarting) {
+        setError(t('backendHealth.starting', 'Backend starting up...'));
+        if (!retryTimeoutRef.current) {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            fetchEndpointStatus();
+          }, RETRY_DELAY_MS);
+        }
+      } else {
+        setError(message);
+        setEnabled(false);
       }
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [endpoint, clearRetryTimeout]);
+  }, [endpoint, clearRetryTimeout, t]);
 
   useEffect(() => {
     if (!endpoint) {
@@ -128,19 +146,15 @@ export function useEndpointEnabled(endpoint: string): {
 
 export function useMultipleEndpointsEnabled(endpoints: string[]): {
   endpointStatus: Record<string, boolean>;
+  endpointDetails: Record<string, EndpointAvailabilityDetails>;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 } {
   const { t } = useTranslation();
-  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(() => {
-    if (!endpoints || endpoints.length === 0) return {};
-    return endpoints.reduce((acc, endpointName) => {
-      acc[endpointName] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
-  });
-  const [loading, setLoading] = useState(false);
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
+  const [endpointDetails, setEndpointDetails] = useState<Record<string, EndpointAvailabilityDetails>>({});
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -163,10 +177,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     clearRetryTimeout();
 
     if (!endpoints || endpoints.length === 0) {
-      if (!isMountedRef.current) return;
       setEndpointStatus({});
       setLoading(false);
       return;
+    }
+
+    const dependenciesReady = await checkDependenciesReady();
+    if (!dependenciesReady) {
+      return; // Health monitor will trigger retry when truly ready
     }
 
     try {
@@ -174,41 +192,60 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
       const endpointsParam = endpoints.join(',');
 
-      const response = await apiClient.get<Record<string, boolean>>('/api/v1/config/endpoints-enabled', {
-        params: { endpoints: endpointsParam },
-        suppressErrorToast: true,
-      });
+      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+        `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
+        {
+          suppressErrorToast: true,
+        }
+      );
 
-      if (!isMountedRef.current) return;
-      setEndpointStatus(response.data);
+      const details = Object.entries(response.data).reduce((acc, [endpointName, detail]) => {
+        acc[endpointName] = {
+          enabled: detail?.enabled ?? false,
+          reason: detail?.reason ?? null,
+        };
+        return acc;
+      }, {} as Record<string, EndpointAvailabilityDetails>);
+
+      const statusMap = Object.keys(details).reduce((acc, key) => {
+        acc[key] = details[key].enabled;
+        return acc;
+      }, {} as Record<string, boolean>);
+
+      setEndpointDetails(prev => ({ ...prev, ...details }));
+      setEndpointStatus(prev => ({ ...prev, ...statusMap }));
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
-      if (!isMountedRef.current) return;
-      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
 
-      const fallbackStatus = endpoints.reduce((acc, endpointName) => {
-        acc[endpointName] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
-      setEndpointStatus(fallbackStatus);
-
-      if (!retryTimeoutRef.current) {
-        retryTimeoutRef.current = setTimeout(() => {
-          retryTimeoutRef.current = null;
-          fetchAllEndpointStatuses();
-        }, RETRY_DELAY_MS);
+      if (isBackendStarting) {
+        setError(t('backendHealth.starting', 'Backend starting up...'));
+        if (!retryTimeoutRef.current) {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            fetchAllEndpointStatuses();
+          }, RETRY_DELAY_MS);
+        }
+      } else {
+        setError(message);
+        const fallbackStatus = endpoints.reduce((acc, endpointName) => {
+          const fallbackDetail: EndpointAvailabilityDetails = { enabled: false, reason: 'UNKNOWN' };
+          acc.status[endpointName] = false;
+          acc.details[endpointName] = fallbackDetail;
+          return acc;
+        }, { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> });
+        setEndpointStatus(fallbackStatus.status);
+        setEndpointDetails(prev => ({ ...prev, ...fallbackStatus.details }));
       }
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [endpoints, clearRetryTimeout]);
+  }, [endpoints, clearRetryTimeout, t]);
 
   useEffect(() => {
     if (!endpoints || endpoints.length === 0) {
       setEndpointStatus({});
+      setEndpointDetails({});
       setLoading(false);
       return;
     }
@@ -230,6 +267,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
   return {
     endpointStatus,
+    endpointDetails,
     loading,
     error,
     refetch: fetchAllEndpointStatuses,
@@ -244,8 +282,8 @@ const DEFAULT_BACKEND_URL =
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
- * - Offline mode: Uses local bundled backend (from env vars)
- * - Server mode: Uses configured server URL from connection config
+ * - SaaS mode: Uses local bundled backend (from env vars)
+ * - Self-hosted mode: Uses configured server URL from connection config
  */
 export function useEndpointConfig(): EndpointConfig {
   const [backendUrl, setBackendUrl] = useState<string>(DEFAULT_BACKEND_URL);
@@ -253,10 +291,10 @@ export function useEndpointConfig(): EndpointConfig {
   useEffect(() => {
     connectionModeService.getCurrentConfig()
       .then((config) => {
-        if (config.mode === 'server' && config.server_config?.url) {
+        if (config.mode === 'selfhosted' && config.server_config?.url) {
           setBackendUrl(config.server_config.url);
         } else {
-          // Offline mode - use default from env vars
+          // SaaS mode - use default from env vars (local backend)
           setBackendUrl(DEFAULT_BACKEND_URL);
         }
       })

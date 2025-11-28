@@ -1,44 +1,43 @@
 import React from 'react';
-import { Button, Card, Badge, Text, Stack, Divider } from '@mantine/core';
+import { Button, Card, Text, Stack, Divider, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PlanTierGroup, LicenseInfo } from '@app/services/licenseService';
+import { PricingBadge } from '@app/components/shared/stripeCheckout/components/PricingBadge';
+import { PriceDisplay } from '@app/components/shared/stripeCheckout/components/PriceDisplay';
+import { calculateDisplayPricing } from '@app/components/shared/stripeCheckout/utils/pricingUtils';
+import { getBaseCardStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
 
 interface PlanCardProps {
   planGroup: PlanTierGroup;
   isCurrentTier: boolean;
   isDowngrade: boolean;
   currentLicenseInfo?: LicenseInfo | null;
+  currentTier?: 'free' | 'server' | 'enterprise' | null;
   onUpgradeClick: (planGroup: PlanTierGroup) => void;
+  onManageClick?: () => void;
+  loginEnabled?: boolean;
 }
 
-const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, onUpgradeClick }) => {
+const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngrade, currentLicenseInfo, currentTier, onUpgradeClick, onManageClick, loginEnabled = true }) => {
   const { t } = useTranslation();
 
   // Render Free plan
   if (planGroup.tier === 'free') {
+    // Get currency from the free plan
+    const freeCurrency = planGroup.monthly?.currency || '$';
+
     return (
       <Card
         padding="lg"
         radius="md"
         withBorder
-        style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '400px',
-          borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
-          borderWidth: isCurrentTier ? '2px' : undefined,
-        }}
+        style={getBaseCardStyle(isCurrentTier)}
       >
         {isCurrentTier && (
-          <Badge
-            color="green"
-            variant="filled"
-            size="sm"
-            style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-          >
-            {t('plan.current', 'Current Plan')}
-          </Badge>
+          <PricingBadge
+            type="current"
+            label={t('plan.current', 'Current Plan')}
+          />
         )}
         <Stack gap="md" style={{ height: '100%' }}>
           <div>
@@ -48,12 +47,12 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             <Text size="xs" c="dimmed" mb="xs" style={{ opacity: 0 }}>
               {t('plan.from', 'From')}
             </Text>
-            <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-              £0
-            </Text>
-            <Text size="sm" c="dimmed" mt="xs">
-              {t('plan.free.forever', 'Forever free')}
-            </Text>
+            <PriceDisplay
+              mode="simple"
+              price={0}
+              currency={freeCurrency}
+              period={t('plan.free.forever', 'Forever free')}
+            />
           </div>
 
           <Divider />
@@ -82,48 +81,32 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   const { monthly, yearly } = planGroup;
   const isEnterprise = planGroup.tier === 'enterprise';
 
-  // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
-  let displayPrice = monthly?.price || 0;
-  let displaySeatPrice = monthly?.seatPrice;
-  let displayCurrency = monthly?.currency || '£';
+  // Block enterprise for free tier users (must have server first)
+  const isEnterpriseBlockedForFree = isEnterprise && currentTier === 'free';
 
-  if (yearly) {
-    displayPrice = Math.round(yearly.price / 12);
-    displaySeatPrice = yearly.seatPrice ? Math.round(yearly.seatPrice / 12) : undefined;
-    displayCurrency = yearly.currency;
-  }
+  // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
+  const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(
+    monthly || undefined,
+    yearly || undefined
+  );
 
   return (
     <Card
       padding="lg"
       radius="md"
       withBorder
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '400px',
-        borderColor: isCurrentTier ? 'var(--mantine-color-green-6)' : undefined,
-        borderWidth: isCurrentTier ? '2px' : undefined,
-      }}
+      style={getBaseCardStyle(isCurrentTier)}
     >
       {isCurrentTier ? (
-        <Badge
-          color="green"
-          variant="filled"
-          size="sm"
-          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-        >
-          {t('plan.current', 'Current Plan')}
-        </Badge>
-      ) : planGroup.popular ? (
-        <Badge
-          variant="filled"
-          size="sm"
-          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-        >
-          {t('plan.popular', 'Popular')}
-        </Badge>
+        <PricingBadge
+          type="current"
+          label={t('plan.current', 'Current Plan')}
+        />
+      ) : planGroup.popular && !(planGroup.tier === 'server' && currentTier === 'enterprise') ? (
+        <PricingBadge
+          type="popular"
+          label={t('plan.popular', 'Popular')}
+        />
       ) : null}
 
       <Stack gap="md" style={{ height: '100%' }}>
@@ -140,29 +123,23 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           {/* Price */}
           {isEnterprise && displaySeatPrice !== undefined ? (
             <>
-              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-                {displayCurrency}{displayPrice}
+              <Text span size="2.25rem" fw={600} style={{ lineHeight: 1 }}>
+                {displayCurrency}{displaySeatPrice.toFixed(2)}
+              </Text>
+              <Text span size="1.5rem" c="dimmed" mt="xs">
+                {t('plan.perSeat', '/seat')}
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
-                + {displayCurrency}{displaySeatPrice}/seat {t('plan.perMonth', '/month')}
+                {t('plan.perMonth', '/month')} {t('plan.withServer', '+ Server Plan')}
               </Text>
             </>
           ) : (
-            <>
-              <Text size="2.5rem" fw={700} style={{ lineHeight: 1 }}>
-                {displayCurrency}{displayPrice}
-              </Text>
-              <Text size="sm" c="dimmed" mt="xs">
-                {t('plan.perMonth', '/month')}
-              </Text>
-            </>
-          )}
-
-          {/* Show seat count for enterprise plans when current */}
-          {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
-            <Text size="sm" c="green" fw={500} mt="xs">
-              {t('plan.licensedSeats', 'Licensed: {{count}} seats', { count: currentLicenseInfo.maxUsers })}
-            </Text>
+            <PriceDisplay
+              mode="simple"
+              price={displayPrice}
+              currency={displayCurrency}
+              period={t('plan.perMonth', '/month')}
+            />
           )}
         </div>
 
@@ -179,21 +156,40 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
 
         <div style={{ flexGrow: 1 }} />
 
+      <Stack gap="xs">
+        {/* Show seat count for enterprise plans when current */}
+        {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
+          <Text size="sm" c="green" fw={500} ta="center">
+            {t('plan.licensedSeats', 'Licensed: {{count}} seats', { count: currentLicenseInfo.maxUsers })}
+          </Text>
+        )}
+
         {/* Single Upgrade Button */}
-        <Button
-          variant={isCurrentTier || isDowngrade ? 'light' : 'filled'}
-          fullWidth
-          onClick={() => onUpgradeClick(planGroup)}
-          disabled={isCurrentTier || isDowngrade}
+        <Tooltip
+          label={t('plan.enterprise.requiresServer', 'Requires Server plan')}
+          disabled={!isEnterpriseBlockedForFree}
+          position="top"
+          withArrow
         >
-          {isCurrentTier
-            ? t('plan.current', 'Current Plan')
-            : isDowngrade
-              ? t('plan.includedInCurrent', 'Included in Your Plan')
-              : isEnterprise
-                ? t('plan.selectPlan', 'Select Plan')
-                : t('plan.upgrade', 'Upgrade')}
-        </Button>
+          <Button
+            variant={isCurrentTier ? 'filled' : isDowngrade ? 'filled' : isEnterpriseBlockedForFree ? 'light' : 'filled'}
+            fullWidth
+            onClick={() => isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup)}
+            disabled={!loginEnabled || isDowngrade || isEnterpriseBlockedForFree}
+          >
+            {isCurrentTier
+              ? t('plan.manage', 'Manage')
+              : isDowngrade
+                ? t('plan.free.included', 'Included')
+                : isEnterpriseBlockedForFree
+                  ? t('plan.enterprise.requiresServer', 'Requires Server')
+                  : isEnterprise
+                    ? t('plan.selectPlan', 'Select Plan')
+                    : t('plan.upgrade', 'Upgrade')}
+          </Button>
+        </Tooltip>
+
+        </Stack>
       </Stack>
     </Card>
   );

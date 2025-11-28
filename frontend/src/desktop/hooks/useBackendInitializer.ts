@@ -25,9 +25,7 @@ export function useBackendInitializer(enabled = true) {
 
     const initializeBackend = async () => {
       try {
-        console.log('[BackendInitializer] Starting backend...');
         await tauriBackendService.startBackend(backendUrl);
-        console.log('[BackendInitializer] Backend started successfully');
 
         // Begin health checks after a short delay
         setTimeout(() => {

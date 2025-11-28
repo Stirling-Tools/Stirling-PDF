@@ -6,7 +6,7 @@ import { useTooltipPosition } from '@app/hooks/useTooltipPosition';
 import { TooltipTip } from '@app/types/tips';
 import { TooltipContent } from '@app/components/shared/tooltip/TooltipContent';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import styles from '@app/components/shared/tooltip/Tooltip.module.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
@@ -37,7 +37,7 @@ export interface TooltipProps {
 
 export const Tooltip: React.FC<TooltipProps> = ({
   sidebarTooltip = false,
-  position = 'right',
+  position,
   content,
   tips,
   children,
@@ -58,6 +58,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const { tooltipLogo } = useLogoAssets();
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -81,6 +82,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
 
+  const resolvedPosition: NonNullable<TooltipProps['position']> = useMemo(() => {
+    const htmlDir = typeof document !== 'undefined' ? document.documentElement.dir : 'ltr';
+    const isRTL = htmlDir === 'rtl';
+    const base = position ?? 'right';
+    if (!isRTL) return base as NonNullable<TooltipProps['position']>;
+    if (base === 'left') return 'right';
+    if (base === 'right') return 'left';
+    return base as NonNullable<TooltipProps['position']>;
+  }, [position]);
+
   const setOpen = useCallback(
     (newOpen: boolean) => {
       if (newOpen === open) return; // avoid churn
@@ -94,7 +105,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const { coords, positionReady } = useTooltipPosition({
     open,
     sidebarTooltip,
-    position,
+    position: resolvedPosition,
     gap,
     triggerRef,
     tooltipRef,
@@ -145,8 +156,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
       left: 'tooltip-arrow-left',
       right: 'tooltip-arrow-right',
     };
-    return map[position] || map.right;
-  }, [position, sidebarTooltip]);
+    return map[resolvedPosition] || map.right;
+  }, [resolvedPosition, sidebarTooltip]);
 
   const getArrowStyleClass = useCallback(
     (key: string) =>
@@ -332,7 +343,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           className={`${styles['tooltip-arrow']} ${getArrowStyleClass(arrowClass!)}`}
           style={
             coords.arrowOffset !== null
-              ? { [position === 'top' || position === 'bottom' ? 'left' : 'top']: coords.arrowOffset }
+              ? { [resolvedPosition === 'top' || resolvedPosition === 'bottom' ? 'left' : 'top']: coords.arrowOffset }
               : undefined
           }
         />
@@ -342,7 +353,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           <div className={styles['tooltip-logo']}>
             {header.logo || (
               <img
-                src={`${BASE_PATH}/logo-tooltip.svg`}
+                src={tooltipLogo}
                 alt="Stirling PDF"
                 style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
               />

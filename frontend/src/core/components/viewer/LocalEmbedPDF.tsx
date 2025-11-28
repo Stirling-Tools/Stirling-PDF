@@ -19,6 +19,7 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -39,6 +40,9 @@ import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
+import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { isPdfFile } from '@app/utils/fileUtils';
+import { useTranslation } from 'react-i18next';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -50,6 +54,7 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+  const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
@@ -138,6 +143,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register thumbnail plugin for page thumbnails
       createPluginRegistration(ThumbnailPluginPackage),
 
+      // Register bookmark plugin for PDF outline support
+      createPluginRegistration(BookmarkPluginPackage),
+
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage),
 
@@ -161,6 +169,29 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           <Text c="dimmed" size="sm">
             No PDF provided
           </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  // Check if the file is actually a PDF
+  if (file && !isPdfFile(file)) {
+    const fileName = 'name' in file ? file.name : t('viewer.unknownFile');
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '48px' }}>📄</div>
+          <Text size="lg" fw={600} c="dimmed">
+            {t('viewer.cannotPreviewFile')}
+          </Text>
+          <Text c="dimmed" size="sm" style={{ textAlign: 'center', maxWidth: '400px' }}>
+            {t('viewer.onlyPdfSupported')}
+          </Text>
+          <PrivateContent>
+            <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
+              {fileName}
+            </Text>
+          </PrivateContent>
         </Stack>
       </Center>
     );
@@ -272,6 +303,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
+        <BookmarkAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{

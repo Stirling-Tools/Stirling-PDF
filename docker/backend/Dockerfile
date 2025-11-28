@@ -17,7 +17,7 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
-# Build the application with DISABLE_ADDITIONAL_FEATURES=false
+# Build the application (server-only JAR - no UI, includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -28,9 +28,6 @@ FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8
 # Copy necessary files
 COPY scripts /scripts
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-# first /app directory is for the build stage, second is for the final image
-COPY --from=build /app/app/core/build/libs/*.jar app.jar
-COPY --from=build /app/build/libs/restart-helper.jar restart-helper.jar
 
 ARG VERSION_TAG
 
@@ -47,8 +44,7 @@ LABEL org.opencontainers.image.version="${VERSION_TAG}"
 LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
 
 # Set Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=false \
-    VERSION_TAG=$VERSION_TAG \
+ENV VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
@@ -84,6 +80,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     gcompat \
     libc6-compat \
     libreoffice \
+    ghostscript \
+    fontforge \
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced features)
@@ -113,8 +111,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf
+
+# first /app directory is for the build stage, second is for the final image
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
+
+RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
 
 EXPOSE 8080/tcp
 

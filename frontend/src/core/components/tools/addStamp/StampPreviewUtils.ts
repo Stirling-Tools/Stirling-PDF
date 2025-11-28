@@ -20,11 +20,11 @@ export const getFontFamily = (alphabet: string): string => {
     case 'arabic':
       return 'Noto Sans Arabic, Arial Unicode MS, sans-serif';
     case 'japanese':
-      return 'Meiryo, Yu Gothic, Hiragino Sans, sans-serif';
+      return 'Noto Sans JP, Yu Gothic, Hiragino Sans, sans-serif';
     case 'korean':
-      return 'Malgun Gothic, Dotum, sans-serif';
+      return 'Noto Sans KR, Malgun Gothic, Dotum, sans-serif';
     case 'chinese':
-      return 'SimSun, Microsoft YaHei, sans-serif';
+      return 'Noto Sans SC, Microsoft YaHei, SimSun, sans-serif';
     case 'thai':
       return 'Noto Sans Thai, Tahoma, sans-serif';
     case 'roman':
