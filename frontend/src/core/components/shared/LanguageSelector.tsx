@@ -13,8 +13,6 @@ interface LanguageSelectorProps {
   offset?: number;
   compact?: boolean; // icon-only trigger
   tooltip?: string; // tooltip text for compact mode
-  tooltipPosition?: 'left' | 'right';
-  tooltipOffset?: number;
 }
 
 interface LanguageOption {
@@ -157,9 +155,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   position = 'bottom-start',
   offset = 8,
   compact = false,
-  tooltip,
-  tooltipPosition = 'left',
-  tooltipOffset = 8
+  tooltip
 }) => {
   const { i18n } = useTranslation();
   const [opened, setOpened] = useState(false);

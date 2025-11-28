@@ -221,8 +221,6 @@ export default function RightRail() {
             offset={6}
             compact
             tooltip={t('rightRail.language', 'Language')}
-            tooltipPosition={tooltipPosition}
-            tooltipOffset={tooltipOffset}
           />
 
           {renderWithTooltip(
