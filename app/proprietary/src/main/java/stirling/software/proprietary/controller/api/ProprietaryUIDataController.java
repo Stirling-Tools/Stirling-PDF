@@ -150,7 +150,6 @@ public class ProprietaryUIDataController {
 
         data.setFirstTimeSetup(isFirstTimeSetup);
         data.setShowDefaultCredentials(showDefaultCredentials);
-        data.setEnableAnalytics(applicationProperties.getSystem().getEnableAnalytics());
 
         OAUTH2 oauth = securityProps.getOauth2();
 
@@ -492,7 +491,6 @@ public class ProprietaryUIDataController {
         private boolean altLogin;
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
-        private Boolean enableAnalytics;
     }
 
     @Data
