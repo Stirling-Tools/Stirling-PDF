@@ -63,7 +63,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
         <div style={{ textAlign: 'left', flex: 1 }}>
           <Text fw={600} size="md">{t('setup.mode.selfhosted.title', 'Self-Hosted Server')}</Text>
           <Text size="sm" c="dimmed" fw={400}>
-            {t('setup.mode.selfhosted.description', 'Connect to your own Stirling PDF server')}
+            {t('setup.mode.selfhosted.description', 'Connect to your own Stirling PDF server with your personal account')}
           </Text>
         </div>
       </Button>

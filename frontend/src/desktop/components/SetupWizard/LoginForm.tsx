@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stack, TextInput, PasswordInput, Button, Text, Divider, Group } from '@mantine/core';
+import { Stack, TextInput, PasswordInput, Button, Text, Divider, Group, Collapse, Anchor, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { authService } from '@app/services/authService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
@@ -19,6 +19,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +92,47 @@ export const LoginForm: React.FC<LoginFormProps> = ({ serverUrl, isSaaS = false,
         <Text size="sm" c="dimmed">
           {t('setup.login.connectingTo', 'Connecting to:')} <strong>{isSaaS ? 'stirling.com' : serverUrl}</strong>
         </Text>
+
+        {/* Login requirement note for self-hosted servers */}
+        {!isSaaS && (
+          <Box>
+            <Text size="xs" c="dimmed">
+              {t('setup.login.serverRequirement', 'Note: The server must have login enabled.')}{' '}
+              <Anchor
+                size="xs"
+                onClick={() => setShowInstructions(!showInstructions)}
+                style={{ cursor: 'pointer' }}
+              >
+                {showInstructions
+                  ? t('setup.login.hideInstructions', 'Hide instructions')
+                  : t('setup.login.showInstructions', 'How to enable?')}
+              </Anchor>
+            </Text>
+
+            <Collapse in={showInstructions}>
+              <Box mt="xs" p="sm" style={{ backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: '4px' }}>
+                <Text size="xs" c="dimmed">
+                  {t('setup.login.instructions', 'To enable login on your Stirling PDF server:')}
+                </Text>
+                <Text size="xs" mt="xs" c="dimmed">
+                  {t('setup.login.instructionsEnvVar', 'Set the environment variable:')}
+                </Text>
+                <Text size="xs" mt="4px" ff="monospace" c="dark">
+                  SECURITY_ENABLELOGIN=true
+                </Text>
+                <Text size="xs" mt="xs" c="dimmed">
+                  {t('setup.login.instructionsOrYml', 'Or in settings.yml:')}
+                </Text>
+                <Text size="xs" mt="4px" ff="monospace" c="dark">
+                  security.enableLogin: true
+                </Text>
+                <Text size="xs" mt="xs" c="dimmed">
+                  {t('setup.login.instructionsRestart', 'Then restart your server for the changes to take effect.')}
+                </Text>
+              </Box>
+            </Collapse>
+          </Box>
+        )}
 
         {/* OAuth Login Buttons - Only show for SaaS */}
         {isSaaS && (

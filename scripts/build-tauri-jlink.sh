@@ -60,6 +60,7 @@ fi
 
 # Clean and build the Stirling-PDF JAR
 print_step "Building Stirling-PDF JAR..."
+export DISABLE_ADDITIONAL_FEATURES=true
 ./gradlew clean bootJar --no-daemon
 
 if [ ! -f compgen -G "app/core/build/libs/stirling-pdf-*.jar" ]; then

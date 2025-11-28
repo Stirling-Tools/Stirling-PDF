@@ -101,8 +101,8 @@ export class TauriBackendService {
     return this.startPromise;
   }
 
-  private async waitForPort(maxAttempts = 30): Promise<void> {
-    for (let i = 0; i < maxAttempts; i++) {
+  private async waitForPort(): Promise<void> {
+    while (true) {
       try {
         const port = await invoke<number | null>('get_backend_port');
         if (port) {
@@ -114,7 +114,6 @@ export class TauriBackendService {
       }
       await new Promise(resolve => setTimeout(resolve, 500));
     }
-    throw new Error('Failed to detect backend port after 15 seconds');
   }
 
   /**
@@ -208,16 +207,14 @@ export class TauriBackendService {
     }
   }
 
-  private async waitForHealthy(maxAttempts = 60): Promise<void> {
-    for (let i = 0; i < maxAttempts; i++) {
+  private async waitForHealthy(): Promise<void> {
+    while (true) {
       const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    this.setStatus('unhealthy');
-    throw new Error('Backend failed to become healthy after 60 seconds');
   }
 
   /**

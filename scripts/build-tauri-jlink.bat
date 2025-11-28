@@ -20,6 +20,8 @@ if errorlevel 1 (
 echo ✅ Java and jlink detected
 
 echo ▶ Building Stirling-PDF JAR...
+
+set DISABLE_ADDITIONAL_FEATURES=true
 call gradlew.bat clean bootJar --no-daemon
 if errorlevel 1 (
     echo ❌ Failed to build Stirling-PDF JAR
