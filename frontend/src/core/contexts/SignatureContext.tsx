@@ -74,8 +74,6 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (signatureApiRef.current) {
       signatureApiRef.current.activateDrawMode();
       setPlacementMode(true);
-      // Mark signatures as not applied when entering draw mode
-      setState(prev => ({ ...prev, signaturesApplied: false }));
     }
   }, [setPlacementMode]);
 
@@ -90,8 +88,6 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (signatureApiRef.current) {
       signatureApiRef.current.activateSignaturePlacementMode();
       setPlacementMode(true);
-      // Mark signatures as not applied when placing new signatures
-      setState(prev => ({ ...prev, signaturesApplied: false }));
     }
   }, [setPlacementMode]);
 
