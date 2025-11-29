@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
-import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -40,14 +40,14 @@ import stirling.software.common.util.GeneralUtils;
 public class UIDataController {
 
     private final ApplicationProperties applicationProperties;
-    private final SignatureService signatureService;
+    private final SharedSignatureService signatureService;
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
 
     public UIDataController(
             ApplicationProperties applicationProperties,
-            SignatureService signatureService,
+            SharedSignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader,
             RuntimePathConfig runtimePathConfig) {
