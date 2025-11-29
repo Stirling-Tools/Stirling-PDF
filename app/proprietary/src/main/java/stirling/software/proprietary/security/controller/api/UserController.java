@@ -407,7 +407,8 @@ public class UserController {
     public ResponseEntity<?> inviteUsers(
             @RequestParam(name = "emails", required = true) String emails,
             @RequestParam(name = "role", defaultValue = "ROLE_USER") String role,
-            @RequestParam(name = "teamId", required = false) Long teamId)
+            @RequestParam(name = "teamId", required = false) Long teamId,
+            HttpServletRequest request)
             throws SQLException, UnsupportedProviderException {
 
         // Check if email invites are enabled
@@ -477,6 +478,9 @@ public class UserController {
             }
         }
 
+        // Build login URL
+        String loginUrl = buildLoginUrl(request);
+
         int successCount = 0;
         int failureCount = 0;
         StringBuilder errors = new StringBuilder();
@@ -488,7 +492,7 @@ public class UserController {
                 continue;
             }
 
-            InviteResult result = processEmailInvite(email, effectiveTeamId, role);
+            InviteResult result = processEmailInvite(email, effectiveTeamId, role, loginUrl);
             if (result.isSuccess()) {
                 successCount++;
             } else {
@@ -688,14 +692,44 @@ public class UserController {
     }
 
     /**
+     * Helper method to build the login URL from the application configuration or request.
+     *
+     * @param request The HTTP request
+     * @return The login URL
+     */
+    private String buildLoginUrl(HttpServletRequest request) {
+        String baseUrl;
+        String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
+        if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
+            // Use configured frontend URL (remove trailing slash if present)
+            baseUrl =
+                    configuredFrontendUrl.endsWith("/")
+                            ? configuredFrontendUrl.substring(0, configuredFrontendUrl.length() - 1)
+                            : configuredFrontendUrl;
+        } else {
+            // Fall back to backend URL from request
+            baseUrl =
+                    request.getScheme()
+                            + "://"
+                            + request.getServerName()
+                            + (request.getServerPort() != 80 && request.getServerPort() != 443
+                                    ? ":" + request.getServerPort()
+                                    : "");
+        }
+        return baseUrl + "/login";
+    }
+
+    /**
      * Helper method to process a single email invitation.
      *
      * @param email The email address to invite
      * @param teamId The team ID to assign the user to
      * @param role The role to assign to the user
+     * @param loginUrl The URL to the login page
      * @return InviteResult containing success status and optional error message
      */
-    private InviteResult processEmailInvite(String email, Long teamId, String role) {
+    private InviteResult processEmailInvite(
+            String email, Long teamId, String role, String loginUrl) {
         try {
             // Validate email format (basic check)
             if (!email.contains("@") || !email.contains(".")) {
@@ -715,7 +749,7 @@ public class UserController {
 
             // Send invite email
             try {
-                emailService.get().sendInviteEmail(email, email, temporaryPassword);
+                emailService.get().sendInviteEmail(email, email, temporaryPassword, loginUrl);
                 log.info("Sent invite email to: {}", email);
                 return InviteResult.success();
             } catch (Exception emailEx) {

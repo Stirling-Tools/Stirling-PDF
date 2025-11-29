@@ -588,6 +588,7 @@ export default function PeopleSection() {
       <InviteMembersModal
         opened={inviteModalOpened}
         onClose={() => setInviteModalOpened(false)}
+        onSuccess={fetchData}
       />
 
       {/* Edit User Modal */}

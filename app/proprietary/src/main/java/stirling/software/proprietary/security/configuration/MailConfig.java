@@ -35,15 +35,40 @@ public class MailConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(mailProperties.getHost());
         mailSender.setPort(mailProperties.getPort());
-        mailSender.setUsername(mailProperties.getUsername());
-        mailSender.setPassword(mailProperties.getPassword());
         mailSender.setDefaultEncoding("UTF-8");
+
+        // Only set username and password if they are provided
+        String username = mailProperties.getUsername();
+        String password = mailProperties.getPassword();
+        boolean hasCredentials =
+                (username != null && !username.trim().isEmpty())
+                        || (password != null && !password.trim().isEmpty());
+
+        if (username != null && !username.trim().isEmpty()) {
+            mailSender.setUsername(username);
+            log.info("SMTP username configured");
+        } else {
+            log.info("SMTP username not configured - using anonymous connection");
+        }
+
+        if (password != null && !password.trim().isEmpty()) {
+            mailSender.setPassword(password);
+            log.info("SMTP password configured");
+        } else {
+            log.info("SMTP password not configured");
+        }
 
         // Retrieves the JavaMail properties to configure additional SMTP parameters
         Properties props = mailSender.getJavaMailProperties();
 
-        // Enables SMTP authentication
-        props.put("mail.smtp.auth", "true");
+        // Only enable SMTP authentication if credentials are provided
+        if (hasCredentials) {
+            props.put("mail.smtp.auth", "true");
+            log.info("SMTP authentication enabled");
+        } else {
+            props.put("mail.smtp.auth", "false");
+            log.info("SMTP authentication disabled - no credentials provided");
+        }
 
         // Enables STARTTLS to encrypt the connection if supported by the SMTP server
         props.put("mail.smtp.starttls.enable", "true");
