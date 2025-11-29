@@ -82,21 +82,17 @@ public class SignatureService {
         }
     }
 
-    public byte[] getSignatureBytes(String username, String fileName) throws IOException {
+    /**
+     * Get a signature from the shared (ALL_USERS) folder. This is always available for both
+     * authenticated and unauthenticated users.
+     */
+    public byte[] getSharedSignatureBytes(String fileName) throws IOException {
         validateFileName(fileName);
-        // First try user's personal folder
-        Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);
-        if (Files.exists(userPath)) {
-            return Files.readAllBytes(userPath);
-        }
-
-        // Then try ALL_USERS folder
         Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
-        if (Files.exists(allUsersPath)) {
-            return Files.readAllBytes(allUsersPath);
+        if (!Files.exists(allUsersPath)) {
+            throw new FileNotFoundException("Shared signature file not found");
         }
-
-        throw new FileNotFoundException("Signature file not found");
+        return Files.readAllBytes(allUsersPath);
     }
 
     private boolean isImageFile(Path path) {

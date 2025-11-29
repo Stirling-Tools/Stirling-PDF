@@ -1,102 +1,83 @@
 package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import stirling.software.SPDF.model.api.signature.SavedSignatureRequest;
-import stirling.software.SPDF.model.api.signature.SavedSignatureResponse;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.service.SignatureService;
+import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
+/**
+ * Unified signature image controller that works for both authenticated and unauthenticated users.
+ * Uses composition pattern: - Core SignatureService (always available): reads shared signatures -
+ * PersonalSignatureService (proprietary, optional): reads personal signatures For authenticated
+ * signature management (save/delete), see proprietary SignatureController.
+ */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/general")
 public class SignatureController {
 
-    private final SignatureService signatureService;
-
+    private final SignatureService sharedSignatureService;
+    private final PersonalSignatureServiceInterface personalSignatureService;
     private final UserServiceInterface userService;
 
     public SignatureController(
-            SignatureService signatureService,
+            SignatureService sharedSignatureService,
+            @Autowired(required = false) PersonalSignatureServiceInterface personalSignatureService,
             @Autowired(required = false) UserServiceInterface userService) {
-        this.signatureService = signatureService;
+        this.sharedSignatureService = sharedSignatureService;
+        this.personalSignatureService = personalSignatureService;
         this.userService = userService;
     }
 
-    @GetMapping("/sign/{fileName}")
-    public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName)
-            throws IOException {
-        String username = "NON_SECURITY_USER";
-        if (userService != null) {
-            username = userService.getCurrentUsername();
-        }
-        // Verify access permission
-        if (!signatureService.hasAccessToFile(username, fileName)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        byte[] imageBytes = signatureService.getSignatureBytes(username, fileName);
-
-        // Determine content type from file extension
-        MediaType contentType = MediaType.IMAGE_PNG; // Default
-        String lowerFileName = fileName.toLowerCase();
-        if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
-            contentType = MediaType.IMAGE_JPEG;
-        }
-
-        return ResponseEntity.ok().contentType(contentType).body(imageBytes);
-    }
-
-    @PostMapping("/signatures")
-    public ResponseEntity<SavedSignatureResponse> saveSignature(
-            @RequestBody SavedSignatureRequest request) {
+    /**
+     * Get a signature image (works for both authenticated and unauthenticated users). -
+     * Authenticated with proprietary: tries personal first, then shared - Unauthenticated or
+     * community: tries shared only
+     */
+    @GetMapping("/signatures/{fileName}")
+    public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName) {
         try {
-            String username = "NON_SECURITY_USER";
-            if (userService != null) {
-                username = userService.getCurrentUsername();
-            }
-            SavedSignatureResponse response = signatureService.saveSignature(username, request);
-            return ResponseEntity.ok(response);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+            byte[] imageBytes = null;
 
-    @GetMapping("/signatures")
-    public ResponseEntity<List<SavedSignatureResponse>> listSignatures() {
-        try {
-            String username = "NON_SECURITY_USER";
-            if (userService != null) {
-                username = userService.getCurrentUsername();
+            // If proprietary service available and user authenticated, try personal folder first
+            if (personalSignatureService != null && userService != null) {
+                try {
+                    String username = userService.getCurrentUsername();
+                    imageBytes =
+                            personalSignatureService.getPersonalSignatureBytes(username, fileName);
+                } catch (Exception e) {
+                    // Not found in personal folder or not authenticated, will try shared
+                    log.debug("Personal signature not found, trying shared: {}", e.getMessage());
+                }
             }
-            List<SavedSignatureResponse> signatures = signatureService.getSavedSignatures(username);
-            return ResponseEntity.ok(signatures);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
-    @DeleteMapping("/signatures/{signatureId}")
-    public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
-        try {
-            String username = "NON_SECURITY_USER";
-            if (userService != null) {
-                username = userService.getCurrentUsername();
+            // If not found in personal (or no personal service), try shared
+            if (imageBytes == null) {
+                imageBytes = sharedSignatureService.getSharedSignatureBytes(fileName);
             }
-            signatureService.deleteSignature(username, signatureId);
-            return ResponseEntity.noContent().build();
+
+            // Determine content type from file extension
+            MediaType contentType = MediaType.IMAGE_PNG; // Default
+            String lowerFileName = fileName.toLowerCase();
+            if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
+                contentType = MediaType.IMAGE_JPEG;
+            }
+
+            return ResponseEntity.ok().contentType(contentType).body(imageBytes);
         } catch (IOException e) {
+            log.debug("Signature not found: {}", fileName);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }

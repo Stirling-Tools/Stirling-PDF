@@ -40,13 +40,13 @@ class SignatureStorageService {
 
   private async _performDetection(): Promise<SignatureStorageCapabilities> {
     try {
-      // Probe the signatures endpoint
-      await apiClient.get('/api/v1/general/signatures', {
+      // Probe the proprietary signatures endpoint (requires authentication)
+      await apiClient.get('/api/v1/proprietary/signatures', {
         timeout: 3000,
       });
 
-      // 200 = Backend available and accessible
-      console.log('[SignatureStorage] Backend signature API detected and accessible');
+      // 200 = Backend available and accessible (authenticated)
+      console.log('[SignatureStorage] Backend signature API detected and accessible (authenticated)');
       return {
         supportsBackend: true,
         storageType: 'backend',
@@ -54,11 +54,11 @@ class SignatureStorageService {
     } catch (error: any) {
       // Check if it's an HTTP error with status code
       if (error?.response?.status === 401 || error?.response?.status === 403) {
-        // Backend exists but needs auth (treat as unavailable for now)
+        // Backend exists but needs auth - gracefully fall back to localStorage
         console.log('[SignatureStorage] Backend signature API requires authentication, using localStorage');
       } else if (error?.response?.status === 404) {
-        // Endpoint doesn't exist
-        console.log('[SignatureStorage] Backend signature API not available (404), using localStorage');
+        // Endpoint doesn't exist (not running proprietary mode)
+        console.log('[SignatureStorage] Backend signature API not available (not in proprietary mode), using localStorage');
       } else {
         // Network error, timeout, or other error
         console.log('[SignatureStorage] Backend signature API not available, using localStorage');
@@ -141,14 +141,14 @@ class SignatureStorageService {
   // Backend methods
   private async _loadFromBackend(): Promise<SavedSignature[]> {
     try {
-      const response = await apiClient.get<SavedSignature[]>('/api/v1/general/signatures');
+      const response = await apiClient.get<SavedSignature[]>('/api/v1/proprietary/signatures');
       const signatures = response.data;
 
       // Fetch image data for each signature and convert to blob URLs
       const signaturePromises = signatures.map(async (sig) => {
-        if (sig.dataUrl && sig.dataUrl.startsWith('/api/v1/general/sign/')) {
+        if (sig.dataUrl && sig.dataUrl.startsWith('/api/v1/general/signatures/')) {
           try {
-            // Fetch image via apiClient (includes auth headers)
+            // Fetch image via apiClient (unified endpoint works for both authenticated and unauthenticated)
             const imageResponse = await apiClient.get<ArrayBuffer>(sig.dataUrl, {
               responseType: 'arraybuffer',
             });
@@ -177,11 +177,11 @@ class SignatureStorageService {
   }
 
   private async _saveToBackend(signature: SavedSignature): Promise<void> {
-    await apiClient.post('/api/v1/general/signatures', signature);
+    await apiClient.post('/api/v1/proprietary/signatures', signature);
   }
 
   private async _deleteFromBackend(id: string): Promise<void> {
-    await apiClient.delete(`/api/v1/general/signatures/${id}`);
+    await apiClient.delete(`/api/v1/proprietary/signatures/${id}`);
   }
 
   // LocalStorage methods
