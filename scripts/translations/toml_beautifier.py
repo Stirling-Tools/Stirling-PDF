@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-JSON Beautifier and Structure Fixer for Stirling PDF Frontend
-Restructures translation JSON files to match en-GB structure and key order exactly.
+TOML Beautifier and Structure Fixer for Stirling PDF Frontend
+Restructures translation TOML files to match en-GB structure and key order exactly.
 """
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -12,34 +11,61 @@ from typing import Dict, Any, List
 import argparse
 from collections import OrderedDict
 
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import toml as tomllib_fallback
+        tomllib = None
+    except ImportError:
+        tomllib = None
+        tomllib_fallback = None
 
-class JSONBeautifier:
+try:
+    import tomli_w  # For writing TOML
+except ImportError:
+    tomli_w = None
+
+
+class TOMLBeautifier:
     def __init__(self, locales_dir: str = "frontend/public/locales"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.json"
-        self.golden_structure = self._load_json(self.golden_truth_file)
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_structure = self._load_toml(self.golden_truth_file)
 
-    def _load_json(self, file_path: Path) -> Dict:
-        """Load JSON file with error handling."""
+    def _load_toml(self, file_path: Path) -> Dict:
+        """Load TOML file with error handling."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f, object_pairs_hook=OrderedDict)
+            if tomllib:
+                with open(file_path, 'rb') as f:
+                    return tomllib.load(f)
+            elif tomllib_fallback:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    return tomllib_fallback.load(f)
+            else:
+                print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
+                sys.exit(1)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON in {file_path}: {e}")
+        except Exception as e:
+            print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
-    def _save_json(self, data: Dict, file_path: Path, backup: bool = True) -> None:
-        """Save JSON file with proper formatting."""
+    def _save_toml(self, data: Dict, file_path: Path, backup: bool = True) -> None:
+        """Save TOML file with proper formatting."""
+        if not tomli_w:
+            print(f"Error: TOML writing not available. Install 'tomli_w'")
+            sys.exit(1)
+
         if backup and file_path.exists():
-            backup_path = file_path.with_suffix(f'.backup.restructured.json')
-            file_path.rename(backup_path)
+            backup_path = file_path.with_suffix(f'.backup.restructured.toml')
+            import shutil
+            shutil.copy2(file_path, backup_path)
             print(f"Backup created: {backup_path}")
 
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False, separators=(',', ': '))
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(data, f)
 
     def _flatten_dict(self, d: Dict, parent_key: str = '', separator: str = '.') -> Dict[str, Any]:
         """Flatten nested dictionary into dot-notation keys."""
@@ -93,7 +119,7 @@ class JSONBeautifier:
             return {}
 
         # Load the target file
-        target_data = self._load_json(target_file)
+        target_data = self._load_toml(target_file)
 
         # Flatten the target translations
         flat_target = self._flatten_dict(target_data)
@@ -112,7 +138,7 @@ class JSONBeautifier:
         restructured_data = self.restructure_translation_file(target_file)
 
         # Save the restructured file
-        self._save_json(restructured_data, target_file, backup)
+        self._save_toml(restructured_data, target_file, backup)
 
         # Analyze the results
         flat_golden = self._flatten_dict(self.golden_structure)
@@ -163,7 +189,7 @@ class JSONBeautifier:
 
     def validate_key_order(self, target_file: Path) -> Dict[str, Any]:
         """Validate that keys appear in the same order as en-GB."""
-        target_data = self._load_json(target_file)
+        target_data = self._load_toml(target_file)
 
         def get_key_order(obj: Dict, path: str = '') -> List[str]:
             keys = []
@@ -198,7 +224,10 @@ class JSONBeautifier:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Beautify and restructure translation JSON files')
+    parser = argparse.ArgumentParser(
+        description='Beautify and restructure translation TOML files',
+        epilog='Works with TOML format translation files.'
+    )
     parser.add_argument('--locales-dir', default='frontend/public/locales',
                         help='Path to locales directory')
     parser.add_argument('--language', help='Restructure specific language only')
@@ -211,10 +240,10 @@ def main():
 
     args = parser.parse_args()
 
-    beautifier = JSONBeautifier(args.locales_dir)
+    beautifier = TOMLBeautifier(args.locales_dir)
 
     if args.language:
-        target_file = Path(args.locales_dir) / args.language / "translation.json"
+        target_file = Path(args.locales_dir) / args.language / "translation.toml"
         if not target_file.exists():
             print(f"Error: Translation file not found for language: {args.language}")
             sys.exit(1)
@@ -237,7 +266,7 @@ def main():
         results = []
         for lang_dir in Path(args.locales_dir).iterdir():
             if lang_dir.is_dir() and lang_dir.name != "en-GB":
-                translation_file = lang_dir / "translation.json"
+                translation_file = lang_dir / "translation.toml"
                 if translation_file.exists():
                     if args.validate_only:
                         order_result = beautifier.validate_key_order(translation_file)

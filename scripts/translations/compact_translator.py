@@ -2,6 +2,7 @@
 """
 Compact Translation Extractor for Character-Limited AI Translation
 Outputs untranslated entries in minimal JSON format with whitespace stripped.
+Supports both TOML and JSON formats.
 """
 
 import json
@@ -22,21 +23,46 @@ except ImportError:
 class CompactTranslationExtractor:
     def __init__(self, locales_dir: str = "frontend/public/locales", ignore_file: str = "scripts/ignore_translation.toml"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.json"
-        self.golden_truth = self._load_json(self.golden_truth_file)
+        # Try TOML first, then fall back to JSON
+        self.golden_truth_file = self._find_translation_file(self.locales_dir / "en-GB")
+        self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_json(self, file_path: Path) -> dict:
-        """Load JSON file with error handling."""
+    def _find_translation_file(self, lang_dir: Path) -> Path:
+        """Find translation file (TOML or JSON) in language directory."""
+        toml_file = lang_dir / "translation.toml"
+        json_file = lang_dir / "translation.json"
+
+        if toml_file.exists():
+            return toml_file
+        elif json_file.exists():
+            return json_file
+        else:
+            print(f"Error: No translation file found in {lang_dir}", file=sys.stderr)
+            sys.exit(1)
+
+    def _load_translation_file(self, file_path: Path) -> dict:
+        """Load TOML or JSON translation file based on extension."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            if file_path.suffix == '.toml':
+                if tomllib:
+                    with open(file_path, 'rb') as f:
+                        return tomllib.load(f)
+                elif tomllib_fallback:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        return tomllib_fallback.load(f)
+                else:
+                    print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+", file=sys.stderr)
+                    sys.exit(1)
+            else:  # JSON
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}", file=sys.stderr)
             sys.exit(1)
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON in {file_path}: {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"Error: Invalid file {file_path}: {e}", file=sys.stderr)
             sys.exit(1)
 
     def _load_ignore_patterns(self) -> dict:
@@ -92,13 +118,14 @@ class CompactTranslationExtractor:
 
     def get_untranslated_entries(self, language: str) -> dict:
         """Get all untranslated entries for a language in compact format."""
-        target_file = self.locales_dir / language / "translation.json"
-
-        if not target_file.exists():
+        lang_dir = self.locales_dir / language
+        try:
+            target_file = self._find_translation_file(lang_dir)
+        except SystemExit:
             print(f"Error: Translation file not found for language: {language}", file=sys.stderr)
             sys.exit(1)
 
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
 
@@ -145,7 +172,10 @@ class CompactTranslationExtractor:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract untranslated entries in compact format for AI translation')
+    parser = argparse.ArgumentParser(
+        description='Extract untranslated entries in compact format for AI translation (supports TOML and JSON)',
+        epilog='Automatically detects and handles both TOML and JSON translation files.'
+    )
     parser.add_argument('language', help='Language code (e.g., de-DE, fr-FR)')
     parser.add_argument('--locales-dir', default='frontend/public/locales', help='Path to locales directory')
     parser.add_argument('--ignore-file', default='scripts/ignore_translation.toml', help='Path to ignore patterns file')

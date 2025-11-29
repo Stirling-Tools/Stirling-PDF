@@ -2,6 +2,7 @@
 """
 Automated Translation Pipeline
 Extracts, translates, merges, and beautifies translations for a language.
+Supports both TOML and JSON formats.
 """
 
 import json
@@ -11,6 +12,16 @@ import os
 import subprocess
 from pathlib import Path
 import time
+
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import toml as tomllib_fallback
+        tomllib = None
+    except ImportError:
+        tomllib = None
+        tomllib_fallback = None
 
 
 def run_command(cmd, description=""):
@@ -30,25 +41,49 @@ def run_command(cmd, description=""):
     return result.returncode == 0
 
 
+def find_translation_file(lang_dir):
+    """Find translation file (TOML or JSON) in language directory."""
+    toml_file = lang_dir / "translation.toml"
+    json_file = lang_dir / "translation.json"
+
+    if toml_file.exists():
+        return toml_file
+    elif json_file.exists():
+        return json_file
+    else:
+        return None
+
+def load_translation_file(file_path):
+    """Load TOML or JSON translation file."""
+    if file_path.suffix == '.toml':
+        if tomllib:
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
+        elif tomllib_fallback:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return tomllib_fallback.load(f)
+        else:
+            print(f"Error: TOML support not available")
+            return None
+    else:  # JSON
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
 def extract_untranslated(language_code, batch_size=500):
     """Extract untranslated entries and split into batches."""
     print(f"\n🔍 Extracting untranslated entries for {language_code}...")
 
     # Load files
-    golden_path = Path(f'frontend/public/locales/en-GB/translation.json')
-    lang_path = Path(f'frontend/public/locales/{language_code}/translation.json')
+    golden_path = find_translation_file(Path('frontend/public/locales/en-GB'))
+    lang_path = find_translation_file(Path(f'frontend/public/locales/{language_code}'))
 
-    if not golden_path.exists():
-        print(f"Error: Golden truth file not found: {golden_path}")
+    if not golden_path:
+        print(f"Error: Golden truth file not found in frontend/public/locales/en-GB")
         return None
 
-    if not lang_path.exists():
-        print(f"Error: Language file not found: {lang_path}")
+    if not lang_path:
+        print(f"Error: Language file not found in frontend/public/locales/{language_code}")
         return None
-
-    def load_json(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
 
     def flatten_dict(d, parent_key='', separator='.'):
         items = []
@@ -60,8 +95,12 @@ def extract_untranslated(language_code, batch_size=500):
                 items.append((new_key, str(v)))
         return dict(items)
 
-    golden = load_json(golden_path)
-    lang_data = load_json(lang_path)
+    golden = load_translation_file(golden_path)
+    lang_data = load_translation_file(lang_path)
+
+    if not golden or not lang_data:
+        print(f"Error: Failed to load translation files")
+        return None
 
     golden_flat = flatten_dict(golden)
     lang_flat = flatten_dict(lang_data)
@@ -226,9 +265,11 @@ def verify_completion(language_code):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Automated translation pipeline for Stirling PDF',
+        description='Automated translation pipeline for Stirling PDF (supports TOML and JSON)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Note: This script automatically detects and handles both TOML and JSON translation files.
+
 Examples:
   # Translate Spanish with API key in environment
   export OPENAI_API_KEY=your_key_here

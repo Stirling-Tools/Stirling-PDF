@@ -1,19 +1,17 @@
-name: Check Properties Files on PR
+name: Check TOML Translation Files on PR (V3)
+
+# This workflow validates TOML translation files for V3 format
+# For legacy formats, see:
+#   - check_properties.yml (V1 backend .properties)
+#   - Legacy JSON validation (V2, deprecated)
 
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "app/core/src/main/resources/messages_*.properties"
+      - "frontend/public/locales/*/translation.toml"
 
 # cancel in-progress jobs if a new job is triggered
-# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
-# or a pull request is updated.
-# It helps to save resources and time by ensuring that only the latest commit is built and tested
-# This is particularly useful for long-running jobs that may take a while to complete.
-# The `group` is set to a combination of the workflow name, event name, and branch name.
-# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
-# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
   cancel-in-progress: true
@@ -73,22 +71,22 @@ jobs:
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
-                   # Check if PR number exists
-            if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
-              echo "Error: PR number is empty"
-              exit 1
-            fi
-            # Get changed files and filter for properties files, handle case where no matches are found
-            gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^app/core/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt || echo "No matching properties files found in PR"
-            # Check if any files were found
-            if [ ! -s changed_files.txt ]; then
-              echo "No properties files changed in this PR"
-              echo "Workflow will exit early as no relevant files to check"
-              exit 0
-            fi
-            echo "Found $(wc -l < changed_files.txt) matching properties files"
+          # Check if PR number exists
+          if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+            echo "Error: PR number is empty"
+            exit 1
+          fi
+          # Get changed files and filter for TOML translation files
+          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
+          # Check if any files were found
+          if [ ! -s changed_files.txt ]; then
+            echo "No TOML translation files changed in this PR"
+            echo "Workflow will exit early as no relevant files to check"
+            exit 0
+          fi
+          echo "Found $(wc -l < changed_files.txt) matching TOML files"
 
-      - name: Determine reference file test
+      - name: Determine reference file
         id: determine-file
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
@@ -125,11 +123,11 @@ jobs:
               pull_number: prNumber,
             });
 
-            // Filter for relevant files based on the PR changes
+            // Filter for relevant TOML files based on the PR changes
             const changedFiles = files
               .filter(file =>
                 file.status !== "removed" &&
-                /^app\/core\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
+                /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
               )
               .map(file => file.filename);
 
@@ -169,16 +167,16 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("app/core/src/main/resources/messages_en_GB.properties")) {
+            if (changedFiles.includes("frontend/public/locales/en-GB/translation.toml")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "app/core/src/main/resources/messages_en_GB.properties",
+                path: "frontend/public/locales/en-GB/translation.toml",
                 ref: branch,
               });
 
-              referenceFilePath = "pr-branch-messages_en_GB.properties";
+              referenceFilePath = "pr-branch-translation-en-GB.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             } else {
@@ -186,11 +184,11 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "app/core/src/main/resources/messages_en_GB.properties",
+                path: "frontend/public/locales/en-GB/translation.toml",
                 ref: "main",
               });
 
-              referenceFilePath = "main-branch-messages_en_GB.properties";
+              referenceFilePath = "main-branch-translation-en-GB.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             }
@@ -198,11 +196,20 @@ jobs:
             console.log(`Reference file path: ${referenceFilePath}`);
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          pip install toml tomli-w
+
       - name: Run Python script to check files
         id: run-check
         run: |
-          echo "Running Python script to check files..."
-          python .github/scripts/check_language_properties.py \
+          echo "Running Python script to check TOML files..."
+          python .github/scripts/check_language_toml.py \
             --actor ${{ github.event.pull_request.user.login }} \
             --reference-file "${REFERENCE_FILE}" \
             --branch "pr-branch" \
@@ -213,7 +220,7 @@ jobs:
         id: capture-output
         run: |
           if [ -f result.txt ] && [ -s result.txt ]; then
-            echo "Test, capturing output..."
+            echo "Capturing output..."
             SCRIPT_OUTPUT=$(cat result.txt)
             echo "SCRIPT_OUTPUT<<EOF" >> $GITHUB_ENV
             echo "$SCRIPT_OUTPUT" >> $GITHUB_ENV
@@ -227,7 +234,7 @@ jobs:
               echo "FAIL_JOB=false" >> $GITHUB_ENV
             fi
           else
-            echo "No update found."
+            echo "No output found."
             echo "SCRIPT_OUTPUT=" >> $GITHUB_ENV
             echo "FAIL_JOB=false" >> $GITHUB_ENV
           fi
@@ -249,7 +256,7 @@ jobs:
               issue_number: issueNumber
             });
 
-            const comment = comments.data.find(c => c.body.includes("## 🚀 Translation Verification Summary"));
+            const comment = comments.data.find(c => c.body.includes("## 🌐 TOML Translation Verification Summary"));
 
             // Only update or create comments by the action user
             const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
@@ -260,7 +267,7 @@ jobs:
                 owner: repoOwner,
                 repo: repoName,
                 comment_id: comment.id,
-                body: `## 🚀 Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
+                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
               });
               console.log("Updated existing comment.");
             } else if (!comment) {
@@ -269,7 +276,7 @@ jobs:
                 owner: repoOwner,
                 repo: repoName,
                 issue_number: issueNumber,
-                body: `## 🚀 Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
+                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
               });
               console.log("Created new comment.");
             } else {
@@ -287,6 +294,6 @@ jobs:
         run: |
           echo "Cleaning up temporary files..."
           rm -rf pr-branch
-          rm -f pr-branch-messages_en_GB.properties main-branch-messages_en_GB.properties changed_files.txt result.txt
+          rm -f pr-branch-translation-en-GB.toml main-branch-translation-en-GB.toml changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

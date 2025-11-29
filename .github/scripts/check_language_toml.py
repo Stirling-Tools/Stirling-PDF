@@ -1,6 +1,6 @@
 """
 Author: Ludy87
-Description: This script processes JSON translation files for localization checks. It compares translation files in a branch with
+Description: This script processes TOML translation files for localization checks. It compares translation files in a branch with
 a reference file to ensure consistency. The script performs two main checks:
 1. Verifies that the number of translation keys in the translation files matches the reference file.
 2. Ensures that all keys in the translation files are present in the reference file and vice versa.
@@ -9,10 +9,10 @@ The script also provides functionality to update the translation files to match 
 adjusting the format.
 
 Usage:
-    python check_language_json.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
+    python check_language_toml.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
 """
 # Sample for Windows:
-# python .github/scripts/check_language_json.py --reference-file frontend/public/locales/en-GB/translation.json --branch "" --files frontend/public/locales/de-DE/translation.json frontend/public/locales/fr-FR/translation.json
+# python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
 
 import copy
 import glob
@@ -21,11 +21,26 @@ import argparse
 import re
 import json
 
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import toml as tomllib_fallback
+        tomllib = None
+    except ImportError:
+        tomllib = None
+        tomllib_fallback = None
+
+try:
+    import tomli_w  # For writing TOML files
+except ImportError:
+    tomli_w = None
+
 
 def find_duplicate_keys(file_path, keys=None, prefix=""):
     """
-    Identifies duplicate keys in a JSON file (including nested keys).
-    :param file_path: Path to the JSON file.
+    Identifies duplicate keys in a TOML file (including nested keys).
+    :param file_path: Path to the TOML file.
     :param keys: Dictionary to track keys (used for recursion).
     :param prefix: Prefix for nested keys.
     :return: List of tuples (key, first_occurrence_path, duplicate_path).
@@ -35,8 +50,15 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
 
     duplicates = []
 
-    with open(file_path, "r", encoding="utf-8") as file:
-        data = json.load(file)
+    # Load TOML file
+    if tomllib:
+        with open(file_path, 'rb') as file:
+            data = tomllib.load(file)
+    elif tomllib_fallback:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = tomllib_fallback.load(file)
+    else:
+        return []  # Cannot check without TOML support
 
     def process_dict(obj, current_prefix=""):
         for key, value in obj.items():
@@ -54,18 +76,24 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     return duplicates
 
 
-# Maximum size for JSON files (e.g., 500 KB)
+# Maximum size for TOML files (e.g., 500 KB)
 MAX_FILE_SIZE = 500 * 1024
 
 
-def parse_json_file(file_path):
+def parse_toml_file(file_path):
     """
-    Parses a JSON translation file and returns a flat dictionary of all keys.
-    :param file_path: Path to the JSON file.
+    Parses a TOML translation file and returns a flat dictionary of all keys.
+    :param file_path: Path to the TOML file.
     :return: Dictionary with flattened keys.
     """
-    with open(file_path, "r", encoding="utf-8") as file:
-        data = json.load(file)
+    if tomllib:
+        with open(file_path, 'rb') as file:
+            data = tomllib.load(file)
+    elif tomllib_fallback:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = tomllib_fallback.load(file)
+    else:
+        raise RuntimeError("TOML support not available. Install 'toml' or upgrade to Python 3.11+")
 
     def flatten_dict(d, parent_key="", sep="."):
         items = {}
@@ -99,38 +127,43 @@ def unflatten_dict(d, sep="."):
     return result
 
 
-def write_json_file(file_path, updated_properties):
+def write_toml_file(file_path, updated_properties):
     """
-    Writes updated properties back to the JSON file.
-    :param file_path: Path to the JSON file.
+    Writes updated properties back to the TOML file.
+    :param file_path: Path to the TOML file.
     :param updated_properties: Dictionary of updated properties to write.
     """
     nested_data = unflatten_dict(updated_properties)
 
-    with open(file_path, "w", encoding="utf-8", newline="\n") as file:
-        json.dump(nested_data, file, ensure_ascii=False, indent=2)
-        file.write("\n")  # Add trailing newline
+    if tomli_w:
+        with open(file_path, "wb") as file:
+            tomli_w.dump(nested_data, file)
+    elif tomllib_fallback and hasattr(tomllib_fallback, 'dump'):
+        with open(file_path, "w", encoding="utf-8", newline="\n") as file:
+            tomllib_fallback.dump(nested_data, file)
+    else:
+        raise RuntimeError("TOML writing not supported. Install 'tomli-w' library")
 
 
 def update_missing_keys(reference_file, file_list, branch=""):
     """
     Updates missing keys in the translation files based on the reference file.
-    :param reference_file: Path to the reference JSON file.
+    :param reference_file: Path to the reference TOML file.
     :param file_list: List of translation files to update.
     :param branch: Branch where the files are located.
     """
-    reference_properties = parse_json_file(reference_file)
+    reference_properties = parse_toml_file(reference_file)
 
     for file_path in file_list:
         basename_current_file = os.path.basename(os.path.join(branch, file_path))
         if (
             basename_current_file == os.path.basename(reference_file)
-            or not file_path.endswith(".json")
+            or not file_path.endswith(".toml")
             or not os.path.dirname(file_path).endswith("locales")
         ):
             continue
 
-        current_properties = parse_json_file(os.path.join(branch, file_path))
+        current_properties = parse_toml_file(os.path.join(branch, file_path))
         updated_properties = {}
 
         for ref_key, ref_value in reference_properties.items():
@@ -141,16 +174,16 @@ def update_missing_keys(reference_file, file_list, branch=""):
                 # Add missing key with reference value
                 updated_properties[ref_key] = ref_value
 
-        write_json_file(os.path.join(branch, file_path), updated_properties)
+        write_toml_file(os.path.join(branch, file_path), updated_properties)
 
 
 def check_for_missing_keys(reference_file, file_list, branch):
     update_missing_keys(reference_file, file_list, branch)
 
 
-def read_json_keys(file_path):
+def read_toml_keys(file_path):
     if os.path.isfile(file_path) and os.path.exists(file_path):
-        return parse_json_file(file_path)
+        return parse_toml_file(file_path)
     return {}
 
 
@@ -160,7 +193,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
     report = []
     report.append(f"#### 🔄 Reference Branch: `{reference_branch}`")
-    reference_keys = read_json_keys(reference_file)
+    reference_keys = read_toml_keys(reference_file)
     has_differences = False
 
     only_reference_file = True
@@ -197,12 +230,12 @@ def check_for_differences(reference_file, file_list, branch, actor):
         ):
             continue
 
-        if not file_normpath.endswith(".json") or basename_current_file != "translation.json":
+        if not file_normpath.endswith(".toml") or basename_current_file != "translation.toml":
             continue
 
         only_reference_file = False
         report.append(f"#### 📃 **File Check:** `{locale_dir}/{basename_current_file}`")
-        current_keys = read_json_keys(os.path.join(branch, file_path))
+        current_keys = read_toml_keys(os.path.join(branch, file_path))
         reference_key_count = len(reference_keys)
         current_key_count = len(current_keys)
 
@@ -272,7 +305,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.json](https://github.com/Stirling-Tools/Stirling-PDF/blob/V2/frontend/public/locales/en-GB/translation.json)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/public/locales/en-GB/translation.toml)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
@@ -286,7 +319,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Find missing keys")
+    parser = argparse.ArgumentParser(description="Find missing keys in TOML translation files")
     parser.add_argument(
         "--actor",
         required=False,
@@ -337,7 +370,7 @@ if __name__ == "__main__":
                     "public",
                     "locales",
                     "*",
-                    "translation.json",
+                    "translation.toml",
                 )
             )
         update_missing_keys(args.reference_file, file_list)

@@ -24,21 +24,34 @@ except ImportError:
 class TranslationAnalyzer:
     def __init__(self, locales_dir: str = "frontend/public/locales", ignore_file: str = "scripts/ignore_translation.toml"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.json"
-        self.golden_truth = self._load_json(self.golden_truth_file)
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_json(self, file_path: Path) -> Dict:
-        """Load JSON file with error handling."""
+    def _load_translation_file(self, file_path: Path) -> Dict:
+        """Load TOML or JSON translation file with error handling."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            if file_path.suffix == '.toml':
+                if tomllib:
+                    # Use Python 3.11+ built-in
+                    with open(file_path, 'rb') as f:
+                        return tomllib.load(f)
+                elif tomllib_fallback:
+                    # Use toml library fallback
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        return tomllib_fallback.load(f)
+                else:
+                    print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
+                    sys.exit(1)
+            else:  # Assume JSON for backward compatibility
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON in {file_path}: {e}")
+        except Exception as e:
+            print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
     def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
@@ -102,18 +115,22 @@ class TranslationAnalyzer:
         return dict(items)
 
     def get_all_language_files(self) -> List[Path]:
-        """Get all translation.json files except en-GB."""
+        """Get all translation files (TOML or JSON) except en-GB."""
         files = []
         for lang_dir in self.locales_dir.iterdir():
             if lang_dir.is_dir() and lang_dir.name != "en-GB":
-                translation_file = lang_dir / "translation.json"
-                if translation_file.exists():
-                    files.append(translation_file)
+                # Try TOML first, then JSON
+                toml_file = lang_dir / "translation.toml"
+                json_file = lang_dir / "translation.json"
+                if toml_file.exists():
+                    files.append(toml_file)
+                elif json_file.exists():
+                    files.append(json_file)
         return sorted(files)
 
     def find_missing_translations(self, target_file: Path) -> Set[str]:
         """Find keys that exist in en-GB but missing in target file."""
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
@@ -127,7 +144,7 @@ class TranslationAnalyzer:
 
     def find_untranslated_entries(self, target_file: Path) -> Set[str]:
         """Find entries that appear to be untranslated (identical to en-GB)."""
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
@@ -170,7 +187,7 @@ class TranslationAnalyzer:
 
     def find_extra_translations(self, target_file: Path) -> Set[str]:
         """Find keys that exist in target file but not in en-GB."""
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
@@ -185,7 +202,7 @@ class TranslationAnalyzer:
         untranslated = self.find_untranslated_entries(target_file)
         extra = self.find_extra_translations(target_file)
 
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
 
@@ -249,8 +266,15 @@ def main():
     analyzer = TranslationAnalyzer(args.locales_dir, args.ignore_file)
 
     if args.language:
-        target_file = Path(args.locales_dir) / args.language / "translation.json"
-        if not target_file.exists():
+        lang_dir = Path(args.locales_dir) / args.language
+        toml_file = lang_dir / "translation.toml"
+        json_file = lang_dir / "translation.json"
+
+        if toml_file.exists():
+            target_file = toml_file
+        elif json_file.exists():
+            target_file = json_file
+        else:
             print(f"Error: Translation file not found for language: {args.language}")
             sys.exit(1)
         results = [analyzer.analyze_file(target_file)]

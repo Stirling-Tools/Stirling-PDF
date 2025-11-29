@@ -16,6 +16,16 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import argparse
 
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import toml as tomllib_fallback
+        tomllib = None
+    except ImportError:
+        tomllib = None
+        tomllib_fallback = None
+
 
 def find_placeholders(text: str) -> Set[str]:
     """Find all placeholders in text like {n}, {{var}}, {0}, etc."""
@@ -117,15 +127,35 @@ def main():
 
     # Define paths
     locales_dir = Path('frontend/public/locales')
-    en_gb_path = locales_dir / 'en-GB' / 'translation.json'
 
-    if not en_gb_path.exists():
-        print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
+    # Try TOML first, then JSON
+    en_gb_toml = locales_dir / 'en-GB' / 'translation.toml'
+    en_gb_json = locales_dir / 'en-GB' / 'translation.json'
+
+    if en_gb_toml.exists():
+        en_gb_path = en_gb_toml
+        file_ext = '.toml'
+    elif en_gb_json.exists():
+        en_gb_path = en_gb_json
+        file_ext = '.json'
+    else:
+        print(f"❌ Error: en-GB translation file not found at {en_gb_toml} or {en_gb_json}")
         sys.exit(1)
 
     # Load en-GB (source of truth)
-    with open(en_gb_path, 'r', encoding='utf-8') as f:
-        en_gb = json.load(f)
+    if file_ext == '.toml':
+        if tomllib:
+            with open(en_gb_path, 'rb') as f:
+                en_gb = tomllib.load(f)
+        elif tomllib_fallback:
+            with open(en_gb_path, 'r', encoding='utf-8') as f:
+                en_gb = tomllib_fallback.load(f)
+        else:
+            print("❌ Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
+            sys.exit(1)
+    else:
+        with open(en_gb_path, 'r', encoding='utf-8') as f:
+            en_gb = json.load(f)
 
     en_gb_flat = flatten_dict(en_gb)
 
@@ -134,23 +164,36 @@ def main():
         languages = [args.language]
     else:
         # Validate all languages except en-GB
-        languages = [
-            d.name for d in locales_dir.iterdir()
-            if d.is_dir() and d.name != 'en-GB' and (d / 'translation.json').exists()
-        ]
+        languages = []
+        for d in locales_dir.iterdir():
+            if d.is_dir() and d.name != 'en-GB':
+                if (d / f'translation{file_ext}').exists():
+                    languages.append(d.name)
 
     all_issues = []
 
     # Validate each language
     for lang_code in sorted(languages):
-        lang_path = locales_dir / lang_code / 'translation.json'
+        lang_path = locales_dir / lang_code / f'translation{file_ext}'
 
         if not lang_path.exists():
-            print(f"⚠️  Warning: {lang_code}/translation.json not found, skipping")
+            print(f"⚠️  Warning: {lang_code}/translation{file_ext} not found, skipping")
             continue
 
-        with open(lang_path, 'r', encoding='utf-8') as f:
-            lang_data = json.load(f)
+        # Load language file
+        if file_ext == '.toml':
+            if tomllib:
+                with open(lang_path, 'rb') as f:
+                    lang_data = tomllib.load(f)
+            elif tomllib_fallback:
+                with open(lang_path, 'r', encoding='utf-8') as f:
+                    lang_data = tomllib_fallback.load(f)
+            else:
+                print(f"⚠️  Warning: Cannot read TOML file {lang_path}, skipping")
+                continue
+        else:
+            with open(lang_path, 'r', encoding='utf-8') as f:
+                lang_data = json.load(f)
 
         lang_flat = flatten_dict(lang_data)
         issues = validate_language(en_gb_flat, lang_flat, lang_code)
