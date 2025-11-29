@@ -34,7 +34,19 @@ import stirling.software.proprietary.util.FormUtils;
 
 @RestController
 @RequestMapping("/api/v1/form")
-@Tag(name = "Forms", description = "PDF form APIs")
+@Tag(
+        name = "Forms",
+        description =
+                """
+                Work with PDF form fields: read them, fill them, edit them, or remove them.
+                Treats a PDF as a structured form instead of just flat pages.
+
+                Typical uses:
+                • Inspect which form fields exist in a PDF
+                • Autofill forms from your own systems (e.g. CRM, ERP)
+                • Change or delete form fields before sending out a final, non-editable copy
+                • Unlock read-only form fields when you need to update them
+                """)
 @RequiredArgsConstructor
 public class FormFillController {
 

@@ -22,25 +22,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Security",
         description =
                 """
-                Document security and protection services for confidential and sensitive content.
+                Protect and clean PDFs: passwords, digital signatures, redaction, and sanitizing.
+                These endpoints help you control who can open a file, what they can do with it, and remove sensitive content when needed.
 
-                This endpoint group provides essential security operations for organizations handling
-                sensitive documents and materials requiring controlled access.
-
-                Common use cases:
-                • Legal confidentiality, healthcare privacy (HIPAA), and financial regulatory compliance
-                • Government classified handling, corporate IP protection, and educational privacy (FERPA)
-                • Contract security for business transactions
-
-                Business applications:
-                • Document authentication, confidential sharing, and secure archiving
-                • Content watermarking, access control, and privacy protection through redaction
-
-                Industry scenarios:
-                • Legal discovery, medical records exchange, financial audit documentation
-                • Enterprise policy enforcement and data governance
-
-                Target users: Legal professionals, healthcare administrators, compliance officers,
-                government agencies, and enterprises handling sensitive content.
+                Typical uses:
+                • Add or remove a password on a PDF
+                • Redact personal or confidential information (manually or automatically)
+                • Validate or remove digital signatures
+                • Sanitize a PDF to strip scripts and embedded content
                 """)
 public @interface SecurityApi {}

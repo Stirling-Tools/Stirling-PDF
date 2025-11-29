@@ -22,25 +22,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Analysis",
         description =
                 """
-                Document analysis and information extraction services for content intelligence and insights.
+                Read-only inspection of PDFs: page count, page sizes, fonts, form fields, annotations, document properties, and security details.
+                Use these endpoints to understand what's inside a document without changing it.
 
-                This endpoint group provides analytical capabilities to understand document structure,
-                extract information, and generate insights from PDF content for automated processing.
-
-                Common use cases:
-                • Document inventory management and content audit for compliance verification
-                • Quality assurance workflows and business intelligence analytics
-                • Migration planning, accessibility evaluation, and document forensics
-
-                Business applications:
-                • Legal discovery, financial document review, and healthcare records analysis
-                • Academic research, government processing, and publishing optimization
-
-                Operational scenarios:
-                • Large-scale profiling, migration assessment, and performance optimization
-                • Automated quality control and content strategy development
-
-                Target users: Data analysts, QA teams, administrators, and business intelligence
-                professionals requiring detailed document insights.
+                Typical uses:
+                • Get page counts and dimensions for layout or print rules
+                • List fonts and annotations to spot compatibility issues
+                • Inspect form fields before deciding how to fill or modify them
+                • Pull metadata and security settings for audits or reports
                 """)
 public @interface AnalysisApi {}

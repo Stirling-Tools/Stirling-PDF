@@ -22,25 +22,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Convert",
         description =
                 """
-                Document format transformation services for cross-platform compatibility and workflow integration.
+                Convert PDFs to and from other formats (Word, images, HTML, Markdown, PDF/A, CBZ/CBR, EML, etc.).
+                This group also powers the text-editor / jobId-based editing flow for incremental PDF edits.
 
-                This endpoint group enables transformation between various formats, supporting
-                diverse business workflows and system integrations for mixed document ecosystems.
-
-                Common use cases:
-                • Legacy system integration, document migration, and cross-platform sharing
-                • Archive standardization, publishing preparation, and content adaptation
-                • Accessibility compliance and mobile-friendly document preparation
-
-                Business applications:
-                • Enterprise content management, digital publishing, and educational platforms
-                • Legal document processing, healthcare interoperability, and government standardization
-
-                Integration scenarios:
-                • API-driven pipelines, automated workflow preparation, and batch conversions
-                • Real-time format adaptation for user requests
-
-                Target users: System integrators, content managers, digital archivists, and
-                organizations requiring flexible document format interoperability.
+                Typical uses:
+                • Turn PDFs into Word or text for editing
+                • Convert office files, images, HTML, or email (EML) into PDFs
+                • Create PDF/A for long-term archiving
+                • Export PDFs as images, HTML, CSV, or Markdown for search, analysis, or reuse
                 """)
 public @interface ConvertApi {}

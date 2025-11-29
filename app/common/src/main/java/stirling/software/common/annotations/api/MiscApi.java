@@ -22,25 +22,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Misc",
         description =
                 """
-                Specialized utilities and supplementary tools for enhanced document processing workflows.
+                Tools that don't fit neatly elsewhere: OCR, compress, repair, flatten, extract images, update metadata, add stamps/page numbers/images, and more.
+                These endpoints help fix problem PDFs and prepare them for sharing, storage, or further processing.
 
-                This endpoint group provides utility operations that support core document processing
-                tasks and address specific workflow needs in real-world scenarios.
-
-                Common use cases:
-                • Document optimization for bandwidth-limited environments and storage cost management
-                • Document repair, content extraction, and validation for quality assurance
-                • Accessibility improvement and custom processing for specialized needs
-
-                Business applications:
-                • Web publishing optimization, email attachment management, and archive efficiency
-                • Mobile compatibility, print production, and legacy document recovery
-
-                Operational scenarios:
-                • Batch processing, quality control, and performance optimization
-                • Troubleshooting and recovery of problematic documents
-
-                Target users: System administrators, document specialists, and organizations requiring
-                specialized document processing and optimization tools.
+                Typical uses:
+                • Repair a damaged PDF or remove blank pages
+                • Run OCR on scanned PDFs so they become searchable
+                • Compress large PDFs for email or web download
+                • Extract embedded images or scans
+                • Add page numbers, stamps, or overlay an image (e.g. logo, seal)
+                • Update PDF metadata (title, author, etc.)
                 """)
 public @interface MiscApi {}
