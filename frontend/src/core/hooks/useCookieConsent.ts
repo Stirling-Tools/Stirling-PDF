@@ -2,12 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 
 declare global {
   interface Window {
     CookieConsent?: {
       run: (config: any) => void;
       show: (show?: boolean) => void;
+      hide: () => void;
+      getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };
@@ -16,19 +19,37 @@ declare global {
 
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
+  forceLightMode?: boolean;
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false
+  analyticsEnabled = false,
+  forceLightMode = false
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const { isOpen: tourIsOpen } = useOnboarding();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (!analyticsEnabled) {
       console.log('Cookie consent not enabled - analyticsEnabled is false');
       return;
+    }
+
+    // Load the cookie consent CSS files first (always needed)
+    const mainCSS = document.createElement('link');
+    mainCSS.rel = 'stylesheet';
+    mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
+    if (!document.querySelector(`link[href="${mainCSS.href}"]`)) {
+      document.head.appendChild(mainCSS);
+    }
+
+    const customCSS = document.createElement('link');
+    customCSS.rel = 'stylesheet';
+    customCSS.href = `${BASE_PATH}css/cookieconsentCustomisation.css`;
+    if (!document.querySelector(`link[href="${customCSS.href}"]`)) {
+      document.head.appendChild(customCSS);
     }
 
     // Prevent double initialization
@@ -41,26 +62,21 @@ export const useCookieConsent = ({
       return;
     }
 
-    // Load the cookie consent CSS files first
-    const mainCSS = document.createElement('link');
-    mainCSS.rel = 'stylesheet';
-    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
-    document.head.appendChild(mainCSS);
-
-    const customCSS = document.createElement('link');
-    customCSS.rel = 'stylesheet';
-    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
-    document.head.appendChild(customCSS);
-
     // Load the cookie consent library
     const script = document.createElement('script');
-    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
+    script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
 
         // Detect current theme and set appropriate mode
         const detectTheme = () => {
+          // If forceLightMode is enabled, always use light mode
+          if (forceLightMode) {
+            document.documentElement.classList.remove('cc--darkmode');
+            return false;
+          }
+
           const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
           const hasLightClass = document.documentElement.classList.contains('light');
           const hasDarkClass = document.documentElement.classList.contains('dark');
@@ -96,21 +112,24 @@ export const useCookieConsent = ({
           return;
         }
 
-        // Listen for theme changes
-        const themeObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-mantine-color-scheme' ||
-                 mutation.attributeName === 'class')) {
-              detectTheme();
-            }
+        // Listen for theme changes (but not if forceLightMode is enabled)
+        let themeObserver: MutationObserver | null = null;
+        if (!forceLightMode) {
+          themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' &&
+                  (mutation.attributeName === 'data-mantine-color-scheme' ||
+                   mutation.attributeName === 'class')) {
+                detectTheme();
+              }
+            });
           });
-        });
 
-        themeObserver.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['data-mantine-color-scheme', 'class']
-        });
+          themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-mantine-color-scheme', 'class']
+          });
+        }
 
 
         // Initialize cookie consent with full configuration
@@ -237,11 +256,94 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
-  const showCookiePreferences = () => {
+  // Update theme when forceLightMode changes
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const detectTheme = () => {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+        return false;
+      }
+
+      const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
+      const hasLightClass = document.documentElement.classList.contains('light');
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      let isDarkMode = false;
+      if (mantineScheme) {
+        isDarkMode = mantineScheme === 'dark';
+      } else if (hasLightClass) {
+        isDarkMode = false;
+      } else if (hasDarkClass) {
+        isDarkMode = true;
+      } else {
+        isDarkMode = systemPrefersDark;
+      }
+
+      document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
+      return isDarkMode;
+    };
+
+    // Update theme immediately
+    detectTheme();
+
+    // Set up or remove theme observer based on forceLightMode
+    let themeObserver: MutationObserver | null = null;
+    if (!forceLightMode) {
+      themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' &&
+              (mutation.attributeName === 'data-mantine-color-scheme' ||
+               mutation.attributeName === 'class')) {
+            detectTheme();
+          }
+        });
+      });
+
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-mantine-color-scheme', 'class']
+      });
+    }
+
+    return () => {
+      if (themeObserver) {
+        themeObserver.disconnect();
+      }
+    };
+  }, [forceLightMode, isInitialized]);
+
+  // Hide cookie banner when tour is active
+  useEffect(() => {
+    if (!isInitialized || !window.CookieConsent) {
+      return;
+    }
+
+    if (tourIsOpen) {
+      window.CookieConsent.hide();
+    } else {
+      // Only show if user hasn't made a choice yet
+      const consentCookie = window.CookieConsent.getCookie?.();
+      const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
+      if (!hasConsented) {
+        window.CookieConsent.show();
+      }
+    }
+  }, [tourIsOpen, isInitialized]);
+
+  const showCookieConsent = useCallback(() => {
+    if (isInitialized && window.CookieConsent) {
+      window.CookieConsent?.show();
+    }
+  }, [isInitialized]);
+
+  const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  };
+  }, [isInitialized]);
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -251,7 +353,9 @@ export const useCookieConsent = ({
   }, []);
 
   return {
+    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted
+    isServiceAccepted,
+    isInitialized,
   };
 };

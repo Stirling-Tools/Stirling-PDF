@@ -5,7 +5,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import ComputerIcon from '@mui/icons-material/Computer';
 
 interface ModeSelectionProps {
-  onSelect: (mode: 'offline' | 'server') => void;
+  onSelect: (mode: 'saas' | 'selfhosted') => void;
   loading: boolean;
 }
 
@@ -17,31 +17,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
       <Button
         size="xl"
         variant="default"
-        onClick={() => onSelect('offline')}
-        disabled={loading}
-        leftSection={<ComputerIcon />}
-        styles={{
-          root: {
-            height: 'auto',
-            padding: '1.25rem',
-          },
-          inner: {
-            justifyContent: 'flex-start',
-          },
-        }}
-      >
-        <div style={{ textAlign: 'left', flex: 1 }}>
-          <Text fw={600} size="md">{t('setup.mode.offline.title', 'Use Offline')}</Text>
-          <Text size="sm" c="dimmed" fw={400}>
-            {t('setup.mode.offline.description', 'Run locally without an internet connection')}
-          </Text>
-        </div>
-      </Button>
-
-      <Button
-        size="xl"
-        variant="default"
-        onClick={() => onSelect('server')}
+        onClick={() => onSelect('saas')}
         disabled={loading}
         leftSection={<CloudIcon />}
         styles={{
@@ -52,12 +28,42 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelect, loading 
           inner: {
             justifyContent: 'flex-start',
           },
+          section: {
+            marginRight: '1rem',
+          },
         }}
       >
         <div style={{ textAlign: 'left', flex: 1 }}>
-          <Text fw={600} size="md">{t('setup.mode.server.title', 'Connect to Server')}</Text>
+          <Text fw={600} size="md">{t('setup.mode.saas.title', 'Use SaaS')}</Text>
           <Text size="sm" c="dimmed" fw={400}>
-            {t('setup.mode.server.description', 'Connect to a remote Stirling PDF server')}
+            {t('setup.mode.saas.description', 'Sign in to Stirling PDF cloud service')}
+          </Text>
+        </div>
+      </Button>
+
+      <Button
+        size="xl"
+        variant="default"
+        onClick={() => onSelect('selfhosted')}
+        disabled={loading}
+        leftSection={<ComputerIcon />}
+        styles={{
+          root: {
+            height: 'auto',
+            padding: '1.25rem',
+          },
+          inner: {
+            justifyContent: 'flex-start',
+          },
+          section: {
+            marginRight: '1rem',
+          },
+        }}
+      >
+        <div style={{ textAlign: 'left', flex: 1 }}>
+          <Text fw={600} size="md">{t('setup.mode.selfhosted.title', 'Self-Hosted Server')}</Text>
+          <Text size="sm" c="dimmed" fw={400}>
+            {t('setup.mode.selfhosted.description', 'Connect to your own Stirling PDF server with your personal account')}
           </Text>
         </div>
       </Button>

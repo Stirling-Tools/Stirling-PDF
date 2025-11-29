@@ -17,24 +17,24 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'offline' | 'server' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
 
   // Load connection mode on mount
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
   }, []);
 
-  // Initialize backend health monitoring for server mode
+  // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (setupComplete && !isFirstLaunch && connectionMode === 'server') {
-      console.log('[AppProviders] Initializing external backend monitoring for server mode');
+    if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
       void tauriBackendService.initializeExternalBackend();
     }
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
-  // Only start bundled backend if in offline mode and setup is complete
-  const shouldStartBackend = setupComplete && !isFirstLaunch && connectionMode === 'offline';
-  useBackendInitializer(shouldStartBackend);
+  // Initialize monitoring for bundled backend (already started in Rust)
+  // This sets up port detection and health checks
+  const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
+  useBackendInitializer(shouldMonitorBackend);
 
   // Show setup wizard on first launch
   if (isFirstLaunch && !setupComplete) {
@@ -52,7 +52,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         <SetupWizard
           onComplete={() => {
-            // Reload the page to reinitialize with new connection config
             window.location.reload();
           }}
         />

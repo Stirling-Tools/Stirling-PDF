@@ -44,13 +44,13 @@ class LicenseKeyCheckerTest {
         ApplicationProperties props = new ApplicationProperties();
         props.getPremium().setEnabled(true);
         props.getPremium().setKey("abc");
-        when(verifier.verifyLicense("abc")).thenReturn(License.PRO);
+        when(verifier.verifyLicense("abc")).thenReturn(License.SERVER);
 
         LicenseKeyChecker checker =
                 new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
 
-        assertEquals(License.PRO, checker.getPremiumLicenseEnabledResult());
+        assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
         verify(verifier).verifyLicense("abc");
     }
 

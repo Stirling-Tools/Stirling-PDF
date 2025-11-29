@@ -111,6 +111,14 @@
   animation: tool-panel-fullscreen-slide-out var(--fullscreen-anim-out-duration) ease forwards;
 }
 
+:root[dir='rtl'] .tool-panel__fullscreen-surface-inner {
+  animation-name: tool-panel-fullscreen-slide-in-rtl;
+}
+
+:root[dir='rtl'] .tool-panel__fullscreen-surface-inner.tool-panel__fullscreen-surface-inner--exiting {
+  animation-name: tool-panel-fullscreen-slide-out-rtl;
+}
+
 .tool-panel__fullscreen-header {
   display: flex;
   justify-content: space-between;
@@ -502,6 +510,28 @@
   }
 }
 
+@keyframes tool-panel-fullscreen-slide-in-rtl {
+  from {
+    transform: translateX(6%) scaleX(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes tool-panel-fullscreen-slide-out-rtl {
+  from {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(6%) scaleX(0.85);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tool-panel__fullscreen-surface-inner {
     animation: none !important;
@@ -541,6 +571,5 @@
     column-width: 14rem;
   }
 }
-
 
 

@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -110,7 +111,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // If we still don't have any authentication, check if it's a public endpoint. If not, deny
         // the request
         if (authentication == null || !authentication.isAuthenticated()) {
-            String method = request.getMethod();
             String contextPath = request.getContextPath();
 
             // Allow public auth endpoints to pass through without authentication
@@ -119,18 +119,18 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
-                response.sendRedirect(contextPath + "/login"); // redirect to the login page
-            } else {
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.getWriter()
-                        .write(
-                                """
-                                Authentication required. Please provide a X-API-KEY in request header.
-                                This is found in Settings -> Account Settings -> API Key
-                                Alternatively you can disable authentication if this is unexpected.
-                                """);
-            }
+            // For API requests, return 401 with JSON response (no redirects)
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json");
+            response.getWriter()
+                    .write(
+                            """
+                            {
+                              "error": "Unauthorized",
+                              "message": "Authentication required. Please provide valid credentials or X-API-KEY header.",
+                              "status": 401
+                            }
+                            """);
             return;
         }
 
@@ -179,8 +179,18 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 // Block user registration if not allowed by configuration
                 if (blockRegistration && !isUserExists) {
                     log.warn("Blocked registration for OAuth2/SAML user: {}", username);
-                    response.sendRedirect(
-                            request.getContextPath() + "/logout?oAuth2AdminBlockedUser=true");
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/json");
+                    response.getWriter()
+                            .write(
+                                    """
+                                    {
+                                      "error": "Forbidden",
+                                      "message": "User registration is blocked by administrator",
+                                      "status": 403
+                                    }
+                                    """);
                     return;
                 }
 
@@ -194,13 +204,35 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
 
-                // Redirect to logout if credentials are invalid
+                // Return 401 if credentials are invalid (no redirects)
                 if (!isUserExists && notSsoLogin) {
-                    response.sendRedirect(request.getContextPath() + "/logout?badCredentials=true");
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    response.getWriter()
+                            .write(
+                                    """
+                                    {
+                                      "error": "Unauthorized",
+                                      "message": "Invalid credentials",
+                                      "status": 401
+                                    }
+                                    """);
                     return;
                 }
                 if (isUserDisabled) {
-                    response.sendRedirect(request.getContextPath() + "/logout?userIsDisabled=true");
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/json");
+                    response.getWriter()
+                            .write(
+                                    """
+                                    {
+                                      "error": "Forbidden",
+                                      "message": "User account is disabled",
+                                      "status": 403
+                                    }
+                                    """);
                     return;
                 }
             }
@@ -250,33 +282,29 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
-        String[] permitAllPatterns = {
-            contextPath + "/login",
-            contextPath + "/register",
-            contextPath + "/invite",
-            contextPath + "/error",
-            contextPath + "/images/",
-            contextPath + "/public/",
-            contextPath + "/css/",
-            contextPath + "/fonts/",
-            contextPath + "/js/",
-            contextPath + "/pdfjs/",
-            contextPath + "/pdfjs-legacy/",
+
+        // Allow unauthenticated access to static resources and SPA routes (GET/HEAD only)
+        if ("GET".equalsIgnoreCase(request.getMethod())
+                || "HEAD".equalsIgnoreCase(request.getMethod())) {
+            if (RequestUriUtils.isStaticResource(contextPath, uri)
+                    || RequestUriUtils.isFrontendRoute(contextPath, uri)) {
+                return true;
+            }
+        }
+
+        // For API routes, only skip filter for these public endpoints
+        String[] publicApiPatterns = {
             contextPath + "/api/v1/info/status",
             contextPath + "/api/v1/auth/login",
             contextPath + "/api/v1/auth/refresh",
             contextPath + "/api/v1/auth/me",
             contextPath + "/api/v1/invite/validate",
             contextPath + "/api/v1/invite/accept",
-            contextPath + "/site.webmanifest"
+            contextPath + "/api/v1/ui-data/footer-info"
         };
 
-        for (String pattern : permitAllPatterns) {
-            if (uri.startsWith(pattern)
-                    || uri.endsWith(".svg")
-                    || uri.endsWith(".mjs")
-                    || uri.endsWith(".png")
-                    || uri.endsWith(".ico")) {
+        for (String pattern : publicApiPatterns) {
+            if (uri.startsWith(pattern)) {
                 return true;
             }
         }
