@@ -19,10 +19,12 @@ declare global {
 
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
+  forceLightMode?: boolean;
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false
+  analyticsEnabled = false,
+  forceLightMode = false
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -69,6 +71,12 @@ export const useCookieConsent = ({
 
         // Detect current theme and set appropriate mode
         const detectTheme = () => {
+          // If forceLightMode is enabled, always use light mode
+          if (forceLightMode) {
+            document.documentElement.classList.remove('cc--darkmode');
+            return false;
+          }
+
           const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
           const hasLightClass = document.documentElement.classList.contains('light');
           const hasDarkClass = document.documentElement.classList.contains('dark');
@@ -104,21 +112,24 @@ export const useCookieConsent = ({
           return;
         }
 
-        // Listen for theme changes
-        const themeObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-mantine-color-scheme' ||
-                 mutation.attributeName === 'class')) {
-              detectTheme();
-            }
+        // Listen for theme changes (but not if forceLightMode is enabled)
+        let themeObserver: MutationObserver | null = null;
+        if (!forceLightMode) {
+          themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' &&
+                  (mutation.attributeName === 'data-mantine-color-scheme' ||
+                   mutation.attributeName === 'class')) {
+                detectTheme();
+              }
+            });
           });
-        });
 
-        themeObserver.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['data-mantine-color-scheme', 'class']
-        });
+          themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-mantine-color-scheme', 'class']
+          });
+        }
 
 
         // Initialize cookie consent with full configuration
@@ -244,6 +255,65 @@ export const useCookieConsent = ({
       }
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
+
+  // Update theme when forceLightMode changes
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const detectTheme = () => {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+        return false;
+      }
+
+      const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
+      const hasLightClass = document.documentElement.classList.contains('light');
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      let isDarkMode = false;
+      if (mantineScheme) {
+        isDarkMode = mantineScheme === 'dark';
+      } else if (hasLightClass) {
+        isDarkMode = false;
+      } else if (hasDarkClass) {
+        isDarkMode = true;
+      } else {
+        isDarkMode = systemPrefersDark;
+      }
+
+      document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
+      return isDarkMode;
+    };
+
+    // Update theme immediately
+    detectTheme();
+
+    // Set up or remove theme observer based on forceLightMode
+    let themeObserver: MutationObserver | null = null;
+    if (!forceLightMode) {
+      themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' &&
+              (mutation.attributeName === 'data-mantine-color-scheme' ||
+               mutation.attributeName === 'class')) {
+            detectTheme();
+          }
+        });
+      });
+
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-mantine-color-scheme', 'class']
+      });
+    }
+
+    return () => {
+      if (themeObserver) {
+        themeObserver.disconnect();
+      }
+    };
+  }, [forceLightMode, isInitialized]);
 
   // Hide cookie banner when tour is active
   useEffect(() => {
