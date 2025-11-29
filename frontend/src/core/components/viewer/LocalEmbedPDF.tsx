@@ -43,6 +43,7 @@ import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
+import { LinkLayer } from '@app/components/viewer/LinkLayer';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -103,15 +104,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       createPluginRegistration(SelectionPluginPackage),
 
       // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
+      // Always register for reading existing annotations
+      createPluginRegistration(HistoryPluginPackage),
 
       // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
+      // Always register for reading existing annotations like links
+      createPluginRegistration(AnnotationPluginPackage, {
         annotationAuthor: 'Digital Signature',
         autoCommit: true,
         deactivateToolAfterCreate: false,
         selectAfterCreate: true,
-      })] : []),
+      }),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
@@ -229,68 +232,62 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={enableAnnotations ? async (registry) => {
+        onInitialized={async (registry) => {
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
           const annotationApi = annotationPlugin.provides();
           if (!annotationApi) return;
 
-          // Add custom signature stamp tool for image signatures
-          annotationApi.addTool({
-            id: 'signatureStamp',
-            name: 'Digital Signature',
-            interaction: { exclusive: false, cursor: 'copy' },
-            matchScore: () => 0,
-            defaults: {
-              type: PdfAnnotationSubtype.STAMP,
-              // Image will be set dynamically when signature is created
-            },
-          });
+          if (enableAnnotations) {
+            annotationApi.addTool({
+              id: 'signatureStamp',
+              name: 'Digital Signature',
+              interaction: { exclusive: false, cursor: 'copy' },
+              matchScore: () => 0,
+              defaults: {
+                type: PdfAnnotationSubtype.STAMP,
+              },
+            });
 
-          // Add custom ink signature tool for drawn signatures
-          annotationApi.addTool({
-            id: 'signatureInk',
-            name: 'Signature Draw',
-            interaction: { exclusive: true, cursor: 'crosshair' },
-            matchScore: () => 0,
-            defaults: {
-              type: PdfAnnotationSubtype.INK,
-              color: '#000000',
-              opacity: 1.0,
-              borderWidth: 2,
-            },
-          });
+            annotationApi.addTool({
+              id: 'signatureInk',
+              name: 'Signature Draw',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: () => 0,
+              defaults: {
+                type: PdfAnnotationSubtype.INK,
+                color: '#000000',
+                opacity: 1.0,
+                borderWidth: 2,
+              },
+            });
 
-          // Listen for annotation events to track annotations and notify parent
-          annotationApi.onAnnotationEvent((event: any) => {
-            if (event.type === 'create' && event.committed) {
-              // Add to annotations list
-              setAnnotations(prev => [...prev, {
-                id: event.annotation.id,
-                pageIndex: event.pageIndex,
-                rect: event.annotation.rect
-              }]);
+            annotationApi.onAnnotationEvent((event: any) => {
+              if (event.type === 'create' && event.committed) {
+                setAnnotations(prev => [...prev, {
+                  id: event.annotation.id,
+                  pageIndex: event.pageIndex,
+                  rect: event.annotation.rect
+                }]);
 
 
-              // Notify parent if callback provided
-              if (onSignatureAdded) {
-                onSignatureAdded(event.annotation);
+                if (onSignatureAdded) {
+                  onSignatureAdded(event.annotation);
+                }
+              } else if (event.type === 'delete' && event.committed) {
+                setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
+              } else if (event.type === 'loaded') {
+                const loadedAnnotations = event.annotations || [];
+                setAnnotations(loadedAnnotations.map((ann: any) => ({
+                  id: ann.id,
+                  pageIndex: ann.pageIndex || 0,
+                  rect: ann.rect
+                })));
               }
-            } else if (event.type === 'delete' && event.committed) {
-              // Remove from annotations list
-              setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
-            } else if (event.type === 'loaded') {
-              // Handle initial load of annotations
-              const loadedAnnotations = event.annotations || [];
-              setAnnotations(loadedAnnotations.map((ann: any) => ({
-                id: ann.id,
-                pageIndex: ann.pageIndex || 0,
-                rect: ann.rect
-              })));
-            }
-          });
-        } : undefined}
+            });
+          }
+        }}
       >
         <ZoomAPIBridge />
         <ScrollAPIBridge />
@@ -352,6 +349,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
                       {/* Selection layer for text interaction */}
                       <SelectionLayer pageIndex={pageIndex} scale={scale} />
+
+                      {/* Link layer for clickable PDF links */}
+                      <LinkLayer pageIndex={pageIndex} scale={scale} document={document} pdfFile={file} />
+
                       {/* Annotation layer for signatures (only when enabled) */}
                       {enableAnnotations && (
                         <AnnotationLayer

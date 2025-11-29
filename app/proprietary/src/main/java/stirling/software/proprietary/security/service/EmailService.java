@@ -115,10 +115,12 @@ public class EmailService {
      * @param to The recipient email address
      * @param username The username for the new account
      * @param temporaryPassword The temporary password
+     * @param loginUrl The URL to the login page
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
     @Async
-    public void sendInviteEmail(String to, String username, String temporaryPassword)
+    public void sendInviteEmail(
+            String to, String username, String temporaryPassword, String loginUrl)
             throws MessagingException {
         String subject = "Welcome to Stirling PDF";
 
@@ -144,6 +146,14 @@ public class EmailService {
                       <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
                         <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> You will be required to change your password upon first login for security reasons.</p>
                       </div>
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;">Log In to Stirling PDF</a>
+                      </div>
+                      <p style="font-size: 14px; color: #666;">Or copy and paste this link in your browser:</p>
+                      <div style="background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;">
+                        %s
+                      </div>
                       <p>Please keep these credentials secure and do not share them with anyone.</p>
                       <p style="margin-bottom: 0;">— The Stirling PDF Team</p>
                     </div>
@@ -155,7 +165,7 @@ public class EmailService {
                 </div>
                 </body></html>
                 """
-                        .formatted(username, temporaryPassword);
+                        .formatted(username, temporaryPassword, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
     }
