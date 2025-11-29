@@ -51,7 +51,8 @@ public class RequestUriUtilsTest {
 
     @Test
     void testIsFrontendRoute() {
-        assertTrue(RequestUriUtils.isFrontendRoute("", "/"), "Root path should be a frontend route");
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/"), "Root path should be a frontend route");
         assertTrue(
                 RequestUriUtils.isFrontendRoute("", "/app/dashboard"),
                 "React routes without extensions should be frontend routes");
