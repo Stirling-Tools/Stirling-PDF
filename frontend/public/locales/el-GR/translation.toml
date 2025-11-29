@@ -163,6 +163,11 @@ unfavorite = "Αφαίρεση από τα Αγαπημένα"
 fullscreen = "Μετάβαση σε λειτουργία πλήρους οθόνης"
 sidebar = "Μετάβαση σε λειτουργία πλευρικής γραμμής"
 
+[backendStartup]
+notFoundTitle = "Το backend δεν βρέθηκε"
+retry = "Επανάληψη"
+unreachable = "Η εφαρμογή δεν μπορεί προς το παρόν να συνδεθεί με το backend. Ελέγξτε την κατάσταση του backend και τη συνδεσιμότητα δικτύου, μετά δοκιμάστε ξανά."
+
 [zipWarning]
 title = "Μεγάλο αρχείο ZIP"
 message = "Αυτό το ZIP περιέχει {{count}} αρχεία. Να γίνει αποσυμπίεση ούτως ή άλλως;"
@@ -347,7 +352,7 @@ teams = "Ομάδες"
 title = "Διαμόρφωση"
 systemSettings = "Ρυθμίσεις συστήματος"
 features = "Δυνατότητες"
-endpoints = "Endpoints"
+endpoints = "Σημεία τερματισμού"
 database = "Βάση δεδομένων"
 advanced = "Προχωρημένα"
 
@@ -369,7 +374,7 @@ privacy = "Απόρρητο"
 
 [settings.developer]
 title = "Προγραμματιστής"
-apiKeys = "API Keys"
+apiKeys = "Κλειδιά API"
 
 [settings.tooltips]
 enableLoginFirst = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
@@ -383,7 +388,7 @@ logout = "Αποσύνδεση"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Αυτο-φιλοξενούμενο"
 
 [settings.general]
 title = "Γενικά"
@@ -1176,7 +1181,7 @@ selectFilesPlaceholder = "Επιλέξτε αρχεία στην κύρια πρ
 settings = "Ρυθμίσεις"
 conversionCompleted = "Η μετατροπή ολοκληρώθηκε"
 results = "Αποτελέσματα"
-defaultFilename = "converted_file"
+defaultFilename = "μετατραπμένο_αρχείο"
 conversionResults = "Αποτελέσματα μετατροπής"
 convertFrom = "Μετατροπή από"
 convertTo = "Μετατροπή σε"
@@ -1363,7 +1368,7 @@ title = "Προσθήκη υδατογραφήματος"
 desc = "Προσθέστε υδατογραφήματα κειμένου ή εικόνας σε αρχεία PDF"
 completed = "Το υδατογράφημα προστέθηκε"
 submit = "Προσθήκη υδατογραφήματος"
-filenamePrefix = "watermarked"
+filenamePrefix = "υδατογραφημένο"
 
 [watermark.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη υδατογραφήματος στο PDF."
@@ -2704,7 +2709,7 @@ header = "Αφαίρεση της ψηφιακής υπογραφής από τ�
 selectPDF = "Επιλέξτε ένα αρχείο PDF:"
 submit = "Αφαίρεση υπογραφής"
 description = "Αυτό το εργαλείο θα αφαιρέσει τις υπογραφές ψηφιακού πιστοποιητικού από το PDF σας."
-filenamePrefix = "unsigned"
+filenamePrefix = "ανυπόγραφο"
 
 [removeCertSign.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3441,6 +3446,9 @@ signinTitle = "Παρακαλώ συνδεθείτε"
 ssoSignIn = "Σύνδεση μέσω Single Sign-on"
 oAuth2AutoCreateDisabled = "Η αυτόματη δημιουργία χρήστη OAUTH2 είναι απενεργοποιημένη"
 oAuth2AdminBlockedUser = "Η εγγραφή ή σύνδεση μη εγγεγραμμένων χρηστών είναι προς το παρόν αποκλεισμένη. Παρακαλώ επικοινωνήστε με τον διαχειριστή."
+oAuth2RequiresLicense = "Η σύνδεση μέσω OAuth/SSO απαιτεί επί πληρωμή άδεια (Server ή Enterprise). Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας."
+saml2RequiresLicense = "Η σύνδεση μέσω SAML απαιτεί επί πληρωμή άδεια (Server ή Enterprise). Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας."
+maxUsersReached = "Έχει επιτευχθεί ο μέγιστος αριθμός χρηστών για την τρέχουσα άδειά σας. Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας ή να προσθέσετε περισσότερες θέσεις."
 oauth2RequestNotFound = "Το αίτημα εξουσιοδότησης δεν βρέθηκε"
 oauth2InvalidUserInfoResponse = "Μη έγκυρη απόκριση πληροφοριών χρήστη"
 oauth2invalidRequest = "Μη έγκυρο αίτημα"
@@ -3536,7 +3544,7 @@ title = "PDF σε μία σελίδα"
 header = "PDF σε μία σελίδα"
 submit = "Μετατροπή σε μία σελίδα"
 description = "Αυτό το εργαλείο θα συγχωνεύσει όλες τις σελίδες του PDF σας σε μία μεγάλη ενιαία σελίδα. Το πλάτος θα παραμείνει ίδιο με των αρχικών σελίδων, αλλά το ύψος θα είναι το άθροισμα όλων των υψών."
-filenamePrefix = "single_page"
+filenamePrefix = "μονοσέλιδο"
 
 [pdfToSinglePage.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3849,14 +3857,17 @@ fitToWidth = "Προσαρμογή στο πλάτος"
 actualSize = "Πραγματικό μέγεθος"
 
 [viewer]
+cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
+dualPageView = "Προβολή διπλής σελίδας"
 firstPage = "Πρώτη σελίδα"
 lastPage = "Τελευταία σελίδα"
-previousPage = "Προηγούμενη σελίδα"
 nextPage = "Επόμενη σελίδα"
+onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
+previousPage = "Προηγούμενη σελίδα"
+singlePageView = "Προβολή μίας σελίδας"
+unknownFile = "Άγνωστο αρχείο"
 zoomIn = "Μεγέθυνση"
 zoomOut = "Σμίκρυνση"
-singlePageView = "Προβολή μίας σελίδας"
-dualPageView = "Προβολή διπλής σελίδας"
 
 [rightRail]
 closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
@@ -4238,11 +4249,11 @@ label = "URL εκδότη"
 description = "Το URL εκδότη του παρόχου OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "Αναγνωριστικό πελάτη (Client ID)"
 description = "Το Client ID OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "Μυστικό πελάτη (Client Secret)"
 description = "Το Client Secret OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} επιλεγμένα"
 download = "Λήψη"
 delete = "Διαγραφή"
 unsupported = "Μη υποστηριζόμενο"
+active = "Ενεργό"
 addToUpload = "Προσθήκη στη μεταφόρτωση"
+closeFile = "Κλείσιμο αρχείου"
 deleteAll = "Διαγραφή όλων"
 loadingFiles = "Φόρτωση αρχείων..."
 noFiles = "Δεν υπάρχουν διαθέσιμα αρχεία"
@@ -5712,7 +5725,7 @@ title = "Διάγραμμα χρήσης Endpoints"
 
 [usage.table]
 title = "Αναλυτικά στατιστικά"
-endpoint = "Endpoint"
+endpoint = "Σημείο τερματισμού"
 visits = "Επισκέψεις"
 percentage = "Ποσοστό"
 noData = "Δεν υπάρχουν διαθέσιμα δεδομένα"
@@ -5800,6 +5813,13 @@ submit = "Σύνδεση"
 signInWith = "Σύνδεση με"
 oauthPending = "Άνοιγμα προγράμματος περιήγησης για έλεγχο ταυτότητας..."
 orContinueWith = "Ή συνεχίστε με email"
+serverRequirement = "Σημείωση: Ο διακομιστής πρέπει να έχει ενεργοποιημένη τη σύνδεση."
+showInstructions = "Πώς ενεργοποιείται;"
+hideInstructions = "Απόκρυψη οδηγιών"
+instructions = "Για να ενεργοποιήσετε τη σύνδεση στον διακομιστή Stirling PDF:"
+instructionsEnvVar = "Ορίστε τη μεταβλητή περιβάλλοντος:"
+instructionsOrYml = "Ή στο settings.yml:"
+instructionsRestart = "Στη συνέχεια, επανεκκινήστε τον διακομιστή σας για να εφαρμοστούν οι αλλαγές."
 
 [setup.login.username]
 label = "Όνομα χρήστη"

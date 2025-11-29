@@ -163,6 +163,11 @@ unfavorite = "Удалить из избранного"
 fullscreen = "Переключиться в полноэкранный режим"
 sidebar = "Переключиться в режим боковой панели"
 
+[backendStartup]
+notFoundTitle = "Серверная часть не найдена"
+retry = "Повторить"
+unreachable = "Приложение сейчас не может подключиться к серверной части. Проверьте состояние серверной части и подключение к сети, затем повторите попытку."
+
 [zipWarning]
 title = "Большой ZIP-файл"
 message = "Этот ZIP содержит {{count}} файлов. Все равно извлечь?"
@@ -3441,6 +3446,9 @@ signinTitle = "Пожалуйста, войдите"
 ssoSignIn = "Вход через единый вход"
 oAuth2AutoCreateDisabled = "Автоматическое создание пользователей OAuth2 отключено"
 oAuth2AdminBlockedUser = "Регистрация или вход незарегистрированных пользователей в настоящее время заблокированы. Обратитесь к администратору."
+oAuth2RequiresLicense = "Вход через OAuth/SSO требует платную лицензию (Server или Enterprise). Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план."
+saml2RequiresLicense = "Вход через SAML требует платную лицензию (Server или Enterprise). Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план."
+maxUsersReached = "Достигнуто максимальное количество пользователей для вашей текущей лицензии. Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план или добавить места."
 oauth2RequestNotFound = "Запрос авторизации не найден"
 oauth2InvalidUserInfoResponse = "Недействительный ответ с информацией о пользователе"
 oauth2invalidRequest = "Недействительный запрос"
@@ -3849,14 +3857,17 @@ fitToWidth = "По ширине"
 actualSize = "Фактический размер"
 
 [viewer]
+cannotPreviewFile = "Не удаётся просмотреть файл"
+dualPageView = "Двухстраничный вид"
 firstPage = "Первая страница"
 lastPage = "Последняя страница"
-previousPage = "Предыдущая страница"
 nextPage = "Следующая страница"
+onlyPdfSupported = "Просмотрщик поддерживает только PDF-файлы. Похоже, этот файл другого формата."
+previousPage = "Предыдущая страница"
+singlePageView = "Одностраничный вид"
+unknownFile = "Неизвестный файл"
 zoomIn = "Увеличить"
 zoomOut = "Уменьшить"
-singlePageView = "Одностраничный вид"
-dualPageView = "Двухстраничный вид"
 
 [rightRail]
 closeSelected = "Закрыть выбранные файлы"
@@ -4490,7 +4501,7 @@ label = "Политика cookie"
 description = "URL или имя файла для политики cookie"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Юридическая информация"
 description = "URL или имя файла для impressum (требуется в некоторых юрисдикциях)"
 
 [admin.settings.premium]
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} выбрано"
 download = "Скачать"
 delete = "Удалить"
 unsupported = "Не поддерживается"
+active = "Активный"
 addToUpload = "Добавить к загрузке"
+closeFile = "Закрыть файл"
 deleteAll = "Удалить все"
 loadingFiles = "Загрузка файлов..."
 noFiles = "Нет доступных файлов"
@@ -4967,7 +4980,7 @@ description = "Привяжите аккаунт, чтобы сохранить 
 socialLogin = "Обновить через соцсеть"
 linkWith = "Привязать к"
 emailPassword = "или введите email и пароль"
-email = "Email"
+email = "Эл. почта"
 emailPlaceholder = "Введите ваш email"
 password = "Пароль (необязательно)"
 passwordPlaceholder = "Задайте пароль"
@@ -5800,13 +5813,20 @@ submit = "Войти"
 signInWith = "Войти через"
 oauthPending = "Открываем браузер для аутентификации..."
 orContinueWith = "Или продолжить по email"
+serverRequirement = "Примечание: на сервере должен быть включён вход в систему."
+showInstructions = "Как включить?"
+hideInstructions = "Скрыть инструкции"
+instructions = "Чтобы включить вход в систему на вашем сервере Stirling PDF:"
+instructionsEnvVar = "Установите переменную окружения:"
+instructionsOrYml = "Или в settings.yml:"
+instructionsRestart = "Затем перезапустите сервер, чтобы изменения вступили в силу."
 
 [setup.login.username]
 label = "Имя пользователя"
 placeholder = "Введите имя пользователя"
 
 [setup.login.email]
-label = "Email"
+label = "Эл. почта"
 placeholder = "Введите email"
 
 [setup.login.password]

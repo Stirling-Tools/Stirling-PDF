@@ -163,6 +163,11 @@ unfavorite = "Aus Favoriten entfernen"
 fullscreen = "In den Vollbildmodus wechseln"
 sidebar = "In den Seitenleistenmodus wechseln"
 
+[backendStartup]
+notFoundTitle = "Backend nicht gefunden"
+retry = "Erneut versuchen"
+unreachable = "Die Anwendung kann derzeit keine Verbindung zum Backend herstellen. Überprüfen Sie den Backend-Status und die Netzwerkverbindung und versuchen Sie es dann erneut."
+
 [zipWarning]
 title = "Große ZIP-Datei"
 message = "Dieses ZIP enthält {{count}} Dateien. Trotzdem extrahieren?"
@@ -347,7 +352,7 @@ teams = "Teams"
 title = "Konfiguration"
 systemSettings = "Systemeinstellungen"
 features = "Funktionen"
-endpoints = "Endpoints"
+endpoints = "Endpunkte"
 database = "Datenbank"
 advanced = "Erweitert"
 
@@ -383,7 +388,7 @@ logout = "Abmelden"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Selbst gehostet"
 
 [settings.general]
 title = "Allgemein"
@@ -612,7 +617,7 @@ desc = "Anzeigen, Kommentieren, Text oder Bilder hinzufügen"
 brandAlt = "Stirling PDF-Logo"
 openFiles = "Dateien öffnen"
 swipeHint = "Zum Wechseln der Ansicht nach links oder rechts wischen"
-tools = "Tools"
+tools = "Werkzeuge"
 toolsSlide = "Bereich für Toolauswahl"
 viewSwitcher = "Ansicht des Arbeitsbereichs wechseln"
 workbenchSlide = "Arbeitsbereichs-Panel"
@@ -917,7 +922,7 @@ title = "PDF-Texteditor"
 desc = "Stirling PDF JSON-Exporte prüfen und bearbeiten – mit gruppierter Textbearbeitung und PDF-Neuerzeugung"
 
 [home.addText]
-tags = "text,annotation,label"
+tags = "text,anmerkung,beschriftung"
 title = "Text hinzufügen"
 desc = "Beliebigen Text überall in Ihrem PDF hinzufügen"
 
@@ -2267,7 +2272,7 @@ noChanges = "Die aktuelle Unterschrift ist bereits gespeichert."
 
 [sign.saved.type]
 canvas = "Zeichnung"
-image = "Upload"
+image = "Hochladen"
 text = "Text"
 
 [sign.saved.status]
@@ -3441,6 +3446,9 @@ signinTitle = "Bitte melden Sie sich an."
 ssoSignIn = "Anmeldung per Single Sign-On"
 oAuth2AutoCreateDisabled = "OAUTH2 Benutzer automatisch erstellen deaktiviert"
 oAuth2AdminBlockedUser = "Die Registrierung bzw. das anmelden von nicht registrierten Benutzern ist derzeit gesperrt. Bitte wenden Sie sich an den Administrator."
+oAuth2RequiresLicense = "OAuth/SSO-Anmeldung erfordert eine kostenpflichtige Lizenz (Server oder Enterprise). Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren."
+saml2RequiresLicense = "SAML-Anmeldung erfordert eine kostenpflichtige Lizenz (Server oder Enterprise). Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren."
+maxUsersReached = "Die maximale Benutzeranzahl für Ihre aktuelle Lizenz wurde erreicht. Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren oder weitere Benutzerplätze hinzuzufügen."
 oauth2RequestNotFound = "Autorisierungsanfrage nicht gefunden"
 oauth2InvalidUserInfoResponse = "Ungültige Benutzerinformationsantwort"
 oauth2invalidRequest = "ungültige Anfrage"
@@ -3849,14 +3857,17 @@ fitToWidth = "An Breite anpassen"
 actualSize = "Originalgröße"
 
 [viewer]
+cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
+dualPageView = "Doppelseitenansicht"
 firstPage = "Erste Seite"
 lastPage = "Letzte Seite"
-previousPage = "Vorherige Seite"
 nextPage = "Nächste Seite"
+onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
+previousPage = "Vorherige Seite"
+singlePageView = "Einzelseitenansicht"
+unknownFile = "Unbekannte Datei"
 zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
-singlePageView = "Einzelseitenansicht"
-dualPageView = "Doppelseitenansicht"
 
 [rightRail]
 closeSelected = "Ausgewählte Dateien schließen"
@@ -3931,7 +3942,7 @@ account = "Konto"
 config = "Konfig"
 settings = "Optionen"
 adminSettings = "Admin Optionen"
-allTools = "Tools"
+allTools = "Werkzeuge"
 reader = "Reader"
 
 [quickAccess.helpMenu]
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} ausgewählt"
 download = "Herunterladen"
 delete = "Löschen"
 unsupported = "Nicht unterstützt"
+active = "Aktiv"
 addToUpload = "Zum Upload hinzufügen"
+closeFile = "Datei schließen"
 deleteAll = "Alle löschen"
 loadingFiles = "Dateien werden geladen..."
 noFiles = "Keine Dateien verfügbar"
@@ -5755,7 +5768,7 @@ label = "Server auswählen"
 description = "Self-Hosted-Server"
 
 [setup.step3]
-label = "Login"
+label = "Anmeldung"
 description = "Anmeldedaten eingeben"
 
 [setup.mode.saas]
@@ -5796,10 +5809,17 @@ testFailed = "Verbindungstest fehlgeschlagen"
 title = "Anmelden"
 subtitle = "Geben Sie Ihre Anmeldedaten ein, um fortzufahren"
 connectingTo = "Verbinden mit:"
-submit = "Login"
+submit = "Anmelden"
 signInWith = "Anmelden mit"
 oauthPending = "Browser zur Authentifizierung wird geöffnet..."
 orContinueWith = "Oder mit E-Mail fortfahren"
+serverRequirement = "Hinweis: Auf dem Server muss die Anmeldung aktiviert sein."
+showInstructions = "Wie aktivieren?"
+hideInstructions = "Anleitung ausblenden"
+instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
+instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
+instructionsOrYml = "Oder in der settings.yml:"
+instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
 
 [setup.login.username]
 label = "Benutzername"
@@ -5850,7 +5870,7 @@ singleLine = "Einzeilig"
 [pdfTextEditor.badges]
 unsaved = "Bearbeitet"
 modified = "Bearbeitet"
-earlyAccess = "Early Access"
+earlyAccess = "Früher Zugriff"
 
 [pdfTextEditor.actions]
 reset = "Änderungen zurücksetzen"

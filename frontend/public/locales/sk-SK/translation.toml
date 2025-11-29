@@ -163,6 +163,11 @@ unfavorite = "Odstrániť z obľúbených"
 fullscreen = "Prepnúť na režim celej obrazovky"
 sidebar = "Prepnúť na režim bočného panela"
 
+[backendStartup]
+notFoundTitle = "Backend sa nenašiel"
+retry = "Skúsiť znova"
+unreachable = "Aplikácia sa momentálne nedokáže pripojiť k backendu. Overte stav backendu a sieťové pripojenie, potom to skúste znova."
+
 [zipWarning]
 title = "Veľký ZIP súbor"
 message = "Tento ZIP obsahuje {{count}} súborov. Aj tak rozbaliť?"
@@ -274,7 +279,7 @@ iAgreeToThe = "Súhlasím so všetkými"
 terms = "Podmienkami používania"
 accessibility = "Prístupnosť"
 cookie = "Zásady používania súborov cookie"
-impressum = "Impressum"
+impressum = "Impresum"
 showCookieBanner = "Predvoľby súborov cookie"
 
 [pipeline]
@@ -513,7 +518,7 @@ syncToAccount = "Synchronizovať účet <- Prehliadač"
 [adminUserSettings]
 title = "Nastavenia kontroly používateľov"
 header = "Admin nastavenia kontroly používateľov"
-admin = "Admin"
+admin = "Administrátor"
 user = "Používateľ"
 addUser = "Pridať nového používateľa"
 deleteUser = "Odstrániť používateľa"
@@ -3441,6 +3446,9 @@ signinTitle = "Prosím, prihláste sa"
 ssoSignIn = "Prihlásiť sa cez Single Sign-on"
 oAuth2AutoCreateDisabled = "Vytváranie používateľa cez OAUTH2 je zakázané"
 oAuth2AdminBlockedUser = "Registrácia alebo prihlasovanie neregistrovaných používateľov je momentálne blokované. Kontaktujte administrátora."
+oAuth2RequiresLicense = "Prihlásenie cez OAuth/SSO vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+saml2RequiresLicense = "Prihlásenie cez SAML vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+maxUsersReached = "Bol dosiahnutý maximálny počet používateľov pre vašu aktuálnu licenciu. Obráťte sa na administrátora, aby aktualizoval váš plán alebo pridal ďalšie miesta."
 oauth2RequestNotFound = "Požiadavka na autorizáciu sa nenašla"
 oauth2InvalidUserInfoResponse = "Neplatná odpoveď User Info"
 oauth2invalidRequest = "Neplatná požiadavka"
@@ -3774,7 +3782,7 @@ version = "Aktuálne vydanie"
 title = "Dokumentácia API"
 header = "Dokumentácia API"
 desc = "Zobraziť a testovať API endpointy Stirling PDF"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,dokumentácia,swagger,endpointy,vývoj"
 
 [cookieBanner.popUp]
 title = "Ako používame súbory cookie"
@@ -3849,14 +3857,17 @@ fitToWidth = "Prispôsobiť šírke"
 actualSize = "Skutočná veľkosť"
 
 [viewer]
+cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
+dualPageView = "Dvojstranové zobrazenie"
 firstPage = "Prvá strana"
 lastPage = "Posledná strana"
-previousPage = "Predchádzajúca strana"
 nextPage = "Nasledujúca strana"
+onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+previousPage = "Predchádzajúca strana"
+singlePageView = "Zobrazenie jednej strany"
+unknownFile = "Neznámy súbor"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
-singlePageView = "Zobrazenie jednej strany"
-dualPageView = "Dvojstranové zobrazenie"
 
 [rightRail]
 closeSelected = "Zavrieť vybrané súbory"
@@ -4490,7 +4501,7 @@ label = "Zásady používania súborov cookie"
 description = "URL alebo názov súboru so zásadami používania súborov cookie"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Impresum"
 description = "URL alebo názov súboru k Impressu (požadované v niektorých jurisdikciách)"
 
 [admin.settings.premium]
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} vybraných"
 download = "Stiahnuť"
 delete = "Vymazať"
 unsupported = "Nepodporované"
+active = "Aktívne"
 addToUpload = "Pridať na nahratie"
+closeFile = "Zatvoriť súbor"
 deleteAll = "Odstrániť všetko"
 loadingFiles = "Načítavajú sa súbory..."
 noFiles = "Nie sú dostupné žiadne súbory"
@@ -5181,7 +5194,7 @@ active = "Aktívny"
 disabled = "Zakázaný"
 activeSession = "Aktívna relácia"
 member = "Člen"
-admin = "Admin"
+admin = "Administrátor"
 editRole = "Upraviť rolu"
 enable = "Povoliť"
 disable = "Zakázať"
@@ -5800,13 +5813,20 @@ submit = "Prihlásiť sa"
 signInWith = "Prihlásiť sa cez"
 oauthPending = "Otvára sa prehliadač na overenie..."
 orContinueWith = "Alebo pokračujte emailom"
+serverRequirement = "Poznámka: Na serveri musí byť povolené prihlásenie."
+showInstructions = "Ako povoliť?"
+hideInstructions = "Skryť pokyny"
+instructions = "Na povolenie prihlásenia na vašom serveri Stirling PDF:"
+instructionsEnvVar = "Nastavte premennú prostredia:"
+instructionsOrYml = "Alebo v súbore settings.yml:"
+instructionsRestart = "Potom reštartujte server, aby sa zmeny prejavili."
 
 [setup.login.username]
 label = "Používateľské meno"
 placeholder = "Zadajte používateľské meno"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Zadajte svoj email"
 
 [setup.login.password]
@@ -5843,7 +5863,7 @@ paragraph = "Strana s odsekmi"
 sparse = "Riedky text"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automaticky"
 paragraph = "Odsek"
 singleLine = "Jeden riadok"
 

@@ -131,7 +131,7 @@ unsupported = "Não suportado"
 
 [toolPanel]
 placeholder = "Escolha uma ferramenta para começar"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Recurso premium:"
 comingSoon = "Em breve:"
 
@@ -162,6 +162,11 @@ unfavorite = "Remover dos favoritos"
 [toolPanel.toggle]
 fullscreen = "Alternar para modo tela cheia"
 sidebar = "Alternar para modo barra lateral"
+
+[backendStartup]
+notFoundTitle = "Backend não encontrado"
+retry = "Tentar novamente"
+unreachable = "No momento, o aplicativo não consegue se conectar ao backend. Verifique o status do backend e a conectividade de rede e tente novamente."
 
 [zipWarning]
 title = "Arquivo ZIP grande"
@@ -3441,6 +3446,9 @@ signinTitle = "Por favor, inicie a sessão"
 ssoSignIn = "Iniciar sessão através de login único (SSO)"
 oAuth2AutoCreateDisabled = "Auto-Criar Usuário OAUTH2 Desativado"
 oAuth2AdminBlockedUser = "O registro ou login de usuários não registrados está atualmente bloqueado. Entre em contato com o administrador."
+oAuth2RequiresLicense = "O login via OAuth/SSO requer uma licença paga (Server ou Enterprise). Entre em contato com o administrador para atualizar seu plano."
+saml2RequiresLicense = "O login via SAML requer uma licença paga (Server ou Enterprise). Entre em contato com o administrador para atualizar seu plano."
+maxUsersReached = "Número máximo de usuários atingido para sua licença atual. Entre em contato com o administrador para atualizar seu plano ou adicionar mais assentos."
 oauth2RequestNotFound = "Solicitação de autorização não encontrada"
 oauth2InvalidUserInfoResponse = "Resposta de informação de usuário inválida"
 oauth2invalidRequest = "Requisição Inválida"
@@ -3849,14 +3857,17 @@ fitToWidth = "Ajustar à largura"
 actualSize = "Tamanho real"
 
 [viewer]
+cannotPreviewFile = "Não é possível visualizar o arquivo"
+dualPageView = "Visualização de duas páginas"
 firstPage = "Primeira página"
 lastPage = "Última página"
-previousPage = "Página anterior"
 nextPage = "Próxima página"
+onlyPdfSupported = "O visualizador oferece suporte apenas a arquivos PDF. Este arquivo parece estar em um formato diferente."
+previousPage = "Página anterior"
+singlePageView = "Visualização de página única"
+unknownFile = "Arquivo desconhecido"
 zoomIn = "Ampliar"
 zoomOut = "Reduzir"
-singlePageView = "Visualização de página única"
-dualPageView = "Visualização de duas páginas"
 
 [rightRail]
 closeSelected = "Fechar arquivos selecionados"
@@ -4156,7 +4167,7 @@ description = "Rastrear ações do usuário e eventos do sistema para conformida
 
 [admin.settings.security.audit.level]
 label = "Nível de auditoria"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=DESLIGADO, 1=BÁSICO, 2=PADRÃO, 3=DETALHADO"
 
 [admin.settings.security.audit.retentionDays]
 label = "Retenção de auditoria (dias)"
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} selecionado(s)"
 download = "Baixar (JSON)"
 delete = "Apagar"
 unsupported = "Não suportado"
+active = "Ativo"
 addToUpload = "Adicionar ao upload"
+closeFile = "Fechar arquivo"
 deleteAll = "Excluir tudo"
 loadingFiles = "Carregando arquivos..."
 noFiles = "Nenhum arquivo disponível"
@@ -5800,13 +5813,20 @@ submit = "Login"
 signInWith = "Entrar com"
 oauthPending = "Abrindo o navegador para autenticação..."
 orContinueWith = "Ou continue com e-mail"
+serverRequirement = "Observação: o servidor deve ter o login ativado."
+showInstructions = "Como ativar?"
+hideInstructions = "Ocultar instruções"
+instructions = "Para ativar o login no seu servidor Stirling PDF:"
+instructionsEnvVar = "Defina a variável de ambiente:"
+instructionsOrYml = "Ou em settings.yml:"
+instructionsRestart = "Em seguida, reinicie o servidor para que as alterações entrem em vigor."
 
 [setup.login.username]
 label = "Usuário"
 placeholder = "Digite seu usuário"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Digite seu e-mail"
 
 [setup.login.password]
@@ -5843,7 +5863,7 @@ paragraph = "Página de parágrafos"
 sparse = "Texto esparso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Parágrafo"
 singleLine = "Linha única"
 

@@ -131,7 +131,7 @@ unsupported = "Não suportado"
 
 [toolPanel]
 placeholder = "Escolha uma ferramenta para começar"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Funcionalidade premium:"
 comingSoon = "Em breve:"
 
@@ -162,6 +162,11 @@ unfavorite = "Remover dos favoritos"
 [toolPanel.toggle]
 fullscreen = "Mudar para modo de ecrã inteiro"
 sidebar = "Mudar para modo de barra lateral"
+
+[backendStartup]
+notFoundTitle = "Backend não encontrado"
+retry = "Tentar novamente"
+unreachable = "A aplicação não consegue ligar-se ao backend neste momento. Verifique o estado do backend e a conectividade de rede e tente novamente."
 
 [zipWarning]
 title = "Ficheiro ZIP grande"
@@ -369,7 +374,7 @@ privacy = "Privacidade"
 
 [settings.developer]
 title = "Programador"
-apiKeys = "API Keys"
+apiKeys = "Chaves de API"
 
 [settings.tooltips]
 enableLoginFirst = "Ative primeiro o modo de login"
@@ -1220,7 +1225,7 @@ odtExt = "Texto OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Apresentação OpenDocument (.odp)"
 txtExt = "Texto simples (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Formato de Texto Enriquecido (.rtf)"
 selectedFiles = "Ficheiros selecionados"
 noFileSelected = "Nenhum ficheiro selecionado. Use o painel de ficheiros para adicionar ficheiros."
 convertFiles = "Converter ficheiros"
@@ -2844,7 +2849,7 @@ label = "Fator de escala"
 [adjustPageScale.pageSize]
 label = "Tamanho da página de destino"
 keep = "Manter tamanho original"
-letter = "Letter"
+letter = "Carta"
 legal = "Legal"
 
 [adjustPageScale.error]
@@ -3441,6 +3446,9 @@ signinTitle = "Por favor inicie sessão"
 ssoSignIn = "Iniciar sessão via Single Sign-On"
 oAuth2AutoCreateDisabled = "Criação Automática de Utilizador OAUTH2 Desativada"
 oAuth2AdminBlockedUser = "O registo ou login de utilizadores não registados está atualmente bloqueado. Por favor contacte o administrador."
+oAuth2RequiresLicense = "O início de sessão via OAuth/SSO requer uma licença paga (Server ou Enterprise). Contacte o administrador para atualizar o seu plano."
+saml2RequiresLicense = "O início de sessão SAML requer uma licença paga (Server ou Enterprise). Contacte o administrador para atualizar o seu plano."
+maxUsersReached = "Foi atingido o número máximo de utilizadores da sua licença atual. Contacte o administrador para atualizar o seu plano ou adicionar mais lugares."
 oauth2RequestNotFound = "Pedido de autorização não encontrado"
 oauth2InvalidUserInfoResponse = "Resposta de Informação de Utilizador Inválida"
 oauth2invalidRequest = "Pedido Inválido"
@@ -3849,14 +3857,17 @@ fitToWidth = "Ajustar à largura"
 actualSize = "Tamanho real"
 
 [viewer]
+cannotPreviewFile = "Não é possível pré-visualizar o ficheiro"
+dualPageView = "Vista de duas páginas"
 firstPage = "Primeira página"
 lastPage = "Última página"
-previousPage = "Página anterior"
 nextPage = "Página seguinte"
+onlyPdfSupported = "O visualizador só suporta ficheiros PDF. Este ficheiro parece ter um formato diferente."
+previousPage = "Página anterior"
+singlePageView = "Vista de página única"
+unknownFile = "Ficheiro desconhecido"
 zoomIn = "Ampliar"
 zoomOut = "Reduzir"
-singlePageView = "Vista de página única"
-dualPageView = "Vista de duas páginas"
 
 [rightRail]
 closeSelected = "Fechar ficheiros selecionados"
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} selecionado(s)"
 download = "Transferir"
 delete = "Eliminar"
 unsupported = "Não suportado"
+active = "Ativo"
 addToUpload = "Adicionar ao carregamento"
+closeFile = "Fechar ficheiro"
 deleteAll = "Eliminar tudo"
 loadingFiles = "A carregar ficheiros..."
 noFiles = "Não há ficheiros disponíveis"
@@ -5285,7 +5298,7 @@ submit = "Gerar link de convite"
 [workspace.people.inviteMode]
 username = "Nome de utilizador"
 email = "Email"
-link = "Link"
+link = "Ligação"
 emailDisabled = "Convites por email requerem configuração de SMTP e mail.enableInvites=true nas definições"
 
 [workspace.people.license]
@@ -5800,6 +5813,13 @@ submit = "Iniciar sessão"
 signInWith = "Iniciar sessão com"
 oauthPending = "A abrir o navegador para autenticação..."
 orContinueWith = "Ou continuar com email"
+serverRequirement = "Nota: O servidor deve ter o início de sessão ativado."
+showInstructions = "Como ativar?"
+hideInstructions = "Ocultar instruções"
+instructions = "Para ativar o início de sessão no seu servidor Stirling PDF:"
+instructionsEnvVar = "Defina a variável de ambiente:"
+instructionsOrYml = "Ou em settings.yml:"
+instructionsRestart = "Em seguida, reinicie o servidor para que as alterações tenham efeito."
 
 [setup.login.username]
 label = "Nome de utilizador"
@@ -5843,7 +5863,7 @@ paragraph = "Página de parágrafos"
 sparse = "Texto disperso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Parágrafo"
 singleLine = "Linha única"
 
@@ -5935,7 +5955,7 @@ warnings = "Avisos"
 suggestions = "Notas"
 currentPageFonts = "Fontes nesta página"
 allFonts = "Todas as fontes"
-fallback = "fallback"
+fallback = "alternativa"
 missing = "em falta"
 perfectMessage = "Todas as fontes podem ser reproduzidas na perfeição."
 warningMessage = "Algumas fontes podem não ser renderizadas corretamente."

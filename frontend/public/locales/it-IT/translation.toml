@@ -163,6 +163,11 @@ unfavorite = "Rimuovi dai preferiti"
 fullscreen = "Passa alla modalità a schermo intero"
 sidebar = "Passa alla modalità barra laterale"
 
+[backendStartup]
+notFoundTitle = "Backend non trovato"
+retry = "Riprova"
+unreachable = "L'applicazione al momento non riesce a connettersi al backend. Verificare lo stato del backend e la connettività di rete, quindi riprovare."
+
 [zipWarning]
 title = "File ZIP di grandi dimensioni"
 message = "Questo ZIP contiene {{count}} file. Estrarre comunque?"
@@ -339,7 +344,7 @@ popular = "Popolare"
 title = "Preferenze"
 
 [settings.workspace]
-title = "Workspace"
+title = "Area di lavoro"
 people = "Persone"
 teams = "Team"
 
@@ -2844,8 +2849,8 @@ label = "Fattore di scala"
 [adjustPageScale.pageSize]
 label = "Dimensione pagina di destinazione"
 keep = "Mantieni dimensioni originali"
-letter = "Letter"
-legal = "Legal"
+letter = "Lettera"
+legal = "Legale"
 
 [adjustPageScale.error]
 failed = "Si è verificato un errore durante la regolazione della scala della pagina."
@@ -3441,6 +3446,9 @@ signinTitle = "Per favore accedi"
 ssoSignIn = "Accedi tramite Single Sign-on"
 oAuth2AutoCreateDisabled = "Creazione automatica utente OAUTH2 DISABILITATA"
 oAuth2AdminBlockedUser = "La registrazione o l'accesso degli utenti non registrati è attualmente bloccata. Si prega di contattare l'amministratore."
+oAuth2RequiresLicense = "L'accesso OAuth/SSO richiede una licenza a pagamento (Server o Enterprise). Contatta l'amministratore per aggiornare il tuo piano."
+saml2RequiresLicense = "L'accesso SAML richiede una licenza a pagamento (Server o Enterprise). Contatta l'amministratore per aggiornare il tuo piano."
+maxUsersReached = "Numero massimo di utenti raggiunto per la licenza corrente. Contatta l'amministratore per aggiornare il piano o aggiungere altri posti."
 oauth2RequestNotFound = "Richiesta di autorizzazione non trovata"
 oauth2InvalidUserInfoResponse = "Risposta relativa alle informazioni utente non valida"
 oauth2invalidRequest = "Richiesta non valida"
@@ -3849,14 +3857,17 @@ fitToWidth = "Adatta alla larghezza"
 actualSize = "Dimensione reale"
 
 [viewer]
+cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
+dualPageView = "Vista doppia pagina"
 firstPage = "Prima pagina"
 lastPage = "Ultima pagina"
-previousPage = "Pagina precedente"
 nextPage = "Pagina successiva"
+onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
+previousPage = "Pagina precedente"
+singlePageView = "Vista pagina singola"
+unknownFile = "File sconosciuto"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
-singlePageView = "Vista pagina singola"
-dualPageView = "Vista doppia pagina"
 
 [rightRail]
 closeSelected = "Chiudi file selezionati"
@@ -3928,7 +3939,7 @@ files = "File"
 activity = "Attività"
 help = "Guida"
 account = "Account"
-config = "Config"
+config = "Configurazione"
 settings = "Opzioni"
 adminSettings = "Opzioni Admin"
 allTools = "Funzioni"
@@ -4647,7 +4658,9 @@ selectedCount = "{{count}} selezionati"
 download = "Salva"
 delete = "Elimina"
 unsupported = "Non supportato"
+active = "Attivo"
 addToUpload = "Aggiungi al caricamento"
+closeFile = "Chiudi file"
 deleteAll = "Elimina tutto"
 loadingFiles = "Caricamento file..."
 noFiles = "Nessun file disponibile"
@@ -5197,7 +5210,7 @@ subtitle = "Digita o incolla le email qui sotto, separate da virgole. La tua are
 
 [workspace.people.actions]
 label = "Azioni"
-upgrade = "Upgrade"
+upgrade = "Aggiorna"
 
 [workspace.people.roleDescriptions]
 admin = "Può gestire impostazioni e invitare membri, con pieno accesso amministrativo."
@@ -5800,6 +5813,13 @@ submit = "Login"
 signInWith = "Accedi con"
 oauthPending = "Apertura del browser per l'autenticazione..."
 orContinueWith = "Oppure continua con email"
+serverRequirement = "Nota: il server deve avere il login abilitato."
+showInstructions = "Come abilitarlo?"
+hideInstructions = "Nascondi istruzioni"
+instructions = "Per abilitare il login sul tuo server Stirling PDF:"
+instructionsEnvVar = "Imposta la variabile d'ambiente:"
+instructionsOrYml = "Oppure in settings.yml:"
+instructionsRestart = "Quindi riavvia il server affinché le modifiche abbiano effetto."
 
 [setup.login.username]
 label = "Nome utente"
@@ -5843,7 +5863,7 @@ paragraph = "Pagina a paragrafi"
 sparse = "Testo sparso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatico"
 paragraph = "Paragrafo"
 singleLine = "Riga singola"
 

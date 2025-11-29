@@ -225,7 +225,7 @@ def beautify_translations(language_code):
     """Beautify translation file to match en-GB structure."""
     print(f"\n✨ Beautifying {language_code} translation file...")
 
-    cmd = f'python3 scripts/translations/json_beautifier.py --language {language_code}'
+    cmd = f'python3 scripts/translations/toml_beautifier.py --language {language_code}'
 
     if not run_command(cmd):
         print(f"✗ Failed to beautify translations")
