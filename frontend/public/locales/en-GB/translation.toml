@@ -4516,6 +4516,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 title = "Premium & Enterprise"
 description = "Configure your premium or enterprise license key."
 license = "License Configuration"
+noInput = "Please provide a license key or file"
 
 [admin.settings.premium.licenseKey]
 toggle = "Got a license key or certificate file?"
@@ -4532,6 +4533,26 @@ title = "⚠️ Warning: Existing License Detected"
 line1 = "Overwriting your current license key cannot be undone."
 line2 = "Your previous license will be permanently lost unless you have backed it up elsewhere."
 line3 = "Important: Keep license keys private and secure. Never share them publicly."
+
+[admin.settings.premium.inputMethod]
+text = "License Key"
+file = "Certificate File"
+
+[admin.settings.premium.file]
+label = "License Certificate File"
+description = "Upload your .lic or .cert license file from offline purchases"
+choose = "Choose License File"
+selected = "Selected: {{filename}} ({{size}})"
+successMessage = "License file uploaded and activated successfully. No restart required."
+
+[admin.settings.premium.currentLicense]
+title = "Active License"
+file = "Source: License file ({{path}})"
+key = "Source: License key"
+type = "Type: {{type}}"
+
+noInput = "Please provide a license key or upload a certificate file"
+success = "Success"
 
 [admin.settings.premium.enabled]
 label = "Enable Premium Features"

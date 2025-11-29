@@ -80,6 +80,10 @@ export interface LicenseInfo {
 export interface LicenseSaveResponse {
   success: boolean;
   licenseType?: string;
+  filename?: string;
+  filePath?: string;
+  enabled?: boolean;
+  maxUsers?: number;
   message?: string;
   error?: string;
 }
@@ -415,6 +419,29 @@ const licenseService = {
       return response.data;
     } catch (error) {
       console.error('Error saving license key:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Upload license certificate file for offline activation
+   * @param file - The .lic or .cert file to upload
+   * @returns Promise with upload result
+   */
+  async saveLicenseFile(file: File): Promise<LicenseSaveResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post('/api/v1/admin/license-file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading license file:', error);
       throw error;
     }
   },
