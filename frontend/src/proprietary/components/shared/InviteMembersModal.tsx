@@ -138,7 +138,7 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
         password: inviteForm.password,
         role: inviteForm.role,
         teamId: inviteForm.teamId,
-        authType: inviteForm.authType.toLowerCase(),
+        authType: inviteForm.authType === 'WEB' ? 'password' : 'SSO',
         forceChange: inviteForm.forceChange,
       });
       alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
