@@ -23,7 +23,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
   const [exporting, setExporting] = useState(false);
 
   // Use shared filters hook
-  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters();
+  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({}, loginEnabled);
 
   const handleExport = async () => {
     if (!loginEnabled) return;
