@@ -26,7 +26,7 @@ export const SavedSignaturesSection = ({
   signatures,
   disabled = false,
   isAtCapacity,
-  storageType,
+  storageType: _storageType,
   onUseSignature,
   onDeleteSignature,
   onRenameSignature,

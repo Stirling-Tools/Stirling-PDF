@@ -101,15 +101,34 @@ public class SignatureService {
 
     private boolean isImageFile(Path path) {
         String fileName = path.getFileName().toString().toLowerCase();
-        return fileName.endsWith(".jpg")
-                || fileName.endsWith(".jpeg")
-                || fileName.endsWith(".png")
-                || fileName.endsWith(".gif");
+        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png");
     }
 
     private void validateFileName(String fileName) {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
             throw new IllegalArgumentException("Invalid filename");
+        }
+        // Only allow alphanumeric, hyphen, and underscore
+        if (!fileName.matches("^[a-zA-Z0-9_-]+$")) {
+            throw new IllegalArgumentException("Filename contains invalid characters");
+        }
+    }
+
+    private String validateAndNormalizeExtension(String extension) {
+        String normalized = extension.toLowerCase().trim();
+        // Whitelist only safe image extensions
+        if (normalized.equals("png") || normalized.equals("jpg") || normalized.equals("jpeg")) {
+            return normalized;
+        }
+        throw new IllegalArgumentException("Unsupported image extension: " + extension);
+    }
+
+    private void verifyPathWithinDirectory(Path resolvedPath, Path targetDirectory)
+            throws IOException {
+        Path canonicalTarget = targetDirectory.toAbsolutePath().normalize();
+        Path canonicalResolved = resolvedPath.toAbsolutePath().normalize();
+        if (!canonicalResolved.startsWith(canonicalTarget)) {
+            throw new IOException("Resolved path is outside the target directory");
         }
     }
 
@@ -145,13 +164,18 @@ public class SignatureService {
             String base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
-            // Determine file extension from data URL
+            // Determine and validate file extension from data URL
             String mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
-            String extension = mimeType.substring(mimeType.indexOf("/") + 1);
+            String rawExtension = mimeType.substring(mimeType.indexOf("/") + 1);
+            String extension = validateAndNormalizeExtension(rawExtension);
 
             // Save image file only
             String imageFileName = request.getId() + "." + extension;
             Path imagePath = targetFolder.resolve(imageFileName);
+
+            // Verify path is within target directory
+            verifyPathWithinDirectory(imagePath, targetFolder);
+
             Files.write(
                     imagePath,
                     imageBytes,

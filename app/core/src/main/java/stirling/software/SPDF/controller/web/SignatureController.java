@@ -53,8 +53,6 @@ public class SignatureController {
         String lowerFileName = fileName.toLowerCase();
         if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
             contentType = MediaType.IMAGE_JPEG;
-        } else if (lowerFileName.endsWith(".gif")) {
-            contentType = MediaType.IMAGE_GIF;
         }
 
         return ResponseEntity.ok().contentType(contentType).body(imageBytes);

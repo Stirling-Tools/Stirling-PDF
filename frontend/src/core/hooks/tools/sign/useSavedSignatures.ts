@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { signatureStorageService, type StorageType } from '@app/services/signatureStorageService';
 
-const STORAGE_KEY = 'stirling:saved-signatures:v1';
 export const MAX_SAVED_SIGNATURES = 10;
 
 export type SavedSignatureType = 'canvas' | 'image' | 'text';

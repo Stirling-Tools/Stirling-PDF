@@ -1,5 +1,5 @@
 import apiClient from '@app/services/apiClient';
-import type { SavedSignature, SavedSignaturePayload } from '@app/hooks/tools/sign/useSavedSignatures';
+import type { SavedSignature } from '@app/hooks/tools/sign/useSavedSignatures';
 
 export type StorageType = 'backend' | 'localStorage';
 
@@ -41,7 +41,7 @@ class SignatureStorageService {
   private async _performDetection(): Promise<SignatureStorageCapabilities> {
     try {
       // Probe the signatures endpoint
-      const response = await apiClient.get('/api/v1/general/signatures', {
+      await apiClient.get('/api/v1/general/signatures', {
         timeout: 3000,
       });
 
