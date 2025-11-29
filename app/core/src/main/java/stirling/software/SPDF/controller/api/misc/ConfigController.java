@@ -85,11 +85,11 @@ public class ConfigController {
 
             // SSO Provider settings
             boolean enableOAuth =
-                    applicationProperties.getSecurity().getOAUTH2() != null
-                            && applicationProperties.getSecurity().getOAUTH2().getEnabled();
+                    applicationProperties.getSecurity().getOauth2() != null
+                            && applicationProperties.getSecurity().getOauth2().getEnabled();
             boolean enableSaml =
-                    applicationProperties.getSecurity().getSAML2() != null
-                            && applicationProperties.getSecurity().getSAML2().getEnabled();
+                    applicationProperties.getSecurity().getSaml2() != null
+                            && applicationProperties.getSecurity().getSaml2().getEnabled();
             configData.put("enableOAuth", enableOAuth);
             configData.put("enableSaml", enableSaml);
 
