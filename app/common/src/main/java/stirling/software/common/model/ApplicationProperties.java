@@ -370,6 +370,8 @@ public class ApplicationProperties {
             private String weasyprint;
             private String unoconvert;
             private String calibre;
+            private String ocrmypdf;
+            private String soffice;
         }
     }
 
@@ -452,10 +454,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-            Driver {
-              driverName='%s'
-            }
-            """
+      Driver {
+        driverName='%s'
+      }
+      """
                     .formatted(driverName);
         }
     }

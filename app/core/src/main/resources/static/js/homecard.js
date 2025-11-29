@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
   try {
-    const response = await fetch('/files/popularity.txt');
+    const response = await fetch('./files/popularity.txt');
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       const errorMsg = errorText || response.statusText || 'Request failed';
