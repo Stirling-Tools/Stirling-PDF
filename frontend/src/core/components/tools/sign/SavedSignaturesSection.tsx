@@ -249,7 +249,7 @@ export const SavedSignaturesSection = ({
                 onClick={() => handleNavigate('prev')}
                 disabled={disabled || activeIndex === 0}
               >
-                <LocalIcon icon="material-symbols:chevron-left-rounded" width={18} height={18} />
+                <LocalIcon icon="chevron-left-rounded" width={18} height={18} />
               </ActionIcon>
               <ActionIcon
                 variant="light"
@@ -257,7 +257,7 @@ export const SavedSignaturesSection = ({
                 onClick={() => handleNavigate('next')}
                 disabled={disabled || activeIndex >= signatures.length - 1}
               >
-                <LocalIcon icon="material-symbols:chevron-right-rounded" width={18} height={18} />
+                <LocalIcon icon="chevron-right-rounded" width={18} height={18} />
               </ActionIcon>
             </Group>
           </Group>
@@ -277,7 +277,7 @@ export const SavedSignaturesSection = ({
                       onClick={() => onDeleteSignature(activeSignature)}
                       disabled={disabled}
                     >
-                      <LocalIcon icon="material-symbols:delete-outline-rounded" width={18} height={18} />
+                      <LocalIcon icon="delete-outline-rounded" width={18} height={18} />
                     </ActionIcon>
                   </Tooltip>
                 </Group>

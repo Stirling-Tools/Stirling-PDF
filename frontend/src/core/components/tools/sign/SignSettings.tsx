@@ -314,7 +314,7 @@ const SignSettings = ({
         color={isSaved ? 'green' : undefined}
         onClick={onClick}
         disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
-        leftSection={<LocalIcon icon="material-symbols:save-rounded" width={16} height={16} />}
+        leftSection={<LocalIcon icon="save-rounded" width={16} height={16} />}
       >
         {isSaved ? translate('saved.status.saved', 'Saved') : label}
       </Button>
@@ -903,7 +903,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.pause', 'Pause placement')}
                 </Text>
@@ -926,7 +926,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.resume', 'Resume placement')}
                 </Text>
