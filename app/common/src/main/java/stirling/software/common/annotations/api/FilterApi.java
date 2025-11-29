@@ -22,25 +22,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Filter",
         description =
                 """
-                Document content filtering and search operations for information discovery and organization.
+                Check basic properties of PDFs before you process them: page count, file size, page size/rotation, and whether they contain text or images.
+                Use these endpoints as a "pre-check" step to decide what to do with a file next.
 
-                This endpoint group enables intelligent content discovery and organization within
-                document collections for content-based processing and information extraction.
-
-                Common use cases:
-                • Legal discovery, research organization, and compliance auditing
-                • Content moderation, academic research, and business intelligence
-                • Quality assurance and content validation workflows
-
-                Business applications:
-                • Contract analysis, financial review, and healthcare records organization
-                • Government processing, educational curation, and IP protection
-
-                Workflow scenarios:
-                • Large-scale processing, automated classification, and information extraction
-                • Document preparation for further processing or analysis
-
-                Target users: Legal professionals, researchers, compliance officers, and
-                organizations requiring intelligent document content discovery and organization.
+                Typical uses:
+                • Reject files that are too big or too small
+                • Detect image-only PDFs that should go through OCR
+                • Ensure a document has enough pages before it enters a workflow
+                • Check orientation of pages before printing or merging
                 """)
 public @interface FilterApi {}
