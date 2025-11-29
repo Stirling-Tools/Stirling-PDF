@@ -108,8 +108,8 @@ public class SignatureService {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
             throw new IllegalArgumentException("Invalid filename");
         }
-        // Only allow alphanumeric, hyphen, and underscore
-        if (!fileName.matches("^[a-zA-Z0-9_-]+$")) {
+        // Only allow alphanumeric, hyphen, underscore, and dot (for extensions)
+        if (!fileName.matches("^[a-zA-Z0-9_.-]+$")) {
             throw new IllegalArgumentException("Filename contains invalid characters");
         }
     }
