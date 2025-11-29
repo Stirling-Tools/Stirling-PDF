@@ -51,8 +51,11 @@ export const useCookieConsent = ({
       document.head.appendChild(customCSS);
     }
 
-    // If already initialized, just mark as ready
+    // If already initialized, apply forceLightMode if needed and mark as ready
     if (window.CookieConsent) {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+      }
       setIsInitialized(true);
       return;
     }

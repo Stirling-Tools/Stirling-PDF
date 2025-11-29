@@ -12,51 +12,31 @@
  * - analytics-modal: Admin analytics choice
  */
 
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import { type StepType } from '@reactour/tour';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { isAuthRoute } from '@app/constants/routes';
 import { dispatchTourState } from '@app/constants/events';
-
-// Orchestrator
 import { useOnboardingOrchestrator } from '@app/components/onboarding/orchestrator/useOnboardingOrchestrator';
 import { markStepSeen } from '@app/components/onboarding/orchestrator/onboardingStorage';
-
-// Extracted components
 import OnboardingTour, { type AdvanceArgs, type CloseArgs } from '@app/components/onboarding/OnboardingTour';
 import OnboardingModalSlide from '@app/components/onboarding/OnboardingModalSlide';
-
-// Extracted hooks
 import {
-  useUpgradeBannerBlock,
   useServerLicenseRequest,
   useTourRequest,
 } from '@app/components/onboarding/useOnboardingEffects';
 import { useOnboardingDownload } from '@app/components/onboarding/useOnboardingDownload';
-
-// Slide config
 import { SLIDE_DEFINITIONS, type SlideId, type ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
-
-// Tool panel mode prompt
 import ToolPanelModePrompt from '@app/components/tools/ToolPanelModePrompt';
-
-// Tour step configs
 import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import { useAdminTourOrchestration } from '@app/contexts/AdminTourOrchestrationContext';
 import { createUserStepsConfig } from '@app/components/onboarding/userStepsConfig';
 import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsConfig';
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-
-
-// Server experience
 import { useServerExperience } from '@app/hooks/useServerExperience';
-
-
-// Analytics choice modal
 import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
-
 import '@app/components/onboarding/OnboardingTour.css';
 
 /**
@@ -68,11 +48,7 @@ export default function Onboarding() {
   const location = useLocation();
   const { state, actions } = useOnboardingOrchestrator();
   const serverExperience = useServerExperience();
-
-  // Check if we're on an auth route
   const onAuthRoute = isAuthRoute(location.pathname);
-
-  // Extracted state
   const { currentStep, isActive, isLoading, runtimeState, activeFlow } = state;
 
   // ============================================
@@ -82,10 +58,6 @@ export default function Onboarding() {
   // Download logic for desktop install slide
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
 
-  // Upgrade banner blocking
-  const onboardingFullyComplete = !isLoading && state.isComplete;
-  useUpgradeBannerBlock(onboardingFullyComplete);
-
   // Server license request handling (from UpgradeBanner "See info" click)
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
 
@@ -93,21 +65,9 @@ export default function Onboarding() {
   const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
 
   // ============================================
-  // Action Wrappers (sync with legacy preferences)
-  // ============================================
-  
-  const completeCurrentStep = useCallback(() => {
-    actions.complete();
-  }, [actions]);
-
-  const skipCurrentStep = useCallback(() => {
-    actions.skip();
-  }, [actions]);
-
-  // ============================================
   // Button Action Handler
   // ============================================
-  
+
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
     serverExperience.setSelfReportedAdmin(role === 'admin');
@@ -125,56 +85,51 @@ export default function Onboarding() {
   const handleButtonAction = useCallback((action: ButtonAction) => {
     switch (action) {
       case 'next':
-        completeCurrentStep();
+      case 'complete-close':
+        actions.complete();
         break;
       case 'prev':
         actions.prev();
         break;
       case 'close':
-        skipCurrentStep();
-        break;
-      case 'complete-close':
-        completeCurrentStep();
+        actions.skip();
         break;
       case 'download-selected':
         handleDownloadSelected();
-        completeCurrentStep();
+        actions.complete();
         break;
       case 'security-next':
         if (!runtimeState.selectedRole) return;
-        if (runtimeState.selectedRole === 'admin') {
-          completeCurrentStep();
-        } else {
+        if (runtimeState.selectedRole !== 'admin') {
           actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
-          completeCurrentStep();
         }
+        actions.complete();
         break;
       case 'launch-admin':
         actions.updateRuntimeState({ tourRequested: true, tourType: 'admin' });
-        completeCurrentStep();
+        actions.complete();
         break;
       case 'launch-tools':
         actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
-        completeCurrentStep();
+        actions.complete();
         break;
       case 'launch-auto': {
         const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'tools';
         actions.updateRuntimeState({ tourRequested: true, tourType });
-        completeCurrentStep();
+        actions.complete();
         break;
       }
       case 'skip-to-license':
-        // Admin opted out of the tour - treat as seen so it never auto-opens
         markStepSeen('tour');
         actions.updateRuntimeState({ tourRequested: false });
-        completeCurrentStep();
+        actions.complete();
         break;
       case 'see-plans':
-        completeCurrentStep();
+        actions.complete();
         navigate('/settings/adminPlan');
         break;
     }
-  }, [actions, completeCurrentStep, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin, skipCurrentStep]);
+  }, [actions, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
 
   // ============================================
   // Tour Setup
@@ -232,16 +187,9 @@ export default function Onboarding() {
     return Object.values(config);
   }, [adminStepsConfig, runtimeState.tourType, userStepsConfig]);
 
-  // Start tour when reaching tour step - mark as seen IMMEDIATELY when opening
+  // Start tour when reaching tour step
   useEffect(() => {
     if (currentStep?.id === 'tour' && !isTourOpen) {
-      // DEBUG: Log what's happening
-      console.log('[Onboarding] Opening tour from orchestrator step', {
-        tourStepSeen: localStorage.getItem('onboarding::tour'),
-        currentStepId: currentStep?.id,
-        allStepsAlreadySeen: activeFlow.every(s => localStorage.getItem(`onboarding::${s.id}`) === 'true'),
-      });
-      // Mark as seen immediately when tour opens
       markStepSeen('tour');
       setIsTourOpen(true);
     }
@@ -250,60 +198,45 @@ export default function Onboarding() {
   // Handle external tour request (from QuickAccessBar help menu)
   useEffect(() => {
     if (externalTourRequested) {
-      console.log('[Onboarding] Opening tour from external request', { tourType: requestedTourType });
-      // Update runtime state with requested tour type
       actions.updateRuntimeState({ tourRequested: true, tourType: requestedTourType });
-      // Mark as seen immediately when tour opens
       markStepSeen('tour');
-      // Open the tour
       setIsTourOpen(true);
-      // Clear the request
       clearTourRequest();
     }
   }, [externalTourRequested, requestedTourType, actions, clearTourRequest]);
 
   // Clean up tour glows
   useEffect(() => {
-    if (!isTourOpen) {
-      removeAllGlows();
-    }
+    if (!isTourOpen) removeAllGlows();
     return () => removeAllGlows();
   }, [isTourOpen]);
 
-  const handleAdvanceTour = useCallback((args: AdvanceArgs) => {
-    const { setCurrentStep, currentStep: tourCurrentStep, steps, setIsOpen } = args;
-    if (steps && tourCurrentStep === steps.length - 1) {
-      setIsOpen(false);
-      setIsTourOpen(false);
-      if (runtimeState.tourType === 'admin') {
-        adminTourOrch.restoreAdminState();
-      } else {
-        tourOrch.restoreWorkbenchState();
-      }
-      // Always mark tour as seen when completed, then advance orchestrator if on tour step
-      markStepSeen('tour');
-      if (currentStep?.id === 'tour') {
-        completeCurrentStep();
-      }
-    } else if (steps) {
-      setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
-    }
-  }, [completeCurrentStep, adminTourOrch, runtimeState.tourType, tourOrch, currentStep]);
-
-  const handleCloseTour = useCallback((args: CloseArgs) => {
-    args.setIsOpen(false);
+  // Shared tour cleanup: restore state, mark seen, advance if on tour step
+  const finishTour = useCallback(() => {
     setIsTourOpen(false);
     if (runtimeState.tourType === 'admin') {
       adminTourOrch.restoreAdminState();
     } else {
       tourOrch.restoreWorkbenchState();
     }
-    // Always mark tour as seen when closed, then advance orchestrator if on tour step
     markStepSeen('tour');
-    if (currentStep?.id === 'tour') {
-      completeCurrentStep();
+    if (currentStep?.id === 'tour') actions.complete();
+  }, [actions, adminTourOrch, currentStep?.id, runtimeState.tourType, tourOrch]);
+
+  const handleAdvanceTour = useCallback((args: AdvanceArgs) => {
+    const { setCurrentStep, currentStep: tourCurrentStep, steps, setIsOpen } = args;
+    if (steps && tourCurrentStep === steps.length - 1) {
+      setIsOpen(false);
+      finishTour();
+    } else if (steps) {
+      setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
     }
-  }, [adminTourOrch, completeCurrentStep, runtimeState.tourType, tourOrch, currentStep]);
+  }, [finishTour]);
+
+  const handleCloseTour = useCallback((args: CloseArgs) => {
+    args.setIsOpen(false);
+    finishTour();
+  }, [finishTour]);
 
   // ============================================
   // Modal Slide Data
@@ -327,7 +260,6 @@ export default function Onboarding() {
       onRoleSelect: handleRoleSelect,
       licenseNotice: runtimeState.licenseNotice,
       loginEnabled: serverExperience.loginEnabled,
-      // First login params
       firstLoginUsername: runtimeState.firstLoginUsername,
       onPasswordChanged: handlePasswordChanged,
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
@@ -406,7 +338,7 @@ export default function Onboarding() {
   // Route by step type
   switch (currentStep.type) {
     case 'tool-prompt':
-      return <ToolPanelModePrompt forceOpen={true} onComplete={completeCurrentStep} />;
+      return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;
 
     case 'tour':
       return (
@@ -422,12 +354,7 @@ export default function Onboarding() {
       );
 
     case 'analytics-modal':
-      return (
-        <AdminAnalyticsChoiceModal
-          opened={true}
-          onClose={completeCurrentStep}
-        />
-      );
+      return <AdminAnalyticsChoiceModal opened={true} onClose={actions.complete} />;
 
     case 'modal-slide':
       if (!currentSlideDefinition || !currentSlideContent) return null;
@@ -438,7 +365,7 @@ export default function Onboarding() {
           runtimeState={runtimeState}
           modalSlideCount={modalSlideCount}
           currentModalSlideIndex={currentModalSlideIndex}
-          onSkip={skipCurrentStep}
+          onSkip={actions.skip}
           onAction={handleButtonAction}
         />
       );

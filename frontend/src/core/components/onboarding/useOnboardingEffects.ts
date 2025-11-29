@@ -3,16 +3,12 @@
  * 
  * These hooks handle side effects that the main Onboarding component needs
  * but don't belong in the render logic:
- * - Upgrade banner session blocking
- * - Cookie consent step completion
  * - Server license request handling (from UpgradeBanner "See info" click)
  * - Tour request handling (from QuickAccessBar help menu)
  */
 
 import { useEffect, useCallback, useState } from 'react';
 import {
-  ONBOARDING_SESSION_BLOCK_KEY,
-  ONBOARDING_SESSION_EVENT,
   SERVER_LICENSE_REQUEST_EVENT,
   START_TOUR_EVENT,
   type ServerLicenseRequestPayload,
@@ -20,22 +16,6 @@ import {
   type StartTourPayload,
 } from '@app/constants/events';
 import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
-
-/**
- * Manages the session storage flag that blocks the UpgradeBanner
- * while onboarding is in progress.
- */
-export function useUpgradeBannerBlock(onboardingFullyComplete: boolean) {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    window.sessionStorage.setItem(
-      ONBOARDING_SESSION_BLOCK_KEY,
-      onboardingFullyComplete ? 'false' : 'true'
-    );
-    window.dispatchEvent(new CustomEvent(ONBOARDING_SESSION_EVENT));
-  }, [onboardingFullyComplete]);
-}
 
 /**
  * Listens for SERVER_LICENSE_REQUEST_EVENT (from UpgradeBanner "See info" click)

@@ -5,8 +5,6 @@ import { isAuthRoute } from '@core/constants/routes';
 import { useCheckout } from '@app/contexts/CheckoutContext';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import {
-  ONBOARDING_SESSION_BLOCK_KEY,
-  ONBOARDING_SESSION_EVENT,
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
   UPGRADE_BANNER_TEST_EVENT,
@@ -15,6 +13,7 @@ import {
   UPGRADE_BANNER_ALERT_EVENT,
 } from '@core/constants/events';
 import { useServerExperience } from '@app/hooks/useServerExperience';
+import { hasSeenStep } from '@core/components/onboarding/orchestrator/onboardingStorage';
 
 const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -37,7 +36,7 @@ const UpgradeBanner: React.FC = () => {
     overFreeTierLimit,
     scenarioKey,
   } = useServerExperience();
-  const [sessionBlocked, setSessionBlocked] = useState(true);
+  const onboardingComplete = hasSeenStep('welcome');
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
     const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
@@ -48,36 +47,6 @@ const UpgradeBanner: React.FC = () => {
   });
   const isDev = import.meta.env.DEV;
   const [testScenario, setTestScenario] = useState<UpgradeBannerTestScenario>(null);
-
-  // Track onboarding session flag so we don't show banner if onboarding ran this load
-  // Default to BLOCKED and only unblock when explicitly told to via 'false' value
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const evaluateBlock = () => {
-      const value = window.sessionStorage.getItem(ONBOARDING_SESSION_BLOCK_KEY);
-      // Stay blocked if:
-      // 1. Key doesn't exist yet (onboarding hasn't initialized)
-      // 2. Key is explicitly 'true'
-      // Only unblock when key is explicitly 'false' (onboarding complete)
-      const blocked = value !== 'false';
-      setSessionBlocked(blocked);
-    };
-
-    evaluateBlock();
-
-    const handleOnboardingEvent = () => {
-      evaluateBlock();
-    };
-
-    window.addEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
-
-    return () => {
-      window.removeEventListener(ONBOARDING_SESSION_EVENT, handleOnboardingEvent as EventListener);
-    };
-  }, []);
 
   useEffect(() => {
     if (!isDev || typeof window === 'undefined') {
@@ -168,7 +137,7 @@ const UpgradeBanner: React.FC = () => {
         shouldShowFriendlyBase &&
           !licenseLoading &&
           effectiveTotalUsersLoaded &&
-          !sessionBlocked,
+          onboardingComplete,
       );
   // Urgent banner should always show when over-limit 
   const shouldEvaluateUrgent = scenario
@@ -196,21 +165,8 @@ const UpgradeBanner: React.FC = () => {
     const lastShown = lastShownRaw ? parseInt(lastShownRaw, 10) : 0;
     const now = Date.now();
     const due = !Number.isFinite(lastShown) || now - lastShown >= WEEK_IN_MS;
-    
-    // DEBUG: Log banner visibility decision
-    console.log('[UpgradeBanner] Evaluating friendly visibility', {
-      lastShownRaw,
-      lastShown,
-      now,
-      timeSinceLastShown: now - lastShown,
-      weekInMs: WEEK_IN_MS,
-      due,
-      sessionBlocked,
-      shouldEvaluateFriendly,
-    });
-    
     setFriendlyVisible(due);
-  }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading, sessionBlocked]);
+  }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {

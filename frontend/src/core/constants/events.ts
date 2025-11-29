@@ -1,7 +1,5 @@
 import type { LicenseNotice } from '@app/types/types';
 
-export const ONBOARDING_SESSION_BLOCK_KEY = 'stirling-onboarding-session-active';
-export const ONBOARDING_SESSION_EVENT = 'stirling:onboarding-session-started';
 export const SERVER_LICENSE_REQUEST_EVENT = 'stirling:server-license-requested';
 export const UPGRADE_BANNER_TEST_EVENT = 'stirling:upgrade-banner-test';
 export const UPGRADE_BANNER_ALERT_EVENT = 'stirling:upgrade-banner-alert';
