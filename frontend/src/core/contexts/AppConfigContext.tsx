@@ -23,6 +23,8 @@ export interface AppConfig {
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
   enableEmailInvites?: boolean;
+  enableOAuth?: boolean;
+  enableSaml?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;

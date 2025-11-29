@@ -386,9 +386,22 @@ public class UserController {
             }
         }
 
-        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
+        // Parse authentication type
+        AuthenticationType authenticationType;
+        try {
+            authenticationType = AuthenticationType.valueOf(authType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Invalid authentication type specified."));
+        }
+
+        // For SSO types (SSO, OAUTH2, SAML2), password is not required
+        if (authenticationType == AuthenticationType.SSO
+                || authenticationType == AuthenticationType.OAUTH2
+                || authenticationType == AuthenticationType.SAML2) {
+            userService.saveUser(username, authenticationType, effectiveTeamId, role);
         } else {
+            // For WEB auth type, password is required
             if (password == null || password.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));
