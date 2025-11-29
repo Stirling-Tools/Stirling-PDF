@@ -5269,7 +5269,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "At least one email address is required"
 submit = "Send Invites"
 success = "user(s) invited successfully"
-partialSuccess = "Some invites failed"
+partialFailure = "Some invites failed"
 allFailed = "Failed to invite users"
 error = "Failed to send invites"
 
