@@ -13,27 +13,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
 /**
  * Unified signature image controller that works for both authenticated and unauthenticated users.
- * Uses composition pattern: - Core SignatureService (always available): reads shared signatures -
+ * Uses composition pattern: - Core SharedSignatureService (always available): reads shared signatures -
  * PersonalSignatureService (proprietary, optional): reads personal signatures For authenticated
  * signature management (save/delete), see proprietary SignatureController.
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/general")
-public class SignatureController {
+public class SignatureImageController {
 
-    private final SignatureService sharedSignatureService;
+    private final SharedSignatureService sharedSignatureService;
     private final PersonalSignatureServiceInterface personalSignatureService;
     private final UserServiceInterface userService;
 
-    public SignatureController(
-            SignatureService sharedSignatureService,
+    public SignatureImageController(
+            SharedSignatureService sharedSignatureService,
             @Autowired(required = false) PersonalSignatureServiceInterface personalSignatureService,
             @Autowired(required = false) UserServiceInterface userService) {
         this.sharedSignatureService = sharedSignatureService;

@@ -25,13 +25,13 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 @Service
 @Slf4j
-public class SignatureService {
+public class SharedSignatureService {
 
     private final String SIGNATURE_BASE_PATH;
     private final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
 
-    public SignatureService() {
+    public SharedSignatureService() {
         SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();
         this.objectMapper = new ObjectMapper();
     }

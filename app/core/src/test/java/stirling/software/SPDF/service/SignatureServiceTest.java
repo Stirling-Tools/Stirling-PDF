@@ -23,7 +23,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 class SignatureServiceTest {
 
     @TempDir Path tempDir;
-    private SignatureService signatureService;
+    private SharedSignatureService signatureService;
     private Path personalSignatureFolder;
     private Path sharedSignatureFolder;
     private final String ALL_USERS_FOLDER = "ALL_USERS";
@@ -53,7 +53,7 @@ class SignatureServiceTest {
                     .thenReturn(tempDir.toString());
 
             // Initialize the service with our temp directory
-            signatureService = new SignatureService();
+            signatureService = new SharedSignatureService();
         }
     }
 
