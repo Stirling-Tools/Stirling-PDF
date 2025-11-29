@@ -39,8 +39,6 @@ public class ExternalAppDepConfig {
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
-    private final String ocrMyPdfPath;
-    private final String sOfficePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -58,8 +56,8 @@ public class ExternalAppDepConfig {
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         String unoconvPath = runtimePathConfig.getUnoConvertPath();
         String calibrePath = runtimePathConfig.getCalibrePath();
-        this.ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
-        this.sOfficePath = runtimePathConfig.getSOfficePath();
+        String ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
+        String sOfficePath = runtimePathConfig.getSOfficePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));

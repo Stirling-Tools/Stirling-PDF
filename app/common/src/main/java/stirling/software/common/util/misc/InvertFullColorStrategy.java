@@ -56,15 +56,14 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                     if (properties != null && properties.getSystem() != null) {
                         renderDpi = properties.getSystem().getMaxDPI();
                     }
-                final int dpi = renderDpi;
-                final int pageNum = page;
+                    final int dpi = renderDpi;
+                    final int pageNum = page;
 
-
-                        image =
-                                ExceptionUtils.handleOomRendering(
-                    pageNum + 1,
-                                dpi,
-                    () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
+                    image =
+                            ExceptionUtils.handleOomRendering(
+                                    pageNum + 1,
+                                    dpi,
+                                    () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
 
                     // Invert the colors
                     invertImageColors(image);
