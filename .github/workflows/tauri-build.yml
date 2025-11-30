@@ -89,7 +89,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libfuse2 fuse
+          sudo apt-get install -y build-essential libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libfuse2 fuse libglib2.0-dev
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
