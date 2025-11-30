@@ -166,7 +166,7 @@ jobs:
           jlink \
             --add-modules "$MODULES" \
             --strip-debug \
-            --compress=2 \
+            --compress=zip-6 \
             --no-header-files \
             --no-man-pages \
             --output ./frontend/src-tauri/runtime/jre
