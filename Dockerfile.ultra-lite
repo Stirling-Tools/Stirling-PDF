@@ -1,0 +1,105 @@
+# Stirling-PDF Dockerfile - Ultra-lite version with embedded frontend
+# Single JAR contains both frontend and backend with minimal dependencies
+
+# Stage 1: Build application with embedded frontend
+FROM gradle:8.14-jdk21 AS build
+
+# Install Node.js and npm for frontend build
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm --version \
+    && node --version \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy gradle files for dependency resolution
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+# Set working directory
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Build ultra-lite JAR with embedded frontend (minimal features)
+RUN DISABLE_ADDITIONAL_FEATURES=true \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Stage 2: Runtime image
+FROM alpine:3.22.1
+
+ARG VERSION_TAG
+
+# Labels
+LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite"
+LABEL org.opencontainers.image.description="Stirling-PDF with embedded frontend - Ultra-lite version with minimal dependencies"
+LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Stirling-Tools"
+LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
+LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
+LABEL maintainer="Stirling-Tools"
+LABEL org.opencontainers.image.authors="Stirling-Tools"
+LABEL org.opencontainers.image.version="${VERSION_TAG}"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
+
+# Copy scripts
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+
+# Copy built JAR from build stage
+COPY --from=build /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
+
+# Environment Variables
+ENV DISABLE_ADDITIONAL_FEATURES=false \
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    ENDPOINTS_GROUPS_TO_REMOVE=CLI
+
+# Install minimal dependencies
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    shadow \
+    su-exec \
+    openjdk21-jre && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    mkdir -p /usr/share/fonts/opentype/noto && \
+    chmod +x /scripts/*.sh && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+
+EXPOSE 8080/tcp
+
+# Set user and run command
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]
