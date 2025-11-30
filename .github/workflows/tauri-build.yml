@@ -345,8 +345,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
+          APPIMAGE_SIGN: "0"
           # Only enable Windows signing in Tauri when on main
-          SIGN: ${{ (matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main' && env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '' }}
+          SIGN: ${{ (matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main' && env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
