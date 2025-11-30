@@ -330,6 +330,13 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Import AppImage signing key
+        if: ${{ github.ref == 'refs/heads/main' && secrets.APPIMAGETOOL_SIGN_KEY != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE != '' }}
+        env:
+          APPIMAGETOOL_SIGN_KEY: ${{ secrets.APPIMAGETOOL_SIGN_KEY }}
+        run: |
+          echo "$APPIMAGETOOL_SIGN_KEY" | base64 --decode | gpg --batch --import
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -340,12 +347,11 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ github.ref == 'refs/heads/main' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE || '' }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ github.ref == 'refs/heads/main' && secrets.APPIMAGETOOL_SIGN_KEY != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          APPIMAGE_SIGN: "0"
           # Only enable Windows signing in Tauri when on main
           SIGN: ${{ (matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main' && env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
