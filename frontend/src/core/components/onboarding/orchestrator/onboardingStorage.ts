@@ -1,27 +1,13 @@
-/**
- * Onboarding Storage
- * 
- * Simple localStorage wrapper for tracking which onboarding steps have been seen.
- * Keys: `onboarding::${stepId}` with value 'true'
- */
-
 import { type OnboardingStepId, ONBOARDING_STEPS } from '@app/components/onboarding/orchestrator/onboardingConfig';
 
 const STORAGE_PREFIX = 'onboarding';
 
-/**
- * Generate the storage key for a step
- */
 export function getStorageKey(stepId: OnboardingStepId): string {
   return `${STORAGE_PREFIX}::${stepId}`;
 }
 
-/**
- * Check if a step has been seen
- */
 export function hasSeenStep(stepId: OnboardingStepId): boolean {
   if (typeof window === 'undefined') return false;
-  
   try {
     return localStorage.getItem(getStorageKey(stepId)) === 'true';
   } catch {
@@ -29,58 +15,33 @@ export function hasSeenStep(stepId: OnboardingStepId): boolean {
   }
 }
 
-/**
- * Mark a step as seen
- */
 export function markStepSeen(stepId: OnboardingStepId): void {
   if (typeof window === 'undefined') return;
-  
   try {
     localStorage.setItem(getStorageKey(stepId), 'true');
-  } catch {
-    // Ignore storage write failures
-  }
+  } catch {}
 }
 
-/**
- * Mark a step as not seen (for resetting)
- */
 export function resetStepSeen(stepId: OnboardingStepId): void {
   if (typeof window === 'undefined') return;
-  
   try {
     localStorage.removeItem(getStorageKey(stepId));
-  } catch {
-    // Ignore storage errors
-  }
+  } catch {}
 }
 
-/**
- * Reset all onboarding progress (for testing/debugging)
- */
 export function resetAllOnboardingProgress(): void {
   if (typeof window === 'undefined') return;
-  
   try {
     const prefix = `${STORAGE_PREFIX}::`;
     const keysToRemove: string[] = [];
-    
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith(prefix)) {
-        keysToRemove.push(key);
-      }
+      if (key?.startsWith(prefix)) keysToRemove.push(key);
     }
-    
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-  } catch {
-    // Ignore errors
-  }
+  } catch {}
 }
 
-/**
- * Get the storage state for debugging
- */
 export function getOnboardingStorageState(): Record<string, boolean> {
   const state: Record<string, boolean> = {};
   ONBOARDING_STEPS.forEach((step) => {
@@ -89,10 +50,6 @@ export function getOnboardingStorageState(): Record<string, boolean> {
   return state;
 }
 
-/**
- * One-time migration from legacy preferences.
- * Converts old stirlingpdf_preferences flags to new onboarding:: keys.
- */
 export function migrateFromLegacyPreferences(): void {
   if (typeof window === 'undefined') return;
   

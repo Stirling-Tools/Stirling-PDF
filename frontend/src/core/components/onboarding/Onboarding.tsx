@@ -1,17 +1,3 @@
-/**
- * Unified Onboarding Component
- * 
- * This is the single entry point for all onboarding flows.
- * It orchestrates the onboarding experience based on user state,
- * server configuration, and what the user has already seen.
- * 
- * The component acts as a router for different step types:
- * - modal-slide: Welcome, desktop install, security check, etc.
- * - tool-prompt: Tool panel mode selection
- * - tour: Interactive guided tour
- * - analytics-modal: Admin analytics choice
- */
-
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { type StepType } from '@reactour/tour';
 import { useTranslation } from 'react-i18next';
@@ -39,9 +25,6 @@ import { useServerExperience } from '@app/hooks/useServerExperience';
 import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
 import '@app/components/onboarding/OnboardingTour.css';
 
-/**
- * Main Onboarding Component
- */
 export default function Onboarding() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -51,34 +34,17 @@ export default function Onboarding() {
   const onAuthRoute = isAuthRoute(location.pathname);
   const { currentStep, isActive, isLoading, runtimeState, activeFlow } = state;
 
-  // ============================================
-  // Extracted Hooks
-  // ============================================
-
-  // Download logic for desktop install slide
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
-
-  // Server license request handling (from UpgradeBanner "See info" click)
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
-
-  // Tour request handling (from QuickAccessBar help menu)
   const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
-
-  // ============================================
-  // Button Action Handler
-  // ============================================
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
     serverExperience.setSelfReportedAdmin(role === 'admin');
   }, [actions, serverExperience]);
 
-  // First login password change handler
   const handlePasswordChanged = useCallback(() => {
-    // Password change successful - backend will log user out
-    // Clear the requiresPasswordChange flag first
     actions.updateRuntimeState({ requiresPasswordChange: false });
-    // Force reload to ensure clean state after password change
     window.location.href = '/login';
   }, [actions]);
 
@@ -131,17 +97,10 @@ export default function Onboarding() {
     }
   }, [actions, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
 
-  // ============================================
-  // Tour Setup
-  // ============================================
-  
   const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Dispatch tour state changes (for hiding cookie consent during tour)
-  useEffect(() => {
-    dispatchTourState(isTourOpen);
-  }, [isTourOpen]);
+  useEffect(() => dispatchTourState(isTourOpen), [isTourOpen]);
 
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const tourOrch = useTourOrchestration();
@@ -187,7 +146,6 @@ export default function Onboarding() {
     return Object.values(config);
   }, [adminStepsConfig, runtimeState.tourType, userStepsConfig]);
 
-  // Start tour when reaching tour step
   useEffect(() => {
     if (currentStep?.id === 'tour' && !isTourOpen) {
       markStepSeen('tour');
@@ -195,7 +153,6 @@ export default function Onboarding() {
     }
   }, [currentStep, isTourOpen, activeFlow]);
 
-  // Handle external tour request (from QuickAccessBar help menu)
   useEffect(() => {
     if (externalTourRequested) {
       actions.updateRuntimeState({ tourRequested: true, tourType: requestedTourType });
@@ -205,13 +162,11 @@ export default function Onboarding() {
     }
   }, [externalTourRequested, requestedTourType, actions, clearTourRequest]);
 
-  // Clean up tour glows
   useEffect(() => {
     if (!isTourOpen) removeAllGlows();
     return () => removeAllGlows();
   }, [isTourOpen]);
 
-  // Shared tour cleanup: restore state, mark seen, advance if on tour step
   const finishTour = useCallback(() => {
     setIsTourOpen(false);
     if (runtimeState.tourType === 'admin') {
@@ -238,10 +193,6 @@ export default function Onboarding() {
     finishTour();
   }, [finishTour]);
 
-  // ============================================
-  // Modal Slide Data
-  // ============================================
-  
   const currentSlideDefinition = useMemo(() => {
     if (!currentStep || currentStep.type !== 'modal-slide' || !currentStep.slideId) {
       return null;
@@ -276,16 +227,10 @@ export default function Onboarding() {
     return modalSlides.findIndex((step) => step.id === currentStep.id);
   }, [activeFlow, currentStep]);
 
-  // ============================================
-  // Render Logic
-  // ============================================
-
-  // Don't show onboarding on auth routes
   if (onAuthRoute) {
     return null;
   }
 
-  // External trigger: Show server license slide from UpgradeBanner "See info" click
   if (showLicenseSlide) {
     const slideDefinition = SLIDE_DEFINITIONS['server-license'];
     const effectiveLicenseNotice = externalLicenseNotice || runtimeState.licenseNotice;
@@ -320,7 +265,6 @@ export default function Onboarding() {
     );
   }
 
-  // If loading/inactive but tour is open, render tour
   if (isLoading || !isActive || !currentStep) {
     return (
       <OnboardingTour
@@ -335,7 +279,6 @@ export default function Onboarding() {
     );
   }
 
-  // Route by step type
   switch (currentStep.type) {
     case 'tool-prompt':
       return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;

@@ -31,12 +31,8 @@ export const useCookieConsent = ({
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Cookie consent shows immediately when analytics is enabled
-    if (!analyticsEnabled) {
-      return;
-    }
+    if (!analyticsEnabled) return;
 
-    // Load the cookie consent CSS files first (always needed)
     const mainCSS = document.createElement('link');
     mainCSS.rel = 'stylesheet';
     mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
@@ -51,7 +47,6 @@ export const useCookieConsent = ({
       document.head.appendChild(customCSS);
     }
 
-    // If already initialized, apply forceLightMode if needed and mark as ready
     if (window.CookieConsent) {
       if (forceLightMode) {
         document.documentElement.classList.remove('cc--darkmode');
@@ -60,16 +55,11 @@ export const useCookieConsent = ({
       return;
     }
 
-    // Load the cookie consent library
     const script = document.createElement('script');
     script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
-
-        // Detect current theme and set appropriate mode
         const detectTheme = () => {
-          // If forceLightMode is enabled, always use light mode
           if (forceLightMode) {
             document.documentElement.classList.remove('cc--darkmode');
             return false;
@@ -80,7 +70,6 @@ export const useCookieConsent = ({
           const hasDarkClass = document.documentElement.classList.contains('dark');
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-          // Priority: Mantine attribute > CSS classes > system preference
           let isDarkMode = false;
 
           if (mantineScheme) {
@@ -93,24 +82,17 @@ export const useCookieConsent = ({
             isDarkMode = systemPrefersDark;
           }
 
-          // Always explicitly set or remove the class
           document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
-
           return isDarkMode;
         };
 
-        // Initial theme detection with slight delay to ensure DOM is ready
-        setTimeout(() => {
-          detectTheme();
-        }, 50);
+        setTimeout(() => detectTheme(), 50);
 
-        // Check if CookieConsent is available
         if (!window.CookieConsent) {
           console.error('CookieConsent is not available on window object');
           return;
         }
 
-        // Listen for theme changes (but not if forceLightMode is enabled)
         let themeObserver: MutationObserver | null = null;
         if (!forceLightMode) {
           themeObserver = new MutationObserver((mutations) => {
@@ -129,11 +111,9 @@ export const useCookieConsent = ({
           });
         }
 
-
-        // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
-            autoShow: true, // Show immediately when analytics is enabled
+            autoShow: true,
             hideFromBots: false,
             guiOptions: {
               consentModal: {
@@ -221,8 +201,8 @@ export const useCookieConsent = ({
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
-      setIsInitialized(true);
-      }, 100); // Small delay to ensure DOM is ready
+        setIsInitialized(true);
+      }, 100);
     };
 
     script.onerror = () => {
@@ -232,7 +212,6 @@ export const useCookieConsent = ({
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup script and CSS when component unmounts
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
@@ -245,7 +224,6 @@ export const useCookieConsent = ({
     };
   }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, forceLightMode]);
 
-  // Update theme when forceLightMode changes
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -275,10 +253,8 @@ export const useCookieConsent = ({
       return isDarkMode;
     };
 
-    // Update theme immediately
     detectTheme();
 
-    // Set up or remove theme observer based on forceLightMode
     let themeObserver: MutationObserver | null = null;
     if (!forceLightMode) {
       themeObserver = new MutationObserver((mutations) => {
@@ -304,25 +280,17 @@ export const useCookieConsent = ({
     };
   }, [forceLightMode, isInitialized]);
 
-  // Hide cookie banner when tour is active
   useEffect(() => {
-    if (!isInitialized || !window.CookieConsent) {
-      return;
-    }
+    if (!isInitialized || !window.CookieConsent) return;
 
     const handleTourState = (event: Event) => {
       const { detail } = event as CustomEvent<TourStatePayload>;
-      
       if (detail?.isOpen) {
-        // Hide the banner while tour is active
         window.CookieConsent?.hide();
       } else {
-        // Show the banner again if user hasn't made a choice yet
         const consentCookie = window.CookieConsent?.getCookie?.();
         const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
-        if (!hasConsented) {
-          window.CookieConsent?.show();
-        }
+        if (!hasConsented) window.CookieConsent?.show();
       }
     };
 

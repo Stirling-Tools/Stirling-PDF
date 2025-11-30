@@ -1,12 +1,3 @@
-/**
- * Onboarding Side-Effect Hooks
- * 
- * These hooks handle side effects that the main Onboarding component needs
- * but don't belong in the render logic:
- * - Server license request handling (from UpgradeBanner "See info" click)
- * - Tour request handling (from QuickAccessBar help menu)
- */
-
 import { useEffect, useCallback, useState } from 'react';
 import {
   SERVER_LICENSE_REQUEST_EVENT,
@@ -17,10 +8,6 @@ import {
 } from '@app/constants/events';
 import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
 
-/**
- * Listens for SERVER_LICENSE_REQUEST_EVENT (from UpgradeBanner "See info" click)
- * and returns state for showing the server license slide externally.
- */
 export function useServerLicenseRequest(): {
   showLicenseSlide: boolean;
   licenseNotice: OnboardingRuntimeState['licenseNotice'] | null;
@@ -58,10 +45,6 @@ export function useServerLicenseRequest(): {
   return { showLicenseSlide, licenseNotice, closeLicenseSlide };
 }
 
-/**
- * Listens for START_TOUR_EVENT (from QuickAccessBar help menu)
- * and returns state for starting a tour externally.
- */
 export function useTourRequest(): {
   tourRequested: boolean;
   requestedTourType: TourType;
