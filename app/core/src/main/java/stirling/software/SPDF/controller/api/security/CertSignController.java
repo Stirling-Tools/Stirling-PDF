@@ -72,6 +72,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.MultiSignPDFWithCertRequest;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -113,7 +114,7 @@ public class CertSignController {
         this.serverCertificateService = serverCertificateService;
     }
 
-    private static void sign(
+    static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
             OutputStream output,
@@ -132,6 +133,42 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
+            if (Boolean.TRUE.equals(showSignature)) {
+                SignatureOptions signatureOptions = new SignatureOptions();
+                signatureOptions.setVisualSignature(
+                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                signatureOptions.setPage(pageNumber);
+
+                doc.addSignature(signature, instance, signatureOptions);
+
+            } else {
+                doc.addSignature(signature, instance);
+            }
+            doc.saveIncremental(output);
+        } catch (Exception e) {
+            ExceptionUtils.logException("PDF signing", e);
+        }
+    }
+
+    static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            InputStream input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo) {
+        try (PDDocument doc = pdfDocumentFactory.load(input)) {
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setName(name);
+            signature.setLocation(location);
+            signature.setReason(reason);
+            signature.setSignDate(Calendar.getInstance());
             if (Boolean.TRUE.equals(showSignature)) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
@@ -251,7 +288,138 @@ public class CertSignController {
                 GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
     }
 
-    private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
+    @AutoJobPostMapping(
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            },
+            value = "/cert-sign/multi")
+    @StandardPdfResponse
+    @Operation(
+            summary = "Sign PDF with multiple Digital Certificates",
+            description =
+                    "This endpoint accepts a PDF file and multiple digital certificates to"
+                            + " sequentially sign the document. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> multiSignPDFWithCert(
+            @ModelAttribute MultiSignPDFWithCertRequest request) throws Exception {
+        if (request.getCertTypes() == null || request.getCertTypes().isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.optionsNotSpecified",
+                    "{0} options are not specified",
+                    "certificate types");
+        }
+
+        byte[] currentPdf = request.getFileInput().getBytes();
+        String originalFilename = request.getFileInput().getOriginalFilename();
+
+        for (int i = 0; i < request.getCertTypes().size(); i++) {
+            String certType = request.getCertTypes().get(i);
+            KeyStore ks = null;
+            String keystorePassword = getFromList(request.getPasswords(), i, "");
+
+            switch (certType) {
+                case "PEM":
+                    ks = KeyStore.getInstance("JKS");
+                    ks.load(null);
+                    MultipartFile privateKeyFile = getFromList(request.getPrivateKeyFiles(), i, null);
+                    MultipartFile certFile = getFromList(request.getCertFiles(), i, null);
+                    if (privateKeyFile == null || certFile == null) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.optionsNotSpecified",
+                                "{0} options are not specified",
+                                "certificate and key files for signer " + (i + 1));
+                    }
+                    PrivateKey privateKey =
+                            getPrivateKeyFromPEM(privateKeyFile.getBytes(), keystorePassword);
+                    Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                    ks.setKeyEntry(
+                            "alias", privateKey, keystorePassword.toCharArray(), new Certificate[] {cert});
+                    break;
+                case "PKCS12":
+                case "PFX":
+                    MultipartFile p12File = getFromList(request.getP12Files(), i, null);
+                    if (p12File == null) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.optionsNotSpecified",
+                                "{0} options are not specified",
+                                "PKCS12/PFX keystore for signer " + (i + 1));
+                    }
+                    ks = KeyStore.getInstance("PKCS12");
+                    ks.load(p12File.getInputStream(), keystorePassword.toCharArray());
+                    break;
+                case "JKS":
+                    MultipartFile jksfile = getFromList(request.getJksFiles(), i, null);
+                    if (jksfile == null) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.optionsNotSpecified",
+                                "{0} options are not specified",
+                                "JKS keystore for signer " + (i + 1));
+                    }
+                    ks = KeyStore.getInstance("JKS");
+                    ks.load(jksfile.getInputStream(), keystorePassword.toCharArray());
+                    break;
+                case "SERVER":
+                    if (serverCertificateService == null) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.serverCertificateNotAvailable",
+                                "Server certificate service is not available in this edition");
+                    }
+                    if (!serverCertificateService.isEnabled()) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.serverCertificateDisabled",
+                                "Server certificate feature is disabled");
+                    }
+                    if (!serverCertificateService.hasServerCertificate()) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.serverCertificateNotFound",
+                                "No server certificate configured");
+                    }
+                    ks = serverCertificateService.getServerKeyStore();
+                    keystorePassword = serverCertificateService.getServerCertificatePassword();
+                    break;
+                default:
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidArgument",
+                            "Invalid argument: {0}",
+                            "certificate type: " + certType);
+            }
+
+            CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            String signerName = getFromList(request.getNames(), i, "SPDF");
+            String location = getFromList(request.getLocations(), i, "SPDF");
+            String reason = getFromList(request.getReasons(), i, "Signed by SPDF");
+            Boolean showSignature = getFromList(request.getShowSignatures(), i, Boolean.FALSE);
+            Boolean showLogo = getFromList(request.getShowLogos(), i, Boolean.TRUE);
+            Integer pageNumber = getFromList(request.getPageNumbers(), i, null);
+            pageNumber = pageNumber != null ? pageNumber - 1 : null;
+
+            sign(
+                    pdfDocumentFactory,
+                    new ByteArrayInputStream(currentPdf),
+                    baos,
+                    createSignature,
+                    showSignature,
+                    pageNumber,
+                    signerName,
+                    location,
+                    reason,
+                    showLogo);
+            currentPdf = baos.toByteArray();
+        }
+
+        return WebResponseUtils.bytesToWebResponse(
+                currentPdf, GeneralUtils.generateFilename(originalFilename, "_multi_signed.pdf"));
+    }
+
+    private static <T> T getFromList(List<T> list, int index, T defaultValue) {
+        if (list == null || list.size() <= index) {
+            return defaultValue;
+        }
+        return list.get(index);
+    }
+
+    public PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
             throws IOException, OperatorCreationException, PKCSException {
         try (PEMParser pemParser =
                 new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
@@ -273,14 +441,14 @@ public class CertSignController {
         }
     }
 
-    private Certificate getCertificateFromPEM(byte[] pemBytes)
+    public Certificate getCertificateFromPEM(byte[] pemBytes)
             throws IOException, CertificateException {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
             return CertificateFactory.getInstance("X.509").generateCertificate(bis);
         }
     }
 
-    class CreateSignature extends CreateSignatureBase {
+    static class CreateSignature extends CreateSignatureBase {
         File logoFile;
 
         public CreateSignature(KeyStore keystore, char[] pin)
