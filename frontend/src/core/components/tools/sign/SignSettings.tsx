@@ -16,6 +16,7 @@ import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
 import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
+import { buildSignaturePreview } from '@app/utils/signaturePreview';
 
 type SignatureDrafts = {
   canvas?: string;
@@ -99,6 +100,7 @@ const SignSettings = ({
     removeSignature,
     updateSignatureLabel,
     byTypeCounts,
+    storageType,
   } = useSavedSignatures();
   const [signatureSource, setSignatureSource] = useState<SignatureSource>(() => {
     const paramSource = parameters.signatureType as SignatureSource;
@@ -157,11 +159,11 @@ const SignSettings = ({
   }, [canvasSignatureData, imageSignatureData, buildTextSignatureKey, parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
 
   const saveSignatureToLibrary = useCallback(
-    (payload: SavedSignaturePayload, type: SavedSignatureType): AddSignatureResult => {
+    async (payload: SavedSignaturePayload, type: SavedSignatureType, scope: 'personal' | 'shared'): Promise<AddSignatureResult> => {
       if (isSavedSignatureLimitReached) {
         return { success: false, reason: 'limit' };
       }
-      return addSignature(payload, getDefaultSavedLabel(type));
+      return await addSignature(payload, getDefaultSavedLabel(type), scope);
     },
     [addSignature, getDefaultSavedLabel, isSavedSignatureLimitReached]
   );
@@ -176,40 +178,57 @@ const SignSettings = ({
     [signatureKeysByType]
   );
 
-  const handleSaveCanvasSignature = useCallback(() => {
+  const handleSaveCanvasSignature = useCallback(async (scope: 'personal' | 'shared') => {
     if (!canvasSignatureData) {
       return;
     }
-    const result = saveSignatureToLibrary({ type: 'canvas', dataUrl: canvasSignatureData }, 'canvas');
+    const result = await saveSignatureToLibrary({ type: 'canvas', dataUrl: canvasSignatureData }, 'canvas', scope);
     if (result.success) {
       setLastSavedKeyForType('canvas');
     }
   }, [canvasSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
 
-  const handleSaveImageSignature = useCallback(() => {
+  const handleSaveImageSignature = useCallback(async (scope: 'personal' | 'shared') => {
     if (!imageSignatureData) {
       return;
     }
-    const result = saveSignatureToLibrary({ type: 'image', dataUrl: imageSignatureData }, 'image');
+    const result = await saveSignatureToLibrary({ type: 'image', dataUrl: imageSignatureData }, 'image', scope);
     if (result.success) {
       setLastSavedKeyForType('image');
     }
   }, [imageSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
 
-  const handleSaveTextSignature = useCallback(() => {
+  const handleSaveTextSignature = useCallback(async (scope: 'personal' | 'shared') => {
     const signerName = (parameters.signerName ?? '').trim();
     if (!signerName) {
       return;
     }
-    const result = saveSignatureToLibrary(
+
+    // Generate image from text signature
+    const preview = await buildSignaturePreview({
+      signatureType: 'text',
+      signerName,
+      fontFamily: parameters.fontFamily ?? 'Helvetica',
+      fontSize: parameters.fontSize ?? 16,
+      textColor: parameters.textColor ?? '#000000',
+    });
+
+    if (!preview?.dataUrl) {
+      console.error('Failed to generate text signature preview');
+      return;
+    }
+
+    const result = await saveSignatureToLibrary(
       {
         type: 'text',
+        dataUrl: preview.dataUrl,
         signerName,
         fontFamily: parameters.fontFamily ?? 'Helvetica',
         fontSize: parameters.fontSize ?? 16,
         textColor: parameters.textColor ?? '#000000',
       },
-      'text'
+      'text',
+      scope
     );
     if (result.success) {
       setLastSavedKeyForType('text');
@@ -286,15 +305,20 @@ const SignSettings = ({
     [updateSignatureLabel]
   );
 
-  const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
+  const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: (scope: 'personal' | 'shared') => void, scope: 'personal' | 'shared', icon: string, label: string) => {
     if (!canUseSavedLibrary) {
       return null;
     }
-    const label = translate('saved.saveButton', 'Save signature');
     const currentKey = signatureKeysByType[type];
     const lastSavedKey = lastSavedSignatureKeys[type];
     const hasChanges = Boolean(currentKey && currentKey !== lastSavedKey);
     const isSaved = isReady && !hasChanges;
+
+    // Only show backend storage buttons when backend is available
+    const showButton = storageType === 'backend' || storageType === null;
+    if (!showButton) {
+      return null;
+    }
 
     let tooltipMessage: string | undefined;
     if (!isReady) {
@@ -312,11 +336,11 @@ const SignSettings = ({
         size="xs"
         variant="outline"
         color={isSaved ? 'green' : undefined}
-        onClick={onClick}
+        onClick={() => onClick(scope)}
         disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
-        leftSection={<LocalIcon icon="save-rounded" width={16} height={16} />}
+        leftSection={<LocalIcon icon={icon} width={16} height={16} />}
       >
-        {isSaved ? translate('saved.status.saved', 'Saved') : label}
+        {label}
       </Button>
     );
 
@@ -331,15 +355,38 @@ const SignSettings = ({
     return button;
   };
 
-  const renderSaveButtonRow = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
-    const button = renderSaveButton(type, isReady, onClick);
-    if (!button) {
+  const renderSaveButtonRow = (type: SavedSignatureType, isReady: boolean, onClick: (scope: 'personal' | 'shared') => void) => {
+    if (!canUseSavedLibrary) {
       return null;
     }
+
+    const personalButton = renderSaveButton(
+      type,
+      isReady,
+      onClick,
+      'personal',
+      'material-symbols:person-rounded',
+      translate('saved.savePersonal', 'Save Personal')
+    );
+
+    const sharedButton = renderSaveButton(
+      type,
+      isReady,
+      onClick,
+      'shared',
+      'material-symbols:groups-rounded',
+      translate('saved.saveShared', 'Save Shared')
+    );
+
+    if (!personalButton && !sharedButton) {
+      return null;
+    }
+
     return (
-      <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
-        {button}
-      </Box>
+      <Group gap="xs" style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+        {personalButton}
+        {sharedButton}
+      </Group>
     );
   };
 
@@ -744,6 +791,7 @@ const SignSettings = ({
           signatures={savedSignatures}
           disabled={disabled}
           isAtCapacity={isSavedSignatureLimitReached}
+          storageType={storageType}
           onUseSignature={handleUseSavedSignature}
           onDeleteSignature={handleDeleteSavedSignature}
           onRenameSignature={handleRenameSavedSignature}
