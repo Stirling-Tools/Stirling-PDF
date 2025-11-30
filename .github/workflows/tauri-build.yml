@@ -64,7 +64,7 @@ jobs:
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage,deb,rpm --verbose","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage,deb,rpm --verbose -- --no-sign","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
