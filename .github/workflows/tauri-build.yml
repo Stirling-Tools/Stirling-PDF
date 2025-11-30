@@ -331,7 +331,6 @@ jobs:
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Import AppImage signing key
-        if: ${{ github.ref == 'refs/heads/main' && secrets.APPIMAGETOOL_SIGN_KEY != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE != '' }}
         env:
           APPIMAGETOOL_SIGN_KEY: ${{ secrets.APPIMAGETOOL_SIGN_KEY }}
         run: |
