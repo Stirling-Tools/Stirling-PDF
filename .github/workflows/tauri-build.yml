@@ -119,6 +119,18 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Make libjvm discoverable (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          if [ -f "$JAVA_LIBJVM" ]; then
+            sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+            echo "Linked libjvm from $JAVA_LIBJVM"
+          else
+            echo "libjvm not found at $JAVA_LIBJVM"
+            exit 1
+          fi
+
       - name: Build Java backend with JLink
         working-directory: ./
         shell: bash
