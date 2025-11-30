@@ -330,11 +330,12 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
-      - name: Import AppImage signing key
-        env:
-          APPIMAGETOOL_SIGN_KEY: ${{ secrets.APPIMAGETOOL_SIGN_KEY }}
+      - name: Import GPG key for AppImage signing
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
-          echo "$APPIMAGETOOL_SIGN_KEY" | base64 --decode | gpg --batch --import
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -346,7 +347,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ github.ref == 'refs/heads/main' && secrets.APPIMAGETOOL_SIGN_KEY != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE != '' && secrets.APPIMAGETOOL_SIGN_PASSPHRASE || '' }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
