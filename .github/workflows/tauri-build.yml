@@ -97,7 +97,8 @@ jobs:
             libxdo-dev \
             libssl-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev
+            librsvg2-dev \
+            openjdk-17-jre-headless
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
