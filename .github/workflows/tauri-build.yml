@@ -64,7 +64,7 @@ jobs:
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage,deb,rpm","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -89,7 +89,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libfuse2 fuse libglib2.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -185,7 +185,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -521,6 +521,7 @@ jobs:
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
@@ -613,8 +614,8 @@ jobs:
             fi
           else
             echo "Checking for Linux artifacts..."
-            find . -name "*.deb" -o -name "*.AppImage" | head -5
-            if [ $(find . -name "*.deb" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
+            find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | head -5
+            if [ $(find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | wc -l) -eq 0 ]; then
               echo "❌ No Linux artifacts found"
               exit 1
             fi
@@ -627,7 +628,7 @@ jobs:
         run: |
           cd ./frontend/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
-          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage"  -o -name "*.rpm" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then
               size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "unknown")
               echo "$file: $size bytes"
