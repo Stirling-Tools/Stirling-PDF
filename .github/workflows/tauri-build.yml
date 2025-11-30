@@ -56,15 +56,15 @@ jobs:
                 echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"--buildes appimage,deb,rpm","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--buildes appimage,deb,rpm","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--buildes appimage,deb,rpm","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -110,70 +110,58 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - name: Cache custom JRE
-        id: cache-jre
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: frontend/src-tauri/runtime/jre
-          key: jre-${{ runner.os }}-${{ hashFiles('build.gradle*', 'app/core/build.gradle*', 'app/common/build.gradle*', 'app/proprietary/build.gradle*', 'gradle/libs.versions.toml', 'app/core/src/main/**') }}
-
       - name: Build Java backend with JLink
         working-directory: ./
         shell: bash
         run: |
-          if [ -d "./frontend/src-tauri/runtime/jre/bin" ] && [ "${{ steps.cache-jre.outputs.cache-hit }}" = "true" ]; then
-            echo "✅ Using cached custom JRE"
-            chmod -R +x ./frontend/src-tauri/runtime/jre/bin
-          else
-            chmod +x ./gradlew
-            echo "🔧 Building Stirling-PDF JAR..."
-            # STIRLING_PDF_DESKTOP_UI=false ./gradlew clean bootJar --no-daemon
-            ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+          chmod +x ./gradlew
+          echo "🔧 Building Stirling-PDF JAR..."
+          # STIRLING_PDF_DESKTOP_UI=false ./gradlew clean bootJar --no-daemon
+          ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
-            # Find the built JAR
-            STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
-            echo "✅ Built JAR: $STIRLING_JAR"
-            
-            # Create Tauri directories
-            mkdir -p ./frontend/src-tauri/libs
-            mkdir -p ./frontend/src-tauri/runtime
-            
-            # Copy JAR to Tauri libs
-            cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
-            echo "✅ JAR copied to Tauri libs"
-            
-            # Analyze JAR dependencies for jlink modules
-            echo "🔍 Analyzing JAR dependencies..."
-            if command -v jdeps &> /dev/null; then
-              DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
-              if [ -n "$DETECTED_MODULES" ]; then
-                echo "📋 jdeps detected modules: $DETECTED_MODULES"
-                MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-              else
-                echo "⚠️ jdeps analysis failed, using predefined modules"
-                MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-              fi
+          # Find the built JAR
+          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
+          echo "✅ Built JAR: $STIRLING_JAR"
+          
+          # Create Tauri directories
+          mkdir -p ./frontend/src-tauri/libs
+          mkdir -p ./frontend/src-tauri/runtime
+          
+          # Copy JAR to Tauri libs
+          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
+          echo "✅ JAR copied to Tauri libs"
+          
+          # Analyze JAR dependencies for jlink modules
+          echo "🔍 Analyzing JAR dependencies..."
+          if command -v jdeps &> /dev/null; then
+            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
+            if [ -n "$DETECTED_MODULES" ]; then
+              echo "📋 jdeps detected modules: $DETECTED_MODULES"
+              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
             else
-              echo "⚠️ jdeps not available, using predefined modules"
+              echo "⚠️ jdeps analysis failed, using predefined modules"
               MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
             fi
-            
-            # Create custom JRE with jlink (always rebuild)
-            echo "🔧 Creating custom JRE with jlink..."
-            echo "📋 Using modules: $MODULES"
-            
-            # Remove any existing JRE
-            rm -rf ./frontend/src-tauri/runtime/jre
-            
-            # Create the custom JRE
-            jlink \
-              --add-modules "$MODULES" \
-              --strip-debug \
-              --compress=2 \
-              --no-header-files \
-              --no-man-pages \
-              --output ./frontend/src-tauri/runtime/jre
+          else
+            echo "⚠️ jdeps not available, using predefined modules"
+            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
           fi
+          
+          # Create custom JRE with jlink (always rebuild)
+          echo "🔧 Creating custom JRE with jlink..."
+          echo "📋 Using modules: $MODULES"
+          
+          # Remove any existing JRE
+          rm -rf ./frontend/src-tauri/runtime/jre
+          
+          # Create the custom JRE
+          jlink \
+            --add-modules "$MODULES" \
+            --strip-debug \
+            --compress=2 \
+            --no-header-files \
+            --no-man-pages \
+            --output ./frontend/src-tauri/runtime/jre
           
           if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
             echo "❌ Failed to create JLink runtime"
