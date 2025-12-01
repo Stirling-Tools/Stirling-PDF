@@ -90,8 +90,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install -y \
-            libwebkit2gtk-4.1-0 \
-            libwebkit2gtk-4.1-dev \
+            libwebkit2gtk-4.0-0 \
+            libwebkit2gtk-4.0-dev \
             build-essential \
             curl \
             wget \
@@ -102,6 +102,7 @@ jobs:
             librsvg2-dev \
             xdg-utils \
             openjdk-17-jre-headless
+          sudo apt-get install -y libgtk-3-dev libappindicator3-dev patchelf
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -351,7 +352,7 @@ jobs:
           gpg --list-secret-keys --keyid-format=long
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
