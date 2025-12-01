@@ -90,7 +90,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install -y \
-            libwebkit2gtk-4.0 \
             libwebkit2gtk-4.0-dev \
             build-essential \
             curl \
