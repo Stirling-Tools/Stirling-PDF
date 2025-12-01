@@ -64,7 +64,7 @@ jobs:
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -86,7 +86,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           
@@ -137,7 +137,6 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: gradle
 
       - name: Make libjvm discoverable (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -387,7 +386,7 @@ jobs:
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
-          # args: ${{ matrix.args }}
+          args: ${{ matrix.args }}
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
@@ -576,12 +575,12 @@ jobs:
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
-          else
+          elif [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
-            if [ "${{ matrix.platform }}" = "ubuntu-22.04" ] && [ "${{ matrix.name }}" = "linux-x86_64-appimage" ] ; then
-              find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
-            fi
+            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          else
+            echo "Unknown platform: ${{ matrix.platform }}"
           fi
 
       - name: Verify Windows Code Signature
@@ -671,13 +670,16 @@ jobs:
               echo "❌ No macOS artifacts found"
               exit 1
             fi
-          else
+          elif [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
             echo "Checking for Linux artifacts..."
             find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | head -5
             if [ $(find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | wc -l) -eq 0 ]; then
               echo "❌ No Linux artifacts found"
               exit 1
             fi
+          else
+            echo "Unknown platform: ${{ matrix.platform }}"
+            exit 1
           fi
 
           echo "✅ Build artifacts found for ${{ matrix.name }}"
