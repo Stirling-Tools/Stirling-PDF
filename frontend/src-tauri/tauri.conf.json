@@ -51,12 +51,7 @@
         "desktopTemplate": "stirling-pdf.desktop"
       },
       "appimage": {
-        "bundleMediaFramework": false,
-        "files": {
-          "/usr/libexec/webkit2gtk-4.1/WebKitNetworkProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
-          "/usr/libexec/webkit2gtk-4.1/WebKitStorageProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitStorageProcess",
-          "/usr/libexec/webkit2gtk-4.1/WebKitWebProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess"
-        }
+        "bundleMediaFramework": false
       }
     },
     "windows": {

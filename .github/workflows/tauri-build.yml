@@ -100,6 +100,13 @@ jobs:
             librsvg2-dev \
             openjdk-17-jre-headless
 
+      - name: Copy WebKit helper binaries for AppImage
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          mkdir -p frontend/src-tauri/lib/x86_64-linux-gnu/webkit2gtk-4.1
+          sudo cp /usr/libexec/webkit2gtk-4.1/WebKit*Process \
+                  frontend/src-tauri/lib/x86_64-linux-gnu/webkit2gtk-4.1/
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
