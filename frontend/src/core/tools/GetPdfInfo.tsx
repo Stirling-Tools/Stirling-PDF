@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { Stack, Button, Group, Divider, Text, UnstyledButton } from '@mantine/core';
 import LinkIcon from '@mui/icons-material/Link';
+import { Stack, Group, Divider, Text, UnstyledButton } from '@mantine/core';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';

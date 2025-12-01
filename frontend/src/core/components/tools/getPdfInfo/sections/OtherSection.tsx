@@ -1,37 +1,55 @@
 import React from 'react';
-import { Accordion, Code, Stack, Text } from '@mantine/core';
+import { Accordion, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import SectionBlock from '../shared/SectionBlock';
-import SimpleArrayList from '../shared/SimpleArrayList';
-import { pdfInfoAccordionStyles } from '../shared/accordionStyles';
+import type { PdfOtherInfo } from '@app/types/getPdfInfo';
+import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
+import ScrollableCodeBlock from '@app/components/tools/getPdfInfo/shared/ScrollableCodeBlock';
+import { pdfInfoAccordionStyles } from '@app/components/tools/getPdfInfo/shared/accordionStyles';
 
 interface OtherSectionProps {
   anchorId: string;
-  other?: Record<string, any> | null;
+  other?: PdfOtherInfo | null;
 }
+
+const renderList = (arr: unknown[] | undefined, emptyText: string) => {
+  if (!arr || arr.length === 0) return <Text size="sm" c="dimmed">{emptyText}</Text>;
+  return (
+    <Stack gap={4}>
+      {arr.map((item, idx) => (
+        <Text key={idx} size="sm" c="dimmed">
+          {typeof item === 'string' ? item : JSON.stringify(item)}
+        </Text>
+      ))}
+    </Stack>
+  );
+};
 
 const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
   const { t } = useTranslation();
-  const panelBg = 'var(--bg-raised)';
-  const panelText = 'var(--text-primary)';
+  const noneDetected = t('getPdfInfo.noneDetected', 'None detected');
+
+  const structureTreeContent = Array.isArray(other?.StructureTree) && other.StructureTree.length > 0
+    ? JSON.stringify(other.StructureTree, null, 2)
+    : null;
+
   return (
     <SectionBlock title={t('getPdfInfo.sections.other', 'Other')} anchorId={anchorId}>
       <Stack gap="sm">
         <Stack gap={6}>
           <Text fw={600} size="sm">{t('getPdfInfo.other.attachments', 'Attachments')}</Text>
-          <SimpleArrayList arr={Array.isArray(other?.Attachments) ? other?.Attachments : []} />
+          {renderList(other?.Attachments, noneDetected)}
         </Stack>
         <Stack gap={6}>
           <Text fw={600} size="sm">{t('getPdfInfo.other.embeddedFiles', 'Embedded Files')}</Text>
-          <SimpleArrayList arr={Array.isArray(other?.EmbeddedFiles) ? other?.EmbeddedFiles : []} />
+          {renderList(other?.EmbeddedFiles, noneDetected)}
         </Stack>
         <Stack gap={6}>
           <Text fw={600} size="sm">{t('getPdfInfo.other.javaScript', 'JavaScript')}</Text>
-          <SimpleArrayList arr={Array.isArray(other?.JavaScript) ? other?.JavaScript : []} />
+          {renderList(other?.JavaScript, noneDetected)}
         </Stack>
         <Stack gap={6}>
           <Text fw={600} size="sm">{t('getPdfInfo.other.layers', 'Layers')}</Text>
-          <SimpleArrayList arr={Array.isArray(other?.Layers) ? other?.Layers : []} />
+          {renderList(other?.Layers, noneDetected)}
         </Stack>
         <Accordion
           variant="separated"
@@ -44,20 +62,7 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
               <Text fw={600} size="sm">{t('getPdfInfo.other.structureTree', 'StructureTree')}</Text>
             </Accordion.Control>
             <Accordion.Panel>
-              {Array.isArray(other?.StructureTree) && other?.StructureTree.length > 0
-                ? <Code
-                    block
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      backgroundColor: panelBg,
-                      color: panelText,
-                      maxHeight: '20rem',
-                      overflowY: 'auto'
-                    }}
-                  >
-                    {JSON.stringify(other?.StructureTree, null, 2)}
-                  </Code>
-                : <Text size="sm" c="dimmed">{t('getPdfInfo.noneDetected', 'None detected')}</Text>}
+              <ScrollableCodeBlock content={structureTreeContent} maxHeight="20rem" />
             </Accordion.Panel>
           </Accordion.Item>
           <Accordion.Item value="xmp">
@@ -65,20 +70,7 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
               <Text fw={600} size="sm">{t('getPdfInfo.other.xmp', 'XMPMetadata')}</Text>
             </Accordion.Control>
             <Accordion.Panel>
-              {other?.XMPMetadata
-                ? <Code
-                    block
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      backgroundColor: panelBg,
-                      color: panelText,
-                      maxHeight: '400px',
-                      overflowY: 'auto'
-                    }}
-                  >
-                    {String(other?.XMPMetadata)}
-                  </Code>
-                : <Text size="sm" c="dimmed">{t('getPdfInfo.noneDetected', 'None detected')}</Text>}
+              <ScrollableCodeBlock content={other?.XMPMetadata} maxHeight="400px" />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>

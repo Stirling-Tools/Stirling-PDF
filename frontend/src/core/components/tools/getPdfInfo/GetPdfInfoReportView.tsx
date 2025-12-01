@@ -1,13 +1,25 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Badge, Group, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { PdfInfoReportData, PdfInfoReportEntry } from '@app/types/getPdfInfo';
+import type {
+  PdfInfoReportData,
+  PdfInfoReportEntry,
+  PdfInfoBackendData,
+  ParsedPdfSections,
+} from '@app/types/getPdfInfo';
 import '@app/components/tools/validateSignature/reportView/styles.css';
-import SummarySection from './sections/SummarySection';
-import KeyValueSection from './sections/KeyValueSection';
-import TableOfContentsSection from './sections/TableOfContentsSection';
-import OtherSection from './sections/OtherSection';
-import PerPageSection from './sections/PerPageSection';
+import SummarySection from '@app/components/tools/getPdfInfo/sections/SummarySection';
+import KeyValueSection from '@app/components/tools/getPdfInfo/sections/KeyValueSection';
+import TableOfContentsSection from '@app/components/tools/getPdfInfo/sections/TableOfContentsSection';
+import OtherSection from '@app/components/tools/getPdfInfo/sections/OtherSection';
+import PerPageSection from '@app/components/tools/getPdfInfo/sections/PerPageSection';
+
+
+/** Valid section anchor IDs for navigation */
+const VALID_ANCHORS = new Set([
+  'summary', 'metadata', 'formFields', 'basicInfo', 'documentInfo',
+  'compliance', 'encryption', 'permissions', 'toc', 'other', 'perPage',
+]);
 
 interface GetPdfInfoReportViewProps {
   data: PdfInfoReportData & { scrollTo?: string | null };
@@ -19,22 +31,8 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
   const entry: PdfInfoReportEntry | null = data.entries[0] ?? null;
 
   useEffect(() => {
-    if (!data.scrollTo) return;
-    const idMap: Record<string, string> = {
-      summary: 'summary',
-      metadata: 'metadata',
-      formFields: 'formFields',
-      basicInfo: 'basicInfo',
-      documentInfo: 'documentInfo',
-      compliance: 'compliance',
-      encryption: 'encryption',
-      permissions: 'permissions',
-      toc: 'toc',
-      other: 'other',
-      perPage: 'perPage',
-    };
-    const anchor = idMap[data.scrollTo];
-    if (!anchor) return;
+    if (!data.scrollTo || !VALID_ANCHORS.has(data.scrollTo)) return;
+    const anchor = data.scrollTo;
     const container = containerRef.current;
     const el = container?.querySelector<HTMLElement>(`#${anchor}`);
     if (el && container) {
@@ -55,20 +53,20 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
     }
   }, [data.scrollTo]);
 
-  const sections = useMemo(() => {
-    const raw = entry?.data ?? {};
+  const sections = useMemo((): ParsedPdfSections => {
+    const raw: PdfInfoBackendData = entry?.data ?? {};
     return {
-      metadata: (raw as any)['Metadata'] as Record<string, unknown> | undefined,
-      formFields: (raw as any)['FormFields'] ?? (raw as any)['Form Fields'],
-      basicInfo: (raw as any)['BasicInfo'] ?? (raw as any)['Basic Info'],
-      documentInfo: (raw as any)['DocumentInfo'] ?? (raw as any)['Document Info'],
-      compliance: (raw as any)['Compliancy'] ?? (raw as any)['Compliance'],
-      encryption: (raw as any)['Encryption'] as Record<string, unknown> | undefined,
-      permissions: (raw as any)['Permissions'] as Record<string, unknown> | undefined,
-      toc: (raw as any)['Bookmarks/Outline/TOC'] ?? (raw as any)['Table of Contents'],
-      other: (raw as any)['Other'] as Record<string, unknown> | undefined,
-      perPage: (raw as any)['PerPageInfo'] ?? (raw as any)['Per Page Info'],
-      summaryData: (raw as any)['SummaryData'] as Record<string, unknown> | undefined,
+      metadata: raw.Metadata ?? null,
+      formFields: raw.FormFields ?? raw['Form Fields'] ?? null,
+      basicInfo: raw.BasicInfo ?? raw['Basic Info'] ?? null,
+      documentInfo: raw.DocumentInfo ?? raw['Document Info'] ?? null,
+      compliance: raw.Compliancy ?? raw.Compliance ?? null,
+      encryption: raw.Encryption ?? null,
+      permissions: raw.Permissions ?? null,
+      toc: raw['Bookmarks/Outline/TOC'] ?? raw['Table of Contents'] ?? null,
+      other: raw.Other ?? null,
+      perPage: raw.PerPageInfo ?? raw['Per Page Info'] ?? null,
+      summaryData: raw.SummaryData ?? null,
     };
   }, [entry]);
 
@@ -100,27 +98,27 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
               </div>
             </Group>
 
-            <SummarySection sections={sections as any} />
+            <SummarySection sections={sections} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.metadata', 'Metadata')} anchorId="metadata" obj={sections.metadata ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.metadata', 'Metadata')} anchorId="metadata" obj={sections.metadata} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.formFields', 'Form Fields')} anchorId="formFields" obj={sections.formFields as any} />
+            <KeyValueSection title={t('getPdfInfo.sections.formFields', 'Form Fields')} anchorId="formFields" obj={sections.formFields} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.basicInfo', 'Basic Info')} anchorId="basicInfo" obj={sections.basicInfo ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.basicInfo', 'Basic Info')} anchorId="basicInfo" obj={sections.basicInfo} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.documentInfo', 'Document Info')} anchorId="documentInfo" obj={sections.documentInfo ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.documentInfo', 'Document Info')} anchorId="documentInfo" obj={sections.documentInfo} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.compliance', 'Compliance')} anchorId="compliance" obj={sections.compliance ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.compliance', 'Compliance')} anchorId="compliance" obj={sections.compliance} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.encryption', 'Encryption')} anchorId="encryption" obj={sections.encryption ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.encryption', 'Encryption')} anchorId="encryption" obj={sections.encryption} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.permissions', 'Permissions')} anchorId="permissions" obj={sections.permissions ?? null} />
+            <KeyValueSection title={t('getPdfInfo.sections.permissions', 'Permissions')} anchorId="permissions" obj={sections.permissions} />
 
-            <TableOfContentsSection anchorId="toc" tocArray={Array.isArray(sections.toc) ? (sections.toc as any[]) : []} />
+            <TableOfContentsSection anchorId="toc" tocArray={sections.toc ?? []} />
 
-            <OtherSection anchorId="other" other={sections.other as any} />
+            <OtherSection anchorId="other" other={sections.other} />
 
-            <PerPageSection anchorId="perPage" perPage={sections.perPage as any} />
+            <PerPageSection anchorId="perPage" perPage={sections.perPage} />
           </Stack>
         </div>
       </Stack>

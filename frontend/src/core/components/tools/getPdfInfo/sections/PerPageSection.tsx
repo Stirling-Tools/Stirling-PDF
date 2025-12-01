@@ -1,43 +1,68 @@
 import React from 'react';
-import { Accordion, Group, Stack, Text } from '@mantine/core';
+import { Accordion, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import SectionBlock from '../shared/SectionBlock';
-import KeyValueList from '../shared/KeyValueList';
-import SimpleArrayList from '../shared/SimpleArrayList';
-import { pdfInfoAccordionStyles } from '../shared/accordionStyles';
+import type { PdfPerPageInfo, PdfPageInfo, PdfFontInfo } from '@app/types/getPdfInfo';
+import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
+import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
+import { pdfInfoAccordionStyles } from '@app/components/tools/getPdfInfo/shared/accordionStyles';
 
 interface PerPageSectionProps {
   anchorId: string;
-  perPage?: Record<string, any> | null;
+  perPage?: PdfPerPageInfo | null;
 }
+
+const renderList = (arr: unknown[] | undefined, emptyText: string) => {
+  if (!arr || arr.length === 0) return <Text size="sm" c="dimmed">{emptyText}</Text>;
+  return (
+    <Stack gap={4}>
+      {arr.map((item, idx) => (
+        <Text key={idx} size="sm" c="dimmed">
+          {typeof item === 'string' ? item : JSON.stringify(item)}
+        </Text>
+      ))}
+    </Stack>
+  );
+};
+
+const renderFontsList = (fonts: PdfFontInfo[] | undefined, emptyText: string) => {
+  if (!fonts || fonts.length === 0) return <Text size="sm" c="dimmed">{emptyText}</Text>;
+  return (
+    <Stack gap={4}>
+      {fonts.map((font, idx) => (
+        <Text key={idx} size="sm" c="dimmed">
+          {`${font.Name ?? 'Unknown'}${font.IsEmbedded ? ' (embedded)' : ''}`}
+        </Text>
+      ))}
+    </Stack>
+  );
+};
 
 const PerPageSection: React.FC<PerPageSectionProps> = ({ anchorId, perPage }) => {
   const { t } = useTranslation();
-  const panelBg = 'var(--bg-raised)';
-  const panelText = 'var(--text-primary)';
+  const noneDetected = t('getPdfInfo.noneDetected', 'None detected');
+
+  const hasPages = perPage && Object.keys(perPage).length > 0;
 
   return (
     <SectionBlock title={t('getPdfInfo.sections.perPageInfo', 'Per Page Info')} anchorId={anchorId}>
-      {perPage && Object.keys(perPage as any).length > 0 ? (
+      {hasPages ? (
         <Accordion
           variant="separated"
           radius="md"
           defaultValue=""
           styles={pdfInfoAccordionStyles}
         >
-          {Object.entries(perPage as any).map(([pageLabel, pageInfo]: [string, any]) => (
+          {Object.entries(perPage).map(([pageLabel, pageInfo]: [string, PdfPageInfo]) => (
             <Accordion.Item key={pageLabel} value={pageLabel}>
               <Accordion.Control>
-                <Group justify="space-between" w="100%" gap="xs">
-                  <Text fw={600} size="sm">{pageLabel}</Text>
-                </Group>
+                <Text fw={600} size="sm">{pageLabel}</Text>
               </Accordion.Control>
               <Accordion.Panel>
-                <div style={{ backgroundColor: panelBg, color: panelText, borderRadius: 8, padding: 12 }}>
+                <div style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', borderRadius: 8, padding: 12 }}>
                   <Stack gap="sm">
                     {pageInfo?.Size && (
                       <Stack gap={4}>
-                        <Text size="sm" fw={600}>{t('getPdfInfo.perPage.size', 'Size')}</Text>
+                        <Text fw={600} size="sm">{t('getPdfInfo.perPage.size', 'Size')}</Text>
                         <KeyValueList obj={pageInfo.Size} />
                       </Stack>
                     )}
@@ -53,41 +78,31 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({ anchorId, perPage }) =>
                     }} />
                     {pageInfo?.Annotations && (
                       <Stack gap={4}>
-                        <Text size="sm" fw={600}>{t('getPdfInfo.perPage.annotations', 'Annotations')}</Text>
+                        <Text fw={600} size="sm">{t('getPdfInfo.perPage.annotations', 'Annotations')}</Text>
                         <KeyValueList obj={pageInfo.Annotations} />
                       </Stack>
                     )}
                     <Stack gap={4}>
-                      <Text size="sm" fw={600}>{t('getPdfInfo.perPage.images', 'Images')}</Text>
-                      <SimpleArrayList arr={Array.isArray(pageInfo?.Images) ? pageInfo.Images : []} />
+                      <Text fw={600} size="sm">{t('getPdfInfo.perPage.images', 'Images')}</Text>
+                      {renderList(pageInfo?.Images, noneDetected)}
                     </Stack>
                     <Stack gap={4}>
-                      <Text size="sm" fw={600}>{t('getPdfInfo.perPage.links', 'Links')}</Text>
-                      <SimpleArrayList arr={Array.isArray(pageInfo?.Links) ? pageInfo.Links : []} />
+                      <Text fw={600} size="sm">{t('getPdfInfo.perPage.links', 'Links')}</Text>
+                      {renderList(pageInfo?.Links, noneDetected)}
                     </Stack>
                     <Stack gap={4}>
-                      <Text size="sm" fw={600}>{t('getPdfInfo.perPage.fonts', 'Fonts')}</Text>
-                      {Array.isArray(pageInfo?.Fonts) && pageInfo.Fonts.length > 0
-                        ? (
-                          <Stack gap={4}>
-                            {pageInfo.Fonts.map((f: any, idx: number) => (
-                              <Text key={idx} size="sm" c="dimmed">
-                                {`${f?.Name ?? 'Unknown'}${f?.IsEmbedded ? ' (embedded)' : ''}`}
-                              </Text>
-                            ))}
-                          </Stack>
-                        )
-                        : <Text size="sm" c="dimmed">{t('getPdfInfo.noneDetected', 'None detected')}</Text>}
+                      <Text fw={600} size="sm">{t('getPdfInfo.perPage.fonts', 'Fonts')}</Text>
+                      {renderFontsList(pageInfo?.Fonts, noneDetected)}
                     </Stack>
                     {pageInfo?.XObjectCounts && (
                       <Stack gap={4}>
-                        <Text size="sm" fw={600}>{t('getPdfInfo.perPage.xobjects', 'XObject Counts')}</Text>
+                        <Text fw={600} size="sm">{t('getPdfInfo.perPage.xobjects', 'XObject Counts')}</Text>
                         <KeyValueList obj={pageInfo.XObjectCounts} />
                       </Stack>
                     )}
                     <Stack gap={4}>
-                      <Text size="sm" fw={600}>{t('getPdfInfo.perPage.multimedia', 'Multimedia')}</Text>
-                      <SimpleArrayList arr={Array.isArray(pageInfo?.Multimedia) ? pageInfo.Multimedia : []} />
+                      <Text fw={600} size="sm">{t('getPdfInfo.perPage.multimedia', 'Multimedia')}</Text>
+                      {renderList(pageInfo?.Multimedia, noneDetected)}
                     </Stack>
                   </Stack>
                 </div>
@@ -96,7 +111,7 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({ anchorId, perPage }) =>
           ))}
         </Accordion>
       ) : (
-        <Text size="sm" c="dimmed">{t('getPdfInfo.noneDetected', 'None detected')}</Text>
+        <Text size="sm" c="dimmed">{noneDetected}</Text>
       )}
     </SectionBlock>
   );
