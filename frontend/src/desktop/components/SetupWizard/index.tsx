@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { Container, Paper, Stack, Title, Text, Button, Image } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ModeSelection } from '@app/components/SetupWizard/ModeSelection';
-import { ServerSelection } from '@app/components/SetupWizard/ServerSelection';
-import { LoginForm } from '@app/components/SetupWizard/LoginForm';
-import { connectionModeService, ServerConfig } from '@app/services/connectionModeService';
-import { authService } from '@app/services/authService';
+import { DesktopAuthLayout } from '@app/components/SetupWizard/DesktopAuthLayout';
+import { SaaSLoginScreen } from '@app/components/SetupWizard/SaaSLoginScreen';
+import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
+import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
+import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
+import { authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { useLogoPath } from '@app/hooks/useLogoPath';
 import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
-import '@app/components/SetupWizard/SetupWizard.css';
+import '@app/routes/authShared/auth.css';
 
 enum SetupStep {
-  ModeSelection,
   SaaSLogin,
   ServerSelection,
   SelfHostedLogin,
@@ -24,24 +22,10 @@ interface SetupWizardProps {
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const { t } = useTranslation();
-  const logoPath = useLogoPath();
-  const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.ModeSelection);
-  const [serverConfig, setServerConfig] = useState<ServerConfig | null>(null);
+  const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
+  const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleModeSelection = (mode: 'saas' | 'selfhosted') => {
-    setError(null);
-
-    if (mode === 'saas') {
-      // For SaaS, go directly to login screen with SaaS URL
-      setServerConfig({ url: STIRLING_SAAS_URL });
-      setActiveStep(SetupStep.SaaSLogin);
-    } else {
-      // For self-hosted, show server selection first
-      setActiveStep(SetupStep.ServerSelection);
-    }
-  };
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -68,6 +52,32 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setError(err instanceof Error ? err.message : 'SaaS login failed');
       setLoading(false);
     }
+  };
+
+  const handleSaaSLoginOAuth = async (_userInfo: UserInfo) => {
+    if (!serverConfig) {
+      setError('No SaaS server configured');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // OAuth already completed by authService.loginWithOAuth
+      await connectionModeService.switchToSaaS(serverConfig.url);
+      tauriBackendService.startBackend().catch(console.error);
+      onComplete();
+    } catch (err) {
+      console.error('SaaS OAuth login completion failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to complete SaaS login');
+      setLoading(false);
+    }
+  };
+
+  const handleSelfHostedClick = () => {
+    setError(null);
+    setActiveStep(SetupStep.ServerSelection);
   };
 
   const handleServerSelection = (config: ServerConfig) => {
@@ -99,118 +109,57 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
   const handleBack = () => {
     setError(null);
-    if (activeStep === SetupStep.SaaSLogin) {
-      setActiveStep(SetupStep.ModeSelection);
-      setServerConfig(null);
-    } else if (activeStep === SetupStep.SelfHostedLogin) {
+    if (activeStep === SetupStep.SelfHostedLogin) {
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
-      setActiveStep(SetupStep.ModeSelection);
-      setServerConfig(null);
-    }
-  };
-
-  const getStepTitle = () => {
-    switch (activeStep) {
-      case SetupStep.ModeSelection:
-        return t('setup.welcome', 'Welcome to Stirling PDF');
-      case SetupStep.SaaSLogin:
-        return t('setup.saas.title', 'Sign in to Stirling Cloud');
-      case SetupStep.ServerSelection:
-        return t('setup.server.title', 'Connect to Server');
-      case SetupStep.SelfHostedLogin:
-        return t('setup.selfhosted.title', 'Sign in to Server');
-      default:
-        return '';
-    }
-  };
-
-  const getStepSubtitle = () => {
-    switch (activeStep) {
-      case SetupStep.ModeSelection:
-        return t('setup.description', 'Get started by choosing how you want to use Stirling PDF');
-      case SetupStep.SaaSLogin:
-        return t('setup.saas.subtitle', 'Sign in with your Stirling account');
-      case SetupStep.ServerSelection:
-        return t('setup.server.subtitle', 'Enter your self-hosted server URL');
-      case SetupStep.SelfHostedLogin:
-        return t('setup.selfhosted.subtitle', 'Enter your server credentials');
-      default:
-        return '';
+      setActiveStep(SetupStep.SaaSLogin);
+      setServerConfig({ url: STIRLING_SAAS_URL });
     }
   };
 
   return (
-    <div className="setup-container">
-      <Container size="sm" className="setup-wrapper">
-        <Paper shadow="xl" p="xl" radius="lg" className="setup-card">
-          <Stack gap="lg">
-            {/* Logo Header */}
-            <Stack gap="xs" align="center">
-              <Image
-                src={logoPath}
-                alt="Stirling PDF"
-                h={64}
-                fit="contain"
-              />
-              <Title order={1} ta="center" style={{ fontSize: '2rem', fontWeight: 800 }}>
-                {getStepTitle()}
-              </Title>
-              <Text size="sm" c="dimmed" ta="center">
-                {getStepSubtitle()}
-              </Text>
-            </Stack>
+    <DesktopAuthLayout>
+      {/* Step Content */}
+      {activeStep === SetupStep.SaaSLogin && (
+        <SaaSLoginScreen
+          serverUrl={serverConfig?.url || STIRLING_SAAS_URL}
+          onLogin={handleSaaSLogin}
+          onOAuthSuccess={handleSaaSLoginOAuth}
+          onSelfHostedClick={handleSelfHostedClick}
+          loading={loading}
+          error={error}
+        />
+      )}
 
-            {/* Error Message */}
-            {error && (
-              <Paper p="md" bg="red.0" style={{ border: '1px solid var(--mantine-color-red-3)' }}>
-                <Text size="sm" c="red.7" ta="center">
-                  {error}
-                </Text>
-              </Paper>
-            )}
+      {activeStep === SetupStep.ServerSelection && (
+        <ServerSelectionScreen
+          onSelect={handleServerSelection}
+          loading={loading}
+          error={error}
+        />
+      )}
 
-            {/* Step Content */}
-            {activeStep === SetupStep.ModeSelection && (
-              <ModeSelection onSelect={handleModeSelection} loading={loading} />
-            )}
+      {activeStep === SetupStep.SelfHostedLogin && (
+        <SelfHostedLoginScreen
+          serverUrl={serverConfig?.url || ''}
+          onLogin={handleSelfHostedLogin}
+          loading={loading}
+          error={error}
+        />
+      )}
 
-            {activeStep === SetupStep.SaaSLogin && (
-              <LoginForm
-                serverUrl={serverConfig?.url || ''}
-                isSaaS={true}
-                onLogin={handleSaaSLogin}
-                loading={loading}
-              />
-            )}
-
-            {activeStep === SetupStep.ServerSelection && (
-              <ServerSelection onSelect={handleServerSelection} loading={loading} />
-            )}
-
-            {activeStep === SetupStep.SelfHostedLogin && (
-              <LoginForm
-                serverUrl={serverConfig?.url || ''}
-                isSaaS={false}
-                onLogin={handleSelfHostedLogin}
-                loading={loading}
-              />
-            )}
-
-            {/* Back Button */}
-            {activeStep > SetupStep.ModeSelection && !loading && (
-              <Button
-                variant="subtle"
-                onClick={handleBack}
-                fullWidth
-                mt="md"
-              >
-                {t('common.back', 'Back')}
-              </Button>
-            )}
-          </Stack>
-        </Paper>
-      </Container>
-    </div>
+      {/* Back Button */}
+      {activeStep > SetupStep.SaaSLogin && !loading && (
+        <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="navigation-link-button"
+          >
+            {t('common.back', 'Back')}
+          </button>
+        </div>
+      )}
+    </DesktopAuthLayout>
   );
 };
