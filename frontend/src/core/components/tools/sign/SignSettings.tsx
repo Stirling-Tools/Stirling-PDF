@@ -14,7 +14,7 @@ import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
+import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
 import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
 import { buildSignaturePreview } from '@app/utils/signaturePreview';
 
@@ -96,6 +96,7 @@ const SignSettings = ({
   const {
     savedSignatures,
     isAtCapacity: isSavedSignatureLimitReached,
+    maxLimit,
     addSignature,
     removeSignature,
     updateSignatureLabel,
@@ -330,8 +331,8 @@ const SignSettings = ({
     } else if (isSaved) {
       tooltipMessage = translate('saved.noChanges', 'Current signature is already saved.');
     } else if (isSavedSignatureLimitReached) {
-      tooltipMessage = translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
-        max: MAX_SAVED_SIGNATURES,
+      tooltipMessage = translate('saved.limitDescription', 'You have reached the maximum limit of {{max}} saved signatures. Remove a saved signature before adding new ones.', {
+        max: maxLimit,
       });
     }
 
@@ -795,6 +796,7 @@ const SignSettings = ({
           signatures={savedSignatures}
           disabled={disabled}
           isAtCapacity={isSavedSignatureLimitReached}
+          maxLimit={maxLimit}
           storageType={storageType}
           isAdmin={isAdmin}
           onUseSignature={handleUseSavedSignature}

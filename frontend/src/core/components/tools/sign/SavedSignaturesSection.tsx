@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionIcon, Alert, Badge, Box, Card, Group, Stack, Text, TextInput, Tooltip } from '@mantine/core';
 import { LocalIcon } from '@app/components/shared/LocalIcon';
-import { MAX_SAVED_SIGNATURES, SavedSignature, SavedSignatureType } from '@app/hooks/tools/sign/useSavedSignatures';
+import { SavedSignature, SavedSignatureType } from '@app/hooks/tools/sign/useSavedSignatures';
 import type { StorageType } from '@app/services/signatureStorageService';
 
 interface SavedSignaturesSectionProps {
   signatures: SavedSignature[];
   disabled?: boolean;
   isAtCapacity: boolean;
+  maxLimit: number;
   storageType?: StorageType | null;
   isAdmin?: boolean;
   onUseSignature: (signature: SavedSignature) => void;
@@ -27,6 +28,7 @@ export const SavedSignaturesSection = ({
   signatures,
   disabled = false,
   isAtCapacity,
+  maxLimit,
   storageType: _storageType,
   isAdmin = false,
   onUseSignature,
@@ -157,7 +159,7 @@ export const SavedSignaturesSection = ({
           {translate(
             'saved.emptyDescription',
             'Draw, upload, or type a signature above, then use "Save to library" to keep up to {{max}} favourites ready to use.',
-            { max: MAX_SAVED_SIGNATURES }
+            { max: maxLimit }
           )}
         </Text>
       </Stack>
@@ -218,7 +220,7 @@ export const SavedSignaturesSection = ({
         <Alert color="yellow" title={translate('saved.limitTitle', 'Limit reached')}>
           <Text size="sm">
             {translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
-              max: MAX_SAVED_SIGNATURES,
+              max: maxLimit,
             })}
           </Text>
         </Alert>

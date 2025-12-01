@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { signatureStorageService, type StorageType } from '@app/services/signatureStorageService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 
-export const MAX_SAVED_SIGNATURES = 10;
+export const MAX_SAVED_SIGNATURES_BACKEND = 20; // Backend limit per user
+export const MAX_SAVED_SIGNATURES_LOCALSTORAGE = 10; // LocalStorage limit
 
 export type SavedSignatureType = 'canvas' | 'image' | 'text';
 export type SignatureScope = 'personal' | 'shared' | 'localStorage';
@@ -100,7 +101,9 @@ export const useSavedSignatures = () => {
     return () => window.removeEventListener('storage', syncFromStorage);
   }, [storageType]);
 
-  const isAtCapacity = savedSignatures.length >= MAX_SAVED_SIGNATURES;
+  // Different limits for backend vs localStorage
+  const maxLimit = storageType === 'backend' ? MAX_SAVED_SIGNATURES_BACKEND : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
+  const isAtCapacity = savedSignatures.length >= maxLimit;
 
   const addSignature = useCallback(
     async (payload: SavedSignaturePayload, label?: string, scope?: SignatureScope): Promise<AddSignatureResult> => {
@@ -111,7 +114,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: 'invalid' };
       }
 
-      if (savedSignatures.length >= MAX_SAVED_SIGNATURES) {
+      if (isAtCapacity) {
         return { success: false, reason: 'limit' };
       }
 
@@ -211,6 +214,7 @@ export const useSavedSignatures = () => {
   return {
     savedSignatures,
     isAtCapacity,
+    maxLimit,
     addSignature,
     removeSignature,
     updateSignatureLabel,
