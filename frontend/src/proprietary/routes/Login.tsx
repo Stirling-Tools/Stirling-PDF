@@ -32,7 +32,6 @@ export default function Login() {
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
-  const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
@@ -103,22 +102,13 @@ export default function Login() {
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
         setShowDefaultCredentials(data.showDefaultCredentials ?? false);
 
-        // Extract provider IDs and labels from the providerList map
+        // Extract provider IDs from the providerList map
         // The keys are like "/oauth2/authorization/google" - extract the last part
-        const providerList = data.providerList || {};
-        const providerIds: string[] = [];
-        const labels: Record<string, string> = {};
-
-        Object.entries(providerList).forEach(([key, displayName]) => {
-          const id = key.split('/').pop();
-          if (id) {
-            providerIds.push(id);
-            labels[id] = displayName as string;
-          }
-        });
+        const providerIds = Object.keys(data.providerList || {})
+          .map(key => key.split('/').pop())
+          .filter((id): id is string => id !== undefined);
 
         setEnabledProviders(providerIds);
-        setProviderLabels(labels);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -336,7 +326,6 @@ export default function Login() {
         isSubmitting={isSigningIn}
         layout="vertical"
         enabledProviders={enabledProviders}
-        providerLabels={providerLabels}
       />
 
       {/* Divider between OAuth and Email - only show if SSO is available */}

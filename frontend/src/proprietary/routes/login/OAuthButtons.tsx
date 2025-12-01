@@ -26,10 +26,9 @@ interface OAuthButtonsProps {
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
   enabledProviders?: string[]  // List of enabled provider IDs from backend
-  providerLabels?: Record<string, string>  // Map of provider ID to display name from backend
 }
 
-export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [], providerLabels = {} }: OAuthButtonsProps) {
+export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {
   const { t } = useTranslation();
 
   // Debug mode: show all providers for UI testing
@@ -37,7 +36,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
     ? Object.keys(oauthProviderConfig)
     : enabledProviders;
 
-  // Build provider list - use known config for recognized providers, generic for unknown
+  // Build provider list - use provider ID to determine icon and label
   const providers = providersToShow.map(id => {
     if (id in oauthProviderConfig) {
       // Known provider - use predefined icon and label
@@ -46,12 +45,10 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         ...oauthProviderConfig[id]
       };
     }
-    // Unknown provider - use backend label (or capitalize ID) and generic icon
-    const backendLabel = providerLabels[id];
-    const label = backendLabel || id.charAt(0).toUpperCase() + id.slice(1);
+    // Unknown provider - use generic icon and capitalize ID for label
     return {
       id,
-      label,
+      label: id.charAt(0).toUpperCase() + id.slice(1),
       file: GENERIC_PROVIDER_ICON
     };
   });
