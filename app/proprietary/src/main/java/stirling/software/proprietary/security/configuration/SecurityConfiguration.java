@@ -84,6 +84,8 @@ public class SecurityConfiguration {
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -103,7 +105,9 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            stirling.software.proprietary.service.UserLicenseSettingsService
+                    licenseSettingsService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -120,70 +124,63 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.licenseSettingsService = licenseSettingsService;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // Read CORS allowed origins from settings
-        if (applicationProperties.getSystem() != null
-                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
-                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+        List<String> configuredOrigins = null;
+        if (applicationProperties.getSystem() != null) {
+            configuredOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
+        }
 
-            List<String> allowedOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
-
-            CorsConfiguration cfg = new CorsConfiguration();
-
-            // Use setAllowedOriginPatterns for better wildcard and port support
-            cfg.setAllowedOriginPatterns(allowedOrigins);
+        CorsConfiguration cfg = new CorsConfiguration();
+        if (configuredOrigins != null && !configuredOrigins.isEmpty()) {
+            cfg.setAllowedOriginPatterns(configuredOrigins);
             log.debug(
                     "CORS configured with allowed origin patterns from settings.yml: {}",
-                    allowedOrigins);
-
-            // Set allowed methods explicitly (including OPTIONS for preflight)
-            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-            // Set allowed headers explicitly
-            cfg.setAllowedHeaders(
-                    List.of(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "X-API-KEY",
-                            "X-CSRF-TOKEN"));
-
-            // Set exposed headers (headers that the browser can access)
-            cfg.setExposedHeaders(
-                    List.of(
-                            "WWW-Authenticate",
-                            "X-Total-Count",
-                            "X-Page-Number",
-                            "X-Page-Size",
-                            "Content-Disposition",
-                            "Content-Type"));
-
-            // Allow credentials (cookies, authorization headers)
-            cfg.setAllowCredentials(true);
-
-            // Set max age for preflight cache
-            cfg.setMaxAge(3600L);
-
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", cfg);
-            return source;
+                    configuredOrigins);
         } else {
-            // No CORS origins configured - return null to disable CORS processing entirely
-            // This avoids empty CORS policy that unexpectedly rejects preflights
+            // Default to allowing all origins when nothing is configured
+            cfg.setAllowedOriginPatterns(List.of("*"));
             log.info(
-                    "CORS is disabled - no allowed origins configured in settings.yml (system.corsAllowedOrigins)");
-            return null;
+                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
         }
+
+        // Explicitly configure supported HTTP methods (include OPTIONS for preflight)
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        cfg.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "X-API-KEY",
+                        "X-CSRF-TOKEN",
+                        "X-XSRF-TOKEN"));
+
+        cfg.setExposedHeaders(
+                List.of(
+                        "WWW-Authenticate",
+                        "X-Total-Count",
+                        "X-Page-Number",
+                        "X-Page-Size",
+                        "Content-Disposition",
+                        "Content-Type"));
+
+        cfg.setAllowCredentials(true);
+        cfg.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        return source;
     }
 
     @Bean
@@ -362,7 +359,8 @@ public class SecurityConfiguration {
                                                     loginAttemptService,
                                                     securityProperties.getOauth2(),
                                                     userService,
-                                                    jwtService))
+                                                    jwtService,
+                                                    licenseSettingsService))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(
@@ -403,7 +401,8 @@ public class SecurityConfiguration {
                                                                 loginAttemptService,
                                                                 securityProperties.getSaml2(),
                                                                 userService,
-                                                                jwtService))
+                                                                jwtService,
+                                                                licenseSettingsService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(

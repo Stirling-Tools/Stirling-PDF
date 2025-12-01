@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Button, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
+import { Menu, Button, ActionIcon } from '@mantine/core';
+import { Tooltip } from '@app/components/shared/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '@app/i18n';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -11,6 +12,7 @@ interface LanguageSelectorProps {
   position?: React.ComponentProps<typeof Menu>['position'];
   offset?: number;
   compact?: boolean; // icon-only trigger
+  tooltip?: string; // tooltip text for compact mode
 }
 
 interface LanguageOption {
@@ -51,7 +53,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
   const { t } = useTranslation();
 
   const label = disabled ? (
-    <Tooltip label={t('comingSoon', 'Coming soon')} position="left" withArrow>
+    <Tooltip content={t('comingSoon', 'Coming soon')} position="left" arrow>
       <p>{option.label}</p>
     </Tooltip>
   ) : (
@@ -64,7 +66,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
       style={{
         opacity: animationTriggered ? 1 : 0,
         transform: animationTriggered ? 'translateY(0px)' : 'translateY(8px)',
-        transition: `opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.02}s, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.02}s`,
+        transition: `opacity 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.01}s, transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.01}s`,
       }}
     >
       <Button
@@ -90,7 +92,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
               : isSelected
               ? 'light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))'
               : 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))',
-            transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            transition: 'all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             '&:hover': !disabled ? {
               backgroundColor: isSelected
@@ -126,7 +128,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
               backgroundColor: 'var(--mantine-color-blue-4)',
               opacity: 0.6,
               transform: 'translate(-50%, -50%)',
-              animation: 'ripple-expand 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              animation: 'ripple-expand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               zIndex: 1,
             }}
           />
@@ -149,7 +151,12 @@ const RippleStyles: React.FC = () => (
 );
 
 // Main component
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-start', offset = 8, compact = false }) => {
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  position = 'bottom-start',
+  offset = 8,
+  compact = false,
+  tooltip
+}) => {
   const { i18n } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [animationTriggered, setAnimationTriggered] = useState(false);
@@ -184,9 +191,14 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
         setOpened(false);
 
         // Clear ripple effect
-        setTimeout(() => setRippleEffect(null), 100);
-      }, 300);
-    }, 200);
+        setTimeout(() => setRippleEffect(null), 50);
+
+        // Force a full reload so RTL/LTR layout and tooltips re-evaluate correctly
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      }, 150);
+    }, 100);
   };
 
   const currentLanguage = supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
@@ -197,7 +209,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
     if (opened) {
       setAnimationTriggered(false);
       // Small delay to ensure DOM is ready
-      setTimeout(() => setAnimationTriggered(true), 50);
+      setTimeout(() => setAnimationTriggered(true), 20);
     }
   }, [opened]);
 
@@ -213,7 +225,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
         zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
         transitionProps={{
           transition: 'scale-y',
-          duration: 200,
+          duration: 120,
           timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
         }}
       >
@@ -222,8 +234,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
             <ActionIcon
               variant="subtle"
               radius="md"
-              title={currentLanguage}
               className="right-rail-icon"
+              title={!opened && tooltip ? tooltip : undefined}
               styles={{
                 root: {
                   color: 'var(--right-rail-icon)',
@@ -269,11 +281,15 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
             zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
           }}
         >
-          <ScrollArea h={190} type="scroll">
-            <div className={styles.languageGrid}>
+          <div className={styles.languageGrid}>
               {languageOptions.map((option, index) => {
-                // Enable languages with >90% translation completion
-                const enabledLanguages = ['en-GB', 'ar-AR', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'pt-BR', 'ru-RU', 'zh-CN'];
+                const enabledLanguages = [
+                  'en-GB', 'zh-CN', 'zh-TW', 'ar-AR', 'fa-IR', 'tr-TR', 'uk-UA', 'zh-BO', 'sl-SI',
+                  'ru-RU', 'ja-JP', 'ko-KR', 'hu-HU', 'ga-IE', 'bg-BG', 'es-ES', 'hi-IN', 'hr-HR',
+                  'el-GR', 'ml-ML', 'pt-BR', 'pl-PL', 'pt-PT', 'sk-SK', 'sr-LATN-RS', 'no-NB',
+                  'th-TH', 'vi-VN', 'az-AZ', 'eu-ES', 'de-DE', 'sv-SE', 'it-IT', 'ca-CA', 'id-ID',
+                  'ro-RO', 'fr-FR', 'nl-NL', 'da-DK', 'cs-CZ'
+                ];
                 const isDisabled = !enabledLanguages.includes(option.value);
 
                 return (
@@ -291,8 +307,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
                   />
                 );
               })}
-            </div>
-          </ScrollArea>
+          </div>
         </Menu.Dropdown>
       </Menu>
     </>

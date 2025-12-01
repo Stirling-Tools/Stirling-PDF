@@ -64,8 +64,12 @@ export function useToolSections(
 
       Object.entries(subs).forEach(([s, tools]) => {
         const subcategoryId = s as SubcategoryId;
-        if (!all[subcategoryId]) all[subcategoryId] = [];
-        all[subcategoryId].push(...tools);
+        // Build the 'all' collection without duplicating recommended tools
+        // Recommended tools are shown in the Quick section only
+        if (categoryId !== ToolCategoryId.RECOMMENDED_TOOLS) {
+          if (!all[subcategoryId]) all[subcategoryId] = [];
+          all[subcategoryId].push(...tools);
+        }
       });
 
       if (categoryId === ToolCategoryId.RECOMMENDED_TOOLS) {

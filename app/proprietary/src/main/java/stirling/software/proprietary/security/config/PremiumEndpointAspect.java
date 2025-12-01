@@ -23,7 +23,7 @@ public class PremiumEndpointAspect {
     public Object checkPremiumAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!runningProOrHigher) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "This endpoint requires a Pro or higher license");
+                    HttpStatus.FORBIDDEN, "This endpoint requires a Server or Enterprise license");
         }
         return joinPoint.proceed();
     }

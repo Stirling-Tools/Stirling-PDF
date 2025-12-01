@@ -7,7 +7,8 @@ import FullscreenToolList from '@app/components/tools/FullscreenToolList';
 import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { useFocusTrap } from '@app/hooks/useFocusTrap';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoPath } from '@app/hooks/useLogoPath';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
 import { ToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
@@ -46,17 +47,15 @@ const FullscreenToolSurface = ({
   const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, !isExiting);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
-    colorScheme === "dark" ? "Dark" : "Light"
-  }.svg`;
-  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
-    colorScheme === "dark" ? "White" : "Black"
-  }Text.svg`;
+  const brandIconSrc = useLogoPath();
+  const { wordmark } = useLogoAssets();
+  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -115,7 +114,10 @@ const FullscreenToolSurface = ({
                 aria-label={toggleLabel}
                 style={{ color: 'var(--right-rail-icon)' }}
               >
-                <DoubleArrowIcon fontSize="small" style={{ transform: 'rotate(180deg)' }} />
+                <DoubleArrowIcon
+                  fontSize="small"
+                  style={{ transform: isRTL ? undefined : 'rotate(180deg)' }}
+                />
               </ActionIcon>
             </Tooltip>
           </div>
@@ -156,5 +158,4 @@ const FullscreenToolSurface = ({
 };
 
 export default FullscreenToolSurface;
-
 

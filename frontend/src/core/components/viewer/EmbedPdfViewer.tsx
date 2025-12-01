@@ -8,12 +8,15 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
 import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
+import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
+import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
+import { useWheelZoom } from '@app/hooks/useWheelZoom';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -33,9 +36,22 @@ const EmbedPdfViewerContent = ({
   setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
   const viewerRef = React.useRef<HTMLDivElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const {
+    isThumbnailSidebarVisible,
+    toggleThumbnailSidebar,
+    isBookmarkSidebarVisible,
+    zoomActions,
+    panActions: _panActions,
+    rotationActions: _rotationActions,
+    getScrollState,
+    getRotationState,
+    isAnnotationMode,
+    isAnnotationsVisible,
+    exportActions,
+  } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -52,7 +68,7 @@ const EmbedPdfViewerContent = ({
   }, [rotationState.rotation]);
 
   // Get signature context
-  const { signatureApiRef, historyApiRef } = useSignature();
+  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();
@@ -66,10 +82,14 @@ const EmbedPdfViewerContent = ({
 
   // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
-  const isSignatureMode = selectedTool === 'sign';
+  // Tools that use the stamp/signature placement system with hover preview
+  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
+  const isPlacementOverlayActive = Boolean(
+    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+  );
 
   // Track which file tab is active
   const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
@@ -122,39 +142,47 @@ const EmbedPdfViewerContent = ({
     }
   }, [previewFile, fileWithUrl]);
 
-  // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  useEffect(() => {
-    let accumulator = 0;
-
-    const handleWheel = (event: WheelEvent) => {
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        accumulator += event.deltaY;
-        const threshold = 10;
-
-        if (accumulator <= -threshold) {
-          // Accumulated scroll up - zoom in
-          zoomActions.zoomIn();
-          accumulator = 0;
-        } else if (accumulator >= threshold) {
-          // Accumulated scroll down - zoom out
-          zoomActions.zoomOut();
-          accumulator = 0;
-        }
-      }
-    };
-
-    const viewerElement = viewerRef.current;
-    if (viewerElement) {
-      viewerElement.addEventListener('wheel', handleWheel, { passive: false });
-      return () => {
-        viewerElement.removeEventListener('wheel', handleWheel);
-      };
+  const bookmarkCacheKey = React.useMemo(() => {
+    if (currentFile && isStirlingFile(currentFile)) {
+      return currentFile.fileId;
     }
-  }, [zoomActions]);
+
+    if (previewFile) {
+      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? 'na'}`;
+      return `preview-${uniquePreviewId}`;
+    }
+
+    if (effectiveFile?.url) {
+      return effectiveFile.url;
+    }
+
+    if (effectiveFile?.file instanceof File) {
+      const fileObj = effectiveFile.file;
+      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? 'na'}`;
+    }
+
+    return undefined;
+  }, [currentFile, effectiveFile, previewFile]);
+
+  // Generate cache keys for all active files to enable preloading
+  const allBookmarkCacheKeys = React.useMemo(() => {
+    if (previewFile) {
+      return [bookmarkCacheKey].filter(Boolean) as string[];
+    }
+
+    return activeFiles.map(file => {
+      if (isStirlingFile(file)) {
+        return file.fileId;
+      }
+      return undefined;
+    }).filter(Boolean) as string[];
+  }, [activeFiles, previewFile, bookmarkCacheKey]);
+
+  useWheelZoom({
+    ref: viewerRef,
+    onZoomIn: zoomActions.zoomIn,
+    onZoomOut: zoomActions.zoomOut,
+  });
 
   // Handle keyboard zoom shortcuts
   useEffect(() => {
@@ -241,6 +269,10 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
 
+  const sidebarWidthRem = 15;
+  const totalRightMargin =
+    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0);
+
   return (
     <Box
       ref={viewerRef}
@@ -274,15 +306,17 @@ const EmbedPdfViewerContent = ({
       ) : (
         <>
           {/* EmbedPDF Viewer */}
-          <Box style={{
-            position: 'relative',
-            flex: 1,
-            overflow: 'hidden',
-            minHeight: 0,
-            minWidth: 0,
-            marginRight: isThumbnailSidebarVisible ? '15rem' : '0',
-            transition: 'margin-right 0.3s ease'
-          }}>
+          <Box
+            ref={pdfContainerRef}
+            style={{
+              position: 'relative',
+              flex: 1,
+              overflow: 'hidden',
+              minHeight: 0,
+              minWidth: 0,
+              marginRight: `${totalRightMargin}rem`,
+              transition: 'margin-right 0.3s ease'
+            }}>
             <LocalEmbedPDF
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
@@ -294,6 +328,11 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
+            />
+            <StampPlacementOverlay
+              containerRef={pdfContainerRef}
+              isActive={isPlacementOverlayActive}
+              signatureConfig={signatureConfig}
             />
           </Box>
         </>
@@ -329,6 +368,12 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileIndex={activeFileIndex}
+      />
+      <BookmarkSidebar
+        visible={isBookmarkSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
       />
 
       {/* Navigation Warning Modal */}

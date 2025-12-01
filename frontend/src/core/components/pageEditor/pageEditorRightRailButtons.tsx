@@ -16,6 +16,7 @@ interface PageEditorRightRailButtonsParams {
   handleDeselectAll: () => void;
   handleDelete: () => void;
   onExportSelected: () => void;
+  onSaveChanges: () => void;
   exportLoading: boolean;
   activeFileCount: number;
   closePdf: () => void;
@@ -34,12 +35,13 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     handleDeselectAll,
     handleDelete,
     onExportSelected,
+    onSaveChanges,
     exportLoading,
     activeFileCount,
     closePdf,
   } = params;
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
   const selectAllLabel = t('rightRail.selectAll', 'Select All');
@@ -47,6 +49,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   const selectByNumberLabel = t('rightRail.selectByNumber', 'Select by Page Numbers');
   const deleteSelectedLabel = t('rightRail.deleteSelected', 'Delete Selected Pages');
   const exportSelectedLabel = t('rightRail.exportSelected', 'Export Selected Pages');
+  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
   const closePdfLabel = t('rightRail.closePdf', 'Close PDF');
 
   const buttons = useMemo<RightRailButtonWithAction[]>(() => {
@@ -117,6 +120,17 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
         onClick: onExportSelected,
       },
       {
+        id: 'page-save-changes',
+        icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
+        tooltip: saveChangesLabel,
+        ariaLabel: saveChangesLabel,
+        section: 'top' as const,
+        order: 55,
+        disabled: totalPages === 0 || exportLoading,
+        visible: totalPages > 0,
+        onClick: onSaveChanges,
+      },
+      {
         id: 'page-close-pdf',
         icon: <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />,
         tooltip: closePdfLabel,
@@ -130,11 +144,13 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     ];
   }, [
     t,
+    i18n.language,
     selectAllLabel,
     deselectAllLabel,
     selectByNumberLabel,
     deleteSelectedLabel,
     exportSelectedLabel,
+    saveChangesLabel,
     closePdfLabel,
     totalPages,
     selectedPageCount,
@@ -147,6 +163,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     handleDeselectAll,
     handleDelete,
     onExportSelected,
+    onSaveChanges,
     exportLoading,
     activeFileCount,
     closePdf,

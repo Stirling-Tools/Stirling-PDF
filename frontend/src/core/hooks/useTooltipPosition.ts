@@ -74,6 +74,7 @@ export function useTooltipPosition({
 
   // Fallback sidebar position (only used as last resort)
   const sidebarLeft = 240;
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   const updatePosition = () => {
     if (!triggerRef.current || !open) return;
@@ -87,28 +88,37 @@ export function useTooltipPosition({
     if (sidebarTooltip) {
       // Require sidebar refs and state for proper positioning
       if (!sidebarRefs || !sidebarState) {
-        console.warn('⚠️ Sidebar tooltip requires sidebarRefs and sidebarState props');
+        console.warn('Sidebar tooltip requires sidebarRefs and sidebarState props');
         setPositionReady(false);
         return;
       }
 
       const sidebarInfo = getSidebarInfo(sidebarRefs, sidebarState);
-      const currentSidebarRight = sidebarInfo.rect ? sidebarInfo.rect.right : sidebarLeft;
-
-      // Only show tooltip if we have the tool panel active
-      if (!sidebarInfo.isToolPanelActive) {
-        console.log('🚫 Not showing tooltip - tool panel not active');
+      const rect = sidebarInfo.rect;
+      if (!rect) {
         setPositionReady(false);
         return;
       }
 
-      // Position to the right of active sidebar with 20px gap
-      left = currentSidebarRight + 20;
+      // Only show tooltip if we have the tool panel active
+      if (!sidebarInfo.isToolPanelActive) {
+        console.log('Not showing tooltip - tool panel not active');
+        setPositionReady(false);
+        return;
+      }
+
+      const tooltipRect = tooltipRef.current?.getBoundingClientRect() || null;
+
+      // Position adjacent to sidebar; mirror for RTL
+      if (isRTL) {
+        left = rect.left - (tooltipRect?.width || 0) - 20;
+      } else {
+        left = rect.right + 20;
+      }
       top = triggerRect.top; // Align top of tooltip with trigger element
 
       // Only clamp if we have tooltip dimensions
-      if (tooltipRef.current) {
-        const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      if (tooltipRect) {
         const maxTop = window.innerHeight - tooltipRect.height - 4;
         const originalTop = top;
         top = clamp(top, 4, maxTop);

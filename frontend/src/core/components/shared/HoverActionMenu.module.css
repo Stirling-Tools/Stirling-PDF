@@ -11,7 +11,6 @@
   padding: 6px 12px;
   border-radius: 20px;
   box-shadow: var(--shadow-md);
-  z-index: 30;
   white-space: nowrap;
   pointer-events: auto;
   transition: opacity 0.2s ease-in-out;

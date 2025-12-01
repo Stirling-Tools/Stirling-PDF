@@ -39,7 +39,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 public class JwtService implements JwtServiceInterface {
 
     private static final String ISSUER = "https://stirling.com";
-    private static final long EXPIRATION = 3600000;
+    private static final long EXPIRATION = 43200000;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;

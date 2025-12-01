@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider, Menu } from "@mantine/core";
+import { ActionIcon, Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -16,6 +16,8 @@ import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolBu
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
+import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
+
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -33,10 +35,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const { startTour } = useOnboarding();
+  const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
+
+  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   // Open modal if URL is at /settings/*
   useEffect(() => {
@@ -88,7 +93,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: () => handleClick(),
             'aria-label': config.name
           })}
-          size={isActive ? (config.size || 'lg') : 'lg'}
+          size={isActive ? 'lg' : 'md'}
           variant="subtle"
           style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
           className={isActive ? 'activeIconScale' : ''}
@@ -108,9 +113,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const mainButtons: ButtonConfig[] = [
     {
       id: 'read',
-      name: t("quickAccess.read", "Read"),
-      icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
-      size: 'lg',
+      name: t("quickAccess.reader", "Reader"),
+      icon: <LocalIcon icon="menu-book-rounded" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       isRound: false,
       type: 'navigation',
       onClick: () => {
@@ -118,23 +123,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         handleReaderToggle();
       }
     },
-    // {
-    //  id: 'sign',
-    //  name: t("quickAccess.sign", "Sign"),
-    //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
-    //  size: 'lg',
-    //  isRound: false,
-    //  type: 'navigation',
-    //  onClick: () => {
-    //    setActiveButton('sign');
-    //    handleToolSelect('sign');
-    //  }
-    // },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon: <LocalIcon icon="automation-outline" width="1.6rem" height="1.6rem" />,
-      size: 'lg',
+      icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       isRound: false,
       type: 'navigation',
       onClick: () => {
@@ -147,37 +140,36 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
-  ];
-
-  const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.6rem" height="1.6rem" />,
+      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
-      size: 'lg',
+      size: 'md',
       type: 'modal',
       onClick: handleFilesButtonClick
     },
-    //TODO: Activity
-    //{
-    //  id: 'activity',
-    //  name: t("quickAccess.activity", "Activity"),
-    //  icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
-    //  isRound: true,
-    //  size: 'lg',
-    //  type: 'navigation',
-    //  onClick: () => setActiveButton('activity')
-    //},
   ];
+
+  const middleButtons: ButtonConfig[] = [];
+  //TODO: Activity
+  //{
+  //  id: 'activity',
+  //  name: t("quickAccess.activity", "Activity"),
+  //  icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
+  //  isRound: true,
+  //  size: 'lg',
+  //  type: 'navigation',
+  //  onClick: () => setActiveButton('activity')
+  //},
 
   const bottomButtons: ButtonConfig[] = [
     {
       id: 'help',
       name: t("quickAccess.help", "Help"),
-      icon: <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />,
+      icon: <LocalIcon icon="help-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
-      size: 'lg',
+      size: 'md',
       type: 'action',
       onClick: () => {
         // This will be overridden by the wrapper logic
@@ -185,9 +177,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     },
     {
       id: 'config',
-      name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
-      icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'lg',
+      name: t("quickAccess.settings", "Settings"),
+      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+      size: 'md',
       type: 'modal',
       onClick: () => {
         navigate('/settings/overview');
@@ -200,10 +192,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
-      className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
-      style={{
-        borderRight: '1px solid var(--border-default)'
-      }}
+      className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
@@ -239,20 +228,30 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             ))}
           </Stack>
 
-          {/* Divider after main buttons */}
-          <Divider
-            size="xs"
-            className="content-divider"
-          />
+          {/* Divider after main buttons (creates gap) */}
+          {middleButtons.length === 0 && (
+            <Divider
+              size="xs"
+              className="content-divider"
+            />
+          )}
 
           {/* Middle section */}
-          <Stack gap="lg" align="center">
-            {middleButtons.map((config, index) => (
-              <React.Fragment key={config.id}>
-                {renderNavButton(config, index)}
-              </React.Fragment>
-            ))}
-          </Stack>
+          {middleButtons.length > 0 && (
+            <>
+              <Divider
+                size="xs"
+                className="content-divider"
+              />
+              <Stack gap="lg" align="center">
+                {middleButtons.map((config, index) => (
+                  <React.Fragment key={config.id}>
+                    {renderNavButton(config, index)}
+                  </React.Fragment>
+                ))}
+              </Stack>
+            </>
+          )}
 
           {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
@@ -280,7 +279,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 // If admin, show menu with both options
                 return (
                   <div key={buttonConfig.id} data-tour="help-button">
-                    <Menu position="right" offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
+                    <Menu position={isRTL ? 'left' : 'right'} offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
                       <Menu.Target>
                         <div>{renderNavButton(buttonConfig, index)}</div>
                       </Menu.Target>
@@ -317,9 +316,27 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 );
               }
 
+              const buttonNode = renderNavButton(buttonConfig, index);
+              const shouldShowSettingsBadge =
+                buttonConfig.id === 'config' &&
+                licenseAlert.active &&
+                licenseAlert.audience === 'admin';
+
               return (
                 <React.Fragment key={buttonConfig.id}>
-                  {renderNavButton(buttonConfig, index)}
+                  {shouldShowSettingsBadge ? (
+                    <Indicator
+                      inline
+                      size={12}
+                      color="orange"
+                      position="top-end"
+                      offset={4}
+                    >
+                      {buttonNode}
+                    </Indicator>
+                  ) : (
+                    buttonNode
+                  )}
                 </React.Fragment>
               );
             })}

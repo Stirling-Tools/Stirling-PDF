@@ -31,24 +31,37 @@ export default defineConfig(({ mode }) => {
         // tell vite to ignore watching `src-tauri`
         ignored: ['**/src-tauri/**'],
       },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-        xfwd: true,
-      },
-      '/oauth2': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-        xfwd: true,
-      },
-      '/login/oauth2': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-        xfwd: true,
+      // Only use proxy in web mode - Tauri handles backend connections directly
+      proxy: isDesktopMode ? undefined : {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/oauth2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/login/oauth2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/swagger-ui': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/v1/api-docs': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
         },
       },
     },

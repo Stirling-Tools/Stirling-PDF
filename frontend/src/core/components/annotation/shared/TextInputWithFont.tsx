@@ -15,6 +15,7 @@ interface TextInputWithFontProps {
   disabled?: boolean;
   label?: string;
   placeholder?: string;
+  onAnyChange?: () => void;
 }
 
 export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
@@ -28,17 +29,24 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   onTextColorChange,
   disabled = false,
   label,
-  placeholder
+  placeholder,
+  onAnyChange
 }) => {
   const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [colorInput, setColorInput] = useState(textColor);
 
   // Sync font size input with prop changes
   useEffect(() => {
     setFontSizeInput(fontSize.toString());
   }, [fontSize]);
+
+  // Sync color input with prop changes
+  useEffect(() => {
+    setColorInput(textColor);
+  }, [textColor]);
 
   const fontOptions = [
     { value: 'Helvetica', label: 'Helvetica' },
@@ -50,22 +58,33 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
 
   const fontSizeOptions = ['8', '12', '16', '20', '24', '28', '32', '36', '40', '48', '56', '64', '72', '80', '96', '112', '128', '144', '160', '176', '192', '200'];
 
+  // Validate hex color
+  const isValidHexColor = (color: string): boolean => {
+    return /^#[0-9A-Fa-f]{6}$/.test(color);
+  };
+
   return (
     <Stack gap="sm">
       <TextInput
-        label={label || t('sign.text.name', 'Signer Name')}
+        label={label || t('sign.text.name', 'Signer name')}
         placeholder={placeholder || t('sign.text.placeholder', 'Enter your full name')}
         value={text}
-        onChange={(e) => onTextChange(e.target.value)}
+        onChange={(e) => {
+          onTextChange(e.target.value);
+          onAnyChange?.();
+        }}
         disabled={disabled}
         required
       />
 
       {/* Font Selection */}
       <Select
-        label="Font"
+        label={t('sign.text.fontLabel', 'Font')}
         value={fontFamily}
-        onChange={(value) => onFontFamilyChange(value || 'Helvetica')}
+        onChange={(value) => {
+          onFontFamilyChange(value || 'Helvetica');
+          onAnyChange?.();
+        }}
         data={fontOptions}
         disabled={disabled}
         searchable
@@ -88,8 +107,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         >
           <Combobox.Target>
             <TextInput
-              label="Font Size"
-              placeholder="Type or select font size (8-200)"
+              label={t('sign.text.fontSizeLabel', 'Font size')}
+              placeholder={t('sign.text.fontSizePlaceholder', 'Type or select font size (8-200)')}
               value={fontSizeInput}
               onChange={(event) => {
                 const value = event.currentTarget.value;
@@ -99,6 +118,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                 const size = parseInt(value);
                 if (!isNaN(size) && size >= 8 && size <= 200) {
                   onFontSizeChange(size);
+                  onAnyChange?.();
                 }
 
                 fontSizeCombobox.openDropdown();
@@ -135,14 +155,30 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         {onTextColorChange && (
           <Box>
             <TextInput
-              label="Text Color"
-              value={textColor}
-              readOnly
+              label={t('sign.text.colorLabel', 'Text colour')}
+              value={colorInput}
+              placeholder="#000000"
               disabled={disabled}
-              onClick={() => !disabled && setIsColorPickerOpen(true)}
-              style={{ cursor: disabled ? 'default' : 'pointer' }}
+              onChange={(e) => {
+                const value = e.currentTarget.value;
+                setColorInput(value);
+
+                // Update color if valid hex
+                if (isValidHexColor(value)) {
+                  onTextColorChange(value);
+                  onAnyChange?.();
+                }
+              }}
+              onBlur={() => {
+                // Revert to valid color on blur if invalid
+                if (!isValidHexColor(colorInput)) {
+                  setColorInput(textColor);
+                }
+              }}
+              style={{ width: '100%' }}
               rightSection={
                 <Box
+                  onClick={() => !disabled && setIsColorPickerOpen(true)}
                   style={{
                     width: 24,
                     height: 24,
@@ -164,7 +200,10 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
           isOpen={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
           selectedColor={textColor}
-          onColorChange={onTextColorChange}
+          onColorChange={(color) => {
+            onTextColorChange(color);
+            onAnyChange?.();
+          }}
         />
       )}
     </Stack>

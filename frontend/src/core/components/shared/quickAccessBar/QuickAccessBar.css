@@ -1,15 +1,29 @@
 .activeIconScale {
-  transform: scale(1.3);
+  transform: scale(1);
   transition: transform 0.2s;
   z-index: 1;
+  width: calc(1.75rem + 10px) !important;
+  height: calc(1.75rem + 10px) !important;
+}
+
+.activeIconScale .iconContainer {
+  width: calc(1.5rem + 10px);
+  height: calc(1.5rem + 10px);
+}
+
+.activeIconScale .iconContainer svg,
+.activeIconScale .iconContainer img {
+  width: calc(1.25rem + 10px) !important;
+  height: calc(1.25rem + 10px) !important;
 }
 
 .iconContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  transition: width 0.2s, height 0.2s;
 }
 
 /* Action icon styles */
@@ -24,21 +38,36 @@
 /* Main container styles */
 .quick-access-bar-main {
   background-color: var(--bg-muted);
-  width: 5rem;
-  min-width: 5rem;
-  max-width: 5rem;
+  width: 4rem;
+  min-width: 4rem;
+  max-width: 4rem;
   position: relative;
   z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr; /* keep layout stable when document is rtl */
 }
 
 /* Rainbow mode container */
 .quick-access-bar-main.rainbow-mode {
   background-color: var(--bg-muted);
-  width: 5rem;
-  min-width: 5rem;
-  max-width: 5rem;
+  width: 4rem;
+  min-width: 4rem;
+  max-width: 4rem;
   position: relative;
   z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr;
+}
+
+/* RTL adjustments keep the bar on-screen and separated from content */
+:root[dir='rtl'] .quick-access-bar-main,
+:root[dir='rtl'] .quick-access-bar-main.rainbow-mode {
+  border-right: none;
+  border-left: 1px solid var(--border-default);
 }
 
 /* Header padding */
@@ -57,7 +86,7 @@
 
 /* Nav header divider */
 .nav-header-divider {
-  width: 3.75rem;
+  width: 3rem;
   border-color: var(--color-gray-300);
   margin-top: 0.5rem;
   margin-bottom: 1rem;
@@ -85,7 +114,7 @@
 
 /* Overflow divider */
 .overflow-divider {
-  width: 3.75rem;
+  width: 3rem;
   border-color: var(--color-gray-300);
   margin: 0 0.5rem;
 }
@@ -143,7 +172,7 @@
 
 /* Content divider */
 .content-divider {
-  width: 3.75rem;
+  width: 3rem;
   border-color: var(--color-gray-300);
   margin: 1rem 0;
 }
@@ -241,7 +270,7 @@
 
 /* Divider that animates growing from top */
 .current-tool-divider {
-  width: 3.75rem;
+  width: 3rem;
   border-color: var(--color-gray-300);
   margin: 0.5rem auto 0.5rem auto;
   transform-origin: top;

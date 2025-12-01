@@ -1,13 +1,203 @@
-import { useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
 import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
+import { useViewer } from '@app/contexts/ViewerContext';
+
+// Minimum allowed width/height (in pixels) for a signature image or text stamp.
+// This prevents rendering issues and ensures signatures are always visible and usable.
+const MIN_SIGNATURE_DIMENSION = 12;
+
+// Use 2x oversampling to improve text rendering quality (anti-aliasing) when generating signature images.
+// This provides a good balance between visual fidelity and performance/memory usage.
+const TEXT_OVERSAMPLE_FACTOR = 2;
+
+const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
+  if (!value || depth > 6) return undefined;
+
+  // Prevent circular references
+  if (typeof value === 'object' && visited.has(value)) {
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    return value.startsWith('data:image') ? value : undefined;
+  }
+
+  if (typeof value === 'object') {
+    visited.add(value);
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const result = extractDataUrl(entry, depth + 1, visited);
+        if (result) return result;
+      }
+    } else {
+      for (const key of Object.keys(value as Record<string, unknown>)) {
+        const result = extractDataUrl((value as Record<string, unknown>)[key], depth + 1, visited);
+        if (result) return result;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+const createTextStampImage = (
+  config: SignParameters,
+  displaySize?: { width: number; height: number } | null
+): { dataUrl: string; pixelWidth: number; pixelHeight: number; displayWidth: number; displayHeight: number } | null => {
+  const text = (config.signerName ?? '').trim();
+  if (!text) {
+    return null;
+  }
+
+  const fontSize = config.fontSize ?? 16;
+  const fontFamily = config.fontFamily ?? 'Helvetica';
+  const textColor = config.textColor ?? '#000000';
+
+  const paddingX = Math.max(4, Math.round(fontSize * 0.8));
+  const paddingY = Math.max(4, Math.round(fontSize * 0.6));
+
+  const measureCanvas = document.createElement('canvas');
+  const measureCtx = measureCanvas.getContext('2d');
+  if (!measureCtx) {
+    return null;
+  }
+
+  measureCtx.font = `${fontSize}px ${fontFamily}`;
+  const metrics = measureCtx.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+  const naturalWidth = Math.max(MIN_SIGNATURE_DIMENSION, textWidth + paddingX * 2);
+  const naturalHeight = Math.max(MIN_SIGNATURE_DIMENSION, Math.ceil(fontSize + paddingY * 2));
+
+  const scale =
+    displaySize && naturalWidth > 0 && naturalHeight > 0
+      ? Math.min(displaySize.width / naturalWidth, displaySize.height / naturalHeight)
+      : 1;
+
+  const displayWidth = Math.max(MIN_SIGNATURE_DIMENSION, naturalWidth * scale);
+  const displayHeight = Math.max(MIN_SIGNATURE_DIMENSION, naturalHeight * scale);
+
+  const canvasWidth = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    Math.round(displayWidth * TEXT_OVERSAMPLE_FACTOR)
+  );
+  const canvasHeight = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    Math.round(displayHeight * TEXT_OVERSAMPLE_FACTOR)
+  );
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return null;
+  }
+
+  const effectiveScale = scale * TEXT_OVERSAMPLE_FACTOR;
+  ctx.scale(effectiveScale, effectiveScale);
+
+  ctx.fillStyle = textColor;
+  ctx.font = `${fontSize}px ${fontFamily}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+
+  const horizontalPadding = paddingX;
+  const verticalCenter = naturalHeight / 2;
+  ctx.fillText(text, horizontalPadding, verticalCenter);
+
+  return {
+    dataUrl: canvas.toDataURL('image/png'),
+    pixelWidth: canvasWidth,
+    pixelHeight: canvasHeight,
+    displayWidth,
+    displayHeight,
+  };
+};
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
+  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
+  const lastStampImageRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate(percent => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => {
+      unregister?.();
+    };
+  }, [getZoomState, registerImmediateZoomUpdate]);
+
+  const cssToPdfSize = useCallback(
+    (size: { width: number; height: number }) => {
+      const zoom = currentZoom || 1;
+      const factor = 1 / zoom;
+      return {
+        width: size.width * factor,
+        height: size.height * factor,
+      };
+    },
+    [currentZoom]
+  );
+
+  const applyStampDefaults = useCallback(
+    (imageSrc: string, subject: string, size?: { width: number; height: number }) => {
+      if (!annotationApi) return;
+
+      annotationApi.setActiveTool(null);
+      annotationApi.setActiveTool('stamp');
+      const stampTool = annotationApi.getActiveTool();
+      if (stampTool && stampTool.id === 'stamp') {
+        annotationApi.setToolDefaults('stamp', {
+          imageSrc,
+          subject,
+          ...(size ? { imageSize: { width: size.width, height: size.height } } : {}),
+        });
+      }
+    },
+    [annotationApi]
+  );
+
+  const configureStampDefaults = useCallback(async () => {
+    if (!annotationApi || !signatureConfig) {
+      return;
+    }
+
+    try {
+      if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
+        const textStamp = createTextStampImage(signatureConfig, placementPreviewSize);
+        if (textStamp) {
+          const displaySize =
+            placementPreviewSize ?? {
+              width: textStamp.displayWidth,
+              height: textStamp.displayHeight,
+            };
+          const pdfSize = cssToPdfSize(displaySize);
+          lastStampImageRef.current = textStamp.dataUrl;
+          applyStampDefaults(textStamp.dataUrl, `Text Signature - ${signatureConfig.signerName}`, pdfSize);
+        }
+        return;
+      }
+
+      if (signatureConfig.signatureData) {
+        const pdfSize = placementPreviewSize ? cssToPdfSize(placementPreviewSize) : undefined;
+        lastStampImageRef.current = signatureConfig.signatureData;
+        applyStampDefaults(signatureConfig.signatureData, `Digital Signature - ${signatureConfig.reason || 'Document signing'}`, pdfSize);
+        return;
+      }
+    } catch (error) {
+      console.error('Error preparing signature defaults:', error);
+    }
+  }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -108,58 +298,9 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     activateSignaturePlacementMode: () => {
       if (!annotationApi || !signatureConfig) return;
 
-      try {
-        if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-          // Skip native text tools - always use stamp for consistent sizing
-          const activatedTool = null;
-
-          if (!activatedTool) {
-            // Create text image as stamp with actual pixel size matching desired display size
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              const baseFontSize = signatureConfig.fontSize || 16;
-              const fontFamily = signatureConfig.fontFamily || 'Helvetica';
-              const textColor = signatureConfig.textColor || '#000000';
-
-              // Canvas pixel size = display size (EmbedPDF uses pixel dimensions directly)
-              canvas.width = Math.max(200, signatureConfig.signerName.length * baseFontSize * 0.6);
-              canvas.height = baseFontSize + 20;
-
-              ctx.fillStyle = textColor;
-              ctx.font = `${baseFontSize}px ${fontFamily}`;
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(signatureConfig.signerName, 10, canvas.height / 2);
-              const dataURL = canvas.toDataURL();
-
-              // Deactivate and reactivate to force refresh
-              annotationApi.setActiveTool(null);
-              annotationApi.setActiveTool('stamp');
-              const stampTool = annotationApi.getActiveTool();
-              if (stampTool && stampTool.id === 'stamp') {
-                annotationApi.setToolDefaults('stamp', {
-                  imageSrc: dataURL,
-                  subject: `Text Signature - ${signatureConfig.signerName}`,
-                });
-              }
-            }
-          }
-        } else if (signatureConfig.signatureData) {
-          // Use stamp tool for image/canvas signatures
-          annotationApi.setActiveTool('stamp');
-          const activeTool = annotationApi.getActiveTool();
-
-          if (activeTool && activeTool.id === 'stamp') {
-            annotationApi.setToolDefaults('stamp', {
-              imageSrc: signatureConfig.signatureData,
-              subject: `Digital Signature - ${signatureConfig.reason || 'Document signing'}`,
-            });
-          }
-        }
-      } catch (error) {
+      configureStampDefaults().catch((error) => {
         console.error('Error activating signature tool:', error);
-      }
+      });
     },
 
     updateDrawSettings: (color: string, size: number) => {
@@ -196,7 +337,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (pageAnnotationsTask) {
         pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
           const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+          if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
             // Store image data before deletion
             storeImageData(annotationId, annotation.imageSrc);
           }
@@ -230,7 +371,125 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return [];
       }
     },
-  }), [annotationApi, signatureConfig]);
+  }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
+
+  useEffect(() => {
+    if (!annotationApi?.onAnnotationEvent) {
+      return;
+    }
+
+    const unsubscribe = annotationApi.onAnnotationEvent(event => {
+      if (event.type !== 'create' && event.type !== 'update') {
+        return;
+      }
+
+      const annotation: any = event.annotation;
+      const annotationId: string | undefined = annotation?.id;
+      if (!annotationId) {
+        return;
+      }
+
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
+      const directData =
+        extractDataUrl(annotation.imageSrc) ||
+        extractDataUrl(annotation.imageData) ||
+        extractDataUrl(annotation.appearance) ||
+        extractDataUrl(annotation.stampData) ||
+        extractDataUrl(annotation.contents) ||
+        extractDataUrl(annotation.data) ||
+        extractDataUrl(annotation.customData) ||
+        extractDataUrl(annotation.asset);
+
+      const dataToStore = directData || lastStampImageRef.current;
+      if (dataToStore) {
+        storeImageData(annotationId, dataToStore);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
+
+  useEffect(() => {
+    if (!isPlacementMode) {
+      return;
+    }
+
+    let cancelled = false;
+    configureStampDefaults().catch((error) => {
+      if (!cancelled) {
+        console.error('Error updating signature defaults:', error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
+
+  useEffect(() => {
+    if (!annotationApi?.onAnnotationEvent) {
+      return;
+    }
+
+    const unsubscribe = annotationApi.onAnnotationEvent(event => {
+      if (event.type !== 'create' && event.type !== 'update') {
+        return;
+      }
+
+      const annotation: any = event.annotation;
+      const annotationId: string | undefined = annotation?.id;
+      if (!annotationId) {
+        return;
+      }
+
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
+      const directData =
+        extractDataUrl(annotation.imageSrc) ||
+        extractDataUrl(annotation.imageData) ||
+        extractDataUrl(annotation.appearance) ||
+        extractDataUrl(annotation.stampData) ||
+        extractDataUrl(annotation.contents) ||
+        extractDataUrl(annotation.data) ||
+        extractDataUrl(annotation.customData) ||
+        extractDataUrl(annotation.asset);
+
+      const dataToStore = directData || lastStampImageRef.current;
+      if (dataToStore) {
+        storeImageData(annotationId, dataToStore);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
+
+  useEffect(() => {
+    if (!isPlacementMode) {
+      return;
+    }
+
+    let cancelled = false;
+    configureStampDefaults().catch((error) => {
+      if (!cancelled) {
+        console.error('Error updating signature defaults:', error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
 
 
   return null; // This is a bridge component with no UI

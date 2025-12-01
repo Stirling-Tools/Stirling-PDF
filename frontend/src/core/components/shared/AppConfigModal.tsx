@@ -1,25 +1,29 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, Text, ActionIcon, Tooltip } from '@mantine/core';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
+import { useConfigNavSections } from '@app/components/shared/config/configNavSections';
 import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
+import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
 }
 
-const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('general');
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
   const { config } = useAppConfig();
+  const licenseAlert = useLicenseAlert();
+  const { confirmIfDirty } = useUnsavedChanges();
 
   // Extract section from URL path (e.g., /settings/people -> people)
   const getSectionFromPath = (pathname: string): NavKey | null => {
@@ -65,18 +69,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   }), []);
 
   // Get isAdmin and runningEE from app config
-  const isAdmin = config?.isAdmin ?? false;
+  const isAdmin = true // config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
-
-  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, fullConfig: config });
+  const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
-  const configNavSections = useMemo(() =>
-    createConfigNavSections(
-      isAdmin,
-      runningEE
-    ),
-    [isAdmin, runningEE]
+  const configNavSections = useConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled
   );
 
   const activeLabel = useMemo(() => {
@@ -95,11 +96,22 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     return null;
   }, [configNavSections, active]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(async () => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+    
     // Navigate back to home when closing modal
     navigate('/', { replace: true });
     onClose();
-  };
+  }, [confirmIfDirty, navigate, onClose]);
+
+  const handleNavigation = useCallback(async (key: NavKey) => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+    
+    setActive(key);
+    navigate(`/settings/${key}`);
+  }, [confirmIfDirty, navigate]);
 
   return (
     <Modal
@@ -138,29 +150,38 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                     const isDisabled = item.disabled ?? false;
                     const color = isActive ? colors.navItemActive : colors.navItem;
                     const iconSize = isMobile ? 28 : 18;
+                    const showPlanWarning =
+                      item.key === 'adminPlan' &&
+                      licenseAlert.active &&
+                      licenseAlert.audience === 'admin';
 
                     const navItemContent = (
                       <div
                         key={item.key}
-                        onClick={() => {
-                          if (!isDisabled) {
-                            setActive(item.key);
-                            navigate(`/settings/${item.key}`);
-                          }
-                        }}
+                        onClick={() => handleNavigation(item.key)}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
-                          opacity: isDisabled ? 0.5 : 1,
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          opacity: isDisabled ? 0.6 : 1,
+                          cursor: 'pointer',
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
                         <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />
                         {!isMobile && (
-                          <Text size="sm" fw={500} style={{ color }}>
-                            {item.label}
-                          </Text>
+                          <Group gap={4} align="center" wrap="nowrap">
+                            <Text size="sm" fw={500} style={{ color }}>
+                              {item.label}
+                            </Text>
+                            {showPlanWarning && (
+                              <LocalIcon
+                                icon="warning-rounded"
+                                width={14}
+                                height={14}
+                                style={{ color: 'var(--mantine-color-orange-7)' }}
+                              />
+                            )}
+                          </Group>
                         )}
                       </div>
                     );
@@ -208,6 +229,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         </div>
       </div>
     </Modal>
+  );
+};
+
+// Wrapper component that provides the UnsavedChangesContext
+const AppConfigModal: React.FC<AppConfigModalProps> = (props) => {
+  return (
+    <UnsavedChangesProvider>
+      <AppConfigModalInner {...props} />
+    </UnsavedChangesProvider>
   );
 };
 
