@@ -29,8 +29,19 @@ use commands::{
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
 
+#[cfg(target_os = "linux")]
+fn configure_linux_webview() {
+  if std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+    add_log("🛠️ Enabling software rendering for WebKit to avoid EGL issues on Linux".to_string());
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  #[cfg(target_os = "linux")]
+  configure_linux_webview();
+
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()
