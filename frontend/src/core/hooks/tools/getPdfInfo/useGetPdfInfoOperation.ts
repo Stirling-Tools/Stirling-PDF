@@ -9,12 +9,7 @@ import {
   PdfInfoReportEntry,
   INFO_JSON_FILENAME,
 } from '@app/types/getPdfInfo';
-
-export interface GetPdfInfoParameters {
-  // Placeholder for future parameters
-}
-
-export const defaultParameters: GetPdfInfoParameters = {};
+import type { GetPdfInfoParameters } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoParameters';
 
 export interface GetPdfInfoOperationHook extends ToolOperationHook<GetPdfInfoParameters> {
   results: PdfInfoReportEntry[];

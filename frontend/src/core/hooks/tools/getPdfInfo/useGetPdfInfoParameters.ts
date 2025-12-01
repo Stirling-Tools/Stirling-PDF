@@ -1,5 +1,9 @@
+import { BaseParameters } from '@app/types/parameters';
 import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
-import type { GetPdfInfoParameters } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation';
+
+export interface GetPdfInfoParameters extends BaseParameters {
+  // No parameters needed
+}
 
 export const defaultParameters: GetPdfInfoParameters = {};
 
