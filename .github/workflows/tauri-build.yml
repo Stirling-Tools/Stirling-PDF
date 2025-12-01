@@ -21,7 +21,7 @@ on:
       - 'frontend/tsconfig.desktop.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, V2]
+    branches: [main, V2, V2-what-broke-desktop]
 
 permissions:
   contents: read
