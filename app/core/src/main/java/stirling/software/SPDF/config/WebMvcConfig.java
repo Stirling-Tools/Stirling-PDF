@@ -41,11 +41,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/index.html")
                 .addResourceLocations("classpath:/static/")
                 .setCacheControl(CacheControl.noCache().mustRevalidate());
-
-        // Short cache for other static resources (images, fonts, etc.)
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic());
     }
 
     @Override
