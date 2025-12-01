@@ -19,14 +19,18 @@ export function markStepSeen(stepId: OnboardingStepId): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(getStorageKey(stepId), 'true');
-  } catch {}
+  } catch (error) {
+    console.error('[onboardingStorage] Error marking step as seen:', error);
+  }
 }
 
 export function resetStepSeen(stepId: OnboardingStepId): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(getStorageKey(stepId));
-  } catch {}
+  } catch (error) {
+    console.error('[onboardingStorage] Error resetting step seen:', error);
+  }
 }
 
 export function resetAllOnboardingProgress(): void {
@@ -39,7 +43,9 @@ export function resetAllOnboardingProgress(): void {
       if (key?.startsWith(prefix)) keysToRemove.push(key);
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-  } catch {}
+  } catch (error) {
+    console.error('[onboardingStorage] Error resetting all onboarding progress:', error);
+  }
 }
 
 export function getOnboardingStorageState(): Record<string, boolean> {
