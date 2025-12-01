@@ -563,12 +563,6 @@ jobs:
             echo "⚠️ No DMG file found to verify"
           fi
 
-      - name: Install FUSE for AppImage processing
-        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fuse libfuse2
-
       - name: Rename artifacts
         shell: bash
         run: |
@@ -586,45 +580,7 @@ jobs:
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             if [ "${{ matrix.platform }}" = "ubuntu-22.04" ] && [ "${{ matrix.name }}" = "linux-x86_64-appimage" ] ; then
-              # Find the AppImage file
-              APPIMAGE_PATH=$(find . -name "*.AppImage" | head -1)
-              if [ -n "$APPIMAGE_PATH" ]; then
-                echo "Processing AppImage: $APPIMAGE_PATH"
-
-                # Make AppImage executable
-                chmod +x "$APPIMAGE_PATH"
-
-                # Extract using the AppImage itself
-                cd "$(dirname "$APPIMAGE_PATH")"
-                APPIMAGE_NAME=$(basename "$APPIMAGE_PATH")
-                "./$APPIMAGE_NAME" --appimage-extract
-
-                # Remove libwayland-client.so files
-                echo "Removing libwayland-client.so files..."
-                find squashfs-root -name "libwayland-client.so*" -type f -delete
-
-                # List what was removed for verification
-                echo "Files remaining in lib directories:"
-                find squashfs-root -name "lib*" -type d | head -5 | while read dir; do
-                  echo "Contents of $dir:"
-                  ls "$dir" | grep -E "(wayland|fuse)" || echo "  No wayland/fuse libraries found"
-                done
-
-                # Get appimagetool
-                wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-                chmod +x appimagetool-x86_64.AppImage
-
-                # Repackage AppImage with no-appstream to avoid warnings
-                ARCH=x86_64 ./appimagetool-x86_64.AppImage --no-appstream squashfs-root "$APPIMAGE_NAME"
-
-                # Clean up
-                rm -rf squashfs-root appimagetool-x86_64.AppImage
-
-                echo "libwayland-client.so removed from AppImage successfully"
-              else
-                echo "No AppImage found to process"
-              fi
-              cp "$APPIMAGE_PATH" "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage"
+              find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
             fi
           fi
 
