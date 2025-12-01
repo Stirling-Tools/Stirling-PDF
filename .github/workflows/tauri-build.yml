@@ -84,9 +84,26 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name != 'linux-x86_64-appimage'
+        run: |
+          sudo apt-get update
+          # Dependencies explanation:
+          # - libwebkit2gtk-4.1-dev: WebKit engine for Tauri v2 (4.0 was for v1)
+          # - libappindicator3-dev: System tray support
+          # - librsvg2-dev: SVG rendering
+          # - patchelf: Required for AppImage packaging
+          # - libxdo-dev: Keyboard/mouse automation
+          # - libasound2-dev: Audio support
+          # - libopenblas-dev: GPU acceleration support
+          # - libx11-dev: X11 development files for window system interaction
+          # - libxtst-dev: X11 testing extensions for input simulation
+          # - libxrandr-dev: X11 RandR extension for display configuration
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
 
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install dependencies (appimage only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
           
