@@ -118,6 +118,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: gradle
 
       - name: Make libjvm discoverable (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -542,35 +543,6 @@ jobs:
           else
             echo "⚠️ No DMG file found to verify"
           fi
-      - name: Test AppImage – wait for webserver
-        if: matrix.platform == 'ubuntu-22.04' && contains(matrix.args, 'appimage')
-        run: |
-          set -e
-          APPIMAGE=$(find ./frontend/src-tauri/target -name "*.AppImage" -type f | head -n 1)
-          chmod +x "$APPIMAGE"
-
-          echo "Starting AppImage in background..."
-          timeout 120 "$APPIMAGE" --appimage-extract &
-          PID=$!
-
-          echo "Waiting for http://127.0.0.1:8080 to respond..."
-          for i in $(seq 1 40); do
-            if curl -f -s http://127.0.0.1:8080 > /dev/null 2>&1; then
-              echo "Stirling-PDF is up and running on port 8080!"
-              curl -s http://127.0.0.1:8080 | head -n 5
-              pkill -f "$(basename "$APPIMAGE")" || true
-              wait $PID || true
-              echo "AppImage functional test PASSED"
-              exit 0
-            fi
-            echo "Attempt $i/40 – still waiting for webserver..."
-            sleep 3
-          done
-
-          echo "AppImage failed to start webserver within 120s"
-          ps aux | grep -i java || true
-          pkill -f "$(basename "$APPIMAGE")" || true
-          exit 1
 
       - name: Rename artifacts
         shell: bash

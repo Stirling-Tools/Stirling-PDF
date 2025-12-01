@@ -141,7 +141,6 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^27.0.0",
-    "license-checker": "^25.0.1",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.18.0",

@@ -52,7 +52,11 @@
       },
       "appimage": {
         "bundleMediaFramework": false,
-        "files": {}
+        "files": {
+          "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitStorageProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitStorageProcess",
+          "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess": "lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess"
+        }
       }
     },
     "windows": {
