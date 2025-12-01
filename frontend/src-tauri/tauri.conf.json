@@ -22,7 +22,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "appimage", "dmg", "app", "msi"],
+    "targets": ["appimage"],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
@@ -48,6 +48,9 @@
     ],
     "linux": {
       "deb": {
+        "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "rpm": {
         "desktopTemplate": "stirling-pdf.desktop"
       },
       "appimage": {
