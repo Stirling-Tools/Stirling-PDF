@@ -3,7 +3,8 @@ Version=1.0
 Type=Application
 Name=Stirling-PDF
 Comment=Locally hosted web application that allows you to perform various operations on PDF files
-Exec=/usr/bin/stirling-pdf
+TryExec={{exec}}
+Exec={{exec}} %F
 Icon={{icon}}
 Terminal=false
 MimeType=application/pdf;
@@ -12,4 +13,4 @@ Actions=open-file;
 
 [Desktop Action open-file]
 Name=Open PDF File
-Exec=/usr/bin/stirling-pdf %F
+Exec={{exec}} %F
