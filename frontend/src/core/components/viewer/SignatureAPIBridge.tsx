@@ -122,7 +122,7 @@ const createTextStampImage = (
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
+  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
@@ -389,6 +389,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return;
       }
 
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
       const directData =
         extractDataUrl(annotation.imageSrc) ||
         extractDataUrl(annotation.imageData) ||
@@ -408,7 +413,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
 
   useEffect(() => {
     if (!isPlacementMode) {
@@ -443,6 +448,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return;
       }
 
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
       const directData =
         extractDataUrl(annotation.imageSrc) ||
         extractDataUrl(annotation.imageData) ||
@@ -462,7 +472,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
 
   useEffect(() => {
     if (!isPlacementMode) {
