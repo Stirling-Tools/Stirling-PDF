@@ -101,7 +101,7 @@ jobs:
             librsvg2-dev \
             xdg-utils \
             openjdk-17-jre-headless
-          sudo apt-get install -y libgtk-3-dev libappindicator3-dev patchelf
+          sudo apt-get install -y libgtk-3-dev patchelf
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
