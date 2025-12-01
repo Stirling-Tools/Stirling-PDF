@@ -330,6 +330,22 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Generate temporary GPG key for AppImage
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          cat >keyparams <<'EOF'
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Name-Real: CI AppImage Signer
+          Name-Email: ci-appimage@example.invalid
+          Expire-Date: 0
+          %commit
+          EOF
+          gpg --batch --generate-key keyparams
+          echo "Generated temporary GPG key:"
+          gpg --list-secret-keys --keyid-format=long
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
