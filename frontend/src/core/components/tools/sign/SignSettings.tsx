@@ -247,16 +247,19 @@ const SignSettings = ({
     (signature: SavedSignature) => {
       setPlacementManuallyPaused(false);
 
+      // Use the data URL directly (already converted to base64 when loaded)
+      const dataUrlToUse = signature.dataUrl;
+
       if (signature.type === 'canvas') {
         if (parameters.signatureType !== 'canvas') {
           onParameterChange('signatureType', 'canvas');
         }
-        setCanvasSignatureData(signature.dataUrl);
+        setCanvasSignatureData(dataUrlToUse);
       } else if (signature.type === 'image') {
         if (parameters.signatureType !== 'image') {
           onParameterChange('signatureType', 'image');
         }
-        setImageSignatureData(signature.dataUrl);
+        setImageSignatureData(dataUrlToUse);
       } else if (signature.type === 'text') {
         if (parameters.signatureType !== 'text') {
           onParameterChange('signatureType', 'text');
@@ -270,7 +273,7 @@ const SignSettings = ({
       const savedKey =
         signature.type === 'text'
           ? buildTextSignatureKey(signature.signerName, signature.fontSize, signature.fontFamily, signature.textColor)
-          : signature.dataUrl;
+          : dataUrlToUse;
       setLastSavedKeyForType(signature.type, savedKey);
 
       const activate = () => onActivateSignaturePlacement?.();

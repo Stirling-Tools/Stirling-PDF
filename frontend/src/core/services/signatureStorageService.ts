@@ -142,7 +142,7 @@ class SignatureStorageService {
       const response = await apiClient.get<SavedSignature[]>('/api/v1/proprietary/signatures');
       const signatures = response.data;
 
-      // Fetch image data for each signature and convert to blob URLs
+      // Fetch image data for each signature and convert to data URLs
       const signaturePromises = signatures.map(async (sig) => {
         if (sig.dataUrl && sig.dataUrl.startsWith('/api/v1/general/signatures/')) {
           try {
@@ -151,14 +151,20 @@ class SignatureStorageService {
               responseType: 'arraybuffer',
             });
 
-            // Convert to blob URL
+            // Convert to data URL (base64) for both display and use
             const blob = new Blob([imageResponse.data], {
               type: imageResponse.headers['content-type'] || 'image/png',
             });
-            const blobUrl = URL.createObjectURL(blob);
-            this.blobUrls.add(blobUrl);
 
-            return { ...sig, dataUrl: blobUrl };
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+
+            // Use data URL for everything - more reliable than blob URLs
+            return { ...sig, dataUrl };
           } catch (error) {
             console.error(`[SignatureStorage] Failed to load image for ${sig.id}:`, error);
             return sig; // Return original if image fetch fails
