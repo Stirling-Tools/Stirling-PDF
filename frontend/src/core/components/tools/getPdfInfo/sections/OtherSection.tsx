@@ -3,6 +3,7 @@ import { Accordion, Code, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import SectionBlock from '../shared/SectionBlock';
 import SimpleArrayList from '../shared/SimpleArrayList';
+import { pdfInfoAccordionStyles } from '../shared/accordionStyles';
 
 interface OtherSectionProps {
   anchorId: string;
@@ -32,7 +33,12 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
           <Text fw={600} size="sm">{t('getPdfInfo.other.layers', 'Layers')}</Text>
           <SimpleArrayList arr={Array.isArray(other?.Layers) ? other?.Layers : []} />
         </Stack>
-        <Accordion variant="separated" radius="md" defaultValue="">
+        <Accordion
+          variant="separated"
+          radius="md"
+          defaultValue=""
+          styles={pdfInfoAccordionStyles}
+        >
           <Accordion.Item value="structureTree">
             <Accordion.Control>
               <Text fw={600} size="sm">{t('getPdfInfo.other.structureTree', 'StructureTree')}</Text>
@@ -44,7 +50,9 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
                     style={{
                       whiteSpace: 'pre-wrap',
                       backgroundColor: panelBg,
-                      color: panelText
+                      color: panelText,
+                      maxHeight: '20rem',
+                      overflowY: 'auto'
                     }}
                   >
                     {JSON.stringify(other?.StructureTree, null, 2)}
@@ -63,7 +71,9 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
                     style={{
                       whiteSpace: 'pre-wrap',
                       backgroundColor: panelBg,
-                      color: panelText
+                      color: panelText,
+                      maxHeight: '400px',
+                      overflowY: 'auto'
                     }}
                   >
                     {String(other?.XMPMetadata)}

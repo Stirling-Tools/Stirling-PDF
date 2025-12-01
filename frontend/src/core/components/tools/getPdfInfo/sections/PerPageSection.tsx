@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SectionBlock from '../shared/SectionBlock';
 import KeyValueList from '../shared/KeyValueList';
 import SimpleArrayList from '../shared/SimpleArrayList';
+import { pdfInfoAccordionStyles } from '../shared/accordionStyles';
 
 interface PerPageSectionProps {
   anchorId: string;
@@ -18,7 +19,12 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({ anchorId, perPage }) =>
   return (
     <SectionBlock title={t('getPdfInfo.sections.perPageInfo', 'Per Page Info')} anchorId={anchorId}>
       {perPage && Object.keys(perPage as any).length > 0 ? (
-        <Accordion variant="separated" radius="md" defaultValue="">
+        <Accordion
+          variant="separated"
+          radius="md"
+          defaultValue=""
+          styles={pdfInfoAccordionStyles}
+        >
           {Object.entries(perPage as any).map(([pageLabel, pageInfo]: [string, any]) => (
             <Accordion.Item key={pageLabel} value={pageLabel}>
               <Accordion.Control>

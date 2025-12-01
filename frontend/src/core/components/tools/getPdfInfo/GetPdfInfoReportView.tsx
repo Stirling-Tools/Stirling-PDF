@@ -34,9 +34,23 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
     };
     const anchor = idMap[data.scrollTo];
     if (!anchor) return;
-    const el = containerRef.current?.querySelector<HTMLElement>(`#${anchor}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const container = containerRef.current;
+    const el = container?.querySelector<HTMLElement>(`#${anchor}`);
+    if (el && container) {
+      // Calculate scroll position with 4rem buffer from top
+      const bufferPx = parseFloat(getComputedStyle(document.documentElement).fontSize) * 4;
+      const elementTop = el.getBoundingClientRect().top;
+      const containerTop = container.getBoundingClientRect().top;
+      const currentScroll = container.scrollTop;
+      const targetScroll = currentScroll + (elementTop - containerTop) - bufferPx;
+      
+      container.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+      
+      // Flash highlight the section
+      el.classList.remove('section-flash-highlight');
+      void el.offsetWidth; // Force reflow
+      el.classList.add('section-flash-highlight');
+      setTimeout(() => el.classList.remove('section-flash-highlight'), 1500);
     }
   }, [data.scrollTo]);
 
