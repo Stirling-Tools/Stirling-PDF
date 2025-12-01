@@ -90,7 +90,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install -y \
-            libwebkit2gtk-4.1-dev \
+            libwebkit2gtk-4.0-dev \
             build-essential \
             curl \
             wget \
@@ -369,7 +369,7 @@ jobs:
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
-          args: ${{ matrix.args }}
+          # args: ${{ matrix.args }}
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
