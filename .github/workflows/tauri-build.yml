@@ -100,6 +100,7 @@ jobs:
             libssl-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            xdg-utils \
             openjdk-17-jre-headless
 
       - name: Setup Node.js
