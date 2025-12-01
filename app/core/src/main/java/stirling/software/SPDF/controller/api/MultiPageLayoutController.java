@@ -73,7 +73,7 @@ public class MultiPageLayoutController {
                             "error.invalidFormat",
                             "Invalid {0} format: {1}",
                             "pagesPerSheet",
-                            "only 2, 3, and perfect squares are supported");
+                            "must be 2, 3 or a perfect square");
                 }
 
                 cols =

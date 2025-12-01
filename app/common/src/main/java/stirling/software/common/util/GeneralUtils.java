@@ -95,32 +95,6 @@ public class GeneralUtils {
     }
 
     /*
-     * Gets the configured temporary directory, creating it if necessary.
-     *
-     * @return Path to the temporary directory
-     * @throws IOException if directory creation fails
-     */
-    private Path getTempDirectory() throws IOException {
-        String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
-        if (customTempDir == null || customTempDir.isEmpty()) {
-            customTempDir = System.getProperty("stirling.tempfiles.directory");
-        }
-
-        Path tempDir;
-        if (customTempDir != null && !customTempDir.isEmpty()) {
-            tempDir = Path.of(customTempDir);
-        } else {
-            tempDir = Path.of(System.getProperty("java.io.tmpdir"), "stirling-pdf");
-        }
-
-        if (!Files.exists(tempDir)) {
-            Files.createDirectories(tempDir);
-        }
-
-        return tempDir;
-    }
-
-    /*
      * Remove file extension
      *
      * <p>Uses fast string operations for common cases (valid extensions) and falls back to
@@ -1100,17 +1074,29 @@ public class GeneralUtils {
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                             .runCommandWithOutputHandling(command);
 
+            ExceptionUtils.GhostscriptException detectedError =
+                    ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
+            if (detectedError != null) {
+                log.warn(
+                        "Ghostscript ebook optimization reported a critical error: {}",
+                        detectedError.getMessage());
+                throw detectedError;
+            }
+
             if (result.getRc() != 0) {
                 log.warn(
                         "Ghostscript ebook optimization failed with return code: {}",
                         result.getRc());
-                throw ExceptionUtils.createGhostscriptCompressionException();
+                throw ExceptionUtils.createGhostscriptCompressionException(result.getMessages());
             }
 
             return Files.readAllBytes(tempOutput);
 
         } catch (Exception e) {
             log.warn("Ghostscript ebook optimization failed", e);
+            if (e instanceof ExceptionUtils.GhostscriptException ghostscriptException) {
+                throw ghostscriptException;
+            }
             throw ExceptionUtils.createGhostscriptCompressionException(e);
         } finally {
             if (tempInput != null) {

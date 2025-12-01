@@ -144,7 +144,7 @@ public class ImageProcessingUtils {
         }
 
         if (image == null) {
-            throw new IOException("Unable to read image from file: " + filename);
+            throw ExceptionUtils.createImageReadException(filename);
         }
 
         double orientation = extractImageOrientation(file.getInputStream());

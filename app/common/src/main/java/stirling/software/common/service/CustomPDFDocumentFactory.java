@@ -478,11 +478,6 @@ public class CustomPDFDocumentFactory {
         return file;
     }
 
-    /** Create a uniquely named temporary directory */
-    private Path createTempDirectory(String prefix) throws IOException {
-        return Files.createTempDirectory(prefix + tempCounter.incrementAndGet() + "-");
-    }
-
     /** Create new document bytes based on an existing document */
     public byte[] createNewBytesBasedOnOldDocument(byte[] oldDocument) throws IOException {
         try (PDDocument document = load(oldDocument)) {

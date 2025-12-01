@@ -36,7 +36,7 @@ jobs:
           egress-policy: audit
 
       - name: Check out code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
 
@@ -82,7 +82,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # v7.0.9
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: "Update 3rd Party Licenses"
