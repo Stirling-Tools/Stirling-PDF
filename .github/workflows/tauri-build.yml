@@ -155,8 +155,8 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Make libjvm discoverable (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Make libjvm discoverable (appimage only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
           JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
           if [ -f "$JAVA_LIBJVM" ]; then
@@ -367,7 +367,7 @@ jobs:
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Generate temporary GPG key for AppImage
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
           cat >keyparams <<'EOF'
           %no-protection
