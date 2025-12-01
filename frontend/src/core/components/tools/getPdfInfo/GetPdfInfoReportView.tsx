@@ -21,6 +21,7 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
   useEffect(() => {
     if (!data.scrollTo) return;
     const idMap: Record<string, string> = {
+      summary: 'summary',
       metadata: 'metadata',
       formFields: 'formFields',
       basicInfo: 'basicInfo',
@@ -85,15 +86,6 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
   return (
     <div className="report-container" ref={containerRef}>
       <Stack gap="xl" align="center">
-        <Stack gap="xs" align="center">
-          <Badge size="lg" color="blue" variant="light">
-            {t('getPdfInfo.report.title', 'PDF Information View')}
-          </Badge>
-          <Text size="sm" c="dimmed">
-            {t('getPdfInfo.report.generatedAt', 'Generated')}{' '}
-            {new Date(data.generatedAt).toLocaleString()}
-          </Text>
-        </Stack>
 
         <div className="simulated-page">
           <Stack gap="lg">

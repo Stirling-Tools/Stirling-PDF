@@ -15,6 +15,7 @@ import { useNavigationActions, useNavigationState } from '@app/contexts/Navigati
 import type { PdfInfoReportData } from '@app/types/getPdfInfo';
 
 const CHAPTERS = [
+  { id: 'summary', labelKey: 'getPdfInfo.summary.title', fallback: 'PDF Summary' },
   { id: 'metadata', labelKey: 'getPdfInfo.sections.metadata', fallback: 'Metadata' },
   { id: 'formFields', labelKey: 'getPdfInfo.sections.formFields', fallback: 'Form Fields' },
   { id: 'basicInfo', labelKey: 'getPdfInfo.sections.basicInfo', fallback: 'Basic Info' },
