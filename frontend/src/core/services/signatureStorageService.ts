@@ -14,7 +14,6 @@ interface SignatureStorageCapabilities {
 class SignatureStorageService {
   private capabilities: SignatureStorageCapabilities | null = null;
   private detectionPromise: Promise<SignatureStorageCapabilities> | null = null;
-  private blobUrls: Set<string> = new Set();
 
   /**
    * Detect if backend supports signature storage API
@@ -83,9 +82,6 @@ class SignatureStorageService {
    * Load all signatures
    */
   async loadSignatures(): Promise<SavedSignature[]> {
-    // Clean up old blob URLs before loading new ones
-    this.cleanup();
-
     const capabilities = await this.detectCapabilities();
 
     if (capabilities.supportsBackend) {
@@ -274,16 +270,6 @@ class SignatureStorageService {
     }
 
     return { migrated, failed };
-  }
-
-  /**
-   * Clean up blob URLs to prevent memory leaks
-   */
-  cleanup(): void {
-    this.blobUrls.forEach(url => {
-      URL.revokeObjectURL(url);
-    });
-    this.blobUrls.clear();
   }
 }
 
