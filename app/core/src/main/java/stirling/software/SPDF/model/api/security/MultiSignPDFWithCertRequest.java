@@ -5,8 +5,10 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
 import stirling.software.common.model.api.PDFFile;
 
 @Data
@@ -36,7 +38,9 @@ public class MultiSignPDFWithCertRequest extends PDFFile {
                     "PKCS12/PFX keystore files. Should match the order of certTypes when PKCS12 or PFX is selected")
     private List<MultipartFile> p12Files;
 
-    @Schema(description = "JKS keystore files. Should match the order of certTypes when JKS is selected")
+    @Schema(
+            description =
+                    "JKS keystore files. Should match the order of certTypes when JKS is selected")
     private List<MultipartFile> jksFiles;
 
     @Schema(description = "Passwords for keystores or private keys", format = "password")

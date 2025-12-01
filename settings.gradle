@@ -1,3 +1,13 @@
+pluginManagement {
+    repositories {
+        maven { url uri("${rootDir}/local-maven") }
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+        maven { url 'https://repo.spring.io/release' }
+    }
+}
+
 plugins {
     // Apply the foojay-resolver plugin to allow automatic download of JDKs
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'

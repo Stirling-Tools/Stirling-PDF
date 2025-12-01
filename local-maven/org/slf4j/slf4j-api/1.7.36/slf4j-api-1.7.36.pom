@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-parent</artifactId>
+    <version>1.7.36</version>
+  </parent>
+
+  <artifactId>slf4j-api</artifactId>
+
+  <packaging>jar</packaging>
+  <name>SLF4J API Module</name>
+  <description>The slf4j API</description>
+
+  <url>http://www.slf4j.org</url>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <configuration>
+          <!-- Signatures cannot be determined and will error unless excluded.  This is isolated to
+               code otherwise already marked for removal in the module artifact. -->
+          <ignores>
+            <ignore>org.slf4j.impl.StaticMDCBinder</ignore>
+            <ignore>org.slf4j.impl.StaticLoggerBinder</ignore>
+            <ignore>org.slf4j.impl.StaticMarkerBinder</ignore>
+          </ignores>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>once</forkMode>
+          <reportFormat>plain</reportFormat>
+          <trimStackTrace>false</trimStackTrace>
+          <excludes>
+            <exclude>**/AllTest.java</exclude>
+            <exclude>**/PackageTest.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-test-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+             <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <tasks>
+            <echo>Removing slf4j-api's dummy StaticLoggerBinder and StaticMarkerBinder</echo>
+            <delete dir="target/classes/org/slf4j/impl"/>
+          </tasks>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

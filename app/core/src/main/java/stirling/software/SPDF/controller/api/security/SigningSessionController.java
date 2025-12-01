@@ -8,6 +8,7 @@ import java.security.cert.Certificate;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.controller.api.security.CertSignController.CreateSignature;
 import stirling.software.SPDF.model.api.security.CreateSigningSessionRequest;
 import stirling.software.SPDF.model.api.security.NotifySigningParticipantsRequest;
@@ -32,7 +35,6 @@ import stirling.software.SPDF.model.api.security.SigningParticipant;
 import stirling.software.SPDF.model.api.security.SigningSession;
 import stirling.software.SPDF.service.SigningSessionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
-import stirling.software.common.config.swagger.StandardPdfResponse;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -106,7 +108,8 @@ public class SigningSessionController {
     @PostMapping(value = "/cert-sign/sessions/{sessionId}/finalize")
     @Operation(
             summary = "Finalize signing session",
-            description = "Applies collected certificates in order and returns the signed document.")
+            description =
+                    "Applies collected certificates in order and returns the signed document.")
     @StandardPdfResponse
     public ResponseEntity<byte[]> finalizeSession(
             @PathVariable("sessionId") @NotBlank String sessionId) throws Exception {
@@ -125,7 +128,8 @@ public class SigningSessionController {
                             ? serverCertificateServiceInterface.getServerCertificatePassword()
                             : submission.getPassword();
             CreateSignature createSignature =
-                    new CreateSignature(keystore, password != null ? password.toCharArray() : new char[0]);
+                    new CreateSignature(
+                            keystore, password != null ? password.toCharArray() : new char[0]);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             CertSignController.sign(
@@ -148,11 +152,12 @@ public class SigningSessionController {
         session.setSignedPdf(pdf);
         return WebResponseUtils.bytesToWebResponse(
                 pdf,
-                GeneralUtils.generateFilename(
-                        session.getDocumentName(), "_shared_signed" + GeneralUtils.PDF_EXTENSION));
+                GeneralUtils.generateFilename(session.getDocumentName(), "_shared_signed.pdf"));
     }
 
     private KeyStore buildKeystore(ParticipantCertificateSubmission submission) throws Exception {
+        CertSignController certSignController =
+                new CertSignController(pdfDocumentFactory, serverCertificateServiceInterface);
         String certType = submission.getCertType().toUpperCase(Locale.ROOT);
         String password = submission.getPassword();
         switch (certType) {
@@ -166,13 +171,17 @@ public class SigningSessionController {
                             "PEM certificate and key bytes for signer");
                 }
                 PrivateKey privateKey =
-                        new CertSignController()
-                                .getPrivateKeyFromPEM(submission.getPrivateKey(), password);
+                        certSignController.getPrivateKeyFromPEM(
+                                submission.getPrivateKey(), password);
                 Certificate certificate =
                         (Certificate)
-                                new CertSignController().getCertificateFromPEM(submission.getCertificate());
+                                certSignController.getCertificateFromPEM(
+                                        submission.getCertificate());
                 pemStore.setKeyEntry(
-                        "alias", privateKey, password.toCharArray(), new Certificate[] {certificate});
+                        "alias",
+                        privateKey,
+                        password.toCharArray(),
+                        new Certificate[] {certificate});
                 return pemStore;
             case "PKCS12":
             case "PFX":
@@ -183,7 +192,9 @@ public class SigningSessionController {
                             "PKCS12 keystore bytes");
                 }
                 KeyStore p12Store = KeyStore.getInstance("PKCS12");
-                p12Store.load(new ByteArrayInputStream(submission.getP12Keystore()), password.toCharArray());
+                p12Store.load(
+                        new ByteArrayInputStream(submission.getP12Keystore()),
+                        password.toCharArray());
                 return p12Store;
             case "JKS":
                 if (submission.getJksKeystore() == null) {
@@ -193,7 +204,9 @@ public class SigningSessionController {
                             "JKS keystore bytes");
                 }
                 KeyStore jksStore = KeyStore.getInstance("JKS");
-                jksStore.load(new ByteArrayInputStream(submission.getJksKeystore()), password.toCharArray());
+                jksStore.load(
+                        new ByteArrayInputStream(submission.getJksKeystore()),
+                        password.toCharArray());
                 return jksStore;
             case "SERVER":
                 if (serverCertificateServiceInterface == null) {
@@ -208,8 +221,7 @@ public class SigningSessionController {
                 }
                 if (!serverCertificateServiceInterface.hasServerCertificate()) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.serverCertificateNotFound",
-                            "No server certificate configured");
+                            "error.serverCertificateNotFound", "No server certificate configured");
                 }
                 return serverCertificateServiceInterface.getServerKeyStore();
             default:

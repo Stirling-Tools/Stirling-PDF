@@ -68,9 +68,7 @@ public class SigningSessionService {
         SigningSession session = sessions.get(sessionId);
         if (session == null) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.notFound",
-                    "Signing session {0} was not found",
-                    sessionId);
+                    "error.notFound", "Signing session {0} was not found", sessionId);
         }
         return session;
     }

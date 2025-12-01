@@ -321,7 +321,8 @@ public class CertSignController {
                 case "PEM":
                     ks = KeyStore.getInstance("JKS");
                     ks.load(null);
-                    MultipartFile privateKeyFile = getFromList(request.getPrivateKeyFiles(), i, null);
+                    MultipartFile privateKeyFile =
+                            getFromList(request.getPrivateKeyFiles(), i, null);
                     MultipartFile certFile = getFromList(request.getCertFiles(), i, null);
                     if (privateKeyFile == null || certFile == null) {
                         throw ExceptionUtils.createIllegalArgumentException(
@@ -333,7 +334,10 @@ public class CertSignController {
                             getPrivateKeyFromPEM(privateKeyFile.getBytes(), keystorePassword);
                     Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
                     ks.setKeyEntry(
-                            "alias", privateKey, keystorePassword.toCharArray(), new Certificate[] {cert});
+                            "alias",
+                            privateKey,
+                            keystorePassword.toCharArray(),
+                            new Certificate[] {cert});
                     break;
                 case "PKCS12":
                 case "PFX":
@@ -384,7 +388,8 @@ public class CertSignController {
                             "certificate type: " + certType);
             }
 
-            CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
+            CreateSignature createSignature =
+                    new CreateSignature(ks, keystorePassword.toCharArray());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             String signerName = getFromList(request.getNames(), i, "SPDF");
             String location = getFromList(request.getLocations(), i, "SPDF");
