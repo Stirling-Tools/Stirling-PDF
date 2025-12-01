@@ -89,7 +89,9 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt install \
+          sudo apt install -y \
+            libwebkit2gtk-4.1-0 \
+            libwebkit2gtk-4.1-dev \
             build-essential \
             curl \
             wget \
@@ -99,13 +101,6 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             openjdk-17-jre-headless
-          sudo apt install -y \
-            libwebkit2gtk-4.1-0=2.44.0-2 \
-            libwebkit2gtk-4.1-dev=2.44.0-2 \
-            libjavascriptcoregtk-4.1-0=2.44.0-2 \
-            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-            gir1.2-webkit2-4.1=2.44.0-2;
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
