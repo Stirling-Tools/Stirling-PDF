@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { signatureStorageService, type StorageType } from '@app/services/signatureStorageService';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 export const MAX_SAVED_SIGNATURES = 10;
 
@@ -49,6 +50,8 @@ export const useSavedSignatures = () => {
   const [savedSignatures, setSavedSignatures] = useState<SavedSignature[]>([]);
   const [storageType, setStorageType] = useState<StorageType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { config } = useAppConfig();
+  const isAdmin = config?.isAdmin ?? false;
 
   // Load signatures and detect storage type on mount
   useEffect(() => {
@@ -146,17 +149,24 @@ export const useSavedSignatures = () => {
   const updateSignatureLabel = useCallback(async (id: string, nextLabel: string) => {
     try {
       await signatureStorageService.updateSignatureLabel(id, nextLabel);
-      setSavedSignatures(prev =>
-        prev.map(entry =>
-          entry.id === id
-            ? { ...entry, label: nextLabel.trim() || entry.label || 'Signature', updatedAt: Date.now() }
-            : entry
-        )
-      );
+      // Reload signatures to get updated data from backend
+      if (storageType === 'backend') {
+        const signatures = await signatureStorageService.loadSignatures();
+        setSavedSignatures(signatures);
+      } else {
+        // For localStorage, update in place
+        setSavedSignatures(prev =>
+          prev.map(entry =>
+            entry.id === id
+              ? { ...entry, label: nextLabel.trim() || entry.label || 'Signature', updatedAt: Date.now() }
+              : entry
+          )
+        );
+      }
     } catch (error) {
       console.error('[useSavedSignatures] Failed to update signature label:', error);
     }
-  }, []);
+  }, [storageType]);
 
   const replaceSignature = useCallback(
     async (id: string, payload: SavedSignaturePayload) => {
@@ -209,6 +219,7 @@ export const useSavedSignatures = () => {
     byTypeCounts,
     storageType,
     isLoading,
+    isAdmin,
   };
 };
 

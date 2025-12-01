@@ -130,9 +130,7 @@ class SignatureStorageService {
     const capabilities = await this.detectCapabilities();
 
     if (capabilities.supportsBackend) {
-      // Backend only stores images - labels not supported for backend signatures
-      console.log('[SignatureStorage] Label updates not supported for backend signatures');
-      return;
+      await this._updateLabelInBackend(id, label);
     } else {
       this._updateLabelInLocalStorage(id, label);
     }
@@ -182,6 +180,10 @@ class SignatureStorageService {
 
   private async _deleteFromBackend(id: string): Promise<void> {
     await apiClient.delete(`/api/v1/proprietary/signatures/${id}`);
+  }
+
+  private async _updateLabelInBackend(id: string, label: string): Promise<void> {
+    await apiClient.post(`/api/v1/proprietary/signatures/${id}/label`, { label });
   }
 
   // LocalStorage methods

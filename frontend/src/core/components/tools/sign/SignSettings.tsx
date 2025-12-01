@@ -101,6 +101,7 @@ const SignSettings = ({
     updateSignatureLabel,
     byTypeCounts,
     storageType,
+    isAdmin,
   } = useSavedSignatures();
   const [signatureSource, setSignatureSource] = useState<SignatureSource>(() => {
     const paramSource = parameters.signatureType as SignatureSource;
@@ -792,6 +793,7 @@ const SignSettings = ({
           disabled={disabled}
           isAtCapacity={isSavedSignatureLimitReached}
           storageType={storageType}
+          isAdmin={isAdmin}
           onUseSignature={handleUseSavedSignature}
           onDeleteSignature={handleDeleteSavedSignature}
           onRenameSignature={handleRenameSavedSignature}

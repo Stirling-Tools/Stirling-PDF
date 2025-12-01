@@ -10,6 +10,7 @@ interface SavedSignaturesSectionProps {
   disabled?: boolean;
   isAtCapacity: boolean;
   storageType?: StorageType | null;
+  isAdmin?: boolean;
   onUseSignature: (signature: SavedSignature) => void;
   onDeleteSignature: (signature: SavedSignature) => void;
   onRenameSignature: (id: string, label: string) => void;
@@ -27,6 +28,7 @@ export const SavedSignaturesSection = ({
   disabled = false,
   isAtCapacity,
   storageType: _storageType,
+  isAdmin = false,
   onUseSignature,
   onDeleteSignature,
   onRenameSignature,
@@ -365,17 +367,19 @@ export const SavedSignaturesSection = ({
                       >
                         <LocalIcon icon="material-symbols:check-circle-outline-rounded" width={18} height={18} />
                       </ActionIcon>
-                      <Tooltip label={translate('saved.delete', 'Remove')}>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          aria-label={translate('saved.delete', 'Remove')}
-                          onClick={() => onDeleteSignature(activeSharedSignature)}
-                          disabled={disabled}
-                        >
-                          <LocalIcon icon="material-symbols:delete-outline-rounded" width={18} height={18} />
-                        </ActionIcon>
-                      </Tooltip>
+                      {isAdmin && (
+                        <Tooltip label={translate('saved.delete', 'Remove')}>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            aria-label={translate('saved.delete', 'Remove')}
+                            onClick={() => onDeleteSignature(activeSharedSignature)}
+                            disabled={disabled}
+                          >
+                            <LocalIcon icon="material-symbols:delete-outline-rounded" width={18} height={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
                     </Group>
                   </Group>
                   {renderPreview(activeSharedSignature)}
