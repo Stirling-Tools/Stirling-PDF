@@ -92,6 +92,14 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         response.setCreatedAt(timestamp);
         response.setUpdatedAt(timestamp);
 
+        // Copy text signature properties if present
+        if ("text".equals(request.getType())) {
+            response.setSignerName(request.getSignerName());
+            response.setFontFamily(request.getFontFamily());
+            response.setFontSize(request.getFontSize());
+            response.setTextColor(request.getTextColor());
+        }
+
         // Extract and save image data
         String dataUrl = request.getDataUrl();
         if (dataUrl != null && dataUrl.startsWith("data:image/")) {
