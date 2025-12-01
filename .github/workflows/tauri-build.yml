@@ -624,7 +624,7 @@ jobs:
               else
                 echo "No AppImage found to process"
               fi
-              find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+              cp "$APPIMAGE_PATH" "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage"
             fi
           fi
 
