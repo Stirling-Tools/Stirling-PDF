@@ -912,9 +912,6 @@ desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne
 desc = "Prekrýva PDF súbory na iný PDF"
 title = "Prekrývanie PDF"
 
-[home.pdfTextEditor]
-title = "Editor textu PDF"
-desc = "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
 
 [home.addText]
 tags = "text,anotácia,štítok"

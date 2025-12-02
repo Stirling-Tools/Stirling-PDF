@@ -919,7 +919,7 @@ title = "Overlay PDFs"
 
 [home.pdfTextEditor]
 title = "PDF Text Editor"
-desc = "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
+desc = "Edit existing text and images inside PDFs"
 
 [home.addText]
 tags = "text,annotation,label"

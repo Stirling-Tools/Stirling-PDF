@@ -912,9 +912,6 @@ desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
 
-[home.pdfTextEditor]
-title = "PDF 文本编辑器"
-desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
 
 [home.addText]
 tags = "文本,注释,标签"

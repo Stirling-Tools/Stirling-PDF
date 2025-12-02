@@ -912,9 +912,6 @@ desc = "Gradite višekorake tokove rada povezivanjem PDF akcija. Idealno za pona
 desc = "Preklapa PDF-ove jedan preko drugog"
 title = "Preklapanje PDF-ova"
 
-[home.pdfTextEditor]
-title = "PDF uređivač teksta"
-desc = "Pregledajte i uređujte Stirling PDF JSON izvoze uz grupisano uređivanje teksta i ponovno generisanje PDF-a"
 
 [home.addText]
 tags = "tekst,anotacija,oznaka"

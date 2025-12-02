@@ -912,9 +912,6 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 desc = "Superposer un PDF sur un autre"
 title = "Superposer des PDF"
 
-[home.pdfTextEditor]
-title = "Éditeur de texte PDF"
-desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
 
 [home.addText]
 tags = "texte,annotation,étiquette"

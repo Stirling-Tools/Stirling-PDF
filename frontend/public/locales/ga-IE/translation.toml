@@ -912,9 +912,6 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéil
 desc = "Forleagain PDF ar bharr PDF eile"
 title = "Forleagan PDF"
 
-[home.pdfTextEditor]
-title = "Eagarthóir Téacs PDF"
-desc = "Athbhreithnigh agus cuir in eagar onnmhairí JSON ó Stirling PDF le heagarthóireacht téacs ghrúpáilte agus athghiniúint PDF"
 
 [home.addText]
 tags = "téacs,anótáil,lipéad"

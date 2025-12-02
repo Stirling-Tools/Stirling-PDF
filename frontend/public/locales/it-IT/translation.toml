@@ -912,9 +912,6 @@ desc = "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività r
 desc = "Sovrapponi un PDF sopra un altro"
 title = "Sovrapponi PDF"
 
-[home.pdfTextEditor]
-title = "Editor testo PDF"
-desc = "Rivedi e modifica le esportazioni JSON di Stirling PDF con modifica testo raggruppata e rigenerazione del PDF"
 
 [home.addText]
 tags = "testo,annotazione,etichetta"
