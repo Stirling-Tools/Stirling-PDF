@@ -47,7 +47,6 @@ springBoot {
 }
 
 repositories {
-    maven { url uri("${rootDir}/local-maven") }
     mavenCentral()
     maven { url = 'https://build.shibboleth.net/maven/releases' }
 }
@@ -113,7 +112,6 @@ subprojects {
      }
 
     repositories {
-        maven { url uri("${rootDir}/local-maven") }
         mavenCentral()
     }
 
