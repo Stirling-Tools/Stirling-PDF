@@ -15,21 +15,8 @@ import argparse
 import re
 from datetime import datetime
 import csv
-
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
-
-try:
-    import tomli_w  # For writing TOML
-except ImportError:
-    tomli_w = None
+import tomllib  # Python 3.11+ (stdlib)
+import tomli_w  # For writing TOML
 
 
 class AITranslationHelper:
@@ -55,15 +42,8 @@ class AITranslationHelper:
         """Load TOML or JSON translation file based on extension."""
         try:
             if file_path.suffix == '.toml':
-                if tomllib:
-                    with open(file_path, 'rb') as f:
-                        return tomllib.load(f)
-                elif tomllib_fallback:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        return tomllib_fallback.load(f)
-                else:
-                    print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
-                    sys.exit(1)
+                with open(file_path, 'rb') as f:
+                    return tomllib.load(f)
             else:  # JSON
                 with open(file_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
@@ -74,12 +54,8 @@ class AITranslationHelper:
     def _save_translation_file(self, data: Dict, file_path: Path) -> None:
         """Save translation file (TOML or JSON) based on extension."""
         if file_path.suffix == '.toml':
-            if tomli_w:
-                with open(file_path, 'wb') as f:
-                    tomli_w.dump(data, f)
-            else:
-                print(f"Error: TOML writing not available. Install 'tomli_w'")
-                sys.exit(1)
+            with open(file_path, 'wb') as f:
+                tomli_w.dump(data, f)
         else:  # JSON
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
@@ -106,10 +82,18 @@ class AITranslationHelper:
 
         for lang in languages:
             lang_dir = self.locales_dir / lang
-            try:
-                lang_file = self._find_translation_file(lang_dir)
+
+            # Check if translation file exists, if not create empty structure
+            toml_file = lang_dir / "translation.toml"
+            json_file = lang_dir / "translation.json"
+
+            if toml_file.exists():
+                lang_file = toml_file
                 lang_data = self._load_translation_file(lang_file)
-            except SystemExit:
+            elif json_file.exists():
+                lang_file = json_file
+                lang_data = self._load_translation_file(lang_file)
+            else:
                 # No translation file found, create empty structure
                 lang_data = {}
 
@@ -285,10 +269,16 @@ class AITranslationHelper:
             lang_dir = self.locales_dir / lang
 
             # Load existing data or create new
-            try:
-                lang_file = self._find_translation_file(lang_dir)
+            toml_file = lang_dir / "translation.toml"
+            json_file = lang_dir / "translation.json"
+
+            if toml_file.exists():
+                lang_file = toml_file
                 lang_data = self._load_translation_file(lang_file)
-            except SystemExit:
+            elif json_file.exists():
+                lang_file = json_file
+                lang_data = self._load_translation_file(lang_file)
+            else:
                 # No translation file found, create new JSON file
                 lang_data = {}
                 lang_dir.mkdir(parents=True, exist_ok=True)
@@ -347,15 +337,26 @@ class AITranslationHelper:
 
                     for lang in languages:
                         lang_dir = self.locales_dir / lang
-                        try:
-                            lang_file = self._find_translation_file(lang_dir)
+                        toml_file = lang_dir / "translation.toml"
+                        json_file = lang_dir / "translation.json"
+
+                        if toml_file.exists():
+                            lang_file = toml_file
                             lang_data = self._load_translation_file(lang_file)
                             lang_flat = self._flatten_dict(lang_data)
                             value = lang_flat.get(key, '')
                             if value.startswith('[UNTRANSLATED]'):
                                 value = ''
                             row[lang] = value
-                        except SystemExit:
+                        elif json_file.exists():
+                            lang_file = json_file
+                            lang_data = self._load_translation_file(lang_file)
+                            lang_flat = self._flatten_dict(lang_data)
+                            value = lang_flat.get(key, '')
+                            if value.startswith('[UNTRANSLATED]'):
+                                value = ''
+                            row[lang] = value
+                        else:
                             row[lang] = ''
 
                     writer.writerow(row)
@@ -377,16 +378,25 @@ class AITranslationHelper:
 
                 for lang in languages:
                     lang_dir = self.locales_dir / lang
-                    try:
-                        lang_file = self._find_translation_file(lang_dir)
+                    toml_file = lang_dir / "translation.toml"
+                    json_file = lang_dir / "translation.json"
+
+                    if toml_file.exists():
+                        lang_file = toml_file
                         lang_data = self._load_translation_file(lang_file)
                         lang_flat = self._flatten_dict(lang_data)
                         value = lang_flat.get(key, '')
                         if value.startswith('[UNTRANSLATED]'):
                             value = ''
                         export_data['translations'][key][lang] = value
-                    except SystemExit:
-                        pass
+                    elif json_file.exists():
+                        lang_file = json_file
+                        lang_data = self._load_translation_file(lang_file)
+                        lang_flat = self._flatten_dict(lang_data)
+                        value = lang_flat.get(key, '')
+                        if value.startswith('[UNTRANSLATED]'):
+                            value = ''
+                        export_data['translations'][key][lang] = value
 
             # Export files are always JSON
             with open(output_file, 'w', encoding='utf-8') as f:

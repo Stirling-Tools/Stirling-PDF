@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Validate JSON/TOML structure and formatting of translation files.
+Validate TOML structure and formatting of translation files.
 
 Checks for:
-- Valid JSON/TOML syntax
+- Valid TOML syntax
 - Consistent key structure with en-GB
 - Missing keys
 - Extra keys not in en-GB
@@ -18,16 +18,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 import argparse
-
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
+import tomllib  # Python 3.11+ (stdlib)
 
 
 def get_all_keys(d: dict, parent_key: str = '', sep: str = '.') -> Set[str]:
@@ -42,24 +33,11 @@ def get_all_keys(d: dict, parent_key: str = '', sep: str = '.') -> Set[str]:
 
 
 def validate_translation_file(file_path: Path) -> tuple[bool, str]:
-    """Validate that a file contains valid JSON or TOML."""
+    """Validate that a file contains valid TOML."""
     try:
-        if file_path.suffix == '.toml':
-            if tomllib:
-                with open(file_path, 'rb') as f:
-                    tomllib.load(f)
-            elif tomllib_fallback:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    tomllib_fallback.load(f)
-            else:
-                return False, "TOML support not available. Install 'toml' or upgrade to Python 3.11+"
-            return True, "Valid TOML"
-        else:  # JSON
-            with open(file_path, 'r', encoding='utf-8') as f:
-                json.load(f)
-            return True, "Valid JSON"
-    except json.JSONDecodeError as e:
-        return False, f"Invalid JSON at line {e.lineno}, column {e.colno}: {e.msg}"
+        with open(file_path, 'rb') as f:
+            tomllib.load(f)
+        return True, "Valid TOML"
     except Exception as e:
         return False, f"Error reading file: {str(e)}"
 
@@ -123,24 +101,14 @@ def print_validation_result(result: Dict, verbose: bool = False):
 
 
 def load_translation_file(file_path: Path) -> dict:
-    """Load JSON or TOML translation file."""
-    if file_path.suffix == '.toml':
-        if tomllib:
-            with open(file_path, 'rb') as f:
-                return tomllib.load(f)
-        elif tomllib_fallback:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return tomllib_fallback.load(f)
-        else:
-            raise RuntimeError("TOML support not available")
-    else:  # JSON
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    """Load TOML translation file."""
+    with open(file_path, 'rb') as f:
+        return tomllib.load(f)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate translation JSON/TOML structure'
+        description='Validate translation TOML structure'
     )
     parser.add_argument(
         '--language',
@@ -162,19 +130,11 @@ def main():
 
     # Define paths
     locales_dir = Path('frontend/public/locales')
+    en_gb_path = locales_dir / 'en-GB' / 'translation.toml'
+    file_ext = '.toml'
 
-    # Try TOML first, then JSON
-    en_gb_toml = locales_dir / 'en-GB' / 'translation.toml'
-    en_gb_json = locales_dir / 'en-GB' / 'translation.json'
-
-    if en_gb_toml.exists():
-        en_gb_path = en_gb_toml
-        file_ext = '.toml'
-    elif en_gb_json.exists():
-        en_gb_path = en_gb_json
-        file_ext = '.json'
-    else:
-        print(f"❌ Error: en-GB translation file not found at {en_gb_toml} or {en_gb_json}")
+    if not en_gb_path.exists():
+        print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
         sys.exit(1)
 
     # Validate en-GB itself
@@ -196,7 +156,7 @@ def main():
         languages = []
         for d in locales_dir.iterdir():
             if d.is_dir() and d.name != 'en-GB':
-                if (d / f'translation{file_ext}').exists():
+                if (d / 'translation.toml').exists():
                     languages.append(d.name)
 
     results = []
@@ -204,10 +164,10 @@ def main():
 
     # Validate each language
     for lang_code in sorted(languages):
-        lang_path = locales_dir / lang_code / f'translation{file_ext}'
+        lang_path = locales_dir / lang_code / 'translation.toml'
 
         if not lang_path.exists():
-            print(f"⚠️  Warning: {lang_code}/translation{file_ext} not found, skipping")
+            print(f"⚠️  Warning: {lang_code}/translation.toml not found, skipping")
             continue
 
         # First check if file is valid

@@ -1,9 +1,6 @@
-name: Check TOML Translation Files on PR (V3)
+name: Check TOML Translation Files on PR
 
-# This workflow validates TOML translation files for V3 format
-# For legacy formats, see:
-#   - check_properties.yml (V1 backend .properties)
-#   - Legacy JSON validation (V2, deprecated)
+# This workflow validates TOML translation files
 
 on:
   pull_request_target:
@@ -203,7 +200,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install toml tomli-w
+          pip install tomli-w
 
       - name: Run Python script to check files
         id: run-check

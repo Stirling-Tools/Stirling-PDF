@@ -1,4 +1,4 @@
-name: Sync Files V3 (TOML)
+name: Sync Files (TOML)
 
 on:
   workflow_dispatch:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install toml tomli-w
+          pip install tomli-w
 
       - name: Sync translation TOML files
         run: |
@@ -88,17 +88,17 @@ jobs:
           signoff: true
           branch: sync_readme_v3
           base: main
-          title: ":globe_with_meridians: [V3] Sync Translations + Update README Progress Table"
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
             ### Description of Changes
 
-            This Pull Request was automatically generated to synchronize updates to translation files and documentation for **V3 (TOML format)**. Below are the details of the changes made:
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
             - Updated translation files (`frontend/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
-            - **Format**: TOML (V3, current) - migrated from JSON (V2) and .properties (V1)
+            - **Format**: TOML
 
             #### **2. Update README.md**
             - Generated the translation progress table in `README.md` using `counter_translation_v3.py`.

@@ -20,21 +20,8 @@ import os
 import argparse
 import re
 import json
-
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
-
-try:
-    import tomli_w  # For writing TOML files
-except ImportError:
-    tomli_w = None
+import tomllib  # Python 3.11+ (stdlib)
+import tomli_w  # For writing TOML files
 
 
 def find_duplicate_keys(file_path, keys=None, prefix=""):
@@ -51,14 +38,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     duplicates = []
 
     # Load TOML file
-    if tomllib:
-        with open(file_path, 'rb') as file:
-            data = tomllib.load(file)
-    elif tomllib_fallback:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            data = tomllib_fallback.load(file)
-    else:
-        return []  # Cannot check without TOML support
+    with open(file_path, 'rb') as file:
+        data = tomllib.load(file)
 
     def process_dict(obj, current_prefix=""):
         for key, value in obj.items():
@@ -86,14 +67,8 @@ def parse_toml_file(file_path):
     :param file_path: Path to the TOML file.
     :return: Dictionary with flattened keys.
     """
-    if tomllib:
-        with open(file_path, 'rb') as file:
-            data = tomllib.load(file)
-    elif tomllib_fallback:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            data = tomllib_fallback.load(file)
-    else:
-        raise RuntimeError("TOML support not available. Install 'toml' or upgrade to Python 3.11+")
+    with open(file_path, 'rb') as file:
+        data = tomllib.load(file)
 
     def flatten_dict(d, parent_key="", sep="."):
         items = {}
@@ -135,14 +110,8 @@ def write_toml_file(file_path, updated_properties):
     """
     nested_data = unflatten_dict(updated_properties)
 
-    if tomli_w:
-        with open(file_path, "wb") as file:
-            tomli_w.dump(nested_data, file)
-    elif tomllib_fallback and hasattr(tomllib_fallback, 'dump'):
-        with open(file_path, "w", encoding="utf-8", newline="\n") as file:
-            tomllib_fallback.dump(nested_data, file)
-    else:
-        raise RuntimeError("TOML writing not supported. Install 'tomli-w' library")
+    with open(file_path, "wb") as file:
+        tomli_w.dump(nested_data, file)
 
 
 def update_missing_keys(reference_file, file_list, branch=""):
