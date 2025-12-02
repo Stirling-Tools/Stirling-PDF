@@ -15,15 +15,7 @@ import subprocess
 from typing import List, Tuple, Optional
 import threading
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
+import tomllib
 
 
 # Thread-safe print lock
@@ -46,11 +38,8 @@ def get_all_languages(locales_dir: Path) -> List[str]:
 
     for lang_dir in sorted(locales_dir.iterdir()):
         if lang_dir.is_dir() and lang_dir.name != "en-GB":
-            # Check if translation file exists
             toml_file = lang_dir / "translation.toml"
-            json_file = lang_dir / "translation.json"
-
-            if toml_file.exists() or json_file.exists():
+            if toml_file.exists():
                 languages.append(lang_dir.name)
 
     return languages
@@ -60,46 +49,18 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
     """Get completion percentage for a language."""
     lang_dir = locales_dir / language
     toml_file = lang_dir / "translation.toml"
-    json_file = lang_dir / "translation.json"
 
-    # Load target language file
-    target_file = toml_file if toml_file.exists() else json_file if json_file.exists() else None
-    if not target_file:
+    if not toml_file.exists():
         return None
 
     try:
-        if target_file.suffix == '.toml':
-            if tomllib:
-                with open(target_file, 'rb') as f:
-                    target_data = tomllib.load(f)
-            elif tomllib_fallback:
-                with open(target_file, 'r', encoding='utf-8') as f:
-                    target_data = tomllib_fallback.load(f)
-            else:
-                return None
-        else:
-            import json
-            with open(target_file, 'r', encoding='utf-8') as f:
-                target_data = json.load(f)
+        with open(toml_file, 'rb') as f:
+            target_data = tomllib.load(f)
 
         # Load en-GB reference
-        en_gb_toml = locales_dir / 'en-GB' / 'translation.toml'
-        en_gb_json = locales_dir / 'en-GB' / 'translation.json'
-        en_gb_file = en_gb_toml if en_gb_toml.exists() else en_gb_json
-
-        if en_gb_file.suffix == '.toml':
-            if tomllib:
-                with open(en_gb_file, 'rb') as f:
-                    en_gb_data = tomllib.load(f)
-            elif tomllib_fallback:
-                with open(en_gb_file, 'r', encoding='utf-8') as f:
-                    en_gb_data = tomllib_fallback.load(f)
-            else:
-                return None
-        else:
-            import json
-            with open(en_gb_file, 'r', encoding='utf-8') as f:
-                en_gb_data = json.load(f)
+        en_gb_file = locales_dir / 'en-GB' / 'translation.toml'
+        with open(en_gb_file, 'rb') as f:
+            en_gb_data = tomllib.load(f)
 
         # Flatten and count
         def flatten(d, parent=''):

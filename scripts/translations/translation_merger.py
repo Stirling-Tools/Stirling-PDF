@@ -15,60 +15,23 @@ import argparse
 import shutil
 from datetime import datetime
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
-
-try:
-    import tomli_w  # For writing TOML
-except ImportError:
-    tomli_w = None
+import tomllib
+import tomli_w
 
 
 class TranslationMerger:
     def __init__(self, locales_dir: str = "frontend/public/locales", ignore_file: str = "scripts/ignore_translation.toml"):
         self.locales_dir = Path(locales_dir)
-        # Try TOML first, then fall back to JSON
-        self.golden_truth_file = self._find_translation_file(self.locales_dir / "en-GB")
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
         self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _find_translation_file(self, lang_dir: Path) -> Path:
-        """Find translation file (TOML or JSON) in language directory."""
-        toml_file = lang_dir / "translation.toml"
-        json_file = lang_dir / "translation.json"
-
-        if toml_file.exists():
-            return toml_file
-        elif json_file.exists():
-            return json_file
-        else:
-            print(f"Error: No translation file found in {lang_dir}")
-            sys.exit(1)
-
     def _load_translation_file(self, file_path: Path) -> Dict:
-        """Load TOML or JSON translation file based on extension."""
+        """Load TOML translation file."""
         try:
-            if file_path.suffix == '.toml':
-                if tomllib:
-                    with open(file_path, 'rb') as f:
-                        return tomllib.load(f)
-                elif tomllib_fallback:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        return tomllib_fallback.load(f)
-                else:
-                    print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
-                    sys.exit(1)
-            else:  # JSON
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
@@ -77,23 +40,14 @@ class TranslationMerger:
             sys.exit(1)
 
     def _save_translation_file(self, data: Dict, file_path: Path, backup: bool = True) -> None:
-        """Save translation file (TOML or JSON) with backup option."""
+        """Save TOML translation file with backup option."""
         if backup and file_path.exists():
-            ext = file_path.suffix
-            backup_path = file_path.with_suffix(f'.backup.{datetime.now().strftime("%Y%m%d_%H%M%S")}{ext}')
+            backup_path = file_path.with_suffix(f'.backup.{datetime.now().strftime("%Y%m%d_%H%M%S")}.toml')
             shutil.copy2(file_path, backup_path)
             print(f"Backup created: {backup_path}")
 
-        if file_path.suffix == '.toml':
-            if tomli_w:
-                with open(file_path, 'wb') as f:
-                    tomli_w.dump(data, f)
-            else:
-                print(f"Error: TOML writing not available. Install 'tomli_w'")
-                sys.exit(1)
-        else:  # JSON
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(data, f)
 
     def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
         """Load ignore patterns from TOML file."""
@@ -101,41 +55,14 @@ class TranslationMerger:
             return {}
 
         try:
-            if tomllib:
-                with open(self.ignore_file, 'rb') as f:
-                    ignore_data = tomllib.load(f)
-            elif tomllib_fallback:
-                ignore_data = tomllib_fallback.load(self.ignore_file)
-            else:
-                # Simple parser as fallback
-                ignore_data = self._parse_simple_toml()
+            with open(self.ignore_file, 'rb') as f:
+                ignore_data = tomllib.load(f)
 
             # Convert to sets for faster lookup
             return {lang: set(data.get('ignore', [])) for lang, data in ignore_data.items()}
         except Exception as e:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
-
-    def _parse_simple_toml(self) -> Dict:
-        """Simple TOML parser for ignore patterns (fallback)."""
-        ignore_data = {}
-        current_section = None
-
-        with open(self.ignore_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-
-                if line.startswith('[') and line.endswith(']'):
-                    current_section = line[1:-1]
-                    ignore_data[current_section] = {'ignore': []}
-                elif line.strip().startswith("'") and current_section:
-                    item = line.strip().strip("',")
-                    if item:
-                        ignore_data[current_section]['ignore'].append(item)
-
-        return ignore_data
 
     def _get_nested_value(self, data: Dict, key_path: str) -> Any:
         """Get value from nested dict using dot notation."""
@@ -341,8 +268,8 @@ class TranslationMerger:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Merge and manage translation files (supports TOML and JSON)',
-        epilog='Automatically detects and handles both TOML and JSON translation files.'
+        description='Merge and manage translation files',
+        epilog='Works with TOML translation files.'
     )
     parser.add_argument('--locales-dir', default='frontend/public/locales',
                         help='Path to locales directory')
@@ -379,9 +306,9 @@ def main():
 
     merger = TranslationMerger(args.locales_dir, args.ignore_file)
 
-    # Find translation file (TOML or JSON)
+    # Find translation file
     lang_dir = Path(args.locales_dir) / args.language
-    target_file = merger._find_translation_file(lang_dir)
+    target_file = lang_dir / "translation.toml"
 
     if args.command == 'add-missing':
         print(f"Adding missing translations to {args.language}...")

@@ -13,15 +13,7 @@ import subprocess
 from pathlib import Path
 import time
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
+import tomllib
 
 
 def run_command(cmd, description=""):
@@ -42,32 +34,16 @@ def run_command(cmd, description=""):
 
 
 def find_translation_file(lang_dir):
-    """Find translation file (TOML or JSON) in language directory."""
+    """Find translation file in language directory."""
     toml_file = lang_dir / "translation.toml"
-    json_file = lang_dir / "translation.json"
-
     if toml_file.exists():
         return toml_file
-    elif json_file.exists():
-        return json_file
-    else:
-        return None
+    return None
 
 def load_translation_file(file_path):
-    """Load TOML or JSON translation file."""
-    if file_path.suffix == '.toml':
-        if tomllib:
-            with open(file_path, 'rb') as f:
-                return tomllib.load(f)
-        elif tomllib_fallback:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return tomllib_fallback.load(f)
-        else:
-            print(f"Error: TOML support not available")
-            return None
-    else:  # JSON
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    """Load TOML translation file."""
+    with open(file_path, 'rb') as f:
+        return tomllib.load(f)
 
 def extract_untranslated(language_code, batch_size=500):
     """Extract untranslated entries and split into batches."""
@@ -265,10 +241,10 @@ def verify_completion(language_code):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Automated translation pipeline for Stirling PDF (supports TOML and JSON)',
+        description='Automated translation pipeline for Stirling PDF',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Note: This script automatically detects and handles both TOML and JSON translation files.
+Note: This script works with TOML translation files.
 
 Examples:
   # Translate Spanish with API key in environment

@@ -15,50 +15,28 @@ import argparse
 import re
 from datetime import datetime
 import csv
-import tomllib  # Python 3.11+ (stdlib)
-import tomli_w  # For writing TOML
+import tomllib
+import tomli_w
 
 
 class AITranslationHelper:
     def __init__(self, locales_dir: str = "frontend/public/locales"):
         self.locales_dir = Path(locales_dir)
-        # Try TOML first, then fall back to JSON
-        self.golden_truth_file = self._find_translation_file(self.locales_dir / "en-GB")
-
-    def _find_translation_file(self, lang_dir: Path) -> Path:
-        """Find translation file (TOML or JSON) in language directory."""
-        toml_file = lang_dir / "translation.toml"
-        json_file = lang_dir / "translation.json"
-
-        if toml_file.exists():
-            return toml_file
-        elif json_file.exists():
-            return json_file
-        else:
-            print(f"Error: No translation file found in {lang_dir}")
-            sys.exit(1)
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
 
     def _load_translation_file(self, file_path: Path) -> Dict:
-        """Load TOML or JSON translation file based on extension."""
+        """Load TOML translation file."""
         try:
-            if file_path.suffix == '.toml':
-                with open(file_path, 'rb') as f:
-                    return tomllib.load(f)
-            else:  # JSON
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
         except (FileNotFoundError, Exception) as e:
             print(f"Error loading {file_path}: {e}")
             return {}
 
     def _save_translation_file(self, data: Dict, file_path: Path) -> None:
-        """Save translation file (TOML or JSON) based on extension."""
-        if file_path.suffix == '.toml':
-            with open(file_path, 'wb') as f:
-                tomli_w.dump(data, f)
-        else:  # JSON
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+        """Save TOML translation file."""
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(data, f)
 
     def create_ai_batch_file(self, languages: List[str], output_file: Path,
                             max_entries_per_language: int = 50) -> None:
@@ -82,17 +60,10 @@ class AITranslationHelper:
 
         for lang in languages:
             lang_dir = self.locales_dir / lang
-
-            # Check if translation file exists, if not create empty structure
             toml_file = lang_dir / "translation.toml"
-            json_file = lang_dir / "translation.json"
 
             if toml_file.exists():
-                lang_file = toml_file
-                lang_data = self._load_translation_file(lang_file)
-            elif json_file.exists():
-                lang_file = json_file
-                lang_data = self._load_translation_file(lang_file)
+                lang_data = self._load_translation_file(toml_file)
             else:
                 # No translation file found, create empty structure
                 lang_data = {}
@@ -267,22 +238,14 @@ class AITranslationHelper:
 
         for lang, translations in batch_data.get('translations', {}).items():
             lang_dir = self.locales_dir / lang
-
-            # Load existing data or create new
             toml_file = lang_dir / "translation.toml"
-            json_file = lang_dir / "translation.json"
 
             if toml_file.exists():
-                lang_file = toml_file
-                lang_data = self._load_translation_file(lang_file)
-            elif json_file.exists():
-                lang_file = json_file
-                lang_data = self._load_translation_file(lang_file)
+                lang_data = self._load_translation_file(toml_file)
             else:
-                # No translation file found, create new JSON file
+                # No translation file found, create new TOML file
                 lang_data = {}
                 lang_dir.mkdir(parents=True, exist_ok=True)
-                lang_file = lang_dir / "translation.json"
 
             applied_count = 0
             for key, translation_data in translations.items():
@@ -292,7 +255,7 @@ class AITranslationHelper:
                     applied_count += 1
 
             if applied_count > 0:
-                self._save_translation_file(lang_data, lang_file)
+                self._save_translation_file(lang_data, toml_file)
                 results['applied'][lang] = applied_count
                 print(f"Applied {applied_count} translations to {lang}")
 
@@ -338,19 +301,9 @@ class AITranslationHelper:
                     for lang in languages:
                         lang_dir = self.locales_dir / lang
                         toml_file = lang_dir / "translation.toml"
-                        json_file = lang_dir / "translation.json"
 
                         if toml_file.exists():
-                            lang_file = toml_file
-                            lang_data = self._load_translation_file(lang_file)
-                            lang_flat = self._flatten_dict(lang_data)
-                            value = lang_flat.get(key, '')
-                            if value.startswith('[UNTRANSLATED]'):
-                                value = ''
-                            row[lang] = value
-                        elif json_file.exists():
-                            lang_file = json_file
-                            lang_data = self._load_translation_file(lang_file)
+                            lang_data = self._load_translation_file(toml_file)
                             lang_flat = self._flatten_dict(lang_data)
                             value = lang_flat.get(key, '')
                             if value.startswith('[UNTRANSLATED]'):
@@ -379,19 +332,9 @@ class AITranslationHelper:
                 for lang in languages:
                     lang_dir = self.locales_dir / lang
                     toml_file = lang_dir / "translation.toml"
-                    json_file = lang_dir / "translation.json"
 
                     if toml_file.exists():
-                        lang_file = toml_file
-                        lang_data = self._load_translation_file(lang_file)
-                        lang_flat = self._flatten_dict(lang_data)
-                        value = lang_flat.get(key, '')
-                        if value.startswith('[UNTRANSLATED]'):
-                            value = ''
-                        export_data['translations'][key][lang] = value
-                    elif json_file.exists():
-                        lang_file = json_file
-                        lang_data = self._load_translation_file(lang_file)
+                        lang_data = self._load_translation_file(toml_file)
                         lang_flat = self._flatten_dict(lang_data)
                         value = lang_flat.get(key, '')
                         if value.startswith('[UNTRANSLATED]'):
@@ -406,8 +349,8 @@ class AITranslationHelper:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='AI Translation Helper (supports TOML and JSON)',
-        epilog='Automatically detects and handles both TOML and JSON translation files.'
+        description='AI Translation Helper',
+        epilog='Works with TOML translation files.'
     )
     parser.add_argument('--locales-dir', default='frontend/public/locales',
                         help='Path to locales directory')

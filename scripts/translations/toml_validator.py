@@ -17,16 +17,7 @@ import argparse
 import glob
 from pathlib import Path
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        print("Error: TOML support not available. Install 'toml' package or upgrade to Python 3.11+")
-        print("  pip install toml")
-        sys.exit(1)
+import tomllib
 
 
 def get_line_context(file_path, line_num, context_lines=3):
@@ -95,14 +86,8 @@ def validate_toml_file(file_path):
     }
 
     try:
-        if tomllib:
-            # Use Python 3.11+ built-in
-            with open(file_path, 'rb') as f:
-                data = tomllib.load(f)
-        else:
-            # Use toml library fallback
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = tomllib_fallback.load(f)
+        with open(file_path, 'rb') as f:
+            data = tomllib.load(f)
 
         result['valid'] = True
         result['entry_count'] = count_keys(data)

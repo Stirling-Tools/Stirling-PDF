@@ -10,15 +10,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import argparse
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
+import tomllib
 
 
 class TranslationAnalyzer:
@@ -30,23 +22,10 @@ class TranslationAnalyzer:
         self.ignore_patterns = self._load_ignore_patterns()
 
     def _load_translation_file(self, file_path: Path) -> Dict:
-        """Load TOML or JSON translation file with error handling."""
+        """Load TOML translation file with error handling."""
         try:
-            if file_path.suffix == '.toml':
-                if tomllib:
-                    # Use Python 3.11+ built-in
-                    with open(file_path, 'rb') as f:
-                        return tomllib.load(f)
-                elif tomllib_fallback:
-                    # Use toml library fallback
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        return tomllib_fallback.load(f)
-                else:
-                    print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
-                    sys.exit(1)
-            else:  # Assume JSON for backward compatibility
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
@@ -60,16 +39,8 @@ class TranslationAnalyzer:
             return {}
 
         try:
-            if tomllib:
-                # Use Python 3.11+ built-in
-                with open(self.ignore_file, 'rb') as f:
-                    ignore_data = tomllib.load(f)
-            elif tomllib_fallback:
-                # Use toml library fallback
-                ignore_data = tomllib_fallback.load(self.ignore_file)
-            else:
-                # Simple parser as fallback
-                ignore_data = self._parse_simple_toml()
+            with open(self.ignore_file, 'rb') as f:
+                ignore_data = tomllib.load(f)
 
             # Convert lists to sets for faster lookup
             return {lang: set(patterns) for lang, data in ignore_data.items()
@@ -77,31 +48,6 @@ class TranslationAnalyzer:
         except Exception as e:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
-
-    def _parse_simple_toml(self) -> Dict:
-        """Simple TOML parser for ignore patterns (fallback)."""
-        ignore_data = {}
-        current_section = None
-
-        with open(self.ignore_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-
-                if line.startswith('[') and line.endswith(']'):
-                    current_section = line[1:-1]
-                    ignore_data[current_section] = {'ignore': []}
-                elif line.startswith('ignore = [') and current_section:
-                    # Handle ignore array
-                    continue
-                elif line.strip().startswith("'") and current_section:
-                    # Extract quoted items
-                    item = line.strip().strip("',")
-                    if item:
-                        ignore_data[current_section]['ignore'].append(item)
-
-        return ignore_data
 
     def _flatten_dict(self, d: Dict, parent_key: str = '', separator: str = '.') -> Dict[str, str]:
         """Flatten nested dictionary into dot-notation keys."""
@@ -115,17 +61,13 @@ class TranslationAnalyzer:
         return dict(items)
 
     def get_all_language_files(self) -> List[Path]:
-        """Get all translation files (TOML or JSON) except en-GB."""
+        """Get all translation files except en-GB."""
         files = []
         for lang_dir in self.locales_dir.iterdir():
             if lang_dir.is_dir() and lang_dir.name != "en-GB":
-                # Try TOML first, then JSON
                 toml_file = lang_dir / "translation.toml"
-                json_file = lang_dir / "translation.json"
                 if toml_file.exists():
                     files.append(toml_file)
-                elif json_file.exists():
-                    files.append(json_file)
         return sorted(files)
 
     def find_missing_translations(self, target_file: Path) -> Set[str]:
@@ -268,12 +210,9 @@ def main():
     if args.language:
         lang_dir = Path(args.locales_dir) / args.language
         toml_file = lang_dir / "translation.toml"
-        json_file = lang_dir / "translation.json"
 
         if toml_file.exists():
             target_file = toml_file
-        elif json_file.exists():
-            target_file = json_file
         else:
             print(f"Error: Translation file not found for language: {args.language}")
             sys.exit(1)

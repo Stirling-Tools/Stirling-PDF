@@ -11,20 +11,8 @@ from typing import Dict, Any, List
 import argparse
 from collections import OrderedDict
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
-
-try:
-    import tomli_w  # For writing TOML
-except ImportError:
-    tomli_w = None
+import tomllib
+import tomli_w
 
 
 class TOMLBeautifier:
@@ -36,15 +24,8 @@ class TOMLBeautifier:
     def _load_toml(self, file_path: Path) -> Dict:
         """Load TOML file with error handling."""
         try:
-            if tomllib:
-                with open(file_path, 'rb') as f:
-                    return tomllib.load(f)
-            elif tomllib_fallback:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return tomllib_fallback.load(f)
-            else:
-                print(f"Error: TOML support not available. Install 'toml' or upgrade to Python 3.11+")
-                sys.exit(1)
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
@@ -54,10 +35,6 @@ class TOMLBeautifier:
 
     def _save_toml(self, data: Dict, file_path: Path, backup: bool = True) -> None:
         """Save TOML file with proper formatting."""
-        if not tomli_w:
-            print(f"Error: TOML writing not available. Install 'tomli_w'")
-            sys.exit(1)
-
         if backup and file_path.exists():
             backup_path = file_path.with_suffix(f'.backup.restructured.toml')
             import shutil
