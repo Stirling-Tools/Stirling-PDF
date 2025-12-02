@@ -44,6 +44,17 @@ export const signingWorkflowOperationConfig = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
+    // Log participant URLs for easy testing
+    console.log('\n🔐 Signing Session Created!');
+    console.log('📄 Session ID:', data.sessionId);
+    console.log('\n👥 Participant Links:');
+    data.participants?.forEach((participant: any, index: number) => {
+      const url = `${window.location.origin}/signing-session?sessionId=${data.sessionId}&token=${participant.shareToken}`;
+      console.log(`\n${index + 1}. ${participant.email}${participant.name ? ` (${participant.name})` : ''}`);
+      console.log(`   ${url}`);
+    });
+    console.log('\n');
+
     if (parameters.notifyOnCreate) {
       await apiClient.post(`/api/v1/security/cert-sign/sessions/${data.sessionId}/notify`, {
         message: parameters.message,

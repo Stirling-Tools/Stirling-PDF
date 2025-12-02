@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Stack, Text, TextInput, Button, Alert, Paper, Title, Group, NumberInput, Switch } from '@mantine/core';
+import { Stack, Text, TextInput, Button, Alert, Paper, Title, Group, NumberInput, Switch, Grid, Box, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import InfoIcon from '@mui/icons-material/Info';
 import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import apiClient from '@app/services/apiClient';
 import FileUploadButton from '@app/components/shared/FileUploadButton';
+import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
+import { ViewerProvider } from '@app/contexts/ViewerContext';
 
 interface SigningParticipant {
   email: string;
@@ -59,10 +62,38 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // PDF viewer state
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   // Load session on mount
   useEffect(() => {
     loadSession();
   }, [sessionId, token]);
+
+  // Load PDF for viewing
+  useEffect(() => {
+    const loadPdf = async () => {
+      if (session && !pdfFile) {
+        try {
+          setPdfLoading(true);
+          const response = await apiClient.get(`/api/v1/security/cert-sign/sessions/${sessionId}/pdf`, {
+            responseType: 'blob'
+          });
+
+          const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+          const pdfFile = new File([pdfBlob], session.documentName || 'document.pdf', { type: 'application/pdf' });
+          setPdfFile(pdfFile);
+        } catch (error) {
+          console.error('Failed to load PDF:', error);
+        } finally {
+          setPdfLoading(false);
+        }
+      }
+    };
+
+    loadPdf();
+  }, [session, sessionId, pdfFile]);
 
   const loadSession = async () => {
     try {
@@ -198,26 +229,58 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
   }
 
   return (
-    <Paper p="xl" withBorder>
-      <Stack gap="lg">
-        <div>
-          <Title order={2}>{t('certSign.collab.participant.title', 'Submit your certificate')}</Title>
-          <Text c="dimmed">{t('certSign.collab.participant.subtitle', 'Upload certificate to sign document')}</Text>
-        </div>
-
-        <Alert icon={<InfoIcon />} color="blue" variant="light">
-          <Stack gap="xs">
-            <Text size="sm"><strong>{t('certSign.collab.participant.documentName', 'Document')}:</strong> {session?.documentName}</Text>
-            <Text size="sm"><strong>{t('certSign.collab.participant.yourEmail', 'Your email')}:</strong> {participant?.email}</Text>
-            {participant?.name && (
-              <Text size="sm"><strong>{t('certSign.collab.participant.nameLabel', 'Name')}:</strong> {participant.name}</Text>
+    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Grid gutter={0} style={{ flex: 1, minHeight: 0 }}>
+        {/* PDF Viewer - Left Side */}
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Paper p="md" withBorder style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Group gap="xs" mb="md">
+              <PictureAsPdfIcon />
+              <Title order={3}>{session?.documentName || 'Document'}</Title>
+            </Group>
+            {pdfLoading ? (
+              <Alert icon={<InfoIcon />} color="blue">
+                Loading PDF...
+              </Alert>
+            ) : pdfFile ? (
+              <Box style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
+                <ViewerProvider>
+                  <LocalEmbedPDF
+                    file={pdfFile}
+                    enableAnnotations={false}
+                  />
+                </ViewerProvider>
+              </Box>
+            ) : (
+              <Alert icon={<InfoIcon />} color="blue">
+                Preparing document...
+              </Alert>
             )}
-          </Stack>
-        </Alert>
+          </Paper>
+        </Grid.Col>
 
-        <Text size="sm">
-          {t('certSign.collab.participant.instructions', 'Please upload your certificate files and provide signing details.')}
-        </Text>
+        {/* Form - Right Side */}
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <ScrollArea style={{ height: '100%' }}>
+            <Paper p="xl" withBorder style={{ height: '100%' }}>
+              <Stack gap="lg">
+                <div>
+                  <Title order={2}>{t('certSign.collab.participant.title', 'Submit your certificate')}</Title>
+                  <Text c="dimmed">{t('certSign.collab.participant.subtitle', 'Upload certificate to sign document')}</Text>
+                </div>
+
+                <Alert icon={<InfoIcon />} color="blue" variant="light">
+                  <Stack gap="xs">
+                    <Text size="sm"><strong>{t('certSign.collab.participant.yourEmail', 'Your email')}:</strong> {participant?.email}</Text>
+                    {participant?.name && (
+                      <Text size="sm"><strong>{t('certSign.collab.participant.nameLabel', 'Name')}:</strong> {participant.name}</Text>
+                    )}
+                  </Stack>
+                </Alert>
+
+                <Text size="sm">
+                  {t('certSign.collab.participant.instructions', 'Please upload your certificate files and provide signing details.')}
+                </Text>
 
         {/* Certificate Type Selection */}
         <div>
@@ -396,8 +459,12 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
         >
           {t('certSign.collab.participant.submit', 'Submit certificate')}
         </Button>
-      </Stack>
-    </Paper>
+              </Stack>
+            </Paper>
+          </ScrollArea>
+        </Grid.Col>
+      </Grid>
+    </Box>
   );
 }
 

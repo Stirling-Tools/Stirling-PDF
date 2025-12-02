@@ -736,6 +736,10 @@ message = "Message to include in invitations"
 dueDate = "Due date (optional, ISO date)"
 notify = "Send notifications immediately"
 footer = "After submitting you will get a session summary with per-signer links and can return later to finalize signatures."
+participantStatus = "Participant Status"
+signed = "Signed"
+pending = "Pending"
+loadingSession = "Loading session status..."
 
 [certSign.collab.message]
 placeholder = "Please review and sign this document by the due date."

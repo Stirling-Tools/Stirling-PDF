@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stack, Button, Alert } from '@mantine/core';
+import { Stack, Button, Alert, Paper, Text, Group, Badge, List } from '@mantine/core';
 import InfoIcon from '@mui/icons-material/Info';
 import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import PersonIcon from '@mui/icons-material/Person';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
@@ -26,6 +28,22 @@ const SigningWorkflow = (props: BaseToolProps) => {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
   const [detectedJsonSession, setDetectedJsonSession] = useState(false);
+  const [sessionData, setSessionData] = useState<any>(null);
+  const [loadingSession, setLoadingSession] = useState(false);
+
+  // Fetch session status from backend
+  const fetchSessionStatus = async (sessionId: string) => {
+    try {
+      setLoadingSession(true);
+      const response = await apiClient.get(`/api/v1/security/cert-sign/sessions/${sessionId}`);
+      setSessionData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch session status:', error);
+      setSessionData(null);
+    } finally {
+      setLoadingSession(false);
+    }
+  };
 
   // Detect if user uploaded a JSON session file
   useEffect(() => {
@@ -51,6 +69,8 @@ const SigningWorkflow = (props: BaseToolProps) => {
               console.log('SigningWorkflow: detected signing session JSON, sessionId:', json.sessionId);
               // This is a session JSON file - show finalization button
               setDetectedJsonSession(true);
+              // Fetch current session status
+              await fetchSessionStatus(json.sessionId);
             }
           } catch (e) {
             console.log('SigningWorkflow: not a valid JSON session file:', e);
@@ -62,15 +82,20 @@ const SigningWorkflow = (props: BaseToolProps) => {
     checkForJsonSession();
   }, [base.selectedFiles, base.hasResults, detectedJsonSession]);
 
-  // Extract sessionId from result JSON file
-  const sessionId = useMemo(() => {
-    if (base.operation.files && base.operation.files.length > 0) {
-      const jsonFile = base.operation.files[0];
-      // Read file synchronously using FileReader
-      return null; // Will be read async in effect
-    }
-    return null;
-  }, [base.operation.files]);
+  // Fetch session status when results are available
+  useEffect(() => {
+    const fetchSessionFromResults = async () => {
+      if (base.hasResults && base.operation.files && base.operation.files.length > 0) {
+        const jsonFile = base.operation.files[0];
+        const sessionId = await extractSessionIdFromFile(jsonFile);
+        if (sessionId) {
+          await fetchSessionStatus(sessionId);
+        }
+      }
+    };
+
+    fetchSessionFromResults();
+  }, [base.hasResults, base.operation.files]);
 
   // Helper to read JSON file and extract sessionId
   const extractSessionIdFromFile = async (file: File): Promise<string | null> => {
@@ -175,6 +200,57 @@ const SigningWorkflow = (props: BaseToolProps) => {
       {/* Finalization button - shown after review OR when JSON session detected */}
       {(base.hasResults || detectedJsonSession) && (
         <Stack gap="sm" mt="md" p="sm">
+          {/* Participant Status Display */}
+          {sessionData && sessionData.participants && (
+            <Paper p="md" withBorder>
+              <Text size="sm" fw={600} mb="xs">
+                {t('certSign.collab.participantStatus', 'Participant Status')}
+              </Text>
+              <List spacing="xs" size="sm">
+                {sessionData.participants.map((participant: any, index: number) => {
+                  const isSigned = participant.status === 'SIGNED';
+                  return (
+                    <List.Item
+                      key={index}
+                      icon={
+                        isSigned ? (
+                          <CheckCircleIcon style={{ color: 'green', fontSize: '1.2rem' }} />
+                        ) : (
+                          <PendingIcon style={{ color: 'orange', fontSize: '1.2rem' }} />
+                        )
+                      }
+                    >
+                      <Group gap="xs">
+                        <PersonIcon style={{ fontSize: '1rem' }} />
+                        <Text size="sm">
+                          {participant.name || participant.email}
+                          {participant.name && (
+                            <Text span size="xs" c="dimmed" ml="xs">
+                              ({participant.email})
+                            </Text>
+                          )}
+                        </Text>
+                        <Badge
+                          size="sm"
+                          color={isSigned ? 'green' : 'orange'}
+                          variant="light"
+                        >
+                          {isSigned ? t('certSign.collab.signed', 'Signed') : t('certSign.collab.pending', 'Pending')}
+                        </Badge>
+                      </Group>
+                    </List.Item>
+                  );
+                })}
+              </List>
+            </Paper>
+          )}
+
+          {loadingSession && (
+            <Alert icon={<InfoIcon />} color="blue" variant="light">
+              {t('certSign.collab.loadingSession', 'Loading session status...')}
+            </Alert>
+          )}
+
           <Alert icon={<InfoIcon />} color="blue" variant="light">
             {t('certSign.collab.finalize.tooltip', 'Apply all collected certificates and download the final signed document')}
           </Alert>
