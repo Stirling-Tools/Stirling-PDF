@@ -912,9 +912,6 @@ desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. �
 desc = "PDF를 다른 PDF 위에 오버레이"
 title = "PDF 오버레이"
 
-[home.pdfTextEditor]
-title = "PDF 텍스트 편집기"
-desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
 
 [home.addText]
 tags = "텍스트,주석,레이블"
