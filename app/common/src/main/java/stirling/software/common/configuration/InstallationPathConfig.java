@@ -60,12 +60,19 @@ public class InstallationPathConfig {
 
     private static String initializeBasePath() {
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+            String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+
             if (os.contains("win")) {
-                return Paths.get(
-                                System.getenv("APPDATA"), // parent path
-                                "Stirling-PDF")
-                        + File.separator;
+                // Allows test override, fallback to actual environment variable
+                String appData =
+                        System.getProperty("STIRLING_PDF_APPDATA", System.getenv("APPDATA"));
+                if (appData == null || appData.isEmpty()) {
+                    log.warn(
+                            "APPDATA environment variable not set. Falling back to current"
+                                    + " directory.");
+                    return "." + File.separator;
+                }
+                return Paths.get(appData, "Stirling-PDF") + File.separator;
             } else if (os.contains("mac")) {
                 return Paths.get(
                                 System.getProperty("user.home"),

@@ -1,12 +1,11 @@
-package stirling.software.SPDF.controller.api.converters;
+package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
-
-import stirling.software.common.util.CbrUtils;
 
 class CbrUtilsTest {
 
@@ -17,7 +16,7 @@ class CbrUtilsTest {
                         "file",
                         "test.cbr",
                         "application/x-rar-compressed",
-                        "test content".getBytes());
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbrUtils.isCbrFile(cbrFile));
     }
@@ -29,7 +28,7 @@ class CbrUtilsTest {
                         "file",
                         "test.rar",
                         "application/x-rar-compressed",
-                        "test content".getBytes());
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbrUtils.isCbrFile(rarFile));
     }
@@ -37,7 +36,11 @@ class CbrUtilsTest {
     @Test
     void testIsCbrFile_InvalidFile() {
         MockMultipartFile textFile =
-                new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "test.txt",
+                        "text/plain",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbrUtils.isCbrFile(textFile));
     }
@@ -46,7 +49,10 @@ class CbrUtilsTest {
     void testIsCbrFile_NoFilename() {
         MockMultipartFile noNameFile =
                 new MockMultipartFile(
-                        "file", null, "application/x-rar-compressed", "test content".getBytes());
+                        "file",
+                        null,
+                        "application/x-rar-compressed",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbrUtils.isCbrFile(noNameFile));
     }
@@ -55,7 +61,10 @@ class CbrUtilsTest {
     void testIsCbrFile_PdfFile() {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
-                        "file", "document.pdf", "application/pdf", "pdf content".getBytes());
+                        "file",
+                        "document.pdf",
+                        "application/pdf",
+                        "pdf content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbrUtils.isCbrFile(pdfFile));
     }
@@ -63,7 +72,11 @@ class CbrUtilsTest {
     @Test
     void testIsCbrFile_JpegFile() {
         MockMultipartFile jpegFile =
-                new MockMultipartFile("file", "image.jpg", "image/jpeg", "jpeg content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "image.jpg",
+                        "image/jpeg",
+                        "jpeg content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbrUtils.isCbrFile(jpegFile));
     }
@@ -72,7 +85,10 @@ class CbrUtilsTest {
     void testIsCbrFile_ZipFile() {
         MockMultipartFile zipFile =
                 new MockMultipartFile(
-                        "file", "archive.zip", "application/zip", "zip content".getBytes());
+                        "file",
+                        "archive.zip",
+                        "application/zip",
+                        "zip content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbrUtils.isCbrFile(zipFile));
     }
@@ -84,7 +100,7 @@ class CbrUtilsTest {
                         "file",
                         "test.CBR",
                         "application/x-rar-compressed",
-                        "test content".getBytes());
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbrUtils.isCbrFile(cbrFile));
     }

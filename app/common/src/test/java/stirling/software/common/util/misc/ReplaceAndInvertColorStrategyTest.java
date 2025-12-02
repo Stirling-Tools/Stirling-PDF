@@ -3,6 +3,7 @@ package stirling.software.common.util.misc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.InputStreamResource;
@@ -38,7 +39,7 @@ class ReplaceAndInvertColorStrategyTest {
                         "file",
                         "test.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "test content".getBytes());
+                        "test content".getBytes(StandardCharsets.UTF_8));
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         // Act
@@ -57,7 +58,7 @@ class ReplaceAndInvertColorStrategyTest {
     @Test
     void testReplace() throws IOException {
         // Arrange
-        byte[] content = "test pdf content".getBytes();
+        byte[] content = "test pdf content".getBytes(StandardCharsets.UTF_8);
         MultipartFile mockFile =
                 new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, content);
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
@@ -80,13 +81,13 @@ class ReplaceAndInvertColorStrategyTest {
                         "file1",
                         "test1.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "content1".getBytes());
+                        "content1".getBytes(StandardCharsets.UTF_8));
         MultipartFile mockFile2 =
                 new MockMultipartFile(
                         "file2",
                         "test2.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "content2".getBytes());
+                        "content2".getBytes(StandardCharsets.UTF_8));
 
         // Act
         ReplaceAndInvertColorStrategy strategy =

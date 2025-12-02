@@ -71,7 +71,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_FileInput(int sizeMB, StrategyType expected) throws IOException {
         File file = writeTempFile(inflatePdf(basePdfBytes, sizeMB));
         factory.load(file);
-        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+        Assertions.assertEquals(expected, factory.getLastStrategyUsed());
     }
 
     @ParameterizedTest
@@ -79,7 +79,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_ByteArray(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         factory.load(inflated);
-        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+        Assertions.assertEquals(expected, factory.getLastStrategyUsed());
     }
 
     @ParameterizedTest
@@ -87,7 +87,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_InputStream(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         factory.load(new ByteArrayInputStream(inflated));
-        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+        Assertions.assertEquals(expected, factory.getLastStrategyUsed());
     }
 
     @ParameterizedTest
@@ -97,7 +97,7 @@ class CustomPDFDocumentFactoryTest {
         MockMultipartFile multipart =
                 new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
         factory.load(multipart);
-        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+        Assertions.assertEquals(expected, factory.getLastStrategyUsed());
     }
 
     @Test
@@ -208,11 +208,6 @@ class CustomPDFDocumentFactoryTest {
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(multipart);
         factory.load(pdfFile);
-        Assertions.assertEquals(expected, factory.lastStrategyUsed);
-    }
-
-    @BeforeEach
-    void cleanup() {
-        System.gc();
+        Assertions.assertEquals(expected, factory.getLastStrategyUsed());
     }
 }

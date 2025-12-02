@@ -3,306 +3,409 @@ package stirling.software.SPDF.controller.api;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.io.RandomAccessStreamCache;
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.xml.XmpSerializer;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class MergeControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
+    @InjectMocks private MergeController controller;
+    @Mock private RandomAccessStreamCache.StreamCacheCreateFunction streamCacheCreateFunction;
 
-    @InjectMocks private MergeController mergeController;
-
-    private MockMultipartFile mockFile1;
-    private MockMultipartFile mockFile2;
-    private MockMultipartFile mockFile3;
-    private PDDocument mockMergedDocument;
-    private PDDocumentCatalog mockCatalog;
-    private PDPage mockPage1;
-    private PDPage mockPage2;
-
-    @BeforeEach
-    void setUp() {
-        mockFile1 =
-                new MockMultipartFile(
-                        "file1",
-                        "document1.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 1".getBytes());
-        mockFile2 =
-                new MockMultipartFile(
-                        "file2",
-                        "document2.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 2".getBytes());
-        mockFile3 =
-                new MockMultipartFile(
-                        "file3",
-                        "chapter3.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content 3".getBytes());
-
-        PDDocument mockDocument = mock(PDDocument.class);
-        mockMergedDocument = mock(PDDocument.class);
-        mockCatalog = mock(PDDocumentCatalog.class);
-        PDPageTree mockPages = mock(PDPageTree.class);
-        mockPage1 = mock(PDPage.class);
-        mockPage2 = mock(PDPage.class);
+    // --------------------- Reflection Helpers ---------------------
+    // These call the private methods we want to test
+    @SuppressWarnings("unchecked")
+    private static Comparator<MultipartFile> invokeGetSortComparator(
+            MergeController target, String sortType) throws Exception {
+        Method m = MergeController.class.getDeclaredMethod("getSortComparator", String.class);
+        m.setAccessible(true);
+        return (Comparator<MultipartFile>) m.invoke(target, sortType);
     }
 
-    @Test
-    void testAddTableOfContents_WithMultipleFiles_Success() throws Exception {
-        // Given
-        MultipartFile[] files = {mockFile1, mockFile2, mockFile3};
+    private static MultipartFile[] invokeReorderedFiles(MultipartFile[] files, String order)
+            throws Exception {
+        Method m =
+                MergeController.class.getDeclaredMethod(
+                        "reorderFilesByProvidedOrder", MultipartFile[].class, String.class);
+        m.setAccessible(true);
+        return (MultipartFile[]) m.invoke(null, files, order);
+    }
 
-        // Mock the merged document setup
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-        when(mockMergedDocument.getNumberOfPages()).thenReturn(6);
-        when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
-        when(mockMergedDocument.getPage(2)).thenReturn(mockPage2);
-        when(mockMergedDocument.getPage(4)).thenReturn(mockPage1);
+    private static int invokeIndexOfByOriginalFilename(List<MultipartFile> list, String name)
+            throws Exception {
+        Method m =
+                MergeController.class.getDeclaredMethod(
+                        "indexOfByOriginalFilename", List.class, String.class);
+        m.setAccessible(true);
+        return (int) m.invoke(null, list, name);
+    }
 
-        // Mock individual document loading for page count
-        PDDocument doc1 = mock(PDDocument.class);
-        PDDocument doc2 = mock(PDDocument.class);
-        PDDocument doc3 = mock(PDDocument.class);
+    private static long invokeGetPdfDateTimeSafe(MergeController target, MultipartFile file)
+            throws Exception {
+        Method m =
+                MergeController.class.getDeclaredMethod("getPdfDateTimeSafe", MultipartFile.class);
+        m.setAccessible(true);
+        try {
+            return (long) m.invoke(target, file);
+        } catch (InvocationTargetException ite) {
+            if (ite.getCause() instanceof RuntimeException re) throw re;
+            throw ite;
+        }
+    }
 
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(pdfDocumentFactory.load(mockFile2)).thenReturn(doc2);
-        when(pdfDocumentFactory.load(mockFile3)).thenReturn(doc3);
+    private static PDDocument invokeMergeDocuments(MergeController target, List<PDDocument> docs)
+            throws Exception {
+        Method m = MergeController.class.getDeclaredMethod("mergeDocuments", List.class);
+        m.setAccessible(true);
+        return (PDDocument) m.invoke(target, docs);
+    }
 
-        when(doc1.getNumberOfPages()).thenReturn(2);
-        when(doc2.getNumberOfPages()).thenReturn(2);
-        when(doc3.getNumberOfPages()).thenReturn(2);
-
-        // When
-        Method addTableOfContentsMethod =
+    private static void invokeAddTableOfContents(
+            MergeController target, PDDocument doc, MultipartFile[] files) throws Exception {
+        Method m =
                 MergeController.class.getDeclaredMethod(
                         "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
-
-        // Then
-        ArgumentCaptor<PDDocumentOutline> outlineCaptor =
-                ArgumentCaptor.forClass(PDDocumentOutline.class);
-        verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
-
-        PDDocumentOutline capturedOutline = outlineCaptor.getValue();
-        assertNotNull(capturedOutline);
-
-        // Verify that documents were loaded for page count
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(pdfDocumentFactory).load(mockFile2);
-        verify(pdfDocumentFactory).load(mockFile3);
-
-        // Verify document closing
-        verify(doc1).close();
-        verify(doc2).close();
-        verify(doc3).close();
+        m.setAccessible(true);
+        m.invoke(target, doc, files);
     }
 
-    @Test
-    void testAddTableOfContents_WithSingleFile_Success() throws Exception {
-        // Given
-        MultipartFile[] files = {mockFile1};
-
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-        when(mockMergedDocument.getNumberOfPages()).thenReturn(3);
-        when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
-
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(3);
-
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
-
-        // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(doc1).close();
+    // --------------------- Test Data Helpers ---------------------
+    // Quick dummy file
+    private static MockMultipartFile mmf(String name) {
+        return new MockMultipartFile(
+                "file", name, MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
     }
 
-    @Test
-    void testAddTableOfContents_WithEmptyArray_Success() throws Exception {
-        // Given
-        MultipartFile[] files = {};
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
-
-        // Then
-        verify(mockMergedDocument).getDocumentCatalog();
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verifyNoInteractions(pdfDocumentFactory);
+    // Real PDF with a given number of pages
+    private static MockMultipartFile mmfValidPdf(String name, int pages) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (PDDocument doc = createSimplePdf(pages)) {
+            doc.save(baos);
+        }
+        return new MockMultipartFile(
+                "file", name, MediaType.APPLICATION_PDF_VALUE, baos.toByteArray());
     }
 
-    @Test
-    void testAddTableOfContents_WithIOException_HandlesGracefully() throws Exception {
-        // Given
-        MultipartFile[] files = {mockFile1, mockFile2};
-
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-        when(mockMergedDocument.getNumberOfPages()).thenReturn(4);
-        when(mockMergedDocument.getPage(anyInt()))
-                .thenReturn(mockPage1); // Use anyInt() to avoid stubbing conflicts
-
-        // First document loads successfully
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(2);
-
-        // Second document throws IOException
-        when(pdfDocumentFactory.load(mockFile2))
-                .thenThrow(new IOException("Failed to load document"));
-
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-
-        // Should not throw exception
-        assertDoesNotThrow(
-                () -> addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files));
-
-        // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(pdfDocumentFactory).load(mockFile1);
-        verify(pdfDocumentFactory).load(mockFile2);
-        verify(doc1).close();
+    // Minimal valid PDF (blank pages)
+    private static PDDocument createSimplePdf(int pages) throws IOException {
+        PDDocument doc = new PDDocument();
+        for (int i = 0; i < pages; i++) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                /* empty content – just need a valid page */
+            }
+        }
+        return doc;
     }
 
-    @Test
-    void testAddTableOfContents_FilenameWithoutExtension_UsesFullName() throws Exception {
-        // Given
-        MockMultipartFile fileWithoutExtension =
-                new MockMultipartFile(
-                        "file",
-                        "document_no_ext",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
-        MultipartFile[] files = {fileWithoutExtension};
-
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-        when(mockMergedDocument.getNumberOfPages()).thenReturn(1);
-        when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
-
-        PDDocument doc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(fileWithoutExtension)).thenReturn(doc);
-        when(doc.getNumberOfPages()).thenReturn(1);
-
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
-
-        // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(doc).close();
+    // PDF with optional creation/modification dates and title
+    private static PDDocument realDocWithInfo(Long mod, Long create, String title) {
+        PDDocument doc = new PDDocument();
+        PDDocumentInformation info = new PDDocumentInformation();
+        if (mod != null) {
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(mod);
+            info.setModificationDate(c);
+        }
+        if (create != null) {
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(create);
+            info.setCreationDate(c);
+        }
+        if (title != null) info.setTitle(title);
+        doc.setDocumentInformation(info);
+        return doc;
     }
 
-    @Test
-    void testAddTableOfContents_PageIndexExceedsDocumentPages_HandlesGracefully() throws Exception {
-        // Given
-        MultipartFile[] files = {mockFile1};
+    // --------------------- Tests ---------------------
 
-        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
-        when(mockMergedDocument.getNumberOfPages()).thenReturn(0); // No pages in merged document
+    @Nested
+    @DisplayName("reorderFilesByProvidedOrder")
+    class ReorderFilesTests {
+        @Test
+        void shouldHonorOrderAndKeepUnknowns() throws Exception {
+            // given four files and an explicit order string
+            MultipartFile a = mmf("A.pdf"), b = mmf("B.pdf"), c = mmf("C.pdf"), d = mmf("D.pdf");
+            MultipartFile[] files = {a, b, c, d};
+            String order = "  C.pdf \n\nA.pdf\r\nX.pdf  ";
+            MultipartFile[] reordered = invokeReorderedFiles(files, order);
+            // then the order should be respected, unknown files stay at the end
+            assertEquals("C.pdf", reordered[0].getOriginalFilename());
+            assertEquals("A.pdf", reordered[1].getOriginalFilename());
+            assertEquals("B.pdf", reordered[2].getOriginalFilename());
+            assertEquals("D.pdf", reordered[3].getOriginalFilename());
+        }
 
-        PDDocument doc1 = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
-        when(doc1.getNumberOfPages()).thenReturn(3);
-
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-
-        // Should not throw exception
-        assertDoesNotThrow(
-                () -> addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files));
-
-        // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
-        verify(mockMergedDocument, never()).getPage(anyInt());
-        verify(doc1).close();
+        @Test
+        void shouldReturnOriginalWhenBlank() throws Exception {
+            // blank order string → no change
+            MultipartFile a = mmf("A.pdf"), b = mmf("B.pdf");
+            MultipartFile[] out = invokeReorderedFiles(new MultipartFile[] {a, b}, " \r\n  ");
+            assertArrayEquals(new MultipartFile[] {a, b}, out);
+        }
     }
 
-    @Test
-    void testMergeDocuments_Success() throws IOException {
-        // Given
-        PDDocument doc1 = mock(PDDocument.class);
-        PDDocument doc2 = mock(PDDocument.class);
-        List<PDDocument> documents = Arrays.asList(doc1, doc2);
+    @Nested
+    @DisplayName("indexOfByOriginalFilename")
+    class IndexOfByOriginalFilenameTests {
+        @Test
+        void shouldReturnCorrectIndex() throws Exception {
+            List<MultipartFile> list = List.of(mmf("foo.pdf"), mmf("bar.pdf"), mmf("baz.pdf"));
+            assertEquals(1, invokeIndexOfByOriginalFilename(list, "bar.pdf"));
+        }
 
-        PDPageTree pages1 = mock(PDPageTree.class);
-        PDPageTree pages2 = mock(PDPageTree.class);
-        PDPage page1 = mock(PDPage.class);
-        PDPage page2 = mock(PDPage.class);
-
-        when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
-        when(doc1.getPages()).thenReturn(pages1);
-        when(doc2.getPages()).thenReturn(pages2);
-        when(pages1.iterator()).thenReturn(Collections.singletonList(page1).iterator());
-        when(pages2.iterator()).thenReturn(Collections.singletonList(page2).iterator());
-
-        // When
-        PDDocument result = mergeController.mergeDocuments(documents);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(mockMergedDocument, result);
-        verify(mockMergedDocument).addPage(page1);
-        verify(mockMergedDocument).addPage(page2);
+        @Test
+        void shouldReturnMinusOneWhenMissing() throws Exception {
+            assertEquals(-1, invokeIndexOfByOriginalFilename(List.of(mmf("x.pdf")), "y.pdf"));
+            assertEquals(-1, invokeIndexOfByOriginalFilename(List.of(), "any"));
+        }
     }
 
-    @Test
-    void testMergeDocuments_EmptyList_ReturnsEmptyDocument() throws IOException {
-        // Given
-        List<PDDocument> documents = List.of();
+    @Nested
+    @DisplayName("getSortComparator – simple")
+    class GetSortComparatorSimpleTests {
+        @Test
+        void byFileNameCaseInsensitive() throws Exception {
+            // sort by filename, ignoring case and extension case
+            MultipartFile b = mmf("b.pdf"), A = mmf("A.pdf"), c = mmf("c.PDF");
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byFileName");
+            MultipartFile[] arr = {b, A, c};
+            Arrays.sort(arr, comp);
+            assertEquals("A.pdf", arr[0].getOriginalFilename());
+            assertEquals("b.pdf", arr[1].getOriginalFilename());
+            assertEquals("c.PDF", arr[2].getOriginalFilename());
+        }
 
-        when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
+        @Test
+        void orderProvidedPreservesOrder() throws Exception {
+            // "orderProvided" means keep the order they arrived in
+            MultipartFile f1 = mmf("1.pdf"), f2 = mmf("2.pdf"), f3 = mmf("3.pdf");
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "orderProvided");
+            MultipartFile[] arr = {f1, f2, f3};
+            Arrays.sort(arr, comp);
+            assertEquals("1.pdf", arr[0].getOriginalFilename());
+            assertEquals("2.pdf", arr[1].getOriginalFilename());
+            assertEquals("3.pdf", arr[2].getOriginalFilename());
+        }
 
-        // When
-        PDDocument result = mergeController.mergeDocuments(documents);
+        @Test
+        void defaultPreservesStableOrder() throws Exception {
+            // unknown sort type → stable (no change)
+            MultipartFile f1 = mmf("3.pdf"), f2 = mmf("1.pdf"), f3 = mmf("2.pdf");
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "bogus");
+            MultipartFile[] arr = {f1, f2, f3};
+            Arrays.sort(arr, comp);
+            assertEquals("3.pdf", arr[0].getOriginalFilename());
+            assertEquals("1.pdf", arr[1].getOriginalFilename());
+            assertEquals("2.pdf", arr[2].getOriginalFilename());
+        }
+    }
 
-        // Then
-        assertNotNull(result);
-        assertEquals(mockMergedDocument, result);
-        verify(mockMergedDocument, never()).addPage(any(PDPage.class));
+    @Nested
+    @DisplayName("getSortComparator – date & title")
+    class GetSortComparatorAdvancedTests {
+        @Test
+        void byDateModifiedDesc() throws Exception {
+            // newest modification date first
+            MultipartFile oldF = mmf("old.pdf"), newF = mmf("new.pdf");
+            when(pdfDocumentFactory.load(oldF)).thenReturn(realDocWithInfo(1_000L, null, null));
+            when(pdfDocumentFactory.load(newF)).thenReturn(realDocWithInfo(5_000L, null, null));
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byDateModified");
+            MultipartFile[] arr = {oldF, newF};
+            Arrays.sort(arr, comp);
+            assertEquals("new.pdf", arr[0].getOriginalFilename());
+            assertEquals("old.pdf", arr[1].getOriginalFilename());
+        }
+
+        @Test
+        void byDateCreatedDesc() throws Exception {
+            MultipartFile f1 = mmf("one.pdf"), f2 = mmf("two.pdf");
+            when(pdfDocumentFactory.load(f1)).thenReturn(realDocWithInfo(null, 1_000L, null));
+            when(pdfDocumentFactory.load(f2)).thenReturn(realDocWithInfo(null, 2_000L, null));
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byDateCreated");
+            MultipartFile[] arr = {f1, f2};
+            Arrays.sort(arr, comp);
+            assertEquals("two.pdf", arr[0].getOriginalFilename());
+            assertEquals("one.pdf", arr[1].getOriginalFilename());
+        }
+
+        @Test
+        void byPDFTitleAscendingNullLast() throws Exception {
+            MultipartFile a = mmf("alpha.pdf"), b = mmf("beta.pdf"), n = mmf("null.pdf");
+            when(pdfDocumentFactory.load(a)).thenReturn(realDocWithInfo(null, null, "Alpha"));
+            when(pdfDocumentFactory.load(b)).thenReturn(realDocWithInfo(null, null, "beta"));
+            when(pdfDocumentFactory.load(n)).thenReturn(realDocWithInfo(null, null, null));
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byPDFTitle");
+            MultipartFile[] arr = {b, n, a};
+            Arrays.sort(arr, comp);
+            assertEquals("alpha.pdf", arr[0].getOriginalFilename());
+            assertEquals("beta.pdf", arr[1].getOriginalFilename());
+            assertEquals("null.pdf", arr[2].getOriginalFilename());
+        }
+
+        @Test
+        void byPDFTitleIOExceptionTreatedEqual() throws Exception {
+            // if reading the title throws, treat files as equal
+            MultipartFile t = mmf("throw.pdf"), ok = mmf("ok.pdf");
+            when(pdfDocumentFactory.load(t)).thenThrow(new IOException("boom"));
+            lenient()
+                    .when(pdfDocumentFactory.load(ok))
+                    .thenReturn(realDocWithInfo(null, null, "Title"));
+
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byPDFTitle");
+            assertEquals(0, comp.compare(t, ok));
+        }
+
+        @Test
+        void byPDFTitleNullsTreatedEqual() throws Exception {
+            // both titles null → equal
+            MultipartFile n1 = mmf("n1.pdf"), n2 = mmf("n2.pdf");
+            when(pdfDocumentFactory.load(n1)).thenReturn(realDocWithInfo(null, null, null));
+            when(pdfDocumentFactory.load(n2)).thenReturn(realDocWithInfo(null, null, null));
+
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byPDFTitle");
+            assertEquals(0, comp.compare(n1, n2));
+        }
+    }
+
+    @Nested
+    @DisplayName("getPdfDateTimeSafe")
+    class GetPdfDateTimeSafeTests {
+        @Test
+        void prefersInfoModDate() throws Exception {
+            MultipartFile f = mmf("mod.pdf");
+            when(pdfDocumentFactory.load(f)).thenReturn(realDocWithInfo(9_000L, 1_000L, null));
+            assertEquals(9_000L, invokeGetPdfDateTimeSafe(controller, f));
+        }
+
+        @Test
+        void fallsBackToCreationDate() throws Exception {
+            MultipartFile f = mmf("create.pdf");
+            when(pdfDocumentFactory.load(f)).thenReturn(realDocWithInfo(null, 2_000L, null));
+            assertEquals(2_000L, invokeGetPdfDateTimeSafe(controller, f));
+        }
+
+        @Test
+        void usesXmpModifyDateWhenInfoEmpty() throws Exception {
+            MultipartFile f = mmf("xmp.pdf");
+            PDDocument doc = new PDDocument();
+            doc.setDocumentInformation(new PDDocumentInformation());
+
+            XMPMetadata xmp = XMPMetadata.createXMPMetadata();
+            XMPBasicSchema bs = xmp.createAndAddXMPBasicSchema();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(8_000L);
+            bs.setModifyDate(cal);
+            XmpSerializer ser = new XmpSerializer();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ser.serialize(xmp, baos, true);
+
+            PDMetadata meta = new PDMetadata(doc);
+            meta.importXMPMetadata(baos.toByteArray());
+            doc.getDocumentCatalog().setMetadata(meta);
+
+            when(pdfDocumentFactory.load(f)).thenReturn(doc);
+            assertEquals(8_000L, invokeGetPdfDateTimeSafe(controller, f));
+        }
+
+        @Test
+        void returnsZeroOnIOException() throws Exception {
+            MultipartFile f = mmf("bad.pdf");
+            when(pdfDocumentFactory.load(f)).thenThrow(new IOException("boom"));
+            assertEquals(0L, invokeGetPdfDateTimeSafe(controller, f));
+        }
+
+        // basic.getCreateDate() != null
+        @Test
+        void usesXmpCreateDateWhenInfoEmpty() throws Exception {
+            MultipartFile f = mmf("xmpcreate.pdf");
+            PDDocument doc = new PDDocument();
+            doc.setDocumentInformation(new PDDocumentInformation());
+            XMPMetadata xmp = XMPMetadata.createXMPMetadata();
+            XMPBasicSchema bs = xmp.createAndAddXMPBasicSchema();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(7_000L);
+            bs.setCreateDate(cal);
+            XmpSerializer ser = new XmpSerializer();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ser.serialize(xmp, baos, true);
+            PDMetadata meta = new PDMetadata(doc);
+            meta.importXMPMetadata(baos.toByteArray());
+            doc.getDocumentCatalog().setMetadata(meta);
+
+            when(pdfDocumentFactory.load(f)).thenReturn(doc);
+            assertEquals(7_000L, invokeGetPdfDateTimeSafe(controller, f));
+        }
+    }
+
+    @Nested
+    @DisplayName("mergeDocuments")
+    class MergeDocumentsTests {
+        @Test
+        void mergesMultipleDocs() throws Exception {
+            // empty document as base
+            when(pdfDocumentFactory.createNewDocument()).thenReturn(createSimplePdf(0));
+            PDDocument d1 = createSimplePdf(1), d2 = createSimplePdf(2);
+            PDDocument merged = invokeMergeDocuments(controller, List.of(d1, d2));
+            assertEquals(3, merged.getNumberOfPages());
+            merged.close();
+            d1.close();
+            d2.close();
+        }
+    }
+
+    @Nested
+    @DisplayName("addTableOfContents")
+    class AddTableOfContentsTests {
+        @Test
+        void addsOutlineItems() throws Exception {
+            PDDocument merged = createSimplePdf(3);
+            MultipartFile f1 = mmf("doc1.pdf"), f2 = mmf("doc2.pdf");
+            when(pdfDocumentFactory.load(f1)).thenReturn(createSimplePdf(1));
+            when(pdfDocumentFactory.load(f2)).thenReturn(createSimplePdf(2));
+            invokeAddTableOfContents(controller, merged, new MultipartFile[] {f1, f2});
+
+            PDDocumentOutline outline = merged.getDocumentCatalog().getDocumentOutline();
+            assertNotNull(outline);
+            PDOutlineItem first = outline.getFirstChild();
+            assertEquals("doc1", first.getTitle());
+            assertEquals("doc2", first.getNextSibling().getTitle());
+            merged.close();
+        }
+
+        @Test
+        void addTableOfContentsIOExceptionHandled() throws Exception {
+            PDDocument merged = createSimplePdf(1);
+            MultipartFile badFile = mmf("bad.pdf");
+            when(pdfDocumentFactory.load(badFile)).thenThrow(new IOException("boom"));
+            // should not throw
+            invokeAddTableOfContents(controller, merged, new MultipartFile[] {badFile});
+            merged.close();
+        }
     }
 }

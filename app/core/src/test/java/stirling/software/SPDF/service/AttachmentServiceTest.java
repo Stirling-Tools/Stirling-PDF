@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -35,7 +36,9 @@ class AttachmentServiceTest {
 
             when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
             when(attachments.get(0).getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Test content".getBytes()));
+                    .thenReturn(
+                            new ByteArrayInputStream(
+                                    "Test content".getBytes(StandardCharsets.UTF_8)));
             when(attachments.get(0).getSize()).thenReturn(12L);
             when(attachments.get(0).getContentType()).thenReturn("text/plain");
 
@@ -57,13 +60,17 @@ class AttachmentServiceTest {
 
             when(attachment1.getOriginalFilename()).thenReturn("document.pdf");
             when(attachment1.getInputStream())
-                    .thenReturn(new ByteArrayInputStream("PDF content".getBytes()));
+                    .thenReturn(
+                            new ByteArrayInputStream(
+                                    "PDF content".getBytes(StandardCharsets.UTF_8)));
             when(attachment1.getSize()).thenReturn(15L);
             when(attachment1.getContentType()).thenReturn(MediaType.APPLICATION_PDF_VALUE);
 
             when(attachment2.getOriginalFilename()).thenReturn("image.jpg");
             when(attachment2.getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Image content".getBytes()));
+                    .thenReturn(
+                            new ByteArrayInputStream(
+                                    "Image content".getBytes(StandardCharsets.UTF_8)));
             when(attachment2.getSize()).thenReturn(20L);
             when(attachment2.getContentType()).thenReturn(MediaType.IMAGE_JPEG_VALUE);
 
@@ -82,7 +89,9 @@ class AttachmentServiceTest {
 
             when(attachments.get(0).getOriginalFilename()).thenReturn("image.jpg");
             when(attachments.get(0).getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Image content".getBytes()));
+                    .thenReturn(
+                            new ByteArrayInputStream(
+                                    "Image content".getBytes(StandardCharsets.UTF_8)));
             when(attachments.get(0).getSize()).thenReturn(25L);
             when(attachments.get(0).getContentType()).thenReturn("");
 
@@ -120,7 +129,7 @@ class AttachmentServiceTest {
                             "file",
                             "..\\evil/../../tricky.txt",
                             MediaType.TEXT_PLAIN_VALUE,
-                            "danger".getBytes());
+                            "danger".getBytes(StandardCharsets.UTF_8));
 
             attachmentService.addAttachment(document, List.of(maliciousAttachment));
 
@@ -138,7 +147,7 @@ class AttachmentServiceTest {
                 assertFalse(sanitizedName.contains("\\"));
 
                 byte[] data = zipInputStream.readAllBytes();
-                assertArrayEquals("danger".getBytes(), data);
+                assertArrayEquals("danger".getBytes(StandardCharsets.UTF_8), data);
                 assertNull(zipInputStream.getNextEntry());
             }
         }
@@ -154,7 +163,7 @@ class AttachmentServiceTest {
                             "file",
                             "large.bin",
                             MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                            "too big".getBytes());
+                            "too big".getBytes(StandardCharsets.UTF_8));
 
             attachmentService.addAttachment(document, List.of(oversizedAttachment));
 
@@ -170,10 +179,16 @@ class AttachmentServiceTest {
         try (var document = new PDDocument()) {
             var first =
                     new MockMultipartFile(
-                            "file", "first.txt", MediaType.TEXT_PLAIN_VALUE, "12345".getBytes());
+                            "file",
+                            "first.txt",
+                            MediaType.TEXT_PLAIN_VALUE,
+                            "12345".getBytes(StandardCharsets.UTF_8));
             var second =
                     new MockMultipartFile(
-                            "file", "second.txt", MediaType.TEXT_PLAIN_VALUE, "67890".getBytes());
+                            "file",
+                            "second.txt",
+                            MediaType.TEXT_PLAIN_VALUE,
+                            "67890".getBytes(StandardCharsets.UTF_8));
 
             attachmentService.addAttachment(document, List.of(first, second));
 
@@ -186,7 +201,7 @@ class AttachmentServiceTest {
                 assertNotNull(firstEntry);
                 assertEquals("first.txt", firstEntry.getName());
                 byte[] firstData = zipInputStream.readNBytes(5);
-                assertArrayEquals("12345".getBytes(), firstData);
+                assertArrayEquals("12345".getBytes(StandardCharsets.UTF_8), firstData);
                 assertNull(zipInputStream.getNextEntry());
             }
         }

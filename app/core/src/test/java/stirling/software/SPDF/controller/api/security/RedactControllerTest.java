@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -144,7 +145,9 @@ class RedactControllerTest {
         when(mockPage.getBBox()).thenReturn(pageRect);
 
         InputStream mockInputStream =
-                new ByteArrayInputStream("BT /F1 12 Tf 100 200 Td (test content) Tj ET".getBytes());
+                new ByteArrayInputStream(
+                        "BT /F1 12 Tf 100 200 Td (test content) Tj ET"
+                                .getBytes(StandardCharsets.UTF_8));
         when(mockPage.getContents()).thenReturn(mockInputStream);
 
         when(mockPage.hasContents()).thenReturn(true);
@@ -162,7 +165,7 @@ class RedactControllerTest {
         doAnswer(
                         invocation -> {
                             ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("Mock PDF Content".getBytes());
+                            baos.write("Mock PDF Content".getBytes(StandardCharsets.UTF_8));
                             return null;
                         })
                 .when(mockDocument)
@@ -260,7 +263,7 @@ class RedactControllerTest {
                                 ("BT /F1 12 Tf 100 200 Td (page "
                                                 + i
                                                 + " content with confidential info) Tj ET")
-                                        .getBytes());
+                                        .getBytes(StandardCharsets.UTF_8));
                 when(page.getContents()).thenReturn(mockInputStream);
 
                 pageList.add(page);
@@ -536,7 +539,7 @@ class RedactControllerTest {
                 InputStream mockInputStream =
                         new ByteArrayInputStream(
                                 ("BT /F1 12 Tf 100 200 Td (page " + i + " content) Tj ET")
-                                        .getBytes());
+                                        .getBytes(StandardCharsets.UTF_8));
                 when(page.getContents()).thenReturn(mockInputStream);
 
                 pageList.add(page);
@@ -875,7 +878,7 @@ class RedactControllerTest {
                             "fileInput",
                             "malformed.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Not a real PDF content".getBytes());
+                            "Not a real PDF content".getBytes(StandardCharsets.UTF_8));
 
             RedactPdfRequest request = new RedactPdfRequest();
             request.setFileInput(malformedFile);

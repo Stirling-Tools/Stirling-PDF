@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ class EditTableOfContentsControllerTest {
                         "file",
                         "test.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+                        "PDF content".getBytes(StandardCharsets.UTF_8));
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);
@@ -218,7 +219,7 @@ class EditTableOfContentsControllerTest {
         doAnswer(
                         invocation -> {
                             ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+                            baos.write("mocked pdf content".getBytes(StandardCharsets.UTF_8));
                             return null;
                         })
                 .when(mockDocument)
@@ -280,7 +281,7 @@ class EditTableOfContentsControllerTest {
         doAnswer(
                         invocation -> {
                             ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+                            baos.write("mocked pdf content".getBytes(StandardCharsets.UTF_8));
                             return null;
                         })
                 .when(mockDocument)
@@ -332,7 +333,7 @@ class EditTableOfContentsControllerTest {
         doAnswer(
                         invocation -> {
                             ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+                            baos.write("mocked pdf content".getBytes(StandardCharsets.UTF_8));
                             return null;
                         })
                 .when(mockDocument)

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -50,7 +51,7 @@ class FileMonitorTest {
 
         // Create a test file
         Path testFile = tempDir.resolve("test-file.txt");
-        Files.write(testFile, "test content".getBytes());
+        Files.write(testFile, "test content".getBytes(StandardCharsets.UTF_8));
 
         // Set modified time to 10 seconds ago (relative to test start time)
         Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
@@ -66,7 +67,7 @@ class FileMonitorTest {
 
         // Create a test file
         Path testFile = tempDir.resolve("recent-file.txt");
-        Files.write(testFile, "test content".getBytes());
+        Files.write(testFile, "test content".getBytes(StandardCharsets.UTF_8));
 
         // Set modified time to just now (relative to test start time)
         Files.setLastModifiedTime(testFile, FileTime.from(testTime));
@@ -91,7 +92,7 @@ class FileMonitorTest {
 
         // Create a test file
         Path testFile = tempDir.resolve("locked-file.txt");
-        Files.write(testFile, "test content".getBytes());
+        Files.write(testFile, "test content".getBytes(StandardCharsets.UTF_8));
 
         // Set modified time to 10 seconds ago (relative to test start time) to make sure it passes
         // the time check
@@ -113,12 +114,12 @@ class FileMonitorTest {
 
         // Create a PDF file
         Path pdfFile = tempDir.resolve("test.pdf");
-        Files.write(pdfFile, "pdf content".getBytes());
+        Files.write(pdfFile, "pdf content".getBytes(StandardCharsets.UTF_8));
         Files.setLastModifiedTime(pdfFile, FileTime.from(Instant.ofEpochMilli(1000000L)));
 
         // Create a TXT file
         Path txtFile = tempDir.resolve("test.txt");
-        Files.write(txtFile, "text content".getBytes());
+        Files.write(txtFile, "text content".getBytes(StandardCharsets.UTF_8));
         Files.setLastModifiedTime(txtFile, FileTime.from(Instant.ofEpochMilli(1000000L)));
 
         // PDF file should be ready for processing
@@ -140,7 +141,7 @@ class FileMonitorTest {
 
         // Create a test file
         Path testFile = tempDir.resolve("in-use-file.txt");
-        Files.write(testFile, "initial content".getBytes());
+        Files.write(testFile, "initial content".getBytes(StandardCharsets.UTF_8));
 
         // Set modified time to 10 seconds ago (relative to test start time)
         Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
@@ -151,7 +152,7 @@ class FileMonitorTest {
                 "File should be ready for processing when sufficiently old");
 
         // After modifying the file to simulate closing, it should still be ready
-        Files.write(testFile, "updated content".getBytes());
+        Files.write(testFile, "updated content".getBytes(StandardCharsets.UTF_8));
         Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         assertTrue(
@@ -166,7 +167,7 @@ class FileMonitorTest {
 
         // Create a test file
         Path testFile = tempDir.resolve("absolute-path-file.txt");
-        Files.write(testFile, "test content".getBytes());
+        Files.write(testFile, "test content".getBytes(StandardCharsets.UTF_8));
 
         // Set modified time to 10 seconds ago (relative to test start time)
         Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));

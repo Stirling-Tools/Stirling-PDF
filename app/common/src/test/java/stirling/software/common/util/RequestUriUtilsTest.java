@@ -4,75 +4,44 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class RequestUriUtilsTest {
 
-    @Test
-    void testIsStaticResource() {
-        // Test static resources without context path
-        assertTrue(
-                RequestUriUtils.isStaticResource("/css/styles.css"), "CSS files should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/js/script.js"), "JS files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/images/logo.png"),
-                "Image files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/public/index.html"),
-                "Public files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/pdfjs/pdf.worker.js"),
-                "PDF.js files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/api/v1/info/status"),
-                "API status should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/some-path/icon.svg"),
-                "SVG files should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/login"), "Login page should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/error"), "Error page should be static");
-
-        // Test non-static resources
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/users"),
-                "API users should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/orders"),
-                "API orders should not be static");
-        assertFalse(RequestUriUtils.isStaticResource("/"), "Root path should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/register"),
-                "Register page should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/products"),
-                "API products should not be static");
+    @ParameterizedTest(name = "[{index}] isStaticResource({0}) -> {1}")
+    @CsvSource({
+        "'/css/styles.css', true",
+        "'/js/script.js', true",
+        "'/images/logo.png', true",
+        "'/public/index.html', true",
+        "'/pdfjs/pdf.worker.js', true",
+        "'/api/v1/info/status', true",
+        "'/some-path/icon.svg', true",
+        "'/login', true",
+        "'/error', true",
+        "'/api/v1/users', false",
+        "'/api/v1/orders', false",
+        "'/', false",
+        "'/register', false",
+        "'/api/v1/products', false"
+    })
+    void testIsStaticResource(String requestUri, boolean expected) {
+        assertEquals(expected, RequestUriUtils.isStaticResource(requestUri));
     }
 
-    @Test
-    void testIsStaticResourceWithContextPath() {
-        String contextPath = "/myapp";
-
-        // Test static resources with context path
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/css/styles.css"),
-                "CSS with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/js/script.js"),
-                "JS with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/images/logo.png"),
-                "Images with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/login"),
-                "Login with context path should be static");
-
-        // Test non-static resources with context path
-        assertFalse(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/api/v1/users"),
-                "API users with context path should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource(contextPath, "/"),
-                "Root path with context path should not be static");
+    @ParameterizedTest(name = "[{index}] isStaticResource({1}) with context {0} -> {2}")
+    @CsvSource({
+        "'/myapp', '/myapp/css/styles.css', true",
+        "'/myapp', '/myapp/js/script.js', true",
+        "'/myapp', '/myapp/images/logo.png', true",
+        "'/myapp', '/myapp/login', true",
+        "'/myapp', '/myapp/api/v1/users', false",
+        "'/myapp', '/', false"
+    })
+    void testIsStaticResourceWithContextPath(
+            String contextPath, String requestUri, boolean expected) {
+        assertEquals(expected, RequestUriUtils.isStaticResource(contextPath, requestUri));
     }
 
     @ParameterizedTest
@@ -95,94 +64,45 @@ public class RequestUriUtilsTest {
                 "Files with specific extensions should be static regardless of path");
     }
 
-    @Test
-    void testIsTrackableResource() {
-        // Test non-trackable resources (returns false)
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/js/script.js"),
-                "JS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/v1/api-docs"),
-                "API docs should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("robots.txt"),
-                "robots.txt should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/images/logo.png"),
-                "Images should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/styles.css"),
-                "CSS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/script.js.map"),
-                "Map files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/icon.svg"),
-                "SVG files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/popularity.txt"),
-                "Popularity file should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/script.js"),
-                "JS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/swagger/index.html"),
-                "Swagger files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/api/v1/info/status"),
-                "API info should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/site.webmanifest"),
-                "Webmanifest should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/fonts/font.woff"),
-                "Fonts should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/pdfjs/viewer.js"),
-                "PDF.js files should not be trackable");
-
-        // Test trackable resources (returns true)
-        assertTrue(RequestUriUtils.isTrackableResource("/login"), "Login page should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/register"),
-                "Register page should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/api/v1/users"),
-                "API users should be trackable");
-        assertTrue(RequestUriUtils.isTrackableResource("/"), "Root path should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/some-other-path"),
-                "Other paths should be trackable");
+    @ParameterizedTest(name = "[{index}] isTrackableResource({0}) -> {1}")
+    @CsvSource({
+        "'/js/script.js', false",
+        "'/v1/api-docs', false",
+        "'robots.txt', false",
+        "'/images/logo.png', false",
+        "'/styles.css', false",
+        "'/script.js.map', false",
+        "'/icon.svg', false",
+        "'/popularity.txt', false",
+        "'/script.js', false",
+        "'/swagger/index.html', false",
+        "'/api/v1/info/status', false",
+        "'/site.webmanifest', false",
+        "'/fonts/font.woff', false",
+        "'/pdfjs/viewer.js', false",
+        "'/login', true",
+        "'/register', true",
+        "'/api/v1/users', true",
+        "'/', true",
+        "'/some-other-path', true"
+    })
+    void testIsTrackableResource(String requestUri, boolean expected) {
+        assertEquals(expected, RequestUriUtils.isTrackableResource(requestUri));
     }
 
-    @Test
-    void testIsTrackableResourceWithContextPath() {
-        String contextPath = "/myapp";
-
-        // Test with context path
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/js/script.js"),
-                "JS files should not be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/login"),
-                "Login page should be trackable with context path");
-
-        // Additional tests with context path
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/fonts/custom.woff"),
-                "Font files should not be trackable with context path");
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/images/header.png"),
-                "Images should not be trackable with context path");
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/swagger/ui.html"),
-                "Swagger UI should not be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/account/profile"),
-                "Account page should be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/pdf/view"),
-                "PDF view page should be trackable with context path");
+    @ParameterizedTest(name = "[{index}] isTrackableResource({1}) with context {0} -> {2}")
+    @CsvSource({
+        "'/myapp', '/js/script.js', false",
+        "'/myapp', '/login', true",
+        "'/myapp', '/fonts/custom.woff', false",
+        "'/myapp', '/images/header.png', false",
+        "'/myapp', '/swagger/ui.html', false",
+        "'/myapp', '/account/profile', true",
+        "'/myapp', '/pdf/view', true"
+    })
+    void testIsTrackableResourceWithContextPath(
+            String contextPath, String requestUri, boolean expected) {
+        assertEquals(expected, RequestUriUtils.isTrackableResource(contextPath, requestUri));
     }
 
     @ParameterizedTest

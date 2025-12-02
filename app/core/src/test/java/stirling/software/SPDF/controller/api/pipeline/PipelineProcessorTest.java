@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +75,7 @@ class PipelineProcessorTest {
 
     private static class MyFileByteArrayResource extends ByteArrayResource {
         public MyFileByteArrayResource() {
-            super("data".getBytes());
+            super("data".getBytes(StandardCharsets.UTF_8));
         }
 
         @Override

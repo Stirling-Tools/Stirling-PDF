@@ -1,3 +1,4 @@
+
 # ==============================================================================
 # Multi-stage Dockerfile for Stirling-PDF – "fat" image with everything included
 # Includes: LibreOffice, Calibre, Tesseract, OCRmyPDF, unoserver, WeasyPrint, etc.
@@ -28,7 +29,7 @@ COPY app/proprietary/build.gradle proprietary/.
 
 # Warm-up Gradle dependency cache (optional but improves subsequent builds)
 RUN ./gradlew --no-daemon printVersion --quiet | tail -1 > /tmp/version_tag || true
-RUN ./gradlew --no-daemon build -x spotlessApply -x spotlessCheck -x test -x sonarqube || true
+RUN ./gradlew --no-daemon build -x spotlessApply -x spotlessCheck -x test -x sonarqube -x jacocoTestReport || true
 
 # Switch to final source directory and copy full source code
 WORKDIR /app
@@ -40,7 +41,7 @@ ENV DISABLE_ADDITIONAL_FEATURES=false \
 
 # Final build – produce the fat JAR
 RUN ./gradlew --no-daemon clean build \
-    -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+    -x spotlessApply -x spotlessCheck -x test -x sonarqube -x jacocoTestReport \
     && apk del bash unzip curl git
 
 

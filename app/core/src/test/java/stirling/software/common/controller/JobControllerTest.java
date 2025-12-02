@@ -3,6 +3,7 @@ package stirling.software.common.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
@@ -129,7 +130,7 @@ class JobControllerTest {
         String fileId = "file-id";
         String originalFileName = "test.pdf";
         String contentType = MediaType.APPLICATION_PDF_VALUE;
-        byte[] fileContent = "Test file content".getBytes();
+        byte[] fileContent = "Test file content".getBytes(StandardCharsets.UTF_8);
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -41,7 +42,7 @@ class FileStorageTest {
     @Test
     void testStoreFile() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         when(mockFile.getBytes()).thenReturn(fileContent);
 
         // Set up mock to handle transferTo by writing the file
@@ -66,7 +67,7 @@ class FileStorageTest {
     @Test
     void testStoreBytes() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         String originalName = "test.pdf";
 
         // Act
@@ -81,7 +82,7 @@ class FileStorageTest {
     @Test
     void testRetrieveFile() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         String fileId = "test-file-1";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
@@ -101,7 +102,7 @@ class FileStorageTest {
     @Test
     void testRetrieveBytes() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         String fileId = "test-file-2";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
@@ -134,7 +135,7 @@ class FileStorageTest {
     @Test
     void testDeleteFile() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         String fileId = "test-file-3";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
@@ -162,7 +163,7 @@ class FileStorageTest {
     @Test
     void testFileExists() throws IOException {
         // Arrange
-        byte[] fileContent = "Test PDF content".getBytes();
+        byte[] fileContent = "Test PDF content".getBytes(StandardCharsets.UTF_8);
         String fileId = "test-file-4";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
