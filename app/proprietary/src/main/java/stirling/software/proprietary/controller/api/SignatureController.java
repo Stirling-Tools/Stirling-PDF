@@ -120,6 +120,7 @@ public class SignatureController {
      * signatures. Admins can also delete shared signatures.
      */
     @DeleteMapping("/{signatureId}")
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {
             String username = userService.getCurrentUsername();
