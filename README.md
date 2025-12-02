@@ -42,7 +42,7 @@ docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf
 
 Then open: http://localhost:8080
 
-For full installation options (including desktop and Kubernetes), see **https://docs.stirlingpdf.com/#documentation-guide**.
+For full installation options (including desktop and Kubernetes), see our [Documentation Guide](https://docs.stirlingpdf.com/#documentation-guide).
 
 ## Resources
 
@@ -53,8 +53,8 @@ For full installation options (including desktop and Kubernetes), see **https://
 
 ## Support
 
-- **Community Discord**: https://discord.gg/HYmhKj45pU
-- **Bug Reports**: https://github.com/Stirling-Tools/Stirling-PDF/issues
+- **Community** [Discord](https://discord.gg/HYmhKj45pU)
+- **Bug Reports**: [Github issues](https://github.com/Stirling-Tools/Stirling-PDF/issues)
 
 ## Contributing
 
