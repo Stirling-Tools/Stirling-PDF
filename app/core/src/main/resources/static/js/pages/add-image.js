@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 window.goToFirstOrLastPage = goToFirstOrLastPage;
 
 document.getElementById('download-pdf').addEventListener('click', async () => {
@@ -31,8 +37,11 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
       const file = allFiles[0];
       originalFileName = file.name.replace(/\.[^/.]+$/, '');
       const pdfData = await file.arrayBuffer();
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+      const pdfDoc = await pdfjsLib.getDocument({
+        ...PDFJS_DEFAULT_OPTIONS,
+        data: pdfData,
+      }).promise;
       await DraggableUtils.renderPage(pdfDoc, 0);
 
       document.querySelectorAll('.show-on-file-selected').forEach((el) => {

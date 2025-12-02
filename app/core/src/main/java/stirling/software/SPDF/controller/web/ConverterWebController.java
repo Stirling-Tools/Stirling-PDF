@@ -54,6 +54,17 @@ public class ConverterWebController {
         return "convert/ebook-to-pdf";
     }
 
+    @GetMapping("/pdf-to-epub")
+    @Hidden
+    public String convertPdfToEpubForm(Model model) {
+        if (!ApplicationContextProvider.getBean(EndpointConfiguration.class)
+                .isEndpointEnabled("pdf-to-epub")) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("currentPage", "pdf-to-epub");
+        return "convert/pdf-to-epub";
+    }
+
     @GetMapping("/pdf-to-cbr")
     @Hidden
     public String convertPdfToCbrForm(Model model) {
