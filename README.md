@@ -21,7 +21,7 @@ Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrob
   </a>
 </p>
 
-![Stirling PDF – Dashboard](images/stirling-home.jpg)
+![Stirling PDF – Dashboard](images/home.png)
 
 ---
 
