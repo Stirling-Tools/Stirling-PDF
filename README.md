@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" alt="Stirling PDF logo">
 </p>
 
-# Stirling PDF – The Open-Source PDF Platform
+<h1 align="center">Stirling PDF – The Open-Source PDF Platform</h1>
 
 Stirling PDF is a powerful, open-source PDF editing platform. Run it as a personal desktop app, in the browser, or deploy it on your own servers with a private API. Edit, sign, redact, convert, and automate PDFs without sending documents to third‑party services.
 
@@ -52,10 +52,10 @@ For full installation options (including desktop and Kubernetes), see **https://
 
 ## Resources
 
-- **Documentation**: https://docs.stirlingpdf.com
-- **Homepage**: https://stirling.com
-- **API Docs**: https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/
-- **Server Plan & Enterprise**: https://docs.stirlingpdf.com/Paid-Offerings
+- [**Documentation**](https://docs.stirlingpdf.com)
+- [**Homepage**](https://stirling.com)
+- [**API Docs**](https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/)
+- [**Server Plan & Enterprise**](https://docs.stirlingpdf.com/Paid-Offerings)
 
 ---
 
