@@ -11,7 +11,6 @@ import i18n from '@app/i18n';
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
 
-
 // Extended config for custom properties
 interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
