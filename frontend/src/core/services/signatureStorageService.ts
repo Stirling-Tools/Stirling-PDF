@@ -14,7 +14,6 @@ interface SignatureStorageCapabilities {
 class SignatureStorageService {
   private capabilities: SignatureStorageCapabilities | null = null;
   private detectionPromise: Promise<SignatureStorageCapabilities> | null = null;
-  private blobUrls: Set<string> = new Set();
 
   /**
    * Detect if backend supports signature storage API
@@ -83,9 +82,6 @@ class SignatureStorageService {
    * Load all signatures
    */
   async loadSignatures(): Promise<SavedSignature[]> {
-    // Clean up old blob URLs before loading new ones
-    this.cleanup();
-
     const capabilities = await this.detectCapabilities();
 
     if (capabilities.supportsBackend) {
@@ -130,9 +126,7 @@ class SignatureStorageService {
     const capabilities = await this.detectCapabilities();
 
     if (capabilities.supportsBackend) {
-      // Backend only stores images - labels not supported for backend signatures
-      console.log('[SignatureStorage] Label updates not supported for backend signatures');
-      return;
+      await this._updateLabelInBackend(id, label);
     } else {
       this._updateLabelInLocalStorage(id, label);
     }
@@ -144,7 +138,7 @@ class SignatureStorageService {
       const response = await apiClient.get<SavedSignature[]>('/api/v1/proprietary/signatures');
       const signatures = response.data;
 
-      // Fetch image data for each signature and convert to blob URLs
+      // Fetch image data for each signature and convert to data URLs
       const signaturePromises = signatures.map(async (sig) => {
         if (sig.dataUrl && sig.dataUrl.startsWith('/api/v1/general/signatures/')) {
           try {
@@ -153,14 +147,20 @@ class SignatureStorageService {
               responseType: 'arraybuffer',
             });
 
-            // Convert to blob URL
+            // Convert to data URL (base64) for both display and use
             const blob = new Blob([imageResponse.data], {
               type: imageResponse.headers['content-type'] || 'image/png',
             });
-            const blobUrl = URL.createObjectURL(blob);
-            this.blobUrls.add(blobUrl);
 
-            return { ...sig, dataUrl: blobUrl };
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+
+            // Use data URL for everything - more reliable than blob URLs
+            return { ...sig, dataUrl };
           } catch (error) {
             console.error(`[SignatureStorage] Failed to load image for ${sig.id}:`, error);
             return sig; // Return original if image fetch fails
@@ -182,6 +182,10 @@ class SignatureStorageService {
 
   private async _deleteFromBackend(id: string): Promise<void> {
     await apiClient.delete(`/api/v1/proprietary/signatures/${id}`);
+  }
+
+  private async _updateLabelInBackend(id: string, label: string): Promise<void> {
+    await apiClient.post(`/api/v1/proprietary/signatures/${id}/label`, { label });
   }
 
   // LocalStorage methods
@@ -266,16 +270,6 @@ class SignatureStorageService {
     }
 
     return { migrated, failed };
-  }
-
-  /**
-   * Clean up blob URLs to prevent memory leaks
-   */
-  cleanup(): void {
-    this.blobUrls.forEach(url => {
-      URL.revokeObjectURL(url);
-    });
-    this.blobUrls.clear();
   }
 }
 

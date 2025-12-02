@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +34,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
     private final String SIGNATURE_BASE_PATH;
     private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Storage limits per user
     private static final int MAX_SIGNATURES_PER_USER = 20;
@@ -88,6 +92,14 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         response.setCreatedAt(timestamp);
         response.setUpdatedAt(timestamp);
 
+        // Copy text signature properties if present
+        if ("text".equals(request.getType())) {
+            response.setSignerName(request.getSignerName());
+            response.setFontFamily(request.getFontFamily());
+            response.setFontSize(request.getFontSize());
+            response.setTextColor(request.getTextColor());
+        }
+
         // Extract and save image data
         String dataUrl = request.getDataUrl();
         if (dataUrl != null && dataUrl.startsWith("data:image/")) {
@@ -132,6 +144,19 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             // Store reference to image file (unified endpoint for all signatures)
             response.setDataUrl("/api/v1/general/signatures/" + imageFileName);
         }
+
+        // Save metadata JSON file
+        String metadataFileName = request.getId() + ".json";
+        Path metadataPath = targetFolder.resolve(metadataFileName);
+        verifyPathWithinDirectory(metadataPath, targetFolder);
+
+        String metadataJson = objectMapper.writeValueAsString(response);
+        Files.writeString(
+                metadataPath,
+                metadataJson,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
 
         log.info("Saved signature {} for user {} (scope: {})", request.getId(), username, scope);
         return response;
@@ -179,11 +204,62 @@ public class SignatureService implements PersonalSignatureServiceInterface {
                     log.info("Deleted signature file: {}", file);
                 }
             }
+
+            // Also delete metadata file if it exists
+            Path metadataPath = personalFolder.resolve(signatureId + ".json");
+            if (Files.exists(metadataPath)) {
+                Files.delete(metadataPath);
+                log.info("Deleted signature metadata: {}", metadataPath);
+            }
         }
 
         if (!deleted) {
             throw new FileNotFoundException("Signature not found or cannot be deleted");
         }
+    }
+
+    /** Update a signature label. */
+    public void updateSignatureLabel(String username, String signatureId, String newLabel)
+            throws IOException {
+        validateFileName(signatureId);
+
+        // Try personal folder first
+        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path metadataPath = personalFolder.resolve(signatureId + ".json");
+
+        if (Files.exists(metadataPath)) {
+            updateMetadataLabel(metadataPath, newLabel);
+            log.info("Updated label for personal signature {} (user: {})", signatureId, username);
+            return;
+        }
+
+        // If not found in personal, try shared folder
+        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        Path sharedMetadataPath = sharedFolder.resolve(signatureId + ".json");
+
+        if (Files.exists(sharedMetadataPath)) {
+            updateMetadataLabel(sharedMetadataPath, newLabel);
+            log.info("Updated label for shared signature {}", signatureId);
+            return;
+        }
+
+        throw new FileNotFoundException("Signature metadata not found");
+    }
+
+    private void updateMetadataLabel(Path metadataPath, String newLabel) throws IOException {
+        String metadataJson = Files.readString(metadataPath, StandardCharsets.UTF_8);
+        SavedSignatureResponse sig =
+                objectMapper.readValue(metadataJson, SavedSignatureResponse.class);
+        sig.setLabel(newLabel);
+        sig.setUpdatedAt(System.currentTimeMillis());
+
+        String updatedJson = objectMapper.writeValueAsString(sig);
+        Files.writeString(
+                metadataPath,
+                updatedJson,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     // Private helper methods
@@ -245,16 +321,31 @@ public class SignatureService implements PersonalSignatureServiceInterface {
                                     String fileName = path.getFileName().toString();
                                     String id = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                                    SavedSignatureResponse sig = new SavedSignatureResponse();
-                                    sig.setId(id);
-                                    sig.setLabel(id);
-                                    sig.setType("image");
-                                    sig.setScope(scope);
-                                    sig.setCreatedAt(Files.getLastModifiedTime(path).toMillis());
-                                    sig.setUpdatedAt(Files.getLastModifiedTime(path).toMillis());
+                                    // Try to load metadata from JSON file
+                                    Path metadataPath = folder.resolve(id + ".json");
+                                    SavedSignatureResponse sig;
 
-                                    // Set unified URL path (works for both personal and shared)
-                                    sig.setDataUrl("/api/v1/general/signatures/" + fileName);
+                                    if (Files.exists(metadataPath)) {
+                                        // Load from metadata file
+                                        String metadataJson =
+                                                Files.readString(
+                                                        metadataPath, StandardCharsets.UTF_8);
+                                        sig =
+                                                objectMapper.readValue(
+                                                        metadataJson, SavedSignatureResponse.class);
+                                    } else {
+                                        // Fallback for old signatures without metadata
+                                        sig = new SavedSignatureResponse();
+                                        sig.setId(id);
+                                        sig.setLabel(id);
+                                        sig.setType("image");
+                                        sig.setScope(scope);
+                                        sig.setCreatedAt(
+                                                Files.getLastModifiedTime(path).toMillis());
+                                        sig.setUpdatedAt(
+                                                Files.getLastModifiedTime(path).toMillis());
+                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
+                                    }
 
                                     signatures.add(sig);
                                 } catch (IOException e) {

@@ -179,7 +179,7 @@ public class SharedSignatureService {
                     StandardOpenOption.TRUNCATE_EXISTING);
 
             // Store reference to image file
-            response.setDataUrl("/api/v1/general/sign/" + imageFileName);
+            response.setDataUrl("/api/v1/general/signatures/" + imageFileName);
         }
 
         log.info("Saved signature {} for user {}", request.getId(), username);
@@ -207,7 +207,7 @@ public class SharedSignatureService {
                                         sig.setLabel(id); // Use ID as label
                                         sig.setType("image"); // Default type
                                         sig.setScope("personal");
-                                        sig.setDataUrl("/api/v1/general/sign/" + fileName);
+                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
                                         sig.setCreatedAt(
                                                 Files.getLastModifiedTime(path).toMillis());
                                         sig.setUpdatedAt(
@@ -238,7 +238,7 @@ public class SharedSignatureService {
                                         sig.setLabel(id); // Use ID as label
                                         sig.setType("image"); // Default type
                                         sig.setScope("shared");
-                                        sig.setDataUrl("/api/v1/general/sign/" + fileName);
+                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
                                         sig.setCreatedAt(
                                                 Files.getLastModifiedTime(path).toMillis());
                                         sig.setUpdatedAt(
