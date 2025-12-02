@@ -1,6 +1,26 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
-import { TourStep } from '@app/components/onboarding/tourSteps';
+
+export enum TourStep {
+  ALL_TOOLS,
+  SELECT_CROP_TOOL,
+  TOOL_INTERFACE,
+  FILES_BUTTON,
+  FILE_SOURCES,
+  WORKBENCH,
+  VIEW_SWITCHER,
+  VIEWER,
+  PAGE_EDITOR,
+  ACTIVE_FILES,
+  FILE_CHECKBOX,
+  SELECT_CONTROLS,
+  CROP_SETTINGS,
+  RUN_BUTTON,
+  RESULTS,
+  FILE_REPLACEMENT,
+  PIN_BUTTON,
+  WRAP_UP,
+}
 
 interface UserStepActions {
   saveWorkbenchState: () => void;

@@ -2267,8 +2267,16 @@ defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Uploaded signature"
 defaultTextLabel = "Typed signature"
 saveButton = "Save signature"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
 saveUnavailable = "Create a signature first to save it."
 noChanges = "Current signature is already saved."
+tempStorageTitle = "Temporary browser storage"
+tempStorageDescription = "Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers."
+personalHeading = "Personal Signatures"
+sharedHeading = "Shared Signatures"
+personalDescription = "Only you can see these signatures."
+sharedDescription = "All users can see and use these signatures."
 
 [sign.saved.type]
 canvas = "Drawing"
@@ -3891,6 +3899,7 @@ toggleSidebar = "Toggle Sidebar"
 exportSelected = "Export Selected Pages"
 toggleAnnotations = "Toggle Annotations Visibility"
 annotationMode = "Toggle Annotation Mode"
+print = "Print PDF"
 draw = "Draw"
 save = "Save"
 saveChanges = "Save Changes"
@@ -4508,6 +4517,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 title = "Premium & Enterprise"
 description = "Configure your premium or enterprise license key."
 license = "License Configuration"
+noInput = "Please provide a license key or file"
 
 [admin.settings.premium.licenseKey]
 toggle = "Got a license key or certificate file?"
@@ -4524,6 +4534,26 @@ title = "⚠️ Warning: Existing License Detected"
 line1 = "Overwriting your current license key cannot be undone."
 line2 = "Your previous license will be permanently lost unless you have backed it up elsewhere."
 line3 = "Important: Keep license keys private and secure. Never share them publicly."
+
+[admin.settings.premium.inputMethod]
+text = "License Key"
+file = "Certificate File"
+
+[admin.settings.premium.file]
+label = "License Certificate File"
+description = "Upload your .lic or .cert license file from offline purchases"
+choose = "Choose License File"
+selected = "Selected: {{filename}} ({{size}})"
+successMessage = "License file uploaded and activated successfully. No restart required."
+
+[admin.settings.premium.currentLicense]
+title = "Active License"
+file = "Source: License file ({{path}})"
+key = "Source: License key"
+type = "Type: {{type}}"
+
+noInput = "Please provide a license key or upload a certificate file"
+success = "Success"
 
 [admin.settings.premium.enabled]
 label = "Enable Premium Features"
@@ -5261,7 +5291,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "At least one email address is required"
 submit = "Send Invites"
 success = "user(s) invited successfully"
-partialSuccess = "Some invites failed"
+partialFailure = "Some invites failed"
 allFailed = "Failed to invite users"
 error = "Failed to send invites"
 
