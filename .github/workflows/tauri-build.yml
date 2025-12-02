@@ -404,7 +404,12 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          # Only enable Windows signing in Tauri when on main
+          # Enable Windows signing only when ALL of the following are true:
+          #   - The build is running on the Windows platform (matrix.platform == 'windows-latest')
+          #   - The build is triggered from the main branch (github.ref == 'refs/heads/main')
+          #   - The DigiCert KeyLocker HSM is NOT being used (env.SM_API_KEY == '')
+          #   - A Windows certificate is available (env.WINDOWS_CERTIFICATE != '')
+          # If all conditions are met, SIGN=1 (enable signing); otherwise, SIGN=0 (disable signing).
           SIGN: ${{ (matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main' && env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:

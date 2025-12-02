@@ -654,6 +654,7 @@ jobs:
             ./artifacts/**/Stirling-PDF-*.msi
             ./artifacts/**/Stirling-PDF-*.dmg
             ./artifacts/**/Stirling-PDF-*.deb
+            ./artifacts/**/Stirling-PDF-*.rpm
             ./artifacts/**/Stirling-PDF-*.AppImage
           draft: false
           prerelease: false
