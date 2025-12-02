@@ -4,7 +4,7 @@ import auditService, { AuditFilters } from '@app/services/auditService';
 /**
  * Shared hook for managing audit filters across components
  */
-export function useAuditFilters(initialFilters: Partial<AuditFilters> = {}) {
+export function useAuditFilters(initialFilters: Partial<AuditFilters> = {}, loginEnabled: boolean = true) {
   const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const [filters, setFilters] = useState<AuditFilters>({
@@ -30,8 +30,10 @@ export function useAuditFilters(initialFilters: Partial<AuditFilters> = {}) {
       }
     };
 
-    fetchMetadata();
-  }, []);
+    if (loginEnabled) {
+      fetchMetadata();
+    }
+  }, [loginEnabled]);
 
   const handleFilterChange = (key: keyof AuditFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
