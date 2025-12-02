@@ -18,6 +18,7 @@ import {
   SearchActions,
   ExportActions,
   BookmarkActions,
+  PrintActions,
 } from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
@@ -125,6 +126,7 @@ interface ViewerContextType {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 
   // Bridge registration - internal use by bridges  
   registerBridge: <K extends BridgeKey>(
@@ -277,6 +279,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
   } = createViewerActions({
     registry: bridgeRefs,
     getScrollState,
@@ -333,6 +336,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
 
     // Bridge registration
     registerBridge,
