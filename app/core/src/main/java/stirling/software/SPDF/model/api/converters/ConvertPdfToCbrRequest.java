@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api.converters;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +14,7 @@ public class ConvertPdfToCbrRequest {
 
     @Schema(
             description = "The input PDF file to be converted to a CBR file",
+            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 

@@ -13,6 +13,8 @@ public class ConvertCbrToPdfRequest {
 
     @Schema(
             description = "The input CBR file to be converted to a PDF file",
+            contentMediaType = "application/vnd.comicbook+rar",
+            format = "binary",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
