@@ -201,6 +201,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.SIGNING,
         synonyms: getSynonyms(t, "signingWorkflow"),
         maxFiles: -1,
+        supportedFormats: ['pdf', 'json'],
         endpoints: ["cert-sign/sessions"],
         operationConfig: signingWorkflowOperationConfig,
         automationSettings: null,

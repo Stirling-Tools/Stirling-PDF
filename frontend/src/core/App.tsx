@@ -15,13 +15,17 @@ import "@app/styles/index.css";
 import "@app/utils/fileIdSafety";
 
 export default function App() {
+  console.error("HELLOOOOOO")
   // Check for participant signing session URL parameters
   const queryParams = new URLSearchParams(window.location.search);
   const sessionId = queryParams.get('sessionId');
   const token = queryParams.get('token');
+  console.log('App.tsx routing check:', { sessionId, token, search: window.location.search });
 
   // If both sessionId and token are present, show participant submission page
   if (sessionId && token) {
+    console.log('Showing participant submission page');
+
     return (
       <Suspense fallback={<LoadingFallback />}>
         <AppProviders>

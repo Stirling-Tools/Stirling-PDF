@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Button, Alert } from '@mantine/core';
 import InfoIcon from '@mui/icons-material/Info';
@@ -25,6 +25,42 @@ const SigningWorkflow = (props: BaseToolProps) => {
   // Finalization state
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
+  const [detectedJsonSession, setDetectedJsonSession] = useState(false);
+
+  // Detect if user uploaded a JSON session file
+  useEffect(() => {
+    const checkForJsonSession = async () => {
+      console.log('SigningWorkflow: checking files', {
+        fileCount: base.selectedFiles.length,
+        hasResults: base.hasResults,
+        detectedJsonSession,
+      });
+
+      if (base.selectedFiles.length === 1 && !base.hasResults && !detectedJsonSession) {
+        const stirlingFile = base.selectedFiles[0];
+        const file = stirlingFile;
+        console.log('SigningWorkflow: checking file:', file.name, file.type);
+
+        if (file.name.endsWith('.json') || file.type === 'application/json') {
+          try {
+            const text = await file.text();
+            const json = JSON.parse(text);
+            console.log('SigningWorkflow: parsed JSON:', json);
+
+            if (json.sessionId) {
+              console.log('SigningWorkflow: detected signing session JSON, sessionId:', json.sessionId);
+              // This is a session JSON file - show finalization button
+              setDetectedJsonSession(true);
+            }
+          } catch (e) {
+            console.log('SigningWorkflow: not a valid JSON session file:', e);
+          }
+        }
+      }
+    };
+
+    checkForJsonSession();
+  }, [base.selectedFiles, base.hasResults, detectedJsonSession]);
 
   // Extract sessionId from result JSON file
   const sessionId = useMemo(() => {
@@ -49,14 +85,21 @@ const SigningWorkflow = (props: BaseToolProps) => {
 
   // Finalization handler
   const handleFinalize = async () => {
-    if (!base.operation.files || base.operation.files.length === 0) return;
+    // Get the JSON file from either operation results or selected files
+    const jsonFile = base.operation.files?.[0] || base.selectedFiles[0];
+    if (!jsonFile) {
+      console.error('SigningWorkflow: No JSON file found for finalization');
+      return;
+    }
+
+    console.log('SigningWorkflow: Starting finalization with file:', jsonFile.name);
 
     setIsFinalizing(true);
     setFinalizeError(null);
 
     try {
       // Extract sessionId from JSON file
-      const extractedSessionId = await extractSessionIdFromFile(base.operation.files[0]);
+      const extractedSessionId = await extractSessionIdFromFile(jsonFile);
 
       if (!extractedSessionId) {
         setFinalizeError(t('certSign.collab.finalize.error', 'Failed to read session ID from file'));
@@ -90,41 +133,48 @@ const SigningWorkflow = (props: BaseToolProps) => {
     }
   };
 
-  return createToolFlow({
-    forceStepNumbers: true,
-    files: {
-      selectedFiles: base.selectedFiles,
-      isCollapsed: base.hasResults,
-    },
-    steps: [
-      {
-        title: t('certSign.collab.stepTitle', 'Share for signing'),
-        isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
-        content: (
-          <SigningCollaborationSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      },
-    ],
-    executeButton: {
-      text: t('certSign.collab.submit', 'Create shared session'),
-      isVisible: !base.hasResults,
-      loadingText: t('loading'),
-      onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
-    },
-    review: {
-      isVisible: base.hasResults,
-      operation: base.operation,
-      title: t('certSign.collab.results', 'Session summary'),
-      onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
-      additionalContent: base.hasResults ? (
-        <Stack gap="sm" mt="md">
+  return (
+    <>
+      {createToolFlow({
+        forceStepNumbers: true,
+        files: {
+          selectedFiles: base.selectedFiles,
+          isCollapsed: base.hasResults || detectedJsonSession,
+        },
+        steps: [
+          {
+            title: t('certSign.collab.stepTitle', 'Share for signing'),
+            isCollapsed: base.settingsCollapsed,
+            onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+            isVisible: !detectedJsonSession,
+            content: (
+              <SigningCollaborationSettings
+                parameters={base.params.parameters}
+                onParameterChange={base.params.updateParameter}
+                disabled={base.endpointLoading}
+              />
+            ),
+          },
+        ],
+        executeButton: {
+          text: t('certSign.collab.submit', 'Create shared session'),
+          isVisible: !base.hasResults && !detectedJsonSession,
+          loadingText: t('loading'),
+          onClick: base.handleExecute,
+          disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+        },
+        review: {
+          isVisible: base.hasResults,
+          operation: base.operation,
+          title: t('certSign.collab.results', 'Session summary'),
+          onFileClick: base.handleThumbnailClick,
+          onUndo: base.handleUndo,
+        },
+      })}
+
+      {/* Finalization button - shown after review OR when JSON session detected */}
+      {(base.hasResults || detectedJsonSession) && (
+        <Stack gap="sm" mt="md" p="sm">
           <Alert icon={<InfoIcon />} color="blue" variant="light">
             {t('certSign.collab.finalize.tooltip', 'Apply all collected certificates and download the final signed document')}
           </Alert>
@@ -146,9 +196,9 @@ const SigningWorkflow = (props: BaseToolProps) => {
             </Alert>
           )}
         </Stack>
-      ) : undefined,
-    },
-  });
+      )}
+    </>
+  );
 };
 
 SigningWorkflow.tool = () => useSigningWorkflowOperation;

@@ -34,7 +34,6 @@ import stirling.software.SPDF.model.api.security.ParticipantStatus;
 import stirling.software.SPDF.model.api.security.SigningParticipant;
 import stirling.software.SPDF.model.api.security.SigningSession;
 import stirling.software.SPDF.service.SigningSessionService;
-import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -60,20 +59,22 @@ public class SigningSessionController {
         this.serverCertificateServiceInterface = serverCertificateServiceInterface;
     }
 
-    @AutoJobPostMapping(
+    @PostMapping(
             consumes = {
                 MediaType.MULTIPART_FORM_DATA_VALUE,
                 MediaType.APPLICATION_FORM_URLENCODED_VALUE
             },
-            value = "/cert-sign/sessions")
+            value = "/cert-sign/sessions",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create a shared signing session",
             description =
                     "Starts a collaboration session, distributes share links, and optionally notifies participants."
                             + " Input:PDF Output:JSON Type:SISO")
-    public SigningSession createSession(@ModelAttribute CreateSigningSessionRequest request)
-            throws Exception {
-        return signingSessionService.createSession(request);
+    public ResponseEntity<SigningSession> createSession(
+            @ModelAttribute CreateSigningSessionRequest request) throws Exception {
+        SigningSession session = signingSessionService.createSession(request);
+        return ResponseEntity.ok(session);
     }
 
     @Operation(summary = "Fetch signing session details")
@@ -121,6 +122,17 @@ public class SigningSessionController {
             if (submission == null || participant.getStatus() != ParticipantStatus.SIGNED) {
                 continue;
             }
+
+            // Skip SERVER certificate type if feature is not available/enabled
+            if ("SERVER".equalsIgnoreCase(submission.getCertType())) {
+                if (serverCertificateServiceInterface == null
+                        || !serverCertificateServiceInterface.isEnabled()
+                        || !serverCertificateServiceInterface.hasServerCertificate()) {
+                    // Skip this participant - server certificate not available
+                    continue;
+                }
+            }
+
             KeyStore keystore = buildKeystore(submission);
             boolean usingServer = "SERVER".equalsIgnoreCase(submission.getCertType());
             String password =
