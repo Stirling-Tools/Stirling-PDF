@@ -283,7 +283,12 @@ public class AdminLicenseController {
         // Prevent path traversal and enforce single filename component
         if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "Filename must not contain path separators or '..'"));
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "Filename must not contain path separators or '..'"));
         }
 
         // Validate file extension

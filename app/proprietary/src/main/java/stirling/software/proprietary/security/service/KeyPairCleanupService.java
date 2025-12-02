@@ -55,7 +55,6 @@ public class KeyPairCleanupService {
             return;
         }
 
-        log.info("Removing keys older than retention period");
         removeKeys(eligibleKeys);
         keyPersistenceService.refreshActiveKeyPair();
     }
