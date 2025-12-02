@@ -5,12 +5,14 @@ import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 import { BASE_PATH } from '@app/constants/app';
 import '@app/routes/authShared/auth.css';
 
+export type OAuthProvider = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
+
 interface DesktopOAuthButtonsProps {
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   onError: (error: string) => void;
   isDisabled: boolean;
   serverUrl: string;
-  providers: Array<'google' | 'github'>;
+  providers: OAuthProvider[];
 }
 
 export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
@@ -23,7 +25,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
   const { t } = useTranslation();
   const [oauthLoading, setOauthLoading] = useState(false);
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
     // Prevent concurrent OAuth attempts
     if (oauthLoading || isDisabled) {
       return;
@@ -62,9 +64,13 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     }
   };
 
-  const providerConfig = {
+  const providerConfig: Record<OAuthProvider, { label: string; file: string }> = {
     google: { label: 'Google', file: 'google.svg' },
     github: { label: 'GitHub', file: 'github.svg' },
+    keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
+    azure: { label: 'Microsoft', file: 'microsoft.svg' },
+    apple: { label: 'Apple', file: 'apple.svg' },
+    oidc: { label: 'OpenID', file: 'oidc.svg' },
   };
 
   if (providers.length === 0) {
@@ -73,25 +79,27 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
 
   return (
     <div className="oauth-container-vertical">
-      {providers.map((providerId) => {
-        const provider = providerConfig[providerId];
-        return (
-          <button
-            key={providerId}
-            onClick={() => handleOAuthLogin(providerId)}
-            disabled={isDisabled || oauthLoading}
-            className="oauth-button-vertical"
-            title={provider.label}
-          >
-            <img
-              src={`${BASE_PATH}/Login/${provider.file}`}
-              alt={provider.label}
-              className="oauth-icon-tiny"
-            />
-            {provider.label}
-          </button>
-        );
-      })}
+      {providers
+        .filter((providerId) => providerId in providerConfig)
+        .map((providerId) => {
+          const provider = providerConfig[providerId];
+          return (
+            <button
+              key={providerId}
+              onClick={() => handleOAuthLogin(providerId)}
+              disabled={isDisabled || oauthLoading}
+              className="oauth-button-vertical"
+              title={provider.label}
+            >
+              <img
+                src={`${BASE_PATH}/Login/${provider.file}`}
+                alt={provider.label}
+                className="oauth-icon-tiny"
+              />
+              {provider.label}
+            </button>
+          );
+        })}
       {oauthLoading && (
         <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
           {t('setup.login.oauthPending', 'Opening browser for authentication...')}

@@ -107,6 +107,27 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
+  const handleSelfHostedOAuthSuccess = async (_userInfo: UserInfo) => {
+    if (!serverConfig) {
+      setError('No server configured');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // OAuth already completed by authService.loginWithOAuth
+      await connectionModeService.switchToSelfHosted(serverConfig);
+      await tauriBackendService.initializeExternalBackend();
+      onComplete();
+    } catch (err) {
+      console.error('Self-hosted OAuth login completion failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to complete login');
+      setLoading(false);
+    }
+  };
+
   const handleBack = () => {
     setError(null);
     if (activeStep === SetupStep.SelfHostedLogin) {
@@ -142,7 +163,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       {activeStep === SetupStep.SelfHostedLogin && (
         <SelfHostedLoginScreen
           serverUrl={serverConfig?.url || ''}
+          enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
           onLogin={handleSelfHostedLogin}
+          onOAuthSuccess={handleSelfHostedOAuthSuccess}
           loading={loading}
           error={error}
         />
