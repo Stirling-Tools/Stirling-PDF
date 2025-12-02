@@ -64,7 +64,7 @@ jobs:
                 echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
@@ -127,18 +127,18 @@ jobs:
             
           mkdir -p /tmp/ubuntu-packages
           cd /tmp/ubuntu-packages
-          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb
-          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb
+          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-javascriptcoregtk-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-webkit2-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu70"; exit 1; }
+          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb || { echo "Failed to download icu-devtools"; exit 1; }
+          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb || { echo "Failed to download libjpeg8"; exit 1; }
+          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb || { echo "Failed to download libjpeg-turbo8"; exit 1; }
+          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb || { echo "Failed to download xdg-desktop-portal-gtk"; exit 1; }
           sudo apt-get install -y /tmp/ubuntu-packages/*.deb
 
       - name: Setup Node.js
@@ -374,7 +374,7 @@ jobs:
       - name: Generate temporary GPG key for AppImage
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
-          cat >keyparams <<'EOF'
+          cat >keyparams <<EOF
           %no-protection
           Key-Type: RSA
           Key-Length: 2048
@@ -384,6 +384,8 @@ jobs:
           %commit
           EOF
           gpg --batch --generate-key keyparams
+          export GPG_FINGERPRINT=$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')
+          echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
           echo "Generated temporary GPG key:"
           gpg --list-secret-keys --keyid-format=long
 
@@ -409,6 +411,15 @@ jobs:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      - name: Cleanup temporary GPG key
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          if [ -n "${GPG_FINGERPRINT:-}" ]; then
+            gpg --batch --yes --delete-secret-keys "$GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$GPG_FINGERPRINT" || true
+          fi
+          rm -f keyparams
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker

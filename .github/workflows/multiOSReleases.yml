@@ -217,18 +217,18 @@ jobs:
             
           mkdir -p /tmp/ubuntu-packages
           cd /tmp/ubuntu-packages
-          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
-          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb
-          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb
-          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb
+          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-javascriptcoregtk-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-webkit2-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu70"; exit 1; }
+          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb || { echo "Failed to download icu-devtools"; exit 1; }
+          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb || { echo "Failed to download libjpeg8"; exit 1; }
+          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb || { echo "Failed to download libjpeg-turbo8"; exit 1; }
+          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb || { echo "Failed to download xdg-desktop-portal-gtk"; exit 1; }
           sudo apt-get install -y /tmp/ubuntu-packages/*.deb
 
       - name: Setup Node.js
