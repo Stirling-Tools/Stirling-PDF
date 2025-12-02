@@ -9,11 +9,26 @@ export interface AccountData {
   saml2Login: boolean;
 }
 
+export interface LoginPageData {
+  showDefaultCredentials: boolean;
+  firstTimeSetup: boolean;
+  enableLogin: boolean;
+}
+
 /**
  * Account Service
  * Provides functions to interact with account-related backend APIs
  */
 export const accountService = {
+  /**
+   * Get login page data (includes showDefaultCredentials flag)
+   * This is a public endpoint - doesn't require authentication
+   */
+  async getLoginPageData(): Promise<LoginPageData> {
+    const response = await apiClient.get<LoginPageData>('/api/v1/proprietary/ui-data/login');
+    return response.data;
+  },
+
   /**
    * Get current user account data
    */
