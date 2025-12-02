@@ -1,0 +1,142 @@
+# Stirling-PDF Dockerfile - Fat version with embedded frontend
+# Single JAR contains both frontend and backend with extra fonts for air-gapped environments
+
+# Stage 1: Build application with embedded frontend
+FROM gradle:8.14-jdk21 AS build
+
+# Install Node.js and npm for frontend build
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm --version \
+    && node --version \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy gradle files for dependency resolution
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+# Set working directory
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Build JAR with embedded frontend (includes security features controlled at runtime)
+RUN DISABLE_ADDITIONAL_FEATURES=false \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Stage 2: Runtime image
+FROM alpine:3.22.1
+
+ARG VERSION_TAG
+
+# Labels
+LABEL org.opencontainers.image.title="Stirling-PDF Fat"
+LABEL org.opencontainers.image.description="Stirling-PDF with embedded frontend - Fat version with extra fonts for air-gapped environments"
+LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Stirling-Tools"
+LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
+LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
+LABEL maintainer="Stirling-Tools"
+LABEL org.opencontainers.image.authors="Stirling-Tools"
+LABEL org.opencontainers.image.version="${VERSION_TAG}"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, fat, air-gapped, API, Spring Boot, React"
+
+# Copy scripts and fonts
+COPY scripts /scripts
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+
+# Copy built JAR from build stage
+COPY --from=build /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
+
+# Environment Variables
+ENV VERSION_TAG=$VERSION_TAG \
+    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    FAT_DOCKER=true \
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
+    PATH=$PATH:/opt/venv/bin \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf
+
+# Install all dependencies plus extra fonts for air-gapped environments
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    shadow \
+    su-exec \
+    openssl \
+    openssl-dev \
+    openjdk21-jre \
+    # Doc conversion
+    gcompat \
+    libc6-compat \
+    libreoffice \
+    ghostscript \
+    fontforge \
+    # pdftohtml
+    poppler-utils \
+    # OCR MY PDF
+    unpaper \
+    tesseract-ocr-data-eng \
+    tesseract-ocr-data-chi_sim \
+    tesseract-ocr-data-deu \
+    tesseract-ocr-data-fra \
+    tesseract-ocr-data-por \
+    ocrmypdf \
+    # Extra fonts for fat version
+    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
+    # CV
+    py3-opencv \
+    python3 \
+    py3-pip \
+    py3-pillow@testing \
+    py3-pdf2image@testing && \
+    python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip setuptools && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
+    mv /usr/share/tessdata /usr/share/tessdata-original && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    fc-cache -f -v && \
+    chmod +x /scripts/* && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /tmp/stirling-pdf && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+
+EXPOSE 8080/tcp
+
+# Set user and run command
+ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]

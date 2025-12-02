@@ -39,6 +39,7 @@ public class RequestUriUtils {
         // Specific static files bundled with the frontend
         if (normalizedUri.equals("/robots.txt")
                 || normalizedUri.equals("/favicon.ico")
+                || normalizedUri.equals("/manifest.json")
                 || normalizedUri.equals("/site.webmanifest")
                 || normalizedUri.equals("/manifest-classic.json")
                 || normalizedUri.equals("/index.html")) {
