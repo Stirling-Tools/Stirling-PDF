@@ -155,18 +155,21 @@ export const executeToolOperationWithPrefix = async (
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
 
+  // Merge with default parameters to ensure all required fields are present
+  const mergedParameters = { ...config.defaultParameters, ...parameters };
+
   try {
     // Check if tool uses custom processor (like Convert tool)
     if (config.customProcessor) {
-      const resultFiles = await config.customProcessor(parameters, files);
+      const resultFiles = await config.customProcessor(mergedParameters, files);
       return resultFiles;
     }
 
     // Execute based on tool type
     if (config.toolType === ToolType.multiFile) {
-      return await executeMultiFileOperation(config, parameters, files, filePrefix);
+      return await executeMultiFileOperation(config, mergedParameters, files, filePrefix);
     } else {
-      return await executeSingleFileOperation(config, parameters, files, filePrefix);
+      return await executeSingleFileOperation(config, mergedParameters, files, filePrefix);
     }
 
   } catch (error: any) {

@@ -41,13 +41,16 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
 
   // Initialize parameters from tool (which should contain defaults from registry)
   useEffect(() => {
+    const toolConfig = toolRegistry[tool.operation as ToolId]?.operationConfig;
+    const defaultParams = toolConfig?.defaultParameters || {};
+
     if (tool.parameters) {
-      setParameters(tool.parameters);
+      setParameters({ ...defaultParams, ...tool.parameters });
     } else {
-      // Fallback to empty parameters if none provided
-      setParameters({});
+      // Fallback to default parameters if nCaone provided
+      setParameters({ ...defaultParams });
     }
-  }, [tool.parameters, tool.operation]);
+  }, [tool.parameters, tool.operation, toolRegistry]);
 
   // Render the settings component
   const renderToolSettings = () => {

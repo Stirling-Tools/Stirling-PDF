@@ -3,11 +3,12 @@ import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOpera
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { ChangePermissionsParameters, defaultParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
 
-export const getFormData = ((parameters: ChangePermissionsParameters) =>
-  Object.entries(parameters).map(([key, value]) =>
-    [key, value.toString()]
-  ) as string[][]
-);
+export const getFormData = ((parameters: ChangePermissionsParameters) => {
+  if (!parameters) return [];
+  return Object.entries(parameters).map(([key, value]) =>
+    [key, (value ?? '').toString()]
+  ) as string[][];
+});
 
 // Static function that can be used by both the hook and automation executor
 export const buildChangePermissionsFormData = (parameters: ChangePermissionsParameters, file: File): FormData => {
