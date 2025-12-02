@@ -26,6 +26,18 @@ on:
   release:
     types: [created]
 
+# cancel in-progress jobs if a new job is triggered
+# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
+# or a pull request is updated.
+# It helps to save resources and time by ensuring that only the latest commit is built and tested
+# This is particularly useful for long-running jobs that may take a while to complete.
+# The `group` is set to a combination of the workflow name, event name, and branch name.
+# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
+# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -74,15 +86,15 @@ jobs:
                 echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For push/release events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
           fi
 
   build-jars:
@@ -111,10 +123,10 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
-          java-version: "21"
+          java-version: "17"
           distribution: "temurin"
 
       - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
@@ -167,12 +179,57 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name != 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
+          # Dependencies explanation:
+          # - libwebkit2gtk-4.1-dev: WebKit engine for Tauri v2 (4.0 was for v1)
+          # - libappindicator3-dev: System tray support
+          # - librsvg2-dev: SVG rendering
+          # - patchelf: Required for AppImage packaging
+          # - libxdo-dev: Keyboard/mouse automation
+          # - libasound2-dev: Audio support
+          # - libopenblas-dev: GPU acceleration support
+          # - libx11-dev: X11 development files for window system interaction
+          # - libxtst-dev: X11 testing extensions for input simulation
+          # - libxrandr-dev: X11 RandR extension for display configuration
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
+
+      - name: Install dependencies (appimage only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          sudo apt-get update
+          
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libgtk-3-dev \
+            libxdo-dev \
+            libssl-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            openjdk-17-jre-headless \
+            patchelf
+            
+          mkdir -p /tmp/ubuntu-packages
+          cd /tmp/ubuntu-packages
+          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb
+          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb
+          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb
+          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb
+          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb
+          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb
+          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb
+          sudo apt-get install -y /tmp/ubuntu-packages/*.deb
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -187,10 +244,10 @@ jobs:
           toolchain: stable
           targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
-          java-version: "21"
+          java-version: "17"
           distribution: "temurin"
 
       - name: Build Java backend with JLink
