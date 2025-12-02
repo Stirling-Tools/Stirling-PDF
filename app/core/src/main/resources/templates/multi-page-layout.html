@@ -18,9 +18,13 @@
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/general/multi-page-layout'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <div class="mb-3">
+                <div class="form-check mb-3">
+                  <input type="checkbox" id="modeCustom">
+                  <label for="modeCustom" th:text="#{pageLayout.custom}"></label>
+                </div>
+                <div id="defaultSection" class="mb-3" style="border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
                   <label for="pagesPerSheet" th:text="#{pageLayout.pagesPerSheet}"></label>
-                  <select class="form-control" id="pagesPerSheet" name="pagesPerSheet">
+                  <select class="form-control" id="pagesPerSheet" name="pagesPerSheet" required>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
@@ -28,12 +32,91 @@
                     <option value="16">16</option>
                   </select>
                 </div>
+                <div id="customSection" class="mb-3" style="border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
+                  <div class="mb-3">
+                    <label for="rows" th:text="#{pageLayout.rows}"></label>
+                    <input class="form-control" type="number" id="rows" name="rows" step="1" min="1" max="300" value="1" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cols" th:text="#{pageLayout.columns}"></label>
+                    <input class="form-control" type="number" id="cols" name="cols" step="1" min="1" max="300" value="1" required>
+                  </div>
+                </div>
                 <div class="form-check mb-3">
-                  <input id="addBorder" name="addBorder" type="checkbox">
-                  <label for="addBorder" th:text="#{pageLayout.addBorder}"></label>
+                  <input id="advancedSettingsToggle" type="checkbox">
+                  <label for="advancedSettingsToggle" th:text="#{pageLayout.advancedSettings}"></label>
+                </div>
+                <div id="advancedSettings" style="display:none; border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
+                  <div class="mb-3">
+                    <label for="pageOrder" th:text="#{pageLayout.pageOrder}"></label>
+                    <select class="form-control" id="pageOrder" name="pageOrder">
+                      <option value="LR_TD" th:text="#{pageLayout.leftRightTopDown}"></option>
+                      <option value="RL_TD" th:text="#{pageLayout.rightLeftTopDown}"></option>
+                      <option value="TD_LR" th:text="#{pageLayout.topDownLeftRight}"></option>
+                      <option value="TD_RL" th:text="#{pageLayout.topDownRightLeft}"></option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="orientation" th:text="#{pageLayout.orientation}"></label>
+                    <select class="form-control" id="orientation" name="orientation">
+                      <option value="PORTRAIT" th:text="#{pageLayout.portrait}"></option>
+                      <option value="LANDSCAPE" th:text="#{pageLayout.landscape}"></option>
+                    </select>
+                  </div>
+                  <div class="form-check mb-3">
+                    <input id="addBorder" name="addBorder" type="checkbox">
+                    <label for="addBorder" th:text="#{pageLayout.addBorder}"></label>
+                  </div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageLayout.submit}"></button>
               </form>
+              
+              <script>
+                (function(){
+                  const modeCheckbox = document.getElementById('modeCustom');
+                  const defaultSection = document.getElementById('defaultSection');
+                  const customSection  = document.getElementById('customSection');
+                  const pagesPerSheet  = document.getElementById('pagesPerSheet');
+                  const rowsInput      = document.getElementById('rows');
+                  const colsInput      = document.getElementById('cols');
+
+                  function sync() {
+                    const mode = modeCheckbox.checked? 'CUSTOM' : 'DEFAULT';
+                    const isDefault = mode === 'DEFAULT';
+
+                    // Enable/disable relevant fields
+                    pagesPerSheet.disabled = !isDefault;
+                    rowsInput.disabled     =  isDefault;
+                    colsInput.disabled     =  isDefault;
+
+                    if (isDefault) {
+                      defaultSection.style.display = 'block';  // show Default
+                      customSection.style.display  = 'none';   // hide Custom
+                    } else {
+                      defaultSection.style.display = 'none';   // hide Default
+                      customSection.style.display  = 'block';  // show Custom
+                    }
+                  }
+
+                  modeCheckbox.addEventListener('change', sync);
+                  
+                  // Show/hide advanced settings
+                  const advancedToggle = document.getElementById('advancedSettingsToggle');
+                  const advancedSettings = document.getElementById('advancedSettings');
+
+                  if (advancedToggle && advancedSettings) {
+                    advancedToggle.addEventListener('change', function() {
+                      advancedSettings.style.display = this.checked ? 'block' : 'none';
+                      advancedSettings.querySelector('#addBorder').checked = false;
+                      advancedSettings.querySelector('#pageOrder').value = 'LR_TD';
+                      advancedSettings.querySelector('#orientation').value = 'PORTRAIT';
+                    });
+                  }
+                  // initial state
+                  sync();
+                })();
+              </script>
+              
             </div>
           </div>
         </div>
