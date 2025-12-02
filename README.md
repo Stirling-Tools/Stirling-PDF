@@ -2,9 +2,9 @@
   <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" alt="Stirling PDF logo">
 </p>
 
-# Stirling PDF – Open‑Source Alternative to Acrobat
+# Stirling PDF – The Open-Source PDF Platform
 
-Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrobat on desktop, in the browser, and on your own servers. Run it as a personal app or deploy it centrally with a private API to edit, sign, redact, convert, and automate PDFs without sending documents to third‑party services.
+Stirling PDF is a powerful, open-source PDF editing Platform. Run it as a personal desktop app, in the browser, or deploy it on your own servers with a private API. Edit, sign, redact, convert, and automate PDFs without sending documents to third‑party services.
 
 <p align="center">
   <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf">
@@ -21,7 +21,7 @@ Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrob
   </a>
 </p>
 
-![Stirling PDF – Dashboard](images/stirling-home.jpg)
+![Stirling PDF – Dashboard](images/home-light.png)
 
 ---
 
@@ -40,10 +40,24 @@ For a full and always up to-date feature list, see the docs: **https://docs.stir
 
 ## Quick Start
 
-The fastest way to get started is with Docker.  
-For full installation options (including desktop and Kubernetes), see **https://docs.stirlingpdf.com**.
+The fastest way to get started is with Docker:
 
 ```bash
-docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf 
+docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf
 ```
+
+For full installation options (including desktop and Kubernetes), see **https://docs.stirlingpdf.com/#documentation-guide**.
+
+---
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+For development setup, see the [Developer Guide](DeveloperGuide.md).
+
+---
+
+## License
+
+This project is open-core licensed under the terms in [LICENSE](LICENSE).
 
