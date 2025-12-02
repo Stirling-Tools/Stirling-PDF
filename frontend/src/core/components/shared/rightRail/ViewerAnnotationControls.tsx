@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { ActionIcon, Popover } from '@mantine/core';
+import React, { useEffect } from 'react';
+import { ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
-import { ColorSwatchButton, ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 import { useFileState, useFileContext } from '@app/contexts/FileContext';
 import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile } from '@app/contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useNavigation, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 
@@ -23,15 +22,13 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const { t } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
-  const [selectedColor, setSelectedColor] = useState('#000000');
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [isHoverColorPickerOpen, setIsHoverColorPickerOpen] = useState(false);
-
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
 
   // Signature context for accessing drawing API
   const { signatureApiRef, isPlacementMode } = useSignature();
+
+  const { setToolAndWorkbench } = useNavigation();
 
   // File state for save functionality
   const { state, selectors } = useFileState();
@@ -41,6 +38,14 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   // Check if we're in sign mode
   const { selectedTool } = useNavigationState();
   const isSignMode = selectedTool === 'sign';
+  const isAnnotateMode = selectedTool === 'annotate';
+
+  // When leaving viewer, turn off annotation overlay
+  useEffect(() => {
+    if (currentView !== 'viewer' && viewerContext?.isAnnotationMode) {
+      viewerContext.setAnnotationMode(false);
+    }
+  }, [currentView, viewerContext]);
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -75,89 +80,19 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         </ActionIcon>
       </Tooltip>
 
-      {/* Annotation Mode Toggle with Drawing Controls */}
-      {viewerContext?.isAnnotationMode ? (
-        // When active: Show color picker on hover
-        <div
-          onMouseEnter={() => setIsHoverColorPickerOpen(true)}
-          onMouseLeave={() => setIsHoverColorPickerOpen(false)}
-          style={{ display: 'inline-flex' }}
+      {/* Launch Annotate tool in the left panel */}
+      <Tooltip content={t('rightRail.draw', 'Draw')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
+        <ActionIcon
+          variant="subtle"
+          radius="md"
+          className="right-rail-icon"
+          onClick={() => setToolAndWorkbench('annotate', 'viewer')}
+          disabled={disabled}
+          aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
         >
-          <Popover
-            opened={isHoverColorPickerOpen}
-            onClose={() => setIsHoverColorPickerOpen(false)}
-            position="left"
-            withArrow
-            shadow="md"
-            offset={8}
-          >
-            <Popover.Target>
-              <ActionIcon
-                variant="filled"
-                color="blue"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => {
-                  viewerContext?.toggleAnnotationMode();
-                  setIsHoverColorPickerOpen(false); // Close hover color picker when toggling off
-                  // Deactivate drawing tool when exiting annotation mode
-                  if (signatureApiRef?.current) {
-                    try {
-                      signatureApiRef.current.deactivateTools();
-                    } catch (error) {
-                      console.log('Signature API not ready:', error);
-                    }
-                  }
-                }}
-              disabled={disabled}
-                aria-label="Drawing mode active"
-              >
-                <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <div style={{ minWidth: '8rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 500 }}>Drawing Color</div>
-                  <ColorSwatchButton
-                    color={selectedColor}
-                    size={32}
-                    onClick={() => {
-                      setIsHoverColorPickerOpen(false); // Close hover picker
-                      setIsColorPickerOpen(true); // Open main color picker modal
-                    }}
-                  />
-                </div>
-              </div>
-            </Popover.Dropdown>
-          </Popover>
-        </div>
-      ) : (
-        // When inactive: Show "Draw" tooltip
-        <Tooltip content={t('rightRail.draw', 'Draw')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="right-rail-icon"
-            onClick={() => {
-              viewerContext?.toggleAnnotationMode();
-              // Activate ink drawing tool when entering annotation mode
-              if (signatureApiRef?.current && currentView === 'viewer') {
-                try {
-                  signatureApiRef.current.activateDrawMode();
-                  signatureApiRef.current.updateDrawSettings(selectedColor, 2);
-                } catch (error) {
-                  console.log('Signature API not ready:', error);
-                }
-              }
-            }}
-            disabled={disabled}
-            aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
-          >
-            <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
-          </ActionIcon>
-        </Tooltip>
-      )}
+          <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
+        </ActionIcon>
+      </Tooltip>
 
       {/* Save PDF with Annotations */}
       <Tooltip content={t('rightRail.save', 'Save')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
@@ -213,25 +148,6 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
         </ActionIcon>
       </Tooltip>
-
-      {/* Color Picker Modal */}
-      <ColorPicker
-        isOpen={isColorPickerOpen}
-        onClose={() => setIsColorPickerOpen(false)}
-        selectedColor={selectedColor}
-        onColorChange={(color) => {
-          setSelectedColor(color);
-          // Update drawing tool color if annotation mode is active
-          if (viewerContext?.isAnnotationMode && signatureApiRef?.current && currentView === 'viewer') {
-            try {
-              signatureApiRef.current.updateDrawSettings(color, 2);
-            } catch (error) {
-              console.log('Unable to update drawing settings:', error);
-            }
-          }
-        }}
-        title="Choose Drawing Color"
-      />
     </>
   );
 }

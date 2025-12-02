@@ -2,7 +2,7 @@ import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useSta
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
-import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import type { AnnotationToolId, AnnotationToolOptions, SignatureAPI } from '@app/components/viewer/viewerTypes';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { useViewer } from '@app/contexts/ViewerContext';
 
@@ -199,12 +199,161 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
+  const buildAnnotationDefaults = useCallback(
+    (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
+      switch (toolId) {
+        case 'highlight':
+          return {
+            type: PdfAnnotationSubtype.HIGHLIGHT,
+            color: options?.color ?? '#ffd54f',
+            opacity: options?.opacity ?? 0.6,
+          };
+        case 'underline':
+          return {
+            type: PdfAnnotationSubtype.UNDERLINE,
+            color: options?.color ?? '#ffb300',
+            opacity: options?.opacity ?? 1,
+          };
+        case 'strikeout':
+          return {
+            type: PdfAnnotationSubtype.STRIKEOUT,
+            color: options?.color ?? '#e53935',
+            opacity: options?.opacity ?? 1,
+          };
+        case 'squiggly':
+          return {
+            type: PdfAnnotationSubtype.SQUIGGLY,
+            color: options?.color ?? '#00acc1',
+            opacity: options?.opacity ?? 1,
+          };
+        case 'ink':
+          return {
+            type: PdfAnnotationSubtype.INK,
+            color: options?.color ?? '#1f2933',
+            opacity: options?.opacity ?? 1,
+            borderWidth: options?.thickness ?? 2,
+            lineWidth: options?.thickness ?? 2,
+            strokeWidth: options?.thickness ?? 2,
+          };
+        case 'inkHighlighter':
+          return {
+            type: PdfAnnotationSubtype.INK,
+            color: options?.color ?? '#ffd54f',
+            opacity: options?.opacity ?? 0.5,
+            borderWidth: options?.thickness ?? 6,
+            lineWidth: options?.thickness ?? 6,
+            strokeWidth: options?.thickness ?? 6,
+          };
+        case 'text':
+          return {
+            type: PdfAnnotationSubtype.FREETEXT,
+            textColor: options?.color ?? '#111111',
+            fontSize: options?.fontSize ?? 14,
+            fontFamily: options?.fontFamily ?? 'Helvetica',
+            opacity: options?.opacity ?? 1,
+            interiorColor: options?.fillColor ?? '#fffef7',
+            borderWidth: options?.thickness ?? 1,
+          };
+        case 'note':
+          return {
+            type: PdfAnnotationSubtype.FREETEXT,
+            textColor: options?.color ?? '#1b1b1b',
+            color: options?.color ?? '#ffa000',
+            interiorColor: options?.fillColor ?? '#fff8e1',
+            opacity: options?.opacity ?? 1,
+            fontSize: options?.fontSize ?? 12,
+            contents: 'Note',
+          };
+        case 'square':
+          return {
+            type: PdfAnnotationSubtype.SQUARE,
+            color: options?.color ?? '#1565c0',
+            interiorColor: options?.fillColor ?? '#e3f2fd',
+            opacity: options?.opacity ?? 0.35,
+            borderWidth: options?.thickness ?? 2,
+          };
+        case 'circle':
+          return {
+            type: PdfAnnotationSubtype.CIRCLE,
+            color: options?.color ?? '#1565c0',
+            interiorColor: options?.fillColor ?? '#e3f2fd',
+            opacity: options?.opacity ?? 0.35,
+            borderWidth: options?.thickness ?? 2,
+          };
+        case 'line':
+          return {
+            type: PdfAnnotationSubtype.LINE,
+            color: options?.color ?? '#1565c0',
+            opacity: options?.opacity ?? 1,
+            borderWidth: options?.thickness ?? 2,
+          };
+        case 'lineArrow':
+          return {
+            type: PdfAnnotationSubtype.LINE,
+            color: options?.color ?? '#1565c0',
+            opacity: options?.opacity ?? 1,
+            borderWidth: options?.thickness ?? 2,
+            startStyle: 'None',
+            endStyle: 'ClosedArrow',
+            lineEndingStyles: { start: 'None', end: 'ClosedArrow' },
+          };
+        case 'polyline':
+          return {
+            type: PdfAnnotationSubtype.POLYLINE,
+            color: options?.color ?? '#1565c0',
+            opacity: options?.opacity ?? 1,
+            borderWidth: options?.thickness ?? 2,
+          };
+        case 'polygon':
+          return {
+            type: PdfAnnotationSubtype.POLYGON,
+            color: options?.color ?? '#1565c0',
+            interiorColor: options?.fillColor ?? '#e3f2fd',
+            opacity: options?.opacity ?? 0.35,
+            borderWidth: options?.thickness ?? 2,
+          };
+        case 'stamp':
+          return {
+            type: PdfAnnotationSubtype.STAMP,
+          };
+        case 'select':
+        default:
+          return null;
+      }
+    },
+    []
+  );
+
+  const configureAnnotationTool = useCallback(
+    (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
+      if (!annotationApi) return;
+
+      const defaults = buildAnnotationDefaults(toolId, options);
+      const api = annotationApi as any;
+
+      if (defaults) {
+        api.setToolDefaults?.(toolId, defaults);
+      }
+
+      api.setActiveTool?.(toolId === 'select' ? null : toolId);
+    },
+    [annotationApi, buildAnnotationDefaults]
+  );
+
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
     if (!annotationApi || (isPlacementMode === undefined)) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const editable = target?.getAttribute?.('contenteditable');
+      if (tag === 'input' || tag === 'textarea' || editable === 'true') {
+        return;
+      }
+
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
@@ -371,7 +520,23 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return [];
       }
     },
-  }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
+    activateAnnotationTool: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
+      configureAnnotationTool(toolId, options);
+    },
+    setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
+      const defaults = buildAnnotationDefaults(toolId, options);
+      const api = annotationApi as any;
+      if (defaults && api?.setToolDefaults) {
+        api.setToolDefaults(toolId, defaults);
+      }
+    },
+    getSelectedAnnotation: () => {
+      return annotationApi?.getSelectedAnnotation?.() ?? null;
+    },
+    updateAnnotation: (pageIndex: number, annotationId: string, patch: Partial<any>) => {
+      annotationApi?.updateAnnotation?.(pageIndex, annotationId, patch);
+    },
+  }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, configureAnnotationTool, buildAnnotationDefaults]);
 
   useEffect(() => {
     if (!annotationApi?.onAnnotationEvent) {

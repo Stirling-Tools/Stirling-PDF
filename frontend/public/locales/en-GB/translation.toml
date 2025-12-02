@@ -708,6 +708,11 @@ tags = "signature,autograph"
 title = "Sign"
 desc = "Adds signature to PDF by drawing, text or image"
 
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
+
 [home.flatten]
 tags = "simplify,remove,interactive"
 title = "Flatten"
@@ -3903,6 +3908,21 @@ print = "Print PDF"
 draw = "Draw"
 save = "Save"
 saveChanges = "Save Changes"
+
+[annotation]
+title = "Annotate"
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
 
 [search]
 title = "Search PDF"
