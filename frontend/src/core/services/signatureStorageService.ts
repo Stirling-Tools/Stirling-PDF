@@ -184,7 +184,7 @@ class SignatureStorageService {
     await apiClient.delete(`/api/v1/proprietary/signatures/${id}`);
   }
 
-  private async _updateLabelInBackend(id: string, label: string): Promise<void> {
+  private async updateLabelInBackend(id: string, label: string): Promise<void> {
     await apiClient.post(`/api/v1/proprietary/signatures/${id}/label`, { label });
   }
 
