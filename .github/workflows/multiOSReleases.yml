@@ -179,8 +179,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      
-      - name: install dependencies (ubuntu only)
+
+      - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' && matrix.name != 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
@@ -436,6 +436,22 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
+
+      - name: Generate temporary GPG key for AppImage
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          cat >keyparams <<'EOF'
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Name-Real: CI AppImage Signer
+          Name-Email: ci-appimage@example.invalid
+          Expire-Date: 0
+          %commit
+          EOF
+          gpg --batch --generate-key keyparams
+          echo "Generated temporary GPG key:"
+          gpg --list-secret-keys --keyid-format=long
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
