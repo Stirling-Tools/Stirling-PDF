@@ -49,9 +49,8 @@ export const signingWorkflowOperationConfig = {
     console.log('📄 Session ID:', data.sessionId);
     console.log('\n👥 Participant Links:');
     data.participants?.forEach((participant: any, index: number) => {
-      const url = `${window.location.origin}/signing-session?sessionId=${data.sessionId}&token=${participant.shareToken}`;
       console.log(`\n${index + 1}. ${participant.email}${participant.name ? ` (${participant.name})` : ''}`);
-      console.log(`   ${url}`);
+      console.log(`   ${participant.participantUrl}`);
     });
     console.log('\n');
 
@@ -61,12 +60,9 @@ export const signingWorkflowOperationConfig = {
       });
     }
 
-    const summary = JSON.stringify(data, null, 2);
-    const summaryFile = new File([summary], `signing-session-${data.sessionId}.json`, {
-      type: 'application/json',
-    });
-
-    return [summaryFile];
+    // Return empty array since we don't need files - session data is in response
+    // The session data will be available via operation.data
+    return { files: [], data };
   },
 } as const;
 

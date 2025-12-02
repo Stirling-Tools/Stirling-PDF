@@ -13,9 +13,11 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
   const { t } = useTranslation();
 
   return (
-    <Stack gap="md">
-      <Alert icon={<InfoIcon fontSize="small" />} radius="md" color="blue" variant="light">
-        {t('certSign.collab.helper', 'Invite multiple participants to sign by entering emails separated with commas. Each invite gets its own tracking token and you will receive a JSON summary back for sharing or automation.')}
+    <Stack gap="sm">
+      <Alert icon={<InfoIcon fontSize="small" />} radius="md" color="blue" variant="light" p="xs">
+        <Text size="xs">
+          {t('certSign.collab.helper', 'Invite multiple participants to sign by entering emails separated with commas. Each invite gets its own tracking token and you will receive a JSON summary back for sharing or automation.')}
+        </Text>
       </Alert>
 
       <TextInput
@@ -25,6 +27,7 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         onChange={(event) => onParameterChange('participantEmails', event.currentTarget.value)}
         disabled={disabled}
         required
+        size="xs"
       />
 
       <TextInput
@@ -33,6 +36,7 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         value={parameters.participantNames}
         onChange={(event) => onParameterChange('participantNames', event.currentTarget.value)}
         disabled={disabled}
+        size="xs"
       />
 
       <TextInput
@@ -41,16 +45,18 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         value={parameters.ownerEmail}
         onChange={(event) => onParameterChange('ownerEmail', event.currentTarget.value)}
         disabled={disabled}
+        size="xs"
       />
 
       <Textarea
-        label={t('certSign.collab.message', 'Message to include in invitations')}
+        label={t('certSign.collab.messageLabel', 'Message to include in invitations')}
         placeholder={t('certSign.collab.message.placeholder', 'Please review and sign this document by the due date.')}
         value={parameters.message}
         onChange={(event) => onParameterChange('message', event.currentTarget.value)}
         disabled={disabled}
         autosize
         minRows={2}
+        size="xs"
       />
 
       <TextInput
@@ -59,6 +65,7 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         value={parameters.dueDate}
         onChange={(event) => onParameterChange('dueDate', event.currentTarget.value)}
         disabled={disabled}
+        size="xs"
       />
 
       <Switch
@@ -66,9 +73,10 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         checked={parameters.notifyOnCreate}
         onChange={(event) => onParameterChange('notifyOnCreate', event.currentTarget.checked)}
         disabled={disabled}
+        size="xs"
       />
 
-      <Text size="sm" c="dimmed">
+      <Text size="xs" c="dimmed">
         {t('certSign.collab.footer', 'After submitting you will get a session summary with per-signer links and can return later to finalize signatures.')}
       </Text>
     </Stack>

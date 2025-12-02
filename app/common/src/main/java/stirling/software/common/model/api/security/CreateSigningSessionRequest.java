@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.security;
+package stirling.software.common.model.api.security;
 
 import java.util.List;
 

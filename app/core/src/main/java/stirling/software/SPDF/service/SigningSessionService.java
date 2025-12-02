@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,21 +13,28 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.security.CreateSigningSessionRequest;
-import stirling.software.SPDF.model.api.security.NotifySigningParticipantsRequest;
-import stirling.software.SPDF.model.api.security.ParticipantCertificateRequest;
-import stirling.software.SPDF.model.api.security.ParticipantCertificateSubmission;
-import stirling.software.SPDF.model.api.security.ParticipantStatus;
-import stirling.software.SPDF.model.api.security.SigningParticipant;
-import stirling.software.SPDF.model.api.security.SigningSession;
+import stirling.software.common.model.api.security.CreateSigningSessionRequest;
+import stirling.software.common.model.api.security.NotifySigningParticipantsRequest;
+import stirling.software.common.model.api.security.ParticipantCertificateRequest;
+import stirling.software.common.model.api.security.ParticipantCertificateSubmission;
+import stirling.software.common.model.api.security.ParticipantStatus;
+import stirling.software.common.model.api.security.SigningParticipant;
+import stirling.software.common.model.api.security.SigningSession;
+import stirling.software.common.service.SigningSessionServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 
 @Service
-public class SigningSessionService {
+public class SigningSessionService implements SigningSessionServiceInterface {
 
     private final Map<String, SigningSession> sessions = new ConcurrentHashMap<>();
 
     public SigningSession createSession(CreateSigningSessionRequest request) throws IOException {
+        return createSession(request, null);
+    }
+
+    @Override
+    public SigningSession createSession(Object requestObj, String username) throws IOException {
+        CreateSigningSessionRequest request = (CreateSigningSessionRequest) requestObj;
         if (request.getParticipantEmails() == null || request.getParticipantEmails().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.optionsNotSpecified",
@@ -73,8 +81,9 @@ public class SigningSessionService {
         return session;
     }
 
-    public SigningSession notifyParticipants(
-            String sessionId, NotifySigningParticipantsRequest request) {
+    @Override
+    public SigningSession notifyParticipants(String sessionId, Object requestObj) {
+        NotifySigningParticipantsRequest request = (NotifySigningParticipantsRequest) requestObj;
         SigningSession session = getSession(sessionId);
         List<SigningParticipant> targets = getTargets(session, request.getParticipantEmails());
         String message =
@@ -91,9 +100,10 @@ public class SigningSessionService {
         return session;
     }
 
+    @Override
     public SigningSession attachCertificate(
-            String sessionId, String participantEmail, ParticipantCertificateRequest request)
-            throws IOException {
+            String sessionId, String participantEmail, Object requestObj) throws IOException {
+        ParticipantCertificateRequest request = (ParticipantCertificateRequest) requestObj;
         SigningSession session = getSession(sessionId);
         SigningParticipant participant =
                 session.getParticipants().stream()
@@ -162,5 +172,69 @@ public class SigningSessionService {
             participant.ifPresent(participants::add);
         }
         return participants;
+    }
+
+    // Interface methods that are not supported by in-memory implementation
+    @Override
+    public List<?> listUserSessions(String username) {
+        // In-memory implementation doesn't support user filtering
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Object getSessionDetail(String sessionId, String username) {
+        // In-memory implementation doesn't have separate detail view
+        return getSession(sessionId);
+    }
+
+    @Override
+    public void deleteSession(String sessionId, String username) {
+        // In-memory implementation doesn't support deletion
+        throw new UnsupportedOperationException(
+                "Session deletion not supported in non-database mode");
+    }
+
+    @Override
+    public Object addParticipants(String sessionId, Object request, String username) {
+        // In-memory implementation doesn't support adding participants
+        throw new UnsupportedOperationException(
+                "Adding participants not supported in non-database mode");
+    }
+
+    @Override
+    public void removeParticipant(String sessionId, String participantEmail, String username) {
+        // In-memory implementation doesn't support removing participants
+        throw new UnsupportedOperationException(
+                "Removing participants not supported in non-database mode");
+    }
+
+    @Override
+    public void markSessionFinalized(String sessionId, byte[] signedPdf) {
+        SigningSession session = getSession(sessionId);
+        session.setSignedPdf(signedPdf);
+    }
+
+    @Override
+    public byte[] getSessionPdf(String sessionId, String token) {
+        SigningSession session = getSession(sessionId);
+        // Validate token
+        boolean validToken =
+                session.getParticipants().stream().anyMatch(p -> p.getShareToken().equals(token));
+        if (!validToken) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.unauthorized", "Invalid token for session", sessionId);
+        }
+        return session.getOriginalPdf();
+    }
+
+    @Override
+    public byte[] getSignedPdf(String sessionId, String username) {
+        throw new UnsupportedOperationException(
+                "getSignedPdf is only available in database-backed mode");
+    }
+
+    @Override
+    public boolean isDatabaseBacked() {
+        return false;
     }
 }

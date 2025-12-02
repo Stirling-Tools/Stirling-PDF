@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.security;
+package stirling.software.common.model.api.security;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,13 +13,13 @@ public class SigningParticipant {
     private String email;
     private String name;
     private ParticipantStatus status = ParticipantStatus.PENDING;
-    private final List<String> notifications = new ArrayList<>();
-    private final String shareToken = UUID.randomUUID().toString();
-    private Instant lastUpdated = Instant.now();
+    private List<String> notifications = new ArrayList<>();
+    private String shareToken = UUID.randomUUID().toString();
+    private String lastUpdated = Instant.now().toString();
     private ParticipantCertificateSubmission certificateSubmission;
 
     public void recordNotification(String message) {
         notifications.add(message);
-        lastUpdated = Instant.now();
+        lastUpdated = Instant.now().toString();
     }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Stack, Text, TextInput, Button, Alert, Paper, Title, Group, NumberInput, Switch, Grid, Box, ScrollArea } from '@mantine/core';
+import { Stack, Text, TextInput, Button, Alert, Paper, Title, Group, NumberInput, Switch, Box, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import InfoIcon from '@mui/icons-material/Info';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -78,6 +78,7 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
         try {
           setPdfLoading(true);
           const response = await apiClient.get(`/api/v1/security/cert-sign/sessions/${sessionId}/pdf`, {
+            params: { token },
             responseType: 'blob'
           });
 
@@ -229,40 +230,39 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
   }
 
   return (
-    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Grid gutter={0} style={{ flex: 1, minHeight: 0 }}>
-        {/* PDF Viewer - Left Side */}
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Paper p="md" withBorder style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <Group gap="xs" mb="md">
-              <PictureAsPdfIcon />
-              <Title order={3}>{session?.documentName || 'Document'}</Title>
-            </Group>
-            {pdfLoading ? (
-              <Alert icon={<InfoIcon />} color="blue">
-                Loading PDF...
-              </Alert>
-            ) : pdfFile ? (
-              <Box style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
-                <ViewerProvider>
-                  <LocalEmbedPDF
-                    file={pdfFile}
-                    enableAnnotations={false}
-                  />
-                </ViewerProvider>
-              </Box>
-            ) : (
-              <Alert icon={<InfoIcon />} color="blue">
-                Preparing document...
-              </Alert>
-            )}
-          </Paper>
-        </Grid.Col>
+    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'row' }}>
+      {/* PDF Viewer - Left Side */}
+      <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <Paper p="md" withBorder style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
+          <Group gap="xs" mb="md">
+            <PictureAsPdfIcon />
+            <Title order={3}>{session?.documentName || 'Document'}</Title>
+          </Group>
+          {pdfLoading ? (
+            <Alert icon={<InfoIcon />} color="blue">
+              Loading PDF...
+            </Alert>
+          ) : pdfFile ? (
+            <Box style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+              <ViewerProvider>
+                <LocalEmbedPDF
+                  file={pdfFile}
+                  enableAnnotations={false}
+                />
+              </ViewerProvider>
+            </Box>
+          ) : (
+            <Alert icon={<InfoIcon />} color="blue">
+              Preparing document...
+            </Alert>
+          )}
+        </Paper>
+      </Box>
 
-        {/* Form - Right Side */}
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <ScrollArea style={{ height: '100%' }}>
-            <Paper p="xl" withBorder style={{ height: '100%' }}>
+      {/* Form - Right Side */}
+      <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <ScrollArea style={{ height: '100vh' }}>
+          <Paper p="xl" withBorder style={{ minHeight: '100vh' }}>
               <Stack gap="lg">
                 <div>
                   <Title order={2}>{t('certSign.collab.participant.title', 'Submit your certificate')}</Title>
@@ -462,8 +462,7 @@ export function ParticipantCertificateSubmission({ sessionId, token }: Participa
               </Stack>
             </Paper>
           </ScrollArea>
-        </Grid.Col>
-      </Grid>
+        </Box>
     </Box>
   );
 }
