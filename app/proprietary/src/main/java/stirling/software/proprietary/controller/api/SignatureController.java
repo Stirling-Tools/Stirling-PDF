@@ -95,6 +95,7 @@ public class SignatureController {
      * shared signatures.
      */
     @PostMapping("/{signatureId}/label")
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> updateSignatureLabel(
             @PathVariable String signatureId, @RequestBody Map<String, String> body) {
         try {
@@ -120,6 +121,7 @@ public class SignatureController {
      * signatures. Admins can also delete shared signatures.
      */
     @DeleteMapping("/{signatureId}")
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {
             String username = userService.getCurrentUsername();
