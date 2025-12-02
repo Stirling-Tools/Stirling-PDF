@@ -47,7 +47,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
     if (tool.parameters) {
       setParameters({ ...defaultParams, ...tool.parameters });
     } else {
-      // Fallback to default parameters if nCaone provided
+      // Fallback to default parameters if none provided
       setParameters({ ...defaultParams });
     }
   }, [tool.parameters, tool.operation, toolRegistry]);

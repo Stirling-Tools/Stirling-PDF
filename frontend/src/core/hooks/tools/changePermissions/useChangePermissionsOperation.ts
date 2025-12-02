@@ -6,7 +6,7 @@ import { ChangePermissionsParameters, defaultParameters } from '@app/hooks/tools
 export const getFormData = ((parameters: ChangePermissionsParameters) => {
   if (!parameters) return [];
   return Object.entries(parameters).map(([key, value]) =>
-    [key, (value ?? '').toString()]
+    [key, (value ?? false).toString()]
   ) as string[][];
 });
 
