@@ -2,7 +2,7 @@
 """
 Automated Translation Pipeline
 Extracts, translates, merges, and beautifies translations for a language.
-Supports both TOML and JSON formats.
+TOML format only.
 """
 
 import json

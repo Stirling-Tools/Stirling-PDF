@@ -3,7 +3,7 @@
 AI Translation Helper for Stirling PDF Frontend
 Provides utilities for AI-assisted translation workflows including
 batch processing, quality checks, and integration helpers.
-Supports both TOML and JSON formats.
+TOML format only.
 """
 
 import json

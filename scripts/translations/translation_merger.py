@@ -3,7 +3,7 @@
 Translation Merger for Stirling PDF Frontend
 Merges missing translations from en-GB into target language files.
 Useful for AI-assisted translation workflows.
-Supports both TOML and JSON formats.
+TOML format only.
 """
 
 import json
