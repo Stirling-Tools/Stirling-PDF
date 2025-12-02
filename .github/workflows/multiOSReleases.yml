@@ -440,7 +440,7 @@ jobs:
       - name: Generate temporary GPG key for AppImage
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
-          cat >keyparams <<'EOF'
+          cat >keyparams <<EOF
           %no-protection
           Key-Type: RSA
           Key-Length: 2048
@@ -450,6 +450,8 @@ jobs:
           %commit
           EOF
           gpg --batch --generate-key keyparams
+          export GPG_FINGERPRINT=$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')
+          echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
           echo "Generated temporary GPG key:"
           gpg --list-secret-keys --keyid-format=long
 
@@ -475,6 +477,15 @@ jobs:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      - name: Cleanup temporary GPG key
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          if [ -n "${GPG_FINGERPRINT:-}" ]; then
+            gpg --batch --yes --delete-secret-keys "$GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$GPG_FINGERPRINT" || true
+          fi
+          rm -f keyparams
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
