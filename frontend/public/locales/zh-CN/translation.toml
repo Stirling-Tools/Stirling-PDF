@@ -917,9 +917,6 @@ desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
 desc = "将一个 PDF 叠加在另一个之上"
 title = "叠加 PDF"
 
-[home.pdfTextEditor]
-title = "PDF 文本编辑器"
-desc = "审阅并编辑 Stirling PDF 导出的 JSON，支持分组文本编辑并重新生成 PDF"
 
 [home.addText]
 tags = "文本,注释,标签"

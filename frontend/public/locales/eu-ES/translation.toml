@@ -917,9 +917,6 @@ desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregi
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
-[home.pdfTextEditor]
-title = "PDF testu-editorea"
-desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
 
 [home.addText]
 tags = "testua,anotazioa,etiketa"

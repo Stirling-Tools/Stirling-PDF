@@ -917,9 +917,6 @@ desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen.
 desc = "Ein PDF über ein anderes legen"
 title = "PDFs überlagern"
 
-[home.pdfTextEditor]
-title = "PDF-Texteditor"
-desc = "Stirling PDF JSON-Exporte prüfen und bearbeiten – mit gruppierter Textbearbeitung und PDF-Neuerzeugung"
 
 [home.addText]
 tags = "text,anmerkung,beschriftung"

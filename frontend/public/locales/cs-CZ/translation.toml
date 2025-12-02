@@ -917,9 +917,6 @@ desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pr
 desc = "Překryje PDF nad jiným PDF"
 title = "Překrýt PDF"
 
-[home.pdfTextEditor]
-title = "Editor textu PDF"
-desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
 
 [home.addText]
 tags = "text,anotace,štítek"

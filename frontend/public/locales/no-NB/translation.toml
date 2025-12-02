@@ -917,9 +917,6 @@ desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt
 desc = "Legger PDF-er over hverandre"
 title = "Overlay PDF-er"
 
-[home.pdfTextEditor]
-title = "PDF-tekstredigerer"
-desc = "Gå gjennom og rediger Stirling PDF JSON-eksporter med gruppert tekstredigering og regenerering av PDF"
 
 [home.addText]
 tags = "tekst,merknad,etikett"

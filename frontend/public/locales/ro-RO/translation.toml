@@ -917,9 +917,6 @@ desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pent
 desc = "Suprapune PDF-uri peste alt PDF"
 title = "Suprapune PDF-uri"
 
-[home.pdfTextEditor]
-title = "Editor text PDF"
-desc = "Revizuiește și editează exporturile JSON Stirling PDF cu editare de text grupată și regenerare PDF"
 
 [home.addText]
 tags = "text,anotare,etichetă"

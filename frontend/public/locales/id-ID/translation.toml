@@ -917,9 +917,6 @@ desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal unt
 desc = "Menumpuk PDF di atas PDF lain"
 title = "Tumpuk PDF"
 
-[home.pdfTextEditor]
-title = "Editor Teks PDF"
-desc = "Tinjau dan edit ekspor Stirling PDF JSON dengan pengeditan teks terkelompok dan pembuatan ulang PDF"
 
 [home.addText]
 tags = "teks,anotasi,label"

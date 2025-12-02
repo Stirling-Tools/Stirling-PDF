@@ -917,9 +917,6 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 desc = "Chồng lớp PDF lên trên PDF khác"
 title = "Chồng lớp PDF"
 
-[home.pdfTextEditor]
-title = "Trình chỉnh sửa văn bản PDF"
-desc = "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
 
 [home.addText]
 tags = "văn bản,chú thích,nhãn"

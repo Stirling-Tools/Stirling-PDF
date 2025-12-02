@@ -917,9 +917,6 @@ desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları q
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 
-[home.pdfTextEditor]
-title = "PDF Mətn Redaktoru"
-desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 
 [home.addText]
 tags = "mətn,şərh,etiket"

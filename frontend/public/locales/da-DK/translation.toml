@@ -917,9 +917,6 @@ desc = "Byg flertrins-workflows ved at kæde PDF-handlinger sammen. Ideelt til t
 desc = "Overlejrer PDF'er oven på en anden PDF"
 title = "Overlejr PDF'er"
 
-[home.pdfTextEditor]
-title = "PDF-teksteditor"
-desc = "Gennemse og rediger Stirling PDF JSON-eksporter med grupperet tekstredigering og regenerering af PDF"
 
 [home.addText]
 tags = "tekst,annotering,etiket"

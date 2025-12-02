@@ -917,9 +917,6 @@ desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzaj
 desc = "Nakłada dokumenty PDF na siebie"
 title = "Nałóż PDFa"
 
-[home.pdfTextEditor]
-title = "Edytor tekstu PDF"
-desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
 
 [home.addText]
 tags = "tekst,adnotacja,etykieta"

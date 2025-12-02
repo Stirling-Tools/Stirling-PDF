@@ -917,9 +917,6 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
-[home.pdfTextEditor]
-title = "PDFテキストエディター"
-desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"

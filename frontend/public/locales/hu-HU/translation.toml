@@ -917,9 +917,6 @@ desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összef�
 desc = "PDF-ek egymásra helyezése egy másik PDF-en"
 title = "PDF-ek egymásra helyezése"
 
-[home.pdfTextEditor]
-title = "PDF szövegszerkesztő"
-desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
 
 [home.addText]
 tags = "szöveg, megjegyzés, címke"

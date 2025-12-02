@@ -917,9 +917,6 @@ desc = "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ide
 desc = "Sobrepor um PDF sobre outro"
 title = "Sobrepor PDFs"
 
-[home.pdfTextEditor]
-title = "Editor de texto de PDF"
-desc = "Revise e edite exportações JSON do Stirling PDF com edição de texto agrupada e regeneração do PDF"
 
 [home.addText]
 tags = "texto,anotação,rótulo"
