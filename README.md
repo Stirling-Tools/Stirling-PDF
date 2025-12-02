@@ -32,8 +32,8 @@ Run it as a personal app or deploy it centrally with a personal API to edit, sig
 - **Everywhere you work** – Desktop client, browser UI, and self‑hosted server with a private API.
 - **50+ PDF tools** – Edit, merge, split, sign, redact, convert, OCR, compress, and more.
 - **Automation & workflows** – No‑code pipelines and APIs to process millions of PDFs.
-- **Enterprise‑grade** – SSO, RBAC, auditing, and flexible on‑prem deployments.
-- **Developer platform** – REST APIs, SDKs, and on‑prem AI integrations for PDF‑centric apps.
+- **Enterprise‑grade** – SSO, auditing, and flexible on‑prem deployments.
+- **Developer platform** – REST APIs available for nearly all tools to integrate into your existing systems
 - **Global UI** – Interface available in 40+ languages.
 
 For a full and always up‑to‑date feature list, see the docs: **https://docs.stirlingpdf.com**
