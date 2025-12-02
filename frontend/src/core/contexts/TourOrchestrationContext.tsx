@@ -110,7 +110,7 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const loadSampleFile = useCallback(async () => {
     try {
-      const response = await fetch('/samples/Sample.pdf');
+      const response = await fetch('samples/Sample.pdf');
       const blob = await response.blob();
       const file = new File([blob], 'Sample.pdf', { type: 'application/pdf' });
 
