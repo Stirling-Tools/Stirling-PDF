@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { signatureStorageService, type StorageType } from '@app/services/signatureStorageService';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
-export const MAX_SAVED_SIGNATURES = 10;
+export const MAX_SAVED_SIGNATURES_BACKEND = 20; // Backend limit per user
+export const MAX_SAVED_SIGNATURES_LOCALSTORAGE = 10; // LocalStorage limit
 
 export type SavedSignatureType = 'canvas' | 'image' | 'text';
 export type SignatureScope = 'personal' | 'shared' | 'localStorage';
@@ -49,6 +51,8 @@ export const useSavedSignatures = () => {
   const [savedSignatures, setSavedSignatures] = useState<SavedSignature[]>([]);
   const [storageType, setStorageType] = useState<StorageType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { config } = useAppConfig();
+  const isAdmin = config?.isAdmin ?? false;
 
   // Load signatures and detect storage type on mount
   useEffect(() => {
@@ -97,7 +101,9 @@ export const useSavedSignatures = () => {
     return () => window.removeEventListener('storage', syncFromStorage);
   }, [storageType]);
 
-  const isAtCapacity = savedSignatures.length >= MAX_SAVED_SIGNATURES;
+  // Different limits for backend vs localStorage
+  const maxLimit = storageType === 'backend' ? MAX_SAVED_SIGNATURES_BACKEND : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
+  const isAtCapacity = savedSignatures.length >= maxLimit;
 
   const addSignature = useCallback(
     async (payload: SavedSignaturePayload, label?: string, scope?: SignatureScope): Promise<AddSignatureResult> => {
@@ -108,7 +114,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: 'invalid' };
       }
 
-      if (savedSignatures.length >= MAX_SAVED_SIGNATURES) {
+      if (isAtCapacity) {
         return { success: false, reason: 'limit' };
       }
 
@@ -146,17 +152,24 @@ export const useSavedSignatures = () => {
   const updateSignatureLabel = useCallback(async (id: string, nextLabel: string) => {
     try {
       await signatureStorageService.updateSignatureLabel(id, nextLabel);
-      setSavedSignatures(prev =>
-        prev.map(entry =>
-          entry.id === id
-            ? { ...entry, label: nextLabel.trim() || entry.label || 'Signature', updatedAt: Date.now() }
-            : entry
-        )
-      );
+      // Reload signatures to get updated data from backend
+      if (storageType === 'backend') {
+        const signatures = await signatureStorageService.loadSignatures();
+        setSavedSignatures(signatures);
+      } else {
+        // For localStorage, update in place
+        setSavedSignatures(prev =>
+          prev.map(entry =>
+            entry.id === id
+              ? { ...entry, label: nextLabel.trim() || entry.label || 'Signature', updatedAt: Date.now() }
+              : entry
+          )
+        );
+      }
     } catch (error) {
       console.error('[useSavedSignatures] Failed to update signature label:', error);
     }
-  }, []);
+  }, [storageType]);
 
   const replaceSignature = useCallback(
     async (id: string, payload: SavedSignaturePayload) => {
@@ -201,6 +214,7 @@ export const useSavedSignatures = () => {
   return {
     savedSignatures,
     isAtCapacity,
+    maxLimit,
     addSignature,
     removeSignature,
     updateSignatureLabel,
@@ -209,6 +223,7 @@ export const useSavedSignatures = () => {
     byTypeCounts,
     storageType,
     isLoading,
+    isAdmin,
   };
 };
 
