@@ -262,7 +262,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
+        docker-rev: ["docker/embedded/Dockerfile", "docker/embedded/Dockerfile.ultra-lite", "docker/embedded/Dockerfile.fat"]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -301,7 +301,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/backend/${{ matrix.docker-rev }}
+          file: ./${{ matrix.docker-rev }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max

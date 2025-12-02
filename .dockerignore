@@ -5,6 +5,7 @@ frontend/dist
 frontend/build
 frontend/.vite
 frontend/.tauri
+frontend/src-tauri/target
 
 # Gradle build artifacts
 .gradle

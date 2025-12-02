@@ -65,6 +65,10 @@ export interface BookmarkActions {
   setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
 }
 
+export interface PrintActions {
+  print: () => void;
+}
+
 export interface ViewerActionsBundle {
   scrollActions: ScrollActions;
   zoomActions: ZoomActions;
@@ -75,6 +79,7 @@ export interface ViewerActionsBundle {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 }
 
 interface ViewerActionDependencies {
@@ -330,6 +335,14 @@ export function createViewerActions({
       setLocalBookmarks: (bookmarks, error = null) => {
         const api = registry.current.bookmark?.api;
         api?.setLocalBookmarks?.(bookmarks ?? null, error);
+      },
+    },
+    printActions: {
+      print: () => {
+        const api = registry.current.print?.api;
+        if (api?.print) {
+          api.print();
+        }
       },
     },
   };
