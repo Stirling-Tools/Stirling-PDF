@@ -917,6 +917,9 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
+[home.pdfTextEditor]
+title = "PDFテキストエディタ"
+desc = "PDF内の既存のテキストと画像を編集"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "手書き署名"
 defaultImageLabel = "アップロードした署名"
 defaultTextLabel = "入力した署名"
 saveButton = "署名を保存"
+savePersonal = "個人用として保存"
+saveShared = "共有用として保存"
 saveUnavailable = "まず署名を作成してから保存してください。"
 noChanges = "現在の署名はすでに保存済みです。"
+tempStorageTitle = "ブラウザーの一時ストレージ"
+tempStorageDescription = "署名はブラウザー内のみに保存されます。ブラウザーのデータを消去するか、別のブラウザーに切り替えると失われます。"
+personalHeading = "個人用署名"
+sharedHeading = "共有署名"
+personalDescription = "これらの署名はあなただけが表示できます。"
+sharedDescription = "すべてのユーザーがこれらの署名を表示して使用できます。"
 
 [sign.saved.type]
 canvas = "描画"
@@ -3888,6 +3899,7 @@ toggleSidebar = "サイドバーを切り替え"
 exportSelected = "選択したページを書き出し"
 toggleAnnotations = "注釈の表示を切り替え"
 annotationMode = "注釈モードを切り替え"
+print = "PDFを印刷"
 draw = "描画"
 save = "保存"
 saveChanges = "変更を保存"
@@ -4505,6 +4517,7 @@ description = "インプリントへの URL またはファイル名（地域に
 title = "プレミアムとエンタープライズ"
 description = "プレミアムまたはエンタープライズのライセンスキーを構成します。"
 license = "ライセンス設定"
+noInput = "ライセンスキーまたはファイルを入力してください"
 
 [admin.settings.premium.licenseKey]
 toggle = "ライセンスキーまたは証明書ファイルをお持ちですか？"
@@ -4521,6 +4534,25 @@ title = "⚠️ 警告: 既存のライセンスを検出"
 line1 = "現在のライセンスキーを上書きすると元に戻せません。"
 line2 = "別途バックアップしていない限り、以前のライセンスは永久に失われます。"
 line3 = "重要: ライセンスキーは秘密に安全に保管してください。公開で共有しないでください。"
+
+[admin.settings.premium.inputMethod]
+text = "ライセンスキー"
+file = "証明書ファイル"
+
+[admin.settings.premium.file]
+label = "ライセンス証明書ファイル"
+description = "オフライン購入の .lic または .cert ライセンスファイルをアップロードしてください"
+choose = "ライセンスファイルを選択"
+selected = "選択済み: {{filename}} ({{size}})"
+successMessage = "ライセンスファイルをアップロードして有効化しました。再起動は不要です。"
+
+[admin.settings.premium.currentLicense]
+title = "有効なライセンス"
+file = "ソース: ライセンスファイル ({{path}})"
+key = "ソース: ライセンスキー"
+type = "種類: {{type}}"
+noInput = "ライセンスキーを入力するか、証明書ファイルをアップロードしてください"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "プレミアム機能を有効化"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "少なくとも1件のメールアドレスが必要です"
 submit = "招待を送信"
 success = "ユーザーを招待しました"
-partialSuccess = "一部の招待に失敗しました"
+partialFailure = "一部の招待に失敗しました"
 allFailed = "ユーザーの招待に失敗しました"
 error = "招待の送信に失敗しました"
 

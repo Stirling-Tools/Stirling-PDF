@@ -195,7 +195,7 @@ title = "Pengaturan Dibuka"
 message = "Silakan pilih Stirling PDF di pengaturan sistem Anda"
 
 [defaultApp.error]
-title = "Error"
+title = "Kesalahan"
 message = "Gagal menyetel penangan PDF default"
 
 [language]
@@ -388,7 +388,7 @@ logout = "Keluar"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Dihost Sendiri"
 
 [settings.general]
 title = "Umum"
@@ -917,6 +917,9 @@ desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal unt
 desc = "Menumpuk PDF di atas PDF lain"
 title = "Tumpuk PDF"
 
+[home.pdfTextEditor]
+title = "Editor Teks PDF"
+desc = "Edit teks dan gambar yang ada di dalam PDF"
 
 [home.addText]
 tags = "teks,anotasi,label"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Tanda tangan gambar"
 defaultImageLabel = "Tanda tangan terunggah"
 defaultTextLabel = "Tanda tangan ketik"
 saveButton = "Simpan tanda tangan"
+savePersonal = "Simpan Pribadi"
+saveShared = "Simpan Bersama"
 saveUnavailable = "Buat tanda tangan terlebih dahulu untuk menyimpannya."
 noChanges = "Tanda tangan saat ini sudah disimpan."
+tempStorageTitle = "Penyimpanan browser sementara"
+tempStorageDescription = "Tanda tangan disimpan hanya di browser Anda. Data akan hilang jika Anda membersihkan data browser atau berpindah browser."
+personalHeading = "Tanda Tangan Pribadi"
+sharedHeading = "Tanda Tangan Bersama"
+personalDescription = "Hanya Anda yang dapat melihat tanda tangan ini."
+sharedDescription = "Semua pengguna dapat melihat dan menggunakan tanda tangan ini."
 
 [sign.saved.type]
 canvas = "Gambar"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Alihkan Sidebar"
 exportSelected = "Ekspor Halaman Terpilih"
 toggleAnnotations = "Alihkan Visibilitas Anotasi"
 annotationMode = "Alihkan Mode Anotasi"
+print = "Cetak PDF"
 draw = "Gambar"
 save = "Simpan"
 saveChanges = "Simpan Perubahan"
@@ -4505,6 +4517,7 @@ description = "URL atau nama file untuk impressum (diperlukan di beberapa yurisd
 title = "Premium & Enterprise"
 description = "Konfigurasikan kunci lisensi premium atau enterprise Anda."
 license = "Konfigurasi Lisensi"
+noInput = "Harap berikan kunci atau file lisensi"
 
 [admin.settings.premium.licenseKey]
 toggle = "Punya kunci lisensi atau file sertifikat?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Peringatan: Lisensi yang Ada Terdeteksi"
 line1 = "Menimpa kunci lisensi Anda saat ini tidak dapat dibatalkan."
 line2 = "Lisensi sebelumnya akan hilang permanen kecuali Anda mencadangkannya di tempat lain."
 line3 = "Penting: Jaga kunci lisensi tetap privat dan aman. Jangan pernah membagikannya secara publik."
+
+[admin.settings.premium.inputMethod]
+text = "Kunci Lisensi"
+file = "File Sertifikat"
+
+[admin.settings.premium.file]
+label = "File Sertifikat Lisensi"
+description = "Unggah file lisensi .lic atau .cert Anda dari pembelian offline"
+choose = "Pilih File Lisensi"
+selected = "Dipilih: {{filename}} ({{size}})"
+successMessage = "File lisensi berhasil diunggah dan diaktifkan. Tidak perlu restart."
+
+[admin.settings.premium.currentLicense]
+title = "Lisensi Aktif"
+file = "Sumber: File lisensi ({{path}})"
+key = "Sumber: Kunci lisensi"
+type = "Tipe: {{type}}"
+noInput = "Harap berikan kunci lisensi atau unggah file sertifikat"
+success = "Berhasil"
 
 [admin.settings.premium.enabled]
 label = "Aktifkan Fitur Premium"
@@ -4951,13 +4983,13 @@ done = "Selesai"
 loading = "Memuat..."
 back = "Kembali"
 continue = "Lanjut"
-error = "Error"
+error = "Kesalahan"
 
 [config.overview]
 title = "Konfigurasi Aplikasi"
 description = "Pengaturan dan detail konfigurasi aplikasi saat ini."
 loading = "Memuat konfigurasi..."
-error = "Error"
+error = "Kesalahan"
 warning = "Peringatan Konfigurasi"
 
 [config.overview.sections]
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Setidaknya satu alamat email diperlukan"
 submit = "Kirim Undangan"
 success = "pengguna berhasil diundang"
-partialSuccess = "Beberapa undangan gagal"
+partialFailure = "Beberapa undangan gagal"
 allFailed = "Gagal mengundang pengguna"
 error = "Gagal mengirim undangan"
 
@@ -5765,7 +5797,7 @@ label = "Pilih Server"
 description = "Server self-hosted"
 
 [setup.step3]
-label = "Login"
+label = "Masuk"
 description = "Masukkan kredensial"
 
 [setup.mode.saas]
@@ -5806,7 +5838,7 @@ testFailed = "Tes koneksi gagal"
 title = "Masuk"
 subtitle = "Masukkan kredensial Anda untuk melanjutkan"
 connectingTo = "Menghubungkan ke:"
-submit = "Login"
+submit = "Masuk"
 signInWith = "Masuk dengan"
 oauthPending = "Membuka browser untuk autentikasi..."
 orContinueWith = "Atau lanjut dengan email"

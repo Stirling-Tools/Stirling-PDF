@@ -917,6 +917,9 @@ desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複�
 desc = "將 PDF 覆蓋在另一個 PDF 上"
 title = "覆蓋 PDF"
 
+[home.pdfTextEditor]
+title = "PDF 文字編輯器"
+desc = "編輯 PDF 中既有的文字與圖片"
 
 [home.addText]
 tags = "文字,註解,標籤"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "手繪簽名"
 defaultImageLabel = "上傳的簽名"
 defaultTextLabel = "輸入的簽名"
 saveButton = "儲存簽名"
+savePersonal = "儲存為個人"
+saveShared = "儲存為共用"
 saveUnavailable = "請先建立簽名才能儲存。"
 noChanges = "目前簽名已儲存。"
+tempStorageTitle = "瀏覽器暫存"
+tempStorageDescription = "簽名僅儲存在您的瀏覽器中。若清除瀏覽資料或更換瀏覽器，將會遺失。"
+personalHeading = "個人簽名"
+sharedHeading = "共用簽名"
+personalDescription = "只有您能看到這些簽名。"
+sharedDescription = "所有使用者都可以查看並使用這些簽名。"
 
 [sign.saved.type]
 canvas = "手繪"
@@ -3888,6 +3899,7 @@ toggleSidebar = "切換側邊欄"
 exportSelected = "匯出選取的頁面"
 toggleAnnotations = "切換註解可見度"
 annotationMode = "切換註解模式"
+print = "列印 PDF"
 draw = "繪圖"
 save = "儲存"
 saveChanges = "儲存變更"
@@ -4505,6 +4517,7 @@ description = "Impressum 的 URL 或檔名（某些司法管轄區要求提供�
 title = "Premium 與 Enterprise"
 description = "設定您的 Premium 或 Enterprise 授權金鑰。"
 license = "擴充授權設定"
+noInput = "請提供授權金鑰或檔案"
 
 [admin.settings.premium.licenseKey]
 toggle = "有授權金鑰或憑證檔嗎？"
@@ -4521,6 +4534,25 @@ title = "⚠️ 警告：偵測到現有授權"
 line1 = "覆寫目前的授權金鑰後將無法復原。"
 line2 = "除非你另有備份，否則先前的授權將永久遺失。"
 line3 = "重要：請妥善保管授權金鑰並保持私密，切勿公開分享。"
+
+[admin.settings.premium.inputMethod]
+text = "授權金鑰"
+file = "憑證檔案"
+
+[admin.settings.premium.file]
+label = "授權憑證檔案"
+description = "上傳您離線購買的 .lic 或 .cert 授權檔案"
+choose = "選擇授權檔案"
+selected = "已選取：{{filename}}（{{size}}）"
+successMessage = "授權檔案已成功上傳並啟用，無需重新啟動。"
+
+[admin.settings.premium.currentLicense]
+title = "使用中的授權"
+file = "來源：授權檔案（{{path}}）"
+key = "來源：授權金鑰"
+type = "類型：{{type}}"
+noInput = "請提供授權金鑰或上傳憑證檔案"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "啟用 Premium 功能"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "至少需要一個電子郵件地址"
 submit = "發送邀請"
 success = "已成功邀請使用者"
-partialSuccess = "部分邀請失敗"
+partialFailure = "部分邀請失敗"
 allFailed = "邀請使用者失敗"
 error = "發送邀請失敗"
 

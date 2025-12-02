@@ -917,6 +917,9 @@ desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. �
 desc = "PDF를 다른 PDF 위에 오버레이"
 title = "PDF 오버레이"
 
+[home.pdfTextEditor]
+title = "PDF 텍스트 편집기"
+desc = "PDF 내부의 기존 텍스트와 이미지를 편집합니다"
 
 [home.addText]
 tags = "텍스트,주석,레이블"
@@ -1906,8 +1909,8 @@ placeholder = "수정 날짜"
 [changeMetadata.trapped]
 label = "트래핑 상태"
 unknown = "알 수 없음"
-true = "True"
-false = "False"
+true = "참"
+false = "거짓"
 
 [changeMetadata.advanced]
 title = "고급 옵션"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "그린 서명"
 defaultImageLabel = "업로드된 서명"
 defaultTextLabel = "입력한 서명"
 saveButton = "서명 저장"
+savePersonal = "개인용으로 저장"
+saveShared = "공유용으로 저장"
 saveUnavailable = "먼저 서명을 만든 후 저장하세요."
 noChanges = "현재 서명이 이미 저장되어 있습니다."
+tempStorageTitle = "임시 브라우저 저장소"
+tempStorageDescription = "서명은 브라우저에만 저장됩니다. 브라우저 데이터를 삭제하거나 브라우저를 변경하면 사라집니다."
+personalHeading = "개인 서명"
+sharedHeading = "공유 서명"
+personalDescription = "이 서명은 본인만 볼 수 있습니다."
+sharedDescription = "모든 사용자가 이 서명을 보고 사용할 수 있습니다."
 
 [sign.saved.type]
 canvas = "그리기"
@@ -3888,6 +3899,7 @@ toggleSidebar = "사이드바 전환"
 exportSelected = "선택한 페이지 내보내기"
 toggleAnnotations = "주석 가시성 전환"
 annotationMode = "주석 모드 전환"
+print = "PDF 인쇄"
 draw = "그리기"
 save = "저장"
 saveChanges = "변경 내용 저장"
@@ -4164,7 +4176,7 @@ description = "컴플라이언스 및 보안 모니터링을 위해 사용자 �
 
 [admin.settings.security.audit.level]
 label = "감사 수준"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=끄기, 1=기본, 2=표준, 3=상세"
 
 [admin.settings.security.audit.retentionDays]
 label = "감사 로그 보존 기간(일)"
@@ -4498,13 +4510,14 @@ label = "쿠키 정책"
 description = "쿠키 정책의 URL 또는 파일 이름"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "법적 고지"
 description = "Impressum의 URL 또는 파일 이름(일부 관할권에서 필수)"
 
 [admin.settings.premium]
 title = "프리미엄 및 엔터프라이즈"
 description = "프리미엄 또는 엔터프라이즈 라이선스 키를 구성합니다."
 license = "라이선스 구성"
+noInput = "라이선스 키 또는 파일을 입력해 주세요"
 
 [admin.settings.premium.licenseKey]
 toggle = "라이선스 키나 인증서 파일이 있나요?"
@@ -4521,6 +4534,25 @@ title = "⚠️ 경고: 기존 라이선스 감지됨"
 line1 = "현재 라이선스 키를 덮어쓰면 되돌릴 수 없습니다."
 line2 = "다른 곳에 백업하지 않았다면 이전 라이선스는 영구적으로 손실됩니다."
 line3 = "중요: 라이선스 키는 개인적으로 안전하게 보관하세요. 공개적으로 공유하지 마세요."
+
+[admin.settings.premium.inputMethod]
+text = "라이선스 키"
+file = "인증서 파일"
+
+[admin.settings.premium.file]
+label = "라이선스 인증서 파일"
+description = "오프라인 구매 시 받은 .lic 또는 .cert 라이선스 파일을 업로드하세요"
+choose = "라이선스 파일 선택"
+selected = "선택됨: {{filename}} ({{size}})"
+successMessage = "라이선스 파일이 업로드되어 성공적으로 활성화되었습니다. 재시작은 필요하지 않습니다."
+
+[admin.settings.premium.currentLicense]
+title = "활성 라이선스"
+file = "소스: 라이선스 파일 ({{path}})"
+key = "소스: 라이선스 키"
+type = "유형: {{type}}"
+noInput = "라이선스 키를 입력하거나 인증서 파일을 업로드해 주세요"
+success = "성공"
 
 [admin.settings.premium.enabled]
 label = "프리미엄 기능 활성화"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "이메일 주소를 최소 한 개 이상 입력해야 합니다"
 submit = "초대장 보내기"
 success = "사용자 초대가 완료되었습니다"
-partialSuccess = "일부 초대가 실패했습니다"
+partialFailure = "일부 초대가 실패했습니다"
 allFailed = "사용자 초대에 실패했습니다"
 error = "초대장 전송에 실패했습니다"
 

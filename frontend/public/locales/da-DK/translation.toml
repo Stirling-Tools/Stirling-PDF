@@ -567,7 +567,7 @@ percentage = "Procent"
 loading = "Laster..."
 failedToLoad = "Kunne ikke indlæse endpoint-data. Prøv at opdatere."
 home = "Hjem"
-login = "Login"
+login = "Log ind"
 top = "Top"
 numberOfVisits = "Antal besøg"
 visitsTooltip = "Besøg: {0} ({1}% af totalen)"
@@ -917,6 +917,9 @@ desc = "Byg flertrins-workflows ved at kæde PDF-handlinger sammen. Ideelt til t
 desc = "Overlejrer PDF'er oven på en anden PDF"
 title = "Overlejr PDF'er"
 
+[home.pdfTextEditor]
+title = "PDF-teksteditor"
+desc = "Rediger eksisterende tekst og billeder i PDF'er"
 
 [home.addText]
 tags = "tekst,annotering,etiket"
@@ -1178,7 +1181,7 @@ selectFilesPlaceholder = "Vælg filer i hovedvisningen for at komme i gang"
 settings = "Indstillinger"
 conversionCompleted = "Konvertering fuldført"
 results = "Resultater"
-defaultFilename = "converted_file"
+defaultFilename = "konverteret_fil"
 conversionResults = "Konverteringsresultater"
 convertFrom = "Konvertér fra"
 convertTo = "Konvertér til"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Tegnet signatur"
 defaultImageLabel = "Uploadet signatur"
 defaultTextLabel = "Indtastet signatur"
 saveButton = "Gem signatur"
+savePersonal = "Gem personlig"
+saveShared = "Gem delt"
 saveUnavailable = "Opret først en signatur for at gemme den."
 noChanges = "Nuværende signatur er allerede gemt."
+tempStorageTitle = "Midlertidig browserlagring"
+tempStorageDescription = "Signaturer gemmes kun i din browser. De går tabt, hvis du rydder browserdata eller skifter browser."
+personalHeading = "Personlige signaturer"
+sharedHeading = "Delte signaturer"
+personalDescription = "Kun du kan se disse signaturer."
+sharedDescription = "Alle brugere kan se og bruge disse signaturer."
 
 [sign.saved.type]
 canvas = "Tegning"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Skift sidepanel"
 exportSelected = "Eksporter valgte sider"
 toggleAnnotations = "Skift visning af annoteringer"
 annotationMode = "Skift annoteringstilstand"
+print = "Udskriv PDF"
 draw = "Tegn"
 save = "Gem"
 saveChanges = "Gem ændringer"
@@ -4505,6 +4517,7 @@ description = "URL eller filnavn til impressum (påkrævet i nogle jurisdiktione
 title = "Premium og Enterprise"
 description = "Konfigurer din premium- eller enterprise-licensnøgle."
 license = "Licenskonfiguration"
+noInput = "Angiv en licensnøgle eller fil"
 
 [admin.settings.premium.licenseKey]
 toggle = "Har du en licensnøgle eller en certifikatfil?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Advarsel: Eksisterende licens fundet"
 line1 = "Overskrivning af din nuværende licensnøgle kan ikke fortrydes."
 line2 = "Din tidligere licens går permanent tabt, medmindre du har sikkerhedskopieret den andetsteds."
 line3 = "Vigtigt: Hold licensnøgler private og sikre. Del dem aldrig offentligt."
+
+[admin.settings.premium.inputMethod]
+text = "Licensnøgle"
+file = "Certifikatfil"
+
+[admin.settings.premium.file]
+label = "Licenscertifikatfil"
+description = "Upload din .lic- eller .cert-licensfil fra offlinekøb"
+choose = "Vælg licensfil"
+selected = "Valgt: {{filename}} ({{size}})"
+successMessage = "Licensfil uploadet og aktiveret. Genstart er ikke påkrævet."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv licens"
+file = "Kilde: Licensfil ({{path}})"
+key = "Kilde: Licensnøgle"
+type = "Type: {{type}}"
+noInput = "Angiv en licensnøgle eller upload en certifikatfil"
+success = "Succes"
 
 [admin.settings.premium.enabled]
 label = "Aktivér premium-funktioner"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Mindst én e-mailadresse er påkrævet"
 submit = "Send invitationer"
 success = "Bruger(e) inviteret"
-partialSuccess = "Nogle invitationer mislykkedes"
+partialFailure = "Nogle invitationer mislykkedes"
 allFailed = "Kunne ikke invitere brugere"
 error = "Kunne ikke sende invitationer"
 
@@ -5765,7 +5797,7 @@ label = "Vælg server"
 description = "Selvhostet server"
 
 [setup.step3]
-label = "Login"
+label = "Log ind"
 description = "Indtast loginoplysninger"
 
 [setup.mode.saas]

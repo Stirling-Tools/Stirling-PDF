@@ -352,7 +352,7 @@ teams = "Teams"
 title = "Configuratie"
 systemSettings = "Systeeminstellingen"
 features = "Functies"
-endpoints = "Endpoints"
+endpoints = "Eindpunten"
 database = "Database"
 advanced = "Geavanceerd"
 
@@ -561,7 +561,7 @@ totalEndpoints = "Totaal aantal endpoints"
 totalVisits = "Totaal aantal bezoeken"
 showing = "Weergeven"
 selectedVisits = "Geselecteerde bezoeken"
-endpoint = "Endpoint"
+endpoint = "Eindpunt"
 visits = "Bezoeken"
 percentage = "Percentage"
 loading = "Laden..."
@@ -917,6 +917,9 @@ desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal 
 desc = "Plaatst PDF's over een andere PDF heen"
 title = "PDF's overlappen"
 
+[home.pdfTextEditor]
+title = "PDF-teksteditor"
+desc = "Bewerk bestaande tekst en afbeeldingen in PDF's"
 
 [home.addText]
 tags = "tekst,annotatie,label"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Getekende handtekening"
 defaultImageLabel = "Geüploade handtekening"
 defaultTextLabel = "Getypte handtekening"
 saveButton = "Handtekening opslaan"
+savePersonal = "Als persoonlijk opslaan"
+saveShared = "Als gedeeld opslaan"
 saveUnavailable = "Maak eerst een handtekening om deze op te slaan."
 noChanges = "De huidige handtekening is al opgeslagen."
+tempStorageTitle = "Tijdelijke browseropslag"
+tempStorageDescription = "Handtekeningen worden alleen in je browser opgeslagen. Ze gaan verloren als je je browsergegevens wist of van browser wisselt."
+personalHeading = "Persoonlijke handtekeningen"
+sharedHeading = "Gedeelde handtekeningen"
+personalDescription = "Alleen jij kunt deze handtekeningen zien."
+sharedDescription = "Alle gebruikers kunnen deze handtekeningen zien en gebruiken."
 
 [sign.saved.type]
 canvas = "Tekening"
@@ -3813,7 +3824,7 @@ description = "These cookies are essential for the website to function properly.
 2 = "Altijd ingeschakeld"
 
 [cookieBanner.preferencesModal.analytics]
-title = "Analytics"
+title = "Analyse"
 description = "Deze cookies helpen ons te begrijpen hoe onze tools worden gebruikt, zodat we ons kunnen richten op het bouwen van de functies die onze community het meest waardeert. Wees gerust—Stirling PDF kan niet en zal nooit de inhoud van de documenten waarmee je werkt volgen."
 
 [cookieBanner.services]
@@ -3888,6 +3899,7 @@ toggleSidebar = "Zijbalk tonen/verbergen"
 exportSelected = "Geselecteerde pagina's exporteren"
 toggleAnnotations = "Annotaties tonen/verbergen"
 annotationMode = "Annotatiemodus schakelen"
+print = "PDF afdrukken"
 draw = "Tekenen"
 save = "Opslaan"
 saveChanges = "Wijzigingen opslaan"
@@ -4354,7 +4366,7 @@ features = "Feature-flags"
 processing = "Verwerking"
 
 [admin.settings.advanced.endpoints]
-label = "Endpoints"
+label = "Eindpunten"
 manage = "API-endpoints beheren"
 description = "Endpointbeheer wordt geconfigureerd via YAML. Zie de documentatie voor details over het in-/uitschakelen van specifieke endpoints."
 
@@ -4505,6 +4517,7 @@ description = "URL of bestandsnaam van het impressum (in sommige jurisdicties ve
 title = "Premium & Enterprise"
 description = "Configureer je premium- of enterprise-licentiesleutel."
 license = "Licentieconfiguratie"
+noInput = "Geef een licentiesleutel of bestand op"
 
 [admin.settings.premium.licenseKey]
 toggle = "Heb je een licentiesleutel of certificaatbestand?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Waarschuwing: Bestaande licentie gedetecteerd"
 line1 = "Het overschrijven van je huidige licentiesleutel kan niet ongedaan worden gemaakt."
 line2 = "Je vorige licentie gaat permanent verloren, tenzij je er elders een back-up van hebt."
 line3 = "Belangrijk: houd licentiesleutels privé en veilig. Deel ze nooit openbaar."
+
+[admin.settings.premium.inputMethod]
+text = "Licentiesleutel"
+file = "Certificaatbestand"
+
+[admin.settings.premium.file]
+label = "Licentiecertificaatbestand"
+description = "Upload je .lic- of .cert-licentiebestand van offline aankopen"
+choose = "Kies licentiebestand"
+selected = "Geselecteerd: {{filename}} ({{size}})"
+successMessage = "Licentiebestand succesvol geüpload en geactiveerd. Herstarten niet vereist."
+
+[admin.settings.premium.currentLicense]
+title = "Actieve licentie"
+file = "Bron: licentiebestand ({{path}})"
+key = "Bron: licentiesleutel"
+type = "Type: {{type}}"
+noInput = "Geef een licentiesleutel op of upload een certificaatbestand"
+success = "Succes"
 
 [admin.settings.premium.enabled]
 label = "Premiumfuncties inschakelen"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Er is minstens één e-mailadres vereist"
 submit = "Uitnodigingen verzenden"
 success = "Gebruiker(s) succesvol uitgenodigd"
-partialSuccess = "Sommige uitnodigingen zijn mislukt"
+partialFailure = "Sommige uitnodigingen zijn mislukt"
 allFailed = "Uitnodigen van gebruikers is mislukt"
 error = "Uitnodigingen verzenden is mislukt"
 
@@ -5722,7 +5754,7 @@ title = "Grafiek van endpointgebruik"
 
 [usage.table]
 title = "Gedetailleerde statistieken"
-endpoint = "Endpoint"
+endpoint = "Eindpunt"
 visits = "Bezoeken"
 percentage = "Percentage"
 noData = "Geen gegevens beschikbaar"

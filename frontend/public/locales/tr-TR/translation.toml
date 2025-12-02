@@ -917,6 +917,9 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 desc = "PDF'leri başka bir PDF'nin üzerine bindirir"
 title = "PDF'leri Bindirme"
 
+[home.pdfTextEditor]
+title = "PDF Metin Düzenleyici"
+desc = "PDF'lerin içindeki mevcut metinleri ve görselleri düzenleyin"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Çizim imzası"
 defaultImageLabel = "Yüklenen imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzayı kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 saveUnavailable = "Kaydetmek için önce bir imza oluşturun."
 noChanges = "Geçerli imza zaten kaydedildi."
+tempStorageTitle = "Geçici tarayıcı depolaması"
+tempStorageDescription = "İmzalar yalnızca tarayıcınızda saklanır. Tarayıcı verilerini temizlerseniz veya tarayıcı değiştirirseniz kaybolurlar."
+personalHeading = "Kişisel İmzalar"
+sharedHeading = "Paylaşılan İmzalar"
+personalDescription = "Bu imzaları yalnızca siz görebilirsiniz."
+sharedDescription = "Tüm kullanıcılar bu imzaları görebilir ve kullanabilir."
 
 [sign.saved.type]
 canvas = "Çizim"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
 exportSelected = "Seçilen Sayfaları Dışa Aktar"
 toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
 annotationMode = "Açıklama Modunu Değiştir"
+print = "PDF'yi Yazdır"
 draw = "Çiz"
 save = "Kaydet"
 saveChanges = "Değişiklikleri Kaydet"
@@ -4505,6 +4517,7 @@ description = "Impressum için URL veya dosya adı (bazı yargı bölgelerinde g
 title = "Premium ve Kurumsal"
 description = "Premium veya kurumsal lisans anahtarınızı yapılandırın."
 license = "Lisans Yapılandırması"
+noInput = "Lütfen bir lisans anahtarı veya dosyası sağlayın"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisans anahtarınız veya sertifika dosyanız mı var?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Uyarı: Mevcut Lisans Tespit Edildi"
 line1 = "Mevcut lisans anahtarınızın üzerine yazma işlemi geri alınamaz."
 line2 = "Başka yerde yedeğiniz yoksa önceki lisansınız kalıcı olarak kaybolacaktır."
 line3 = "Önemli: Lisans anahtarlarını gizli ve güvenli tutun. Asla herkese açık şekilde paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisans Anahtarı"
+file = "Sertifika Dosyası"
+
+[admin.settings.premium.file]
+label = "Lisans Sertifika Dosyası"
+description = "Çevrimdışı satın alımlardan aldığınız .lic veya .cert lisans dosyanızı yükleyin"
+choose = "Lisans Dosyası Seç"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisans dosyası başarıyla yüklendi ve etkinleştirildi. Yeniden başlatma gerekmez."
+
+[admin.settings.premium.currentLicense]
+title = "Etkin Lisans"
+file = "Kaynak: Lisans dosyası ({{path}})"
+key = "Kaynak: Lisans anahtarı"
+type = "Tür: {{type}}"
+noInput = "Lütfen bir lisans anahtarı girin veya bir sertifika dosyası yükleyin"
+success = "Başarılı"
 
 [admin.settings.premium.enabled]
 label = "Premium Özellikleri Etkinleştir"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "En az bir e-posta adresi gereklidir"
 submit = "Davetleri Gönder"
 success = "kullanıcı(lar) başarıyla davet edildi"
-partialSuccess = "Bazı davetler başarısız oldu"
+partialFailure = "Bazı davetler başarısız oldu"
 allFailed = "Kullanıcılar davet edilemedi"
 error = "Davetler gönderilemedi"
 

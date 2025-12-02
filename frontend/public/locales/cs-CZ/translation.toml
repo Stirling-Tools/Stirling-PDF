@@ -917,6 +917,9 @@ desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pr
 desc = "Překryje PDF nad jiným PDF"
 title = "Překrýt PDF"
 
+[home.pdfTextEditor]
+title = "Editor textu PDF"
+desc = "Upravujte existující text a obrázky v PDF"
 
 [home.addText]
 tags = "text,anotace,štítek"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Nakreslený podpis"
 defaultImageLabel = "Nahraný podpis"
 defaultTextLabel = "Napsaný podpis"
 saveButton = "Uložit podpis"
+savePersonal = "Uložit osobní"
+saveShared = "Uložit sdílené"
 saveUnavailable = "Nejprve vytvořte podpis, abyste jej mohli uložit."
 noChanges = "Aktuální podpis je již uložen."
+tempStorageTitle = "Dočasné úložiště prohlížeče"
+tempStorageDescription = "Podpisy jsou uloženy pouze ve vašem prohlížeči. Při vymazání dat prohlížeče nebo při přepnutí na jiný prohlížeč budou ztraceny."
+personalHeading = "Osobní podpisy"
+sharedHeading = "Sdílené podpisy"
+personalDescription = "Tyto podpisy vidíte pouze vy."
+sharedDescription = "Všichni uživatelé mohou tyto podpisy vidět a používat."
 
 [sign.saved.type]
 canvas = "Kresba"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Přepnout postranní panel"
 exportSelected = "Exportovat vybrané stránky"
 toggleAnnotations = "Přepnout viditelnost anotací"
 annotationMode = "Přepnout režim anotací"
+print = "Tisk PDF"
 draw = "Kreslit"
 save = "Uložit"
 saveChanges = "Uložit změny"
@@ -4505,6 +4517,7 @@ description = "URL nebo název souboru k Impressu (vyžadováno v některých ju
 title = "Premium a Enterprise"
 description = "Nakonfigurujte svůj prémiový nebo enterprise licenční klíč."
 license = "Konfigurace licence"
+noInput = "Zadejte licenční klíč nebo soubor"
 
 [admin.settings.premium.licenseKey]
 toggle = "Máte licenční klíč nebo certifikační soubor?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Varování: Zjištěna stávající licence"
 line1 = "Přepsání aktuálního licenčního klíče nelze vrátit zpět."
 line2 = "Předchozí licence bude trvale ztracena, pokud ji nemáte zálohovanou jinde."
 line3 = "Důležité: Uchovávejte licenční klíče v soukromí a v bezpečí. Nikdy je nesdílejte veřejně."
+
+[admin.settings.premium.inputMethod]
+text = "Licenční klíč"
+file = "Soubor certifikátu"
+
+[admin.settings.premium.file]
+label = "Soubor licenčního certifikátu"
+description = "Nahrajte svůj licenční soubor .lic nebo .cert z offline nákupu"
+choose = "Vybrat licenční soubor"
+selected = "Vybráno: {{filename}} ({{size}})"
+successMessage = "Licenční soubor byl úspěšně nahrán a aktivován. Restart není vyžadován."
+
+[admin.settings.premium.currentLicense]
+title = "Aktivní licence"
+file = "Zdroj: Licenční soubor ({{path}})"
+key = "Zdroj: Licenční klíč"
+type = "Typ: {{type}}"
+noInput = "Zadejte licenční klíč nebo nahrajte soubor certifikátu"
+success = "Úspěch"
 
 [admin.settings.premium.enabled]
 label = "Povolit prémiové funkce"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "uzivatel1@priklad.cz, uzivatel2@priklad.cz"
 emailsRequired = "Je vyžadována alespoň jedna e‑mailová adresa"
 submit = "Odeslat pozvánky"
 success = "uživatel(é) úspěšně pozváni"
-partialSuccess = "Některé pozvánky se nepodařilo odeslat"
+partialFailure = "Některá pozvání selhala"
 allFailed = "Nepodařilo se pozvat uživatele"
 error = "Nepodařilo se odeslat pozvánky"
 

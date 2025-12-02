@@ -39,7 +39,7 @@ class TranslationMerger:
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
-    def _save_translation_file(self, data: Dict, file_path: Path, backup: bool = True) -> None:
+    def _save_translation_file(self, data: Dict, file_path: Path, backup: bool = False) -> None:
         """Save TOML translation file with backup option."""
         if backup and file_path.exists():
             backup_path = file_path.with_suffix(f'.backup.{datetime.now().strftime("%Y%m%d_%H%M%S")}.toml')
@@ -198,7 +198,7 @@ class TranslationMerger:
         return False
 
     def apply_translations(self, target_file: Path, translations: Dict[str, str],
-                          backup: bool = True) -> Dict:
+                          backup: bool = False) -> Dict:
         """Apply provided translations to target file."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
@@ -281,7 +281,7 @@ def main():
 
     # Add missing command
     add_parser = subparsers.add_parser('add-missing', help='Add missing translations from en-GB')
-    add_parser.add_argument('--no-backup', action='store_true', help='Skip backup creation')
+    add_parser.add_argument('--backup', action='store_true', help='Create backup before modifying files')
     add_parser.add_argument('--mark-untranslated', action='store_true', default=True,
                            help='Mark added translations as [UNTRANSLATED]')
 
@@ -296,7 +296,7 @@ def main():
     # Apply translations command
     apply_parser = subparsers.add_parser('apply-translations', help='Apply translations from JSON file')
     apply_parser.add_argument('--translations-file', required=True, help='JSON file with translations')
-    apply_parser.add_argument('--no-backup', action='store_true', help='Skip backup creation')
+    apply_parser.add_argument('--backup', action='store_true', help='Create backup before modifying files')
 
     args = parser.parse_args()
 
@@ -317,7 +317,7 @@ def main():
             mark_untranslated=args.mark_untranslated
         )
 
-        merger._save_translation_file(result['data'], target_file, backup=not args.no_backup)
+        merger._save_translation_file(result['data'], target_file, backup=args.backup)
         print(f"Added {result['added_count']} missing translations")
 
     elif args.command == 'extract-untranslated':
@@ -340,7 +340,7 @@ def main():
         else:
             translations = translations_data
 
-        result = merger.apply_translations(target_file, translations, backup=not args.no_backup)
+        result = merger.apply_translations(target_file, translations, backup=args.backup)
 
         if result['success']:
             print(f"Applied {result['applied_count']} translations")

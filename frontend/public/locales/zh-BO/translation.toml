@@ -917,6 +917,9 @@ desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
 
+[home.pdfTextEditor]
+title = "PDF 文本编辑器"
+desc = "编辑 PDF 中的现有文本和图像"
 
 [home.addText]
 tags = "文本,注释,标签"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "手写签名"
 defaultImageLabel = "已上传的签名"
 defaultTextLabel = "键入的签名"
 saveButton = "保存签名"
+savePersonal = "保存为个人"
+saveShared = "保存为共享"
 saveUnavailable = "请先创建签名再保存。"
 noChanges = "当前签名已保存。"
+tempStorageTitle = "浏览器临时存储"
+tempStorageDescription = "签名仅存储在您的浏览器中。若清除浏览器数据或更换浏览器，这些签名将会丢失。"
+personalHeading = "个人签名"
+sharedHeading = "共享签名"
+personalDescription = "只有您可以看到这些签名。"
+sharedDescription = "所有用户都可以查看并使用这些签名。"
 
 [sign.saved.type]
 canvas = "绘制"
@@ -3888,6 +3899,7 @@ toggleSidebar = "切换侧边栏"
 exportSelected = "导出所选页面"
 toggleAnnotations = "切换注释可见性"
 annotationMode = "切换注释模式"
+print = "打印 PDF"
 draw = "绘制"
 save = "保存"
 saveChanges = "保存更改"
@@ -4505,6 +4517,7 @@ description = "Impressum 的 URL 或文件名（某些司法管辖区要求）"
 title = "高级与企业版"
 description = "配置你的高级或企业许可证密钥。"
 license = "许可证配置"
+noInput = "请提供许可证密钥或文件"
 
 [admin.settings.premium.licenseKey]
 toggle = "有许可证密钥或证书文件？"
@@ -4521,6 +4534,25 @@ title = "⚠️ 警告：检测到现有许可证"
 line1 = "覆盖当前许可证密钥后将无法撤销。"
 line2 = "除非另有备份，否则之前的许可证将被永久丢失。"
 line3 = "重要：请妥善保管许可证密钥，切勿公开分享。"
+
+[admin.settings.premium.inputMethod]
+text = "许可证密钥"
+file = "证书文件"
+
+[admin.settings.premium.file]
+label = "许可证证书文件"
+description = "上传您线下购买的 .lic 或 .cert 许可证文件"
+choose = "选择许可证文件"
+selected = "已选择：{{filename}}（{{size}}）"
+successMessage = "许可证文件上传并激活成功。无需重启。"
+
+[admin.settings.premium.currentLicense]
+title = "已激活的许可证"
+file = "来源：许可证文件（{{path}}）"
+key = "来源：许可证密钥"
+type = "类型：{{type}}"
+noInput = "请提供许可证密钥或上传证书文件"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "启用高级功能"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "至少需要一个邮箱地址"
 submit = "发送邀请"
 success = "已成功邀请用户"
-partialSuccess = "部分邀请失败"
+partialFailure = "部分邀请发送失败"
 allFailed = "邀请用户失败"
 error = "发送邀请失败"
 

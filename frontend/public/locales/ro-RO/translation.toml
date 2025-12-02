@@ -917,6 +917,9 @@ desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pent
 desc = "Suprapune PDF-uri peste alt PDF"
 title = "Suprapune PDF-uri"
 
+[home.pdfTextEditor]
+title = "Editor de text PDF"
+desc = "Editați textul și imaginile existente în PDF-uri"
 
 [home.addText]
 tags = "text,anotare,etichetă"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Semnătură desenată"
 defaultImageLabel = "Semnătură încărcată"
 defaultTextLabel = "Semnătură tastată"
 saveButton = "Salvează semnătura"
+savePersonal = "Salvați ca personal"
+saveShared = "Salvați ca partajat"
 saveUnavailable = "Creează mai întâi o semnătură pentru a o salva."
 noChanges = "Semnătura curentă este deja salvată."
+tempStorageTitle = "Stocare temporară în browser"
+tempStorageDescription = "Semnăturile sunt stocate doar în browserul dvs. Vor fi pierdute dacă ștergeți datele browserului sau schimbați browserul."
+personalHeading = "Semnături personale"
+sharedHeading = "Semnături partajate"
+personalDescription = "Doar dvs. puteți vedea aceste semnături."
+sharedDescription = "Toți utilizatorii pot vedea și utiliza aceste semnături."
 
 [sign.saved.type]
 canvas = "Desen"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Comutați bara laterală"
 exportSelected = "Exportați paginile selectate"
 toggleAnnotations = "Comutați vizibilitatea adnotărilor"
 annotationMode = "Comutați modul de adnotare"
+print = "Imprimați PDF"
 draw = "Desenați"
 save = "Salvați"
 saveChanges = "Salvați modificările"
@@ -4505,6 +4517,7 @@ description = "URL sau nume de fișier către impressum (necesar în unele juris
 title = "Premium și Enterprise"
 description = "Configurați cheia de licență premium sau enterprise."
 license = "Configurare licență"
+noInput = "Vă rugăm să furnizați o cheie sau un fișier de licență"
 
 [admin.settings.premium.licenseKey]
 toggle = "Ai o cheie de licență sau un fișier certificat?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Avertizare: licență existentă detectată"
 line1 = "Suprascrierea cheii de licență curente nu poate fi anulată."
 line2 = "Licența anterioară va fi pierdută definitiv dacă nu ai o copie de rezervă."
 line3 = "Important: Păstrează cheile de licență private și în siguranță. Nu le distribui public."
+
+[admin.settings.premium.inputMethod]
+text = "Cheie de licență"
+file = "Fișier de certificat"
+
+[admin.settings.premium.file]
+label = "Fișier certificat de licență"
+description = "Încărcați fișierul de licență .lic sau .cert din achizițiile offline"
+choose = "Alegeți fișierul de licență"
+selected = "Selectat: {{filename}} ({{size}})"
+successMessage = "Fișierul de licență a fost încărcat și activat cu succes. Nu este necesară repornirea."
+
+[admin.settings.premium.currentLicense]
+title = "Licență activă"
+file = "Sursă: Fișier de licență ({{path}})"
+key = "Sursă: Cheie de licență"
+type = "Tip: {{type}}"
+noInput = "Vă rugăm să furnizați o cheie de licență sau să încărcați un fișier de certificat"
+success = "Succes"
 
 [admin.settings.premium.enabled]
 label = "Activează funcțiile Premium"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Este necesară cel puțin o adresă de email"
 submit = "Trimiteți invitații"
 success = "utilizator(i) invitați cu succes"
-partialSuccess = "Unele invitații au eșuat"
+partialFailure = "Unele invitații au eșuat"
 allFailed = "Invitarea utilizatorilor a eșuat"
 error = "Trimiterea invitațiilor a eșuat"
 

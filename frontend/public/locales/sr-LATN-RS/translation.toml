@@ -917,6 +917,9 @@ desc = "Gradite višekorake tokove rada povezivanjem PDF akcija. Idealno za pona
 desc = "Preklapa PDF-ove jedan preko drugog"
 title = "Preklapanje PDF-ova"
 
+[home.pdfTextEditor]
+title = "PDF uređivač teksta"
+desc = "Uređujte postojeći tekst i slike unutar PDF-ova"
 
 [home.addText]
 tags = "tekst,anotacija,oznaka"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Crtani potpis"
 defaultImageLabel = "Otpremljeni potpis"
 defaultTextLabel = "Ukucani potpis"
 saveButton = "Sačuvaj potpis"
+savePersonal = "Sačuvaj lično"
+saveShared = "Sačuvaj deljeno"
 saveUnavailable = "Prvo napravite potpis da biste ga sačuvali."
 noChanges = "Trenutni potpis je već sačuvan."
+tempStorageTitle = "Privremeno skladište pregledača"
+tempStorageDescription = "Potpisi se čuvaju samo u vašem pregledaču. Biće izgubljeni ako obrišete podatke pregledača ili promenite pregledač."
+personalHeading = "Lični potpisi"
+sharedHeading = "Deljeni potpisi"
+personalDescription = "Samo vi možete da vidite ove potpise."
+sharedDescription = "Svi korisnici mogu da vide i koriste ove potpise."
 
 [sign.saved.type]
 canvas = "Crtanje"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Uključi/isključi bočnu traku"
 exportSelected = "Izvezi izabrane stranice"
 toggleAnnotations = "Uključi/isključi vidljivost anotacija"
 annotationMode = "Uključi/isključi režim anotacija"
+print = "Štampaj PDF"
 draw = "Crtaj"
 save = "Sačuvaj"
 saveChanges = "Sačuvaj izmene"
@@ -4505,6 +4517,7 @@ description = "URL ili naziv datoteke do impresuma (obavezno u nekim jurisdikcij
 title = "Premium i Enterprise"
 description = "Podesite svoj premium ili enterprise licencni ključ."
 license = "Konfiguracija licence"
+noInput = "Navedite licencni ključ ili fajl"
 
 [admin.settings.premium.licenseKey]
 toggle = "Imate licencni ključ ili datoteku sertifikata?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Upozorenje: Postojeća licenca detektovana"
 line1 = "Prepisivanje vašeg trenutnog licencnog ključa ne može se opozvati."
 line2 = "Prethodna licenca će biti trajno izgubljena osim ako je niste sačuvali na drugom mestu."
 line3 = "Važno: Čuvajte licencne ključeve privatnim i bezbednim. Nikada ih javno ne delite."
+
+[admin.settings.premium.inputMethod]
+text = "Licencni ključ"
+file = "Fajl sertifikata"
+
+[admin.settings.premium.file]
+label = "Fajl licencnog sertifikata"
+description = "Otpremite svoj .lic ili .cert licencni fajl iz offline kupovina"
+choose = "Izaberite licencni fajl"
+selected = "Izabrano: {{filename}} ({{size}})"
+successMessage = "Licencni fajl je uspešno otpremljen i aktiviran. Restart nije potreban."
+
+[admin.settings.premium.currentLicense]
+title = "Aktivna licenca"
+file = "Izvor: licencni fajl ({{path}})"
+key = "Izvor: licencni ključ"
+type = "Tip: {{type}}"
+noInput = "Navedite licencni ključ ili otpremite fajl sertifikata"
+success = "Uspeh"
 
 [admin.settings.premium.enabled]
 label = "Omogući premium funkcije"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Potrebna je bar jedna email adresa"
 submit = "Pošalji pozive"
 success = "Korisnik(ci) uspešno pozvan(i)"
-partialSuccess = "Neki pozivi nisu uspeli"
+partialFailure = "Neki pozivi nisu uspeli"
 allFailed = "Pozivanje korisnika nije uspelo"
 error = "Slanje poziva nije uspelo"
 

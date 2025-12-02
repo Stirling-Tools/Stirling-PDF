@@ -99,7 +99,7 @@ visitGithub = "Navštíviť GitHub repozitár"
 donate = "Darovať"
 color = "Farba"
 sponsor = "Sponzorovať"
-info = "Info"
+info = "Informácie"
 pro = "Pro"
 page = "Strana"
 pages = "Strany"
@@ -917,6 +917,9 @@ desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne
 desc = "Prekrýva PDF súbory na iný PDF"
 title = "Prekrývanie PDF"
 
+[home.pdfTextEditor]
+title = "Editor textu PDF"
+desc = "Upravujte existujúci text a obrázky v PDF"
 
 [home.addText]
 tags = "text,anotácia,štítok"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Kreslený podpis"
 defaultImageLabel = "Nahraný podpis"
 defaultTextLabel = "Napísaný podpis"
 saveButton = "Uložiť podpis"
+savePersonal = "Uložiť osobné"
+saveShared = "Uložiť zdieľané"
 saveUnavailable = "Najprv vytvorte podpis, aby ste ho mohli uložiť."
 noChanges = "Aktuálny podpis je už uložený."
+tempStorageTitle = "Dočasné úložisko prehliadača"
+tempStorageDescription = "Podpisy sú uložené iba vo vašom prehliadači. Pri vymazaní údajov prehliadača alebo pri zmene prehliadača sa stratia."
+personalHeading = "Osobné podpisy"
+sharedHeading = "Zdieľané podpisy"
+personalDescription = "Tieto podpisy vidíte iba vy."
+sharedDescription = "Všetci používatelia môžu tieto podpisy vidieť a používať."
 
 [sign.saved.type]
 canvas = "Kresba"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Prepnúť bočný panel"
 exportSelected = "Exportovať vybrané strany"
 toggleAnnotations = "Prepnúť zobrazenie anotácií"
 annotationMode = "Prepnúť režim anotácií"
+print = "Vytlačiť PDF"
 draw = "Kresliť"
 save = "Uložiť"
 saveChanges = "Uložiť zmeny"
@@ -4505,6 +4517,7 @@ description = "URL alebo názov súboru k Impressu (požadované v niektorých j
 title = "Premium a Enterprise"
 description = "Nakonfigurujte svoj Premium alebo Enterprise licenčný kľúč."
 license = "Konfigurácia licencie"
+noInput = "Zadajte licenčný kľúč alebo súbor"
 
 [admin.settings.premium.licenseKey]
 toggle = "Máte licenčný kľúč alebo súbor certifikátu?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Upozornenie: Zistená existujúca licencia"
 line1 = "Prepísanie aktuálneho licenčného kľúča nemožno vrátiť späť."
 line2 = "Vaša predchádzajúca licencia bude natrvalo stratená, pokiaľ ju nemáte zálohovanú inde."
 line3 = "Dôležité: Licenčné kľúče uchovávajte súkromné a v bezpečí. Nikdy ich nezdieľajte verejne."
+
+[admin.settings.premium.inputMethod]
+text = "Licenčný kľúč"
+file = "Súbor certifikátu"
+
+[admin.settings.premium.file]
+label = "Súbor licenčného certifikátu"
+description = "Nahrajte svoj licenčný súbor .lic alebo .cert z offline nákupu"
+choose = "Vybrať licenčný súbor"
+selected = "Vybrané: {{filename}} ({{size}})"
+successMessage = "Licenčný súbor bol úspešne nahraný a aktivovaný. Reštart nie je potrebný."
+
+[admin.settings.premium.currentLicense]
+title = "Aktívna licencia"
+file = "Zdroj: Licenčný súbor ({{path}})"
+key = "Zdroj: Licenčný kľúč"
+type = "Typ: {{type}}"
+noInput = "Zadajte licenčný kľúč alebo nahrajte súbor certifikátu"
+success = "Úspech"
 
 [admin.settings.premium.enabled]
 label = "Povoliť Premium funkcie"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Vyžaduje sa aspoň jedna e-mailová adresa"
 submit = "Odoslať pozvánky"
 success = "Používatelia boli úspešne pozvaní"
-partialSuccess = "Niektoré pozvánky zlyhali"
+partialFailure = "Niektoré pozvánky zlyhali"
 allFailed = "Nepodarilo sa pozvať používateľov"
 error = "Nepodarilo sa odoslať pozvánky"
 

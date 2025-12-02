@@ -917,6 +917,9 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
 
+[home.pdfTextEditor]
+title = "PDF-textredigerare"
+desc = "Redigera befintlig text och bilder i PDF-filer"
 
 [home.addText]
 tags = "text,kommentar,etikett"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Ritad signatur"
 defaultImageLabel = "Uppladdad signatur"
 defaultTextLabel = "Skriven signatur"
 saveButton = "Spara signatur"
+savePersonal = "Spara som personlig"
+saveShared = "Spara som delad"
 saveUnavailable = "Skapa en signatur först för att kunna spara."
 noChanges = "Aktuell signatur är redan sparad."
+tempStorageTitle = "Tillfällig lagring i webbläsaren"
+tempStorageDescription = "Signaturer lagras endast i din webbläsare. De går förlorade om du rensar webbläsardata eller byter webbläsare."
+personalHeading = "Personliga signaturer"
+sharedHeading = "Delade signaturer"
+personalDescription = "Endast du kan se dessa signaturer."
+sharedDescription = "Alla användare kan se och använda dessa signaturer."
 
 [sign.saved.type]
 canvas = "Ritning"
@@ -2286,7 +2297,7 @@ placeDesc = "Placera signaturen på din PDF"
 [sign.type]
 title = "Signaturtyp"
 draw = "Rita"
-canvas = "Canvas"
+canvas = "Rityta"
 image = "Bild"
 text = "Text"
 saved = "Sparad"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Växla sidofält"
 exportSelected = "Exportera markerade sidor"
 toggleAnnotations = "Växla synlighet för anteckningar"
 annotationMode = "Växla anteckningsläge"
+print = "Skriv ut PDF"
 draw = "Rita"
 save = "Spara"
 saveChanges = "Spara ändringar"
@@ -4505,6 +4517,7 @@ description = "URL eller filnamn till impressum (krävs i vissa jurisdiktioner)"
 title = "Premium och Enterprise"
 description = "Konfigurera din premium- eller enterprise-licensnyckel."
 license = "Licenskonfiguration"
+noInput = "Ange en licensnyckel eller fil"
 
 [admin.settings.premium.licenseKey]
 toggle = "Har du en licensnyckel eller certifikatfil?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Varning: Befintlig licens upptäckt"
 line1 = "Att skriva över din nuvarande licensnyckel kan inte ångras."
 line2 = "Din tidigare licens går förlorad permanent om du inte har säkerhetskopierat den någon annanstans."
 line3 = "Viktigt: Håll licensnycklar privata och säkra. Dela dem aldrig offentligt."
+
+[admin.settings.premium.inputMethod]
+text = "Licensnyckel"
+file = "Certifikatfil"
+
+[admin.settings.premium.file]
+label = "Licenscertifikatfil"
+description = "Ladda upp din .lic- eller .cert-licensfil från offlineköp"
+choose = "Välj licensfil"
+selected = "Vald: {{filename}} ({{size}})"
+successMessage = "Licensfilen har laddats upp och aktiverats. Ingen omstart krävs."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv licens"
+file = "Källa: Licensfil ({{path}})"
+key = "Källa: Licensnyckel"
+type = "Typ: {{type}}"
+noInput = "Ange en licensnyckel eller ladda upp en certifikatfil"
+success = "Lyckat"
 
 [admin.settings.premium.enabled]
 label = "Aktivera premiumfunktioner"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Minst en e-postadress krävs"
 submit = "Skicka inbjudningar"
 success = "Användare inbjudna"
-partialSuccess = "Vissa inbjudningar misslyckades"
+partialFailure = "Vissa inbjudningar misslyckades"
 allFailed = "Misslyckades med att bjuda in användare"
 error = "Misslyckades med att skicka inbjudningar"
 

@@ -917,6 +917,9 @@ desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt
 desc = "Legger PDF-er over hverandre"
 title = "Overlay PDF-er"
 
+[home.pdfTextEditor]
+title = "PDF-teksteditor"
+desc = "Rediger eksisterende tekst og bilder i PDF-filer"
 
 [home.addText]
 tags = "tekst,merknad,etikett"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Tegnet signatur"
 defaultImageLabel = "Opplastet signatur"
 defaultTextLabel = "Tekstsignatur"
 saveButton = "Lagre signatur"
+savePersonal = "Lagre personlig"
+saveShared = "Lagre delt"
 saveUnavailable = "Opprett en signatur først for å lagre den."
 noChanges = "Gjeldende signatur er allerede lagret."
+tempStorageTitle = "Midlertidig nettleserlagring"
+tempStorageDescription = "Signaturer lagres bare i nettleseren din. De går tapt hvis du sletter nettleserdata eller bytter nettleser."
+personalHeading = "Personlige signaturer"
+sharedHeading = "Delte signaturer"
+personalDescription = "Bare du kan se disse signaturene."
+sharedDescription = "Alle brukere kan se og bruke disse signaturene."
 
 [sign.saved.type]
 canvas = "Tegning"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Vis/skjul sidepanel"
 exportSelected = "Eksporter valgte sider"
 toggleAnnotations = "Vis/skjul merknader"
 annotationMode = "Veksle merknadsmodus"
+print = "Skriv ut PDF"
 draw = "Tegn"
 save = "Lagre"
 saveChanges = "Lagre endringer"
@@ -4164,7 +4176,7 @@ description = "Spor brukerhandlinger og systemhendelser for etterlevelse og sikk
 
 [admin.settings.security.audit.level]
 label = "Revisjonsnivå"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=AV, 1=GRUNNLEGGENDE, 2=STANDARD, 3=DETALJERT"
 
 [admin.settings.security.audit.retentionDays]
 label = "Bevaring av revisjon (dager)"
@@ -4505,6 +4517,7 @@ description = "URL eller filnavn til impressum (påkrevd i noen jurisdiksjoner)"
 title = "Premium og Enterprise"
 description = "Konfigurer din premium- eller enterprise-lisensnøkkel."
 license = "Lisenskonfigurasjon"
+noInput = "Oppgi en lisensnøkkel eller fil"
 
 [admin.settings.premium.licenseKey]
 toggle = "Har du en lisensnøkkel eller sertifikatfil?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Advarsel: Eksisterende lisens oppdaget"
 line1 = "Å overskrive gjeldende lisensnøkkel kan ikke angres."
 line2 = "Den forrige lisensen vil gå tapt permanent med mindre du har sikkerhetskopiert den et annet sted."
 line3 = "Viktig: Hold lisensnøkler private og sikre. Del dem aldri offentlig."
+
+[admin.settings.premium.inputMethod]
+text = "Lisensnøkkel"
+file = "Sertifikatfil"
+
+[admin.settings.premium.file]
+label = "Lisenssertifikatfil"
+description = "Last opp .lic- eller .cert-lisensfilen din fra offline-kjøp"
+choose = "Velg lisensfil"
+selected = "Valgt: {{filename}} ({{size}})"
+successMessage = "Lisensfilen ble lastet opp og aktivert. Omstart er ikke nødvendig."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv lisens"
+file = "Kilde: Lisensfil ({{path}})"
+key = "Kilde: Lisensnøkkel"
+type = "Type: {{type}}"
+noInput = "Oppgi en lisensnøkkel eller last opp en sertifikatfil"
+success = "Vellykket"
 
 [admin.settings.premium.enabled]
 label = "Aktiver premiumfunksjoner"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Minst én e-postadresse er påkrevd"
 submit = "Send invitasjoner"
 success = "bruker(e) invitert"
-partialSuccess = "Noen invitasjoner mislyktes"
+partialFailure = "Noen invitasjoner mislyktes"
 allFailed = "Kunne ikke invitere brukere"
 error = "Kunne ikke sende invitasjoner"
 

@@ -917,6 +917,9 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 desc = "Chồng lớp PDF lên trên PDF khác"
 title = "Chồng lớp PDF"
 
+[home.pdfTextEditor]
+title = "Trình chỉnh sửa văn bản PDF"
+desc = "Chỉnh sửa văn bản và hình ảnh hiện có bên trong PDF"
 
 [home.addText]
 tags = "văn bản,chú thích,nhãn"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Chữ ký vẽ"
 defaultImageLabel = "Chữ ký đã tải lên"
 defaultTextLabel = "Chữ ký nhập"
 saveButton = "Lưu chữ ký"
+savePersonal = "Lưu cá nhân"
+saveShared = "Lưu dùng chung"
 saveUnavailable = "Hãy tạo chữ ký trước để lưu."
 noChanges = "Chữ ký hiện tại đã được lưu."
+tempStorageTitle = "Bộ nhớ tạm của trình duyệt"
+tempStorageDescription = "Chữ ký chỉ được lưu trong trình duyệt của bạn. Chúng sẽ bị mất nếu bạn xóa dữ liệu trình duyệt hoặc đổi sang trình duyệt khác."
+personalHeading = "Chữ ký cá nhân"
+sharedHeading = "Chữ ký dùng chung"
+personalDescription = "Chỉ mình bạn có thể xem các chữ ký này."
+sharedDescription = "Tất cả người dùng đều có thể xem và sử dụng các chữ ký này."
 
 [sign.saved.type]
 canvas = "Vẽ"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Chuyển đổi thanh bên"
 exportSelected = "Xuất các trang đã chọn"
 toggleAnnotations = "Chuyển đổi hiển thị chú thích"
 annotationMode = "Chuyển đổi chế độ chú thích"
+print = "In PDF"
 draw = "Vẽ"
 save = "Lưu"
 saveChanges = "Lưu thay đổi"
@@ -4505,6 +4517,7 @@ description = "URL hoặc tên tệp cho impressum (bắt buộc ở một số 
 title = "Premium & Enterprise"
 description = "Cấu hình khóa giấy phép premium hoặc enterprise của bạn."
 license = "Cấu hình giấy phép"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tệp"
 
 [admin.settings.premium.licenseKey]
 toggle = "Có license key hoặc tệp chứng chỉ?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Cảnh báo: Phát hiện license hiện có"
 line1 = "Ghi đè license key hiện tại không thể hoàn tác."
 line2 = "License trước đó sẽ bị mất vĩnh viễn trừ khi bạn đã sao lưu ở nơi khác."
 line3 = "Quan trọng: Giữ license key riêng tư và an toàn. Không bao giờ chia sẻ công khai."
+
+[admin.settings.premium.inputMethod]
+text = "Khóa giấy phép"
+file = "Tệp chứng chỉ"
+
+[admin.settings.premium.file]
+label = "Tệp chứng chỉ giấy phép"
+description = "Tải lên tệp giấy phép .lic hoặc .cert từ các lần mua ngoại tuyến của bạn"
+choose = "Chọn tệp giấy phép"
+selected = "Đã chọn: {{filename}} ({{size}})"
+successMessage = "Tệp giấy phép đã được tải lên và kích hoạt thành công. Không cần khởi động lại."
+
+[admin.settings.premium.currentLicense]
+title = "Giấy phép đang hoạt động"
+file = "Nguồn: Tệp giấy phép ({{path}})"
+key = "Nguồn: Khóa giấy phép"
+type = "Loại: {{type}}"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tải lên tệp chứng chỉ"
+success = "Thành công"
 
 [admin.settings.premium.enabled]
 label = "Bật tính năng Premium"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Yêu cầu ít nhất một địa chỉ email"
 submit = "Gửi lời mời"
 success = "Mời người dùng thành công"
-partialSuccess = "Một số lời mời thất bại"
+partialFailure = "Một số lời mời không thành công"
 allFailed = "Mời người dùng thất bại"
 error = "Gửi lời mời thất bại"
 

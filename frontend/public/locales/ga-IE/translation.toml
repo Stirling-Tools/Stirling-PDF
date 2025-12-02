@@ -917,6 +917,9 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéil
 desc = "Forleagain PDF ar bharr PDF eile"
 title = "Forleagan PDF"
 
+[home.pdfTextEditor]
+title = "Eagarthóir Téacs PDF"
+desc = "Cuir téacs agus íomhánna atá ann cheana in eagar laistigh de PDFanna"
 
 [home.addText]
 tags = "téacs,anótáil,lipéad"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Síniú líníochta"
 defaultImageLabel = "Síniú uaslódáilte"
 defaultTextLabel = "Síniú clóscríofa"
 saveButton = "Sábháil síniú"
+savePersonal = "Sábháil Pearsanta"
+saveShared = "Sábháil Comhroinnte"
 saveUnavailable = "Cruthaigh síniú ar dtús chun é a shábháil."
 noChanges = "Tá an síniú reatha sábháilte cheana."
+tempStorageTitle = "Stóráil shealadach an bhrabhsálaí"
+tempStorageDescription = "Stóráiltear na sínithe i do bhrabhsálaí amháin. Caillfear iad má ghlanann tú sonraí an bhrabhsálaí nó má athraíonn tú brabhsálaithe."
+personalHeading = "Sínithe Pearsanta"
+sharedHeading = "Sínithe Comhroinnte"
+personalDescription = "Ní féidir ach leatsa na sínithe seo a fheiceáil."
+sharedDescription = "Is féidir le gach úsáideoir na sínithe seo a fheiceáil agus a úsáid."
 
 [sign.saved.type]
 canvas = "Líníocht"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Athraigh an Barra Taoibh"
 exportSelected = "Easpórtáil na Leathanaigh Roghnaithe"
 toggleAnnotations = "Athraigh Infheictheacht Anótálacha"
 annotationMode = "Athraigh Mód Anótála"
+print = "Priontáil PDF"
 draw = "Tarraing"
 save = "Sábháil"
 saveChanges = "Sábháil Athruithe"
@@ -4505,6 +4517,7 @@ description = "URL nó ainm comhaid don impressum (riachtanach i roinnt dlínsí
 title = "Préimh & Fiontar"
 description = "Cumraigh do eochair cheadúnais préimhe nó fiontair."
 license = "Cumraíocht Ceadúnais"
+noInput = "Tabhair eochair nó comhad ceadúnais, le do thoil"
 
 [admin.settings.premium.licenseKey]
 toggle = "An bhfuil eochair cheadúnais nó comhad teastais agat?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Rabhadh: Braitheadh Ceadúnas Reatha"
 line1 = "Ní féidir forshcríobh ar do eochair cheadúnais reatha a chealú."
 line2 = "Caillefar do cheadúnas roimhe seo go buan mura bhfuil cúltaca de in áit eile agat."
 line3 = "Tábhachtach: Coinnigh eochracha ceadúnais príobháideach agus slán. Ná roinn go poiblí riamh."
+
+[admin.settings.premium.inputMethod]
+text = "Eochair Ceadúnais"
+file = "Comhad Teastais"
+
+[admin.settings.premium.file]
+label = "Comhad Teastais Ceadúnais"
+description = "Uaslódáil do chomhad ceadúnais .lic nó .cert ó cheannacháin as líne"
+choose = "Roghnaigh Comhad Ceadúnais"
+selected = "Roghnaithe: {{filename}} ({{size}})"
+successMessage = "D’éirigh le huaslódáil agus gníomhachtú an chomhaid cheadúnais. Níl atosú ag teastáil."
+
+[admin.settings.premium.currentLicense]
+title = "Ceadúnas Gníomhach"
+file = "Foinse: Comhad ceadúnais ({{path}})"
+key = "Foinse: Eochair ceadúnais"
+type = "Cineál: {{type}}"
+noInput = "Tabhair eochair ceadúnais nó uaslódáil comhad teastais, le do thoil"
+success = "Rath"
 
 [admin.settings.premium.enabled]
 label = "Cumasaigh Gnéithe Préimhe"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Tá ar a laghad seoladh ríomhphoist amháin de dhíth"
 submit = "Seol Cuirí"
 success = "Tugadh cuireadh d’úsáideoir(í) go rathúil"
-partialSuccess = "Theip ar chuid de na cuirí"
+partialFailure = "Níor éirigh le roinnt cuirí"
 allFailed = "Theip ar úsáideoirí a thabhairt isteach"
 error = "Theip ar churí a sheoladh"
 

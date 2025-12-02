@@ -917,6 +917,9 @@ desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları q
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 
+[home.pdfTextEditor]
+title = "PDF Mətn Redaktoru"
+desc = "PDF-lərin içindəki mövcud mətn və şəkilləri redaktə edin"
 
 [home.addText]
 tags = "mətn,şərh,etiket"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Çəkilmiş imza"
 defaultImageLabel = "Yüklənmiş imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzanı saxla"
+savePersonal = "Şəxsi yadda saxla"
+saveShared = "Paylaşılanı yadda saxla"
 saveUnavailable = "Saxlamaq üçün əvvəlcə imza yaradın."
 noChanges = "Cari imza artıq saxlanıb."
+tempStorageTitle = "Müvəqqəti brauzer yaddaşı"
+tempStorageDescription = "İmzalar yalnız brauzerinizdə saxlanılır. Brauzer məlumatlarını təmizləsəniz və ya brauzer dəyişsəniz, itəcək."
+personalHeading = "Şəxsi imzalar"
+sharedHeading = "Paylaşılan imzalar"
+personalDescription = "Bu imzaları yalnız siz görə bilirsiniz."
+sharedDescription = "Bütün istifadəçilər bu imzaları görə və istifadə edə bilərlər."
 
 [sign.saved.type]
 canvas = "Rəsm"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Yan paneli aç/bağla"
 exportSelected = "Seçilmiş səhifələri ixrac et"
 toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
 annotationMode = "Annotasiya rejimini dəyiş"
+print = "PDF-i çap et"
 draw = "Rəsm çək"
 save = "Yadda saxla"
 saveChanges = "Dəyişiklikləri yadda saxla"
@@ -4505,6 +4517,7 @@ description = "Impressum üçün URL və ya fayl adı (bəzi yurisdiksiyalarda t
 title = "Premium və Enterprise"
 description = "Premium və ya enterprise lisenziya açarınızı konfiqurasiya edin."
 license = "Lisenziya Konfiqurasiyası"
+noInput = "Zəhmət olmasa lisenziya açarı və ya fayl təqdim edin"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisenziya açarınız və ya sertifikat faylınız var?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Xəbərdarlıq: Mövcud lisenziya aşkarlandı"
 line1 = "Cari lisenziya açarının üzərinə yazmaq geri alına bilməz."
 line2 = "Ehtiyat nüsxəsi yoxdursa, əvvəlki lisenziyanız birdəfəlik itəcək."
 line3 = "Vacibdir: Lisenziya açarlarını məxfi və təhlükəsiz saxlayın. Heç vaxt onları ictimai paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisenziya açarı"
+file = "Sertifikat faylı"
+
+[admin.settings.premium.file]
+label = "Lisenziya sertifikat faylı"
+description = "Oflayn alışdan əldə etdiyiniz .lic və ya .cert lisenziya faylını yükləyin"
+choose = "Lisenziya faylını seçin"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisenziya faylı uğurla yüklənib və aktivləşdirilib. Yenidən başlatmağa ehtiyac yoxdur."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv lisenziya"
+file = "Mənbə: Lisenziya faylı ({{path}})"
+key = "Mənbə: Lisenziya açarı"
+type = "Növ: {{type}}"
+noInput = "Zəhmət olmasa lisenziya açarı verin və ya sertifikat faylı yükləyin"
+success = "Uğurlu"
 
 [admin.settings.premium.enabled]
 label = "Premium Xüsusiyyətlərini aktiv et"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Ən azı bir e-poçt ünvanı tələb olunur"
 submit = "Dəvətnamələri göndər"
 success = "istifadəçi(lər) uğurla dəvət olundu"
-partialSuccess = "Bəzi dəvətnamələr alınmadı"
+partialFailure = "Bəzi dəvətlər uğursuz oldu"
 allFailed = "İstifadəçiləri dəvət etmək alınmadı"
 error = "Dəvətnamələri göndərmək alınmadı"
 

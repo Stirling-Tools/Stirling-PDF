@@ -33,7 +33,7 @@ class TOMLBeautifier:
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
-    def _save_toml(self, data: Dict, file_path: Path, backup: bool = True) -> None:
+    def _save_toml(self, data: Dict, file_path: Path, backup: bool = False) -> None:
         """Save TOML file with proper formatting."""
         if backup and file_path.exists():
             backup_path = file_path.with_suffix(f'.backup.restructured.toml')
@@ -106,7 +106,7 @@ class TOMLBeautifier:
 
         return restructured
 
-    def beautify_and_restructure(self, target_file: Path, backup: bool = True) -> Dict[str, Any]:
+    def beautify_and_restructure(self, target_file: Path, backup: bool = False) -> Dict[str, Any]:
         """Main function to beautify and restructure a translation file."""
         lang_code = target_file.parent.name
         print(f"Restructuring {lang_code} translation file...")
@@ -210,8 +210,8 @@ def main():
     parser.add_argument('--language', help='Restructure specific language only')
     parser.add_argument('--all-languages', action='store_true',
                         help='Restructure all language files')
-    parser.add_argument('--no-backup', action='store_true',
-                        help='Skip backup creation')
+    parser.add_argument('--backup', action='store_true',
+                        help='Create backup files before modifying')
     parser.add_argument('--validate-only', action='store_true',
                         help='Only validate structure, do not modify files')
 
@@ -231,7 +231,7 @@ def main():
             print(f"  Order preserved: {order_result['order_preserved']}")
             print(f"  Common keys: {order_result['common_keys_count']}/{order_result['golden_keys_count']}")
         else:
-            result = beautifier.beautify_and_restructure(target_file, backup=not args.no_backup)
+            result = beautifier.beautify_and_restructure(target_file, backup=args.backup)
             print(f"\nResults for {result['language']}:")
             print(f"  Keys preserved: {result['preserved_keys']}/{result['total_reference_keys']}")
             if result['structure_match']['total_issues'] > 0:
@@ -249,7 +249,7 @@ def main():
                         order_result = beautifier.validate_key_order(translation_file)
                         print(f"{lang_dir.name}: Order preserved = {order_result['order_preserved']}")
                     else:
-                        result = beautifier.beautify_and_restructure(translation_file, backup=not args.no_backup)
+                        result = beautifier.beautify_and_restructure(translation_file, backup=args.backup)
                         results.append(result)
 
         if not args.validate_only and results:

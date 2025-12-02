@@ -917,6 +917,9 @@ desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za pona
 desc = "Prekriva PDF-je na vrhu drugega PDF-ja"
 title = "Prekrivanje PDF-jev"
 
+[home.pdfTextEditor]
+title = "Urejevalnik besedila PDF"
+desc = "Urejajte obstoječe besedilo in slike v PDF-jih"
 
 [home.addText]
 tags = "besedilo,pripomba,oznaka"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Narisan podpis"
 defaultImageLabel = "Naložen podpis"
 defaultTextLabel = "Vpisan podpis"
 saveButton = "Shrani podpis"
+savePersonal = "Shrani osebno"
+saveShared = "Shrani deljeno"
 saveUnavailable = "Najprej ustvarite podpis, da ga lahko shranite."
 noChanges = "Trenutni podpis je že shranjen."
+tempStorageTitle = "Začasno shranjevanje v brskalniku"
+tempStorageDescription = "Podpisi so shranjeni samo v vašem brskalniku. Izgubite jih, če počistite podatke brskalnika ali zamenjate brskalnik."
+personalHeading = "Osebni podpisi"
+sharedHeading = "Deljeni podpisi"
+personalDescription = "Te podpise vidite samo vi."
+sharedDescription = "Vsi uporabniki lahko te podpise vidijo in uporabljajo."
 
 [sign.saved.type]
 canvas = "Risba"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Preklopi stransko vrstico"
 exportSelected = "Izvozi izbrane strani"
 toggleAnnotations = "Preklopi vidnost opomb"
 annotationMode = "Preklopi način opomb"
+print = "Natisni PDF"
 draw = "Riši"
 save = "Shrani"
 saveChanges = "Shrani spremembe"
@@ -4505,6 +4517,7 @@ description = "URL ali ime datoteke do impressuma (zahtevano v nekaterih jurisdi
 title = "Premium in Enterprise"
 description = "Konfigurirajte svoj ključ licence Premium ali Enterprise."
 license = "Konfiguracija licence"
+noInput = "Navedite licenčni ključ ali datoteko"
 
 [admin.settings.premium.licenseKey]
 toggle = "Imate licenčni ključ ali potrdilno datoteko?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Opozorilo: Zaznana obstoječa licenca"
 line1 = "Prepis trenutnega licenčnega ključa ni mogoče razveljaviti."
 line2 = "Prejšnja licenca bo trajno izgubljena, razen če ste jo varnostno kopirali drugje."
 line3 = "Pomembno: Licenčne ključe hranite zasebno in varno. Nikoli jih ne delite javno."
+
+[admin.settings.premium.inputMethod]
+text = "Licenčni ključ"
+file = "Datoteka potrdila"
+
+[admin.settings.premium.file]
+label = "Datoteka licenčnega potrdila"
+description = "Naložite svojo licenčno datoteko .lic ali .cert iz nakupov brez povezave"
+choose = "Izberite licenčno datoteko"
+selected = "Izbrano: {{filename}} ({{size}})"
+successMessage = "Licenčna datoteka je bila uspešno naložena in aktivirana. Ponovni zagon ni potreben."
+
+[admin.settings.premium.currentLicense]
+title = "Aktivna licenca"
+file = "Vir: licenčna datoteka ({{path}})"
+key = "Vir: licenčni ključ"
+type = "Vrsta: {{type}}"
+noInput = "Navedite licenčni ključ ali naložite datoteko potrdila"
+success = "Uspešno"
 
 [admin.settings.premium.enabled]
 label = "Omogoči funkcije Premium"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Zahtevan je vsaj en e-poštni naslov"
 submit = "Pošlji povabila"
 success = "uporabnik(i) uspešno povabljen(i)"
-partialSuccess = "Nekatera povabila niso uspela"
+partialFailure = "Nekatera povabila niso uspela"
 allFailed = "Uporabnikov ni bilo mogoče povabiti"
 error = "Pošiljanje povabil ni uspelo"
 

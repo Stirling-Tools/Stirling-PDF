@@ -917,6 +917,9 @@ desc = "Crear flujos de trabajo de múltiples pasos encadenando acciones de PDF.
 desc = "Superponer PDFs encima de otro PDF"
 title = "Superponer PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de texto de PDF"
+desc = "Edita texto e imágenes existentes dentro de archivos PDF"
 
 [home.addText]
 tags = "texto,anotación,etiqueta"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Firma dibujada"
 defaultImageLabel = "Firma subida"
 defaultTextLabel = "Firma escrita"
 saveButton = "Guardar firma"
+savePersonal = "Guardar personal"
+saveShared = "Guardar compartida"
 saveUnavailable = "Cree primero una firma para guardarla."
 noChanges = "La firma actual ya está guardada."
+tempStorageTitle = "Almacenamiento temporal del navegador"
+tempStorageDescription = "Las firmas se almacenan solo en tu navegador. Se perderán si borras los datos del navegador o cambias de navegador."
+personalHeading = "Firmas personales"
+sharedHeading = "Firmas compartidas"
+personalDescription = "Solo tú puedes ver estas firmas."
+sharedDescription = "Todos los usuarios pueden ver y usar estas firmas."
 
 [sign.saved.type]
 canvas = "Dibujo"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Alternar Barra Lateral"
 exportSelected = "Exportar páginas seleccionadas"
 toggleAnnotations = "Mostrar/ocultar anotaciones"
 annotationMode = "Cambiar modo de anotaciones"
+print = "Imprimir PDF"
 draw = "Dibujar"
 save = "Guardar"
 saveChanges = "Guardar cambios"
@@ -4505,6 +4517,7 @@ description = "URL o nombre de archivo del impressum (requerido en algunas juris
 title = "Premium y Enterprise"
 description = "Configura tu clave de licencia premium o enterprise."
 license = "Configuración de licencia"
+noInput = "Proporciona una clave o archivo de licencia"
 
 [admin.settings.premium.licenseKey]
 toggle = "¿Tiene una clave de licencia o un archivo de certificado?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Advertencia: se detectó una licencia existente"
 line1 = "Sobrescribir su clave de licencia actual no se puede deshacer."
 line2 = "Su licencia anterior se perderá de forma permanente a menos que la haya respaldado en otro lugar."
 line3 = "Importante: mantenga las claves de licencia privadas y seguras. Nunca las comparta públicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Clave de licencia"
+file = "Archivo de certificado"
+
+[admin.settings.premium.file]
+label = "Archivo de certificado de licencia"
+description = "Sube tu archivo de licencia .lic o .cert de compras sin conexión"
+choose = "Elegir archivo de licencia"
+selected = "Seleccionado: {{filename}} ({{size}})"
+successMessage = "Archivo de licencia subido y activado correctamente. No es necesario reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licencia activa"
+file = "Origen: Archivo de licencia ({{path}})"
+key = "Origen: Clave de licencia"
+type = "Tipo: {{type}}"
+noInput = "Proporciona una clave de licencia o sube un archivo de certificado"
+success = "Éxito"
 
 [admin.settings.premium.enabled]
 label = "Habilitar funciones Premium"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "usuario1@ejemplo.com, usuario2@ejemplo.com"
 emailsRequired = "Se requiere al menos una dirección de correo electrónico"
 submit = "Enviar invitaciones"
 success = "usuario(s) invitado(s) correctamente"
-partialSuccess = "Algunas invitaciones fallaron"
+partialFailure = "Algunas invitaciones fallaron"
 allFailed = "No se pudo invitar a los usuarios"
 error = "No se pudieron enviar las invitaciones"
 

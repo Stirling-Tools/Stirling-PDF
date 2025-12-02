@@ -369,7 +369,7 @@ usageAnalytics = "Análise de utilização"
 
 [settings.policiesPrivacy]
 title = "Políticas e Privacidade"
-legal = "Legal"
+legal = "Jurídico"
 privacy = "Privacidade"
 
 [settings.developer]
@@ -917,6 +917,9 @@ desc = "Crie fluxos de trabalho de vários passos encadeando ações de PDF. Ide
 desc = "Sobrepõe PDFs em cima de outro PDF"
 title = "Sobrepor PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de texto de PDF"
+desc = "Edite texto e imagens existentes dentro de PDFs"
 
 [home.addText]
 tags = "texto,anotação,etiqueta"
@@ -1365,7 +1368,7 @@ title = "Adicionar Marca de Água"
 desc = "Adicionar marcas de água de texto ou imagem a ficheiros PDF"
 completed = "Marca de água adicionada"
 submit = "Adicionar Marca de Água"
-filenamePrefix = "watermarked"
+filenamePrefix = "com-marca-de-água"
 
 [watermark.error]
 failed = "Ocorreu um erro ao adicionar a marca de água ao PDF."
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Assinatura desenhada"
 defaultImageLabel = "Assinatura carregada"
 defaultTextLabel = "Assinatura digitada"
 saveButton = "Guardar assinatura"
+savePersonal = "Guardar como pessoal"
+saveShared = "Guardar como partilhada"
 saveUnavailable = "Crie primeiro uma assinatura para a guardar."
 noChanges = "A assinatura atual já está guardada."
+tempStorageTitle = "Armazenamento temporário do navegador"
+tempStorageDescription = "As assinaturas são armazenadas apenas no seu navegador. Serão perdidas se limpar os dados do navegador ou mudar de navegador."
+personalHeading = "Assinaturas pessoais"
+sharedHeading = "Assinaturas partilhadas"
+personalDescription = "Apenas você pode ver estas assinaturas."
+sharedDescription = "Todos os utilizadores podem ver e usar estas assinaturas."
 
 [sign.saved.type]
 canvas = "Desenho"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Alternar barra lateral"
 exportSelected = "Exportar páginas selecionadas"
 toggleAnnotations = "Alternar visibilidade das anotações"
 annotationMode = "Alternar modo de anotação"
+print = "Imprimir PDF"
 draw = "Desenhar"
 save = "Guardar"
 saveChanges = "Guardar alterações"
@@ -4505,6 +4517,7 @@ description = "URL ou nome de ficheiro para o impressum (obrigatório em algumas
 title = "Premium e Enterprise"
 description = "Configurar a sua chave de licença premium ou enterprise."
 license = "Configuração de licença"
+noInput = "Forneça uma chave ou ficheiro de licença"
 
 [admin.settings.premium.licenseKey]
 toggle = "Tem uma chave de licença ou ficheiro de certificado?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Aviso: Licença existente detetada"
 line1 = "Sobrescrever a sua chave de licença atual não pode ser anulado."
 line2 = "A sua licença anterior será perdida permanentemente, a menos que a tenha guardado noutro local."
 line3 = "Importante: mantenha as chaves de licença privadas e seguras. Nunca as partilhe publicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Chave de licença"
+file = "Ficheiro de certificado"
+
+[admin.settings.premium.file]
+label = "Ficheiro de certificado de licença"
+description = "Carregue o seu ficheiro de licença .lic ou .cert de compras offline"
+choose = "Escolher ficheiro de licença"
+selected = "Selecionado: {{filename}} ({{size}})"
+successMessage = "Ficheiro de licença carregado e ativado com sucesso. Não é necessário reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licença ativa"
+file = "Origem: ficheiro de licença ({{path}})"
+key = "Origem: chave de licença"
+type = "Tipo: {{type}}"
+noInput = "Forneça uma chave de licença ou carregue um ficheiro de certificado"
+success = "Sucesso"
 
 [admin.settings.premium.enabled]
 label = "Ativar funcionalidades premium"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "É necessário pelo menos um endereço de email"
 submit = "Enviar convites"
 success = "utilizador(es) convidado(s) com sucesso"
-partialSuccess = "Alguns convites falharam"
+partialFailure = "Alguns convites falharam"
 allFailed = "Falha ao convidar utilizadores"
 error = "Falha ao enviar convites"
 

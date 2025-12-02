@@ -917,6 +917,9 @@ desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összef�
 desc = "PDF-ek egymásra helyezése egy másik PDF-en"
 title = "PDF-ek egymásra helyezése"
 
+[home.pdfTextEditor]
+title = "PDF szövegszerkesztő"
+desc = "Meglévő szöveg és képek szerkesztése a PDF-ekben"
 
 [home.addText]
 tags = "szöveg, megjegyzés, címke"
@@ -2264,8 +2267,16 @@ defaultCanvasLabel = "Rajzolt aláírás"
 defaultImageLabel = "Feltöltött aláírás"
 defaultTextLabel = "Gépelt aláírás"
 saveButton = "Aláírás mentése"
+savePersonal = "Mentés személyesként"
+saveShared = "Mentés megosztottként"
 saveUnavailable = "Előbb hozzon létre egy aláírást a mentéshez."
 noChanges = "Az aktuális aláírás már mentve van."
+tempStorageTitle = "Ideiglenes böngészőbeli tárolás"
+tempStorageDescription = "Az aláírások csak a böngészőben tárolódnak. Elvesznek, ha törli a böngészőadatokat vagy böngészőt vált."
+personalHeading = "Személyes aláírások"
+sharedHeading = "Megosztott aláírások"
+personalDescription = "Csak Ön láthatja ezeket az aláírásokat."
+sharedDescription = "Minden felhasználó láthatja és használhatja ezeket az aláírásokat."
 
 [sign.saved.type]
 canvas = "Rajz"
@@ -3888,6 +3899,7 @@ toggleSidebar = "Oldalsáv ki/be"
 exportSelected = "Kijelölt oldalak exportálása"
 toggleAnnotations = "Jegyzetek láthatóságának váltása"
 annotationMode = "Jegyzetelési mód váltása"
+print = "PDF nyomtatása"
 draw = "Rajzolás"
 save = "Mentés"
 saveChanges = "Változtatások mentése"
@@ -4505,6 +4517,7 @@ description = "URL vagy fájlnév az impresszumhoz (egyes joghatóságokban köt
 title = "Prémium és Vállalati"
 description = "Prémium vagy vállalati licenckulcs konfigurálása."
 license = "Licenckonfiguráció"
+noInput = "Kérjük, adjon meg egy licenckulcsot vagy fájlt"
 
 [admin.settings.premium.licenseKey]
 toggle = "Van licenckulcsa vagy tanúsítványfájlja?"
@@ -4521,6 +4534,25 @@ title = "⚠️ Figyelmeztetés: Meglévő licenc észlelve"
 line1 = "A jelenlegi licenckulcs felülírása nem vonható vissza."
 line2 = "A korábbi licenc végleg elveszik, hacsak nem készített róla máshol biztonsági másolatot."
 line3 = "Fontos: Tartsa a licenckulcsokat bizalmasan és biztonságban. Soha ne ossza meg nyilvánosan."
+
+[admin.settings.premium.inputMethod]
+text = "Licenckulcs"
+file = "Tanúsítványfájl"
+
+[admin.settings.premium.file]
+label = "Licenc tanúsítványfájl"
+description = "Töltse fel az offline vásárlásból származó .lic vagy .cert licencfájlt"
+choose = "Licencfájl kiválasztása"
+selected = "Kiválasztva: {{filename}} ({{size}})"
+successMessage = "A licencfájl feltöltése és aktiválása sikeres. Nincs szükség újraindításra."
+
+[admin.settings.premium.currentLicense]
+title = "Aktív licenc"
+file = "Forrás: licencfájl ({{path}})"
+key = "Forrás: licenckulcs"
+type = "Típus: {{type}}"
+noInput = "Adjon meg egy licenckulcsot, vagy töltsön fel tanúsítványfájlt"
+success = "Siker"
 
 [admin.settings.premium.enabled]
 label = "Prémium funkciók engedélyezése"
@@ -5258,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Legalább egy e-mail cím megadása szükséges"
 submit = "Meghívók küldése"
 success = "felhasználó sikeresen meghívva"
-partialSuccess = "Néhány meghívó sikertelen volt"
+partialFailure = "Néhány meghívás sikertelen volt"
 allFailed = "Nem sikerült meghívni a felhasználókat"
 error = "Nem sikerült elküldeni a meghívókat"
 
