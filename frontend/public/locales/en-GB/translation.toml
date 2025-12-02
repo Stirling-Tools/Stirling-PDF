@@ -718,6 +718,61 @@ tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server
 title = "Sign with Certificate"
 desc = "Signs a PDF with a Certificate/Key (PEM/P12)"
 
+[home.signingWorkflow]
+title = "Shared signing"
+desc = "Invite collaborators, issue notifications, and manage certificate collection."
+tags = "collaborate,share,team,invite,multi,participants,distributed"
+
+[certSign.collab]
+stepTitle = "Share for signing"
+submit = "Create shared session"
+results = "Session summary"
+error = "Unable to start shared signing session. Please verify participant emails and try again."
+helper = "Invite multiple participants to sign by entering emails separated with commas. Each invite gets its own tracking token and you will receive a JSON summary back for sharing or automation."
+emails = "Participant emails"
+names = "Participant names (optional, comma separated)"
+owner = "Your email for updates (optional)"
+message = "Message to include in invitations"
+dueDate = "Due date (optional, ISO date)"
+notify = "Send notifications immediately"
+footer = "After submitting you will get a session summary with per-signer links and can return later to finalize signatures."
+
+[certSign.collab.message]
+placeholder = "Please review and sign this document by the due date."
+
+[certSign.collab.participant]
+title = "Submit your certificate"
+subtitle = "Upload certificate to sign document"
+sessionInfo = "Session: {sessionId}"
+documentName = "Document: {documentName}"
+yourEmail = "Your email: {email}"
+status = "Status: {status}"
+instructions = "Please upload your certificate files and provide signing details."
+certTypeLabel = "Certificate type"
+passwordLabel = "Certificate password"
+passwordPlaceholder = "Leave empty if no password"
+filesLabel = "Certificate files"
+appearanceLabel = "Signature appearance"
+visibleLabel = "Make signature visible"
+pageNumberLabel = "Page number"
+reasonLabel = "Reason"
+locationLabel = "Location"
+nameLabel = "Signer name"
+submit = "Submit certificate"
+submitSuccess = "Certificate submitted successfully"
+submitError = "Failed to submit certificate. Please check your files and try again."
+invalidToken = "Invalid or expired session link"
+alreadySigned = "You have already submitted your certificate"
+loading = "Loading session details..."
+
+[certSign.collab.finalize]
+button = "Finalize and download signed PDF"
+tooltip = "Apply all collected certificates and download the final signed document"
+processing = "Applying signatures..."
+success = "Document signed successfully"
+error = "Failed to finalize signatures. Some participants may not have submitted certificates."
+incomplete = "Not all participants have submitted certificates yet"
+
 [home.repair]
 tags = "fix,restore"
 title = "Repair"
