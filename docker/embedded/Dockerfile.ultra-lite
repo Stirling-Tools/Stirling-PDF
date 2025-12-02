@@ -62,8 +62,7 @@ COPY --from=build /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
 
 # Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=false \
-    VERSION_TAG=$VERSION_TAG \
+ENV VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \

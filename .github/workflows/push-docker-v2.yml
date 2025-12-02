@@ -110,7 +110,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified
+          file: ./docker/embedded/Dockerfile
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -166,7 +166,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified
+          file: ./docker/embedded/Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -220,7 +220,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified-lite
+          file: ./docker/embedded/Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
