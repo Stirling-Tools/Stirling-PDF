@@ -4,7 +4,9 @@
 
 # Stirling PDF – Open‑Source Alternative to Acrobat
 
-Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrobat on desktop, in the browser, and on your own servers. Run it as a personal app or deploy it centrally with a private API to edit, sign, redact, convert, and automate PDFs without sending documents to third‑party services.
+Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrobat on desktop, in the browser, and on your own servers.
+
+Run it as a personal app or deploy it centrally with a personal API to edit, sign, redact, convert, and automate PDFs locally.
 
 <p align="center">
   <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf">
@@ -34,16 +36,34 @@ Stirling PDF is a powerful, open‑source PDF platform that replaces Adobe Acrob
 - **Developer platform** – REST APIs, SDKs, and on‑prem AI integrations for PDF‑centric apps.
 - **Global UI** – Interface available in 40+ languages.
 
-For a full and always up to-date feature list, see the docs: **https://docs.stirlingpdf.com**
-
----
+For a full and always up‑to‑date feature list, see the docs: **https://docs.stirlingpdf.com**
 
 ## Quick Start
-
-The fastest way to get started is with Docker.  
-For full installation options (including desktop and Kubernetes), see **https://docs.stirlingpdf.com**.
 
 ```bash
 docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf 
 ```
 
+Then open: http://localhost:8080
+
+## Resources
+
+- **Documentation**: https://docs.stirlingpdf.com
+- **Homepage**: https://stirling.com
+- **API Docs**: https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/
+- **Server Plan & Enterprise**: https://docs.stirlingpdf.com/Paid-Offerings
+
+## Support
+
+- Community Discord: https://discord.gg/HYmhKj45pU
+- Bug Reports: https://github.com/Stirling-Tools/Stirling-PDF/issues
+
+## Contributing
+
+- Contribution Guidelines: CONTRIBUTING.md
+- Developer Guide: devGuide/DeveloperGuide.md
+- Translation Guide: devGuide/HowToAddNewLanguage.md
+
+## License
+
+Stirling PDF is open-core. See LICENSE for details.
