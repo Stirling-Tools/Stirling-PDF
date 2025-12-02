@@ -37,7 +37,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -150,9 +149,6 @@ public class PdfJsonConversionService {
 
     @Value("${stirling.pdf.json.font-normalization.enabled:true}")
     private boolean fontNormalizationEnabled;
-
-    @Value("${stirling.pdf.json.cache.ttl-minutes:720}")
-    private int documentCacheTtlMinutes;
 
     /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
     private final Map<String, CachedPdfDocument> documentCache = new ConcurrentHashMap<>();
@@ -5319,22 +5315,12 @@ public class PdfJsonConversionService {
         private final Map<String, PdfJsonFont> fonts; // Font map with UIDs for consistency
         private final Map<Integer, Map<PDFont, String>> pageFontResources; // Page font resources
         private final long timestamp;
-        private final AtomicLong lastAccess;
 
         public CachedPdfDocument(
                 byte[] pdfBytes,
                 PdfJsonDocumentMetadata metadata,
                 Map<String, PdfJsonFont> fonts,
                 Map<Integer, Map<PDFont, String>> pageFontResources) {
-            this(pdfBytes, metadata, fonts, pageFontResources, System.currentTimeMillis());
-        }
-
-        private CachedPdfDocument(
-                byte[] pdfBytes,
-                PdfJsonDocumentMetadata metadata,
-                Map<String, PdfJsonFont> fonts,
-                Map<Integer, Map<PDFont, String>> pageFontResources,
-                long lastAccess) {
             this.pdfBytes = pdfBytes;
             this.metadata = metadata;
             // Create defensive copies to prevent mutation of shared maps
@@ -5347,7 +5333,6 @@ public class PdfJsonConversionService {
                             ? new java.util.concurrent.ConcurrentHashMap<>(pageFontResources)
                             : new java.util.concurrent.ConcurrentHashMap<>();
             this.timestamp = System.currentTimeMillis();
-            this.lastAccess = new AtomicLong(lastAccess);
         }
 
         // Getters return defensive copies to prevent external mutation
@@ -5371,14 +5356,6 @@ public class PdfJsonConversionService {
             return timestamp;
         }
 
-        public long getLastAccess() {
-            return lastAccess.get();
-        }
-
-        public void touch() {
-            lastAccess.set(System.currentTimeMillis());
-        }
-
         public CachedPdfDocument withUpdatedPdfBytes(byte[] nextBytes) {
             return withUpdatedFonts(nextBytes, this.fonts);
         }
@@ -5386,8 +5363,7 @@ public class PdfJsonConversionService {
         public CachedPdfDocument withUpdatedFonts(
                 byte[] nextBytes, Map<String, PdfJsonFont> nextFonts) {
             Map<String, PdfJsonFont> fontsToUse = nextFonts != null ? nextFonts : this.fonts;
-            return new CachedPdfDocument(
-                    nextBytes, metadata, fontsToUse, pageFontResources, System.currentTimeMillis());
+            return new CachedPdfDocument(nextBytes, metadata, fontsToUse, pageFontResources);
         }
     }
 
@@ -5494,7 +5470,6 @@ public class PdfJsonConversionService {
         if (cached == null) {
             throw new IllegalArgumentException("No cached document found for jobId: " + jobId);
         }
-        cached.touch();
 
         int pageIndex = pageNumber - 1;
         int totalPages = cached.getMetadata().getPageDimensions().size();
@@ -5656,7 +5631,6 @@ public class PdfJsonConversionService {
         if (cached == null) {
             throw new IllegalArgumentException("No cached document available for jobId: " + jobId);
         }
-        cached.touch();
         if (updates == null || updates.getPages() == null || updates.getPages().isEmpty()) {
             log.debug(
                     "Incremental export requested with no page updates; returning cached PDF for jobId {}",
@@ -5967,59 +5941,18 @@ public class PdfJsonConversionService {
         REGENERATE_CLEAR
     }
 
-    private long getDocumentCacheTtlMillis() {
-        if (documentCacheTtlMinutes <= 0) {
-            return 0;
-        }
-        int ttlMinutes = Math.max(documentCacheTtlMinutes, 5);
-        return TimeUnit.MINUTES.toMillis(ttlMinutes);
-    }
-
-    /** Schedules automatic cleanup of cached documents after the configured idle TTL. */
+    /** Schedules automatic cleanup of cached documents after 30 minutes. */
     private void scheduleDocumentCleanup(String jobId) {
-        long ttlMillis = getDocumentCacheTtlMillis();
-        if (ttlMillis <= 0) {
-            log.debug(
-                    "Cache TTL disabled ({} minutes) - no auto-cleanup for jobId {}",
-                    documentCacheTtlMinutes,
-                    jobId);
-            return;
-        }
-        Thread cleanupThread =
-                new Thread(
+        new Thread(
                         () -> {
-                            while (true) {
-                                try {
-                                    Thread.sleep(ttlMillis);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    return;
-                                }
-
-                                CachedPdfDocument cached = documentCache.get(jobId);
-                                if (cached == null) {
-                                    return;
-                                }
-
-                                long idleMillis = System.currentTimeMillis() - cached.getLastAccess();
-                                if (idleMillis >= ttlMillis) {
-                                    clearCachedDocument(jobId);
-                                    log.debug(
-                                            "Auto-cleaned cached document for jobId {} after {} ms idle (ttl {} ms)",
-                                            jobId,
-                                            idleMillis,
-                                            ttlMillis);
-                                    return;
-                                }
-
-                                log.debug(
-                                        "Retaining cached document for jobId {} (idle {} ms < ttl {} ms)",
-                                        jobId,
-                                        idleMillis,
-                                        ttlMillis);
+                            try {
+                                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+                                clearCachedDocument(jobId);
+                                log.debug("Auto-cleaned cached document for jobId: {}", jobId);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
                             }
-                        });
-        cleanupThread.setDaemon(true);
-        cleanupThread.start();
+                        })
+                .start();
     }
 }
