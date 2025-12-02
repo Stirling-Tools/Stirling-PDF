@@ -23,8 +23,6 @@ Stirling PDF is a powerful, open-source PDF editing platform. Run it as a person
 
 ![Stirling PDF – Dashboard](images/home-light.png)
 
----
-
 ## Key Capabilities
 
 - **Everywhere you work** – Desktop client, browser UI, and self-hosted server with a private API.
@@ -36,8 +34,6 @@ Stirling PDF is a powerful, open-source PDF editing platform. Run it as a person
 
 For a full feature list, see the docs: **https://docs.stirlingpdf.com**
 
----
-
 ## Quick Start
 
 ```bash
@@ -48,8 +44,6 @@ Then open: http://localhost:8080
 
 For full installation options (including desktop and Kubernetes), see **https://docs.stirlingpdf.com/#documentation-guide**.
 
----
-
 ## Resources
 
 - [**Documentation**](https://docs.stirlingpdf.com)
@@ -57,14 +51,10 @@ For full installation options (including desktop and Kubernetes), see **https://
 - [**API Docs**](https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/)
 - [**Server Plan & Enterprise**](https://docs.stirlingpdf.com/Paid-Offerings)
 
----
-
 ## Support
 
 - **Community Discord**: https://discord.gg/HYmhKj45pU
 - **Bug Reports**: https://github.com/Stirling-Tools/Stirling-PDF/issues
-
----
 
 ## Contributing
 
@@ -73,8 +63,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 For development setup, see the [Developer Guide](DeveloperGuide.md).
 
 For adding translations, see the [Translation Guide](devGuide/HowToAddNewLanguage.md).
-
----
 
 ## License
 
