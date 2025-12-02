@@ -20,6 +20,7 @@ import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -41,6 +42,7 @@ import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
@@ -156,6 +158,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       createPluginRegistration(ExportPluginPackage, {
         defaultFileName: 'document.pdf',
       }),
+
+      // Register print plugin for printing PDFs
+      createPluginRegistration(PrintPluginPackage),
     ];
   }, [pdfUrl]);
 
@@ -301,6 +306,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
         <BookmarkAPIBridge />
+        <PrintAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
