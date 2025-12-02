@@ -3,65 +3,39 @@ import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useOnboarding } from '@app/contexts/OnboardingContext';
 import '@app/components/tools/ToolPanelModePrompt.css';
 import { type ToolPanelMode } from '@app/constants/toolPanel';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 interface ToolPanelModePromptProps {
   onComplete?: () => void;
+  /** If true, the modal will be forced open (used by orchestrator) */
+  forceOpen?: boolean;
 }
 
-const ToolPanelModePrompt = ({ onComplete }: ToolPanelModePromptProps = {}) => {
+/**
+ * ToolPanelModePrompt - Lets users choose between sidebar and fullscreen tool modes
+ * 
+ * The orchestrator controls this via forceOpen prop. When shown standalone (legacy),
+ * it uses internal state based on preferences.
+ */
+const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps = {}) => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const { preferences, updatePreference } = usePreferences();
-  const {
-    startTour,
-    startAfterToolModeSelection,
-    setStartAfterToolModeSelection,
-    pendingTourRequest,
-  } = useOnboarding();
-  const [opened, setOpened] = useState(false);
-  const { config } = useAppConfig();
-  const isAdmin = !!config?.isAdmin;
+  const [internalOpened, setInternalOpened] = useState(false);
 
-  // Only show after the new 3-slide onboarding has been completed
+  // Only show after the intro onboarding has been completed (legacy standalone mode)
   const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
 
   useEffect(() => {
-    if (shouldShowPrompt) {
-      setOpened(true);
+    if (shouldShowPrompt && forceOpen === undefined) {
+      setInternalOpened(true);
     }
-  }, [shouldShowPrompt]);
+  }, [shouldShowPrompt, forceOpen]);
 
-  const resolveRequestedTourType = (): 'admin' | 'tools' => {
-    if (pendingTourRequest?.type) {
-      return pendingTourRequest.type;
-    }
-    if (pendingTourRequest?.metadata && 'selfReportedAdmin' in pendingTourRequest.metadata) {
-      return pendingTourRequest.metadata.selfReportedAdmin ? 'admin' : 'tools';
-    }
-    return isAdmin ? 'admin' : 'tools';
-  };
-
-  const resumeDeferredTour = (context?: { selection?: ToolPanelMode; dismissed?: boolean }) => {
-    if (!startAfterToolModeSelection) {
-      return;
-    }
-    setStartAfterToolModeSelection(false);
-    const targetType = resolveRequestedTourType();
-    startTour(targetType, {
-      skipToolPromptRequirement: true,
-      source: 'tool-panel-mode-prompt',
-      metadata: {
-        ...pendingTourRequest?.metadata,
-        resumedFromToolPrompt: true,
-        ...(context?.selection ? { selection: context.selection } : {}),
-        ...(context?.dismissed ? { dismissed: true } : {}),
-      },
-    });
-  };
+  // If forceOpen is provided, use it; otherwise use internal state
+  const opened = forceOpen ?? internalOpened;
+  const setOpened = forceOpen !== undefined ? () => {} : setInternalOpened;
 
   const handleSelect = (mode: ToolPanelMode) => {
     setToolPanelMode(mode);
@@ -69,8 +43,6 @@ const ToolPanelModePrompt = ({ onComplete }: ToolPanelModePromptProps = {}) => {
     updatePreference('toolPanelModePromptSeen', true);
     updatePreference('hasSelectedToolPanelMode', true);
     setOpened(false);
-
-    resumeDeferredTour({ selection: mode });
     onComplete?.();
   };
 
@@ -83,7 +55,6 @@ const ToolPanelModePrompt = ({ onComplete }: ToolPanelModePromptProps = {}) => {
     updatePreference('hasSelectedToolPanelMode', true);
     updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
-    resumeDeferredTour({ dismissed: true });
     onComplete?.();
   };
 

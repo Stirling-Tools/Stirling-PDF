@@ -3,16 +3,18 @@ import DesktopInstallSlide from '@app/components/onboarding/slides/DesktopInstal
 import SecurityCheckSlide from '@app/components/onboarding/slides/SecurityCheckSlide';
 import PlanOverviewSlide from '@app/components/onboarding/slides/PlanOverviewSlide';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
+import FirstLoginSlide from '@app/components/onboarding/slides/FirstLoginSlide';
 import { SlideConfig, LicenseNotice } from '@app/types/types';
 
 export type SlideId =
+  | 'first-login'
   | 'welcome'
   | 'desktop-install'
   | 'security-check'
   | 'admin-overview'
   | 'server-license';
 
-export type HeroType = 'rocket' | 'dual-icon' | 'shield' | 'diamond' | 'logo';
+export type HeroType = 'rocket' | 'dual-icon' | 'shield' | 'diamond' | 'logo' | 'lock';
 
 export type ButtonAction =
   | 'next'
@@ -46,6 +48,10 @@ export interface SlideFactoryParams {
   onRoleSelect: (role: 'admin' | 'user' | null) => void;
   licenseNotice?: LicenseNotice;
   loginEnabled?: boolean;
+  // First login params
+  firstLoginUsername?: string;
+  onPasswordChanged?: () => void;
+  usingDefaultCredentials?: boolean;
 }
 
 export interface HeroDefinition {
@@ -71,6 +77,17 @@ export interface SlideDefinition {
 }
 
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
+  'first-login': {
+    id: 'first-login',
+    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) => 
+      FirstLoginSlide({ 
+        username: firstLoginUsername || '', 
+        onPasswordChanged: onPasswordChanged || (() => {}),
+        usingDefaultCredentials: usingDefaultCredentials || false,
+      }),
+    hero: { type: 'lock' },
+    buttons: [], // Form has its own submit button
+  },
   'welcome': {
     id: 'welcome',
     createSlide: () => WelcomeSlide(),
@@ -196,12 +213,4 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
     ],
   },
 };
-
-export const FLOW_SEQUENCES = {
-  loginAdmin: ['welcome', 'desktop-install', 'admin-overview'] as SlideId[],
-  loginUser: ['welcome', 'desktop-install'] as SlideId[],
-  noLoginBase: ['welcome', 'desktop-install', 'security-check'] as SlideId[],
-  noLoginAdmin: ['admin-overview'] as SlideId[],
-};
-
 

@@ -15,8 +15,8 @@ import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
+import { requestStartTour } from '@app/constants/events';
 
 import {
   isNavButtonActive,
@@ -34,7 +34,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
-  const { startTour } = useOnboarding();
   const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
@@ -269,7 +268,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     <div
                       key={buttonConfig.id}
                       data-tour="help-button"
-                      onClick={() => startTour('tools')}
+                      onClick={() => requestStartTour('tools')}
                     >
                       {renderNavButton(buttonConfig, index)}
                     </div>
@@ -286,7 +285,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       <Menu.Dropdown>
                         <Menu.Item
                           leftSection={<LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() => startTour('tools')}
+                          onClick={() => requestStartTour('tools')}
                         >
                           <div>
                             <div style={{ fontWeight: 500 }}>
@@ -299,7 +298,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         </Menu.Item>
                         <Menu.Item
                           leftSection={<LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() => startTour('admin')}
+                          onClick={() => requestStartTour('admin')}
                         >
                           <div>
                             <div style={{ fontWeight: 500 }}>

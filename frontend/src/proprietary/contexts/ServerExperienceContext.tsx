@@ -173,19 +173,8 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
     }
 
     const shouldUseAdminData = (config.enableLogin ?? true) && config.isAdmin;
-    const shouldUseEstimate = config.enableLogin === false;
-
-    if (!shouldUseAdminData && !shouldUseEstimate) {
-      setUserCountState((prev) => ({
-        ...prev,
-        totalUsers: null,
-        weeklyActiveUsers: null,
-        loading: false,
-        source: 'unknown',
-        error: null,
-      }));
-      return;
-    }
+    // Use WAU estimate for no-login scenarios OR for login non-admin users
+    const shouldUseEstimate = config.enableLogin === false || !config.isAdmin;
 
     setUserCountState((prev) => ({
       ...prev,

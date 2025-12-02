@@ -8,7 +8,7 @@ import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
-import OnboardingTour from "@app/components/onboarding/OnboardingTour";
+import Onboarding from "@app/components/onboarding/Onboarding";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -34,7 +34,7 @@ export default function App() {
             {/* Main app routes - Landing handles auth logic */}
             <Route path="/*" element={<Landing />} />
           </Routes>
-          <OnboardingTour />
+          <Onboarding />
         </AppLayout>
       </AppProviders>
     </Suspense>

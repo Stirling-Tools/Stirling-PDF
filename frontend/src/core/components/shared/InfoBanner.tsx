@@ -130,11 +130,6 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               onClick={onButtonClick}
               loading={loading}
               leftSection={<LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />}
-              styles={{
-                label: {
-                  color: textColor ?? toneStyle.text,
-                },
-              }}
             >
               {buttonText}
             </Button>
