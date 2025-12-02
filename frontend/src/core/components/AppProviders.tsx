@@ -12,7 +12,6 @@ import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions } from
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
-import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
@@ -77,7 +76,6 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
       <RainbowThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
-            <OnboardingProvider>
               <AppConfigProvider
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
@@ -113,7 +111,6 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                     </ToolRegistryProvider>
                   </FileContextProvider>
               </AppConfigProvider>
-            </OnboardingProvider>
           </BannerProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>
