@@ -16,7 +16,7 @@ const renderList = (arr: unknown[] | undefined, emptyText: string) => {
   return (
     <Stack gap={4}>
       {arr.map((item, idx) => (
-        <Text key={idx} size="sm" c="dimmed">
+        <Text key={idx} size="sm" c="dimmed" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
           {typeof item === 'string' ? item : JSON.stringify(item)}
         </Text>
       ))}
@@ -29,7 +29,7 @@ const renderFontsList = (fonts: PdfFontInfo[] | undefined, emptyText: string) =>
   return (
     <Stack gap={4}>
       {fonts.map((font, idx) => (
-        <Text key={idx} size="sm" c="dimmed">
+        <Text key={idx} size="sm" c="dimmed" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
           {`${font.Name ?? 'Unknown'}${font.IsEmbedded ? ' (embedded)' : ''}`}
         </Text>
       ))}

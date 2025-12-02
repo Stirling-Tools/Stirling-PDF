@@ -13,9 +13,11 @@ const KeyValueList: React.FC<KeyValueListProps> = ({ obj, emptyLabel }) => {
   return (
     <Stack gap={6}>
       {Object.entries(obj).map(([k, v]) => (
-        <Group key={k} grow wrap="nowrap">
-          <Text size="sm" style={{ minWidth: 180 }}>{k}</Text>
-          <Text size="sm" c="dimmed">{v == null ? '' : String(v)}</Text>
+        <Group key={k} wrap="nowrap" align="flex-start" style={{ width: '100%' }}>
+          <Text size="sm" style={{ minWidth: 180, maxWidth: 180, flexShrink: 0 }}>{k}</Text>
+          <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', flex: 1 }}>
+            {v == null ? '' : String(v)}
+          </Text>
         </Group>
       ))}
     </Stack>

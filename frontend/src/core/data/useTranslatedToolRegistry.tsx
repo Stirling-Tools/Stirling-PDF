@@ -331,7 +331,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
-        automationSettings: null
+        automationSettings: null,
+        maxFiles: 1,
       },
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
