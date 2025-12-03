@@ -1,21 +1,21 @@
 """A script to update language progress status in README.md based on
-JSON translation file comparison.
+TOML translation file comparison.
 
-This script compares the default translation JSON file with others in the locales directory to
+This script compares the default translation TOML file with others in the locales directory to
 determine language progress.
 It then updates README.md based on provided progress list.
 
 Author: Ludy87
+Updated for TOML format
 
 Example:
     To use this script, simply run it from command line:
-        $ python counter_translation_v2.py
+        $ python counter_translation_v3.py
 """  # noqa: D205
 
 import glob
 import os
 import re
-import json
 
 import tomlkit
 import tomlkit.toml_file
@@ -80,14 +80,14 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
         file.writelines(content)
 
 
-def parse_json_file(file_path):
+def parse_toml_file(file_path):
     """
-    Parses a JSON translation file and returns a flat dictionary of all keys.
-    :param file_path: Path to the JSON file.
+    Parses a TOML translation file and returns a flat dictionary of all keys.
+    :param file_path: Path to the TOML file.
     :return: Dictionary with flattened keys and values.
     """
     with open(file_path, "r", encoding="utf-8") as file:
-        data = json.load(file)
+        data = tomlkit.parse(file.read())
 
     def flatten_dict(d, parent_key="", sep="."):
         items = {}
@@ -105,19 +105,19 @@ def parse_json_file(file_path):
 def compare_files(
     default_file_path, file_paths, ignore_translation_file
 ) -> list[tuple[str, int]]:
-    """Compares the default JSON translation file with other
+    """Compares the default TOML translation file with other
     translation files in the locales directory.
 
     Parameters:
-        default_file_path (str): The path to the default translation JSON file.
-        file_paths (list): List of paths to translation JSON files.
+        default_file_path (str): The path to the default translation TOML file.
+        file_paths (list): List of paths to translation TOML files.
         ignore_translation_file (str): Path to the TOML file with ignore rules.
 
     Returns:
         list[tuple[str, int]]: A list of tuples containing
         language and progress percentage.
     """  # noqa: D205
-    default_keys = parse_json_file(default_file_path)
+    default_keys = parse_toml_file(default_file_path)
     num_keys = len(default_keys)
 
     result_list = []
@@ -152,7 +152,7 @@ def compare_files(
                 ["language.direction"]
             )
 
-        current_keys = parse_json_file(file_path)
+        current_keys = parse_toml_file(file_path)
 
         # Compare keys
         for default_key, default_value in default_keys.items():
@@ -193,8 +193,8 @@ def compare_files(
 
 if __name__ == "__main__":
     directory = os.path.join(os.getcwd(), "frontend", "public", "locales")
-    translation_file_paths = glob.glob(os.path.join(directory, "*", "translation.json"))
-    reference_file = os.path.join(directory, "en-GB", "translation.json")
+    translation_file_paths = glob.glob(os.path.join(directory, "*", "translation.toml"))
+    reference_file = os.path.join(directory, "en-GB", "translation.toml")
 
     scripts_directory = os.path.join(os.getcwd(), "scripts")
     translation_state_file = os.path.join(scripts_directory, "ignore_translation.toml")
