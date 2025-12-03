@@ -190,17 +190,17 @@ export const useToolOperation = <TParams>(
     }
 
     // Handle zero-byte inputs explicitly: mark as error and continue with others
-    const zeroByteFiles = selectedFiles.filter(file => (file as any)?.size === 0);
+    const zeroByteFiles = selectedFiles.filter(file => file.size === 0);
     if (zeroByteFiles.length > 0) {
       try {
         for (const f of zeroByteFiles) {
-          (fileActions.markFileError as any)((f as any).fileId);
+          fileActions.markFileError(f.fileId);
         }
       } catch (e) {
         console.log('markFileError', e);
       }
     }
-    const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
+    const validFiles: StirlingFile[] = selectedFiles.filter(file => file.size > 0);
     if (validFiles.length === 0) {
       actions.setError(t('noValidFiles', 'No valid files to process'));
       return;
@@ -233,7 +233,7 @@ export const useToolOperation = <TParams>(
 
       try {
       let processedFiles: File[];
-        let successSourceIds: string[] = [];
+        let successSourceIds: FileId[] = [];
 
       // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
       const filesForAPI = extractFiles(validFiles);
@@ -251,14 +251,14 @@ export const useToolOperation = <TParams>(
           console.debug('[useToolOperation] Multi-file start', { count: filesForAPI.length });
           const result = await processFiles(
             params,
-            filesForAPI,
+            validFiles,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus,
-            fileActions.markFileError as any
+            fileActions.markFileError
           );
           processedFiles = result.outputFiles;
-          successSourceIds = result.successSourceIds as any;
+          successSourceIds = result.successSourceIds;
           console.debug('[useToolOperation] Multi-file results', { outputFiles: processedFiles.length, successSources: result.successSourceIds.length });
           break;
         }
@@ -286,7 +286,7 @@ export const useToolOperation = <TParams>(
             processedFiles = await extractZipFiles(response.data);
           }
           // Assume all inputs succeeded together unless server provided an error earlier
-          successSourceIds = validFiles.map(f => (f as any).fileId) as any;
+          successSourceIds = validFiles.map(f => f.fileId);
           break;
         }
 
@@ -300,15 +300,15 @@ export const useToolOperation = <TParams>(
           // If consumedAllInputs flag is set, mark all inputs as successful
           // (used for operations that combine N inputs into fewer outputs)
           if (consumedAllInputs) {
-            successSourceIds = validFiles.map(f => (f as any).fileId) as any;
+            successSourceIds = validFiles.map(f => f.fileId);
           } else {
             // Try to map outputs back to inputs by filename (before extension)
-            const inputBaseNames = new Map<string, string>();
+            const inputBaseNames = new Map<string, FileId>();
             for (const f of validFiles) {
               const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-              inputBaseNames.set(base, (f as any).fileId);
+              inputBaseNames.set(base, f.fileId);
             }
-            const mappedSuccess: string[] = [];
+            const mappedSuccess: FileId[] = [];
             for (const out of processedFiles) {
               const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
               const id = inputBaseNames.get(base);
@@ -316,9 +316,9 @@ export const useToolOperation = <TParams>(
             }
             // Fallback to naive alignment if names don't match
             if (mappedSuccess.length === 0) {
-              successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+              successSourceIds = validFiles.slice(0, processedFiles.length).map(f => f.fileId);
             } else {
-              successSourceIds = mappedSuccess as any;
+              successSourceIds = mappedSuccess;
             }
           }
           break;
@@ -327,16 +327,16 @@ export const useToolOperation = <TParams>(
 
       // Normalize error flags across tool types: mark failures, clear successes
       try {
-        const allInputIds = validFiles.map(f => (f as any).fileId) as unknown as string[];
-        const okSet = new Set((successSourceIds as unknown as string[]) || []);
+        const allInputIds = validFiles.map(f => f.fileId);
+        const okSet = new Set(successSourceIds);
         // Clear errors on successes
         for (const okId of okSet) {
-          try { (fileActions.clearFileError as any)(okId); } catch (_e) { void _e; }
+          try { fileActions.clearFileError(okId); } catch (_e) { void _e; }
         }
         // Mark errors on inputs that didn't succeed
         for (const id of allInputIds) {
           if (!okSet.has(id)) {
-            try { (fileActions.markFileError as any)(id); } catch (_e) { void _e; }
+            try { fileActions.markFileError(id); } catch (_e) { void _e; }
           }
         }
       } catch (_e) { void _e; }
@@ -344,12 +344,12 @@ export const useToolOperation = <TParams>(
       if (externalErrorFileIds.length > 0) {
         // If backend told us which sources failed, prefer that mapping
         successSourceIds = validFiles
-          .map(f => (f as any).fileId)
-          .filter(id => !externalErrorFileIds.includes(id)) as any;
+          .map(f => f.fileId)
+          .filter(id => !externalErrorFileIds.includes(id));
         // Also mark failed IDs immediately
         try {
           for (const badId of externalErrorFileIds) {
-            (fileActions.markFileError as any)(badId);
+            fileActions.markFileError(badId as FileId);
           }
         } catch (_e) { void _e; }
       }
@@ -398,7 +398,7 @@ export const useToolOperation = <TParams>(
         );
         // Always create child stubs linking back to the successful source inputs
         const successInputStubs = successSourceIds
-          .map((id) => selectors.getStirlingFileStub(id as any))
+          .map((id) => selectors.getStirlingFileStub(id))
           .filter(Boolean) as StirlingFileStub[];
 
         if (successInputStubs.length !== processedFiles.length) {
@@ -424,7 +424,7 @@ export const useToolOperation = <TParams>(
           return createStirlingFile(file, childStub.id);
         });
         // Build consumption arrays aligned to the successful source IDs
-        const toConsumeInputIds = successSourceIds.filter((id: string) => inputFileIds.includes(id as any)) as unknown as FileId[];
+        const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
         // Outputs and stubs are already ordered by success sequence
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
@@ -441,25 +441,27 @@ export const useToolOperation = <TParams>(
     } catch (error: any) {
       // Centralized 422 handler: mark provided IDs in errorFileIds
       try {
-        const status = (error?.response?.status as number | undefined);
-        if (status === 422) {
+        const status = error?.response?.status;
+        if (typeof status === 'number' && status === 422) {
           const payload = error?.response?.data;
-          let parsed: any = payload;
+          let parsed: unknown = payload;
           if (typeof payload === 'string') {
             try { parsed = JSON.parse(payload); } catch { parsed = payload; }
-          } else if (payload && typeof (payload as any).text === 'function') {
+          } else if (payload && typeof (payload as Blob).text === 'function') {
             // Blob or Response-like object from axios when responseType='blob'
             const text = await (payload as Blob).text();
             try { parsed = JSON.parse(text); } catch { parsed = text; }
           }
-          let ids: string[] | undefined = Array.isArray(parsed?.errorFileIds) ? parsed.errorFileIds : undefined;
+          let ids: string[] | undefined = Array.isArray((parsed as { errorFileIds?: unknown })?.errorFileIds)
+            ? (parsed as { errorFileIds: string[] }).errorFileIds
+            : undefined;
           if (!ids && typeof parsed === 'string') {
             const match = parsed.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
             if (match && match.length > 0) ids = Array.from(new Set(match));
           }
           if (ids && ids.length > 0) {
             for (const badId of ids) {
-              try { (fileActions.markFileError as any)(badId); } catch (_e) { void _e; }
+              try { fileActions.markFileError(badId as FileId); } catch (_e) { void _e; }
             }
             actions.setStatus('Process failed due to invalid/corrupted file(s)');
             // Avoid duplicating toast messaging here
