@@ -256,6 +256,7 @@
   --header-selected-bg: #1E88E5; /* light mode selected header matches dark */
   --header-selected-fg: #FFFFFF;
   --file-card-bg: #FFFFFF;  /* file card background (light/dark paired) */
+  --accordion-item-bg: #E8EAED;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
@@ -519,6 +520,7 @@
   --header-selected-fg: #FFFFFF;
   /* file card background (dark) */
   --file-card-bg: #1F2329;
+  --accordion-item-bg: #373D45;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
