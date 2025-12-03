@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Badge, Group, Stack, Text } from '@mantine/core';
+import { Badge, Divider, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type {
   PdfInfoReportData,
@@ -87,18 +87,15 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
 
         <div className="simulated-page">
           <Stack gap="lg">
-              <Group justify="space-between" align="flex-start">
-              <div>
-                <Text fw={700} size="xl" style={{ lineHeight: 1.1 }}>
-                  {entry.fileName}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {t('getPdfInfo.report.entryLabel', 'Full information summary')}
-                </Text>
-              </div>
-            </Group>
+            <Stack gap="xs">
+              <Text fw={700} size="xl" style={{ lineHeight: 1.3, wordBreak: 'break-word' }}>
+                {entry.fileName}
+                <Text component="span" fw={700}> - {t('getPdfInfo.summary.title', 'PDF Summary')}</Text>
+              </Text>
+              <Divider />
+            </Stack>
 
-            <SummarySection sections={sections} />
+            <SummarySection sections={sections} hideSectionTitle />
 
             <KeyValueSection title={t('getPdfInfo.sections.metadata', 'Metadata')} anchorId="metadata" obj={sections.metadata} />
 

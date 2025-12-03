@@ -7,9 +7,10 @@ import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
 
 interface SummarySectionProps {
   sections: ParsedPdfSections;
+  hideSectionTitle?: boolean;
 }
 
-const SummarySection: React.FC<SummarySectionProps> = ({ sections }) => {
+const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTitle = false }) => {
   const { t } = useTranslation();
 
   const summaryBlocks = useMemo(() => {
@@ -104,32 +105,40 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections }) => {
     };
   }, [sections, t]);
 
+  const content = (
+    <Stack gap="md">
+      <Stack gap={6}>
+        <Text fw={600} size="sm">{t('getPdfInfo.summary.basic', 'Basic Information')}</Text>
+        <KeyValueList obj={summaryBlocks.basicInformation} />
+      </Stack>
+      <Stack gap={6}>
+        <Text fw={600} size="sm">{t('getPdfInfo.summary.documentInfo', 'Document Information')}</Text>
+        <KeyValueList obj={summaryBlocks.documentInformation} />
+      </Stack>
+      <Stack gap={6}>
+        <Text fw={600} size="sm">{t('getPdfInfo.summary.securityTitle', 'Security Status')}</Text>
+        <Text size="sm" c="dimmed">{summaryBlocks.securityStatusText}</Text>
+        <Text size="sm" c="dimmed">{summaryBlocks.permSummary}</Text>
+        <Text size="sm" c="dimmed">{summaryBlocks.complianceText}</Text>
+      </Stack>
+      <Stack gap={6}>
+        <Text fw={600} size="sm">{t('getPdfInfo.summary.technical', 'Technical')}</Text>
+        <KeyValueList obj={summaryBlocks.technical} />
+      </Stack>
+      <Stack gap={6}>
+        <Text fw={600} size="sm">{t('getPdfInfo.summary.overviewTitle', 'PDF Overview')}</Text>
+        <Text size="sm" c="dimmed">{summaryBlocks.overview}</Text>
+      </Stack>
+    </Stack>
+  );
+
+  if (hideSectionTitle) {
+    return <div id="summary">{content}</div>;
+  }
+
   return (
     <SectionBlock title={t('getPdfInfo.summary.title', 'PDF Summary')} anchorId="summary">
-      <Stack gap="md">
-        <Stack gap={6}>
-          <Text fw={600} size="sm">{t('getPdfInfo.summary.basic', 'Basic Information')}</Text>
-          <KeyValueList obj={summaryBlocks.basicInformation} />
-        </Stack>
-        <Stack gap={6}>
-          <Text fw={600} size="sm">{t('getPdfInfo.summary.documentInfo', 'Document Information')}</Text>
-          <KeyValueList obj={summaryBlocks.documentInformation} />
-        </Stack>
-        <Stack gap={6}>
-          <Text fw={600} size="sm">{t('getPdfInfo.summary.securityTitle', 'Security Status')}</Text>
-          <Text size="sm" c="dimmed">{summaryBlocks.securityStatusText}</Text>
-          <Text size="sm" c="dimmed">{summaryBlocks.permSummary}</Text>
-          <Text size="sm" c="dimmed">{summaryBlocks.complianceText}</Text>
-        </Stack>
-        <Stack gap={6}>
-          <Text fw={600} size="sm">{t('getPdfInfo.summary.technical', 'Technical')}</Text>
-          <KeyValueList obj={summaryBlocks.technical} />
-        </Stack>
-        <Stack gap={6}>
-          <Text fw={600} size="sm">{t('getPdfInfo.summary.overviewTitle', 'PDF Overview')}</Text>
-          <Text size="sm" c="dimmed">{summaryBlocks.overview}</Text>
-        </Stack>
-      </Stack>
+      {content}
     </SectionBlock>
   );
 };
