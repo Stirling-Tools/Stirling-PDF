@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { getEndpointUrl, isImageFormat, isWebFormat } from '@app/utils/convertUtils';
+import { getEndpointUrl, isImageFormat, isWebFormat, isOfficeFormat } from '@app/utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
@@ -21,6 +21,10 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+    // PDF to office format conversions (each PDF should generate its own office file)
+    (parameters.fromExtension === 'pdf' && isOfficeFormat(parameters.toExtension)) ||
+    // Office files to PDF conversions (each file should be processed separately via LibreOffice)
+    (isOfficeFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
