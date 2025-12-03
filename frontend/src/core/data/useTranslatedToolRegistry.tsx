@@ -27,6 +27,7 @@ import AdjustContrastSingleStepSettings from "@app/components/tools/adjustContra
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import GetPdfInfo from "@app/tools/GetPdfInfo";
 import AddWatermark from "@app/tools/AddWatermark";
 import AddStamp from "@app/tools/AddStamp";
 import AddAttachments from "@app/tools/AddAttachments";
@@ -341,14 +342,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       getPdfInfo: {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: null,
+        component: GetPdfInfo,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
-        automationSettings: null
+        automationSettings: null,
+        maxFiles: 1,
       },
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
