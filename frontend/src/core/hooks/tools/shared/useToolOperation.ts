@@ -56,6 +56,13 @@ interface BaseToolOperationConfig<TParams> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * For custom tools: if true, success implies all input files were successfully processed.
+   * Use this for tools like Automate or Merge where Many-to-One relationships exist
+   * and exact input-output mapping is difficult.
+   */
+  consumesAllInputs?: boolean;
 }
 
 export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
@@ -275,23 +282,28 @@ export const useToolOperation = <TParams>(
         case ToolType.custom: {
           actions.setStatus('Processing files...');
           processedFiles = await config.customProcessor(params, filesForAPI);
-          // Try to map outputs back to inputs by filename (before extension)
-          const inputBaseNames = new Map<string, string>();
-          for (const f of validFiles) {
-            const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            inputBaseNames.set(base, (f as any).fileId);
-          }
-          const mappedSuccess: string[] = [];
-          for (const out of processedFiles) {
-            const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            const id = inputBaseNames.get(base);
-            if (id) mappedSuccess.push(id);
-          }
-          // Fallback to naive alignment if names don't match
-          if (mappedSuccess.length === 0) {
-            successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+
+          if (config.consumesAllInputs) {
+            successSourceIds = validFiles.map(f => (f as any).fileId) as any;
           } else {
-            successSourceIds = mappedSuccess as any;
+            // Try to map outputs back to inputs by filename (before extension)
+            const inputBaseNames = new Map<string, string>();
+            for (const f of validFiles) {
+              const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              inputBaseNames.set(base, (f as any).fileId);
+            }
+            const mappedSuccess: string[] = [];
+            for (const out of processedFiles) {
+              const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              const id = inputBaseNames.get(base);
+              if (id) mappedSuccess.push(id);
+            }
+            // Fallback to naive alignment if names don't match
+            if (mappedSuccess.length === 0) {
+              successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+            } else {
+              successSourceIds = mappedSuccess as any;
+            }
           }
           break;
         }

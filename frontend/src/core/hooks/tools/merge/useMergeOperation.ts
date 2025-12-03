@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import { MergeParameters, defaultParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 const buildFormData = (parameters: MergeParameters, files: File[]): FormData => {
   const formData = new FormData();
@@ -13,8 +13,8 @@ const buildFormData = (parameters: MergeParameters, files: File[]): FormData => 
   const clientIds: string[] = files.map((f: any) => String((f as any).fileId || f.name));
   formData.append('clientFileIds', JSON.stringify(clientIds));
   formData.append("sortType", "orderProvided"); // Always use orderProvided since UI handles sorting
-  formData.append("removeCertSign", parameters.removeDigitalSignature.toString());
-  formData.append("generateToc", parameters.generateTableOfContents.toString());
+  formData.append("removeCertSign", (parameters.removeDigitalSignature ?? false).toString());
+  formData.append("generateToc", (parameters.generateTableOfContents ?? false).toString());
 
   return formData;
 };
@@ -26,6 +26,7 @@ export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
   operationType: 'merge',
   endpoint: '/api/v1/general/merge-pdfs',
   filePrefix: 'merged_',
+  defaultParameters,
 };
 
 export const useMergeOperation = () => {
