@@ -8,6 +8,7 @@ import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 import { extractErrorMessage } from '@app/utils/toolErrorHandler';
 import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
 import { FILE_EVENTS } from '@app/services/errorUtils';
+import { getFilenameWithoutExtension } from '@app/utils/fileUtils';
 import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { ToolOperation } from '@app/types/file';
@@ -305,12 +306,12 @@ export const useToolOperation = <TParams>(
             // Try to map outputs back to inputs by filename (before extension)
             const inputBaseNames = new Map<string, FileId>();
             for (const f of validFiles) {
-              const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              const base = getFilenameWithoutExtension(f.name || '');
               inputBaseNames.set(base, f.fileId);
             }
             const mappedSuccess: FileId[] = [];
             for (const out of processedFiles) {
-              const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              const base = getFilenameWithoutExtension(out.name || '');
               const id = inputBaseNames.get(base);
               if (id) mappedSuccess.push(id);
             }
