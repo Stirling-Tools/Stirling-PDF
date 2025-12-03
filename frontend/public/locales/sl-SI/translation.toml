@@ -912,9 +912,6 @@ desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za pona
 desc = "Prekriva PDF-je na vrhu drugega PDF-ja"
 title = "Prekrivanje PDF-jev"
 
-[home.pdfTextEditor]
-title = "Urejevalnik besedila PDF"
-desc = "Pregledujte in urejajte Stirling PDF JSON izvoze z urejanjem združenega besedila in ponovnim ustvarjanjem PDF"
 
 [home.addText]
 tags = "besedilo,pripomba,oznaka"

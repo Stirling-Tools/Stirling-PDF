@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - V2-master
+      - alljavadocker
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -93,10 +94,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}
             type=raw,value=latest
 
-      - name: Generate tags for latest (V2-demo branch - test)
+      - name: Generate tags for latest (alljavadocker branch - test)
         id: meta-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/V2-demo'
+        if: github.ref == 'refs/heads/alljavadocker'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -110,7 +111,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified
+          file: ./docker/embedded/Dockerfile
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -149,10 +150,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat
             type=raw,value=latest-fat
 
-      - name: Generate tags for latest-fat (V2-demo branch - test)
+      - name: Generate tags for latest-fat (alljavadocker branch - test)
         id: meta-fat-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/V2-demo'
+        if: github.ref == 'refs/heads/alljavadocker'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -166,7 +167,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified
+          file: ./docker/embedded/Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -203,10 +204,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite
             type=raw,value=latest-ultra-lite
 
-      - name: Generate tags for ultra-lite (V2-demo branch - test)
+      - name: Generate tags for ultra-lite (alljavadocker branch - test)
         id: meta-lite-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/V2-demo'
+        if: github.ref == 'refs/heads/alljavadocker'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -220,7 +221,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile.unified-lite
+          file: ./docker/embedded/Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max

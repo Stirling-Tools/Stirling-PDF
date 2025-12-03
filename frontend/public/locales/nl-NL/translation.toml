@@ -912,9 +912,6 @@ desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal 
 desc = "Plaatst PDF's over een andere PDF heen"
 title = "PDF's overlappen"
 
-[home.pdfTextEditor]
-title = "PDF-teksteditor"
-desc = "Bekijk en bewerk Stirling PDF JSON-exporten met gegroepeerde tekstbewerking en het opnieuw genereren van PDF's"
 
 [home.addText]
 tags = "tekst,annotatie,label"
