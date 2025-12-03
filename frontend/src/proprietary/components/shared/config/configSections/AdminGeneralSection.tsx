@@ -335,7 +335,7 @@ export default function AdminGeneralSection() {
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/classic-logo/favicon.ico"
+                        src="classic-logo/favicon.ico"
                         alt={t('admin.settings.general.logoStyle.classicAlt', 'Classic logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
@@ -348,7 +348,7 @@ export default function AdminGeneralSection() {
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/modern-logo/StirlingPDFLogoNoTextLight.svg"
+                        src="modern-logo/StirlingPDFLogoNoTextLight.svg"
                         alt={t('admin.settings.general.logoStyle.modernAlt', 'Modern logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
