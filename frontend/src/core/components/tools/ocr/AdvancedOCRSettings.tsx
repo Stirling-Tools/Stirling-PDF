@@ -2,7 +2,6 @@ import React from 'react';
 import { Stack, Text, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { OCRParameters } from '@app/hooks/tools/ocr/useOCRParameters';
-import { Tooltip } from '@app/components/shared/Tooltip';
 
 export interface AdvancedOCRParameters {
   advancedOptions: string[];
