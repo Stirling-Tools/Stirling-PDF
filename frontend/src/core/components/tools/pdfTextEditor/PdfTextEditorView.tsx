@@ -34,6 +34,7 @@ import MergeTypeIcon from '@mui/icons-material/MergeType';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UploadFileIcon from '@mui/icons-material/UploadFileOutlined';
+import SaveIcon from '@mui/icons-material/SaveOutlined';
 import { Rnd } from 'react-rnd';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
@@ -379,6 +380,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     fileName,
     errorMessage,
     isGeneratingPdf,
+    isSavingToWorkbench,
     isConverting,
     conversionProgress,
     hasChanges,
@@ -394,6 +396,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onDownloadJson,
     onGeneratePdf,
     onGeneratePdfForNavigation,
+    onSaveToWorkbench,
     onForceSingleTextElementChange,
     onGroupingModeChange,
     onMergeGroups,
@@ -1492,6 +1495,17 @@ const selectionToolbarPosition = useMemo(() => {
               >
                 {t('pdfTextEditor.actions.generatePdf', 'Generate PDF')}
               </Button>
+              <Button
+                variant="filled"
+                color="green"
+                leftSection={<SaveIcon fontSize="small" />}
+                onClick={onSaveToWorkbench}
+                loading={isSavingToWorkbench}
+                disabled={!hasDocument || !hasChanges || isConverting}
+                fullWidth
+              >
+                {t('pdfTextEditor.actions.saveChanges', 'Save Changes')}
+              </Button>
             </Stack>
 
             {fileName && (
@@ -2478,7 +2492,7 @@ const selectionToolbarPosition = useMemo(() => {
 
       {/* Navigation Warning Modal */}
       <NavigationWarningModal
-        onApplyAndContinue={onGeneratePdfForNavigation}
+        onApplyAndContinue={onSaveToWorkbench}
       />
     </Stack>
   );
