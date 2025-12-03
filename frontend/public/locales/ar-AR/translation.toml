@@ -912,9 +912,6 @@ desc = "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة 
 desc = "تراكب ملف PDF فوق آخر"
 title = "تراكب ملفات PDF"
 
-[home.pdfTextEditor]
-title = "محرر نصوص PDF"
-desc = "مراجعة وتحرير صادرات Stirling PDF بصيغة JSON مع تحرير نصوص مجمّعة وإعادة إنشاء PDF"
 
 [home.addText]
 tags = "نص,تعليق,تسمية"

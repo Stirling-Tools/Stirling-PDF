@@ -912,9 +912,6 @@ desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal pe
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
 
-[home.pdfTextEditor]
-title = "Editor de text PDF"
-desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 
 [home.addText]
 tags = "text,anotació,etiqueta"
