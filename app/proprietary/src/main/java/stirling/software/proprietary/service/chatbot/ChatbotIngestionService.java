@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
+import stirling.software.proprietary.model.chatbot.ChatbotSessionStatus;
 import stirling.software.proprietary.model.chatbot.ChatbotSessionCreateRequest;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
@@ -95,7 +97,7 @@ public class ChatbotIngestionService {
                         .sessionId(sessionId)
                         .documentId(request.getDocumentId())
                         .userId(request.getUserId())
-                        .metadata(immutableMetadata)
+                        .metadata(new ConcurrentHashMap<>(metadata))
                         .ocrRequested(ocrApplied)
                         .imageContentDetected(imagesDetected)
                         .textCharacters(textCharacters)
@@ -104,6 +106,7 @@ public class ChatbotIngestionService {
                         .alphaWarningRequired(settings.alphaWarning())
                         .cacheKey(cacheKey)
                         .createdAt(Instant.now())
+                        .status(ChatbotSessionStatus.READY)
                         .build();
         session.setUsageSummary(
                 usageService.registerIngestion(session.getUserId(), estimatedTokens));

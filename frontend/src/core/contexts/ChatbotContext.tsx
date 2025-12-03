@@ -16,6 +16,7 @@ import { extractTextFromDocx } from '@app/services/docxTextExtractor';
 import {
   ChatbotSessionInfo,
   createChatbotSession,
+  uploadChatbotChunk,
 } from '@app/services/chatbotService';
 import { runOcrForChat } from '@app/services/chatbotOcrService';
 

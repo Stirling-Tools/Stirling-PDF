@@ -21,6 +21,8 @@ export interface ChatbotSessionPayload {
   warningsAccepted: boolean;
 }
 
+export type ChatbotSessionStatus = 'PROCESSING' | 'READY';
+
 export interface ChatbotSessionInfo {
   sessionId: string;
   documentId: string;
@@ -33,12 +35,25 @@ export interface ChatbotSessionInfo {
   warnings?: string[];
   metadata?: Record<string, string>;
   usageSummary?: ChatbotUsageSummary;
+  status?: ChatbotSessionStatus;
 }
 
 export interface ChatbotQueryPayload {
   sessionId: string;
   prompt: string;
   allowEscalation: boolean;
+}
+
+export interface ChatbotChunkPayload {
+  sessionId?: string;
+  documentId: string;
+  chunkText: string;
+  chunkOrder: number;
+  metadata?: Record<string, string>;
+  finalChunk: boolean;
+  ocrRequested: boolean;
+  imagesDetected: boolean;
+  totalCharactersHint?: number;
 }
 
 export interface ChatbotMessageResponse {
@@ -59,6 +74,11 @@ export interface ChatbotMessageResponse {
 
 export async function createChatbotSession(payload: ChatbotSessionPayload) {
   const { data } = await apiClient.post<ChatbotSessionInfo>('/api/v1/internal/chatbot/session', payload);
+  return data;
+}
+
+export async function uploadChatbotChunk(payload: ChatbotChunkPayload) {
+  const { data } = await apiClient.post<ChatbotSessionInfo>('/api/v1/internal/chatbot/session/chunk', payload);
   return data;
 }
 

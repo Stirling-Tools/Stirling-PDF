@@ -621,6 +621,7 @@ public class ApplicationProperties {
                 private Audit audit = new Audit();
                 private long maxPromptCharacters = 4000;
                 private double minConfidenceNano = 0.65;
+                private boolean streamingEnabled = false;
                 private Usage usage = new Usage();
 
                 @Data

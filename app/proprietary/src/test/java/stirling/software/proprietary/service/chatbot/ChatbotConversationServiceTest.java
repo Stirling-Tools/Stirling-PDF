@@ -68,6 +68,7 @@ class ChatbotConversationServiceTest {
                         true,
                         4000,
                         0.65D,
+                        false,
                         new ChatbotSettings.ModelSettings(
                                 ChatbotSettings.ModelProvider.OPENAI,
                                 "gpt-5-nano",

@@ -33,6 +33,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotHistoryEntry;
 import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
+import stirling.software.proprietary.model.chatbot.ChatbotSessionStatus;
 import stirling.software.proprietary.model.chatbot.ChatbotUsageSummary;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
@@ -73,6 +74,13 @@ public class ChatbotConversationService {
                         .findById(request.getSessionId())
                         .orElseThrow(() -> new ChatbotException("Unknown chatbot session"));
 
+        if (session.getStatus() == null) {
+            session.setStatus(ChatbotSessionStatus.READY);
+        }
+        if (session.getStatus() == ChatbotSessionStatus.PROCESSING) {
+            throw new ChatbotException("Chatbot session is still processing the document.");
+        }
+
         ensureModelSwitchCapability(settings);
 
         ChatbotDocumentCacheEntry cacheEntry =
@@ -85,9 +93,12 @@ public class ChatbotConversationService {
         List<Document> context =
                 retrievalService.retrieveTopK(
                         request.getSessionId(), request.getPrompt(), settings);
+        String precomputedSummary = session.getMetadata().get("content.summary");
         String contextSummary =
-                contextCompressor.summarize(
-                        context, (int) Math.max(settings.maxPromptCharacters() / 2, 1000));
+                StringUtils.hasText(precomputedSummary)
+                        ? precomputedSummary
+                        : contextCompressor.summarize(
+                                context, (int) Math.max(settings.maxPromptCharacters() / 2, 1000));
         List<ChatbotHistoryEntry> conversationHistory =
                 loadConversationHistory(session.getSessionId());
         String conversationSummary = loadConversationSummary(session.getSessionId());
@@ -355,15 +366,7 @@ public class ChatbotConversationService {
         StringBuilder outline = new StringBuilder();
         for (Document chunk : context) {
             String order = chunk.getMetadata().getOrDefault("chunkOrder", "?").toString();
-            String snippet = chunk.getText();
-            if (snippet != null) {
-                snippet = snippet.replaceAll("\\s+", " ").trim();
-                if (snippet.length() > 240) {
-                    snippet = snippet.substring(0, 237) + "...";
-                }
-            } else {
-                snippet = "(empty)";
-            }
+            String snippet = resolveSnippet(chunk, 240);
             outline.append("- Chunk ").append(order).append(": ").append(snippet).append("\n");
         }
         return outline.toString();
@@ -376,21 +379,30 @@ public class ChatbotConversationService {
         StringBuilder excerpts = new StringBuilder();
         for (Document chunk : context) {
             String order = chunk.getMetadata().getOrDefault("chunkOrder", "?").toString();
-            String snippet = chunk.getText();
+            String snippet = resolveSnippet(chunk, 400);
             if (!StringUtils.hasText(snippet)) {
                 continue;
             }
-            String normalized = snippet.replaceAll("\\s+", " ").trim();
-            int maxExcerpt = 400;
-            if (normalized.length() > maxExcerpt) {
-                normalized = normalized.substring(0, maxExcerpt - 3) + "...";
-            }
-            excerpts.append("[Chunk ").append(order).append("] ").append(normalized).append("\n");
+            excerpts.append("[Chunk ").append(order).append("] ").append(snippet).append("\n");
         }
         if (!StringUtils.hasText(excerpts)) {
             return "Chunks retrieved but no text excerpts available.";
         }
         return excerpts.toString();
+    }
+
+    private String resolveSnippet(Document chunk, int maxLen) {
+        Object snippetObj = chunk.getMetadata().get("chunkSnippet");
+        String snippet =
+                snippetObj instanceof String ? (String) snippetObj : chunk.getText();
+        if (!StringUtils.hasText(snippet)) {
+            return "(empty)";
+        }
+        String normalized = snippet.replaceAll("\\s+", " ").trim();
+        if (normalized.length() > maxLen) {
+            return normalized.substring(0, maxLen - 3) + "...";
+        }
+        return normalized;
     }
 
     private String buildConversationOutline(List<ChatbotHistoryEntry> history) {

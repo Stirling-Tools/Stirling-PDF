@@ -50,6 +50,7 @@ class ChatbotServiceTest {
                         true,
                         4000,
                         0.5D,
+                        false,
                         new ChatbotSettings.ModelSettings(
                                 ChatbotSettings.ModelProvider.OPENAI,
                                 "gpt-5-nano",
@@ -68,6 +69,7 @@ class ChatbotServiceTest {
                         true,
                         4000,
                         0.5D,
+                        false,
                         new ChatbotSettings.ModelSettings(
                                 ChatbotSettings.ModelProvider.OPENAI,
                                 "gpt-5-nano",

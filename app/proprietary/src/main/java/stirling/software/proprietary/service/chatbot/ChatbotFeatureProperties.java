@@ -33,6 +33,7 @@ public class ChatbotFeatureProperties {
                 chatbot.isAlphaWarning(),
                 chatbot.getMaxPromptCharacters(),
                 chatbot.getMinConfidenceNano(),
+                chatbot.isStreamingEnabled(),
                 modelSettings,
                 new ChatbotSettings.RagSettings(
                         chatbot.getRag().getChunkSizeTokens(),
@@ -77,6 +78,7 @@ public class ChatbotFeatureProperties {
             boolean alphaWarning,
             long maxPromptCharacters,
             double minConfidenceNano,
+            boolean streamingEnabled,
             ModelSettings models,
             RagSettings rag,
             CacheSettings cache,

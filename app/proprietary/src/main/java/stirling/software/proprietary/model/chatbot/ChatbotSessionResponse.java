@@ -28,6 +28,7 @@ public class ChatbotSessionResponse {
     private List<String> warnings;
     private Map<String, String> metadata;
     private ChatbotUsageSummary usageSummary;
+    private ChatbotSessionStatus status;
 
     public List<String> getWarnings() {
         return warnings == null ? Collections.emptyList() : warnings;

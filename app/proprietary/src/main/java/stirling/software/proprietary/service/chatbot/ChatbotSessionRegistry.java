@@ -38,4 +38,8 @@ public class ChatbotSessionRegistry {
     public void removeByDocumentId(String documentId) {
         Optional.ofNullable(documentToSession.remove(documentId)).ifPresent(sessionStore::remove);
     }
+
+    public Map<String, ChatbotSession> snapshot() {
+        return Map.copyOf(sessionStore);
+    }
 }

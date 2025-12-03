@@ -26,6 +26,7 @@ public class ChatbotSession {
     private String vectorStoreId;
     private Instant createdAt;
     private ChatbotUsageSummary usageSummary;
+    private ChatbotSessionStatus status;
 
     public static String randomSessionId() {
         return UUID.randomUUID().toString();

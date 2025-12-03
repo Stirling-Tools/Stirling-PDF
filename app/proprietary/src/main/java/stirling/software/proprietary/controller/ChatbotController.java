@@ -1,6 +1,7 @@
 package stirling.software.proprietary.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.model.chatbot.ChatbotChunkRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotQueryRequest;
 import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
@@ -27,6 +29,7 @@ import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
 import stirling.software.proprietary.service.chatbot.ChatbotService;
 import stirling.software.proprietary.service.chatbot.ChatbotSessionRegistry;
+import stirling.software.proprietary.service.chatbot.ChatbotStreamingIngestionService;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Slf4j
@@ -38,6 +41,7 @@ public class ChatbotController {
     private final ChatbotService chatbotService;
     private final ChatbotSessionRegistry sessionRegistry;
     private final ChatbotCacheService cacheService;
+    private final ChatbotStreamingIngestionService streamingIngestionService;
     private final ChatbotFeatureProperties featureProperties;
 
     @PostMapping("/session")
@@ -52,6 +56,13 @@ public class ChatbotController {
     @PostMapping("/query")
     public ResponseEntity<ChatbotResponse> query(@RequestBody ChatbotQueryRequest request) {
         ChatbotResponse response = chatbotService.ask(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/session/chunk")
+    public ResponseEntity<ChatbotSessionResponse> streamChunk(
+            @RequestBody ChatbotChunkRequest request) {
+        ChatbotSessionResponse response = streamingIngestionService.ingestChunk(request);
         return ResponseEntity.ok(response);
     }
 
@@ -119,8 +130,9 @@ public class ChatbotController {
                 .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
                 .createdAt(session.getCreatedAt())
                 .warnings(sessionWarnings(settings, session))
-                .metadata(session.getMetadata())
+                .metadata(new HashMap<>(session.getMetadata()))
                 .usageSummary(session.getUsageSummary())
+                .status(session.getStatus())
                 .build();
     }
 }
