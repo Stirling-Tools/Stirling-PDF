@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
 import { alert } from '@app/components/toast';
@@ -11,6 +11,7 @@ import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
+import { supportedLanguages } from '@app/i18n';
 
 interface GeneralSettingsData {
   ui: {
@@ -43,12 +44,21 @@ interface GeneralSettingsData {
   };
 }
 
+const toUnderscoreLanguages = (languages?: string[]) =>
+  (languages || []).map(language => language.replace(/-/g, '_'));
+
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
   const { setIsDirty, markClean } = useUnsavedChanges();
+  const languageOptions = useMemo(
+    () => Object.entries(supportedLanguages)
+      .map(([code, label]) => ({ value: code.replace(/-/g, '_'), label }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+    []
+  );
   
   // Track original settings for dirty detection
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
@@ -73,9 +83,11 @@ export default function AdminGeneralSection() {
         apiClient.get('/api/v1/admin/settings/section/premium')
       ]);
 
-      const ui = uiResponse.data || {};
-      const system = systemResponse.data || {};
-      const premium = premiumResponse.data || {};
+      const ui = { ...(uiResponse.data || {}) };
+      const system = { ...(systemResponse.data || {}) };
+      const premium = { ...(premiumResponse.data || {}) };
+
+      ui.languages = Array.isArray(ui.languages) ? toUnderscoreLanguages(ui.languages) : [];
 
       const result: any = {
         ui,
@@ -151,6 +163,11 @@ export default function AdminGeneralSection() {
       };
     }
   });
+
+  const selectedLanguages = useMemo(
+    () => toUnderscoreLanguages(settings.ui?.languages),
+    [settings.ui?.languages]
+  );
 
   useEffect(() => {
     // Only fetch real settings if login is enabled
@@ -369,20 +386,9 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.languages.description', 'Limit which languages are available (empty = all languages)')}
-              value={settings.ui?.languages || []}
+              value={selectedLanguages}
               onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, languages: value } })}
-              data={[
-                { value: 'de_DE', label: 'Deutsch' },
-                { value: 'es_ES', label: 'Español' },
-                { value: 'fr_FR', label: 'Français' },
-                { value: 'it_IT', label: 'Italiano' },
-                { value: 'pl_PL', label: 'Polski' },
-                { value: 'pt_BR', label: 'Português (Brasil)' },
-                { value: 'ru_RU', label: 'Русский' },
-                { value: 'zh_CN', label: '简体中文' },
-                { value: 'ja_JP', label: '日本語' },
-                { value: 'ko_KR', label: '한국어' },
-              ]}
+              data={languageOptions}
               searchable
               clearable
               placeholder={t('admin.settings.general.languages.placeholder', 'Select languages')}

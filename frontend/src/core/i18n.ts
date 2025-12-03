@@ -105,10 +105,24 @@ i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
 });
 
+function normalizeLanguageCode(languageCode: string): string {
+  // Replace underscores with hyphens to align with i18next/translation file naming
+  const hyphenated = languageCode.replace(/_/g, '-');
+  const [base, ...rest] = hyphenated.split('-');
+
+  if (rest.length === 0) {
+    return base.toLowerCase();
+  }
+
+  const normalizedParts = rest.map(part => (part.length <= 3 ? part.toUpperCase() : part));
+  return [base.toLowerCase(), ...normalizedParts].join('-');
+}
+
 /**
  * Updates the supported languages list dynamically based on config
  * If configLanguages is null/empty, all languages remain available
- * Otherwise, only specified languages plus 'en-GB' fallback are enabled
+ * Otherwise, only the specified languages are enabled with the first valid
+ * option (preferring en-GB when present) used as the fallback language.
  */
 export function updateSupportedLanguages(configLanguages?: string[] | null) {
   if (!configLanguages || configLanguages.length === 0) {
@@ -116,22 +130,24 @@ export function updateSupportedLanguages(configLanguages?: string[] | null) {
     return;
   }
 
-  // Ensure fallback language is always included
-  const languagesToSupport = new Set(['en-GB', ...configLanguages]);
+  const validLanguages = configLanguages
+    .map(normalizeLanguageCode)
+    .filter(lang => lang in supportedLanguages);
 
-  // Filter to only valid language codes that exist in our translations
-  const validLanguages = Array.from(languagesToSupport).filter(
-    lang => lang in supportedLanguages
-  );
+  // If no valid languages were provided, keep existing configuration
+  if (validLanguages.length === 0) {
+    return;
+  }
 
-  if (validLanguages.length > 0) {
-    i18n.options.supportedLngs = validLanguages;
+  const fallback = validLanguages.includes('en-GB') ? 'en-GB' : validLanguages[0];
 
-    // If current language is not in the new supported list, switch to fallback
-    const currentLang = i18n.language;
-    if (currentLang && !validLanguages.includes(currentLang)) {
-      i18n.changeLanguage('en-GB');
-    }
+  i18n.options.supportedLngs = validLanguages;
+  i18n.options.fallbackLng = fallback;
+
+  // If current language is not in the new supported list, switch to fallback
+  const currentLang = normalizeLanguageCode(i18n.language || '');
+  if (currentLang && !validLanguages.includes(currentLang)) {
+    i18n.changeLanguage(fallback);
   }
 }
 
