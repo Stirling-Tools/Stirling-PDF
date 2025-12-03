@@ -30,8 +30,8 @@ export const useAdvancedOCRTips = (): TooltipContent => {
         description: t("ocr.tooltip.advanced.cleanFinal.text", "Post-processes the final PDF by removing OCR artefacts and optimising the text layer for better readability and smaller file size.")
       },
       {
-        title: t("ocr.invalidateSignatures", "Invalidate digital signatures"),
-        description: t("ocr.invalidateSignatures.warning", "Warning: Enabling this option will invalidate any digital signatures in the PDF. The document will no longer be legally valid as a signed document.")
+        title: t("ocr.tooltip.advanced.invalidateDigitalSignatures.title", "Invalidate digital signatures"),
+        description: t("ocr.tooltip.advanced.invalidateDigitalSignatures.text", "Warning: Enabling this option will invalidate any digital signatures in the PDF. The document will no longer be legally valid as a signed document.")
       }
     ]
   };
