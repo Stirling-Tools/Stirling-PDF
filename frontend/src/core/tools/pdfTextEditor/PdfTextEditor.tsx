@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
 
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useFileSelection } from '@app/contexts/FileContext';
+import { useFileSelection, useFileManagement } from '@app/contexts/FileContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
 import { CONVERSION_ENDPOINTS } from '@app/constants/convertConstants';
@@ -209,6 +209,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
   const { registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = navigationActions;
+  const { addFiles } = useFileManagement();
 
   const [loadedDocument, setLoadedDocument] = useState<PdfJsonDocument | null>(null);
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
@@ -718,6 +719,17 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       }
     },
     [groupingMode, resetToDocument, t],
+  );
+
+  // Wrapper for loading files from the dropzone - adds to workbench first
+  const handleLoadFileFromDropzone = useCallback(
+    async (file: File) => {
+      // Add the file to the workbench so it appears in the file list
+      await addFiles([file]);
+      // Then load it into the editor
+      void handleLoadFile(file);
+    },
+    [addFiles, handleLoadFile],
   );
 
   const handleSelectPage = useCallback((pageIndex: number) => {
@@ -1282,6 +1294,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     onGroupingModeChange: setGroupingMode,
     onMergeGroups: handleMergeGroups,
     onUngroupGroup: handleUngroupGroup,
+    onLoadFile: handleLoadFileFromDropzone,
   }), [
     handleMergeGroups,
     handleUngroupGroup,
@@ -1311,6 +1324,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     groupingMode,
     requestPagePreview,
     setForceSingleTextElement,
+    handleLoadFileFromDropzone,
   ]);
 
   const latestViewDataRef = useRef<PdfTextEditorViewData>(viewData);

@@ -225,4 +225,5 @@ export interface PdfTextEditorViewData {
   onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
   onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;
   onUngroupGroup: (pageIndex: number, groupId: string) => boolean;
+  onLoadFile: (file: File) => void;
 }
