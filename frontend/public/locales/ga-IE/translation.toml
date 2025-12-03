@@ -163,6 +163,11 @@ unfavorite = "Bain den Cheanáin"
 fullscreen = "Athraigh go mód lánscáileáin"
 sidebar = "Athraigh go mód barra taoibh"
 
+[backendStartup]
+notFoundTitle = "Níor aimsíodh an cúlchóras"
+retry = "Atriail"
+unreachable = "Ní féidir leis an bhfeidhmchlár ceangal leis an gcúlchóras faoi láthair. Deimhnigh stádas an chúlchórais agus nascacht an líonra, ansin bain triail eile as."
+
 [zipWarning]
 title = "Comhad ZIP Mór"
 message = "Tá {{count}} comhad sa ZIP seo. An mbaineann tú amach mar sin féin?"
@@ -914,7 +919,7 @@ title = "Forleagan PDF"
 
 [home.pdfTextEditor]
 title = "Eagarthóir Téacs PDF"
-desc = "Athbhreithnigh agus cuir in eagar onnmhairí JSON ó Stirling PDF le heagarthóireacht téacs ghrúpáilte agus athghiniúint PDF"
+desc = "Cuir téacs agus íomhánna atá ann cheana in eagar laistigh de PDFanna"
 
 [home.addText]
 tags = "téacs,anótáil,lipéad"
@@ -1638,7 +1643,7 @@ subtitle = "Íoslódáil an comhad próiseáilte nó cealaigh an oibríocht thí
 [removePages]
 tags = "Bain leathanaigh, scrios leathanaigh"
 title = "Bain"
-filenamePrefix = "pages_removed"
+filenamePrefix = "leathanaigh_bainte"
 submit = "Bain"
 
 [removePages.pageNumbers]
@@ -1840,7 +1845,7 @@ title = "Bain Léamh-Amháin ó Réimsí Foirme"
 header = "Díghlasáil Foirmeacha PDF"
 submit = "Remove"
 description = "Bainfidh an uirlis seo srianta léamh-amáin ó réimsí foirme PDF, rud a fhágann go mbeidh siad in-eagarthóireachta agus inlíonta."
-filenamePrefix = "unlocked_forms"
+filenamePrefix = "foirmeacha_díghlasáilte"
 
 [unlockPDFForms.files]
 placeholder = "Roghnaigh comhad PDF sa phríomh-amharc chun tosú"
@@ -1854,7 +1859,7 @@ title = "Torthaí Díghlasála Foirmeacha"
 [changeMetadata]
 header = "Athraigh Meiteashonraí"
 submit = "Athrú"
-filenamePrefix = "metadata"
+filenamePrefix = "meiteashonraí"
 
 [changeMetadata.settings]
 title = "Socruithe Meiteashonraí"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Síniú líníochta"
 defaultImageLabel = "Síniú uaslódáilte"
 defaultTextLabel = "Síniú clóscríofa"
 saveButton = "Sábháil síniú"
+savePersonal = "Sábháil Pearsanta"
+saveShared = "Sábháil Comhroinnte"
 saveUnavailable = "Cruthaigh síniú ar dtús chun é a shábháil."
 noChanges = "Tá an síniú reatha sábháilte cheana."
+tempStorageTitle = "Stóráil shealadach an bhrabhsálaí"
+tempStorageDescription = "Stóráiltear na sínithe i do bhrabhsálaí amháin. Caillfear iad má ghlanann tú sonraí an bhrabhsálaí nó má athraíonn tú brabhsálaithe."
+personalHeading = "Sínithe Pearsanta"
+sharedHeading = "Sínithe Comhroinnte"
+personalDescription = "Ní féidir ach leatsa na sínithe seo a fheiceáil."
+sharedDescription = "Is féidir le gach úsáideoir na sínithe seo a fheiceáil agus a úsáid."
 
 [sign.saved.type]
 canvas = "Líníocht"
@@ -2321,7 +2334,7 @@ title = "Comhcheangail"
 header = "PDF cothromú"
 flattenOnlyForms = "Flatten foirmeacha amháin"
 submit = "Comhcheangail"
-filenamePrefix = "flattened"
+filenamePrefix = "maolaithe"
 
 [flatten.files]
 placeholder = "Roghnaigh comhad PDF sa phríomh-amharc chun tosú"
@@ -2369,7 +2382,7 @@ title = "Deisiúchán"
 header = "PDF a dheisiú"
 submit = "Deisiúchán"
 description = "Déanfaidh an uirlis seo iarracht comhaid PDF truaillithe nó damáiste a dheisiú. Níl aon socruithe breise ag teastáil."
-filenamePrefix = "repaired"
+filenamePrefix = "deisithe"
 
 [repair.files]
 placeholder = "Roghnaigh comhad PDF sa phríomh-amharc chun tosú"
@@ -2570,7 +2583,7 @@ stopButton = "Stop comparáid"
 [certSign]
 tags = "fíordheimhnigh, PEM, P12, oifigiúil, criptigh"
 title = "Síniú Teastais"
-filenamePrefix = "signed"
+filenamePrefix = "síníthe"
 chooseCertificate = "Roghnaigh Comhad Teastais"
 chooseJksFile = "Roghnaigh Comhad JKS"
 chooseP12File = "Roghnaigh Comhad PKCS12"
@@ -2704,7 +2717,7 @@ header = "Bain an deimhniú digiteach ó PDF"
 selectPDF = "Roghnaigh comhad PDF:"
 submit = "Bain Síniú"
 description = "Bainfidh an uirlis seo sínithe teastais dhigiteacha de do dhoiciméad PDF."
-filenamePrefix = "unsigned"
+filenamePrefix = "neamhshínithe"
 
 [removeCertSign.files]
 placeholder = "Roghnaigh comhad PDF sa phríomh-amharc chun tosú"
@@ -3441,6 +3454,9 @@ signinTitle = "Sínigh isteach le do thoil"
 ssoSignIn = "Logáil isteach trí Chlárú Aonair"
 oAuth2AutoCreateDisabled = "OAUTH2 Uath-Chruthaigh Úsáideoir faoi Mhíchumas"
 oAuth2AdminBlockedUser = "Tá bac faoi láthair ar chlárú nó logáil isteach úsáideoirí neamhchláraithe. Déan teagmháil leis an riarthóir le do thoil."
+oAuth2RequiresLicense = "Teastaíonn ceadúnas íoctha (Server nó Enterprise) chun logáil isteach le OAuth/SSO. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú."
+saml2RequiresLicense = "Teastaíonn ceadúnas íoctha (Server nó Enterprise) chun logáil isteach le SAML. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú."
+maxUsersReached = "Sroicheadh an líon uasta úsáideoirí do do cheadúnas reatha. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú nó suíocháin bhreise a chur leis."
 oauth2RequestNotFound = "Níor aimsíodh iarratas údaraithe"
 oauth2InvalidUserInfoResponse = "Freagra Neamhbhailí Faisnéise Úsáideora"
 oauth2invalidRequest = "Iarratas Neamhbhailí"
@@ -3536,7 +3552,7 @@ title = "PDF go leathanach amháin"
 header = "PDF go leathanach amháin"
 submit = "Tiontaigh go Leathanach Aonair"
 description = "Cuirfidh an uirlis seo gach leathanach de do PDF le chéile in aon leathanach mór amháin. Fanfaidh an leithead mar an gcéanna leis na leathanaigh bhunaidh, ach beidh an airde cothrom le suim airde na leathanach go léir."
-filenamePrefix = "single_page"
+filenamePrefix = "leathanach_aonair"
 
 [pdfToSinglePage.files]
 placeholder = "Roghnaigh comhad PDF sa phríomh-amharc chun tosú"
@@ -3849,14 +3865,17 @@ fitToWidth = "Oiriúnaigh don Leithead"
 actualSize = "Fíormhéid"
 
 [viewer]
+cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
+dualPageView = "Amharc Dhá Leathanach"
 firstPage = "An Chéad Leathanach"
 lastPage = "An Leathanach Deireanach"
-previousPage = "Leathanach Roimhe Seo"
 nextPage = "Leathanach Ar Aghaidh"
+onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
+previousPage = "Leathanach Roimhe Seo"
+singlePageView = "Amharc Leathanach Aonair"
+unknownFile = "Comhad anaithnid"
 zoomIn = "Súmáil Isteach"
 zoomOut = "Súmáil Amach"
-singlePageView = "Amharc Leathanach Aonair"
-dualPageView = "Amharc Dhá Leathanach"
 
 [rightRail]
 closeSelected = "Dún na Comhaid Roghnaithe"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Athraigh an Barra Taoibh"
 exportSelected = "Easpórtáil na Leathanaigh Roghnaithe"
 toggleAnnotations = "Athraigh Infheictheacht Anótálacha"
 annotationMode = "Athraigh Mód Anótála"
+print = "Priontáil PDF"
 draw = "Tarraing"
 save = "Sábháil"
 saveChanges = "Sábháil Athruithe"
@@ -4497,6 +4517,7 @@ description = "URL nó ainm comhaid don impressum (riachtanach i roinnt dlínsí
 title = "Préimh & Fiontar"
 description = "Cumraigh do eochair cheadúnais préimhe nó fiontair."
 license = "Cumraíocht Ceadúnais"
+noInput = "Tabhair eochair nó comhad ceadúnais, le do thoil"
 
 [admin.settings.premium.licenseKey]
 toggle = "An bhfuil eochair cheadúnais nó comhad teastais agat?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Rabhadh: Braitheadh Ceadúnas Reatha"
 line1 = "Ní féidir forshcríobh ar do eochair cheadúnais reatha a chealú."
 line2 = "Caillefar do cheadúnas roimhe seo go buan mura bhfuil cúltaca de in áit eile agat."
 line3 = "Tábhachtach: Coinnigh eochracha ceadúnais príobháideach agus slán. Ná roinn go poiblí riamh."
+
+[admin.settings.premium.inputMethod]
+text = "Eochair Ceadúnais"
+file = "Comhad Teastais"
+
+[admin.settings.premium.file]
+label = "Comhad Teastais Ceadúnais"
+description = "Uaslódáil do chomhad ceadúnais .lic nó .cert ó cheannacháin as líne"
+choose = "Roghnaigh Comhad Ceadúnais"
+selected = "Roghnaithe: {{filename}} ({{size}})"
+successMessage = "D’éirigh le huaslódáil agus gníomhachtú an chomhaid cheadúnais. Níl atosú ag teastáil."
+
+[admin.settings.premium.currentLicense]
+title = "Ceadúnas Gníomhach"
+file = "Foinse: Comhad ceadúnais ({{path}})"
+key = "Foinse: Eochair ceadúnais"
+type = "Cineál: {{type}}"
+noInput = "Tabhair eochair ceadúnais nó uaslódáil comhad teastais, le do thoil"
+success = "Rath"
 
 [admin.settings.premium.enabled]
 label = "Cumasaigh Gnéithe Préimhe"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} roghnaithe"
 download = "Íosluchtaigh"
 delete = "Scrios"
 unsupported = "Gan tacaíocht"
+active = "Gníomhach"
 addToUpload = "Cuir leis an Uaslódáil"
+closeFile = "Dún an comhad"
 deleteAll = "Scrios Uile"
 loadingFiles = "Comhaid á Luchtú..."
 noFiles = "Níl comhaid ar fáil"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Tá ar a laghad seoladh ríomhphoist amháin de dhíth"
 submit = "Seol Cuirí"
 success = "Tugadh cuireadh d’úsáideoir(í) go rathúil"
-partialSuccess = "Theip ar chuid de na cuirí"
+partialFailure = "Níor éirigh le roinnt cuirí"
 allFailed = "Theip ar úsáideoirí a thabhairt isteach"
 error = "Theip ar churí a sheoladh"
 
@@ -5800,6 +5842,13 @@ submit = "Logáil Isteach"
 signInWith = "Sínigh isteach le"
 oauthPending = "Brabhsálaí á oscailt le haghaidh fíordheimhnithe..."
 orContinueWith = "Nó lean ar aghaidh le ríomhphost"
+serverRequirement = "Nóta: Ní mór an cumas logála isteach a bheith cumasaithe ar an bhfreastalaí."
+showInstructions = "Conas é a chumasú?"
+hideInstructions = "Folaigh na treoracha"
+instructions = "Chun logáil isteach a chumasú ar do fhreastalaí Stirling PDF:"
+instructionsEnvVar = "Socraigh an athróg chomhshaoil:"
+instructionsOrYml = "Nó i settings.yml:"
+instructionsRestart = "Ansin atosaigh do fhreastalaí chun go mbeidh na hathruithe i bhfeidhm."
 
 [setup.login.username]
 label = "Ainm Úsáideora"
