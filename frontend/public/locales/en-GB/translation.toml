@@ -1994,6 +1994,8 @@ header = "Cleanup Scans / OCR (Optical Character Recognition)"
 help = "Please read this documentation on how to use this for other languages and/or use not in docker"
 credit = "This service uses qpdf and Tesseract for OCR."
 submit = "Process PDF with OCR"
+invalidateSignatures = "Invalidate digital signatures"
+"invalidateSignatures.warning" = "Warning: Enabling this option will invalidate any digital signatures in the PDF. The document will no longer be legally valid as a signed document."
 
 [ocr.selectText]
 1 = "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):"

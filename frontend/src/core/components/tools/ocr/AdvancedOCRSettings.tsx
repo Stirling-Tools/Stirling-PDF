@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack, Text, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { OCRParameters } from '@app/hooks/tools/ocr/useOCRParameters';
+import { Tooltip } from '@app/components/shared/Tooltip';
 
 export interface AdvancedOCRParameters {
   advancedOptions: string[];
@@ -35,6 +36,11 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
     { value: 'deskew', label: t('ocr.settings.advancedOptions.deskew', 'Deskew pages'), isSpecial: false },
     { value: 'clean', label: t('ocr.settings.advancedOptions.clean', 'Clean input file'), isSpecial: false },
     { value: 'cleanFinal', label: t('ocr.settings.advancedOptions.cleanFinal', 'Clean final output'), isSpecial: false },
+    {
+      value: 'invalidateDigitalSignatures',
+      label: t('ocr.invalidateSignatures', 'Invalidate digital signatures'),
+      isSpecial: false,
+    },
   ];
 
   // Handle individual checkbox changes
@@ -71,16 +77,31 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
         </Text>
 
         <Stack gap="sm">
-          {advancedOptionsData.map((option) => (
-            <Checkbox
-              key={option.value}
-              checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
-              onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
-              label={option.label}
-              disabled={disabled}
-              size="sm"
-            />
-          ))}
+          {advancedOptionsData.map((option) => {
+            const checkbox = (
+              <Checkbox
+                checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
+                onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
+                label={option.label}
+                disabled={disabled}
+                size="sm"
+              />
+            );
+
+            if (option.value === 'invalidateDigitalSignatures') {
+              return (
+                <Tooltip
+                  key={option.value}
+                  content={t('ocr.invalidateSignatures.warning', 'Warning: Enabling this option will invalidate any digital signatures in the PDF. The document will no longer be legally valid as a signed document.')}
+                  position="right"
+                >
+                  {checkbox}
+                </Tooltip>
+              );
+            }
+
+            return <React.Fragment key={option.value}>{checkbox}</React.Fragment>;
+          })}
         </Stack>
       </div>
     </Stack>
