@@ -19,6 +19,7 @@ export const PLAN_FEATURES = {
     { name: 'Editing text in pdfs', included: false },
     { name: 'Users limited to seats', included: false },
     { name: 'SSO', included: false },
+    { name: 'SAML', included: false },
     { name: 'Auditing', included: false },
     { name: 'Usage tracking', included: false },
     { name: 'Prometheus Support', included: false },
@@ -37,7 +38,8 @@ export const PLAN_FEATURES = {
     { name: 'External Database', included: true },
     { name: 'Editing text in pdfs', included: true },
     { name: 'Users limited to seats', included: false },
-    { name: 'SSO', included: false },
+    { name: 'SSO', included: true },
+    { name: 'SAML', included: false },
     { name: 'Auditing', included: false },
     { name: 'Usage tracking', included: false },
     { name: 'Prometheus Support', included: false },
@@ -57,6 +59,7 @@ export const PLAN_FEATURES = {
     { name: 'Editing text in pdfs', included: true },
     { name: 'Users limited to seats', included: true },
     { name: 'SSO', included: true },
+    { name: 'SAML', included: true },
     { name: 'Auditing', included: true },
     { name: 'Usage tracking', included: true },
     { name: 'Prometheus Support', included: true },
@@ -74,6 +77,7 @@ export const PLAN_HIGHLIGHTS = {
     'Self-hosted on your infrastructure',
     'Unlimited users',
     'Advanced integrations',
+    'SSO (OAuth2/OIDC)',
     'Editing text in PDFs',
     'Cancel anytime'
   ],
@@ -81,17 +85,18 @@ export const PLAN_HIGHLIGHTS = {
     'Self-hosted on your infrastructure',
     'Unlimited users',
     'Advanced integrations',
+    'SSO (OAuth2/OIDC)',
     'Editing text in PDFs',
     'Save with annual billing'
   ],
   ENTERPRISE_MONTHLY: [
-    'Enterprise features (SSO, Auditing)',
+    'Enterprise features (SAML, Auditing)',
     'Usage tracking & Prometheus',
     'Custom PDF metadata',
     'Per-seat licensing'
   ],
   ENTERPRISE_YEARLY: [
-    'Enterprise features (SSO, Auditing)',
+    'Enterprise features (SAML, Auditing)',
     'Usage tracking & Prometheus',
     'Custom PDF metadata',
     'Save with annual billing'
