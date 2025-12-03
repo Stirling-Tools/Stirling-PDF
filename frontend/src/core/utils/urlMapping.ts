@@ -97,6 +97,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/automate': 'automate',
   '/sign': 'sign',
   '/add-text': 'addText',
+  '/pdf-text-editor': 'pdfTextEditor',
 
   // Developer tools
   '/dev-api': 'devApi',
