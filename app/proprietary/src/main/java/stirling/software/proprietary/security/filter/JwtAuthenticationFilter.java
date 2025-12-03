@@ -105,22 +105,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             try {
-                log.debug("Validating JWT token");
                 jwtService.validateToken(jwtToken);
-                log.debug("JWT token validated successfully");
             } catch (AuthenticationFailureException e) {
-                log.warn("JWT validation failed: {}", e.getMessage());
+                log.debug("JWT validation failed: {}", e.getMessage());
                 handleAuthenticationFailure(request, response, e);
                 return;
             }
 
             Map<String, Object> claims = jwtService.extractClaims(jwtToken);
             String tokenUsername = claims.get("sub").toString();
-            log.debug("JWT token username: {}", tokenUsername);
 
             try {
                 authenticate(request, claims);
-                log.debug("Authentication successful for user: {}", tokenUsername);
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
                 handleAuthenticationFailure(

@@ -131,7 +131,7 @@ unsupported = "Nieobsługiwane"
 
 [toolPanel]
 placeholder = "Wybierz narzędzie, aby zacząć"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Funkcja premium:"
 comingSoon = "Wkrótce:"
 
@@ -162,6 +162,11 @@ unfavorite = "Usuń z ulubionych"
 [toolPanel.toggle]
 fullscreen = "Przełącz na tryb pełnoekranowy"
 sidebar = "Przełącz na tryb paska bocznego"
+
+[backendStartup]
+notFoundTitle = "Nie znaleziono backendu"
+retry = "Spróbuj ponownie"
+unreachable = "Aplikacja nie może obecnie połączyć się z backendem. Sprawdź stan backendu i łączność sieciową, a następnie spróbuj ponownie."
 
 [zipWarning]
 title = "Duży plik ZIP"
@@ -914,7 +919,7 @@ title = "Nałóż PDFa"
 
 [home.pdfTextEditor]
 title = "Edytor tekstu PDF"
-desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
+desc = "Edytuj istniejący tekst i obrazy w plikach PDF"
 
 [home.addText]
 tags = "tekst,adnotacja,etykieta"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Podpis rysowany"
 defaultImageLabel = "Przesłany podpis"
 defaultTextLabel = "Podpis wpisany"
 saveButton = "Zapisz podpis"
+savePersonal = "Zapisz osobiste"
+saveShared = "Zapisz udostępnione"
 saveUnavailable = "Najpierw utwórz podpis, aby go zapisać."
 noChanges = "Bieżący podpis jest już zapisany."
+tempStorageTitle = "Tymczasowe przechowywanie w przeglądarce"
+tempStorageDescription = "Podpisy są przechowywane tylko w Twojej przeglądarce. Zostaną utracone po wyczyszczeniu danych przeglądarki lub zmianie przeglądarki."
+personalHeading = "Osobiste podpisy"
+sharedHeading = "Udostępnione podpisy"
+personalDescription = "Tylko Ty widzisz te podpisy."
+sharedDescription = "Wszyscy użytkownicy mogą widzieć i używać tych podpisów."
 
 [sign.saved.type]
 canvas = "Rysunek"
@@ -3441,6 +3454,9 @@ signinTitle = "Zaloguj się"
 ssoSignIn = "Zaloguj się za pomocą logowania jednokrotnego"
 oAuth2AutoCreateDisabled = "Wyłączono automatyczne tworzenie użytkownika OAUTH2"
 oAuth2AdminBlockedUser = "Rejestracja lub logowanie niezarejestrowanych użytkowników jest obecnie zablokowane. Prosimy o kontakt z administratorem."
+oAuth2RequiresLicense = "Logowanie OAuth/SSO wymaga płatnej licencji (Server lub Enterprise). Skontaktuj się z administratorem, aby uaktualnić swój plan."
+saml2RequiresLicense = "Logowanie SAML wymaga płatnej licencji (Server lub Enterprise). Skontaktuj się z administratorem, aby uaktualnić swój plan."
+maxUsersReached = "Osiągnięto maksymalną liczbę użytkowników dla Twojej obecnej licencji. Skontaktuj się z administratorem, aby uaktualnić plan lub dodać więcej miejsc."
 oauth2RequestNotFound = "Błąd logowania OAuth2"
 oauth2InvalidUserInfoResponse = "Niewłaściwe dane logowania"
 oauth2invalidRequest = "Nieprawidłowe żądanie"
@@ -3536,7 +3552,7 @@ title = "PDF do pojedyńczej strony"
 header = "PDF do pojedyńczej strony"
 submit = "Zapisz dokument jako PDF z jedną stroną"
 description = "To narzędzie scali wszystkie strony Twojego PDF w jedną dużą stronę. Szerokość pozostanie taka jak w oryginalnych stronach, a wysokość będzie sumą wysokości wszystkich stron."
-filenamePrefix = "single_page"
+filenamePrefix = "pojedyncza_strona"
 
 [pdfToSinglePage.files]
 placeholder = "Wybierz plik PDF w widoku głównym, aby rozpocząć"
@@ -3849,14 +3865,17 @@ fitToWidth = "Dopasuj do szerokości"
 actualSize = "Rzeczywisty rozmiar"
 
 [viewer]
+cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
+dualPageView = "Widok dwóch stron"
 firstPage = "Pierwsza strona"
 lastPage = "Ostatnia strona"
-previousPage = "Poprzednia strona"
 nextPage = "Następna strona"
+onlyPdfSupported = "Przeglądarka obsługuje tylko pliki PDF. Ten plik wydaje się mieć inny format."
+previousPage = "Poprzednia strona"
+singlePageView = "Widok pojedynczej strony"
+unknownFile = "Nieznany plik"
 zoomIn = "Powiększ"
 zoomOut = "Pomniejsz"
-singlePageView = "Widok pojedynczej strony"
-dualPageView = "Widok dwóch stron"
 
 [rightRail]
 closeSelected = "Zamknij wybrane pliki"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Przełącz panel boczny"
 exportSelected = "Eksportuj wybrane strony"
 toggleAnnotations = "Przełącz widoczność adnotacji"
 annotationMode = "Przełącz tryb adnotacji"
+print = "Drukuj PDF"
 draw = "Rysuj"
 save = "Zapisz"
 saveChanges = "Zapisz zmiany"
@@ -4156,7 +4176,7 @@ description = "Śledź działania użytkowników i zdarzenia systemowe na potrze
 
 [admin.settings.security.audit.level]
 label = "Poziom audytu"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=WYŁ., 1=PODSTAWOWY, 2=STANDARDOWY, 3=SZCZEGÓŁOWY"
 
 [admin.settings.security.audit.retentionDays]
 label = "Przechowywanie audytu (dni)"
@@ -4497,6 +4517,7 @@ description = "URL lub nazwa pliku do impressum (wymagane w niektórych jurysdyk
 title = "Premium i Enterprise"
 description = "Skonfiguruj swój klucz licencyjny premium lub enterprise."
 license = "Konfiguracja licencji"
+noInput = "Podaj klucz licencyjny lub plik"
 
 [admin.settings.premium.licenseKey]
 toggle = "Masz klucz licencyjny lub plik certyfikatu?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Ostrzeżenie: wykryto istniejącą licencję"
 line1 = "Nadpisania bieżącego klucza licencyjnego nie można cofnąć."
 line2 = "Poprzednia licencja zostanie trwale utracona, jeśli nie masz jej kopii zapasowej."
 line3 = "Ważne: przechowuj klucze licencyjne prywatnie i bezpiecznie. Nigdy nie udostępniaj ich publicznie."
+
+[admin.settings.premium.inputMethod]
+text = "Klucz licencyjny"
+file = "Plik certyfikatu"
+
+[admin.settings.premium.file]
+label = "Plik certyfikatu licencji"
+description = "Prześlij swój plik licencji .lic lub .cert z zakupów offline"
+choose = "Wybierz plik licencji"
+selected = "Wybrano: {{filename}} ({{size}})"
+successMessage = "Plik licencji przesłano i pomyślnie aktywowano. Ponowne uruchomienie nie jest wymagane."
+
+[admin.settings.premium.currentLicense]
+title = "Aktywna licencja"
+file = "Źródło: plik licencji ({{path}})"
+key = "Źródło: klucz licencyjny"
+type = "Typ: {{type}}"
+noInput = "Podaj klucz licencyjny lub prześlij plik certyfikatu"
+success = "Sukces"
 
 [admin.settings.premium.enabled]
 label = "Włącz funkcje premium"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} wybrane"
 download = "Pobierz"
 delete = "usuń"
 unsupported = "Nieobsługiwane"
+active = "Aktywny"
 addToUpload = "Dodaj do przesyłania"
+closeFile = "Zamknij plik"
 deleteAll = "Usuń wszystko"
 loadingFiles = "Ładowanie plików..."
 noFiles = "Brak dostępnych plików"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Wymagany jest co najmniej jeden adres e‑mail"
 submit = "Wyślij zaproszenia"
 success = "Pomyślnie zaproszono użytkowników"
-partialSuccess = "Niektóre zaproszenia nie powiodły się"
+partialFailure = "Niektóre zaproszenia nie powiodły się"
 allFailed = "Nie udało się zaprosić użytkowników"
 error = "Nie udało się wysłać zaproszeń"
 
@@ -5800,6 +5842,13 @@ submit = "Zaloguj"
 signInWith = "Zaloguj przez"
 oauthPending = "Otwieranie przeglądarki do uwierzytelnienia..."
 orContinueWith = "Lub kontynuuj e‑mailem"
+serverRequirement = "Uwaga: Na serwerze musi być włączone logowanie."
+showInstructions = "Jak włączyć?"
+hideInstructions = "Ukryj instrukcje"
+instructions = "Aby włączyć logowanie na swoim serwerze Stirling PDF:"
+instructionsEnvVar = "Ustaw zmienną środowiskową:"
+instructionsOrYml = "Lub w settings.yml:"
+instructionsRestart = "Następnie uruchom ponownie serwer, aby zmiany zaczęły obowiązywać."
 
 [setup.login.username]
 label = "Nazwa użytkownika"
@@ -5843,7 +5892,7 @@ paragraph = "Strona akapitowa"
 sparse = "Rzadki tekst"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatycznie"
 paragraph = "Akapit"
 singleLine = "Pojedyncza linia"
 

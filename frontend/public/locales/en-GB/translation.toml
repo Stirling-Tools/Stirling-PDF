@@ -919,7 +919,7 @@ title = "Overlay PDFs"
 
 [home.pdfTextEditor]
 title = "PDF Text Editor"
-desc = "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
+desc = "Edit existing text and images inside PDFs"
 
 [home.addText]
 tags = "text,annotation,label"
@@ -3902,6 +3902,7 @@ toggleSidebar = "Toggle Sidebar"
 exportSelected = "Export Selected Pages"
 toggleAnnotations = "Toggle Annotations Visibility"
 annotationMode = "Toggle Annotation Mode"
+print = "Print PDF"
 draw = "Draw"
 save = "Save"
 saveChanges = "Save Changes"
