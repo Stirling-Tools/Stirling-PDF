@@ -257,6 +257,9 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+            // Supported values: client_secret_basic, client_secret_post, none
+            // Default is null to use provider's discovered method or Spring's default
+            private String authenticationMethod;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =

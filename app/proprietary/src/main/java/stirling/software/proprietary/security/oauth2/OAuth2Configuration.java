@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +98,9 @@ public class OAuth2Configuration {
                                 .registrationId(keycloak.getName())
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
+                                .clientAuthenticationMethod(
+                                        getClientAuthenticationMethod(
+                                                oauth2.getAuthenticationMethod()))
                                 .scope(keycloak.getScopes())
                                 .userNameAttributeName(keycloak.getUseAsUsername().getName())
                                 .clientName(keycloak.getClientName())
@@ -165,7 +169,6 @@ public class OAuth2Configuration {
                         githubClient.getUseAsUsername());
 
         boolean isValid = validateProvider(github);
-        log.info("Initialised GitHub OAuth2 provider");
 
         return isValid
                 ? Optional.of(
@@ -214,6 +217,9 @@ public class OAuth2Configuration {
                                 .registrationId(name)
                                 .clientId(oidcProvider.getClientId())
                                 .clientSecret(oidcProvider.getClientSecret())
+                                .clientAuthenticationMethod(
+                                        getClientAuthenticationMethod(
+                                                oauth.getAuthenticationMethod()))
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
@@ -230,6 +236,27 @@ public class OAuth2Configuration {
     private boolean isClientInitialised(OAUTH2 oauth2) {
         Client client = oauth2.getClient();
         return client == null;
+    }
+
+    /**
+     * Converts a string configuration value to a ClientAuthenticationMethod.
+     *
+     * @param method the string value (client_secret_basic, client_secret_post, none)
+     * @return the corresponding ClientAuthenticationMethod, or null if not specified
+     */
+    private ClientAuthenticationMethod getClientAuthenticationMethod(String method) {
+        if (isStringEmpty(method)) {
+            return null;
+        }
+        return switch (method.toLowerCase().replace("-", "_")) {
+            case "client_secret_basic" -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC;
+            case "client_secret_post" -> ClientAuthenticationMethod.CLIENT_SECRET_POST;
+            case "none" -> ClientAuthenticationMethod.NONE;
+            default -> {
+                log.warn("Unknown clientAuthenticationMethod '{}', using provider default", method);
+                yield null;
+            }
+        };
     }
 
     /*

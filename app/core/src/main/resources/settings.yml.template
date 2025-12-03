@@ -41,6 +41,7 @@ security:
     issuer: '' # set to any Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
     clientId: '' # client ID from your Provider
     clientSecret: '' # client secret from your Provider
+    authenticationMethod: '' # authentication method to use when communicating with the token endpoint. Supported values: 'client_secret_basic', 'client_secret_post', 'none'
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # default is 'email'; custom fields can be used as the username
