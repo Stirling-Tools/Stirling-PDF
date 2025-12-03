@@ -248,11 +248,14 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign in with OAuth provider (GitHub, Google, etc.)
+   * Sign in with OAuth provider (GitHub, Google, Authentik, etc.)
    * This redirects to the Spring OAuth2 authorization endpoint
+   *
+   * @param params.provider - OAuth provider ID (e.g., 'github', 'google', 'authentik', 'mycompany')
+   *                          Can be any string - the backend determines available providers
    */
   async signInWithOAuth(params: {
-    provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc';
+    provider: string;
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {

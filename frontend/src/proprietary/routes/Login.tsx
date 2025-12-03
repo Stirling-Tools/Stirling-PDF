@@ -235,16 +235,12 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
 
-      // Map unknown providers to 'oidc' for the backend redirect
-      const backendProvider: KnownOAuthProvider = KNOWN_OAUTH_PROVIDERS.includes(provider as KnownOAuthProvider)
-        ? (provider as KnownOAuthProvider)
-        : 'oidc';
+      console.log(`[Login] Signing in with provider: ${provider}`);
 
-      console.log(`[Login] Signing in with ${provider} (backend: ${backendProvider})`);
-
-      // Redirect to Spring OAuth2 endpoint
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
-        provider: backendProvider,
+        provider: provider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 

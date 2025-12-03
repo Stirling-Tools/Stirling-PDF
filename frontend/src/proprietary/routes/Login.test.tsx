@@ -239,6 +239,139 @@ describe('Login', () => {
     });
   });
 
+  it('should use actual provider ID for OAuth login (authentik)', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with authentik
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/authentik': 'Authentik',
+        },
+      }),
+    } as Response);
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear
+    await waitFor(() => {
+      const button = screen.queryByText('Authentik');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('Authentik');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'authentik' directly, NOT map to 'oidc'
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'authentik',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
+  it('should use actual provider ID for OAuth login (custom provider)', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with custom provider 'mycompany'
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/mycompany': 'My Company SSO',
+        },
+      }),
+    } as Response);
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear (will show 'Mycompany' as label)
+    await waitFor(() => {
+      const button = screen.queryByText('Mycompany');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('Mycompany');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'mycompany' directly - this is the critical fix
+      // Previously it would map unknown providers to 'oidc'
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'mycompany',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
+  it('should use oidc provider ID when explicitly configured', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with 'oidc'
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/oidc': 'OIDC',
+        },
+      }),
+    } as Response);
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear
+    await waitFor(() => {
+      const button = screen.queryByText('OIDC');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('OIDC');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'oidc' when explicitly configured
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'oidc',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
   it('should show error on failed login', async () => {
     const user = userEvent.setup();
     const errorMessage = 'Invalid credentials';
