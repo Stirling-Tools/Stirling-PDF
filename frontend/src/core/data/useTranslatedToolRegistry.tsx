@@ -152,6 +152,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Proprietary tools (if any)
       ...proprietaryTools,
       // Recommended Tools in order
+      pdfTextEditor: {
+        icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.pdfTextEditor.title", "PDF Text Editor"),
+        component: PdfTextEditor,
+        description: t(
+          "home.pdfTextEditor.desc",
+          "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+        ),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 1,
+        endpoints: ["text-editor-pdf"],
+        synonyms: getSynonyms(t, "pdfTextEditor"),
+        supportsAutomate: false,
+        automationSettings: null,
+        versionStatus: "alpha",
+      },
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
@@ -892,23 +909,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: redactOperationConfig,
         automationSettings: RedactSingleStepSettings,
         synonyms: getSynonyms(t, "redact")
-      },
-      pdfTextEditor: {
-        icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: PdfTextEditor,
-        description: t(
-          "home.pdfTextEditor.desc",
-          "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
-        ),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: 1,
-        endpoints: ["text-editor-pdf"],
-        synonyms: getSynonyms(t, "pdfTextEditor"),
-        supportsAutomate: false,
-        automationSettings: null,
-        versionStatus: "alpha",
       },
     };
 

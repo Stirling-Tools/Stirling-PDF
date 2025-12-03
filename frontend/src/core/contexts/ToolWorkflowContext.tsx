@@ -224,11 +224,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return;
     }
 
+    if (navigationState.pendingNavigation || navigationState.showNavigationWarning) {
+      return;
+    }
+
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench]);
+  }, [actions, customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 

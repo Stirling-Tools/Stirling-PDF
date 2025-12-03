@@ -5991,6 +5991,7 @@ earlyAccess = "Early Access"
 reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
+saveChanges = "Save Changes"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -6028,6 +6029,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
+dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"

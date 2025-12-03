@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 
@@ -20,13 +21,23 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
+  const { hasUnsavedChanges } = useNavigationState();
+  const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
 
-  const handleClick = () => {
+  const performNavigation = () => {
     setActiveButton('tools');
     // Preserve existing behavior used in QuickAccessBar header
     handleReaderToggle();
     handleBackToTools();
+  };
+
+  const handleClick = () => {
+    if (hasUnsavedChanges) {
+      navigationActions.requestNavigation(performNavigation);
+      return;
+    }
+    performNavigation();
   };
 
   // Do not highlight All Tools when a specific tool is open (indicator is shown)
@@ -35,6 +46,11 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   const navProps = getHomeNavigation();
 
   const handleNavClick = (e: React.MouseEvent) => {
+    if (hasUnsavedChanges) {
+      e.preventDefault();
+      navigationActions.requestNavigation(performNavigation);
+      return;
+    }
     handleUnlessSpecialClick(e, handleClick);
   };
 

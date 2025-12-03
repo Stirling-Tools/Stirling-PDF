@@ -12,7 +12,7 @@ interface NavigationWarningModalProps {
 
 const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: NavigationWarningModalProps) => {
   const { t } = useTranslation();
-  const { showNavigationWarning, hasUnsavedChanges, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
+  const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
 
   const handleKeepWorking = () => {
@@ -41,7 +41,9 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
   };
   const BUTTON_WIDTH = "10rem";
 
-  if (!hasUnsavedChanges) {
+  // Only show modal if there are unsaved changes AND there's an actual pending navigation
+  // This prevents the modal from showing due to spurious state updates
+  if (!hasUnsavedChanges || !pendingNavigation) {
     return null;
   }
 
