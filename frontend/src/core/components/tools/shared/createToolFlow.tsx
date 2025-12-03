@@ -87,6 +87,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
         {config.steps.map((stepConfig) =>
           steps.create(stepConfig.title, {
             isVisible: stepConfig.isVisible,
+            isCollapsed: stepConfig.isCollapsed,
             onCollapsedClick: stepConfig.onCollapsedClick,
             tooltip: stepConfig.tooltip
           }, stepConfig.content)
