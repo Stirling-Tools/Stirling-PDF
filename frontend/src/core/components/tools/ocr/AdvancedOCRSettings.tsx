@@ -78,8 +78,9 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
 
         <Stack gap="sm">
           {advancedOptionsData.map((option) => {
-            const checkbox = (
+            return (
               <Checkbox
+                key={option.value}
                 checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
                 onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
                 label={option.label}
@@ -87,20 +88,6 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
                 size="sm"
               />
             );
-
-            if (option.value === 'invalidateDigitalSignatures') {
-              return (
-                <Tooltip
-                  key={option.value}
-                  content={t('ocr.invalidateSignatures.warning', 'Warning: Enabling this option will invalidate any digital signatures in the PDF. The document will no longer be legally valid as a signed document.')}
-                  position="right"
-                >
-                  {checkbox}
-                </Tooltip>
-              );
-            }
-
-            return <React.Fragment key={option.value}>{checkbox}</React.Fragment>;
           })}
         </Stack>
       </div>
