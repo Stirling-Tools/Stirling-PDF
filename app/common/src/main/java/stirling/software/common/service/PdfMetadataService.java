@@ -65,20 +65,18 @@ public class PdfMetadataService {
     }
 
     /**
-     * Parses a date string and converts it to Calendar for PDFBox compatibility.
+     * Parses a date string to ZonedDateTime.
      *
      * @param dateString the date string in "yyyy/MM/dd HH:mm:ss" format
-     * @return Calendar instance or null if parsing fails or input is empty
+     * @return ZonedDateTime instance or null if parsing fails or input is empty
      */
-    public static Calendar parseToCalendar(String dateString) {
+    public static ZonedDateTime parseToZonedDateTime(String dateString) {
         if (dateString == null || dateString.trim().isEmpty()) {
             return null;
         }
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-            ZonedDateTime zonedDateTime =
-                    LocalDateTime.parse(dateString, formatter).atZone(ZoneId.systemDefault());
-            return toCalendar(zonedDateTime);
+            return LocalDateTime.parse(dateString, formatter).atZone(ZoneId.systemDefault());
         } catch (Exception e) {
             return null;
         }
