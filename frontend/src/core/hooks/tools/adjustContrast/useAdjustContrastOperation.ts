@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { ToolType, useToolOperation, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
 import { AdjustContrastParameters, defaultParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
 import { applyAdjustmentsToCanvas } from '@app/components/tools/adjustContrast/utils';
@@ -46,7 +46,7 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
     return out;
 }
 
-async function processPdfClientSide(params: AdjustContrastParameters, files: File[]): Promise<File[]> {
+async function processPdfClientSide(params: AdjustContrastParameters, files: File[]): Promise<CustomProcessorResult> {
   // Limit concurrency to avoid exhausting memory/CPU while still getting speedups
   // Heuristic: use up to 4 workers on capable machines, otherwise 2-3
   let CONCURRENCY_LIMIT = 2;
@@ -72,7 +72,12 @@ async function processPdfClientSide(params: AdjustContrastParameters, files: Fil
     return results;
   };
 
-  return mapWithConcurrency(files, CONCURRENCY_LIMIT, (file) => buildAdjustedPdfForFile(file, params));
+  const processedFiles = await mapWithConcurrency(files, CONCURRENCY_LIMIT, (file) => buildAdjustedPdfForFile(file, params));
+
+  return {
+    files: processedFiles,
+    consumedAllInputs: false,
+  };
 }
 
 export const adjustContrastOperationConfig = {

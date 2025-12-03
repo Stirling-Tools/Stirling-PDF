@@ -75,8 +75,7 @@ public class ReactRoutingController {
 
     @GetMapping(
             "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
-    public ResponseEntity<String> forwardRootPaths(HttpServletRequest request)
-            throws IOException {
+    public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
