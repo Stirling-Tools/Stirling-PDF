@@ -4,7 +4,7 @@
 
 <h1 align="center">Stirling PDF - The Open-Source PDF Platform</h1>
 
-Stirling PDF is a powerful, open-source PDF editing platform. Run it as a personal desktop app, in the browser, or deploy it on your own servers with a private API. Edit, sign, redact, convert, and automate PDFs without sending documents to third‑party services.
+Stirling PDF is a powerful, open-source PDF editing platform. Run it as a personal desktop app, in the browser, or deploy it on your own servers with a private API. Edit, sign, redact, convert, and automate PDFs without sending documents to external services.
 
 <p align="center">
   <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf">
