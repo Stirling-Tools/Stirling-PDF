@@ -3,6 +3,7 @@
 AI Translation Helper for Stirling PDF Frontend
 Provides utilities for AI-assisted translation workflows including
 batch processing, quality checks, and integration helpers.
+TOML format only.
 """
 
 import json
@@ -14,31 +15,33 @@ import argparse
 import re
 from datetime import datetime
 import csv
+import tomllib
+import tomli_w
 
 
 class AITranslationHelper:
     def __init__(self, locales_dir: str = "frontend/public/locales"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.json"
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
 
-    def _load_json(self, file_path: Path) -> Dict:
-        """Load JSON file with error handling."""
+    def _load_translation_file(self, file_path: Path) -> Dict:
+        """Load TOML translation file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
+        except (FileNotFoundError, Exception) as e:
             print(f"Error loading {file_path}: {e}")
             return {}
 
-    def _save_json(self, data: Dict, file_path: Path) -> None:
-        """Save JSON file."""
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+    def _save_translation_file(self, data: Dict, file_path: Path) -> None:
+        """Save TOML translation file."""
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(data, f)
 
     def create_ai_batch_file(self, languages: List[str], output_file: Path,
                             max_entries_per_language: int = 50) -> None:
         """Create a batch file for AI translation with multiple languages."""
-        golden_truth = self._load_json(self.golden_truth_file)
+        golden_truth = self._load_translation_file(self.golden_truth_file)
         batch_data = {
             'metadata': {
                 'created_at': datetime.now().isoformat(),
@@ -56,12 +59,14 @@ class AITranslationHelper:
         }
 
         for lang in languages:
-            lang_file = self.locales_dir / lang / "translation.json"
-            if not lang_file.exists():
-                # Create empty translation structure
-                lang_data = {}
+            lang_dir = self.locales_dir / lang
+            toml_file = lang_dir / "translation.toml"
+
+            if toml_file.exists():
+                lang_data = self._load_translation_file(toml_file)
             else:
-                lang_data = self._load_json(lang_file)
+                # No translation file found, create empty structure
+                lang_data = {}
 
             # Find untranslated entries
             untranslated = self._find_untranslated_entries(golden_truth, lang_data)
@@ -79,7 +84,9 @@ class AITranslationHelper:
                     'context': self._get_key_context(key)
                 }
 
-        self._save_json(batch_data, output_file)
+        # Always save batch files as JSON for compatibility
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(batch_data, f, indent=2, ensure_ascii=False)
         total_entries = sum(len(lang_data) for lang_data in batch_data['translations'].values())
         print(f"Created AI batch file: {output_file}")
         print(f"Total entries to translate: {total_entries}")
@@ -173,7 +180,9 @@ class AITranslationHelper:
 
     def validate_ai_translations(self, batch_file: Path) -> Dict[str, List[str]]:
         """Validate AI translations for common issues."""
-        batch_data = self._load_json(batch_file)
+        # Batch files are always JSON
+        with open(batch_file, 'r', encoding='utf-8') as f:
+            batch_data = json.load(f)
         issues = {'errors': [], 'warnings': []}
 
         for lang, translations in batch_data.get('translations', {}).items():
@@ -209,7 +218,9 @@ class AITranslationHelper:
 
     def apply_ai_batch_translations(self, batch_file: Path, validate: bool = True) -> Dict[str, Any]:
         """Apply translations from AI batch file to individual language files."""
-        batch_data = self._load_json(batch_file)
+        # Batch files are always JSON
+        with open(batch_file, 'r', encoding='utf-8') as f:
+            batch_data = json.load(f)
         results = {'applied': {}, 'errors': [], 'warnings': []}
 
         if validate:
@@ -226,14 +237,15 @@ class AITranslationHelper:
                     print(f"  WARNING: {warning}")
 
         for lang, translations in batch_data.get('translations', {}).items():
-            lang_file = self.locales_dir / lang / "translation.json"
+            lang_dir = self.locales_dir / lang
+            toml_file = lang_dir / "translation.toml"
 
-            # Load existing data or create new
-            if lang_file.exists():
-                lang_data = self._load_json(lang_file)
+            if toml_file.exists():
+                lang_data = self._load_translation_file(toml_file)
             else:
+                # No translation file found, create new TOML file
                 lang_data = {}
-                lang_file.parent.mkdir(parents=True, exist_ok=True)
+                lang_dir.mkdir(parents=True, exist_ok=True)
 
             applied_count = 0
             for key, translation_data in translations.items():
@@ -243,7 +255,7 @@ class AITranslationHelper:
                     applied_count += 1
 
             if applied_count > 0:
-                self._save_json(lang_data, lang_file)
+                self._save_translation_file(lang_data, toml_file)
                 results['applied'][lang] = applied_count
                 print(f"Applied {applied_count} translations to {lang}")
 
@@ -265,7 +277,7 @@ class AITranslationHelper:
 
     def export_for_external_translation(self, languages: List[str], output_format: str = 'csv') -> None:
         """Export translations for external translation services."""
-        golden_truth = self._load_json(self.golden_truth_file)
+        golden_truth = self._load_translation_file(self.golden_truth_file)
         golden_flat = self._flatten_dict(golden_truth)
 
         if output_format == 'csv':
@@ -287,9 +299,11 @@ class AITranslationHelper:
                     }
 
                     for lang in languages:
-                        lang_file = self.locales_dir / lang / "translation.json"
-                        if lang_file.exists():
-                            lang_data = self._load_json(lang_file)
+                        lang_dir = self.locales_dir / lang
+                        toml_file = lang_dir / "translation.toml"
+
+                        if toml_file.exists():
+                            lang_data = self._load_translation_file(toml_file)
                             lang_flat = self._flatten_dict(lang_data)
                             value = lang_flat.get(key, '')
                             if value.startswith('[UNTRANSLATED]'):
@@ -316,21 +330,28 @@ class AITranslationHelper:
                 }
 
                 for lang in languages:
-                    lang_file = self.locales_dir / lang / "translation.json"
-                    if lang_file.exists():
-                        lang_data = self._load_json(lang_file)
+                    lang_dir = self.locales_dir / lang
+                    toml_file = lang_dir / "translation.toml"
+
+                    if toml_file.exists():
+                        lang_data = self._load_translation_file(toml_file)
                         lang_flat = self._flatten_dict(lang_data)
                         value = lang_flat.get(key, '')
                         if value.startswith('[UNTRANSLATED]'):
                             value = ''
                         export_data['translations'][key][lang] = value
 
-            self._save_json(export_data, output_file)
+            # Export files are always JSON
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(export_data, f, indent=2, ensure_ascii=False)
             print(f"Exported to {output_file}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='AI Translation Helper')
+    parser = argparse.ArgumentParser(
+        description='AI Translation Helper',
+        epilog='Works with TOML translation files.'
+    )
     parser.add_argument('--locales-dir', default='frontend/public/locales',
                         help='Path to locales directory')
 

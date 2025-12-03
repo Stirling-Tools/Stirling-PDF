@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Validate JSON structure and formatting of translation files.
+Validate TOML structure and formatting of translation files.
 
 Checks for:
-- Valid JSON syntax
+- Valid TOML syntax
 - Consistent key structure with en-GB
 - Missing keys
 - Extra keys not in en-GB
@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 import argparse
+import tomllib  # Python 3.11+ (stdlib)
 
 
 def get_all_keys(d: dict, parent_key: str = '', sep: str = '.') -> Set[str]:
@@ -31,14 +32,12 @@ def get_all_keys(d: dict, parent_key: str = '', sep: str = '.') -> Set[str]:
     return keys
 
 
-def validate_json_file(file_path: Path) -> tuple[bool, str]:
-    """Validate that a file contains valid JSON."""
+def validate_translation_file(file_path: Path) -> tuple[bool, str]:
+    """Validate that a file contains valid TOML."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            json.load(f)
-        return True, "Valid JSON"
-    except json.JSONDecodeError as e:
-        return False, f"Invalid JSON at line {e.lineno}, column {e.colno}: {e.msg}"
+        with open(file_path, 'rb') as f:
+            tomllib.load(f)
+        return True, "Valid TOML"
     except Exception as e:
         return False, f"Error reading file: {str(e)}"
 
@@ -101,9 +100,15 @@ def print_validation_result(result: Dict, verbose: bool = False):
     print("-" * 100)
 
 
+def load_translation_file(file_path: Path) -> dict:
+    """Load TOML translation file."""
+    with open(file_path, 'rb') as f:
+        return tomllib.load(f)
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate translation JSON structure'
+        description='Validate translation TOML structure'
     )
     parser.add_argument(
         '--language',
@@ -125,21 +130,21 @@ def main():
 
     # Define paths
     locales_dir = Path('frontend/public/locales')
-    en_gb_path = locales_dir / 'en-GB' / 'translation.json'
+    en_gb_path = locales_dir / 'en-GB' / 'translation.toml'
+    file_ext = '.toml'
 
     if not en_gb_path.exists():
         print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
         sys.exit(1)
 
     # Validate en-GB itself
-    is_valid, message = validate_json_file(en_gb_path)
+    is_valid, message = validate_translation_file(en_gb_path)
     if not is_valid:
         print(f"❌ Error in en-GB file: {message}")
         sys.exit(1)
 
     # Load en-GB structure
-    with open(en_gb_path, 'r', encoding='utf-8') as f:
-        en_gb = json.load(f)
+    en_gb = load_translation_file(en_gb_path)
 
     en_gb_keys = get_all_keys(en_gb)
 
@@ -147,24 +152,26 @@ def main():
     if args.language:
         languages = [args.language]
     else:
-        languages = [
-            d.name for d in locales_dir.iterdir()
-            if d.is_dir() and d.name != 'en-GB' and (d / 'translation.json').exists()
-        ]
+        # Validate all languages except en-GB
+        languages = []
+        for d in locales_dir.iterdir():
+            if d.is_dir() and d.name != 'en-GB':
+                if (d / 'translation.toml').exists():
+                    languages.append(d.name)
 
     results = []
     json_errors = []
 
     # Validate each language
     for lang_code in sorted(languages):
-        lang_path = locales_dir / lang_code / 'translation.json'
+        lang_path = locales_dir / lang_code / 'translation.toml'
 
         if not lang_path.exists():
-            print(f"⚠️  Warning: {lang_code}/translation.json not found, skipping")
+            print(f"⚠️  Warning: {lang_code}/translation.toml not found, skipping")
             continue
 
-        # First check if JSON is valid
-        is_valid, message = validate_json_file(lang_path)
+        # First check if file is valid
+        is_valid, message = validate_translation_file(lang_path)
         if not is_valid:
             json_errors.append({
                 'language': lang_code,
@@ -174,8 +181,7 @@ def main():
             continue
 
         # Load and compare structure
-        with open(lang_path, 'r', encoding='utf-8') as f:
-            lang_data = json.load(f)
+        lang_data = load_translation_file(lang_path)
 
         lang_keys = get_all_keys(lang_data)
         result = validate_structure(en_gb_keys, lang_keys, lang_code)
@@ -189,9 +195,9 @@ def main():
         }
         print(json.dumps(output, indent=2, ensure_ascii=False))
     else:
-        # Print JSON errors first
+        # Print syntax errors first
         if json_errors:
-            print("\n❌ JSON Syntax Errors:")
+            print("\n❌ Syntax Errors:")
             print("=" * 100)
             for error in json_errors:
                 print(f"\nLanguage: {error['language']}")

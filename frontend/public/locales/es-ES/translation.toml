@@ -163,6 +163,11 @@ unfavorite = "Quitar de favoritos"
 fullscreen = "Cambiar a modo pantalla completa"
 sidebar = "Cambiar a modo barra lateral"
 
+[backendStartup]
+notFoundTitle = "Backend no encontrado"
+retry = "Reintentar"
+unreachable = "La aplicación no puede conectarse actualmente al backend. Verifique el estado del backend y la conectividad de red, luego inténtelo de nuevo."
+
 [zipWarning]
 title = "Archivo ZIP grande"
 message = "Este ZIP contiene {{count}} archivos. ¿Extraer de todos modos?"
@@ -347,7 +352,7 @@ teams = "Equipos"
 title = "Configuración"
 systemSettings = "Ajustes del sistema"
 features = "Funciones"
-endpoints = "Endpoints"
+endpoints = "Puntos de conexión"
 database = "Base de datos"
 advanced = "Avanzado"
 
@@ -912,6 +917,9 @@ desc = "Crear flujos de trabajo de múltiples pasos encadenando acciones de PDF.
 desc = "Superponer PDFs encima de otro PDF"
 title = "Superponer PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de texto de PDF"
+desc = "Edita texto e imágenes existentes dentro de archivos PDF"
 
 [home.addText]
 tags = "texto,anotación,etiqueta"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Firma dibujada"
 defaultImageLabel = "Firma subida"
 defaultTextLabel = "Firma escrita"
 saveButton = "Guardar firma"
+savePersonal = "Guardar personal"
+saveShared = "Guardar compartida"
 saveUnavailable = "Cree primero una firma para guardarla."
 noChanges = "La firma actual ya está guardada."
+tempStorageTitle = "Almacenamiento temporal del navegador"
+tempStorageDescription = "Las firmas se almacenan solo en tu navegador. Se perderán si borras los datos del navegador o cambias de navegador."
+personalHeading = "Firmas personales"
+sharedHeading = "Firmas compartidas"
+personalDescription = "Solo tú puedes ver estas firmas."
+sharedDescription = "Todos los usuarios pueden ver y usar estas firmas."
 
 [sign.saved.type]
 canvas = "Dibujo"
@@ -3438,6 +3454,9 @@ signinTitle = "Por favor, inicie sesión"
 ssoSignIn = "Iniciar sesión a través del inicio de sesión único"
 oAuth2AutoCreateDisabled = "Usuario de creación automática de OAUTH2 DESACTIVADO"
 oAuth2AdminBlockedUser = "El registro o inicio de sesión de usuarios no registrados está actualmente bloqueado. Por favor, póngase en contacto con el administrador."
+oAuth2RequiresLicense = "El inicio de sesión OAuth/SSO requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+saml2RequiresLicense = "El inicio de sesión SAML requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+maxUsersReached = "Se alcanzó el número máximo de usuarios para su licencia actual. Póngase en contacto con el administrador para actualizar su plan o añadir más plazas."
 oauth2RequestNotFound = "Solicitud de autorización no encontrada"
 oauth2InvalidUserInfoResponse = "Respuesta de información de usuario no válida"
 oauth2invalidRequest = "Solicitud no válida"
@@ -3846,14 +3865,17 @@ fitToWidth = "Ajustar al Ancho"
 actualSize = "Tamaño Real"
 
 [viewer]
+cannotPreviewFile = "No se puede previsualizar el archivo"
+dualPageView = "Vista de Página Doble"
 firstPage = "Primera Página"
 lastPage = "Última Página"
-previousPage = "Página Anterior"
 nextPage = "Página Siguiente"
+onlyPdfSupported = "El visor solo admite archivos PDF. Este archivo parece ser de un formato diferente."
+previousPage = "Página Anterior"
+singlePageView = "Vista de Página Única"
+unknownFile = "Archivo desconocido"
 zoomIn = "Acercar"
 zoomOut = "Alejar"
-singlePageView = "Vista de Página Única"
-dualPageView = "Vista de Página Doble"
 
 [rightRail]
 closeSelected = "Cerrar Archivos Seleccionados"
@@ -3877,6 +3899,7 @@ toggleSidebar = "Alternar Barra Lateral"
 exportSelected = "Exportar páginas seleccionadas"
 toggleAnnotations = "Mostrar/ocultar anotaciones"
 annotationMode = "Cambiar modo de anotaciones"
+print = "Imprimir PDF"
 draw = "Dibujar"
 save = "Guardar"
 saveChanges = "Guardar cambios"
@@ -4494,6 +4517,7 @@ description = "URL o nombre de archivo del impressum (requerido en algunas juris
 title = "Premium y Enterprise"
 description = "Configura tu clave de licencia premium o enterprise."
 license = "Configuración de licencia"
+noInput = "Proporciona una clave o archivo de licencia"
 
 [admin.settings.premium.licenseKey]
 toggle = "¿Tiene una clave de licencia o un archivo de certificado?"
@@ -4510,6 +4534,25 @@ title = "⚠️ Advertencia: se detectó una licencia existente"
 line1 = "Sobrescribir su clave de licencia actual no se puede deshacer."
 line2 = "Su licencia anterior se perderá de forma permanente a menos que la haya respaldado en otro lugar."
 line3 = "Importante: mantenga las claves de licencia privadas y seguras. Nunca las comparta públicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Clave de licencia"
+file = "Archivo de certificado"
+
+[admin.settings.premium.file]
+label = "Archivo de certificado de licencia"
+description = "Sube tu archivo de licencia .lic o .cert de compras sin conexión"
+choose = "Elegir archivo de licencia"
+selected = "Seleccionado: {{filename}} ({{size}})"
+successMessage = "Archivo de licencia subido y activado correctamente. No es necesario reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licencia activa"
+file = "Origen: Archivo de licencia ({{path}})"
+key = "Origen: Clave de licencia"
+type = "Tipo: {{type}}"
+noInput = "Proporciona una clave de licencia o sube un archivo de certificado"
+success = "Éxito"
 
 [admin.settings.premium.enabled]
 label = "Habilitar funciones Premium"
@@ -4644,7 +4687,9 @@ selectedCount = "{{count}} seleccionados"
 download = "Descargar"
 delete = "Borrar"
 unsupported = "No Soportado"
+active = "Activo"
 addToUpload = "Añadir a la subida"
+closeFile = "Cerrar archivo"
 deleteAll = "Eliminar todo"
 loadingFiles = "Cargando archivos..."
 noFiles = "No hay archivos disponibles"
@@ -5204,7 +5249,7 @@ user = "Usuario"
 [workspace.people.addMember]
 title = "Añadir miembro"
 username = "Nombre de usuario (correo)"
-usernamePlaceholder = "user@example.com"
+usernamePlaceholder = "usuario@ejemplo.com"
 password = "Contraseña"
 passwordPlaceholder = "Introduce la contraseña"
 role = "Rol"
@@ -5241,11 +5286,11 @@ error = "No se pudo eliminar el usuario"
 tab = "Invitación por correo electrónico"
 description = "Escribe o pega correos a continuación, separados por comas. Los usuarios recibirán credenciales de inicio de sesión por correo electrónico."
 emails = "Direcciones de correo electrónico"
-emailsPlaceholder = "user1@example.com, user2@example.com"
+emailsPlaceholder = "usuario1@ejemplo.com, usuario2@ejemplo.com"
 emailsRequired = "Se requiere al menos una dirección de correo electrónico"
 submit = "Enviar invitaciones"
 success = "usuario(s) invitado(s) correctamente"
-partialSuccess = "Algunas invitaciones fallaron"
+partialFailure = "Algunas invitaciones fallaron"
 allFailed = "No se pudo invitar a los usuarios"
 error = "No se pudieron enviar las invitaciones"
 
@@ -5541,7 +5586,7 @@ emailInvalid = "Introduzca una dirección de correo válida"
 title = "Introduzca su correo electrónico"
 description = "Lo usaremos para enviar su clave de licencia y recibos."
 emailLabel = "Dirección de correo electrónico"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "su@email.com"
 continue = "Continuar"
 modalTitle = "Comenzar - {{planName}}"
 
@@ -5797,13 +5842,20 @@ submit = "Iniciar sesión"
 signInWith = "Iniciar sesión con"
 oauthPending = "Abriendo el navegador para autenticación..."
 orContinueWith = "O continuar con email"
+serverRequirement = "Nota: el servidor debe tener el inicio de sesión habilitado."
+showInstructions = "¿Cómo habilitarlo?"
+hideInstructions = "Ocultar instrucciones"
+instructions = "Para habilitar el inicio de sesión en su servidor de Stirling PDF:"
+instructionsEnvVar = "Establezca la variable de entorno:"
+instructionsOrYml = "O en settings.yml:"
+instructionsRestart = "Luego reinicie su servidor para que los cambios surtan efecto."
 
 [setup.login.username]
 label = "Nombre de usuario"
 placeholder = "Introduzca su nombre de usuario"
 
 [setup.login.email]
-label = "Email"
+label = "Correo electrónico"
 placeholder = "Introduzca su email"
 
 [setup.login.password]
@@ -5840,7 +5892,7 @@ paragraph = "Página de párrafos"
 sparse = "Texto disperso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Párrafo"
 singleLine = "Línea única"
 

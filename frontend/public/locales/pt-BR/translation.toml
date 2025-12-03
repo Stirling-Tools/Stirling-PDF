@@ -131,7 +131,7 @@ unsupported = "Não suportado"
 
 [toolPanel]
 placeholder = "Escolha uma ferramenta para começar"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Recurso premium:"
 comingSoon = "Em breve:"
 
@@ -162,6 +162,11 @@ unfavorite = "Remover dos favoritos"
 [toolPanel.toggle]
 fullscreen = "Alternar para modo tela cheia"
 sidebar = "Alternar para modo barra lateral"
+
+[backendStartup]
+notFoundTitle = "Backend não encontrado"
+retry = "Tentar novamente"
+unreachable = "No momento, o aplicativo não consegue se conectar ao backend. Verifique o status do backend e a conectividade de rede e tente novamente."
 
 [zipWarning]
 title = "Arquivo ZIP grande"
@@ -912,6 +917,9 @@ desc = "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ide
 desc = "Sobrepor um PDF sobre outro"
 title = "Sobrepor PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de Texto em PDF"
+desc = "Edite texto e imagens existentes em PDFs"
 
 [home.addText]
 tags = "texto,anotação,rótulo"
@@ -1217,7 +1225,7 @@ odtExt = "Texto OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Apresentação OpenDocument (.odp)"
 txtExt = "Texto simples (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Formato Rich Text (.rtf)"
 selectedFiles = "Arquivos selecionados"
 noFileSelected = "Nenhum arquivo selecionado. Use o painel de arquivos para adicionar arquivos."
 convertFiles = "Converter arquivos"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Assinatura desenhada"
 defaultImageLabel = "Assinatura enviada"
 defaultTextLabel = "Assinatura digitada"
 saveButton = "Salvar assinatura"
+savePersonal = "Salvar pessoal"
+saveShared = "Salvar compartilhado"
 saveUnavailable = "Crie uma assinatura primeiro para salvá-la."
 noChanges = "A assinatura atual já está salva."
+tempStorageTitle = "Armazenamento temporário do navegador"
+tempStorageDescription = "As assinaturas são armazenadas apenas no seu navegador. Elas serão perdidas se você limpar os dados do navegador ou trocar de navegador."
+personalHeading = "Assinaturas pessoais"
+sharedHeading = "Assinaturas compartilhadas"
+personalDescription = "Somente você pode ver essas assinaturas."
+sharedDescription = "Todos os usuários podem ver e usar essas assinaturas."
 
 [sign.saved.type]
 canvas = "Desenho"
@@ -3438,6 +3454,9 @@ signinTitle = "Por favor, inicie a sessão"
 ssoSignIn = "Iniciar sessão através de login único (SSO)"
 oAuth2AutoCreateDisabled = "Auto-Criar Usuário OAUTH2 Desativado"
 oAuth2AdminBlockedUser = "O registro ou login de usuários não registrados está atualmente bloqueado. Entre em contato com o administrador."
+oAuth2RequiresLicense = "O login via OAuth/SSO requer uma licença paga (Server ou Enterprise). Entre em contato com o administrador para atualizar seu plano."
+saml2RequiresLicense = "O login via SAML requer uma licença paga (Server ou Enterprise). Entre em contato com o administrador para atualizar seu plano."
+maxUsersReached = "Número máximo de usuários atingido para sua licença atual. Entre em contato com o administrador para atualizar seu plano ou adicionar mais assentos."
 oauth2RequestNotFound = "Solicitação de autorização não encontrada"
 oauth2InvalidUserInfoResponse = "Resposta de informação de usuário inválida"
 oauth2invalidRequest = "Requisição Inválida"
@@ -3846,14 +3865,17 @@ fitToWidth = "Ajustar à largura"
 actualSize = "Tamanho real"
 
 [viewer]
+cannotPreviewFile = "Não é possível visualizar o arquivo"
+dualPageView = "Visualização de duas páginas"
 firstPage = "Primeira página"
 lastPage = "Última página"
-previousPage = "Página anterior"
 nextPage = "Próxima página"
+onlyPdfSupported = "O visualizador oferece suporte apenas a arquivos PDF. Este arquivo parece estar em um formato diferente."
+previousPage = "Página anterior"
+singlePageView = "Visualização de página única"
+unknownFile = "Arquivo desconhecido"
 zoomIn = "Ampliar"
 zoomOut = "Reduzir"
-singlePageView = "Visualização de página única"
-dualPageView = "Visualização de duas páginas"
 
 [rightRail]
 closeSelected = "Fechar arquivos selecionados"
@@ -3877,6 +3899,7 @@ toggleSidebar = "Alternar barra lateral"
 exportSelected = "Exportar páginas selecionadas"
 toggleAnnotations = "Alternar visibilidade das anotações"
 annotationMode = "Alternar modo de anotação"
+print = "Imprimir PDF"
 draw = "Desenhar"
 save = "Salvar"
 saveChanges = "Salvar alterações"
@@ -3925,7 +3948,7 @@ files = "Arquivos"
 activity = "Ativ."
 help = "Ajuda"
 account = "Conta"
-config = "Config"
+config = "Configurações"
 settings = "Ajustes"
 adminSettings = "Ajustes admin"
 allTools = "Ferram."
@@ -4153,7 +4176,7 @@ description = "Rastrear ações do usuário e eventos do sistema para conformida
 
 [admin.settings.security.audit.level]
 label = "Nível de auditoria"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=DESLIGADO, 1=BÁSICO, 2=PADRÃO, 3=DETALHADO"
 
 [admin.settings.security.audit.retentionDays]
 label = "Retenção de auditoria (dias)"
@@ -4235,11 +4258,11 @@ label = "URL do emissor"
 description = "A URL do emissor do provedor OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "ID do cliente"
 description = "O Client ID do OAuth2 do seu provedor"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "Segredo do cliente"
 description = "O Client Secret do OAuth2 do seu provedor"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4494,6 +4517,7 @@ description = "URL ou nome de arquivo do impressum (exigido em algumas jurisdiç
 title = "Premium e Enterprise"
 description = "Configurar sua chave de licença premium ou enterprise."
 license = "Configuração de licença"
+noInput = "Forneça uma chave ou arquivo de licença"
 
 [admin.settings.premium.licenseKey]
 toggle = "Tem uma chave de licença ou arquivo de certificado?"
@@ -4510,6 +4534,25 @@ title = "⚠️ Aviso: licença existente detectada"
 line1 = "Substituir sua chave de licença atual não pode ser desfeito."
 line2 = "Sua licença anterior será perdida permanentemente, a menos que você tenha um backup em outro lugar."
 line3 = "Importante: mantenha chaves de licença privadas e seguras. Nunca as compartilhe publicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Chave de licença"
+file = "Arquivo de certificado"
+
+[admin.settings.premium.file]
+label = "Arquivo de certificado de licença"
+description = "Faça upload do seu arquivo de licença .lic ou .cert de compras offline"
+choose = "Escolher arquivo de licença"
+selected = "Selecionado: {{filename}} ({{size}})"
+successMessage = "Arquivo de licença enviado e ativado com sucesso. Não é necessário reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licença ativa"
+file = "Origem: arquivo de licença ({{path}})"
+key = "Origem: chave de licença"
+type = "Tipo: {{type}}"
+noInput = "Forneça uma chave de licença ou envie um arquivo de certificado"
+success = "Sucesso"
 
 [admin.settings.premium.enabled]
 label = "Habilitar recursos Premium"
@@ -4644,7 +4687,9 @@ selectedCount = "{{count}} selecionado(s)"
 download = "Baixar (JSON)"
 delete = "Apagar"
 unsupported = "Não suportado"
+active = "Ativo"
 addToUpload = "Adicionar ao upload"
+closeFile = "Fechar arquivo"
 deleteAll = "Excluir tudo"
 loadingFiles = "Carregando arquivos..."
 noFiles = "Nenhum arquivo disponível"
@@ -5178,7 +5223,7 @@ active = "Ativo"
 disabled = "Desativado"
 activeSession = "Sessão ativa"
 member = "Membro"
-admin = "Admin"
+admin = "Administrador"
 editRole = "Editar função"
 enable = "Ativar"
 disable = "Desativar"
@@ -5245,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Ao menos um endereço de email é obrigatório"
 submit = "Enviar convites"
 success = "usuário(s) convidado(s) com sucesso"
-partialSuccess = "Alguns convites falharam"
+partialFailure = "Alguns convites falharam"
 allFailed = "Falha ao convidar usuários"
 error = "Falha ao enviar convites"
 
@@ -5797,13 +5842,20 @@ submit = "Login"
 signInWith = "Entrar com"
 oauthPending = "Abrindo o navegador para autenticação..."
 orContinueWith = "Ou continue com e-mail"
+serverRequirement = "Observação: o servidor deve ter o login ativado."
+showInstructions = "Como ativar?"
+hideInstructions = "Ocultar instruções"
+instructions = "Para ativar o login no seu servidor Stirling PDF:"
+instructionsEnvVar = "Defina a variável de ambiente:"
+instructionsOrYml = "Ou em settings.yml:"
+instructionsRestart = "Em seguida, reinicie o servidor para que as alterações entrem em vigor."
 
 [setup.login.username]
 label = "Usuário"
 placeholder = "Digite seu usuário"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Digite seu e-mail"
 
 [setup.login.password]
@@ -5840,7 +5892,7 @@ paragraph = "Página de parágrafos"
 sparse = "Texto esparso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Parágrafo"
 singleLine = "Linha única"
 

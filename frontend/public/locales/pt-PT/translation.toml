@@ -131,7 +131,7 @@ unsupported = "Não suportado"
 
 [toolPanel]
 placeholder = "Escolha uma ferramenta para começar"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Funcionalidade premium:"
 comingSoon = "Em breve:"
 
@@ -162,6 +162,11 @@ unfavorite = "Remover dos favoritos"
 [toolPanel.toggle]
 fullscreen = "Mudar para modo de ecrã inteiro"
 sidebar = "Mudar para modo de barra lateral"
+
+[backendStartup]
+notFoundTitle = "Backend não encontrado"
+retry = "Tentar novamente"
+unreachable = "A aplicação não consegue ligar-se ao backend neste momento. Verifique o estado do backend e a conectividade de rede e tente novamente."
 
 [zipWarning]
 title = "Ficheiro ZIP grande"
@@ -364,12 +369,12 @@ usageAnalytics = "Análise de utilização"
 
 [settings.policiesPrivacy]
 title = "Políticas e Privacidade"
-legal = "Legal"
+legal = "Jurídico"
 privacy = "Privacidade"
 
 [settings.developer]
 title = "Programador"
-apiKeys = "API Keys"
+apiKeys = "Chaves de API"
 
 [settings.tooltips]
 enableLoginFirst = "Ative primeiro o modo de login"
@@ -912,6 +917,9 @@ desc = "Crie fluxos de trabalho de vários passos encadeando ações de PDF. Ide
 desc = "Sobrepõe PDFs em cima de outro PDF"
 title = "Sobrepor PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de texto de PDF"
+desc = "Edite texto e imagens existentes dentro de PDFs"
 
 [home.addText]
 tags = "texto,anotação,etiqueta"
@@ -1217,7 +1225,7 @@ odtExt = "Texto OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Apresentação OpenDocument (.odp)"
 txtExt = "Texto simples (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Formato de Texto Enriquecido (.rtf)"
 selectedFiles = "Ficheiros selecionados"
 noFileSelected = "Nenhum ficheiro selecionado. Use o painel de ficheiros para adicionar ficheiros."
 convertFiles = "Converter ficheiros"
@@ -1360,7 +1368,7 @@ title = "Adicionar Marca de Água"
 desc = "Adicionar marcas de água de texto ou imagem a ficheiros PDF"
 completed = "Marca de água adicionada"
 submit = "Adicionar Marca de Água"
-filenamePrefix = "watermarked"
+filenamePrefix = "com-marca-de-água"
 
 [watermark.error]
 failed = "Ocorreu um erro ao adicionar a marca de água ao PDF."
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Assinatura desenhada"
 defaultImageLabel = "Assinatura carregada"
 defaultTextLabel = "Assinatura digitada"
 saveButton = "Guardar assinatura"
+savePersonal = "Guardar como pessoal"
+saveShared = "Guardar como partilhada"
 saveUnavailable = "Crie primeiro uma assinatura para a guardar."
 noChanges = "A assinatura atual já está guardada."
+tempStorageTitle = "Armazenamento temporário do navegador"
+tempStorageDescription = "As assinaturas são armazenadas apenas no seu navegador. Serão perdidas se limpar os dados do navegador ou mudar de navegador."
+personalHeading = "Assinaturas pessoais"
+sharedHeading = "Assinaturas partilhadas"
+personalDescription = "Apenas você pode ver estas assinaturas."
+sharedDescription = "Todos os utilizadores podem ver e usar estas assinaturas."
 
 [sign.saved.type]
 canvas = "Desenho"
@@ -2841,7 +2857,7 @@ label = "Fator de escala"
 [adjustPageScale.pageSize]
 label = "Tamanho da página de destino"
 keep = "Manter tamanho original"
-letter = "Letter"
+letter = "Carta"
 legal = "Legal"
 
 [adjustPageScale.error]
@@ -3438,6 +3454,9 @@ signinTitle = "Por favor inicie sessão"
 ssoSignIn = "Iniciar sessão via Single Sign-On"
 oAuth2AutoCreateDisabled = "Criação Automática de Utilizador OAUTH2 Desativada"
 oAuth2AdminBlockedUser = "O registo ou login de utilizadores não registados está atualmente bloqueado. Por favor contacte o administrador."
+oAuth2RequiresLicense = "O início de sessão via OAuth/SSO requer uma licença paga (Server ou Enterprise). Contacte o administrador para atualizar o seu plano."
+saml2RequiresLicense = "O início de sessão SAML requer uma licença paga (Server ou Enterprise). Contacte o administrador para atualizar o seu plano."
+maxUsersReached = "Foi atingido o número máximo de utilizadores da sua licença atual. Contacte o administrador para atualizar o seu plano ou adicionar mais lugares."
 oauth2RequestNotFound = "Pedido de autorização não encontrado"
 oauth2InvalidUserInfoResponse = "Resposta de Informação de Utilizador Inválida"
 oauth2invalidRequest = "Pedido Inválido"
@@ -3846,14 +3865,17 @@ fitToWidth = "Ajustar à largura"
 actualSize = "Tamanho real"
 
 [viewer]
+cannotPreviewFile = "Não é possível pré-visualizar o ficheiro"
+dualPageView = "Vista de duas páginas"
 firstPage = "Primeira página"
 lastPage = "Última página"
-previousPage = "Página anterior"
 nextPage = "Página seguinte"
+onlyPdfSupported = "O visualizador só suporta ficheiros PDF. Este ficheiro parece ter um formato diferente."
+previousPage = "Página anterior"
+singlePageView = "Vista de página única"
+unknownFile = "Ficheiro desconhecido"
 zoomIn = "Ampliar"
 zoomOut = "Reduzir"
-singlePageView = "Vista de página única"
-dualPageView = "Vista de duas páginas"
 
 [rightRail]
 closeSelected = "Fechar ficheiros selecionados"
@@ -3877,6 +3899,7 @@ toggleSidebar = "Alternar barra lateral"
 exportSelected = "Exportar páginas selecionadas"
 toggleAnnotations = "Alternar visibilidade das anotações"
 annotationMode = "Alternar modo de anotação"
+print = "Imprimir PDF"
 draw = "Desenhar"
 save = "Guardar"
 saveChanges = "Guardar alterações"
@@ -4494,6 +4517,7 @@ description = "URL ou nome de ficheiro para o impressum (obrigatório em algumas
 title = "Premium e Enterprise"
 description = "Configurar a sua chave de licença premium ou enterprise."
 license = "Configuração de licença"
+noInput = "Forneça uma chave ou ficheiro de licença"
 
 [admin.settings.premium.licenseKey]
 toggle = "Tem uma chave de licença ou ficheiro de certificado?"
@@ -4510,6 +4534,25 @@ title = "⚠️ Aviso: Licença existente detetada"
 line1 = "Sobrescrever a sua chave de licença atual não pode ser anulado."
 line2 = "A sua licença anterior será perdida permanentemente, a menos que a tenha guardado noutro local."
 line3 = "Importante: mantenha as chaves de licença privadas e seguras. Nunca as partilhe publicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Chave de licença"
+file = "Ficheiro de certificado"
+
+[admin.settings.premium.file]
+label = "Ficheiro de certificado de licença"
+description = "Carregue o seu ficheiro de licença .lic ou .cert de compras offline"
+choose = "Escolher ficheiro de licença"
+selected = "Selecionado: {{filename}} ({{size}})"
+successMessage = "Ficheiro de licença carregado e ativado com sucesso. Não é necessário reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licença ativa"
+file = "Origem: ficheiro de licença ({{path}})"
+key = "Origem: chave de licença"
+type = "Tipo: {{type}}"
+noInput = "Forneça uma chave de licença ou carregue um ficheiro de certificado"
+success = "Sucesso"
 
 [admin.settings.premium.enabled]
 label = "Ativar funcionalidades premium"
@@ -4644,7 +4687,9 @@ selectedCount = "{{count}} selecionado(s)"
 download = "Transferir"
 delete = "Eliminar"
 unsupported = "Não suportado"
+active = "Ativo"
 addToUpload = "Adicionar ao carregamento"
+closeFile = "Fechar ficheiro"
 deleteAll = "Eliminar tudo"
 loadingFiles = "A carregar ficheiros..."
 noFiles = "Não há ficheiros disponíveis"
@@ -5245,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "É necessário pelo menos um endereço de email"
 submit = "Enviar convites"
 success = "utilizador(es) convidado(s) com sucesso"
-partialSuccess = "Alguns convites falharam"
+partialFailure = "Alguns convites falharam"
 allFailed = "Falha ao convidar utilizadores"
 error = "Falha ao enviar convites"
 
@@ -5282,7 +5327,7 @@ submit = "Gerar link de convite"
 [workspace.people.inviteMode]
 username = "Nome de utilizador"
 email = "Email"
-link = "Link"
+link = "Ligação"
 emailDisabled = "Convites por email requerem configuração de SMTP e mail.enableInvites=true nas definições"
 
 [workspace.people.license]
@@ -5797,6 +5842,13 @@ submit = "Iniciar sessão"
 signInWith = "Iniciar sessão com"
 oauthPending = "A abrir o navegador para autenticação..."
 orContinueWith = "Ou continuar com email"
+serverRequirement = "Nota: O servidor deve ter o início de sessão ativado."
+showInstructions = "Como ativar?"
+hideInstructions = "Ocultar instruções"
+instructions = "Para ativar o início de sessão no seu servidor Stirling PDF:"
+instructionsEnvVar = "Defina a variável de ambiente:"
+instructionsOrYml = "Ou em settings.yml:"
+instructionsRestart = "Em seguida, reinicie o servidor para que as alterações tenham efeito."
 
 [setup.login.username]
 label = "Nome de utilizador"
@@ -5840,7 +5892,7 @@ paragraph = "Página de parágrafos"
 sparse = "Texto disperso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Parágrafo"
 singleLine = "Linha única"
 
@@ -5932,7 +5984,7 @@ warnings = "Avisos"
 suggestions = "Notas"
 currentPageFonts = "Fontes nesta página"
 allFonts = "Todas as fontes"
-fallback = "fallback"
+fallback = "alternativa"
 missing = "em falta"
 perfectMessage = "Todas as fontes podem ser reproduzidas na perfeição."
 warningMessage = "Algumas fontes podem não ser renderizadas corretamente."

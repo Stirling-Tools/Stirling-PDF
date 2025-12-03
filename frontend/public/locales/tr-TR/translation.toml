@@ -163,6 +163,11 @@ unfavorite = "Favorilerden kaldır"
 fullscreen = "Tam ekran moduna geç"
 sidebar = "Kenar çubuğu moduna geç"
 
+[backendStartup]
+notFoundTitle = "Arka uç bulunamadı"
+retry = "Yeniden dene"
+unreachable = "Uygulama şu anda arka uca bağlanamıyor. Lütfen arka uç durumunu ve ağ bağlantısını doğrulayın, ardından tekrar deneyin."
+
 [zipWarning]
 title = "Büyük ZIP Dosyası"
 message = "Bu ZIP {{count}} dosya içeriyor. Yine de çıkartılsın mı?"
@@ -912,6 +917,9 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 desc = "PDF'leri başka bir PDF'nin üzerine bindirir"
 title = "PDF'leri Bindirme"
 
+[home.pdfTextEditor]
+title = "PDF Metin Düzenleyici"
+desc = "PDF'lerin içindeki mevcut metinleri ve görselleri düzenleyin"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Çizim imzası"
 defaultImageLabel = "Yüklenen imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzayı kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 saveUnavailable = "Kaydetmek için önce bir imza oluşturun."
 noChanges = "Geçerli imza zaten kaydedildi."
+tempStorageTitle = "Geçici tarayıcı depolaması"
+tempStorageDescription = "İmzalar yalnızca tarayıcınızda saklanır. Tarayıcı verilerini temizlerseniz veya tarayıcı değiştirirseniz kaybolurlar."
+personalHeading = "Kişisel İmzalar"
+sharedHeading = "Paylaşılan İmzalar"
+personalDescription = "Bu imzaları yalnızca siz görebilirsiniz."
+sharedDescription = "Tüm kullanıcılar bu imzaları görebilir ve kullanabilir."
 
 [sign.saved.type]
 canvas = "Çizim"
@@ -3438,6 +3454,9 @@ signinTitle = "Lütfen giriş yapınız."
 ssoSignIn = "Tek Oturum Açma ile Giriş Yap"
 oAuth2AutoCreateDisabled = "OAUTH2 Otomatik Oluşturma Kullanıcı Devre Dışı Bırakıldı"
 oAuth2AdminBlockedUser = "Kayıtlı olmayan kullanıcıların kayıt veya giriş yapması şu anda engellenmiştir. Lütfen yöneticiyle iletişime geçin."
+oAuth2RequiresLicense = "OAuth/SSO ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+saml2RequiresLicense = "SAML ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+maxUsersReached = "Mevcut lisansınız için azami kullanıcı sayısına ulaşıldı. Planınızı yükseltmek veya daha fazla koltuk eklemek için lütfen yöneticiyle iletişime geçin."
 oauth2RequestNotFound = "Yetkilendirme isteği bulunamadı"
 oauth2InvalidUserInfoResponse = "Geçersiz Kullanıcı Bilgisi Yanıtı"
 oauth2invalidRequest = "Geçersiz İstek"
@@ -3846,14 +3865,17 @@ fitToWidth = "Genişliğe Sığdır"
 actualSize = "Gerçek Boyut"
 
 [viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+dualPageView = "Çift Sayfa Görünümü"
 firstPage = "İlk Sayfa"
 lastPage = "Son Sayfa"
-previousPage = "Önceki Sayfa"
 nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
-singlePageView = "Tek Sayfa Görünümü"
-dualPageView = "Çift Sayfa Görünümü"
 
 [rightRail]
 closeSelected = "Seçilen Dosyaları Kapat"
@@ -3877,6 +3899,7 @@ toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
 exportSelected = "Seçilen Sayfaları Dışa Aktar"
 toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
 annotationMode = "Açıklama Modunu Değiştir"
+print = "PDF'yi Yazdır"
 draw = "Çiz"
 save = "Kaydet"
 saveChanges = "Değişiklikleri Kaydet"
@@ -4494,6 +4517,7 @@ description = "Impressum için URL veya dosya adı (bazı yargı bölgelerinde g
 title = "Premium ve Kurumsal"
 description = "Premium veya kurumsal lisans anahtarınızı yapılandırın."
 license = "Lisans Yapılandırması"
+noInput = "Lütfen bir lisans anahtarı veya dosyası sağlayın"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisans anahtarınız veya sertifika dosyanız mı var?"
@@ -4510,6 +4534,25 @@ title = "⚠️ Uyarı: Mevcut Lisans Tespit Edildi"
 line1 = "Mevcut lisans anahtarınızın üzerine yazma işlemi geri alınamaz."
 line2 = "Başka yerde yedeğiniz yoksa önceki lisansınız kalıcı olarak kaybolacaktır."
 line3 = "Önemli: Lisans anahtarlarını gizli ve güvenli tutun. Asla herkese açık şekilde paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisans Anahtarı"
+file = "Sertifika Dosyası"
+
+[admin.settings.premium.file]
+label = "Lisans Sertifika Dosyası"
+description = "Çevrimdışı satın alımlardan aldığınız .lic veya .cert lisans dosyanızı yükleyin"
+choose = "Lisans Dosyası Seç"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisans dosyası başarıyla yüklendi ve etkinleştirildi. Yeniden başlatma gerekmez."
+
+[admin.settings.premium.currentLicense]
+title = "Etkin Lisans"
+file = "Kaynak: Lisans dosyası ({{path}})"
+key = "Kaynak: Lisans anahtarı"
+type = "Tür: {{type}}"
+noInput = "Lütfen bir lisans anahtarı girin veya bir sertifika dosyası yükleyin"
+success = "Başarılı"
 
 [admin.settings.premium.enabled]
 label = "Premium Özellikleri Etkinleştir"
@@ -4644,7 +4687,9 @@ selectedCount = "{{count}} seçildi"
 download = "İndir"
 delete = "Sil"
 unsupported = "Desteklenmiyor"
+active = "Aktif"
 addToUpload = "Yüklemeye Ekle"
+closeFile = "Dosyayı Kapat"
 deleteAll = "Tümünü Sil"
 loadingFiles = "Dosyalar yükleniyor..."
 noFiles = "Kullanılabilir dosya yok"
@@ -5245,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "En az bir e-posta adresi gereklidir"
 submit = "Davetleri Gönder"
 success = "kullanıcı(lar) başarıyla davet edildi"
-partialSuccess = "Bazı davetler başarısız oldu"
+partialFailure = "Bazı davetler başarısız oldu"
 allFailed = "Kullanıcılar davet edilemedi"
 error = "Davetler gönderilemedi"
 
@@ -5797,6 +5842,13 @@ submit = "Oturum Aç"
 signInWith = "Şununla oturum aç"
 oauthPending = "Kimlik doğrulama için tarayıcı açılıyor..."
 orContinueWith = "Veya e-postayla devam edin"
+serverRequirement = "Not: Sunucuda oturum açma etkin olmalıdır."
+showInstructions = "Nasıl etkinleştirilir?"
+hideInstructions = "Yönergeleri gizle"
+instructions = "Stirling PDF sunucunuzda oturum açmayı etkinleştirmek için:"
+instructionsEnvVar = "Ortam değişkenini ayarlayın:"
+instructionsOrYml = "Veya settings.yml içinde:"
+instructionsRestart = "Ardından değişikliklerin etkili olması için sunucunuzu yeniden başlatın."
 
 [setup.login.username]
 label = "Kullanıcı adı"

@@ -8,36 +8,33 @@
 
 Fork Stirling-PDF and create a new branch out of `main`.
 
-Then add a reference to the language in the navbar by adding a new language entry to the dropdown:
+## Frontend Translation Files (TOML Format)
 
-- Edit the file: [languages.html](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/templates/fragments/languages.html)
+### Add Language Directory and Translation File
 
+1. Create a new language directory in `frontend/public/locales/`
+   - Use hyphenated format: `pl-PL` (not underscore)
 
-For example, to add Polish, you would add:
+2. Copy the reference translation file:
+   - Source: `frontend/public/locales/en-GB/translation.toml`
+   - Destination: `frontend/public/locales/pl-PL/translation.toml`
 
-```html
-<div th:replace="~{fragments/languageEntry :: languageEntry ('pl_PL', 'Polski')}" ></div>
-```
+3. Translate all entries in the TOML file
+   - Keep the TOML structure intact
+   - Preserve all placeholders like `{n}`, `{total}`, `{filename}`, `{{variable}}`
+   - See `scripts/translations/README.md` for translation tools and workflows
 
-The `data-bs-language-code` is the code used to reference the file in the next step.
+4. Update the language selector in the frontend to include your new language
 
-### Add Language Property File
-
-Start by copying the existing English property file:
-
-- [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/messages_en_GB.properties)
-
-Copy and rename it to `messages_{your data-bs-language-code here}.properties`. In the Polish example, you would set the name to `messages_pl_PL.properties`.
-
-Then simply translate all property entries within that file and make a Pull Request (PR) into `main` for others to use!
-
-If you do not have a Java IDE, I am happy to verify that the changes work once you raise the PR (but I won't be able to verify the translations themselves).
+Then make a Pull Request (PR) into `main` for others to use!
 
 ## Handling Untranslatable Strings
 
-Sometimes, certain strings in the properties file may not require translation because they are the same in the target language or are universal (like names of protocols, certain terminologies, etc.). To ensure accurate statistics for language progress, these strings should be added to the `ignore_translation.toml` file located in the `scripts` directory. This will exclude them from the translation progress calculations.
+Sometimes, certain strings may not require translation because they are the same in the target language or are universal (like names of protocols, certain terminologies, etc.). To ensure accurate statistics for language progress, these strings should be added to the `ignore_translation.toml` file located in the `scripts` directory. This will exclude them from the translation progress calculations.
 
-For example, if the English string `error=Error` does not need translation in Polish, add it to the `ignore_translation.toml` under the Polish section:
+For example, if the English string `error` does not need translation in Polish, add it to the `ignore_translation.toml` under the Polish section:
+
+**Note**: Use underscores in `ignore_translation.toml` even though frontend uses hyphens (e.g., `pl_PL` not `pl-PL`)
 
 ```toml
 [pl_PL]
@@ -50,27 +47,27 @@ ignore = [
 ## Add New Translation Tags
 
 > [!IMPORTANT]
-> If you add any new translation tags, they must first be added to the `messages_en_GB.properties` file. This ensures consistency across all language files.
+> If you add any new translation tags, they must first be added to the `en-GB/translation.toml` file. This ensures consistency across all language files.
 
-- New translation tags **must be added** to the `messages_en_GB.properties` file to maintain a reference for other languages.
-- After adding the new tags to `messages_en_GB.properties`, add and translate them in the respective language file (e.g., `messages_pl_PL.properties`).
+- New translation tags **must be added** to `frontend/public/locales/en-GB/translation.toml` to maintain a reference for other languages.
+- After adding the new tags to `en-GB/translation.toml`, add and translate them in the respective language file (e.g., `pl-PL/translation.toml`).
+- Use the scripts in `scripts/translations/` to validate and manage translations (see `scripts/translations/README.md`)
 
 Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.
 
-### Use this code to perform a local check
+### Validation Commands
 
-#### Windows command
-
-```powershell
-python .github/scripts/check_language_properties.py --reference-file app\core\src\main\resources\messages_en_GB.properties --branch "" --files app\core\src\main\resources\messages_pl_PL.properties
-
-python .github/scripts/check_language_properties.py --reference-file app\core\src\main\resources\messages_en_GB.properties --branch "" --check-file app\core\src\main\resources\messages_pl_PL.properties
-```
-
-#### Linux command
+Use the translation scripts in `scripts/translations/` directory:
 
 ```bash
-python3 .github/scripts/check_language_properties.py --reference-file app/core/src/main/resources/messages_en_GB.properties --branch "" --files app/core/src/main/resources/messages_pl_PL.properties
+# Analyze translation progress
+python3 scripts/translations/translation_analyzer.py --language pl-PL
 
-python3 .github/scripts/check_language_properties.py --reference-file app/core/src/main/resources/messages_en_GB.properties --branch "" --check-file app/core/src/main/resources/messages_pl_PL.properties
+# Validate TOML structure
+python3 scripts/translations/validate_json_structure.py --language pl-PL
+
+# Validate placeholders
+python3 scripts/translations/validate_placeholders.py --language pl-PL
 ```
+
+See `scripts/translations/README.md` for complete documentation.

@@ -163,6 +163,11 @@ unfavorite = "お気に入りから削除"
 fullscreen = "フルスクリーンモードに切り替え"
 sidebar = "サイドバーモードに切り替え"
 
+[backendStartup]
+notFoundTitle = "バックエンドが見つかりません"
+retry = "再試行"
+unreachable = "現在、アプリケーションはバックエンドに接続できません。バックエンドの稼働状況とネットワーク接続を確認し、再度お試しください。"
+
 [zipWarning]
 title = "大きな ZIP ファイル"
 message = "このZIPには{{count}}個のファイルが含まれています。展開しますか？"
@@ -912,6 +917,9 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
+[home.pdfTextEditor]
+title = "PDFテキストエディタ"
+desc = "PDF内の既存のテキストと画像を編集"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"
@@ -1173,7 +1181,7 @@ selectFilesPlaceholder = "開始するにはメインビューでファイルを
 settings = "設定"
 conversionCompleted = "変換が完了しました"
 results = "結果"
-defaultFilename = "converted_file"
+defaultFilename = "変換済みファイル"
 conversionResults = "変換結果"
 convertFrom = "変換元"
 convertTo = "変換先"
@@ -1360,7 +1368,7 @@ title = "透かしの追加"
 desc = "PDF ファイルにテキストまたは画像の透かしを追加"
 completed = "透かしを追加しました"
 submit = "透かしを追加"
-filenamePrefix = "watermarked"
+filenamePrefix = "透かし入り"
 
 [watermark.error]
 failed = "PDF への透かし追加中にエラーが発生しました。"
@@ -1635,7 +1643,7 @@ subtitle = "処理済みファイルをダウンロードするか、下で操�
 [removePages]
 tags = "ページを削除,ページ削除"
 title = "削除"
-filenamePrefix = "pages_removed"
+filenamePrefix = "ページ削除済み"
 submit = "削除"
 
 [removePages.pageNumbers]
@@ -1837,7 +1845,7 @@ title = "フォームフィールドから読み取り専用を削除"
 header = "PDFフォームのロックを解除"
 submit = "Remove"
 description = "このツールは PDF フォームフィールドの読み取り専用制限を解除し、編集・入力可能にします。"
-filenamePrefix = "unlocked_forms"
+filenamePrefix = "フォームのロック解除済み"
 
 [unlockPDFForms.files]
 placeholder = "メインビューで PDF ファイルを選択して開始してください"
@@ -1851,7 +1859,7 @@ title = "フォームのロック解除結果"
 [changeMetadata]
 header = "メタデータの変更"
 submit = "変更"
-filenamePrefix = "metadata"
+filenamePrefix = "メタデータ"
 
 [changeMetadata.settings]
 title = "メタデータ設定"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "手書き署名"
 defaultImageLabel = "アップロードした署名"
 defaultTextLabel = "入力した署名"
 saveButton = "署名を保存"
+savePersonal = "個人用として保存"
+saveShared = "共有用として保存"
 saveUnavailable = "まず署名を作成してから保存してください。"
 noChanges = "現在の署名はすでに保存済みです。"
+tempStorageTitle = "ブラウザーの一時ストレージ"
+tempStorageDescription = "署名はブラウザー内のみに保存されます。ブラウザーのデータを消去するか、別のブラウザーに切り替えると失われます。"
+personalHeading = "個人用署名"
+sharedHeading = "共有署名"
+personalDescription = "これらの署名はあなただけが表示できます。"
+sharedDescription = "すべてのユーザーがこれらの署名を表示して使用できます。"
 
 [sign.saved.type]
 canvas = "描画"
@@ -2318,7 +2334,7 @@ title = "平坦化"
 header = "PDFを平坦化する"
 flattenOnlyForms = "フォームのみを平坦にする"
 submit = "平坦化"
-filenamePrefix = "flattened"
+filenamePrefix = "フラット化済み"
 
 [flatten.files]
 placeholder = "開始するにはメインビューで PDF ファイルを選択してください"
@@ -2366,7 +2382,7 @@ title = "修復"
 header = "PDFを修復"
 submit = "修復"
 description = "このツールは破損または損傷した PDF ファイルの修復を試みます。追加の設定は不要です。"
-filenamePrefix = "repaired"
+filenamePrefix = "修復済み"
 
 [repair.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -2567,7 +2583,7 @@ stopButton = "比較を停止"
 [certSign]
 tags = "authenticate,PEM,P12,official,encrypt"
 title = "証明書による署名"
-filenamePrefix = "signed"
+filenamePrefix = "署名済み"
 chooseCertificate = "証明書ファイルを選択"
 chooseJksFile = "JKS ファイルを選択"
 chooseP12File = "PKCS12 ファイルを選択"
@@ -2701,7 +2717,7 @@ header = "PDFから電子証明書を削除する"
 selectPDF = "PDFファイルの選択:"
 submit = "署名の削除"
 description = "このツールは PDF 文書からデジタル証明書署名を削除します。"
-filenamePrefix = "unsigned"
+filenamePrefix = "署名なし"
 
 [removeCertSign.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -3438,6 +3454,9 @@ signinTitle = "サインインしてください"
 ssoSignIn = "シングルサインオンでログイン"
 oAuth2AutoCreateDisabled = "OAuth 2自動作成ユーザーが無効"
 oAuth2AdminBlockedUser = "現在、未登録ユーザーの登録またはログインはブロックされています。管理者にお問い合わせください。"
+oAuth2RequiresLicense = "OAuth/SSO ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+saml2RequiresLicense = "SAML ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+maxUsersReached = "現在のライセンスのユーザー数上限に達しました。プランのアップグレードまたはシート数の追加について、管理者にお問い合わせください。"
 oauth2RequestNotFound = "認証リクエストが見つかりません"
 oauth2InvalidUserInfoResponse = "無効なユーザー情報の応答"
 oauth2invalidRequest = "無効なリクエスト"
@@ -3533,7 +3552,7 @@ title = "PDFを単一ページに変換"
 header = "PDFを単一ページに変換"
 submit = "単一ページに変換"
 description = "このツールは PDF の全ページを 1 つの大きな単一ページに結合します。幅は元のページと同じで、高さは全ページの高さの合計になります。"
-filenamePrefix = "single_page"
+filenamePrefix = "単一ページ"
 
 [pdfToSinglePage.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -3846,14 +3865,17 @@ fitToWidth = "幅に合わせる"
 actualSize = "原寸"
 
 [viewer]
+cannotPreviewFile = "ファイルをプレビューできません"
+dualPageView = "見開き表示"
 firstPage = "最初のページ"
 lastPage = "最後のページ"
-previousPage = "前のページ"
 nextPage = "次のページ"
+onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
+previousPage = "前のページ"
+singlePageView = "単一ページ表示"
+unknownFile = "不明なファイル"
 zoomIn = "拡大"
 zoomOut = "縮小"
-singlePageView = "単一ページ表示"
-dualPageView = "見開き表示"
 
 [rightRail]
 closeSelected = "選択したファイルを閉じる"
@@ -3877,6 +3899,7 @@ toggleSidebar = "サイドバーを切り替え"
 exportSelected = "選択したページを書き出し"
 toggleAnnotations = "注釈の表示を切り替え"
 annotationMode = "注釈モードを切り替え"
+print = "PDFを印刷"
 draw = "描画"
 save = "保存"
 saveChanges = "変更を保存"
@@ -4231,15 +4254,15 @@ label = "プロバイダ"
 description = "認証に使用する OAuth2 プロバイダ"
 
 [admin.settings.connections.oauth2.issuer]
-label = "Issuer URL"
+label = "発行者 URL"
 description = "OAuth2 プロバイダの Issuer URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "クライアント ID"
 description = "プロバイダから発行された OAuth2 の Client ID"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "クライアント シークレット"
 description = "プロバイダから発行された OAuth2 の Client Secret"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4270,7 +4293,7 @@ label = "プロバイダ"
 description = "SAML2 プロバイダ名"
 
 [admin.settings.connections.saml2.registrationId]
-label = "Registration ID"
+label = "登録 ID"
 description = "SAML2 の登録識別子"
 
 [admin.settings.connections.saml2.autoCreateUser]
@@ -4407,7 +4430,7 @@ description = "より広範なシステム一時ディレクトリをクリー�
 label = "プロセス実行制限"
 description = "各プロセス実行器のセッション上限とタイムアウトを設定"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF to HTML"
+pdfToHtml = "PDF を HTML に"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4494,6 +4517,7 @@ description = "インプリントへの URL またはファイル名（地域に
 title = "プレミアムとエンタープライズ"
 description = "プレミアムまたはエンタープライズのライセンスキーを構成します。"
 license = "ライセンス設定"
+noInput = "ライセンスキーまたはファイルを入力してください"
 
 [admin.settings.premium.licenseKey]
 toggle = "ライセンスキーまたは証明書ファイルをお持ちですか？"
@@ -4510,6 +4534,25 @@ title = "⚠️ 警告: 既存のライセンスを検出"
 line1 = "現在のライセンスキーを上書きすると元に戻せません。"
 line2 = "別途バックアップしていない限り、以前のライセンスは永久に失われます。"
 line3 = "重要: ライセンスキーは秘密に安全に保管してください。公開で共有しないでください。"
+
+[admin.settings.premium.inputMethod]
+text = "ライセンスキー"
+file = "証明書ファイル"
+
+[admin.settings.premium.file]
+label = "ライセンス証明書ファイル"
+description = "オフライン購入の .lic または .cert ライセンスファイルをアップロードしてください"
+choose = "ライセンスファイルを選択"
+selected = "選択済み: {{filename}} ({{size}})"
+successMessage = "ライセンスファイルをアップロードして有効化しました。再起動は不要です。"
+
+[admin.settings.premium.currentLicense]
+title = "有効なライセンス"
+file = "ソース: ライセンスファイル ({{path}})"
+key = "ソース: ライセンスキー"
+type = "種類: {{type}}"
+noInput = "ライセンスキーを入力するか、証明書ファイルをアップロードしてください"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "プレミアム機能を有効化"
@@ -4644,7 +4687,9 @@ selectedCount = "{{count}} 件選択"
 download = "ダウンロード"
 delete = "削除"
 unsupported = "未対応"
+active = "アクティブ"
 addToUpload = "アップロードに追加"
+closeFile = "ファイルを閉じる"
 deleteAll = "すべて削除"
 loadingFiles = "ファイルを読み込み中..."
 noFiles = "ファイルはありません"
@@ -4669,7 +4714,7 @@ title = "サニタイズ"
 desc = "PDF ファイルから潜在的に有害な要素を削除します。"
 submit = "PDFをサニタイズ"
 completed = "サニタイズが正常に完了しました"
-filenamePrefix = "sanitised"
+filenamePrefix = "サニタイズ済み"
 sanitizationResults = "サニタイズ結果"
 
 [sanitize.error]
@@ -4717,7 +4762,7 @@ title = "パスワードの追加"
 desc = "パスワードで PDF 文書を暗号化します。"
 completed = "パスワード保護を適用しました"
 submit = "暗号化"
-filenamePrefix = "encrypted"
+filenamePrefix = "暗号化済み"
 
 [addPassword.error]
 failed = "PDF の暗号化中にエラーが発生しました。"
@@ -4812,7 +4857,7 @@ text = "これらの権限を変更不可にするには、パスワード追加
 title = "パスワードの削除"
 desc = "PDFからパスワードの削除します。"
 tags = "セキュア,復号,セキュリティ,パスワード解除,パスワード削除"
-filenamePrefix = "decrypted"
+filenamePrefix = "復号済み"
 submit = "削除"
 
 [removePassword.password]
@@ -5245,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "少なくとも1件のメールアドレスが必要です"
 submit = "招待を送信"
 success = "ユーザーを招待しました"
-partialSuccess = "一部の招待に失敗しました"
+partialFailure = "一部の招待に失敗しました"
 allFailed = "ユーザーの招待に失敗しました"
 error = "招待の送信に失敗しました"
 
@@ -5797,13 +5842,20 @@ submit = "ログイン"
 signInWith = "でサインイン"
 oauthPending = "認証のためブラウザーを開いています..."
 orContinueWith = "またはメールで続行"
+serverRequirement = "注: サーバーでログインを有効にする必要があります。"
+showInstructions = "有効化するには？"
+hideInstructions = "手順を非表示"
+instructions = "Stirling PDF サーバーでログインを有効にするには:"
+instructionsEnvVar = "環境変数を設定:"
+instructionsOrYml = "または settings.yml で:"
+instructionsRestart = "その後、サーバーを再起動して変更を反映させてください。"
 
 [setup.login.username]
 label = "ユーザー名"
 placeholder = "ユーザー名を入力"
 
 [setup.login.email]
-label = "Email"
+label = "メールアドレス"
 placeholder = "メールアドレスを入力"
 
 [setup.login.password]

@@ -1,15 +1,15 @@
-name: Sync Files V2
+name: Sync Files (TOML)
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - V2
+      - main
       - syncLangTest
     paths:
       - "build.gradle"
       - "README.md"
-      - "frontend/public/locales/*/translation.json"
+      - "frontend/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
@@ -52,21 +52,25 @@ jobs:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
 
-      - name: Sync translation JSON files
+      - name: Install Python dependencies
         run: |
-          python .github/scripts/check_language_json.py --reference-file "frontend/public/locales/en-GB/translation.json" --branch V2
+          pip install tomli-w
+
+      - name: Sync translation TOML files
+        run: |
+          python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
 
       - name: Commit translation files
         run: |
-          git add frontend/public/locales/*/translation.json
-          git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "No changes detected"
+          git add frontend/public/locales/*/translation.toml
+          git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
 
-      - name: Install dependencies
+      - name: Install README dependencies
         run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Sync README.md
         run: |
-          python scripts/counter_translation_v2.py
+          python scripts/counter_translation_v3.py
 
       - name: Run git add
         run: |
@@ -82,21 +86,22 @@ jobs:
           committer: ${{ steps.setup-bot.outputs.committer }}
           author: ${{ steps.setup-bot.outputs.committer }}
           signoff: true
-          branch: sync_readme_v2
-          base: V2
-          title: ":globe_with_meridians: [V2] Sync Translations + Update README Progress Table"
+          branch: sync_readme_v3
+          base: main
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
             ### Description of Changes
 
-            This Pull Request was automatically generated to synchronize updates to translation files and documentation for the **V2 branch**. Below are the details of the changes made:
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/public/locales/*/translation.json`) to reflect changes in the reference file `en-GB/translation.json`.
+            - Updated translation files (`frontend/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
+            - **Format**: TOML
 
             #### **2. Update README.md**
-            - Generated the translation progress table in `README.md`.
+            - Generated the translation progress table in `README.md` using `counter_translation_v3.py`.
             - Added a summary of the current translation status for all supported languages.
             - Included up-to-date statistics on translation coverage.
 
@@ -115,4 +120,5 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            frontend/public/locales/*/translation.json
+            frontend/public/locales/*/translation.toml
+            scripts/ignore_translation.toml

@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 import argparse
+import tomllib  # Python 3.11+ (stdlib)
 
 
 def find_placeholders(text: str) -> Set[str]:
@@ -117,15 +118,16 @@ def main():
 
     # Define paths
     locales_dir = Path('frontend/public/locales')
-    en_gb_path = locales_dir / 'en-GB' / 'translation.json'
+    en_gb_path = locales_dir / 'en-GB' / 'translation.toml'
+    file_ext = '.toml'
 
     if not en_gb_path.exists():
         print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
         sys.exit(1)
 
     # Load en-GB (source of truth)
-    with open(en_gb_path, 'r', encoding='utf-8') as f:
-        en_gb = json.load(f)
+    with open(en_gb_path, 'rb') as f:
+        en_gb = tomllib.load(f)
 
     en_gb_flat = flatten_dict(en_gb)
 
@@ -134,23 +136,25 @@ def main():
         languages = [args.language]
     else:
         # Validate all languages except en-GB
-        languages = [
-            d.name for d in locales_dir.iterdir()
-            if d.is_dir() and d.name != 'en-GB' and (d / 'translation.json').exists()
-        ]
+        languages = []
+        for d in locales_dir.iterdir():
+            if d.is_dir() and d.name != 'en-GB':
+                if (d / 'translation.toml').exists():
+                    languages.append(d.name)
 
     all_issues = []
 
     # Validate each language
     for lang_code in sorted(languages):
-        lang_path = locales_dir / lang_code / 'translation.json'
+        lang_path = locales_dir / lang_code / 'translation.toml'
 
         if not lang_path.exists():
-            print(f"⚠️  Warning: {lang_code}/translation.json not found, skipping")
+            print(f"⚠️  Warning: {lang_code}/translation.toml not found, skipping")
             continue
 
-        with open(lang_path, 'r', encoding='utf-8') as f:
-            lang_data = json.load(f)
+        # Load language file
+        with open(lang_path, 'rb') as f:
+            lang_data = tomllib.load(f)
 
         lang_flat = flatten_dict(lang_data)
         issues = validate_language(en_gb_flat, lang_flat, lang_code)

@@ -202,10 +202,10 @@ const [ToolName] = (props: BaseToolProps) => {
 ## 5. Add Translations
 Update translation files. **Important: Only update `en-GB` files** - other languages are handled separately.
 
-**File to update:** `frontend/public/locales/en-GB/translation.json`
+**File to update:** `frontend/public/locales/en-GB/translation.toml`
 
 **Required Translation Keys**:
-```json
+```toml
 {
   "home": {
     "[toolName]": {
@@ -251,7 +251,7 @@ Update translation files. **Important: Only update `en-GB` files** - other langu
 ```
 
 **Translation Notes:**
-- **Only update `en-GB/translation.json`** - other locale files are managed separately
+- **Only update `en-GB/translation.toml`** - other locale files are managed separately
 - Use descriptive keys that match your component's `t()` calls
 - Include tooltip translations if you created tooltip hooks
 - Add `options.*` keys if your tool has settings with descriptions
