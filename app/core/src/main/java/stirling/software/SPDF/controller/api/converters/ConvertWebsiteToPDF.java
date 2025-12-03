@@ -100,7 +100,7 @@ public class ConvertWebsiteToPDF {
         }
 
         if (location != null) {
-            log.info("Redirecting to: {}", location.toString());
+            log.info("Redirecting to: {}", location);
             return ResponseEntity.status(status).location(location).build();
         }
 
@@ -241,7 +241,7 @@ public class ConvertWebsiteToPDF {
 
     private String decodeNumericHtmlEntities(String content) {
         Matcher matcher = NUMERIC_HTML_ENTITY_PATTERN.matcher(content);
-        StringBuffer decoded = new StringBuffer();
+        StringBuilder decoded = new StringBuilder();
         while (matcher.find()) {
             String entityBody = matcher.group(1);
             try {

@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.database.repository;
 
-import java.util.Date;
-
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +27,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 
     @Override
     @Transactional
-    public void updateToken(String series, String tokenValue, Date lastUsed) {
+    public void updateToken(String series, String tokenValue, java.util.Date lastUsed) {
         PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);
         if (existingToken != null) {
             existingToken.setToken(tokenValue);
@@ -46,7 +44,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
                     token.getUsername(),
                     token.getSeries(),
                     token.getToken(),
-                    Date.from(token.getLastUsed()));
+                    java.util.Date.from(token.getLastUsed()));
         }
         return null;
     }

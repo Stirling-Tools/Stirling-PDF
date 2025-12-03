@@ -159,7 +159,7 @@ class LanguageServiceTest {
         }
 
         @Override
-        protected Resource[] getResourcesFromPattern(String pattern) throws IOException {
+        protected Resource[] getResourcesFromPattern() throws IOException {
             if (shouldThrowException) {
                 throw new IOException("Test exception");
             }

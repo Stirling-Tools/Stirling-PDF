@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -40,6 +39,7 @@ import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.FileMonitor;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -141,7 +141,7 @@ public class PipelineDirectoryProcessor {
     }
 
     private PipelineConfig readAndParseJson(Path jsonFile) throws IOException {
-        String jsonString = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
+        String jsonString = Files.readString(jsonFile);
         log.debug("Reading JSON file: {}", jsonFile);
         return objectMapper.readValue(jsonString, PipelineConfig.class);
     }
@@ -202,7 +202,7 @@ public class PipelineDirectoryProcessor {
                                         String extension =
                                                 filename.contains(".")
                                                         ? filename.substring(
-                                                                        filename.lastIndexOf(".")
+                                                                        filename.lastIndexOf('.')
                                                                                 + 1)
                                                                 .toLowerCase(Locale.ROOT)
                                                         : "";
@@ -237,9 +237,7 @@ public class PipelineDirectoryProcessor {
                             .map(Path::toFile)
                             .toArray(File[]::new);
             log.info(
-                    "Collected {} files for processing for {}",
-                    files.length,
-                    dir.toAbsolutePath().toString());
+                    "Collected {} files for processing for {}", files.length, dir.toAbsolutePath());
             return files;
         }
     }
@@ -264,7 +262,7 @@ public class PipelineDirectoryProcessor {
                     if (attempt < maxRetries) {
                         log.info("File move failed (attempt {}), retrying...", attempt);
                         try {
-                            Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));
+                            Thread.sleep(retryDelayMs * (1L << (attempt - 1)));
                         } catch (InterruptedException e1) {
                             log.error("prepareFilesForProcessing failure", e);
                         }
@@ -359,31 +357,42 @@ public class PipelineDirectoryProcessor {
 
     private String createOutputFileName(Resource resource, PipelineConfig config) {
         String resourceName = resource.getFilename();
-        String baseName = resourceName.substring(0, resourceName.lastIndexOf('.'));
-        String extension = resourceName.substring(resourceName.lastIndexOf('.') + 1);
-        String outputFileName =
-                config.getOutputPattern()
-                                .replace("{filename}", baseName)
-                                .replace("{pipelineName}", config.getName())
-                                .replace(
-                                        "{date}",
-                                        LocalDate.now()
-                                                .format(DateTimeFormatter.ofPattern("yyyyMMdd")))
-                                .replace(
-                                        "{time}",
-                                        LocalTime.now()
-                                                .format(DateTimeFormatter.ofPattern("HHmmss")))
-                        + "."
-                        + extension;
-        return outputFileName;
+        if (resourceName == null) {
+            throw new IllegalArgumentException("Resource filename cannot be null");
+        }
+
+        int lastDotIndex = resourceName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException(
+                    "Resource filename must have an extension: " + resourceName);
+        }
+
+        String baseName = resourceName.substring(0, lastDotIndex);
+        String extension = resourceName.substring(lastDotIndex + 1);
+
+        return config.getOutputPattern()
+                        .replace("{filename}", baseName)
+                        .replace("{pipelineName}", config.getName())
+                        .replace(
+                                "{date}",
+                                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
+                        .replace(
+                                "{time}",
+                                LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss")))
+                + "."
+                + extension;
     }
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir =
                 config.getOutputDir()
                         .replace("{outputFolder}", finishedFoldersDir)
-                        .replace("{folderName}", dir.toString())
-                        .replaceAll("\\\\?watchedFolders", "");
+                        .replace("{folderName}", dir.toString());
+        outputDir =
+                RegexPatternUtils.getInstance()
+                        .getPattern("\\\\?watchedFolders")
+                        .matcher(outputDir)
+                        .replaceAll("");
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

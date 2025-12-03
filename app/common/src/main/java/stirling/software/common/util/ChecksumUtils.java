@@ -22,10 +22,10 @@ import lombok.experimental.UtilityClass;
 public class ChecksumUtils {
 
     /** Shared buffer size for streaming I/O. */
-    private static final int BUFFER_SIZE = 8192;
+    private final int BUFFER_SIZE = 8192;
 
     /** Mask to extract the lower 32 bits of a long value (unsigned int). */
-    private static final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
+    private final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
 
     /**
      * Computes a checksum for the given file using the chosen algorithm and returns a lowercase hex
@@ -40,7 +40,7 @@ public class ChecksumUtils {
      * @return hex string of the checksum
      * @throws IOException if the file cannot be read
      */
-    public static String checksum(Path path, String algorithm) throws IOException {
+    public String checksum(Path path, String algorithm) throws IOException {
         try (InputStream is = Files.newInputStream(path)) {
             return checksum(is, algorithm);
         }
@@ -57,7 +57,7 @@ public class ChecksumUtils {
      * @return hex string of the checksum
      * @throws IOException if reading from the stream fails
      */
-    public static String checksum(InputStream is, String algorithm) throws IOException {
+    public String checksum(InputStream is, String algorithm) throws IOException {
         return switch (algorithm.toUpperCase(Locale.ROOT)) {
             case "CRC32" -> checksumChecksum(is, new CRC32());
             case "ADLER32" -> checksumChecksum(is, new Adler32());
@@ -77,7 +77,7 @@ public class ChecksumUtils {
      * @return Base64-encoded checksum bytes
      * @throws IOException if the file cannot be read
      */
-    public static String checksumBase64(Path path, String algorithm) throws IOException {
+    public String checksumBase64(Path path, String algorithm) throws IOException {
         try (InputStream is = Files.newInputStream(path)) {
             return checksumBase64(is, algorithm);
         }
@@ -94,7 +94,7 @@ public class ChecksumUtils {
      * @return Base64-encoded checksum bytes
      * @throws IOException if reading from the stream fails
      */
-    public static String checksumBase64(InputStream is, String algorithm) throws IOException {
+    public String checksumBase64(InputStream is, String algorithm) throws IOException {
         return switch (algorithm.toUpperCase(Locale.ROOT)) {
             case "CRC32" ->
                     Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new CRC32()));
@@ -115,8 +115,7 @@ public class ChecksumUtils {
      * @return map of algorithm → hex string
      * @throws IOException if the file cannot be read
      */
-    public static Map<String, String> checksums(Path path, String... algorithms)
-            throws IOException {
+    public Map<String, String> checksums(Path path, String... algorithms) throws IOException {
         try (InputStream is = Files.newInputStream(path)) {
             return checksums(is, algorithms);
         }
@@ -132,25 +131,24 @@ public class ChecksumUtils {
      * @return map of algorithm → hex string
      * @throws IOException if reading from the stream fails
      */
-    public static Map<String, String> checksums(InputStream is, String... algorithms)
-            throws IOException {
+    public Map<String, String> checksums(InputStream is, String... algorithms) throws IOException {
         // Use LinkedHashMap to preserve the order of requested algorithms in the result.
         Map<String, MessageDigest> digests = new LinkedHashMap<>();
         Map<String, Checksum> checksums = new LinkedHashMap<>();
 
         for (String algorithm : algorithms) {
-            String key = algorithm; // keep original key for output
+            // keep original key for output
             switch (algorithm.toUpperCase(Locale.ROOT)) {
                 case "CRC32":
-                    checksums.put(key, new CRC32());
+                    checksums.put(algorithm, new CRC32());
                     break;
                 case "ADLER32":
-                    checksums.put(key, new Adler32());
+                    checksums.put(algorithm, new Adler32());
                     break;
                 default:
                     try {
                         // For MessageDigest, pass the original name (case-insensitive per JCA)
-                        digests.put(key, MessageDigest.getInstance(algorithm));
+                        digests.put(algorithm, MessageDigest.getInstance(algorithm));
                     } catch (NoSuchAlgorithmException e) {
                         throw new IllegalStateException("Unsupported algorithm: " + algorithm, e);
                     }
@@ -189,7 +187,7 @@ public class ChecksumUtils {
      * @return {@code true} if they match, otherwise {@code false}
      * @throws IOException if the file cannot be read
      */
-    public static boolean matches(Path path, String algorithm, String expected) throws IOException {
+    public boolean matches(Path path, String algorithm, String expected) throws IOException {
         try (InputStream is = Files.newInputStream(path)) {
             return matches(is, algorithm, expected);
         }
@@ -206,8 +204,7 @@ public class ChecksumUtils {
      * @return {@code true} if they match, otherwise {@code false}
      * @throws IOException if reading from the stream fails
      */
-    public static boolean matches(InputStream is, String algorithm, String expected)
-            throws IOException {
+    public boolean matches(InputStream is, String algorithm, String expected) throws IOException {
         return checksum(is, algorithm).equalsIgnoreCase(expected);
     }
 
@@ -222,7 +219,7 @@ public class ChecksumUtils {
      * @throws IOException if reading fails
      * @throws IllegalStateException if the algorithm is unsupported
      */
-    private static byte[] checksumBytes(InputStream is, String algorithm) throws IOException {
+    private byte[] checksumBytes(InputStream is, String algorithm) throws IOException {
         try {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -246,7 +243,7 @@ public class ChecksumUtils {
      * @return 8-character lowercase hex (big-endian representation)
      * @throws IOException if reading fails
      */
-    private static String checksumChecksum(InputStream is, Checksum checksum) throws IOException {
+    private String checksumChecksum(InputStream is, Checksum checksum) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         int read;
         while ((read = is.read(buffer)) != -1) {
@@ -269,8 +266,7 @@ public class ChecksumUtils {
      * @return 4 bytes (big-endian)
      * @throws IOException if reading fails
      */
-    private static byte[] checksumChecksumBytes(InputStream is, Checksum checksum)
-            throws IOException {
+    private byte[] checksumChecksumBytes(InputStream is, Checksum checksum) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         int read;
         while ((read = is.read(buffer)) != -1) {
@@ -287,7 +283,7 @@ public class ChecksumUtils {
      * @param hash the byte array to convert
      * @return the lowercase hex string
      */
-    private static String toHex(byte[] hash) {
+    private String toHex(byte[] hash) {
         StringBuilder sb = new StringBuilder(hash.length * 2);
         for (byte b : hash) {
             sb.append(String.format(Locale.ROOT, "%02x", b));

@@ -27,10 +27,10 @@ public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static final String ERROR_KEYWORD = "ERROR";
-    private static ApplicationProperties applicationProperties = new ApplicationProperties();
+    private static final ApplicationProperties applicationProperties = new ApplicationProperties();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
-    private long timeoutDuration;
+    private final long timeoutDuration;
 
     private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
         this.semaphore = new Semaphore(semaphoreLimit);
@@ -175,7 +175,7 @@ public class ProcessExecutor {
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
         String messages = "";
-        int exitCode = 1;
+        int exitCode;
         semaphore.acquire();
         AtomicBoolean errorDetected = new AtomicBoolean(false);
         try {
@@ -276,8 +276,7 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
-            boolean isQpdf =
-                    command != null && !command.isEmpty() && command.get(0).contains("qpdf");
+            boolean isQpdf = !command.isEmpty() && command.get(0).contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
@@ -339,7 +338,7 @@ public class ProcessExecutor {
 
     @Setter
     @Getter
-    public class ProcessExecutorResult {
+    public static class ProcessExecutorResult {
         int rc;
         String messages;
 

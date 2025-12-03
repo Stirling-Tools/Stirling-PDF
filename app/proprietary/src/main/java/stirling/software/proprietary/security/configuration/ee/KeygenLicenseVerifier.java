@@ -130,9 +130,9 @@ public class KeygenLicenseVerifier {
 
             log.info("Decoded certificate payload: {}", payload);
 
-            String encryptedData = "";
-            String encodedSignature = "";
-            String algorithm = "";
+            String encryptedData;
+            String encodedSignature;
+            String algorithm;
 
             try {
                 JSONObject attrs = new JSONObject(payload);
@@ -170,9 +170,8 @@ public class KeygenLicenseVerifier {
             }
 
             // Process the certificate data
-            boolean isValid = processCertificateData(decodedData, context);
 
-            return isValid;
+            return processCertificateData(decodedData, context);
         } catch (Exception e) {
             log.error("Error verifying certificate license: {}", e.getMessage(), e);
             return false;
@@ -319,9 +318,8 @@ public class KeygenLicenseVerifier {
             String payload = new String(payloadBytes);
 
             // Process the license payload
-            boolean isValid = processJWTLicensePayload(payload, context);
 
-            return isValid;
+            return processJWTLicensePayload(payload, context);
         } catch (Exception e) {
             log.error("Error verifying ED25519_SIGN license: {}", e.getMessage());
             return false;
@@ -636,7 +634,7 @@ public class KeygenLicenseVerifier {
 
                 // Check if the current fingerprint is already activated
                 boolean isCurrentMachineActivated = false;
-                String currentMachineId = null;
+                String currentMachineId;
 
                 for (JsonNode machine : machines) {
                     if (machineFingerprint.equals(
@@ -662,7 +660,7 @@ public class KeygenLicenseVerifier {
                             "Max machines reached. Deregistering oldest machine to make room for the new machine.");
 
                     // Find the oldest machine based on creation timestamp
-                    if (machines.size() > 0) {
+                    if (!machines.isEmpty()) {
                         // Find the machine with the oldest creation date
                         String oldestMachineId = null;
                         java.time.Instant oldestTime = null;

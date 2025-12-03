@@ -33,14 +33,6 @@ public class CbzUtils {
     public byte[] convertCbzToPdf(
             MultipartFile cbzFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager)
-            throws IOException {
-        return convertCbzToPdf(cbzFile, pdfDocumentFactory, tempFileManager, false);
-    }
-
-    public byte[] convertCbzToPdf(
-            MultipartFile cbzFile,
-            CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
             boolean optimizeForEbook)
             throws IOException {
@@ -153,7 +145,7 @@ public class CbzUtils {
         return "cbz".equals(extension) || "zip".equals(extension);
     }
 
-    public static boolean isComicBookFile(MultipartFile file) {
+    public boolean isComicBookFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         if (filename == null) {
             return false;

@@ -96,9 +96,6 @@ public class AuditUtils {
         }
 
         HttpServletRequest req = attrs.getRequest();
-        if (req == null) {
-            return; // No request available
-        }
 
         // STANDARD level HTTP data
         if (auditLevel.includes(AuditLevel.STANDARD)) {
@@ -144,7 +141,7 @@ public class AuditUtils {
                     Arrays.stream(joinPoint.getArgs())
                             .filter(a -> a instanceof MultipartFile)
                             .map(a -> (MultipartFile) a)
-                            .collect(Collectors.toList());
+                            .toList();
 
             if (!files.isEmpty()) {
                 List<Map<String, Object>> fileInfos =

@@ -26,11 +26,10 @@ public class LoadingWindow extends JDialog {
     private final JProgressBar progressBar;
     private final JLabel statusLabel;
     private final JPanel mainPanel;
-    private final JLabel brandLabel;
-    private long startTime;
+    private final long startTime;
 
     private Timer stuckTimer;
-    private long stuckThreshold = 4000;
+    private final long stuckThreshold = 4000;
     private long timeAt90Percent = -1;
     private volatile Process explorerProcess;
     private static final boolean IS_WINDOWS =
@@ -75,7 +74,7 @@ public class LoadingWindow extends JDialog {
         }
 
         // URL Label with explicit size
-        brandLabel = new JLabel(initialUrl);
+        JLabel brandLabel = new JLabel(initialUrl);
         brandLabel.setHorizontalAlignment(SwingConstants.CENTER);
         brandLabel.setPreferredSize(new Dimension(300, 25));
         brandLabel.setText("Stirling-PDF");

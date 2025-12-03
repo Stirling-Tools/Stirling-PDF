@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.GregorianCalendar;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -135,7 +135,8 @@ class GetInfoOnPDFTest {
         info.setCreator("Test Creator");
         info.setProducer("Test Producer");
 
-        GregorianCalendar cal = GregorianCalendar.from(FIXED_NOW);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(FIXED_NOW.toInstant().toEpochMilli());
         info.setCreationDate(cal);
         info.setModificationDate(cal);
 
@@ -228,7 +229,10 @@ class GetInfoOnPDFTest {
 
                 ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                String jsonResponse = null;
+                if (response.getBody() != null) {
+                    jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                }
                 JsonNode jsonNode = objectMapper.readTree(jsonResponse);
                 JsonNode basicInfo = jsonNode.get("BasicInfo");
 
@@ -263,7 +267,10 @@ class GetInfoOnPDFTest {
 
                 ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                String jsonResponse = null;
+                if (response.getBody() != null) {
+                    jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                }
                 JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                 Assertions.assertEquals(
@@ -300,7 +307,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
@@ -337,7 +347,10 @@ class GetInfoOnPDFTest {
             Assertions.assertNotNull(response);
             Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
@@ -369,7 +382,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode encryption = jsonNode.get("Encryption");
 
@@ -396,7 +412,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode permissions = jsonNode.get("Permissions");
 
@@ -432,7 +451,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("FormFields"));
@@ -460,7 +482,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode formFields = jsonNode.get("FormFields");
 
@@ -494,7 +519,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode perPageInfo = jsonNode.get("PerPageInfo");
 
@@ -530,7 +558,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode page1 = jsonNode.get("PerPageInfo").get("Page 1");
 
@@ -554,7 +585,10 @@ class GetInfoOnPDFTest {
 
             Assertions.assertEquals(
                     HttpStatus.OK, response.getStatusCode()); // Returns error JSON with 200
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -573,7 +607,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -629,7 +666,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -723,7 +763,10 @@ class GetInfoOnPDFTest {
                     Assertions.assertNotNull(response);
                     Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
 
-                    String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    String jsonResponse = null;
+                    if (response.getBody() != null) {
+                        jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    }
                     JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                     Assertions.assertFalse(
@@ -758,7 +801,10 @@ class GetInfoOnPDFTest {
                     ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
                     Assertions.assertNotNull(response);
-                    String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    String jsonResponse = null;
+                    if (response.getBody() != null) {
+                        jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    }
                     JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                     Assertions.assertFalse(jsonNode.has("error"));
@@ -793,7 +839,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode compliancy = jsonNode.get("Compliancy");
 
@@ -828,7 +877,10 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = null;
+            if (response.getBody() != null) {
+                jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            }
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode basicInfo = jsonNode.get("BasicInfo");
 

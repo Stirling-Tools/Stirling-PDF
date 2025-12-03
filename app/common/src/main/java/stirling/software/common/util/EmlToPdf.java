@@ -11,8 +11,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class EmlToPdf {
 
-    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
-            throws IOException {
+    public String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request) throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
         EmlParser.EmailContent emailContent =
@@ -20,7 +19,7 @@ public class EmlToPdf {
         return EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, null);
     }
 
-    public static byte[] convertEmlToPdf(
+    public byte[] convertEmlToPdf(
             String weasyprintPath,
             EmlToPdfRequest request,
             byte[] emlBytes,
@@ -63,7 +62,7 @@ public class EmlToPdf {
         }
     }
 
-    private static boolean shouldAttachFiles(
+    private boolean shouldAttachFiles(
             EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
                 && request != null
@@ -71,7 +70,7 @@ public class EmlToPdf {
                 && !emailContent.getAttachments().isEmpty();
     }
 
-    private static byte[] convertHtmlToPdf(
+    private byte[] convertHtmlToPdf(
             String weasyprintPath,
             EmlToPdfRequest request,
             String htmlContent,

@@ -106,9 +106,8 @@ public class TempFileManager {
      * Delete a temporary file and unregister it from the registry.
      *
      * @param file The file to delete
-     * @return true if the file was deleted successfully, false otherwise
      */
-    public boolean deleteTempFile(File file) {
+    public void deleteTempFile(File file) {
         if (file != null && file.exists()) {
             boolean deleted = file.delete();
             if (deleted) {
@@ -117,9 +116,7 @@ public class TempFileManager {
             } else {
                 log.warn("Failed to delete temp file: {}", file.getAbsolutePath());
             }
-            return deleted;
         }
-        return false;
     }
 
     /**
@@ -134,13 +131,13 @@ public class TempFileManager {
                 boolean deleted = Files.deleteIfExists(path);
                 if (deleted) {
                     registry.unregister(path);
-                    log.debug("Deleted temp file: {}", path.toString());
+                    log.debug("Deleted temp file: {}", path);
                 } else {
-                    log.debug("Temp file already deleted or does not exist: {}", path.toString());
+                    log.debug("Temp file already deleted or does not exist: {}", path);
                 }
                 return deleted;
             } catch (IOException e) {
-                log.warn("Failed to delete temp file: {}", path.toString(), e);
+                log.warn("Failed to delete temp file: {}", path, e);
             }
         }
         return false;
@@ -155,9 +152,9 @@ public class TempFileManager {
         if (directory != null && Files.isDirectory(directory)) {
             try {
                 GeneralUtils.deleteDirectory(directory);
-                log.debug("Deleted temp directory: {}", directory.toString());
+                log.debug("Deleted temp directory: {}", directory);
             } catch (IOException e) {
-                log.warn("Failed to delete temp directory: {}", directory.toString(), e);
+                log.warn("Failed to delete temp directory: {}", directory, e);
             }
         }
     }

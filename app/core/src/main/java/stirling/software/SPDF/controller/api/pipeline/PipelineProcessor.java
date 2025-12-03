@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class PipelineProcessor {
 
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf(".");
+        int dotIndex = filename.lastIndexOf('.');
         if (dotIndex == -1) {
             // No extension found
             return filename;
@@ -68,7 +69,7 @@ public class PipelineProcessor {
         String name = filename.substring(0, dotIndex);
         String extension = filename.substring(dotIndex);
         // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf("_");
+        int underscoreIndex = name.lastIndexOf('_');
         if (underscoreIndex == -1) {
             // No underscore found
             return filename;
@@ -150,7 +151,8 @@ public class PipelineProcessor {
                                 continue;
                             }
                             if (!HttpStatus.OK.equals(response.getStatusCode())) {
-                                logPrintStream.println("Error: " + response.getBody());
+                                logPrintStream.println(
+                                        "Error: " + Arrays.toString(response.getBody()));
                                 hasErrors = true;
                                 continue;
                             }
@@ -162,7 +164,7 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf("."))
+                                    filename.substring(filename.lastIndexOf('.'))
                                             .toLowerCase(Locale.ROOT);
                         }
 
@@ -222,7 +224,8 @@ public class PipelineProcessor {
                     } else {
                         // Log error if the response status is not OK
                         logPrintStream.println(
-                                "Error in multi-input operation: " + response.getBody());
+                                "Error in multi-input operation: "
+                                        + Arrays.toString(response.getBody()));
                         hasErrors = true;
                     }
                 } else {
@@ -234,7 +237,7 @@ public class PipelineProcessor {
                                                 String filename = file.getFilename();
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
-                                                                    filename.lastIndexOf("."))
+                                                                    filename.lastIndexOf('.'))
                                                             .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
@@ -259,7 +262,7 @@ public class PipelineProcessor {
             outputFiles = newOutputFiles;
         }
         if (hasErrors) {
-            log.error("Errors occurred during processing. Log: {}", logStream.toString());
+            log.error("Errors occurred during processing. Log: {}", logStream);
         }
         result.setHasErrors(hasErrors);
         result.setFiltersApplied(filtersApplied);
@@ -281,7 +284,7 @@ public class PipelineProcessor {
         return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
     }
 
-    private List<Resource> processOutputFiles(
+    private void processOutputFiles(
             String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
             throws IOException {
         // Define filename
@@ -296,12 +299,18 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        byte[] responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new IllegalStateException(
+                    "Pipeline operation returned null response body for operation: " + operation);
+        }
+
+        if (isZip(responseBody, newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody()));
+            newOutputFiles.addAll(unzip(responseBody));
         } else {
             Resource outputResource =
-                    new ByteArrayResource(response.getBody()) {
+                    new ByteArrayResource(responseBody) {
 
                         @Override
                         public String getFilename() {
@@ -310,7 +319,6 @@ public class PipelineProcessor {
                     };
             newOutputFiles.add(outputResource);
         }
-        return newOutputFiles;
     }
 
     public String extractFilename(ResponseEntity<byte[]> response) {

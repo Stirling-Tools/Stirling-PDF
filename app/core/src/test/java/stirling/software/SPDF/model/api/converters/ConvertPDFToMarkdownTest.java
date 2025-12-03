@@ -48,14 +48,15 @@ class ConvertPDFToMarkdownTest {
         try (MockedConstruction<PDFToFile> construction =
                 Mockito.mockConstruction(
                         PDFToFile.class,
-                        (mock, ctx) -> {
-                            when(mock.processPdfToMarkdown(any(MultipartFile.class)))
-                                    .thenAnswer(
-                                            inv ->
-                                                    ResponseEntity.ok()
-                                                            .header("Content-Type", "text/markdown")
-                                                            .body(md));
-                        })) {
+                        (mock, ctx) ->
+                                when(mock.processPdfToMarkdown(any(MultipartFile.class)))
+                                        .thenAnswer(
+                                                inv ->
+                                                        ResponseEntity.ok()
+                                                                .header(
+                                                                        "Content-Type",
+                                                                        "text/markdown")
+                                                                .body(md)))) {
 
             MockMvc mvc = mockMvc();
 
@@ -91,10 +92,9 @@ class ConvertPDFToMarkdownTest {
         try (MockedConstruction<PDFToFile> ignored =
                 Mockito.mockConstruction(
                         PDFToFile.class,
-                        (mock, ctx) -> {
-                            when(mock.processPdfToMarkdown(any(MultipartFile.class)))
-                                    .thenThrow(new RuntimeException("boom"));
-                        })) {
+                        (mock, ctx) ->
+                                when(mock.processPdfToMarkdown(any(MultipartFile.class)))
+                                        .thenThrow(new RuntimeException("boom")))) {
 
             MockMvc mvc = mockMvc();
 

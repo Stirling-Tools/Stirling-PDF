@@ -45,7 +45,7 @@ class ConnectedInputStreamTest {
         byte[] one = new byte[1];
         int n1 = cis.read(one, 0, 1);
         assertEquals(1, n1);
-        assertEquals((int) ' ', one[0] & 0xFF);
+        assertEquals(' ', one[0] & 0xFF);
 
         // reset to mark and re-read the same 5 bytes ("ello ")
         cis.reset();

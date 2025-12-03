@@ -14,7 +14,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -157,7 +156,7 @@ public class CompressController {
         return uniqueImages;
     }
 
-    private static ImageReference addDirectImage(
+    private static void addDirectImage(
             int pageNum,
             COSName name,
             PDImageXObject image,
@@ -169,8 +168,6 @@ public class CompressController {
 
         ImageIdentity identity = new ImageIdentity(image);
         uniqueImages.computeIfAbsent(identity, k -> new ArrayList<>()).add(ref);
-
-        return ref;
     }
 
     // Look for images inside form XObjects
@@ -1119,10 +1116,6 @@ public class CompressController {
                     break;
                 case 3:
                     command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                case 5:
-                    command.add("-dPDFSETTINGS=/screen");
                     break;
                 case 6:
                 case 7:

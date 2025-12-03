@@ -262,8 +262,8 @@ public class RearrangePagesPDFController {
             log.info("totalPages = {}", totalPages);
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
-            for (int i = 0; i < newPageOrder.size(); i++) {
-                newPages.add(document.getPage(newPageOrder.get(i)));
+            for (Integer integer : newPageOrder) {
+                newPages.add(document.getPage(integer));
             }
 
             // Create a new document based on the original one

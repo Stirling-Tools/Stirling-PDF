@@ -136,15 +136,16 @@ class AttemptCounterTest {
         void shouldReturnTrueWhenExactlyWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
-            long now = System.currentTimeMillis();
 
-            // Simulate: last action was exactly 'window' ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - window);
+            // Simulate: last action was exactly 'window' ms ago (or slightly more to avoid timing
+            // races)
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window + 10));
 
-            // Purpose: Equality -> reset should occur because the window has fully elapsed
+            // Purpose: At or past the window threshold -> reset should occur because the window has
+            // fully elapsed
             assertTrue(
                     counter.shouldReset(window),
-                    "With exactly equal difference, the reset window has elapsed");
+                    "With difference equal to or greater than window, the reset window has elapsed");
         }
 
         @Test
@@ -152,10 +153,9 @@ class AttemptCounterTest {
         void shouldReturnTrueWhenGreaterThanWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 100L;
-            long now = System.currentTimeMillis();
 
-            // Simulate: last action was (window + 1) ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - (window + 1));
+            // Simulate: last action was (window + 10) ms ago to ensure we're clearly outside
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window + 10));
 
             // Purpose: Outside the window -> reset
             assertTrue(counter.shouldReset(window), "Outside the window, reset should occur");

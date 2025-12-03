@@ -5,10 +5,7 @@ import static stirling.software.common.util.AttachmentUtils.setCatalogViewerPref
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.attribute.FileTime;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.GregorianCalendar;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -85,11 +82,9 @@ public class AttachmentService implements AttachmentServiceInterface {
                         PDEmbeddedFile embeddedFile =
                                 new PDEmbeddedFile(document, attachment.getInputStream());
                         embeddedFile.setSize((int) attachment.getSize());
-                        // use java.time.Instant and convert to GregorianCalendar for PDFBox
-                        Instant now = Instant.now();
-                        GregorianCalendar nowCal =
-                                GregorianCalendar.from(
-                                        ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
+                        // Use Calendar for PDFBox compatibility
+                        Calendar nowCal = Calendar.getInstance();
+                        nowCal.setTimeInMillis(System.currentTimeMillis());
                         embeddedFile.setCreationDate(nowCal);
                         embeddedFile.setModDate(nowCal);
                         String contentType = attachment.getContentType();

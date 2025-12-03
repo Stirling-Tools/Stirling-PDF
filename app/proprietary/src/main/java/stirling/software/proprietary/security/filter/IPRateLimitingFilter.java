@@ -28,12 +28,12 @@ public class IPRateLimitingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         if (request instanceof HttpServletRequest httpServletRequest) {
-            HttpServletRequest httpRequest = httpServletRequest;
-            String method = httpRequest.getMethod();
-            String requestURI = httpRequest.getRequestURI();
+            String method = httpServletRequest.getMethod();
+            String requestURI = httpServletRequest.getRequestURI();
             // Check if the request is for static resources
             boolean isStaticResource =
-                    RequestUriUtils.isStaticResource(httpRequest.getContextPath(), requestURI);
+                    RequestUriUtils.isStaticResource(
+                            httpServletRequest.getContextPath(), requestURI);
 
             // If it's a static resource, just continue the filter chain and skip the logic below
             if (isStaticResource) {

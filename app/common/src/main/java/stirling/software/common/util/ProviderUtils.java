@@ -20,10 +20,6 @@ public class ProviderUtils {
             return false;
         }
 
-        if (isCollectionEmpty(provider.getScopes())) {
-            return false;
-        }
-
-        return true;
+        return !isCollectionEmpty(provider.getScopes());
     }
 }

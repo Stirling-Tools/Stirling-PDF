@@ -39,10 +39,6 @@ public class ExternalAppDepConfig {
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
-    private final String unoconvPath;
-    private final String calibrePath;
-    private final String ocrMyPdfPath;
-    private final String sOfficePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -58,10 +54,10 @@ public class ExternalAppDepConfig {
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
-        this.unoconvPath = runtimePathConfig.getUnoConvertPath();
-        this.calibrePath = runtimePathConfig.getCalibrePath();
-        this.ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
-        this.sOfficePath = runtimePathConfig.getSOfficePath();
+        String unoconvPath = runtimePathConfig.getUnoConvertPath();
+        String calibrePath = runtimePathConfig.getCalibrePath();
+        String ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
+        String sOfficePath = runtimePathConfig.getSOfficePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
@@ -90,7 +86,7 @@ public class ExternalAppDepConfig {
                                                 checkDependencyAndDisableGroup(cmd);
                                                 return null;
                                             })
-                            .collect(Collectors.toList());
+                            .toList();
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
 
             // Python / OpenCV special handling
@@ -308,7 +304,7 @@ public class ExternalAppDepConfig {
                 new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (sb.length() > 0) sb.append('\n');
+                if (!sb.isEmpty()) sb.append('\n');
                 sb.append(line);
             }
         }

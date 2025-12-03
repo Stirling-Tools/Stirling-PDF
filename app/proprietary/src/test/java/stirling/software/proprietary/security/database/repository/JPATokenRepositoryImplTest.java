@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ class JPATokenRepositoryImplTest {
         @Test
         @DisplayName("should save new PersistentLogin with correct values")
         void shouldSaveNewToken() {
-            Date date = new Date();
+            java.util.Date date = java.util.Date.from(Instant.now());
             PersistentRememberMeToken token =
                     new PersistentRememberMeToken("user1", "series123", "tokenABC", date);
 
@@ -57,11 +57,11 @@ class JPATokenRepositoryImplTest {
             existing.setSeries("series123");
             existing.setUsername("user1");
             existing.setToken("oldToken");
-            existing.setLastUsed(new Date().toInstant());
+            existing.setLastUsed(Instant.now());
 
             when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(existing));
 
-            Date newDate = new Date();
+            java.util.Date newDate = java.util.Date.from(Instant.now());
             tokenRepository.updateToken("series123", "newToken", newDate);
 
             assertEquals("newToken", existing.getToken());
@@ -74,7 +74,8 @@ class JPATokenRepositoryImplTest {
         void shouldDoNothingIfNotFound() {
             when(persistentLoginRepository.findById("unknownSeries")).thenReturn(Optional.empty());
 
-            tokenRepository.updateToken("unknownSeries", "newToken", new Date());
+            tokenRepository.updateToken(
+                    "unknownSeries", "newToken", java.util.Date.from(Instant.now()));
 
             verify(persistentLoginRepository, never()).save(any());
         }
@@ -87,12 +88,12 @@ class JPATokenRepositoryImplTest {
         @Test
         @DisplayName("should return PersistentRememberMeToken if found")
         void shouldReturnTokenIfFound() {
-            Date date = new Date();
+            Instant instant = Instant.now();
             PersistentLogin login = new PersistentLogin();
             login.setSeries("series123");
             login.setUsername("user1");
             login.setToken("tokenXYZ");
-            login.setLastUsed(date.toInstant());
+            login.setLastUsed(instant);
 
             when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(login));
 
@@ -102,7 +103,7 @@ class JPATokenRepositoryImplTest {
             assertEquals("user1", result.getUsername());
             assertEquals("series123", result.getSeries());
             assertEquals("tokenXYZ", result.getTokenValue());
-            assertEquals(date, result.getDate());
+            assertEquals(java.util.Date.from(instant), result.getDate());
         }
 
         @Test

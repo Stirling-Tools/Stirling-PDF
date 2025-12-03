@@ -32,7 +32,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
 
     private String textColor;
     private String backgroundColor;
-    private HighContrastColorCombination highContrastColorCombination;
+    private final HighContrastColorCombination highContrastColorCombination;
 
     public CustomColorReplaceStrategy(
             MultipartFile file,
@@ -55,8 +55,10 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             String[] colors =
                     HighContrastColorReplaceDecider.getColors(
                             replaceAndInvert, highContrastColorCombination);
-            this.textColor = colors[0];
-            this.backgroundColor = colors[1];
+            if (colors != null && colors.length >= 2) {
+                this.textColor = colors[0];
+                this.backgroundColor = colors[1];
+            }
         }
 
         // Create a temporary file, with the original filename from the multipart file
@@ -91,7 +93,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(
                                 text.getX(), page.getMediaBox().getHeight() - text.getY());
-                        PDFont font = null;
+                        PDFont font;
                         String unicodeText = text.getUnicode();
                         try {
                             font = PDFontFactory.createFont(text.getFont().getCOSObject());
@@ -151,8 +153,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             // Prepare the modified PDF for download
             ByteArrayInputStream inputStream =
                     new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            InputStreamResource resource = new InputStreamResource(inputStream);
-            return resource;
+            return new InputStreamResource(inputStream);
         }
     }
 

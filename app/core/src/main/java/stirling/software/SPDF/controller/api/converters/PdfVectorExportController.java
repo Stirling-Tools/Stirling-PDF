@@ -125,21 +125,13 @@ public class PdfVectorExportController {
             String outputName =
                     GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
 
-            MediaType mediaType;
-            switch (outputFormat.toLowerCase(Locale.ROOT)) {
-                case "eps":
-                case "ps":
-                    mediaType = MediaType.parseMediaType("application/postscript");
-                    break;
-                case "pcl":
-                    mediaType = MediaType.parseMediaType("application/vnd.hp-PCL");
-                    break;
-                case "xps":
-                    mediaType = MediaType.parseMediaType("application/vnd.ms-xpsdocument");
-                    break;
-                default:
-                    mediaType = MediaType.APPLICATION_OCTET_STREAM;
-            }
+            MediaType mediaType =
+                    switch (outputFormat.toLowerCase(Locale.ROOT)) {
+                        case "eps", "ps" -> MediaType.parseMediaType("application/postscript");
+                        case "pcl" -> MediaType.parseMediaType("application/vnd.hp-PCL");
+                        case "xps" -> MediaType.parseMediaType("application/vnd.ms-xpsdocument");
+                        default -> MediaType.APPLICATION_OCTET_STREAM;
+                    };
 
             return WebResponseUtils.bytesToWebResponse(vectorBytes, outputName, mediaType);
         }

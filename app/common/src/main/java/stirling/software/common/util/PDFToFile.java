@@ -78,7 +78,7 @@ public class PDFToFile {
 
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName;
-        if (originalPdfFileName.contains(".")) {
+        if (originalPdfFileName != null && originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
@@ -166,7 +166,7 @@ public class PDFToFile {
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName;
-        if (originalPdfFileName.contains(".")) {
+        if (originalPdfFileName != null && originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 

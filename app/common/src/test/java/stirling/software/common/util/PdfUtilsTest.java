@@ -602,7 +602,7 @@ public class PdfUtilsTest {
             }
 
             assertTrue(PdfUtils.hasTextOnPage(p1, "needle"));
-            assertTrue(!PdfUtils.hasTextOnPage(p2, "needle"));
+            assertFalse(PdfUtils.hasTextOnPage(p2, "needle"));
         }
     }
 
@@ -631,7 +631,7 @@ public class PdfUtilsTest {
                 cs.drawImage(ximg, 50, 700, 20, 20);
             }
 
-            assertTrue(!PdfUtils.hasImages(doc, "1"), "Page 1 should have no image");
+            assertFalse(PdfUtils.hasImages(doc, "1"), "Page 1 should have no image");
         }
 
         // Case 2: Page 2 with image -> true
@@ -699,7 +699,7 @@ public class PdfUtilsTest {
             }
 
             assertTrue(PdfUtils.hasImagesOnPage(p1));
-            assertTrue(!PdfUtils.hasImagesOnPage(p2));
+            assertFalse(PdfUtils.hasImagesOnPage(p2));
         }
     }
 

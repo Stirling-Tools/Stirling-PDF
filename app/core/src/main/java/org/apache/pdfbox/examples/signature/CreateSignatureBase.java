@@ -56,9 +56,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * If set to {@code false}, internal signing will be performed.
      *
      * <p>Default: {@code false}
-     *
-     * @param externalSigning {@code true} if external signing should be performed; {@code false}
-     *     for internal signing
      */
     @Setter @Getter private boolean externalSigning;
 
@@ -74,7 +71,7 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * @throws CertificateException if the certificate is not valid as signing time
      * @throws IOException if no certificate could be found
      */
-    public CreateSignatureBase(KeyStore keystore, char[] pin)
+    protected CreateSignatureBase(KeyStore keystore, char[] pin)
             throws KeyStoreException,
                     UnrecoverableKeyException,
                     NoSuchAlgorithmException,
@@ -88,16 +85,14 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         Certificate cert = null;
         while (cert == null && aliases.hasMoreElements()) {
             alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+            privateKey = (PrivateKey) keystore.getKey(alias, pin);
             Certificate[] certChain = keystore.getCertificateChain(alias);
             if (certChain != null) {
-                setCertificateChain(certChain);
+                certificateChain = certChain;
                 cert = certChain[0];
-                if (cert instanceof X509Certificate) {
+                if (cert instanceof X509Certificate x509Certificate) {
                     // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
-
-                    //// SigUtils.checkCertificateUsage((X509Certificate) cert);
+                    x509Certificate.checkValidity();
                 }
             }
         }
@@ -127,8 +122,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * want to create the hash and the signature separately (e.g. to transfer only the hash to an
      * external application), read <a href="https://stackoverflow.com/questions/41767351">this
      * answer</a> or <a href="https://stackoverflow.com/questions/56867465">this answer</a>.
-     *
-     * @throws IOException
      */
     @Override
     public byte[] sign(InputStream content) throws IOException {

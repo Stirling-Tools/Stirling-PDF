@@ -155,8 +155,7 @@ public class EditTableOfContentsController {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
-                    objectMapper.readValue(
-                            request.getBookmarkData(), new TypeReference<List<BookmarkItem>>() {});
+                    objectMapper.readValue(request.getBookmarkData(), new TypeReference<>() {});
 
             // Create a new document outline
             PDDocumentOutline outline = new PDDocumentOutline();

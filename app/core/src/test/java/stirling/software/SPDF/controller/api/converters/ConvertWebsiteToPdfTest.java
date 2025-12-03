@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.AfterEach;
@@ -45,6 +46,7 @@ import stirling.software.common.util.WebResponseUtils;
 
 public class ConvertWebsiteToPdfTest {
 
+    private static final Pattern PATTERN = Pattern.compile("[A-Za-z0-9_]+\\.pdf");
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
 
@@ -141,7 +143,7 @@ public class ConvertWebsiteToPdfTest {
 
         assertTrue(out.endsWith(".pdf"));
         // Only A–Z, a–z, 0–9, underscore and dot allowed
-        assertTrue(out.matches("[A-Za-z0-9_]+\\.pdf"));
+        assertTrue(PATTERN.matcher(out).matches());
         // no truncation here (source not that long)
         assertTrue(out.length() <= 54);
     }
@@ -158,7 +160,7 @@ public class ConvertWebsiteToPdfTest {
         String out = (String) m.invoke(sut, longUrl);
 
         assertTrue(out.endsWith(".pdf"));
-        assertTrue(out.matches("[A-Za-z0-9_]+\\.pdf"));
+        assertTrue(PATTERN.matcher(out).matches());
         // safeName limited to 50 -> total max 54 including '.pdf'
         assertTrue(out.length() <= 54, "Filename should be truncated to 50 + '.pdf'");
     }

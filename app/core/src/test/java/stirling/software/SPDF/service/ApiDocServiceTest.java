@@ -27,7 +27,7 @@ class ApiDocServiceTest {
     @Mock UserServiceInterface userService;
 
     ApiDocService apiDocService;
-    ObjectMapper mapper = new ObjectMapper();
+    final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {

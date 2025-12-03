@@ -74,8 +74,7 @@ public class PageNumbersController {
                     case "small" -> 0.02f;
                     case "large" -> 0.05f;
                     case "x-large" -> 0.075f;
-                    case "medium" -> 0.035f;
-                    default -> 0.035f;
+                    default -> 0.035f; // medium
                 };
 
         if (pagesToNumber == null || pagesToNumber.isEmpty()) {
@@ -84,10 +83,6 @@ public class PageNumbersController {
         if (customText == null || customText.isEmpty()) {
             customText = "{n}";
         }
-
-        final String baseFilename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
 
         List<Integer> pagesToNumberList =
                 GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());

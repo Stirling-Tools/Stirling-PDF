@@ -67,8 +67,16 @@ public class ExtractImageScansController {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("Input file must have a valid filename");
+        }
 
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException("Input file must have an extension: " + fileName);
+        }
+
+        String extension = fileName.substring(lastDotIndex + 1);
         List<String> images = new ArrayList<>();
 
         List<Path> tempImageFiles = new ArrayList<>();
@@ -119,7 +127,7 @@ public class ExtractImageScansController {
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list
-                        images.add(tempFile.toString());
+                        images.add(tempFile.toAbsolutePath().toString());
                         tempImageFiles.add(tempFile);
                     }
                 }
@@ -127,13 +135,13 @@ public class ExtractImageScansController {
                 tempInputFile = Files.createTempFile("input_", "." + extension);
                 inputFile.transferTo(tempInputFile);
                 // Add input file path to images list
-                images.add(tempInputFile.toString());
+                images.add(tempInputFile.toAbsolutePath().toString());
             }
 
             List<byte[]> processedImageBytes = new ArrayList<>();
 
             // Process each image
-            for (int i = 0; i < images.size(); i++) {
+            for (String image : images) {
 
                 Path tempDir = Files.createTempDirectory("openCV_output");
                 tempDirs.add(tempDir);
@@ -142,8 +150,8 @@ public class ExtractImageScansController {
                                 Arrays.asList(
                                         pythonVersion,
                                         splitPhotosScript.toAbsolutePath().toString(),
-                                        images.get(i),
-                                        tempDir.toString(),
+                                        image,
+                                        tempDir.toAbsolutePath().toString(),
                                         "--angle_threshold",
                                         String.valueOf(request.getAngleThreshold()),
                                         "--tolerance",

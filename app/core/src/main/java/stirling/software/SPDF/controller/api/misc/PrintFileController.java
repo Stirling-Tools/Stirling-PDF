@@ -2,9 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -83,30 +81,25 @@ public class PrintFileController {
                 job.setPageable(new PDFPageable(document));
                 job.print();
                 document.close();
-            } else if (contentType.startsWith("image/")) {
+            } else if (contentType != null && contentType.startsWith("image/")) {
                 BufferedImage image = ImageIO.read(file.getInputStream());
                 PrinterJob job = PrinterJob.getPrinterJob();
                 job.setPrintService(selectedService);
                 job.setPrintable(
-                        new Printable() {
-                            public int print(
-                                    Graphics graphics, PageFormat pageFormat, int pageIndex)
-                                    throws PrinterException {
-                                if (pageIndex != 0) {
-                                    return NO_SUCH_PAGE;
-                                }
-                                Graphics2D g2d = (Graphics2D) graphics;
-                                g2d.translate(
-                                        pageFormat.getImageableX(), pageFormat.getImageableY());
-                                g2d.drawImage(
-                                        image,
-                                        0,
-                                        0,
-                                        (int) pageFormat.getImageableWidth(),
-                                        (int) pageFormat.getImageableHeight(),
-                                        null);
-                                return PAGE_EXISTS;
+                        (graphics, pageFormat, pageIndex) -> {
+                            if (pageIndex != 0) {
+                                return Printable.NO_SUCH_PAGE;
                             }
+                            Graphics2D g2d = (Graphics2D) graphics;
+                            g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+                            g2d.drawImage(
+                                    image,
+                                    0,
+                                    0,
+                                    (int) pageFormat.getImageableWidth(),
+                                    (int) pageFormat.getImageableHeight(),
+                                    null);
+                            return Printable.PAGE_EXISTS;
                         });
                 job.print();
             }

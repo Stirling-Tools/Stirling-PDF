@@ -24,7 +24,7 @@ import stirling.software.common.util.ExceptionUtils;
 public class SignatureService {
 
     private final String SIGNATURE_BASE_PATH;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
 
     public SignatureService() {
         SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();

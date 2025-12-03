@@ -120,7 +120,7 @@ class LanguageServiceBasicTest {
         }
 
         @Override
-        protected Resource[] getResourcesFromPattern(String pattern) {
+        protected Resource[] getResourcesFromPattern() {
             return mockResources;
         }
     }

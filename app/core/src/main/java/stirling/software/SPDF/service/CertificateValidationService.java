@@ -25,6 +25,11 @@ public class CertificateValidationService {
 
     private void loadMozillaCertificates() throws Exception {
         try (InputStream is = getClass().getResourceAsStream("/certdata.txt")) {
+            if (is == null) {
+                throw new IllegalStateException(
+                        "Certificate data resource not found: /certdata.txt");
+            }
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line;
             StringBuilder certData = new StringBuilder();

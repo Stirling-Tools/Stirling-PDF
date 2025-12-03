@@ -97,15 +97,14 @@ public class SplitPDFController {
                 }
             }
 
-            String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+            String baseFilename =
+                    GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                 int splitDocumentsSize = splitDocumentsBoas.size();
                 for (int i = 0; i < splitDocumentsSize; i++) {
-                    StringBuilder sb = new StringBuilder(baseFilename.length() + 10);
-                    sb.append(baseFilename).append('_').append(i + 1).append(".pdf");
-                    String fileName = sb.toString();
+                    String fileName = baseFilename + '_' + (i + 1) + ".pdf";
 
                     ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                     byte[] pdf = baos.toByteArray();
@@ -125,7 +124,8 @@ public class SplitPDFController {
             byte[] data = Files.readAllBytes(outputTempFile.getPath());
 
             String zipFilename =
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
+                    GeneralUtils.generateFilename(
+                            request.getFileInput().getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
                     data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
         }

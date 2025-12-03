@@ -72,7 +72,6 @@ public class TSAClient {
     }
 
     /**
-     * @param content
      * @return the time stamp token
      * @throws IOException if there was an error with the connection or data from the TSA server, or
      *     if the time stamp response could not be validated

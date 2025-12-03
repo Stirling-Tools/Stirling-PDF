@@ -95,16 +95,21 @@ public class PipelineController {
             // Loop through each file and add it to the zip
             for (Resource file : outputFiles) {
                 String originalFilename = file.getFilename();
+                if (originalFilename == null) {
+                    log.warn("Skipping file with null filename");
+                    continue;
+                }
+
                 String filename = originalFilename;
                 // Check if the filename already exists, and modify it if necessary
                 if (filenameCount.containsKey(originalFilename)) {
                     int count = filenameCount.get(originalFilename);
-                    assert originalFilename != null;
                     filename = GeneralUtils.generateFilename(originalFilename, "(" + count + ")");
                     filenameCount.put(originalFilename, count + 1);
                 } else {
                     filenameCount.put(originalFilename, 1);
                 }
+
                 ZipEntry zipEntry = new ZipEntry(filename);
                 zipOut.putNextEntry(zipEntry);
                 // Read the file into a byte array

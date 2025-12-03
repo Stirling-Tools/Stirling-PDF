@@ -224,7 +224,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -233,7 +233,7 @@ public class MetricsController {
                             }
 
                             // Filter for specific endpoint if provided
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
+                            return endpoint.isEmpty() || endpoint.get().equals(uri);
                         })
                 .mapToDouble(Counter::count)
                 .sum();
@@ -265,7 +265,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -305,14 +305,14 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
                                 log.debug("Skipping invalid GET endpoint: {}", uri);
                                 return false;
                             }
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
+                            return endpoint.isEmpty() || endpoint.get().equals(uri);
                         })
                 .forEach(
                         counter -> {

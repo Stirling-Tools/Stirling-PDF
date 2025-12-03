@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +37,7 @@ public class TaskManager {
     private final Map<String, JobResult> jobResults = new ConcurrentHashMap<>();
 
     @Value("${stirling.jobResultExpiryMinutes:30}")
-    private int jobResultExpiryMinutes = 30;
+    private final int jobResultExpiryMinutes = 30;
 
     private final FileStorage fileStorage;
     private final ScheduledExecutorService cleanupExecutor =
@@ -297,8 +296,7 @@ public class TaskManager {
 
     /** Clean up old completed job results */
     public void cleanupOldJobs() {
-        LocalDateTime expiryThreshold =
-                LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime expiryThreshold = LocalDateTime.now().minusMinutes(jobResultExpiryMinutes);
         int removedCount = 0;
 
         try {
@@ -354,7 +352,7 @@ public class TaskManager {
             return true;
         }
 
-        return false;
+        return fileName != null && fileName.toLowerCase().endsWith(".zip");
     }
 
     /** Extract a ZIP file into individual files and store them */

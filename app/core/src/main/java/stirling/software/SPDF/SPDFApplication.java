@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -87,16 +86,15 @@ public class SPDFApplication {
 
         // External config files
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
-        log.info("Settings file: {}", settingsPath.toString());
+        log.info("Settings file: {}", settingsPath);
         if (Files.exists(settingsPath)) {
-            propertyFiles.put(
-                    "spring.config.additional-location", "file:" + settingsPath.toString());
+            propertyFiles.put("spring.config.additional-location", "file:" + settingsPath);
         } else {
-            log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
+            log.warn("External configuration file '{}' does not exist.", settingsPath);
         }
 
         Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
-        log.info("Custom settings file: {}", customSettingsPath.toString());
+        log.info("Custom settings file: {}", customSettingsPath);
         if (Files.exists(customSettingsPath)) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
@@ -105,19 +103,16 @@ public class SPDFApplication {
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existingLocation + "file:" + customSettingsPath.toString());
+                    existingLocation + "file:" + customSettingsPath);
         } else {
-            log.warn(
-                    "Custom configuration file '{}' does not exist.",
-                    customSettingsPath.toString());
+            log.warn("Custom configuration file '{}' does not exist.", customSettingsPath);
         }
         Properties finalProps = new Properties();
 
         if (!propertyFiles.isEmpty()) {
-            finalProps.putAll(
-                    Collections.singletonMap(
-                            "spring.config.additional-location",
-                            propertyFiles.get("spring.config.additional-location")));
+            finalProps.put(
+                    "spring.config.additional-location",
+                    propertyFiles.get("spring.config.additional-location"));
         }
 
         if (!props.isEmpty()) {
@@ -138,40 +133,10 @@ public class SPDFApplication {
         printStartupLogs();
     }
 
-    @PostConstruct
-    public void init() {
-        String baseUrl = appConfig.getBaseUrl();
-        String contextPath = appConfig.getContextPath();
-        String serverPort = appConfig.getServerPort();
-        baseUrlStatic = baseUrl;
-        contextPathStatic = contextPath;
-        serverPortStatic = serverPort;
-        String url = baseUrl + ":" + getStaticPort() + contextPath;
-
-        if (webBrowser != null
-                && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            webBrowser.initWebUI(url);
-        } else {
-            String browserOpenEnv = env.getProperty("BROWSER_OPEN");
-            boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
-            if (browserOpen) {
-                try {
-                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-                    Runtime rt = Runtime.getRuntime();
-
-                    if (os.contains("win")) {
-                        // For Windows
-                        SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
-                    } else if (os.contains("mac")) {
-                        SystemCommand.runCommand(rt, "open " + url);
-                    } else if (os.contains("nix") || os.contains("nux")) {
-                        SystemCommand.runCommand(rt, "xdg-open " + url);
-                    }
-                } catch (IOException e) {
-                    log.error("Error opening browser: {}", e.getMessage());
-                }
-            }
-        }
+    private static void printStartupLogs() {
+        log.info("Stirling-PDF Started.");
+        String url = baseUrlStatic + ":" + serverPortStatic + contextPathStatic;
+        log.info("Navigate to {}", url);
     }
 
     public static void setServerPortStatic(String port) {
@@ -191,10 +156,40 @@ public class SPDFApplication {
         }
     }
 
-    private static void printStartupLogs() {
-        log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
-        log.info("Navigate to {}", url);
+    @PostConstruct
+    public void init() {
+        String baseUrl = appConfig.getBaseUrl();
+        String contextPath = appConfig.getContextPath();
+        String serverPort = appConfig.getServerPort();
+        baseUrlStatic = baseUrl;
+        contextPathStatic = contextPath;
+        serverPortStatic = serverPort;
+        String url = baseUrl + ":" + serverPortStatic + contextPath;
+
+        if (webBrowser != null
+                && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
+            webBrowser.initWebUI(url);
+        } else {
+            String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+            boolean browserOpen = "true".equalsIgnoreCase(browserOpenEnv);
+            if (browserOpen) {
+                try {
+                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+                    Runtime rt = Runtime.getRuntime();
+
+                    if (os.contains("win")) {
+                        // For Windows
+                        SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                    } else if (os.contains("mac")) {
+                        SystemCommand.runCommand(rt, "open " + url);
+                    } else if (os.contains("nix") || os.contains("nux")) {
+                        SystemCommand.runCommand(rt, "xdg-open " + url);
+                    }
+                } catch (IOException e) {
+                    log.error("Error opening browser: {}", e.getMessage());
+                }
+            }
+        }
     }
 
     protected static String[] getActiveProfile(String[] args) {

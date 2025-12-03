@@ -14,12 +14,8 @@ public class ExecutorFactory {
      */
     public static ExecutorService newVirtualOrCachedThreadExecutor() {
         try {
-            ExecutorService executor =
-                    (ExecutorService)
-                            Executors.class
-                                    .getMethod("newVirtualThreadPerTaskExecutor")
-                                    .invoke(null);
-            return executor;
+            return (ExecutorService)
+                    Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
         } catch (NoSuchMethodException e) {
             log.debug("Virtual threads not available; falling back to cached thread pool.");
         } catch (Exception e) {

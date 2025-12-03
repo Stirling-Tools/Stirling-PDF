@@ -20,10 +20,10 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
-    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
-    private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private Set<String> disabledGroups = new HashSet<>();
-    private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
+    @Getter private final Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
+    private final Set<String> disabledGroups = new HashSet<>();
+    private final Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
     public EndpointConfiguration(
@@ -60,10 +60,11 @@ public class EndpointConfiguration {
             return false;
         }
 
-        // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
+        // Rule 2: Functional group check - disabled functional groups override tool groups for a
         // group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
                 if (!isToolGroup(group)) {
                     log.debug(
@@ -90,10 +91,11 @@ public class EndpointConfiguration {
 
         // Rule 4: Single-dependency check - if no alternatives defined, check if endpoint belongs
         // to any disabled tool groups
-        for (String group : endpointGroups.keySet()) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
             if (isToolGroup(group)
                     && disabledGroups.contains(group)
-                    && endpointGroups.get(group).contains(endpoint)) {
+                    && entry.getValue().contains(endpoint)) {
                 log.debug(
                         "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
                         original,
@@ -481,7 +483,8 @@ public class EndpointConfiguration {
             disableGroup("enterprise");
         }
 
-        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
+        if (applicationProperties != null
+                && !applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
@@ -521,8 +524,9 @@ public class EndpointConfiguration {
         }
 
         // Check if endpoint belongs to any disabled functional group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 if (!isToolGroup(group)) {
                     return false;
                 }

@@ -182,7 +182,7 @@ public class JobExecutorService {
                                     "Running async job {} with timeout {} ms", jobId, timeoutToUse);
 
                             // Execute with timeout
-                            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+                            Object result = executeWithTimeout(work, timeoutToUse);
                             processJobResult(jobId, result);
                         } catch (TimeoutException te) {
                             log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
@@ -198,7 +198,7 @@ public class JobExecutorService {
             log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
             // Execute with timeout
-            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+            Object result = executeWithTimeout(work, timeoutToUse);
 
             // If the result is already a ResponseEntity, return it directly
             if (result instanceof ResponseEntity) {
@@ -243,7 +243,7 @@ public class JobExecutorService {
                             filename =
                                     disposition.substring(
                                             disposition.indexOf("filename=") + 9,
-                                            disposition.lastIndexOf("\""));
+                                            disposition.lastIndexOf('"'));
                         }
                     }
 

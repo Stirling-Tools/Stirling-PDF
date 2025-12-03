@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.session;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,7 +23,7 @@ public class SessionScheduled {
             List<SessionInformation> sessionInformations =
                     sessionPersistentRegistry.getAllSessions(principal, false);
             for (SessionInformation sessionInformation : sessionInformations) {
-                Date lastRequest = sessionInformation.getLastRequest();
+                java.util.Date lastRequest = sessionInformation.getLastRequest();
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 Instant expirationTime =
                         lastRequest.toInstant().plus(maxInactiveInterval, ChronoUnit.SECONDS);

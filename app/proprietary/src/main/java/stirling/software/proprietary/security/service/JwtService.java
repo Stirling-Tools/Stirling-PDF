@@ -6,7 +6,6 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,13 +87,14 @@ public class JwtService implements JwtServiceInterface {
 
             KeyPair keyPair = keyPairOpt.get();
 
+            Instant now = Instant.now();
             var builder =
                     Jwts.builder()
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(Date.from(Instant.now()))
-                            .expiration(Date.from(Instant.now().plusMillis(EXPIRATION)))
+                            .issuedAt(java.util.Date.from(now))
+                            .expiration(java.util.Date.from(now.plusMillis(EXPIRATION)))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
@@ -130,10 +130,11 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(Date.from(Instant.now()));
+        java.util.Date expiration = extractExpiration(token);
+        return expiration.before(java.util.Date.from(Instant.now()));
     }
 
-    private Date extractExpiration(String token) {
+    private java.util.Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 

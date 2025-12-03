@@ -126,7 +126,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
 
             UserLoginType loginMethod = UserLoginType.UNKNOWN;
 
@@ -207,7 +207,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         UNKNOWN("Unknown"),
         SAML2USER("Saml2User");
 
-        private String method;
+        private final String method;
 
         UserLoginType(String method) {
             this.method = method;
