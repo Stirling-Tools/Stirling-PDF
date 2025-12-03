@@ -163,6 +163,11 @@ unfavorite = "Rimuovi dai preferiti"
 fullscreen = "Passa alla modalità a schermo intero"
 sidebar = "Passa alla modalità barra laterale"
 
+[backendStartup]
+notFoundTitle = "Backend non trovato"
+retry = "Riprova"
+unreachable = "L'applicazione al momento non riesce a connettersi al backend. Verificare lo stato del backend e la connettività di rete, quindi riprovare."
+
 [zipWarning]
 title = "File ZIP di grandi dimensioni"
 message = "Questo ZIP contiene {{count}} file. Estrarre comunque?"
@@ -339,7 +344,7 @@ popular = "Popolare"
 title = "Preferenze"
 
 [settings.workspace]
-title = "Workspace"
+title = "Area di lavoro"
 people = "Persone"
 teams = "Team"
 
@@ -913,8 +918,8 @@ desc = "Sovrapponi un PDF sopra un altro"
 title = "Sovrapponi PDF"
 
 [home.pdfTextEditor]
-title = "Editor testo PDF"
-desc = "Rivedi e modifica le esportazioni JSON di Stirling PDF con modifica testo raggruppata e rigenerazione del PDF"
+title = "Editor di testo PDF"
+desc = "Modifica testo e immagini esistenti nei PDF"
 
 [home.addText]
 tags = "testo,annotazione,etichetta"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Firma disegnata"
 defaultImageLabel = "Firma caricata"
 defaultTextLabel = "Firma digitata"
 saveButton = "Salva firma"
+savePersonal = "Salva come personale"
+saveShared = "Salva come condivisa"
 saveUnavailable = "Crea prima una firma per salvarla."
 noChanges = "La firma corrente è già salvata."
+tempStorageTitle = "Archiviazione temporanea del browser"
+tempStorageDescription = "Le firme sono archiviate solo nel tuo browser. Verranno perse se cancelli i dati del browser o cambi browser."
+personalHeading = "Firme personali"
+sharedHeading = "Firme condivise"
+personalDescription = "Solo tu puoi vedere queste firme."
+sharedDescription = "Tutti gli utenti possono vedere e usare queste firme."
 
 [sign.saved.type]
 canvas = "Disegno"
@@ -2844,8 +2857,8 @@ label = "Fattore di scala"
 [adjustPageScale.pageSize]
 label = "Dimensione pagina di destinazione"
 keep = "Mantieni dimensioni originali"
-letter = "Letter"
-legal = "Legal"
+letter = "Lettera"
+legal = "Legale"
 
 [adjustPageScale.error]
 failed = "Si è verificato un errore durante la regolazione della scala della pagina."
@@ -3441,6 +3454,9 @@ signinTitle = "Per favore accedi"
 ssoSignIn = "Accedi tramite Single Sign-on"
 oAuth2AutoCreateDisabled = "Creazione automatica utente OAUTH2 DISABILITATA"
 oAuth2AdminBlockedUser = "La registrazione o l'accesso degli utenti non registrati è attualmente bloccata. Si prega di contattare l'amministratore."
+oAuth2RequiresLicense = "L'accesso OAuth/SSO richiede una licenza a pagamento (Server o Enterprise). Contatta l'amministratore per aggiornare il tuo piano."
+saml2RequiresLicense = "L'accesso SAML richiede una licenza a pagamento (Server o Enterprise). Contatta l'amministratore per aggiornare il tuo piano."
+maxUsersReached = "Numero massimo di utenti raggiunto per la licenza corrente. Contatta l'amministratore per aggiornare il piano o aggiungere altri posti."
 oauth2RequestNotFound = "Richiesta di autorizzazione non trovata"
 oauth2InvalidUserInfoResponse = "Risposta relativa alle informazioni utente non valida"
 oauth2invalidRequest = "Richiesta non valida"
@@ -3849,14 +3865,17 @@ fitToWidth = "Adatta alla larghezza"
 actualSize = "Dimensione reale"
 
 [viewer]
+cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
+dualPageView = "Vista doppia pagina"
 firstPage = "Prima pagina"
 lastPage = "Ultima pagina"
-previousPage = "Pagina precedente"
 nextPage = "Pagina successiva"
+onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
+previousPage = "Pagina precedente"
+singlePageView = "Vista pagina singola"
+unknownFile = "File sconosciuto"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
-singlePageView = "Vista pagina singola"
-dualPageView = "Vista doppia pagina"
 
 [rightRail]
 closeSelected = "Chiudi file selezionati"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Mostra/Nascondi barra laterale"
 exportSelected = "Esporta pagine selezionate"
 toggleAnnotations = "Attiva/disattiva visibilità annotazioni"
 annotationMode = "Attiva/disattiva modalità annotazione"
+print = "Stampa PDF"
 draw = "Disegna"
 save = "Salva"
 saveChanges = "Salva modifiche"
@@ -3928,7 +3948,7 @@ files = "File"
 activity = "Attività"
 help = "Guida"
 account = "Account"
-config = "Config"
+config = "Configurazione"
 settings = "Opzioni"
 adminSettings = "Opzioni Admin"
 allTools = "Funzioni"
@@ -4490,13 +4510,14 @@ label = "Informativa sui cookie"
 description = "URL o nome file della cookie policy"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Note legali"
 description = "URL o nome file dell'Impressum (richiesto in alcune giurisdizioni)"
 
 [admin.settings.premium]
 title = "Premium e Enterprise"
 description = "Configura la tua chiave di licenza premium o enterprise."
 license = "Configurazione licenza"
+noInput = "Fornisci una chiave o un file di licenza"
 
 [admin.settings.premium.licenseKey]
 toggle = "Hai una chiave di licenza o un file di certificato?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Attenzione: licenza esistente rilevata"
 line1 = "La sovrascrittura della licenza attuale non può essere annullata."
 line2 = "La tua licenza precedente andrà persa in modo permanente a meno che tu non l'abbia salvata altrove."
 line3 = "Importante: mantieni le chiavi di licenza private e sicure. Non condividerle mai pubblicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Chiave di licenza"
+file = "File del certificato"
+
+[admin.settings.premium.file]
+label = "File del certificato di licenza"
+description = "Carica il file di licenza .lic o .cert degli acquisti offline"
+choose = "Scegli file di licenza"
+selected = "Selezionato: {{filename}} ({{size}})"
+successMessage = "File di licenza caricato e attivato con successo. Non è richiesto il riavvio."
+
+[admin.settings.premium.currentLicense]
+title = "Licenza attiva"
+file = "Origine: File di licenza ({{path}})"
+key = "Origine: Chiave di licenza"
+type = "Tipo: {{type}}"
+noInput = "Fornisci una chiave di licenza o carica un file di certificato"
+success = "Successo"
 
 [admin.settings.premium.enabled]
 label = "Abilita funzionalità Premium"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} selezionati"
 download = "Salva"
 delete = "Elimina"
 unsupported = "Non supportato"
+active = "Attivo"
 addToUpload = "Aggiungi al caricamento"
+closeFile = "Chiudi file"
 deleteAll = "Elimina tutto"
 loadingFiles = "Caricamento file..."
 noFiles = "Nessun file disponibile"
@@ -5197,7 +5239,7 @@ subtitle = "Digita o incolla le email qui sotto, separate da virgole. La tua are
 
 [workspace.people.actions]
 label = "Azioni"
-upgrade = "Upgrade"
+upgrade = "Aggiorna"
 
 [workspace.people.roleDescriptions]
 admin = "Può gestire impostazioni e invitare membri, con pieno accesso amministrativo."
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "È richiesto almeno un indirizzo email"
 submit = "Invia inviti"
 success = "utente/i invitato/i con successo"
-partialSuccess = "Alcuni inviti non sono riusciti"
+partialFailure = "Alcuni inviti non sono riusciti"
 allFailed = "Impossibile invitare gli utenti"
 error = "Invio inviti non riuscito"
 
@@ -5755,7 +5797,7 @@ label = "Seleziona server"
 description = "Server self-hosted"
 
 [setup.step3]
-label = "Login"
+label = "Accesso"
 description = "Inserisci credenziali"
 
 [setup.mode.saas]
@@ -5796,10 +5838,17 @@ testFailed = "Test di connessione non riuscito"
 title = "Accedi"
 subtitle = "Inserisci le credenziali per continuare"
 connectingTo = "Connessione a:"
-submit = "Login"
+submit = "Accedi"
 signInWith = "Accedi con"
 oauthPending = "Apertura del browser per l'autenticazione..."
 orContinueWith = "Oppure continua con email"
+serverRequirement = "Nota: il server deve avere il login abilitato."
+showInstructions = "Come abilitarlo?"
+hideInstructions = "Nascondi istruzioni"
+instructions = "Per abilitare il login sul tuo server Stirling PDF:"
+instructionsEnvVar = "Imposta la variabile d'ambiente:"
+instructionsOrYml = "Oppure in settings.yml:"
+instructionsRestart = "Quindi riavvia il server affinché le modifiche abbiano effetto."
 
 [setup.login.username]
 label = "Nome utente"
@@ -5843,7 +5892,7 @@ paragraph = "Pagina a paragrafi"
 sparse = "Testo sparso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatico"
 paragraph = "Paragrafo"
 singleLine = "Riga singola"
 

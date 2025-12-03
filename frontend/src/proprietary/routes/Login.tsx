@@ -107,6 +107,7 @@ export default function Login() {
         const providerIds = Object.keys(data.providerList || {})
           .map(key => key.split('/').pop())
           .filter((id): id is string => id !== undefined);
+
         setEnabledProviders(providerIds);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
@@ -225,16 +226,25 @@ export default function Login() {
     );
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
+  // Known OAuth providers that have dedicated backend support
+  const KNOWN_OAUTH_PROVIDERS = ['github', 'google', 'apple', 'azure', 'keycloak', 'oidc'] as const;
+  type KnownOAuthProvider = typeof KNOWN_OAUTH_PROVIDERS[number];
+
+  const signInWithProvider = async (provider: string) => {
     try {
       setIsSigningIn(true);
       setError(null);
 
-      console.log(`[Login] Signing in with ${provider}`);
+      // Map unknown providers to 'oidc' for the backend redirect
+      const backendProvider: KnownOAuthProvider = KNOWN_OAUTH_PROVIDERS.includes(provider as KnownOAuthProvider)
+        ? (provider as KnownOAuthProvider)
+        : 'oidc';
+
+      console.log(`[Login] Signing in with ${provider} (backend: ${backendProvider})`);
 
       // Redirect to Spring OAuth2 endpoint
       const { error } = await springAuth.signInWithOAuth({
-        provider,
+        provider: backendProvider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 

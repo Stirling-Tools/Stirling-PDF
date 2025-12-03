@@ -24,6 +24,7 @@ export function useViewerRightRailButtons() {
   const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
+  const printLabel = t('rightRail.print', 'Print PDF');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
@@ -128,6 +129,17 @@ export function useViewerRightRailButtons() {
         }
       },
       {
+        id: 'viewer-print',
+        icon: <LocalIcon icon="print" width="1.5rem" height="1.5rem" />,
+        tooltip: printLabel,
+        ariaLabel: printLabel,
+        section: 'top' as const,
+        order: 56,
+        onClick: () => {
+          viewer.printActions.print();
+        }
+      },
+      {
         id: 'viewer-annotation-controls',
         section: 'top' as const,
         order: 60,
@@ -136,7 +148,7 @@ export function useViewerRightRailButtons() {
         )
       }
     ];
-  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, tooltipPosition]);
+  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, printLabel, tooltipPosition]);
 
   useRightRailButtons(viewerButtons);
 }

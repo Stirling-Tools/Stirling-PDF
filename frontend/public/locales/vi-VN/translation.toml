@@ -163,6 +163,11 @@ unfavorite = "Xóa khỏi Mục yêu thích"
 fullscreen = "Chuyển sang chế độ toàn màn hình"
 sidebar = "Chuyển sang chế độ thanh bên"
 
+[backendStartup]
+notFoundTitle = "Không tìm thấy Backend"
+retry = "Thử lại"
+unreachable = "Ứng dụng hiện không thể kết nối tới Backend. Hãy kiểm tra trạng thái Backend và kết nối mạng, sau đó thử lại."
+
 [zipWarning]
 title = "Tệp ZIP lớn"
 message = "ZIP này chứa {{count}} tệp. Vẫn giải nén?"
@@ -347,7 +352,7 @@ teams = "Nhóm"
 title = "Cấu hình"
 systemSettings = "Cài đặt hệ thống"
 features = "Tính năng"
-endpoints = "Endpoints"
+endpoints = "Điểm cuối"
 database = "Cơ sở dữ liệu"
 advanced = "Nâng cao"
 
@@ -359,7 +364,7 @@ connections = "Kết nối"
 [settings.licensingAnalytics]
 title = "Giấy phép & Phân tích"
 plan = "Gói"
-audit = "Audit"
+audit = "Kiểm toán"
 usageAnalytics = "Phân tích sử dụng"
 
 [settings.policiesPrivacy]
@@ -369,7 +374,7 @@ privacy = "Quyền riêng tư"
 
 [settings.developer]
 title = "Nhà phát triển"
-apiKeys = "API Keys"
+apiKeys = "Khóa API"
 
 [settings.tooltips]
 enableLoginFirst = "Bật chế độ đăng nhập trước"
@@ -914,7 +919,7 @@ title = "Chồng lớp PDF"
 
 [home.pdfTextEditor]
 title = "Trình chỉnh sửa văn bản PDF"
-desc = "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
+desc = "Chỉnh sửa văn bản và hình ảnh hiện có bên trong PDF"
 
 [home.addText]
 tags = "văn bản,chú thích,nhãn"
@@ -1176,7 +1181,7 @@ selectFilesPlaceholder = "Chọn tệp trong khung chính để bắt đầu"
 settings = "Cài đặt"
 conversionCompleted = "Hoàn tất chuyển đổi"
 results = "Kết quả"
-defaultFilename = "converted_file"
+defaultFilename = "tep_da_chuyen_doi"
 conversionResults = "Kết quả chuyển đổi"
 convertFrom = "Chuyển từ"
 convertTo = "Sang"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Chữ ký vẽ"
 defaultImageLabel = "Chữ ký đã tải lên"
 defaultTextLabel = "Chữ ký nhập"
 saveButton = "Lưu chữ ký"
+savePersonal = "Lưu cá nhân"
+saveShared = "Lưu dùng chung"
 saveUnavailable = "Hãy tạo chữ ký trước để lưu."
 noChanges = "Chữ ký hiện tại đã được lưu."
+tempStorageTitle = "Bộ nhớ tạm của trình duyệt"
+tempStorageDescription = "Chữ ký chỉ được lưu trong trình duyệt của bạn. Chúng sẽ bị mất nếu bạn xóa dữ liệu trình duyệt hoặc đổi sang trình duyệt khác."
+personalHeading = "Chữ ký cá nhân"
+sharedHeading = "Chữ ký dùng chung"
+personalDescription = "Chỉ mình bạn có thể xem các chữ ký này."
+sharedDescription = "Tất cả người dùng đều có thể xem và sử dụng các chữ ký này."
 
 [sign.saved.type]
 canvas = "Vẽ"
@@ -2570,7 +2583,7 @@ stopButton = "Dừng so sánh"
 [certSign]
 tags = "xác thực,PEM,P12,chính thức,mã hóa"
 title = "Ký bằng chứng chỉ"
-filenamePrefix = "signed"
+filenamePrefix = "da_ky"
 chooseCertificate = "Chọn tệp chứng chỉ"
 chooseJksFile = "Chọn tệp JKS"
 chooseP12File = "Chọn tệp PKCS12"
@@ -2704,7 +2717,7 @@ header = "Xóa chứng chỉ số khỏi PDF"
 selectPDF = "Chọn một tệp PDF:"
 submit = "Xóa chữ ký"
 description = "Công cụ này sẽ xóa chữ ký chứng chỉ số khỏi tài liệu PDF của bạn."
-filenamePrefix = "unsigned"
+filenamePrefix = "chua_ky"
 
 [removeCertSign.files]
 placeholder = "Chọn một tệp PDF trong màn hình chính để bắt đầu"
@@ -3441,6 +3454,9 @@ signinTitle = "Vui lòng đăng nhập"
 ssoSignIn = "Đăng nhập qua Single Sign-on"
 oAuth2AutoCreateDisabled = "Tự động tạo người dùng OAUTH2 bị vô hiệu hóa"
 oAuth2AdminBlockedUser = "Hiện đang chặn đăng ký hoặc đăng nhập người dùng chưa đăng ký. Vui lòng liên hệ quản trị viên."
+oAuth2RequiresLicense = "Đăng nhập OAuth/SSO cần giấy phép trả phí (Server hoặc Enterprise). Vui lòng liên hệ quản trị viên để nâng cấp gói của bạn."
+saml2RequiresLicense = "Đăng nhập SAML cần giấy phép trả phí (Server hoặc Enterprise). Vui lòng liên hệ quản trị viên để nâng cấp gói của bạn."
+maxUsersReached = "Đã đạt số lượng người dùng tối đa cho giấy phép hiện tại của bạn. Vui lòng liên hệ quản trị viên để nâng cấp gói hoặc thêm suất."
 oauth2RequestNotFound = "Không tìm thấy yêu cầu ủy quyền"
 oauth2InvalidUserInfoResponse = "Phản hồi thông tin người dùng không hợp lệ"
 oauth2invalidRequest = "Yêu cầu không hợp lệ"
@@ -3536,7 +3552,7 @@ title = "PDF thành một trang"
 header = "PDF thành một trang"
 submit = "Chuyển đổi thành một trang"
 description = "Công cụ này sẽ gộp tất cả các trang của PDF của bạn thành một trang đơn lớn. Chiều rộng giữ nguyên như các trang gốc, còn chiều cao sẽ bằng tổng chiều cao của tất cả các trang."
-filenamePrefix = "single_page"
+filenamePrefix = "mot_trang"
 
 [pdfToSinglePage.files]
 placeholder = "Chọn một tệp PDF ở màn hình chính để bắt đầu"
@@ -3849,14 +3865,17 @@ fitToWidth = "Vừa chiều rộng"
 actualSize = "Kích thước thật"
 
 [viewer]
+cannotPreviewFile = "Không thể xem trước tệp"
+dualPageView = "Chế độ xem hai trang"
 firstPage = "Trang đầu"
 lastPage = "Trang cuối"
-previousPage = "Trang trước"
 nextPage = "Trang tiếp"
+onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
+previousPage = "Trang trước"
+singlePageView = "Chế độ xem trang đơn"
+unknownFile = "Tệp không xác định"
 zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
-singlePageView = "Chế độ xem trang đơn"
-dualPageView = "Chế độ xem hai trang"
 
 [rightRail]
 closeSelected = "Đóng các tệp đã chọn"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Chuyển đổi thanh bên"
 exportSelected = "Xuất các trang đã chọn"
 toggleAnnotations = "Chuyển đổi hiển thị chú thích"
 annotationMode = "Chuyển đổi chế độ chú thích"
+print = "In PDF"
 draw = "Vẽ"
 save = "Lưu"
 saveChanges = "Lưu thay đổi"
@@ -4497,6 +4517,7 @@ description = "URL hoặc tên tệp cho impressum (bắt buộc ở một số 
 title = "Premium & Enterprise"
 description = "Cấu hình khóa giấy phép premium hoặc enterprise của bạn."
 license = "Cấu hình giấy phép"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tệp"
 
 [admin.settings.premium.licenseKey]
 toggle = "Có license key hoặc tệp chứng chỉ?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Cảnh báo: Phát hiện license hiện có"
 line1 = "Ghi đè license key hiện tại không thể hoàn tác."
 line2 = "License trước đó sẽ bị mất vĩnh viễn trừ khi bạn đã sao lưu ở nơi khác."
 line3 = "Quan trọng: Giữ license key riêng tư và an toàn. Không bao giờ chia sẻ công khai."
+
+[admin.settings.premium.inputMethod]
+text = "Khóa giấy phép"
+file = "Tệp chứng chỉ"
+
+[admin.settings.premium.file]
+label = "Tệp chứng chỉ giấy phép"
+description = "Tải lên tệp giấy phép .lic hoặc .cert từ các lần mua ngoại tuyến của bạn"
+choose = "Chọn tệp giấy phép"
+selected = "Đã chọn: {{filename}} ({{size}})"
+successMessage = "Tệp giấy phép đã được tải lên và kích hoạt thành công. Không cần khởi động lại."
+
+[admin.settings.premium.currentLicense]
+title = "Giấy phép đang hoạt động"
+file = "Nguồn: Tệp giấy phép ({{path}})"
+key = "Nguồn: Khóa giấy phép"
+type = "Loại: {{type}}"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tải lên tệp chứng chỉ"
+success = "Thành công"
 
 [admin.settings.premium.enabled]
 label = "Bật tính năng Premium"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} đã chọn"
 download = "Tải xuống"
 delete = "Xóa"
 unsupported = "Không được hỗ trợ"
+active = "Hoạt động"
 addToUpload = "Thêm vào tải lên"
+closeFile = "Đóng tệp"
 deleteAll = "Xóa tất cả"
 loadingFiles = "Đang tải tệp..."
 noFiles = "Không có tệp nào"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Yêu cầu ít nhất một địa chỉ email"
 submit = "Gửi lời mời"
 success = "Mời người dùng thành công"
-partialSuccess = "Một số lời mời thất bại"
+partialFailure = "Một số lời mời không thành công"
 allFailed = "Mời người dùng thất bại"
 error = "Gửi lời mời thất bại"
 
@@ -5800,6 +5842,13 @@ submit = "Đăng nhập"
 signInWith = "Đăng nhập với"
 oauthPending = "Đang mở trình duyệt để xác thực..."
 orContinueWith = "Hoặc tiếp tục bằng email"
+serverRequirement = "Lưu ý: Máy chủ phải bật đăng nhập."
+showInstructions = "Cách bật?"
+hideInstructions = "Ẩn hướng dẫn"
+instructions = "Để bật đăng nhập trên máy chủ Stirling PDF của bạn:"
+instructionsEnvVar = "Đặt biến môi trường:"
+instructionsOrYml = "Hoặc trong settings.yml:"
+instructionsRestart = "Sau đó khởi động lại máy chủ để các thay đổi có hiệu lực."
 
 [setup.login.username]
 label = "Tên người dùng"
