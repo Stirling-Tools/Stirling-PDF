@@ -333,7 +333,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
         automationSettings: null,
         maxFiles: 1,
-        
       },
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
