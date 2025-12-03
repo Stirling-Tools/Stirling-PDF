@@ -331,17 +331,17 @@ public class UserLicenseSettingsService {
     }
 
     /**
-     * Checks if a user is eligible to use OAuth/SAML authentication.
+     * Checks if a user is eligible to use OAuth authentication.
      *
      * <p>A user is eligible if:
      *
      * <ul>
      *   <li>They are grandfathered for OAuth (existing user before policy change), OR
-     *   <li>The system has an ENTERPRISE license (SSO is enterprise-only)
+     *   <li>The system has a paid license (SERVER or ENTERPRISE)
      * </ul>
      *
      * @param user The user to check
-     * @return true if the user can use OAuth/SAML
+     * @return true if the user can use OAuth
      */
     public boolean isOAuthEligible(stirling.software.proprietary.security.model.User user) {
         // Grandfathered users always have OAuth access
@@ -350,10 +350,36 @@ public class UserLicenseSettingsService {
             return true;
         }
 
-        // Users can use OAuth/SAML only if system has ENTERPRISE license
-        boolean hasEnterpriseLicense = hasEnterpriseLicense();
-        log.debug("OAuth eligibility check: hasEnterpriseLicense={}", hasEnterpriseLicense);
-        return hasEnterpriseLicense;
+        // Users can use OAuth with SERVER or ENTERPRISE license
+        boolean hasPaid = hasPaidLicense();
+        log.debug("OAuth eligibility check: hasPaidLicense={}", hasPaid);
+        return hasPaid;
+    }
+
+    /**
+     * Checks if a user is eligible to use SAML authentication.
+     *
+     * <p>A user is eligible if:
+     *
+     * <ul>
+     *   <li>They are grandfathered for OAuth (existing user before policy change), OR
+     *   <li>The system has an ENTERPRISE license (SAML is enterprise-only)
+     * </ul>
+     *
+     * @param user The user to check
+     * @return true if the user can use SAML
+     */
+    public boolean isSamlEligible(stirling.software.proprietary.security.model.User user) {
+        // Grandfathered users always have SAML access
+        if (user != null && user.isOauthGrandfathered()) {
+            log.debug("User {} is grandfathered for SAML", user.getUsername());
+            return true;
+        }
+
+        // Users can use SAML only with ENTERPRISE license
+        boolean hasEnterprise = hasEnterpriseLicense();
+        log.debug("SAML eligibility check: hasEnterpriseLicense={}", hasEnterprise);
+        return hasEnterprise;
     }
 
     /**
@@ -500,8 +526,7 @@ public class UserLicenseSettingsService {
     }
 
     /**
-     * Checks if the system has an ENTERPRISE license. Used for enterprise-only features like SSO
-     * (OAuth/SAML).
+     * Checks if the system has an ENTERPRISE license. Used for enterprise-only features like SAML.
      *
      * @return true if ENTERPRISE license is active
      */
