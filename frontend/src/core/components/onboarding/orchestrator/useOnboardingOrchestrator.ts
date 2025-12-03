@@ -17,6 +17,7 @@ import {
   migrateFromLegacyPreferences,
 } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { accountService } from '@app/services/accountService';
+import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
 
 const AUTH_ROUTES = ['/login', '/signup', '/auth', '/invite'];
 const SESSION_TOUR_REQUESTED = 'onboarding::session::tour-requested';
@@ -142,6 +143,7 @@ export function useOnboardingOrchestrator(
   const serverExperience = useServerExperience();
   const { config, loading: configLoading } = useAppConfig();
   const location = useLocation();
+  const bypassOnboarding = useBypassOnboarding();
 
   const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() => 
     getInitialRuntimeState(defaultState)
@@ -213,7 +215,8 @@ export function useOnboardingOrchestrator(
   const isOnAuthRoute = AUTH_ROUTES.some((route) => location.pathname.startsWith(route));
   const loginEnabled = config?.enableLogin === true;
   const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
-  const shouldBlockOnboarding = isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
+  const shouldBlockOnboarding =
+    bypassOnboarding || isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
 
   const conditionContext = useMemo<OnboardingConditionContext>(() => ({
     ...serverExperience,

@@ -6,6 +6,7 @@ import { isAuthRoute } from '@app/constants/routes';
 import { dispatchTourState } from '@app/constants/events';
 import { useOnboardingOrchestrator } from '@app/components/onboarding/orchestrator/useOnboardingOrchestrator';
 import { markStepSeen } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
 import OnboardingTour, { type AdvanceArgs, type CloseArgs } from '@app/components/onboarding/OnboardingTour';
 import OnboardingModalSlide from '@app/components/onboarding/OnboardingModalSlide';
 import {
@@ -29,6 +30,7 @@ export default function Onboarding() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const bypassOnboarding = useBypassOnboarding();
   const { state, actions } = useOnboardingOrchestrator();
   const serverExperience = useServerExperience();
   const onAuthRoute = isAuthRoute(location.pathname);
@@ -226,6 +228,10 @@ export default function Onboarding() {
     const modalSlides = activeFlow.filter((step) => step.type === 'modal-slide');
     return modalSlides.findIndex((step) => step.id === currentStep.id);
   }, [activeFlow, currentStep]);
+
+  if (bypassOnboarding) {
+    return null;
+  }
 
   if (onAuthRoute) {
     return null;
