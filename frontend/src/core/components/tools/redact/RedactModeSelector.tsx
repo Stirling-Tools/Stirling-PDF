@@ -6,9 +6,10 @@ interface RedactModeSelectorProps {
   mode: RedactMode;
   onModeChange: (mode: RedactMode) => void;
   disabled?: boolean;
+  hasFiles?: boolean;
 }
 
-export default function RedactModeSelector({ mode, onModeChange, disabled }: RedactModeSelectorProps) {
+export default function RedactModeSelector({ mode, onModeChange, disabled, hasFiles = false }: RedactModeSelectorProps) {
   const { t } = useTranslation();
 
   return (
@@ -24,7 +25,7 @@ export default function RedactModeSelector({ mode, onModeChange, disabled }: Red
         {
           value: 'manual' as const,
           label: t('redact.modeSelector.manual', 'Manual'),
-          disabled: true, // Keep manual mode disabled until implemented
+          disabled: !hasFiles, // Enable manual mode when files are present
         },
       ]}
       disabled={disabled}

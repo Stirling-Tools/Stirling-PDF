@@ -12,6 +12,7 @@ import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions } from
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
+import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
@@ -93,13 +94,15 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                 <ViewerProvider>
                                   <PageEditorProvider>
                                     <SignatureProvider>
-                                      <RightRailProvider>
-                                        <TourOrchestrationProvider>
-                                          <AdminTourOrchestrationProvider>
-                                            {children}
-                                          </AdminTourOrchestrationProvider>
-                                        </TourOrchestrationProvider>
-                                      </RightRailProvider>
+                                      <RedactionProvider>
+                                        <RightRailProvider>
+                                          <TourOrchestrationProvider>
+                                            <AdminTourOrchestrationProvider>
+                                              {children}
+                                            </AdminTourOrchestrationProvider>
+                                          </TourOrchestrationProvider>
+                                        </RightRailProvider>
+                                      </RedactionProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>
                                 </ViewerProvider>

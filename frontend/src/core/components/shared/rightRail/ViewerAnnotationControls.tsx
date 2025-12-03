@@ -10,9 +10,10 @@ import { useFileState, useFileContext } from '@app/contexts/FileContext';
 import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile } from '@app/contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useNavigationState, useNavigationGuard, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { useRedactionMode, useRedaction } from '@app/contexts/RedactionContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -38,9 +39,16 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const { actions: fileActions } = useFileContext();
   const activeFiles = selectors.getFiles();
 
-  // Check if we're in sign mode
+  // Check if we're in sign mode or redaction mode
   const { selectedTool } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
   const isSignMode = selectedTool === 'sign';
+  const isRedactMode = selectedTool === 'redact';
+  
+  // Get redaction pending state and navigation guard
+  const { pendingCount: redactionPendingCount, isRedacting } = useRedactionMode();
+  const { requestNavigation } = useNavigationGuard();
+  const { setRedactionMode, activateTextSelection } = useRedaction();
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -54,8 +62,60 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     return null;
   }
 
+  // Handle redaction mode toggle
+  const handleRedactionToggle = () => {
+    if (isRedactMode) {
+      // If already in redact mode, toggle annotation mode off and show redaction layer
+      if (viewerContext?.isAnnotationMode) {
+        viewerContext.setAnnotationMode(false);
+        // Deactivate any active annotation tools
+        if (signatureApiRef?.current) {
+          try {
+            signatureApiRef.current.deactivateTools();
+          } catch (error) {
+            console.log('Unable to deactivate annotation tools:', error);
+          }
+        }
+        // Activate redaction tool
+        setTimeout(() => {
+          activateTextSelection();
+        }, 100);
+      } else {
+        // Exit redaction mode - go back to default view
+        navActions.handleToolSelect('allTools');
+        setRedactionMode(false);
+      }
+    } else {
+      // Enter redaction mode - select redact tool with manual mode
+      navActions.handleToolSelect('redact');
+      setRedactionMode(true);
+      // Activate text selection mode after a short delay
+      setTimeout(() => {
+        activateTextSelection();
+      }, 200);
+    }
+  };
+
   return (
     <>
+      {/* Redaction Mode Toggle */}
+      <Tooltip content={isRedactMode ? t('rightRail.exitRedaction', 'Exit Redaction Mode') : t('rightRail.redact', 'Redact')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
+        <ActionIcon
+          variant={isRedactMode && !viewerContext?.isAnnotationMode ? 'filled' : 'subtle'}
+          color={isRedactMode && !viewerContext?.isAnnotationMode ? 'red' : undefined}
+          radius="md"
+          className="right-rail-icon"
+          onClick={handleRedactionToggle}
+          disabled={disabled || currentView !== 'viewer'}
+        >
+          <LocalIcon
+            icon="scan-delete-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        </ActionIcon>
+      </Tooltip>
+
       {/* Annotation Visibility Toggle */}
       <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
@@ -68,7 +128,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           disabled={disabled || currentView !== 'viewer' || viewerContext?.isAnnotationMode || isPlacementMode}
         >
           <LocalIcon
-            icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
+            icon={viewerContext?.isAnnotationsVisible ? "visibility" : "preview-off-rounded"}
             width="1.5rem"
             height="1.5rem"
           />
@@ -140,14 +200,35 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
             radius="md"
             className="right-rail-icon"
             onClick={() => {
-              viewerContext?.toggleAnnotationMode();
-              // Activate ink drawing tool when entering annotation mode
-              if (signatureApiRef?.current && currentView === 'viewer') {
-                try {
-                  signatureApiRef.current.activateDrawMode();
-                  signatureApiRef.current.updateDrawSettings(selectedColor, 2);
-                } catch (error) {
-                  console.log('Signature API not ready:', error);
+              const activateDrawMode = () => {
+                // Use setTimeout to ensure this runs after any state updates from applyChanges
+                setTimeout(() => {
+                  viewerContext?.setAnnotationMode(true);
+                  // Activate ink drawing tool when entering annotation mode
+                  if (signatureApiRef?.current && currentView === 'viewer') {
+                    try {
+                      signatureApiRef.current.activateDrawMode();
+                      signatureApiRef.current.updateDrawSettings(selectedColor, 2);
+                    } catch (error) {
+                      console.log('Signature API not ready:', error);
+                    }
+                  }
+                }, 150);
+              };
+              
+              // If in redaction mode with pending redactions, show warning modal
+              if (isRedactMode && redactionPendingCount > 0) {
+                requestNavigation(activateDrawMode);
+              } else {
+                // Direct activation - no need for delay
+                viewerContext?.toggleAnnotationMode();
+                if (signatureApiRef?.current && currentView === 'viewer') {
+                  try {
+                    signatureApiRef.current.activateDrawMode();
+                    signatureApiRef.current.updateDrawSettings(selectedColor, 2);
+                  } catch (error) {
+                    console.log('Signature API not ready:', error);
+                  }
                 }
               }
             }}

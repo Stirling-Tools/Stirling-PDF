@@ -16,10 +16,8 @@ export const buildRedactFormData = (parameters: RedactParameters, file: File): F
     formData.append("redactColor", parameters.redactColor.replace('#', ''));
     formData.append("customPadding", parameters.customPadding.toString());
     formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
-  } else {
-    // Manual mode parameters would go here when implemented
-    throw new Error('Manual redaction not yet implemented');
   }
+  // Note: Manual mode is handled client-side via EmbedPDF, no formData needed
 
   return formData;
 };
@@ -32,10 +30,10 @@ export const redactOperationConfig = {
   endpoint: (parameters: RedactParameters) => {
     if (parameters.mode === 'automatic') {
       return '/api/v1/security/auto-redact';
-    } else {
-      // Manual redaction endpoint would go here when implemented
-      throw new Error('Manual redaction not yet implemented');
     }
+    // Manual redaction is handled client-side via EmbedPDF
+    // Return null to indicate no server endpoint is needed
+    return null;
   },
   defaultParameters,
 } as const;

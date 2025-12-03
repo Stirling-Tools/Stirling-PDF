@@ -230,25 +230,37 @@ export const NavigationProvider: React.FC<{
     }, []),
 
     handleToolSelect: useCallback((toolId: string) => {
-      if (toolId === 'allTools') {
-        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
-        return;
+      const performToolSelect = () => {
+        if (toolId === 'allTools') {
+          dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
+          return;
+        }
+
+        if (toolId === 'read' || toolId === 'view-pdf') {
+          dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: 'viewer' } });
+          return;
+        }
+
+        // Look up the tool in the registry to get its proper workbench
+        const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
+        const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
+
+        // Validate toolId and convert to ToolId type
+        const validToolId = isValidToolId(toolId) ? toolId : null;
+        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
+      };
+
+      // Check for unsaved changes using registered checker or state
+      const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+      
+      // If switching away from current tool and have unsaved changes, show warning
+      if (hasUnsavedChanges && state.selectedTool && state.selectedTool !== toolId) {
+        dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performToolSelect } });
+        dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
+      } else {
+        performToolSelect();
       }
-
-      if (toolId === 'read' || toolId === 'view-pdf') {
-        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: 'viewer' } });
-        return;
-      }
-
-      // Look up the tool in the registry to get its proper workbench
-
-      const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
-      const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
-
-      // Validate toolId and convert to ToolId type
-      const validToolId = isValidToolId(toolId) ? toolId : null;
-      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
-    }, [toolRegistry])
+    }, [toolRegistry, state.hasUnsavedChanges, state.selectedTool])
   };
 
   const stateValue: NavigationContextStateValue = {

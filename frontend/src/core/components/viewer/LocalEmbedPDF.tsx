@@ -21,11 +21,10 @@ import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
-
-// Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { RedactionPluginPackage, RedactionLayer } from '@embedpdf/plugin-redaction/react';
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
@@ -46,17 +45,24 @@ import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
+import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
+import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
+import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   enableAnnotations?: boolean;
+  enableRedaction?: boolean;
+  /** When true, RedactionAPIBridge is rendered even if enableRedaction is false (for switching between annotation/redaction) */
+  isManualRedactionMode?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
+  redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, onSignatureAdded, signatureApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -119,6 +125,11 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         autoCommit: true,
         deactivateToolAfterCreate: false,
         selectAfterCreate: true,
+      }),
+
+      // Register redaction plugin (depends on InteractionManager, Selection)
+      createPluginRegistration(RedactionPluginPackage, {
+        drawBlackBoxes: true, // Draw black boxes over redacted content
       }),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
@@ -305,8 +316,12 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
-        {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
+        {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
+        <SignatureAPIBridge ref={signatureApiRef} />
+        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <HistoryAPIBridge ref={historyApiRef} />}
+        {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
+        {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
+        {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
         <ExportAPIBridge />
         <BookmarkAPIBridge />
         <PrintAPIBridge />
@@ -371,6 +386,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                           pageHeight={height}
                           rotation={rotation}
                           selectionOutlineColor="#007ACC"
+                        />
+                      )}
+
+                      {/* Redaction layer for marking areas to redact (only when enabled) */}
+                      {enableRedaction && (
+                        <RedactionLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          rotation={rotation}
+                          selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
                         />
                       )}
                     </div>

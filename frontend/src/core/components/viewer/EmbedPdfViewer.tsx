@@ -11,6 +11,8 @@ import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
+import { useRedaction } from '@app/contexts/RedactionContext';
+import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
@@ -70,6 +72,12 @@ const EmbedPdfViewerContent = ({
   // Get signature context
   const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
+  // Get redaction context
+  const { isRedactionMode } = useRedaction();
+  
+  // Ref for redaction pending tracker API
+  const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
+
   // Get current file from FileContext
   const { selectors, state } = useFileState();
   const { actions } = useFileActions();
@@ -80,13 +88,20 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in signature mode OR viewer annotation mode
+  // Check if we're in signature mode OR viewer annotation mode OR redaction mode
   const { selectedTool } = useNavigationState();
   // Tools that use the stamp/signature placement system with hover preview
   const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+  // Check if we're in manual redaction mode
+  const isManualRedactMode = selectedTool === 'redact';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
-  const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
+  // When in manual redaction mode, annotation mode takes priority if active (user clicked draw tool)
+  const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || (isAnnotationsVisible && !isManualRedactMode);
+  
+  // Enable redaction when the redact tool is selected and annotation mode is NOT active
+  // This allows switching between redaction and annotation tools while redact is the selected tool
+  const shouldEnableRedaction = (isManualRedactMode || isRedactionMode) && !isAnnotationMode;
   const isPlacementOverlayActive = Boolean(
     isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
   );
@@ -218,11 +233,14 @@ const EmbedPdfViewerContent = ({
     const checkForChanges = () => {
       // Check for annotation changes via history
       const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
+      // Check for pending redactions
+      const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
 
       console.log('[Viewer] Checking for unsaved changes:', {
-        hasAnnotationChanges
+        hasAnnotationChanges,
+        hasPendingRedactions
       });
-      return hasAnnotationChanges;
+      return hasAnnotationChanges || hasPendingRedactions;
     };
 
     console.log('[Viewer] Registering unsaved changes checker');
@@ -234,12 +252,20 @@ const EmbedPdfViewerContent = ({
     };
   }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
-  // Apply changes - save annotations to new file version
+  // Apply changes - save annotations and redactions to new file version
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
-      console.log('[Viewer] Applying changes - exporting PDF with annotations');
+      console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
+
+      // Step 0: Commit any pending redactions before export
+      if (redactionTrackerRef.current?.getPendingCount() ?? 0 > 0) {
+        console.log('[Viewer] Committing pending redactions before export');
+        redactionTrackerRef.current?.commitAllPending();
+        // Give a small delay for the commit to process
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
 
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
@@ -322,8 +348,11 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}
+              enableRedaction={shouldEnableRedaction}
+              isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
+              redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
