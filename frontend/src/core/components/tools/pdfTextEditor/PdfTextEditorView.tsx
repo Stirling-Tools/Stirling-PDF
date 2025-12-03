@@ -33,7 +33,7 @@ import MergeTypeIcon from '@mui/icons-material/MergeType';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Rnd } from 'react-rnd';
-import NavigationWarningModal from '@core/components/shared/NavigationWarningModal';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
 import {
   PdfTextEditorViewData,
