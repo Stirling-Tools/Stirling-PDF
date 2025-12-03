@@ -395,7 +395,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onReset,
     onDownloadJson,
     onGeneratePdf,
-    onGeneratePdfForNavigation,
     onSaveToWorkbench,
     onForceSingleTextElementChange,
     onGroupingModeChange,

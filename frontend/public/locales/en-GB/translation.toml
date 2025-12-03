@@ -5906,6 +5906,7 @@ earlyAccess = "Early Access"
 reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
+saveChanges = "Save Changes"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
