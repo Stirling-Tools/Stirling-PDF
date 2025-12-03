@@ -24,12 +24,6 @@ const AuthContext = createContext<AuthContextType>({
   refreshSession: async () => {},
 });
 
-/**
- * Auth Provider Component
- *
- * Manages authentication state and provides it to the entire app.
- * Integrates with Spring Security + JWT backend.
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,24 +89,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.debug('[Auth] Initializing auth...');
 
-        // Skip auth check if we're on auth pages
-        // Need to check for paths with or without base path
-        const pathname = window.location.pathname;
-        const isAuthPage = pathname.endsWith('/login') ||
-                          pathname.endsWith('/signup') ||
-                          pathname.endsWith('/auth/callback') ||
-                          pathname.includes('/auth/') ||
-                          pathname.includes('/invite/');
+        // GUARD: Check if JWT exists before making session call
+        const hasJWT = localStorage.getItem('stirling_jwt');
 
-        if (isAuthPage) {
-          console.log('[Auth] On auth page, completely skipping session check');
+        // Skip auth check if we're on auth pages *and* there is no JWT yet.
+        // Once a JWT exists (after login), we still want to fetch the session even if the URL
+        // hasn't navigated away from /login.
+        const pathname = window.location.pathname;
+        const isAuthPage =
+                pathname.endsWith('/login')
+                        || pathname.endsWith('/signup')
+                        || pathname.endsWith('/auth/callback')
+                        || pathname.includes('/auth/')
+                        || pathname.includes('/invite/');
+
+        if (isAuthPage && !hasJWT) {
+          console.log('[Auth] On auth page without JWT, skipping session check');
           console.log('[Auth] Current path:', pathname);
           setLoading(false);
           return;
         }
 
-        // GUARD: Check if JWT exists before making session call
-        const hasJWT = localStorage.getItem('stirling_jwt');
         if (!hasJWT) {
           console.debug('[Auth] No JWT token found, skipping session check');
           setLoading(false);
@@ -179,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // Handle specific events
             if (event === 'SIGNED_OUT') {
-              console.debug('[Auth] User signed out, clearing session');
+                console.debug('[Auth] User signed out, clearing session');
             } else if (event === 'SIGNED_IN') {
               console.debug('[Auth] User signed in successfully');
             } else if (event === 'TOKEN_REFRESHED') {
