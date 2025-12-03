@@ -163,6 +163,11 @@ unfavorite = "Удалить из избранного"
 fullscreen = "Переключиться в полноэкранный режим"
 sidebar = "Переключиться в режим боковой панели"
 
+[backendStartup]
+notFoundTitle = "Серверная часть не найдена"
+retry = "Повторить"
+unreachable = "Приложение сейчас не может подключиться к серверной части. Проверьте состояние серверной части и подключение к сети, затем повторите попытку."
+
 [zipWarning]
 title = "Большой ZIP-файл"
 message = "Этот ZIP содержит {{count}} файлов. Все равно извлечь?"
@@ -913,8 +918,8 @@ desc = "Наложить один PDF поверх другого"
 title = "Наложение PDF"
 
 [home.pdfTextEditor]
-title = "Редактор текста в PDF"
-desc = "Просмотр и редактирование экспортов Stirling PDF в JSON с групповым редактированием текста и регенерацией PDF"
+title = "Редактор текста PDF"
+desc = "Редактируйте существующий текст и изображения внутри PDF-файлов"
 
 [home.addText]
 tags = "текст,аннотация,ярлык"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Рисованная подпись"
 defaultImageLabel = "Загруженная подпись"
 defaultTextLabel = "Введённая подпись"
 saveButton = "Сохранить подпись"
+savePersonal = "Сохранить как личную"
+saveShared = "Сохранить как общую"
 saveUnavailable = "Сначала создайте подпись, чтобы сохранить её."
 noChanges = "Текущая подпись уже сохранена."
+tempStorageTitle = "Временное хранилище браузера"
+tempStorageDescription = "Подписи сохраняются только в вашем браузере. Они будут потеряны, если вы очистите данные браузера или смените браузер."
+personalHeading = "Личные подписи"
+sharedHeading = "Общие подписи"
+personalDescription = "Эти подписи видны только вам."
+sharedDescription = "Все пользователи могут видеть и использовать эти подписи."
 
 [sign.saved.type]
 canvas = "Рисунок"
@@ -3441,6 +3454,9 @@ signinTitle = "Пожалуйста, войдите"
 ssoSignIn = "Вход через единый вход"
 oAuth2AutoCreateDisabled = "Автоматическое создание пользователей OAuth2 отключено"
 oAuth2AdminBlockedUser = "Регистрация или вход незарегистрированных пользователей в настоящее время заблокированы. Обратитесь к администратору."
+oAuth2RequiresLicense = "Вход через OAuth/SSO требует платную лицензию (Server или Enterprise). Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план."
+saml2RequiresLicense = "Вход через SAML требует платную лицензию (Server или Enterprise). Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план."
+maxUsersReached = "Достигнуто максимальное количество пользователей для вашей текущей лицензии. Пожалуйста, свяжитесь с администратором, чтобы обновить ваш план или добавить места."
 oauth2RequestNotFound = "Запрос авторизации не найден"
 oauth2InvalidUserInfoResponse = "Недействительный ответ с информацией о пользователе"
 oauth2invalidRequest = "Недействительный запрос"
@@ -3849,14 +3865,17 @@ fitToWidth = "По ширине"
 actualSize = "Фактический размер"
 
 [viewer]
+cannotPreviewFile = "Не удаётся просмотреть файл"
+dualPageView = "Двухстраничный вид"
 firstPage = "Первая страница"
 lastPage = "Последняя страница"
-previousPage = "Предыдущая страница"
 nextPage = "Следующая страница"
+onlyPdfSupported = "Просмотрщик поддерживает только PDF-файлы. Похоже, этот файл другого формата."
+previousPage = "Предыдущая страница"
+singlePageView = "Одностраничный вид"
+unknownFile = "Неизвестный файл"
 zoomIn = "Увеличить"
 zoomOut = "Уменьшить"
-singlePageView = "Одностраничный вид"
-dualPageView = "Двухстраничный вид"
 
 [rightRail]
 closeSelected = "Закрыть выбранные файлы"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Показать/скрыть боковую панель"
 exportSelected = "Экспортировать выбранные страницы"
 toggleAnnotations = "Показать/скрыть аннотации"
 annotationMode = "Переключить режим аннотаций"
+print = "Печать PDF"
 draw = "Рисовать"
 save = "Сохранить"
 saveChanges = "Сохранить изменения"
@@ -4490,13 +4510,14 @@ label = "Политика cookie"
 description = "URL или имя файла для политики cookie"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Юридическая информация"
 description = "URL или имя файла для impressum (требуется в некоторых юрисдикциях)"
 
 [admin.settings.premium]
 title = "Премиум и Enterprise"
 description = "Настройте ключ лицензии премиум или enterprise."
 license = "Конфигурация лицензии"
+noInput = "Укажите лицензионный ключ или файл"
 
 [admin.settings.premium.licenseKey]
 toggle = "Есть лицензионный ключ или файл сертификата?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Внимание: обнаружена существующая 
 line1 = "Перезапись текущего лицензионного ключа необратима."
 line2 = "Предыдущая лицензия будет безвозвратно утеряна, если вы не сделали резервную копию где‑то ещё."
 line3 = "Важно: храните лицензионные ключи в секрете и безопасности. Никогда не публикуйте их."
+
+[admin.settings.premium.inputMethod]
+text = "Лицензионный ключ"
+file = "Файл сертификата"
+
+[admin.settings.premium.file]
+label = "Файл лицензионного сертификата"
+description = "Загрузите файл лицензии .lic или .cert из офлайн-покупки"
+choose = "Выберите файл лицензии"
+selected = "Выбрано: {{filename}} ({{size}})"
+successMessage = "Файл лицензии успешно загружен и активирован. Перезапуск не требуется."
+
+[admin.settings.premium.currentLicense]
+title = "Активная лицензия"
+file = "Источник: файл лицензии ({{path}})"
+key = "Источник: лицензионный ключ"
+type = "Тип: {{type}}"
+noInput = "Укажите лицензионный ключ или загрузите файл сертификата"
+success = "Успешно"
 
 [admin.settings.premium.enabled]
 label = "Включить премиум-функции"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} выбрано"
 download = "Скачать"
 delete = "Удалить"
 unsupported = "Не поддерживается"
+active = "Активный"
 addToUpload = "Добавить к загрузке"
+closeFile = "Закрыть файл"
 deleteAll = "Удалить все"
 loadingFiles = "Загрузка файлов..."
 noFiles = "Нет доступных файлов"
@@ -4967,7 +5009,7 @@ description = "Привяжите аккаунт, чтобы сохранить 
 socialLogin = "Обновить через соцсеть"
 linkWith = "Привязать к"
 emailPassword = "или введите email и пароль"
-email = "Email"
+email = "Эл. почта"
 emailPlaceholder = "Введите ваш email"
 password = "Пароль (необязательно)"
 passwordPlaceholder = "Задайте пароль"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Требуется хотя бы один адрес email"
 submit = "Отправить приглашения"
 success = "Пользователи успешно приглашены"
-partialSuccess = "Некоторые приглашения не отправлены"
+partialFailure = "Некоторые приглашения не удалось отправить"
 allFailed = "Не удалось пригласить пользователей"
 error = "Не удалось отправить приглашения"
 
@@ -5800,13 +5842,20 @@ submit = "Войти"
 signInWith = "Войти через"
 oauthPending = "Открываем браузер для аутентификации..."
 orContinueWith = "Или продолжить по email"
+serverRequirement = "Примечание: на сервере должен быть включён вход в систему."
+showInstructions = "Как включить?"
+hideInstructions = "Скрыть инструкции"
+instructions = "Чтобы включить вход в систему на вашем сервере Stirling PDF:"
+instructionsEnvVar = "Установите переменную окружения:"
+instructionsOrYml = "Или в settings.yml:"
+instructionsRestart = "Затем перезапустите сервер, чтобы изменения вступили в силу."
 
 [setup.login.username]
 label = "Имя пользователя"
 placeholder = "Введите имя пользователя"
 
 [setup.login.email]
-label = "Email"
+label = "Эл. почта"
 placeholder = "Введите email"
 
 [setup.login.password]

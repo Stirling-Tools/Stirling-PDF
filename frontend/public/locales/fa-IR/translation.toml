@@ -163,6 +163,11 @@ unfavorite = "حذف از علاقه‌مندی‌ها"
 fullscreen = "تغییر به حالت تمام‌صفحه"
 sidebar = "تغییر به حالت نوار کناری"
 
+[backendStartup]
+notFoundTitle = "بک‌اند یافت نشد"
+retry = "تلاش مجدد"
+unreachable = "برنامه در حال حاضر نمی‌تواند به بک‌اند متصل شود. وضعیت بک‌اند و اتصال شبکه را بررسی کرده و سپس دوباره تلاش کنید."
+
 [zipWarning]
 title = "فایل ZIP بزرگ"
 message = "این ZIP شامل {{count}} فایل است. با این حال استخراج شود؟"
@@ -914,7 +919,7 @@ title = "هم‌پوشانی PDF‌ها"
 
 [home.pdfTextEditor]
 title = "ویرایشگر متن PDF"
-desc = "بازبینی و ویرایش خروجی‌های JSON Stirling PDF با ویرایش گروهی متن و بازتولید PDF"
+desc = "ویرایش متن و تصاویر موجود در PDFها"
 
 [home.addText]
 tags = "متن,حاشیه‌نویسی,برچسب"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "امضای ترسیمی"
 defaultImageLabel = "امضای بارگذاری‌شده"
 defaultTextLabel = "امضای تایپی"
 saveButton = "ذخیره امضا"
+savePersonal = "ذخیره شخصی"
+saveShared = "ذخیره اشتراکی"
 saveUnavailable = "برای ذخیره، ابتدا امضایی بسازید."
 noChanges = "امضای فعلی قبلاً ذخیره شده است."
+tempStorageTitle = "ذخیره‌سازی موقت در مرورگر"
+tempStorageDescription = "امضاها فقط در مرورگر شما ذخیره می‌شوند. در صورت پاک‌کردن داده‌های مرورگر یا تعویض مرورگر، از بین می‌روند."
+personalHeading = "امضاهای شخصی"
+sharedHeading = "امضاهای اشتراکی"
+personalDescription = "تنها شما می‌توانید این امضاها را ببینید."
+sharedDescription = "همه کاربران می‌توانند این امضاها را ببینند و استفاده کنند."
 
 [sign.saved.type]
 canvas = "ترسیمی"
@@ -3441,6 +3454,9 @@ signinTitle = "لطفاً وارد شوید"
 ssoSignIn = "ورود از طریق Single Sign-on"
 oAuth2AutoCreateDisabled = "ایجاد خودکار کاربر با OAUTH2 غیرفعال است"
 oAuth2AdminBlockedUser = "ثبت‌نام یا ورود کاربران ثبت‌نشده در حال حاضر مسدود است. لطفاً با مدیر تماس بگیرید."
+oAuth2RequiresLicense = "ورود با OAuth/SSO به لایسنس پولی (Server یا Enterprise) نیاز دارد. لطفاً برای ارتقای طرح خود با مدیر تماس بگیرید."
+saml2RequiresLicense = "ورود با SAML به لایسنس پولی (Server یا Enterprise) نیاز دارد. لطفاً برای ارتقای طرح خود با مدیر تماس بگیرید."
+maxUsersReached = "حداکثر تعداد کاربران برای لایسنس کنونی شما به حد نصاب رسیده است. لطفاً برای ارتقای طرح یا افزودن کاربران بیشتر با مدیر تماس بگیرید."
 oauth2RequestNotFound = "درخواست احراز هویت پیدا نشد"
 oauth2InvalidUserInfoResponse = "پاسخ اطلاعات کاربری نامعتبر است"
 oauth2invalidRequest = "درخواست نامعتبر"
@@ -3849,14 +3865,17 @@ fitToWidth = "تناسب با عرض"
 actualSize = "اندازه واقعی"
 
 [viewer]
+cannotPreviewFile = "امکان پیش‌نمایش فایل نیست"
+dualPageView = "نمای دوصفحه‌ای"
 firstPage = "صفحه نخست"
 lastPage = "صفحه آخر"
-previousPage = "صفحه قبل"
 nextPage = "صفحه بعد"
+onlyPdfSupported = "نمایشگر فقط فایل‌های PDF را پشتیبانی می‌کند. به نظر می‌رسد این فایل قالب متفاوتی دارد."
+previousPage = "صفحه قبل"
+singlePageView = "نمای تک‌صفحه‌ای"
+unknownFile = "فایل ناشناخته"
 zoomIn = "بزرگ‌نمایی"
 zoomOut = "کوچک‌نمایی"
-singlePageView = "نمای تک‌صفحه‌ای"
-dualPageView = "نمای دوصفحه‌ای"
 
 [rightRail]
 closeSelected = "بستن فایل‌های انتخاب‌شده"
@@ -3880,6 +3899,7 @@ toggleSidebar = "تغییر وضعیت نوار کناری"
 exportSelected = "برون‌بری صفحات انتخاب‌شده"
 toggleAnnotations = "تغییر وضعیت نمایش حاشیه‌نویسی‌ها"
 annotationMode = "تغییر حالت حاشیه‌نویسی"
+print = "چاپ PDF"
 draw = "رسم"
 save = "ذخیره"
 saveChanges = "ذخیره تغییرات"
@@ -4490,13 +4510,14 @@ label = "خط‌مشی کوکی"
 description = "URL یا نام فایل برای خط‌مشی کوکی"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "اطلاعات حقوقی"
 description = "URL یا نام فایل برای impressum (در برخی حوزه‌های قضایی الزامی است)"
 
 [admin.settings.premium]
 title = "پرمیوم و سازمانی"
 description = "کلید لایسنس پرمیوم یا سازمانی خود را پیکربندی کنید."
 license = "پیکربندی لایسنس"
+noInput = "لطفاً کلید یا فایل مجوز را ارائه کنید"
 
 [admin.settings.premium.licenseKey]
 toggle = "کلید لایسنس یا فایل گواهی دارید؟"
@@ -4513,6 +4534,25 @@ title = "⚠️ هشدار: لایسنس موجود شناسایی شد"
 line1 = "بازنویسی کلید لایسنس فعلی قابل بازگشت نیست."
 line2 = "مگر آنکه در جایی پشتیبان گرفته باشید، لایسنس قبلی به‌طور دائمی از دست می‌رود."
 line3 = "مهم: کلیدهای لایسنس را خصوصی و امن نگه دارید. هرگز آن‌ها را عمومی به‌اشتراک نگذارید."
+
+[admin.settings.premium.inputMethod]
+text = "کلید مجوز"
+file = "فایل گواهی"
+
+[admin.settings.premium.file]
+label = "فایل گواهی مجوز"
+description = "فایل مجوز .lic یا .cert مربوط به خریدهای آفلاین خود را بارگذاری کنید"
+choose = "انتخاب فایل مجوز"
+selected = "انتخاب‌شده: {{filename}} ({{size}})"
+successMessage = "فایل مجوز با موفقیت بارگذاری و فعال شد. نیازی به راه‌اندازی مجدد نیست."
+
+[admin.settings.premium.currentLicense]
+title = "مجوز فعال"
+file = "منبع: فایل مجوز ({{path}})"
+key = "منبع: کلید مجوز"
+type = "نوع: {{type}}"
+noInput = "لطفاً کلید مجوز ارائه کنید یا فایل گواهی را بارگذاری کنید"
+success = "موفق"
 
 [admin.settings.premium.enabled]
 label = "فعال‌سازی قابلیت‌های پرمیوم"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} مورد انتخاب‌شده"
 download = "دانلود"
 delete = "حذف"
 unsupported = "پشتیبانی‌نشده"
+active = "فعال"
 addToUpload = "افزودن به بارگذاری"
+closeFile = "بستن فایل"
 deleteAll = "حذف همه"
 loadingFiles = "در حال بارگذاری فایل‌ها..."
 noFiles = "فایلی موجود نیست"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "حداقل یک آدرس ایمیل الزامی است"
 submit = "ارسال دعوت‌نامه‌ها"
 success = "کاربر(ان) با موفقیت دعوت شد(ند)"
-partialSuccess = "برخی دعوت‌ها ناموفق بود"
+partialFailure = "برخی دعوت‌ها ناموفق بودند"
 allFailed = "دعوت کاربران ناموفق بود"
 error = "ارسال دعوت‌نامه‌ها ناموفق بود"
 
@@ -5800,6 +5842,13 @@ submit = "ورود"
 signInWith = "ورود با"
 oauthPending = "در حال باز کردن مرورگر برای احراز هویت..."
 orContinueWith = "یا با ایمیل ادامه دهید"
+serverRequirement = "توجه: سرور باید ورود را فعال کرده باشد."
+showInstructions = "نحوه فعال‌سازی؟"
+hideInstructions = "مخفی کردن دستورالعمل‌ها"
+instructions = "برای فعال‌سازی ورود در سرور Stirling PDF خود:"
+instructionsEnvVar = "متغیر محیطی را تنظیم کنید:"
+instructionsOrYml = "یا در settings.yml:"
+instructionsRestart = "سپس سرور خود را راه‌اندازی مجدد کنید تا تغییرات اعمال شوند."
 
 [setup.login.username]
 label = "نام کاربری"
