@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -398,7 +398,7 @@ export default function AdminGeneralSection() {
           </div>
 
           <div>
-            <TextInput
+            <Select
               label={
                 <Group gap="xs">
                   <span>{t('admin.settings.general.defaultLocale.label', 'Default Locale')}</span>
@@ -406,9 +406,12 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.defaultLocale.description', 'The default language for new users (e.g., en_US, es_ES)')}
-              value={ settings.system?.defaultLocale || ''}
-              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: e.target.value } })}
-              placeholder="en_US"
+              value={settings.system?.defaultLocale || ''}
+              onChange={(value) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: value || '' } })}
+              data={languageOptions}
+              searchable
+              clearable
+              placeholder="en_GB"
               disabled={!loginEnabled}
             />
           </div>
