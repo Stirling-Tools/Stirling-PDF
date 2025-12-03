@@ -33,7 +33,7 @@ import MergeTypeIcon from '@mui/icons-material/MergeType';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Rnd } from 'react-rnd';
-import NavigationWarningModal from '@core/components/shared/NavigationWarningModal';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
 import {
   PdfTextEditorViewData,
@@ -2147,14 +2147,20 @@ const selectionToolbarPosition = useMemo(() => {
                       // Determine text wrapping behavior based on whether text has been changed
                       const hasChanges = changed;
                       const widthExtended = resolvedWidth - baseWidth > 0.5;
-                      const enableWrap = isParagraphLayout || widthExtended || isEditing || hasChanges;
+                      // Only enable wrapping if:
+                      // 1. It's paragraph layout (multi-line groups should wrap)
+                      // 2. Width was manually extended (user explicitly made space for wrapping)
+                      // 3. Has changes AND was already wrapping (preserve existing wrap state)
+                      // DO NOT enable wrapping just because isEditing - text should only wrap when it actually overflows
+                      const wasWrapping = isParagraphLayout || widthExtended;
+                      const enableWrap = wasWrapping || (hasChanges && wasWrapping);
                       const whiteSpace = enableWrap ? 'pre-wrap' : 'pre';
                       const wordBreak = enableWrap ? 'break-word' : 'normal';
                       const overflowWrap = enableWrap ? 'break-word' : 'normal';
 
                       // For paragraph mode, allow height to grow to accommodate lines without wrapping
                       // For single-line mode, maintain fixed height based on PDF bounds
-                      const useFlexibleHeight = isEditing || enableWrap || (isParagraphLayout && lineCount > 1);
+                      const useFlexibleHeight = enableWrap || (isParagraphLayout && lineCount > 1);
 
                       // The renderGroupContainer wrapper adds 4px horizontal padding (2px left + 2px right)
                       // We need to add this to the container width to compensate, so the inner content
