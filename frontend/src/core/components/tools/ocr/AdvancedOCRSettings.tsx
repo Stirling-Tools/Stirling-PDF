@@ -72,18 +72,16 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
         </Text>
 
         <Stack gap="sm">
-          {advancedOptionsData.map((option) => {
-            return (
-              <Checkbox
-                key={option.value}
-                checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
-                onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
-                label={option.label}
-                disabled={disabled}
-                size="sm"
-              />
-            );
-          })}
+          {advancedOptionsData.map((option) => (
+            <Checkbox
+              key={option.value}
+              checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
+              onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
+              label={option.label}
+              disabled={disabled}
+              size="sm"
+            />
+          ))}
         </Stack>
       </div>
     </Stack>
