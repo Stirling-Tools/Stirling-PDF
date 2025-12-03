@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.util.HtmlUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -182,7 +183,8 @@ public class GlobalExceptionHandler {
      */
     private static ProblemDetail createBaseProblemDetail(
             HttpStatus status, String detail, HttpServletRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
+        String escapedDetail = detail != null ? HtmlUtils.htmlEscape(detail) : null;
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, escapedDetail);
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
         return problemDetail;
@@ -717,16 +719,22 @@ public class GlobalExceptionHandler {
         log.warn(
                 "Method not supported at {}: {} not allowed",
                 request.getRequestURI(),
-                ex.getMethod());
+                ex.getMethod() != null ? ex.getMethod() : "unknown");
+
+        String supportedMethodsStr =
+                ex.getSupportedMethods() != null
+                        ? String.join(", ", ex.getSupportedMethods())
+                        : "none";
 
         String message =
                 getLocalizedMessage(
                         "error.methodNotAllowed.detail",
                         String.format(
                                 "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
-                                ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
-                        ex.getMethod(),
-                        String.join(", ", ex.getSupportedMethods()));
+                                ex.getMethod() != null ? ex.getMethod() : "unknown",
+                                supportedMethodsStr),
+                        ex.getMethod() != null ? ex.getMethod() : "unknown",
+                        supportedMethodsStr);
 
         String title =
                 getLocalizedMessage(
@@ -737,8 +745,10 @@ public class GlobalExceptionHandler {
         problemDetail.setType(URI.create(ErrorTypes.METHOD_NOT_ALLOWED));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("method", ex.getMethod());
-        problemDetail.setProperty("supportedMethods", ex.getSupportedMethods());
+        problemDetail.setProperty("method", ex.getMethod() != null ? ex.getMethod() : "unknown");
+        problemDetail.setProperty(
+                "supportedMethods",
+                ex.getSupportedMethods() != null ? ex.getSupportedMethods() : List.of());
         addStandardHints(
                 problemDetail,
                 "error.methodNotAllowed.hints",
@@ -807,10 +817,6 @@ public class GlobalExceptionHandler {
                 .contentType(PROBLEM_JSON)
                 .body(problemDetail);
     }
-
-    // ===========================================================================================
-    // JAVA STANDARD EXCEPTIONS
-    // ===========================================================================================
 
     /**
      * Handle malformed JSON or request body parsing errors.
@@ -970,8 +976,8 @@ public class GlobalExceptionHandler {
 
         // If it was wrapped as a specific PDF exception, the more specific handler will catch it on
         // retry
-        if (processedException instanceof BaseAppException) {
-            return handleBaseApp((BaseAppException) processedException, request);
+        if (processedException instanceof BaseAppException baseappexception) {
+            return handleBaseApp(baseappexception, request);
         }
 
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
