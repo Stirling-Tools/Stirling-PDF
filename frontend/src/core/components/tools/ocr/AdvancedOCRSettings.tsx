@@ -36,11 +36,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
     { value: 'deskew', label: t('ocr.settings.advancedOptions.deskew', 'Deskew pages'), isSpecial: false },
     { value: 'clean', label: t('ocr.settings.advancedOptions.clean', 'Clean input file'), isSpecial: false },
     { value: 'cleanFinal', label: t('ocr.settings.advancedOptions.cleanFinal', 'Clean final output'), isSpecial: false },
-    {
-      value: 'invalidateDigitalSignatures',
-      label: t('ocr.invalidateSignatures', 'Invalidate digital signatures'),
-      isSpecial: false,
-    },
+    { value: 'invalidateDigitalSignatures', label: t('ocr.invalidateSignatures', 'Invalidate digital signatures'), isSpecial: false },
   ];
 
   // Handle individual checkbox changes
