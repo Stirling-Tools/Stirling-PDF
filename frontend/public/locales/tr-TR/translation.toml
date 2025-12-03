@@ -912,9 +912,6 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 desc = "PDF'leri başka bir PDF'nin üzerine bindirir"
 title = "PDF'leri Bindirme"
 
-[home.pdfTextEditor]
-title = "PDF Metin Düzenleyici"
-desc = "Gruplu metin düzenleme ve PDF yeniden oluşturma ile Stirling PDF JSON dışa aktarımlarını gözden geçirin ve düzenleyin"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"

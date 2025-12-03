@@ -912,9 +912,6 @@ desc = "สร้างเวิร์กโฟลว์หลายขั้น
 desc = "ซ้อนทับ PDF บน PDF อีกไฟล์หนึ่ง"
 title = "ซ้อนทับ PDF"
 
-[home.pdfTextEditor]
-title = "แก้ไขข้อความ PDF"
-desc = "ตรวจทานและแก้ไขไฟล์ JSON ที่ส่งออกจาก Stirling PDF ด้วยการแก้ไขข้อความแบบกลุ่มและการสร้าง PDF ใหม่"
 
 [home.addText]
 tags = "text,annotation,label"

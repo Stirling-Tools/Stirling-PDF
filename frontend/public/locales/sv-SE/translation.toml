@@ -912,9 +912,6 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
 
-[home.pdfTextEditor]
-title = "PDF-textredigerare"
-desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
 
 [home.addText]
 tags = "text,kommentar,etikett"

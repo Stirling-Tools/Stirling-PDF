@@ -912,9 +912,6 @@ desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複�
 desc = "將 PDF 覆蓋在另一個 PDF 上"
 title = "覆蓋 PDF"
 
-[home.pdfTextEditor]
-title = "PDF 文字編輯器"
-desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
 
 [home.addText]
 tags = "文字,註解,標籤"
