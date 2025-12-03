@@ -10,7 +10,7 @@ import { CONVERSION_ENDPOINTS } from '@app/constants/convertConstants';
 import apiClient from '@app/services/apiClient';
 import { downloadBlob, downloadTextAsFile } from '@app/utils/downloadUtils';
 import { getFilenameFromHeaders } from '@app/utils/fileResponseUtils';
-import { pdfWorkerManager } from '@core/services/pdfWorkerManager';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {
   PdfJsonDocument,
