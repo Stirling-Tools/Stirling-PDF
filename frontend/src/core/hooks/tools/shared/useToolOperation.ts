@@ -24,6 +24,20 @@ export enum ToolType {
 }
 
 /**
+ * Result from custom processor with optional metadata about input consumption.
+ */
+export interface CustomProcessorResult {
+  /** Processed output files */
+  files: File[];
+  /**
+   * When true, marks all input files as successfully consumed regardless of output count.
+   * Use when operation combines N inputs into fewer outputs (e.g., 3 images → 1 PDF).
+   * When false/undefined, uses filename-based mapping to determine which inputs succeeded.
+   */
+  consumedAllInputs?: boolean;
+}
+
+/**
  * Configuration for tool operations defining processing behavior and API integration.
  *
  * Supports three patterns:
@@ -98,8 +112,12 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
    * Custom processing logic that completely bypasses standard file processing.
    * This tool handles all API calls, response processing, and file creation.
    * Use for tools with complex routing logic or non-standard processing requirements.
+   *
+   * Returns CustomProcessorResult with:
+   * - files: Processed output files
+   * - consumedAllInputs: true if operation combines N inputs → fewer outputs
    */
-  customProcessor: (params: TParams, files: File[]) => Promise<File[]>;
+  customProcessor: (params: TParams, files: File[]) => Promise<CustomProcessorResult>;
 }
 
 export type ToolOperationConfig<TParams = void> = SingleFileToolOperationConfig<TParams> | MultiFileToolOperationConfig<TParams> | CustomToolOperationConfig<TParams>;
@@ -274,24 +292,34 @@ export const useToolOperation = <TParams>(
 
         case ToolType.custom: {
           actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, filesForAPI);
-          // Try to map outputs back to inputs by filename (before extension)
-          const inputBaseNames = new Map<string, string>();
-          for (const f of validFiles) {
-            const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            inputBaseNames.set(base, (f as any).fileId);
-          }
-          const mappedSuccess: string[] = [];
-          for (const out of processedFiles) {
-            const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            const id = inputBaseNames.get(base);
-            if (id) mappedSuccess.push(id);
-          }
-          // Fallback to naive alignment if names don't match
-          if (mappedSuccess.length === 0) {
-            successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+          const result = await config.customProcessor(params, filesForAPI);
+
+          processedFiles = result.files;
+          const consumedAllInputs = result.consumedAllInputs || false;
+
+          // If consumedAllInputs flag is set, mark all inputs as successful
+          // (used for operations that combine N inputs into fewer outputs)
+          if (consumedAllInputs) {
+            successSourceIds = validFiles.map(f => (f as any).fileId) as any;
           } else {
-            successSourceIds = mappedSuccess as any;
+            // Try to map outputs back to inputs by filename (before extension)
+            const inputBaseNames = new Map<string, string>();
+            for (const f of validFiles) {
+              const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              inputBaseNames.set(base, (f as any).fileId);
+            }
+            const mappedSuccess: string[] = [];
+            for (const out of processedFiles) {
+              const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              const id = inputBaseNames.get(base);
+              if (id) mappedSuccess.push(id);
+            }
+            // Fallback to naive alignment if names don't match
+            if (mappedSuccess.length === 0) {
+              successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+            } else {
+              successSourceIds = mappedSuccess as any;
+            }
           }
           break;
         }

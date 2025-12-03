@@ -3,7 +3,7 @@ import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { useToolOperation, ToolType, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
 import { getEndpointUrl, isImageFormat, isWebFormat, isOfficeFormat } from '@app/utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor
@@ -102,7 +102,7 @@ export const createFileFromResponse = (
 export const convertProcessor = async (
   parameters: ConvertParameters,
   selectedFiles: File[]
-): Promise<File[]> => {
+): Promise<CustomProcessorResult> => {
   const processedFiles: File[] = [];
   const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
 
@@ -111,7 +111,9 @@ export const convertProcessor = async (
   }
 
   // Convert-specific routing logic: decide batch vs individual processing
-  if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
+  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, parameters);
+
+  if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
     for (const file of selectedFiles) {
       try {
@@ -138,7 +140,14 @@ export const convertProcessor = async (
     processedFiles.push(convertedFile);
   }
 
-  return processedFiles;
+  // When batch processing multiple files into one output (e.g., 3 images → 1 PDF),
+  // mark all inputs as consumed even though there's only 1 output file
+  const isCombiningMultiple = !isSeparateProcessing && selectedFiles.length > 1;
+
+  return {
+    files: processedFiles,
+    consumedAllInputs: isCombiningMultiple,
+  };
 };
 
 // Static configuration object
@@ -155,7 +164,7 @@ export const useConvertOperation = () => {
   const customConvertProcessor = useCallback(async (
     parameters: ConvertParameters,
     selectedFiles: File[]
-  ): Promise<File[]> => {
+  ): Promise<CustomProcessorResult> => {
     return convertProcessor(parameters, selectedFiles);
   }, []);
 
