@@ -3790,7 +3790,7 @@ version = "Текущий релиз"
 title = "Документація API"
 header = "Документація API"
 desc = "Переглядайте та тестуйте кінцеві точки API Stirling PDF"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,документація,swagger,кінцеві точки,розробка"
 
 [cookieBanner.popUp]
 title = "Як ми використовуємо файли cookie"
@@ -5177,7 +5177,7 @@ upgrade = "Оновити зараз →"
 freeTitle = "Ліцензія сервера"
 overLimitTitle = "Потрібна ліцензія сервера"
 overLimitBody = "Наша ліцензія дозволяє до <strong>{{freeTierLimit}}</strong> користувачів безкоштовно на сервер. У вас <strong>{{overLimitUserCopy}}</strong> користувачів Stirling. Щоб працювати без перерв, перейдіть на план Stirling Server — <strong>необмежена кількість місць</strong>, редагування тексту PDF та повний адмін-контроль за $99/server/mo."
-freeBody = "Наша <strong>Open-Core</strong> ліцензія дозволяє до <strong>{{freeTierLimit}}</strong> користувачів безкоштовно на сервер. Щоб масштабуватися безперервно та отримати ранній доступ до нового <strong>інструмента редагування тексту PDF</strong>, рекомендуємо план Stirling Server — повне редагування та <strong>необмежена кількість місць</strong> за $99/server/mo."
+freeBody = "Наша ліцензія <strong>Open-Core</strong> дозволяє до <strong>{{freeTierLimit}}</strong> користувачів безкоштовно на сервер. Щоб масштабуватися без перерв, рекомендуємо план Stirling Server — <strong>необмежена кількість місць</strong> і <strong>підтримка SSO</strong> за $99/сервер/міс."
 
 [onboarding.desktopInstall]
 title = "Завантажити"
