@@ -1,4 +1,4 @@
-name: Auto PR V2 Deployment
+name: Auto PR main Deployment
 
 on:
   pull_request:
@@ -31,7 +31,7 @@ jobs:
       pr_ref: ${{ steps.resolve.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # main.12.2
         with:
           egress-policy: audit
 
@@ -89,12 +89,12 @@ jobs:
           else
             auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96" "balazs-szucs")
             is_auth=false; for u in "${auth_users[@]}"; do [ "$u" = "$PR_AUTHOR" ] && is_auth=true && break; done
-            if [ "$PR_BASE" = "V2" ] && [ "$is_auth" = true ]; then
+            if [ "$PR_BASE" = "main" ] && [ "$is_auth" = true ]; then
               should=true
             else
-              title_has_v2=false; echo "$PR_TITLE" | grep -qiE 'v2|version.?2|version.?two' && title_has_v2=true
-              branch_has_kw=false; echo "$PR_BRANCH" | grep -qiE 'v2|react' && branch_has_kw=true
-              if [ "$is_auth" = true ] && { [ "$title_has_v2" = true ] || [ "$branch_has_kw" = true ]; }; then
+              title_has_main=false; echo "$PR_TITLE" | grep -qiE 'main|version.?2|version.?two' && title_has_main=true
+              branch_has_kw=false; echo "$PR_BRANCH" | grep -qiE 'main|react' && branch_has_kw=true
+              if [ "$is_auth" = true ] && { [ "$title_has_main" = true ] || [ "$branch_has_kw" = true ]; }; then
                 should=true
               fi
             fi
@@ -103,13 +103,13 @@ jobs:
           echo "should_deploy=$should" >> $GITHUB_OUTPUT
           echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
-  deploy-v2-pr:
+  deploy-main-pr:
     needs: check-pr
     runs-on: ubuntu-latest
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
     # Concurrency control - only one deployment per PR at a time
     concurrency:
-      group: v2-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
+      group: main-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
       cancel-in-progress: true
     permissions:
       contents: read
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # main.12.2
         with:
           egress-policy: audit
 
@@ -146,7 +146,7 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
             
-            // Delete previous V2 deployment comments to avoid clutter
+            // Delete previous main deployment comments to avoid clutter
             const { data: comments } = await github.rest.issues.listComments({
               owner,
               repo,
@@ -154,14 +154,14 @@ jobs:
               per_page: 100
             });
 
-            const v2Comments = comments.filter(comment => 
-              comment.body.includes('🚀 **Auto-deploying V2 version**') ||
-              comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
-              comment.body.includes('❌ **V2 Auto-deployment failed**')
+            const mainComments = comments.filter(comment => 
+              comment.body.includes('🚀 **Auto-deploying main version**') ||
+              comment.body.includes('## 🚀 main Auto-Deployment Complete!') ||
+              comment.body.includes('❌ **main Auto-deployment failed**')
             );
 
-            for (const comment of v2Comments) {
-              console.log(`Deleting old V2 comment: ${comment.id}`);
+            for (const comment of mainComments) {
+              console.log(`Deleting old main comment: ${comment.id}`);
               await github.rest.issues.deleteComment({
                 owner,
                 repo,
@@ -174,7 +174,7 @@ jobs:
               owner,
               repo,
               issue_number: prNumber,
-              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
+              body: `🚀 **Auto-deploying main version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by main/version2 keywords in the PR title or main/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
             return newComment.id;
 
@@ -238,7 +238,7 @@ jobs:
       - name: Check if frontend image exists
         id: check-frontend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Frontend image already exists, skipping build"
           else
@@ -249,7 +249,7 @@ jobs:
       - name: Check if backend image exists
         id: check-backend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Backend image already exists, skipping build"
           else
@@ -257,26 +257,26 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
-      - name: Build and push V2 frontend image
+      - name: Build and push main frontend image
         if: steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
-          build-args: VERSION_TAG=v2-alpha
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+          build-args: VERSION_TAG=main-alpha
           platforms: linux/amd64
 
-      - name: Build and push V2 backend image
+      - name: Build and push main backend image
         if: steps.check-backend.outputs.exists == 'false'
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
-          build-args: VERSION_TAG=v2-alpha
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-backend-${{ steps.commit-hashes.outputs.backend_short }}
+          build-args: VERSION_TAG=main-alpha
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -285,66 +285,66 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
-      - name: Deploy V2 to VPS
+      - name: Deploy main to VPS
         id: deploy
         run: |
           # Use same port strategy as regular PRs - just the PR number
-          V2_PORT=${{ needs.check-pr.outputs.pr_number }}
-          BACKEND_PORT=$((V2_PORT + 10000))  # Backend on higher port to avoid conflicts
+          main_PORT=${{ needs.check-pr.outputs.pr_number }}
+          BACKEND_PORT=$((main_PORT + 10000))  # Backend on higher port to avoid conflicts
           
-          # Create docker-compose for V2 with separate frontend and backend
+          # Create docker-compose for main with separate frontend and backend
           cat > docker-compose.yml << EOF
           version: '3.3'
           services:
-            stirling-pdf-v2-backend:
-              container_name: stirling-pdf-v2-backend-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+            stirling-pdf-main-backend:
+              container_name: stirling-pdf-main-backend-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-backend-${{ steps.commit-hashes.outputs.backend_short }}
               ports:
                 - "${BACKEND_PORT}:8080"    # Backend API port
               volumes:
-                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
-                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
-                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
+                - /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
+                - /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
+                - /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
                 SYSTEM_DEFAULTLOCALE: en-GB
-                UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
-                UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Frontend/Backend Split Architecture"
-                UI_APPNAMENAVBAR: "V2 PR#${{ needs.check-pr.outputs.pr_number }}"
+                UI_APPNAME: "Stirling-PDF main PR#${{ needs.check-pr.outputs.pr_number }}"
+                UI_HOMEDESCRIPTION: "main PR#${{ needs.check-pr.outputs.pr_number }} - Frontend/Backend Split Architecture"
+                UI_APPNAMENAVBAR: "main PR#${{ needs.check-pr.outputs.pr_number }}"
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
-                SWAGGER_SERVER_URL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
-                baseUrl: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
+                SWAGGER_SERVER_URL: "https://${main_PORT}.ssl.stirlingpdf.cloud"
+                baseUrl: "https://${main_PORT}.ssl.stirlingpdf.cloud"
               restart: on-failure:5
 
-            stirling-pdf-v2-frontend:
-              container_name: stirling-pdf-v2-frontend-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+            stirling-pdf-main-frontend:
+              container_name: stirling-pdf-main-frontend-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:main-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
               ports:
-                - "${V2_PORT}:80"          # Frontend port (same as regular PRs)
+                - "${main_PORT}:80"          # Frontend port (same as regular PRs)
               environment:
                 VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:${BACKEND_PORT}"
               depends_on:
-                - stirling-pdf-v2-backend
+                - stirling-pdf-main-backend
               restart: on-failure:5
           EOF
 
           # Deploy to VPS
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose-v2.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose-main.yml
 
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
-            # Create V2 PR-specific directories
-            mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
+            # Create main PR-specific directories
+            mkdir -p /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
 
             # Move docker-compose file to correct location
-            mv /tmp/docker-compose-v2.yml /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml
+            mv /tmp/docker-compose-main.yml /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml
 
             # Stop any existing container and clean up
-            cd /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}
+            cd /stirling/main-PR-${{ needs.check-pr.outputs.pr_number }}
             docker-compose down --remove-orphans 2>/dev/null || true
             
             # Start the new container
@@ -359,9 +359,9 @@ jobs:
           ENDSSH
 
           # Set port for output
-          echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
+          echo "main_port=${main_PORT}" >> $GITHUB_OUTPUT
 
-      - name: Post V2 deployment URL to PR
+      - name: Post main deployment URL to PR
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
@@ -369,7 +369,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
-            const v2Port = ${{ steps.deploy.outputs.v2_port }};
+            const mainPort = ${{ steps.deploy.outputs.main_port }};
             
             // Delete the "deploying..." comment since we're posting the final result
             const deploymentStartedId = ${{ steps.deployment-started.outputs.result }};
@@ -386,15 +386,15 @@ jobs:
               }
             }
             
-            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
-            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
+            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${mainPort}`;
+            const httpsUrl = `https://${mainPort}.ssl.stirlingpdf.cloud`;
 
-            const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
-                              `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
+            const commentBody = `## 🚀 main Auto-Deployment Complete!\n\n` +
+                              `Your main PR with the new frontend/backend split architecture has been deployed!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
                               `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
-                              `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
+                              `🔄 **Auto-deployed** because PR title or branch name contains main/version2/React keywords.`;
 
             await github.rest.issues.createComment({
               owner,
@@ -403,7 +403,7 @@ jobs:
               body: commentBody
             });
 
-  cleanup-v2-deployment:
+  cleanup-main-deployment:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
@@ -413,7 +413,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # main.12.2
         with:
           egress-policy: audit
 
@@ -429,7 +429,7 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Clean up V2 deployment comments
+      - name: Clean up main deployment comments
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
@@ -437,25 +437,25 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = ${{ github.event.pull_request.number }};
             
-            // Find and delete V2 deployment comments
+            // Find and delete main deployment comments
             const { data: comments } = await github.rest.issues.listComments({
               owner,
               repo,
               issue_number: prNumber
             });
             
-            const v2Comments = comments.filter(c =>
-              c.body?.includes("## 🚀 V2 Auto-Deployment Complete!") &&
+            const mainComments = comments.filter(c =>
+              c.body?.includes("## 🚀 main Auto-Deployment Complete!") &&
               c.user?.type === "Bot"
             );
             
-            for (const comment of v2Comments) {
+            for (const comment of mainComments) {
               await github.rest.issues.deleteComment({
                 owner,
                 repo,
                 comment_id: comment.id
               });
-              console.log(`Deleted V2 deployment comment (ID: ${comment.id})`);
+              console.log(`Deleted main deployment comment (ID: ${comment.id})`);
             }
 
       - name: Set up SSH
@@ -464,29 +464,29 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
-      - name: Cleanup V2 deployment
+      - name: Cleanup main deployment
         run: |
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
-            if [ -d "/stirling/V2-PR-${{ github.event.pull_request.number }}" ]; then
-              echo "Found V2 PR directory, proceeding with cleanup..."
+            if [ -d "/stirling/main-PR-${{ github.event.pull_request.number }}" ]; then
+              echo "Found main PR directory, proceeding with cleanup..."
 
-              # Stop and remove V2 containers
-              cd /stirling/V2-PR-${{ github.event.pull_request.number }}
+              # Stop and remove main containers
+              cd /stirling/main-PR-${{ github.event.pull_request.number }}
               docker-compose down || true
 
               # Go back to root before removal
               cd /
 
-              # Remove V2 PR-specific directories
-              rm -rf /stirling/V2-PR-${{ github.event.pull_request.number }}
+              # Remove main PR-specific directories
+              rm -rf /stirling/main-PR-${{ github.event.pull_request.number }}
 
-              # Clean up V2 containers by name (in case compose cleanup missed them)
-              docker rm -f stirling-pdf-v2-frontend-pr-${{ github.event.pull_request.number }} || true
-              docker rm -f stirling-pdf-v2-backend-pr-${{ github.event.pull_request.number }} || true
+              # Clean up main containers by name (in case compose cleanup missed them)
+              docker rm -f stirling-pdf-main-frontend-pr-${{ github.event.pull_request.number }} || true
+              docker rm -f stirling-pdf-main-backend-pr-${{ github.event.pull_request.number }} || true
 
-              echo "V2 cleanup completed"
+              echo "main cleanup completed"
             else
-              echo "V2 PR directory not found, nothing to clean up"
+              echo "main PR directory not found, nothing to clean up"
             fi
             
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
