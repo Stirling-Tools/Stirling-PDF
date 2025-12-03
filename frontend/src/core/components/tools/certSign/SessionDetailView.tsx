@@ -8,11 +8,11 @@ import {
   Badge,
   Button,
   List,
-  TextInput,
   ActionIcon,
   Divider,
   Alert,
   Modal,
+  TagsInput,
 } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -47,8 +47,8 @@ const SessionDetailView = ({
   onRefresh,
 }: SessionDetailViewProps) => {
   const { t } = useTranslation();
-  const [newEmails, setNewEmails] = useState('');
-  const [newNames, setNewNames] = useState('');
+  const [newEmails, setNewEmails] = useState<string[]>([]);
+  const [newNames, setNewNames] = useState<string[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -74,15 +74,12 @@ const SessionDetailView = ({
   };
 
   const handleAddParticipants = async () => {
-    if (!newEmails.trim()) return;
-
-    const emails = newEmails.split(',').map((e) => e.trim()).filter(Boolean);
-    const names = newNames ? newNames.split(',').map((n) => n.trim()) : [];
+    if (newEmails.length === 0) return;
 
     try {
-      await onAddParticipants({ participantEmails: emails, participantNames: names });
-      setNewEmails('');
-      setNewNames('');
+      await onAddParticipants({ participantEmails: newEmails, participantNames: newNames });
+      setNewEmails([]);
+      setNewNames([]);
       alert({
         alertType: 'success',
         title: t('success'),
@@ -280,25 +277,31 @@ const SessionDetailView = ({
               <Text size="xs" fw={600}>
                 {t('certSign.collab.sessionDetail.addParticipants', 'Add Participants')}
               </Text>
-              <TextInput
+              <TagsInput
                 placeholder={t(
                   'certSign.collab.sessionDetail.addParticipantsEmails',
-                  'Participant emails (comma-separated)'
+                  'Enter email and press Enter'
                 )}
                 value={newEmails}
-                onChange={(e) => setNewEmails(e.currentTarget.value)}
+                onChange={setNewEmails}
                 size="xs"
+                splitChars={[',', ' ']}
+                clearable
+                acceptValueOnBlur
               />
-              <TextInput
+              <TagsInput
                 placeholder={t(
                   'certSign.collab.sessionDetail.addParticipantsNames',
-                  'Participant names (comma-separated, optional)'
+                  'Enter name and press Enter (optional)'
                 )}
                 value={newNames}
-                onChange={(e) => setNewNames(e.currentTarget.value)}
+                onChange={setNewNames}
                 size="xs"
+                splitChars={[',']}
+                clearable
+                acceptValueOnBlur
               />
-              <Button leftSection={<AddIcon />} onClick={handleAddParticipants} disabled={!newEmails.trim()} size="xs">
+              <Button leftSection={<AddIcon />} onClick={handleAddParticipants} disabled={newEmails.length === 0} size="xs">
                 {t('certSign.collab.sessionDetail.addButton', 'Add Participants')}
               </Button>
             </>

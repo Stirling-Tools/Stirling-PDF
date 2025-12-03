@@ -26,6 +26,14 @@ public interface SigningSessionRepository extends JpaRepository<SigningSessionEn
             @Param("sessionId") String sessionId);
 
     @Query(
+            "SELECT DISTINCT s FROM SigningSessionEntity s "
+                    + "LEFT JOIN FETCH s.participants p "
+                    + "LEFT JOIN FETCH p.certificateSubmission "
+                    + "WHERE s.sessionId = :sessionId")
+    Optional<SigningSessionEntity> findBySessionIdWithParticipantsAndCertificates(
+            @Param("sessionId") String sessionId);
+
+    @Query(
             "SELECT s FROM SigningSessionEntity s WHERE s.user.id = :userId AND s.finalized = false ORDER BY s.createdAt DESC")
     List<SigningSessionEntity> findActiveSessionsByUserId(@Param("userId") Long userId);
 

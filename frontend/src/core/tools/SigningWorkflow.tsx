@@ -12,6 +12,7 @@ import { useSigningWorkflowOperation } from '@app/hooks/tools/certSign/useSignin
 import { useSigningSessionManagement } from '@app/hooks/tools/certSign/useSigningSessionManagement';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
 import { alert } from '@app/components/toast';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 
 const SigningWorkflow = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ const SigningWorkflow = (props: BaseToolProps) => {
 
   const sessionMgmt = useSigningSessionManagement();
   const { addFiles } = useFileManagement();
+  const { openFilesModal } = useFilesModalContext();
 
   // View states: 'list' | 'create' | 'detail'
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
@@ -34,13 +36,19 @@ const SigningWorkflow = (props: BaseToolProps) => {
     sessionMgmt.fetchSessions();
   }, []);
 
-  // After session creation: show detail view
+  // After session creation: refresh sessions and return to list
   useEffect(() => {
     if (base.hasResults && base.operation.data) {
       const sessionData = base.operation.data;
       if (sessionData.sessionId) {
-        sessionMgmt.fetchSessionDetail(sessionData.sessionId);
-        setView('detail');
+        sessionMgmt.fetchSessions();
+        base.handleUndo(); // Clear the created session from state
+        setView('list');
+        alert({
+          alertType: 'success',
+          title: t('success'),
+          body: t('certSign.collab.sessionCreated', 'Signing session created successfully'),
+        });
       }
     }
   }, [base.hasResults]);
@@ -62,6 +70,8 @@ const SigningWorkflow = (props: BaseToolProps) => {
   const handleCreateNew = () => {
     base.handleUndo();
     setView('create');
+    // Open file picker modal
+    openFilesModal();
   };
 
   // Always create toolFlowContent to maintain consistent hook order

@@ -301,8 +301,8 @@ public class SigningSessionController {
                             ? Math.max(submission.getPageNumber() - 1, 0)
                             : null,
                     StringUtils.defaultIfBlank(participant.getName(), "Shared Signing"),
-                    submission.getLocation(),
-                    submission.getReason(),
+                    StringUtils.defaultIfBlank(submission.getLocation(), ""),
+                    StringUtils.defaultIfBlank(submission.getReason(), "Document Signing"),
                     submission.getShowLogo());
 
             pdf = baos.toByteArray();

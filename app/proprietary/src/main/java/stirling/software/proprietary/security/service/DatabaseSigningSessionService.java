@@ -123,9 +123,10 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
 
     @Transactional(readOnly = true)
     public SigningSession getSession(String sessionId) {
+        // Use query with participants and certificates fetch for finalization
         SigningSessionEntity entity =
                 sessionRepository
-                        .findBySessionId(sessionId)
+                        .findBySessionIdWithParticipantsAndCertificates(sessionId)
                         .orElseThrow(
                                 () ->
                                         ExceptionUtils.createIllegalArgumentException(
@@ -133,15 +134,16 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
                                                 "Signing session {0} was not found",
                                                 sessionId));
 
-        // Force LOB loading within transaction by accessing the fields
+        // Force LOB loading within transaction
         byte[] originalPdf = entity.getOriginalPdf();
         byte[] signedPdf = entity.getSignedPdf();
 
         log.debug(
-                "Loading session {}: originalPdf={} bytes, signedPdf={} bytes",
+                "Loading session {} for signing: originalPdf={} bytes, signedPdf={} bytes, participants={}",
                 sessionId,
                 originalPdf != null ? originalPdf.length : 0,
-                signedPdf != null ? signedPdf.length : 0);
+                signedPdf != null ? signedPdf.length : 0,
+                entity.getParticipants().size());
 
         if (originalPdf == null || originalPdf.length == 0) {
             log.error("Original PDF is null or empty for session {}", sessionId);

@@ -1,4 +1,4 @@
-import { Stack, Text, TextInput, Switch, Textarea, Alert } from '@mantine/core';
+import { Stack, Text, TextInput, Switch, Textarea, Alert, TagsInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import InfoIcon from '@mui/icons-material/Info';
 import { SigningWorkflowParameters } from '@app/hooks/tools/certSign/useSigningWorkflowParameters';
@@ -20,23 +20,28 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
         </Text>
       </Alert>
 
-      <TextInput
+      <TagsInput
         label={t('certSign.collab.emails', 'Participant emails')}
-        placeholder="jane@example.com, john@example.com"
-        value={parameters.participantEmails}
-        onChange={(event) => onParameterChange('participantEmails', event.currentTarget.value)}
+        placeholder={t('certSign.collab.emailsPlaceholder', 'Enter email and press Enter')}
+        value={parameters.participantEmails ? parameters.participantEmails.split(',').map(e => e.trim()).filter(Boolean) : []}
+        onChange={(values) => onParameterChange('participantEmails', values.join(','))}
         disabled={disabled}
-        required
         size="xs"
+        splitChars={[',']}
+        clearable
+        acceptValueOnBlur
       />
 
-      <TextInput
-        label={t('certSign.collab.names', 'Participant names (optional, comma separated)')}
-        placeholder="Jane Smith, John Doe"
-        value={parameters.participantNames}
-        onChange={(event) => onParameterChange('participantNames', event.currentTarget.value)}
+      <TagsInput
+        label={t('certSign.collab.names', 'Participant names (optional)')}
+        placeholder={t('certSign.collab.namesPlaceholder', 'Enter name and press Enter')}
+        value={parameters.participantNames ? parameters.participantNames.split(',').map(n => n.trim()).filter(Boolean) : []}
+        onChange={(values) => onParameterChange('participantNames', values.join(','))}
         disabled={disabled}
         size="xs"
+        splitChars={[',']}
+        clearable
+        acceptValueOnBlur
       />
 
       <TextInput
