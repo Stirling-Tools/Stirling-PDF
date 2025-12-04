@@ -194,9 +194,7 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.disable());
         }
 
-        // if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
         http.csrf(CsrfConfigurer::disable);
-        // }
 
         if (loginEnabledValue) {
             boolean v2Enabled = appConfig.v2Enabled();
