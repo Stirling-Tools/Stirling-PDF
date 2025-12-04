@@ -19,58 +19,6 @@ interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
 }
 
 /**
- * Extract CSRF token from cookie
- */
-function getCsrfTokenFromCookie(): string | null {
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'XSRF-TOKEN') {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
-}
-
-/**
- * Fetch fresh CSRF token by making a lightweight GET request
- * Prevents stale tokens due to Spring Security's token rotation
- */
-async function fetchFreshCsrfToken(client: AxiosInstance): Promise<string | null> {
-  try {
-    // Make a lightweight GET that triggers CSRF token rotation
-    await client.get('/api/v1/config/app-config', {
-      skipBackendReadyCheck: true,
-    } as any);
-
-    return getCsrfTokenFromCookie();
-  } catch (error) {
-    console.error('[apiClientSetup] Failed to fetch fresh CSRF token:', error);
-    return getCsrfTokenFromCookie();
-  }
-}
-
-/**
- * Store CSRF token from response header to document.cookie
- * Tauri webview and backend have different origins, so we manually sync cookies
- */
-function storeCsrfTokenFromResponse(headers: any): void {
-  const setCookie = headers['set-cookie'] || headers['Set-Cookie'];
-  if (setCookie) {
-    const cookieString = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
-    const match = cookieString.match(/XSRF-TOKEN=([^;]+)/);
-    if (match) {
-      const newToken = decodeURIComponent(match[1]);
-      try {
-        document.cookie = `XSRF-TOKEN=${encodeURIComponent(newToken)}; Path=/; SameSite=Lax`;
-      } catch (e) {
-        console.error('[apiClientSetup] Failed to set CSRF cookie:', e);
-      }
-    }
-  }
-}
-
-/**
  * Desktop-specific API interceptors
  * - Reuses the core interceptors
  * - Dynamically sets base URL based on connection mode
@@ -112,22 +60,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         } else {
           console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
         }
-
-        // Add CSRF token for self-hosted servers with security enabled
-        // For POST/PUT/DELETE, fetch a fresh token first to avoid rotation issues
-        const method = (extendedConfig.method || 'GET').toUpperCase();
-        const isMutatingRequest = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
-
-        let freshToken: string | null = null;
-        if (isMutatingRequest) {
-          freshToken = await fetchFreshCsrfToken(client);
-        } else {
-          freshToken = getCsrfTokenFromCookie();
-        }
-
-        if (freshToken) {
-          extendedConfig.headers['X-XSRF-TOKEN'] = freshToken;
-        }
       } else {
         // SaaS mode: disable credentials (security disabled on local backend)
         extendedConfig.withCredentials = false;
@@ -159,13 +91,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     (error) => Promise.reject(error)
   );
 
-  // Response interceptor: Extract CSRF token and handle auth errors
+  // Response interceptor: Handle auth errors
   client.interceptors.response.use(
     (response) => {
-      // Extract and store CSRF token from response headers
-      if (response.headers) {
-        storeCsrfTokenFromResponse(response.headers);
-      }
       return response;
     },
     async (error) => {

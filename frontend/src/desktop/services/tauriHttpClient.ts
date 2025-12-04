@@ -176,17 +176,6 @@ class TauriHttpClient {
       // Convert withCredentials to fetch API's credentials option
       const credentials: RequestCredentials = finalConfig.withCredentials ? 'include' : 'omit';
 
-      // Re-sync cookie with latest CSRF token right before fetch
-      // This prevents race conditions where token rotates between interceptor and fetch
-      if (headers['X-XSRF-TOKEN']) {
-        try {
-          const tokenValue = headers['X-XSRF-TOKEN'];
-          document.cookie = `XSRF-TOKEN=${encodeURIComponent(tokenValue)}; Path=/; SameSite=Lax`;
-        } catch (e) {
-          console.error('[tauriHttpClient] Failed to sync cookie before fetch:', e);
-        }
-      }
-
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       const response = await fetch(url, {
         method,
