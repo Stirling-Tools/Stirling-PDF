@@ -59,17 +59,21 @@ export default function HomePage() {
   const prevFileCountRef = useRef(activeFiles.length);
 
   // Auto-switch to viewer when going from 0 to 1 file
+  // Skip this if PDF Text Editor is active - it handles its own empty state
   useEffect(() => {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
     if (prevCount === 0 && currentCount === 1) {
-      actions.setWorkbench('viewer');
-      setActiveFileIndex(0);
+      // PDF Text Editor handles its own empty state with a dropzone
+      if (selectedToolKey !== 'pdfTextEditor') {
+        actions.setWorkbench('viewer');
+        setActiveFileIndex(0);
+      }
     }
 
     prevFileCountRef.current = currentCount;
-  }, [activeFiles.length, actions, setActiveFileIndex]);
+  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
