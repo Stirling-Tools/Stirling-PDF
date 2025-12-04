@@ -5816,7 +5816,7 @@ subtitle = "Sign in with your Stirling account"
 [setup.selfhosted]
 title = "Sign in to Server"
 subtitle = "Enter your server credentials"
-link = "or connect to a self hosted account"
+link = "or connect to a self-hosted account"
 
 [setup.server]
 title = "Connect to Server"
