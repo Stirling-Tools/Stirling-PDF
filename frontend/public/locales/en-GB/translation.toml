@@ -6035,7 +6035,7 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
 dropzone = "Drag and drop a PDF here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"

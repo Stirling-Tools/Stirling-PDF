@@ -1452,7 +1452,7 @@ const selectionToolbarPosition = useMemo(() => {
               </Text>
               <Text size="sm" c="dimmed" ta="center" maw={420}>
                 {activeFiles.length > 0
-                  ? t('pdfTextEditor.empty.dropzoneWithFiles', 'Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse')
+                  ? t('pdfTextEditor.empty.dropzoneWithFiles', 'Select a file from the Files tab, or drag and drop a PDF here, or click to browse')
                   : t('pdfTextEditor.empty.dropzone', 'Drag and drop a PDF here, or click to browse')}
               </Text>
             </Stack>
