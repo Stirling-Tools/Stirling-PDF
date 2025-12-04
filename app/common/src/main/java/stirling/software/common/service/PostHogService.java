@@ -254,10 +254,7 @@ public class PostHogService {
                 properties,
                 "security_enableLogin",
                 applicationProperties.getSecurity().getEnableLogin());
-        addIfNotEmpty(
-                properties,
-                "security_csrfDisabled",
-                applicationProperties.getSecurity().getCsrfDisabled());
+        addIfNotEmpty(properties, "security_csrfDisabled", true);
         addIfNotEmpty(
                 properties,
                 "security_loginAttemptCount",

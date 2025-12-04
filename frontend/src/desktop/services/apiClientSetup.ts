@@ -48,13 +48,21 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // Debug logging
       console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
-      // Add auth token for remote requests
+      // Add auth token for remote requests and enable credentials
       const isRemote = await operationRouter.isSelfHostedMode();
       if (isRemote) {
+        // Self-hosted mode: enable credentials for session management
+        extendedConfig.withCredentials = true;
+
         const token = await authService.getAuthToken();
         if (token) {
           extendedConfig.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
         }
+      } else {
+        // SaaS mode: disable credentials (security disabled on local backend)
+        extendedConfig.withCredentials = false;
       }
 
       // Backend readiness check (for local backend)
@@ -85,7 +93,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
   // Response interceptor: Handle auth errors
   client.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      return response;
+    },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
 

@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,8 +24,6 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -47,7 +44,6 @@ import stirling.software.proprietary.security.database.repository.PersistentLogi
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
@@ -198,9 +194,7 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.disable());
         }
 
-        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
-            http.csrf(CsrfConfigurer::disable);
-        }
+        http.csrf(CsrfConfigurer::disable);
 
         if (loginEnabledValue) {
             boolean v2Enabled = appConfig.v2Enabled();
@@ -209,48 +203,6 @@ public class SecurityConfiguration {
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
-
-            if (!securityProperties.getCsrfDisabled()) {
-                CookieCsrfTokenRepository cookieRepo =
-                        CookieCsrfTokenRepository.withHttpOnlyFalse();
-                CsrfTokenRequestAttributeHandler requestHandler =
-                        new CsrfTokenRequestAttributeHandler();
-                requestHandler.setCsrfRequestAttributeName(null);
-                http.csrf(
-                        csrf ->
-                                csrf.ignoringRequestMatchers(
-                                                request -> {
-                                                    String uri = request.getRequestURI();
-
-                                                    // Ignore CSRF for auth endpoints
-                                                    if (uri.startsWith("/api/v1/auth/")) {
-                                                        return true;
-                                                    }
-
-                                                    String apiKey = request.getHeader("X-API-KEY");
-                                                    // If there's no API key, don't ignore CSRF
-                                                    // (return false)
-                                                    if (apiKey == null || apiKey.trim().isEmpty()) {
-                                                        return false;
-                                                    }
-                                                    // Validate API key using existing UserService
-                                                    try {
-                                                        Optional<User> user =
-                                                                userService.getUserByApiKey(apiKey);
-                                                        // If API key is valid, ignore CSRF (return
-                                                        // true)
-                                                        // If API key is invalid, don't ignore CSRF
-                                                        // (return false)
-                                                        return user.isPresent();
-                                                    } catch (Exception e) {
-                                                        // If there's any error validating the API
-                                                        // key, don't ignore CSRF
-                                                        return false;
-                                                    }
-                                                })
-                                        .csrfTokenRepository(cookieRepo)
-                                        .csrfTokenRequestHandler(requestHandler));
-            }
 
             http.sessionManagement(
                     sessionManagement -> {

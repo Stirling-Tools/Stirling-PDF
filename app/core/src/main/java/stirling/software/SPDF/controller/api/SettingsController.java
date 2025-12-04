@@ -124,7 +124,6 @@ public class SettingsController {
         ApplicationProperties.Security security = applicationProperties.getSecurity();
 
         settings.put("enableLogin", security.getEnableLogin());
-        settings.put("csrfDisabled", security.getCsrfDisabled());
         settings.put("loginMethod", security.getLoginMethod());
         settings.put("loginAttemptCount", security.getLoginAttemptCount());
         settings.put("loginResetTimeMinutes", security.getLoginResetTimeMinutes());
@@ -158,12 +157,6 @@ public class SettingsController {
             applicationProperties
                     .getSecurity()
                     .setEnableLogin((Boolean) settings.get("enableLogin"));
-        }
-        if (settings.containsKey("csrfDisabled")) {
-            GeneralUtils.saveKeyToSettings("security.csrfDisabled", settings.get("csrfDisabled"));
-            applicationProperties
-                    .getSecurity()
-                    .setCsrfDisabled((Boolean) settings.get("csrfDisabled"));
         }
         if (settings.containsKey("loginMethod")) {
             GeneralUtils.saveKeyToSettings("security.loginMethod", settings.get("loginMethod"));

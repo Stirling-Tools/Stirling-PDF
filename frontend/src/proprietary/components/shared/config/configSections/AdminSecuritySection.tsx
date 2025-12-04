@@ -13,7 +13,6 @@ import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBann
 
 interface SecuritySettingsData {
   enableLogin?: boolean;
-  csrfDisabled?: boolean;
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
@@ -123,7 +122,6 @@ export default function AdminSecuritySection() {
       const deltaSettings: Record<string, any> = {
         // Security settings
         'security.enableLogin': securitySettings.enableLogin,
-        'security.csrfDisabled': securitySettings.csrfDisabled,
         'security.loginMethod': securitySettings.loginMethod,
         'security.loginAttemptCount': securitySettings.loginAttemptCount,
         'security.loginResetTimeMinutes': securitySettings.loginResetTimeMinutes,
@@ -281,23 +279,6 @@ export default function AdminSecuritySection() {
               max={1440}
               disabled={!loginEnabled}
             />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.csrfDisabled.label', 'Disable CSRF Protection')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.security.csrfDisabled.description', 'Disable Cross-Site Request Forgery protection (not recommended)')}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.csrfDisabled || false}
-                onChange={(e) => setSettings({ ...settings, csrfDisabled: e.target.checked })}
-                disabled={!loginEnabled}
-              />
-              <PendingBadge show={isFieldPending('csrfDisabled')} />
-            </Group>
           </div>
         </Stack>
       </Paper>

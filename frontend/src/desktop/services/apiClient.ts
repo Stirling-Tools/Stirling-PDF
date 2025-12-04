@@ -14,7 +14,7 @@ import { getApiBaseUrl } from '@app/services/apiClientConfig';
 const apiClient = create({
   baseURL: getApiBaseUrl(),
   responseType: 'json',
-  withCredentials: true,
+  withCredentials: false, // Desktop doesn't need credentials
 });
 
 // Setup interceptors (desktop-specific auth and backend ready checks)
