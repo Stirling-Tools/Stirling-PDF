@@ -85,7 +85,10 @@ export function LocalEmbedPDFWithAnnotations({
         strategy: ScrollStrategy.Vertical,
         initialPage: 0,
       }),
-      createPluginRegistration(RenderPluginPackage),
+      createPluginRegistration(RenderPluginPackage, {
+        withForms: true,
+        withAnnotations: true,
+      }),
 
       // Register interaction manager (required for annotations)
       createPluginRegistration(InteractionManagerPluginPackage),

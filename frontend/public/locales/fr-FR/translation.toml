@@ -163,6 +163,11 @@ unfavorite = "Retirer des favoris"
 fullscreen = "Passer en mode plein écran"
 sidebar = "Passer en mode barre latérale"
 
+[backendStartup]
+notFoundTitle = "Backend introuvable"
+retry = "Réessayer"
+unreachable = "L’application ne peut actuellement pas se connecter au backend. Vérifiez l’état du backend et la connectivité réseau, puis réessayez."
+
 [zipWarning]
 title = "Fichier ZIP volumineux"
 message = "Ce ZIP contient {{count}} fichiers. Extraire quand même ?"
@@ -347,7 +352,7 @@ teams = "Équipes"
 title = "Configuration"
 systemSettings = "Paramètres système"
 features = "Fonctionnalités"
-endpoints = "Endpoints"
+endpoints = "Points de terminaison"
 database = "Base de données"
 advanced = "Avancé"
 
@@ -914,7 +919,7 @@ title = "Superposer des PDF"
 
 [home.pdfTextEditor]
 title = "Éditeur de texte PDF"
-desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
+desc = "Modifier le texte et les images existants dans les PDF"
 
 [home.addText]
 tags = "texte,annotation,étiquette"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Signature dessinée"
 defaultImageLabel = "Signature téléversée"
 defaultTextLabel = "Signature saisie"
 saveButton = "Enregistrer la signature"
+savePersonal = "Enregistrer en personnel"
+saveShared = "Enregistrer en partagé"
 saveUnavailable = "Créez d’abord une signature pour l’enregistrer."
 noChanges = "La signature actuelle est déjà enregistrée."
+tempStorageTitle = "Stockage temporaire du navigateur"
+tempStorageDescription = "Les signatures sont stockées uniquement dans votre navigateur. Elles seront perdues si vous effacez les données du navigateur ou si vous changez de navigateur."
+personalHeading = "Signatures personnelles"
+sharedHeading = "Signatures partagées"
+personalDescription = "Vous seul pouvez voir ces signatures."
+sharedDescription = "Tous les utilisateurs peuvent voir et utiliser ces signatures."
 
 [sign.saved.type]
 canvas = "Dessin"
@@ -3441,6 +3454,9 @@ signinTitle = "Veuillez vous connecter"
 ssoSignIn = "Se connecter via l'authentification unique"
 oAuth2AutoCreateDisabled = "OAUTH2 Création automatique d'utilisateur désactivée"
 oAuth2AdminBlockedUser = "La création ou l'authentification d'utilisateurs non enregistrés est actuellement bloquée. Veuillez contacter l'administrateur."
+oAuth2RequiresLicense = "La connexion OAuth/SSO nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
+saml2RequiresLicense = "La connexion SAML nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
+maxUsersReached = "Nombre maximal d’utilisateurs atteint pour votre licence actuelle. Veuillez contacter l’administrateur pour mettre à niveau votre plan ou ajouter des places."
 oauth2RequestNotFound = "Demande d'autorisation introuvable"
 oauth2InvalidUserInfoResponse = "Réponse contenant les informations de l'utilisateur est invalide"
 oauth2invalidRequest = "Requête invalide"
@@ -3849,14 +3865,17 @@ fitToWidth = "Ajuster à la largeur"
 actualSize = "Taille réelle"
 
 [viewer]
+cannotPreviewFile = "Impossible d’afficher un aperçu du fichier"
+dualPageView = "Vue double page"
 firstPage = "Première page"
 lastPage = "Dernière page"
-previousPage = "Page précédente"
 nextPage = "Page suivante"
+onlyPdfSupported = "Le visualiseur prend uniquement en charge les fichiers PDF. Ce fichier semble être d’un autre format."
+previousPage = "Page précédente"
+singlePageView = "Vue page unique"
+unknownFile = "Fichier inconnu"
 zoomIn = "Zoom avant"
 zoomOut = "Zoom arrière"
-singlePageView = "Vue page unique"
-dualPageView = "Vue double page"
 
 [rightRail]
 closeSelected = "Fermer les fichiers sélectionnés"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Afficher/masquer la barre latérale"
 exportSelected = "Exporter les pages sélectionnées"
 toggleAnnotations = "Afficher/masquer les annotations"
 annotationMode = "Basculer en mode annotation"
+print = "Imprimer le PDF"
 draw = "Dessiner"
 save = "Enregistrer"
 saveChanges = "Enregistrer les modifications"
@@ -4156,7 +4176,7 @@ description = "Suivre les actions des utilisateurs et les événements système 
 
 [admin.settings.security.audit.level]
 label = "Niveau d’audit"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=DÉSACTIVÉ, 1=BASIQUE, 2=STANDARD, 3=VERBEUX"
 
 [admin.settings.security.audit.retentionDays]
 label = "Rétention des journaux (jours)"
@@ -4494,9 +4514,10 @@ label = "Mentions légales"
 description = "URL ou nom de fichier de l’impressum (obligatoire dans certaines juridictions)"
 
 [admin.settings.premium]
-title = "Premium & Enterprise"
+title = "Premium et Entreprise"
 description = "Configurer votre clé de licence Premium ou Enterprise."
 license = "Configuration de la licence"
+noInput = "Veuillez fournir une clé de licence ou un fichier"
 
 [admin.settings.premium.licenseKey]
 toggle = "Vous avez une clé de licence ou un fichier de certificat ?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Avertissement : licence existante détectée"
 line1 = "Écraser votre clé de licence actuelle est irréversible."
 line2 = "Votre licence précédente sera définitivement perdue, sauf si vous l’avez sauvegardée ailleurs."
 line3 = "Important : gardez vos clés de licence privées et sécurisées. Ne les partagez jamais publiquement."
+
+[admin.settings.premium.inputMethod]
+text = "Clé de licence"
+file = "Fichier de certificat"
+
+[admin.settings.premium.file]
+label = "Fichier de certificat de licence"
+description = "Téléversez votre fichier de licence .lic ou .cert issu d’achats hors ligne"
+choose = "Choisir le fichier de licence"
+selected = "Sélectionné: {{filename}} ({{size}})"
+successMessage = "Fichier de licence téléversé et activé avec succès. Aucun redémarrage requis."
+
+[admin.settings.premium.currentLicense]
+title = "Licence active"
+file = "Source: Fichier de licence ({{path}})"
+key = "Source: Clé de licence"
+type = "Type: {{type}}"
+noInput = "Veuillez fournir une clé de licence ou téléverser un fichier de certificat"
+success = "Succès"
 
 [admin.settings.premium.enabled]
 label = "Activer les fonctionnalités Premium"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} sélectionné(s)"
 download = "Télécharger"
 delete = "Supprimer"
 unsupported = "Non pris en charge"
+active = "Actif"
 addToUpload = "Ajouter au téléversement"
+closeFile = "Fermer le fichier"
 deleteAll = "Tout supprimer"
 loadingFiles = "Chargement des fichiers..."
 noFiles = "Aucun fichier disponible"
@@ -5181,7 +5223,7 @@ active = "Actif"
 disabled = "Désactivé"
 activeSession = "Session active"
 member = "Membre"
-admin = "Admin"
+admin = "Administrateur"
 editRole = "Modifier le rôle"
 enable = "Activer"
 disable = "Désactiver"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Au moins une adresse e-mail est requise"
 submit = "Envoyer les invitations"
 success = "Utilisateur(s) invité(s) avec succès"
-partialSuccess = "Certaines invitations ont échoué"
+partialFailure = "Certaines invitations ont échoué"
 allFailed = "Échec de l’invitation des utilisateurs"
 error = "Échec de l’envoi des invitations"
 
@@ -5712,7 +5754,7 @@ title = "Graphique d’utilisation des endpoints"
 
 [usage.table]
 title = "Statistiques détaillées"
-endpoint = "Endpoint"
+endpoint = "Point de terminaison"
 visits = "Visites"
 percentage = "Pourcentage"
 noData = "Aucune donnée disponible"
@@ -5800,13 +5842,20 @@ submit = "Se connecter"
 signInWith = "Se connecter avec"
 oauthPending = "Ouverture du navigateur pour l'authentification..."
 orContinueWith = "Ou continuer avec l’email"
+serverRequirement = "Remarque : le serveur doit avoir la connexion activée."
+showInstructions = "Comment l’activer ?"
+hideInstructions = "Masquer les instructions"
+instructions = "Pour activer la connexion sur votre serveur Stirling PDF :"
+instructionsEnvVar = "Définissez la variable d’environnement :"
+instructionsOrYml = "Ou dans settings.yml :"
+instructionsRestart = "Redémarrez ensuite votre serveur pour que les modifications prennent effet."
 
 [setup.login.username]
 label = "Nom d’utilisateur"
 placeholder = "Entrez votre nom d’utilisateur"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Saisissez votre email"
 
 [setup.login.password]

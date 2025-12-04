@@ -324,10 +324,16 @@ public class SecurityConfiguration {
                                     .authenticated());
             // Handle User/Password Logins
             if (securityProperties.isUserPass()) {
+                // v2: Authentication is handled via API (/api/v1/auth/login), not form login
+                // We configure form login to handle Spring Security redirects,
+                // but use /perform_login as the processing URL so /login remains a React route
                 http.formLogin(
                         formLogin ->
                                 formLogin
-                                        .loginPage("/login")
+                                        .loginPage("/login") // Redirect here when unauthenticated
+                                        .loginProcessingUrl(
+                                                "/perform_login") // Process form posts here (not
+                                        // /login)
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
                                                         loginAttemptService,

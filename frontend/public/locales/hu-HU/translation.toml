@@ -163,6 +163,11 @@ unfavorite = "Eltávolítás a kedvencekből"
 fullscreen = "Váltás teljes képernyős módra"
 sidebar = "Váltás oldalsáv módra"
 
+[backendStartup]
+notFoundTitle = "Backend nem található"
+retry = "Próbálja újra"
+unreachable = "Az alkalmazás jelenleg nem tud csatlakozni a Backendhez. Ellenőrizze a Backend állapotát és a hálózati kapcsolatot, majd próbálja újra."
+
 [zipWarning]
 title = "Nagy ZIP fájl"
 message = "Ez a ZIP {{count}} fájlt tartalmaz. Mégis kibontja?"
@@ -914,7 +919,7 @@ title = "PDF-ek egymásra helyezése"
 
 [home.pdfTextEditor]
 title = "PDF szövegszerkesztő"
-desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
+desc = "Meglévő szöveg és képek szerkesztése a PDF-ekben"
 
 [home.addText]
 tags = "szöveg, megjegyzés, címke"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Rajzolt aláírás"
 defaultImageLabel = "Feltöltött aláírás"
 defaultTextLabel = "Gépelt aláírás"
 saveButton = "Aláírás mentése"
+savePersonal = "Mentés személyesként"
+saveShared = "Mentés megosztottként"
 saveUnavailable = "Előbb hozzon létre egy aláírást a mentéshez."
 noChanges = "Az aktuális aláírás már mentve van."
+tempStorageTitle = "Ideiglenes böngészőbeli tárolás"
+tempStorageDescription = "Az aláírások csak a böngészőben tárolódnak. Elvesznek, ha törli a böngészőadatokat vagy böngészőt vált."
+personalHeading = "Személyes aláírások"
+sharedHeading = "Megosztott aláírások"
+personalDescription = "Csak Ön láthatja ezeket az aláírásokat."
+sharedDescription = "Minden felhasználó láthatja és használhatja ezeket az aláírásokat."
 
 [sign.saved.type]
 canvas = "Rajz"
@@ -3441,6 +3454,9 @@ signinTitle = "Kérjük, jelentkezzen be"
 ssoSignIn = "Bejelentkezés egyszeri bejelentkezéssel"
 oAuth2AutoCreateDisabled = "OAuth2 automatikus felhasználólétrehozás letiltva"
 oAuth2AdminBlockedUser = "A nem regisztrált felhasználók regisztrációja vagy bejelentkezése jelenleg le van tiltva. Kérjük, forduljon a rendszergazdához."
+oAuth2RequiresLicense = "Az OAuth/SSO bejelentkezés fizetős licencet igényel (Server vagy Enterprise). Kérjük, lépjen kapcsolatba az adminisztrátorral a csomag frissítéséhez."
+saml2RequiresLicense = "A SAML bejelentkezés fizetős licencet igényel (Server vagy Enterprise). Kérjük, lépjen kapcsolatba az adminisztrátorral a csomag frissítéséhez."
+maxUsersReached = "Elérte az aktuális licenchez tartozó felhasználók maximális számát. Kérjük, lépjen kapcsolatba az adminisztrátorral a csomag frissítéséhez vagy további felhasználói helyek hozzáadásához."
 oauth2RequestNotFound = "A hitelesítési kérés nem található"
 oauth2InvalidUserInfoResponse = "Érvénytelen felhasználói információ válasz"
 oauth2invalidRequest = "Érvénytelen kérés"
@@ -3849,14 +3865,17 @@ fitToWidth = "Szélességhez igazítás"
 actualSize = "Tényleges méret"
 
 [viewer]
+cannotPreviewFile = "A fájl előnézete nem lehetséges"
+dualPageView = "Kétoldalas nézet"
 firstPage = "Első oldal"
 lastPage = "Utolsó oldal"
-previousPage = "Előző oldal"
 nextPage = "Következő oldal"
+onlyPdfSupported = "A megjelenítő csak PDF fájlokat támogat. Úgy tűnik, ez a fájl más formátumú."
+previousPage = "Előző oldal"
+singlePageView = "Egyoldalas nézet"
+unknownFile = "Ismeretlen fájl"
 zoomIn = "Nagyítás"
 zoomOut = "Kicsinyítés"
-singlePageView = "Egyoldalas nézet"
-dualPageView = "Kétoldalas nézet"
 
 [rightRail]
 closeSelected = "Kijelölt fájlok bezárása"
@@ -3880,6 +3899,7 @@ toggleSidebar = "Oldalsáv ki/be"
 exportSelected = "Kijelölt oldalak exportálása"
 toggleAnnotations = "Jegyzetek láthatóságának váltása"
 annotationMode = "Jegyzetelési mód váltása"
+print = "PDF nyomtatása"
 draw = "Rajzolás"
 save = "Mentés"
 saveChanges = "Változtatások mentése"
@@ -4497,6 +4517,7 @@ description = "URL vagy fájlnév az impresszumhoz (egyes joghatóságokban köt
 title = "Prémium és Vállalati"
 description = "Prémium vagy vállalati licenckulcs konfigurálása."
 license = "Licenckonfiguráció"
+noInput = "Kérjük, adjon meg egy licenckulcsot vagy fájlt"
 
 [admin.settings.premium.licenseKey]
 toggle = "Van licenckulcsa vagy tanúsítványfájlja?"
@@ -4513,6 +4534,25 @@ title = "⚠️ Figyelmeztetés: Meglévő licenc észlelve"
 line1 = "A jelenlegi licenckulcs felülírása nem vonható vissza."
 line2 = "A korábbi licenc végleg elveszik, hacsak nem készített róla máshol biztonsági másolatot."
 line3 = "Fontos: Tartsa a licenckulcsokat bizalmasan és biztonságban. Soha ne ossza meg nyilvánosan."
+
+[admin.settings.premium.inputMethod]
+text = "Licenckulcs"
+file = "Tanúsítványfájl"
+
+[admin.settings.premium.file]
+label = "Licenc tanúsítványfájl"
+description = "Töltse fel az offline vásárlásból származó .lic vagy .cert licencfájlt"
+choose = "Licencfájl kiválasztása"
+selected = "Kiválasztva: {{filename}} ({{size}})"
+successMessage = "A licencfájl feltöltése és aktiválása sikeres. Nincs szükség újraindításra."
+
+[admin.settings.premium.currentLicense]
+title = "Aktív licenc"
+file = "Forrás: licencfájl ({{path}})"
+key = "Forrás: licenckulcs"
+type = "Típus: {{type}}"
+noInput = "Adjon meg egy licenckulcsot, vagy töltsön fel tanúsítványfájlt"
+success = "Siker"
 
 [admin.settings.premium.enabled]
 label = "Prémium funkciók engedélyezése"
@@ -4647,7 +4687,9 @@ selectedCount = "{{count}} kiválasztva"
 download = "Letöltés"
 delete = "Törlés"
 unsupported = "Nem támogatott"
+active = "Aktív"
 addToUpload = "Hozzáadás a feltöltéshez"
+closeFile = "Fájl bezárása"
 deleteAll = "Összes törlése"
 loadingFiles = "Fájlok betöltése..."
 noFiles = "Nem állnak rendelkezésre fájlok"
@@ -5248,7 +5290,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Legalább egy e-mail cím megadása szükséges"
 submit = "Meghívók küldése"
 success = "felhasználó sikeresen meghívva"
-partialSuccess = "Néhány meghívó sikertelen volt"
+partialFailure = "Néhány meghívás sikertelen volt"
 allFailed = "Nem sikerült meghívni a felhasználókat"
 error = "Nem sikerült elküldeni a meghívókat"
 
@@ -5800,6 +5842,13 @@ submit = "Bejelentkezés"
 signInWith = "Bejelentkezés ezzel"
 oauthPending = "Böngésző megnyitása hitelesítéshez..."
 orContinueWith = "Vagy folytassa e-maillel"
+serverRequirement = "Megjegyzés: A szerveren engedélyezni kell a bejelentkezést."
+showInstructions = "Hogyan engedélyezhető?"
+hideInstructions = "Utasítások elrejtése"
+instructions = "A bejelentkezés engedélyezéséhez a Stirling PDF szerverén:"
+instructionsEnvVar = "Állítsa be a környezeti változót:"
+instructionsOrYml = "Vagy a settings.yml-ben:"
+instructionsRestart = "Ezután indítsa újra a szervert, hogy a módosítások életbe lépjenek."
 
 [setup.login.username]
 label = "Felhasználónév"

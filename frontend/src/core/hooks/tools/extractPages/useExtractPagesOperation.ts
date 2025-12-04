@@ -1,6 +1,6 @@
 import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { ToolType, useToolOperation, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { ExtractPagesParameters, defaultParameters } from '@app/hooks/tools/extractPages/useExtractPagesParameters';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
@@ -23,7 +23,7 @@ async function resolveSelectionToCsv(expression: string, file: File): Promise<st
 export const extractPagesOperationConfig = {
   toolType: ToolType.custom,
   operationType: 'extractPages',
-  customProcessor: async (parameters: ExtractPagesParameters, files: File[]): Promise<File[]> => {
+  customProcessor: async (parameters: ExtractPagesParameters, files: File[]): Promise<CustomProcessorResult> => {
     const outputs: File[] = [];
 
     for (const file of files) {
@@ -43,7 +43,10 @@ export const extractPagesOperationConfig = {
       outputs.push(outFile);
     }
 
-    return outputs;
+    return {
+      files: outputs,
+      consumedAllInputs: false,
+    };
   },
   defaultParameters,
 } as const;
