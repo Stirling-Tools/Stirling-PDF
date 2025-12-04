@@ -13,8 +13,6 @@ import {
   Stack,
   Switch,
   Text,
-  Title,
-  Tooltip as MantineTooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
@@ -25,7 +23,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
 import { PdfTextEditorViewData, TextGroup } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import { pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
 import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
-import ToolStep, { ToolStepProvider } from '@app/components/tools/shared/ToolStep';
+import ToolStep from '@app/components/tools/shared/ToolStep';
 import { usePdfTextEditorTips } from '@app/components/tooltips/usePdfTextEditorTips';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import LocalIcon from '@app/components/shared/LocalIcon';

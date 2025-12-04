@@ -304,8 +304,6 @@ const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean
   return isParagraphPage;
 };
 
-type GroupingMode = 'auto' | 'paragraph' | 'singleLine';
-
 const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const { t } = useTranslation();
   const { activeFiles } = useFileContext();
@@ -366,14 +364,14 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     dirtyPages,
     hasDocument,
     hasVectorPreview,
-    fileName,
+    fileName: _fileName,
     errorMessage,
-    isGeneratingPdf,
-    isSavingToWorkbench,
+    isGeneratingPdf: _isGeneratingPdf,
+    isSavingToWorkbench: _isSavingToWorkbench,
     isConverting,
     conversionProgress,
-    hasChanges,
-    forceSingleTextElement,
+    hasChanges: _hasChanges,
+    forceSingleTextElement: _forceSingleTextElement,
     groupingMode: externalGroupingMode,
     autoScaleText,
     requestPagePreview,
@@ -382,11 +380,11 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onGroupDelete,
     onImageTransform,
     onImageReset,
-    onReset,
-    onGeneratePdf,
+    onReset: _onReset,
+    onGeneratePdf: _onGeneratePdf,
     onSaveToWorkbench,
-    onForceSingleTextElementChange,
-    onGroupingModeChange,
+    onForceSingleTextElementChange: _onForceSingleTextElementChange,
+    onGroupingModeChange: _onGroupingModeChange,
     onMergeGroups,
     onUngroupGroup,
     onLoadFile,
