@@ -61,7 +61,7 @@ class TauriHttpClient {
     headers: {},
     timeout: 120000,
     responseType: 'json',
-    withCredentials: true,
+    withCredentials: false, // Desktop doesn't need credentials (backend has allowCredentials=false)
   };
 
   public interceptors: Interceptors = {
@@ -173,14 +173,15 @@ class TauriHttpClient {
     }
 
     try {
-      // Debug logging
-      console.debug(`[tauriHttpClient] Fetch request:`, { url, method });
+      // Convert withCredentials to fetch API's credentials option
+      const credentials: RequestCredentials = finalConfig.withCredentials ? 'include' : 'omit';
 
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       const response = await fetch(url, {
         method,
         headers,
         body,
+        credentials,
       });
 
       // Parse response based on responseType

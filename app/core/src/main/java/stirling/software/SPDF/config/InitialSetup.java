@@ -34,7 +34,6 @@ public class InitialSetup {
     public void init() throws IOException {
         initUUIDKey();
         initSecretKey();
-        initEnableCSRFSecurity();
         initLegalUrls();
         initSetAppVersion();
         GeneralUtils.extractPipeline();
@@ -59,19 +58,6 @@ public class InitialSetup {
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
-
-    public void initEnableCSRFSecurity() throws IOException {
-        if (GeneralUtils.isVersionHigher(
-                "0.46.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
-            Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
-            if (!csrf) {
-                GeneralUtils.saveKeyToSettings("security.csrfDisabled", false);
-                GeneralUtils.saveKeyToSettings("system.enableAnalytics", true);
-                applicationProperties.getSecurity().setCsrfDisabled(false);
-            }
-        }
-    }
-
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
@@ -95,7 +81,7 @@ public class InitialSetup {
         isNewServer =
                 existingVersion == null
                         || existingVersion.isEmpty()
-                        || existingVersion.equals("0.0.0");
+                        || "0.0.0".equals(existingVersion);
 
         String appVersion = "0.0.0";
         Resource resource = new ClassPathResource("version.properties");
