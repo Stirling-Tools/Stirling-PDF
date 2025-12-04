@@ -97,6 +97,7 @@ export const OAUTH2_PROVIDERS: Provider[] = [
     icon: 'key-rounded',
     type: 'oauth2',
     scope: 'SSO',
+    businessTier: false, // Server tier - OAuth2/OIDC SSO
     fields: [
       {
         key: 'issuer',
@@ -141,6 +142,7 @@ export const GENERIC_OAUTH2_PROVIDER: Provider = {
   icon: 'link-rounded',
   type: 'oauth2',
   scope: 'SSO',
+  businessTier: false, // Server tier - OAuth2/OIDC SSO
   fields: [
     {
       key: 'enabled',
@@ -262,8 +264,8 @@ export const SAML2_PROVIDER: Provider = {
   name: 'SAML2',
   icon: 'verified-user-rounded',
   type: 'saml2',
-  scope: 'SSO',
-  businessTier: true,
+  scope: 'SSO (SAML)',
+  businessTier: true, // Enterprise tier - SAML only
   fields: [
     {
       key: 'enabled',
