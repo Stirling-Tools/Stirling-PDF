@@ -2,7 +2,7 @@
  * File processing utilities specifically for automation workflows
  */
 
-import axios from 'axios';
+import apiClient from '@app/services/apiClient';
 import { zipFileService } from '@app/services/zipFileService';
 import { ResourceManager } from '@app/utils/resourceManager';
 import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
@@ -97,7 +97,7 @@ export class AutomationFileProcessor {
     options: AutomationProcessingOptions = {}
   ): Promise<AutomationProcessingResult> {
     try {
-      const response = await axios.post(endpoint, formData, {
+      const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || 'blob',
         timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
@@ -139,7 +139,7 @@ export class AutomationFileProcessor {
     options: AutomationProcessingOptions = {}
   ): Promise<AutomationProcessingResult> {
     try {
-      const response = await axios.post(endpoint, formData, {
+      const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || 'blob',
         timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
