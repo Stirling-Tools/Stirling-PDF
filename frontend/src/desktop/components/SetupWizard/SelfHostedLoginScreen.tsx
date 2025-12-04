@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Text } from '@mantine/core';
 import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
@@ -61,11 +62,9 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
 
       <ErrorMessage error={displayError} />
 
-      <div style={{ marginBottom: '1rem' }}>
-        <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
-          {t('setup.login.connectingTo', 'Connecting to:')} <strong>{serverUrl}</strong>
-        </p>
-      </div>
+      <Text size="sm" mb="md">
+        {t('setup.login.connectingTo', 'Connecting to:')} <Text span fw="500">{serverUrl}</Text>
+      </Text>
 
       {/* Show OAuth buttons if providers are available */}
       {enabledOAuthProviders && enabledOAuthProviders.length > 0 && (
