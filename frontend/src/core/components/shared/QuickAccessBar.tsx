@@ -7,6 +7,7 @@ import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvi
 import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
@@ -32,6 +33,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { hasUnsavedChanges } = useNavigationState();
+  const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
@@ -58,7 +61,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   // Helper function to render navigation buttons with URL support
-  const renderNavButton = (config: ButtonConfig, index: number) => {
+  const renderNavButton = (config: ButtonConfig, index: number, shouldGuardNavigation = false) => {
     const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
 
     // Check if this button has URL navigation support
@@ -67,6 +70,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       : null;
 
     const handleClick = (e?: React.MouseEvent) => {
+      // If there are unsaved changes and this button should guard navigation, show warning modal
+      if (shouldGuardNavigation && hasUnsavedChanges) {
+        e?.preventDefault();
+        navigationActions.requestNavigation(() => {
+          config.onClick();
+        });
+        return;
+      }
       if (navProps && e) {
         handleUnlessSpecialClick(e, config.onClick);
       } else {
@@ -89,7 +100,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: (e: React.MouseEvent) => handleClick(e),
             'aria-label': config.name
           } : {
-            onClick: () => handleClick(),
+            onClick: (e: React.MouseEvent) => handleClick(e),
             'aria-label': config.name
           })}
           size={isActive ? 'lg' : 'md'}
@@ -222,7 +233,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <Stack gap="lg" align="center">
             {mainButtons.map((config, index) => (
               <React.Fragment key={config.id}>
-                {renderNavButton(config, index)}
+                {renderNavButton(config, index, config.id === 'read' || config.id === 'automate')}
               </React.Fragment>
             ))}
           </Stack>

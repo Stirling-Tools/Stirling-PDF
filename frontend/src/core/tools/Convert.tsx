@@ -23,6 +23,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(convertParams.getEndpointName());
 
+  // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
+  const skipNextSelectionResetRef = useRef(false);
+  const previousSelectionRef = useRef<string>('');
+
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -33,24 +37,49 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = convertOperation.downloadUrl !== null;
+  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null;
   const settingsCollapsed = hasResults;
 
+  // When operation completes, flag the next selection change to skip reset
   useEffect(() => {
+    if (hasResults) {
+      skipNextSelectionResetRef.current = true;
+    }
+  }, [hasResults]);
+
+  // Reset results when user manually changes file selection
+  useEffect(() => {
+    const currentSelection = selectedFiles.map(f => f.fileId).sort().join(',');
+
+    if (currentSelection === previousSelectionRef.current) return; // No change
+
+    // Skip reset if this is the auto-selection after operation completed
+    // Don't analyze file types - would change parameters and trigger another reset
+    if (skipNextSelectionResetRef.current) {
+      skipNextSelectionResetRef.current = false;
+      previousSelectionRef.current = currentSelection;
+      return;
+    }
+
+    // User manually selected different files
     if (selectedFiles.length > 0) {
+      previousSelectionRef.current = currentSelection;
       convertParams.analyzeFileTypes(selectedFiles);
+      if (hasResults) {
+        convertOperation.resetResults();
+        onPreviewFile?.(null);
+      }
     } else {
-      // Only reset when there are no active files at all
-      // If there are active files but no selected files, keep current format (user filtered by format)
+      previousSelectionRef.current = '';
       if (activeFiles.length === 0) {
         convertParams.resetParameters();
       }
     }
-  }, [selectedFiles, activeFiles, convertParams.analyzeFileTypes, convertParams.resetParameters]);
+  }, [selectedFiles]);
 
   useEffect(() => {
-    // Only clear results if we're not currently processing and parameters changed
-    if (!convertOperation.isLoading) {
+    // Reset when user changes conversion parameters (but not during operation)
+    if (!convertOperation.isLoading && !skipNextSelectionResetRef.current) {
       convertOperation.resetResults();
       onPreviewFile?.(null);
     }
@@ -87,6 +116,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const handleSettingsReset = () => {
+    skipNextSelectionResetRef.current = false;
     convertOperation.resetResults();
     onPreviewFile?.(null);
   };

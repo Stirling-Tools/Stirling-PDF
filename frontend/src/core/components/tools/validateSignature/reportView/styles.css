@@ -44,15 +44,15 @@
 .simulated-page {
   width: min(820px, 100%);
   min-height: 1040px;
-  background-color: rgb(var(--pdf-light-simulated-page-bg)) !important;
-  box-shadow: 0 12px 32px rgba(var(--pdf-light-simulated-page-text), 0.12) !important;
+  background-color: var(--bg-raised) !important;
+  box-shadow: 0 12px 32px var(--shadow-color) !important;
   border-radius: 12px !important;
   padding: 48px 56px !important;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Container for the interactive report view */
@@ -67,12 +67,12 @@
 
 /* Keep field blocks stable colors across themes */
 .field-value {
-  border: 1px solid rgb(var(--pdf-light-box-border)) !important;
-  background-color: rgb(var(--pdf-light-box-bg)) !important;
+  border: 1px solid var(--border-default) !important;
+  background-color: var(--bg-raised) !important;
 }
 
 .field-container {
-  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Thumbnail preview styles */
@@ -102,4 +102,29 @@
   justify-content: center;
   color: rgb(var(--pdf-light-text-muted));
   background: linear-gradient(145deg, var(--mantine-color-gray-1) 0%, var(--mantine-color-gray-0) 100%);
+}
+
+/* Flash highlight animation for section navigation */
+@keyframes section-flash {
+  0% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+  20% {
+    background-color: rgba(255, 235, 59, 0.35);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+  }
+  50% {
+    background-color: rgba(255, 235, 59, 0.25);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+  }
+  100% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+}
+
+.section-flash-highlight {
+  animation: section-flash 1.5s ease-out;
+  border-radius: 8px;
 }

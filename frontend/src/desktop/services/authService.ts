@@ -25,6 +25,7 @@ export class AuthService {
   private static instance: AuthService;
   private authStatus: AuthStatus = 'unauthenticated';
   private userInfo: UserInfo | null = null;
+  private cachedToken: string | null = null;
   private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
 
   static getInstance(): AuthService {
@@ -38,13 +39,32 @@ export class AuthService {
    * Save token to all storage locations and notify listeners
    */
   private async saveTokenEverywhere(token: string): Promise<void> {
-    // Save to Tauri store
-    await invoke('save_auth_token', { token });
-    console.log('[Desktop AuthService] Token saved to Tauri store');
+    // Validate token before caching
+    if (!token || token.trim().length === 0) {
+      console.warn('[Desktop AuthService] Attempted to save invalid/empty token');
+      throw new Error('Invalid token');
+    }
 
-    // Sync to localStorage for web layer
-    localStorage.setItem('stirling_jwt', token);
-    console.log('[Desktop AuthService] Token saved to localStorage');
+    try {
+      // Save to Tauri store
+      await invoke('save_auth_token', { token });
+      console.log('[Desktop AuthService] ✅ Token saved to Tauri store');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to save token to Tauri store:', error);
+      // Don't throw - we can still use localStorage
+    }
+
+    try {
+      // Sync to localStorage for web layer
+      localStorage.setItem('stirling_jwt', token);
+      console.log('[Desktop AuthService] ✅ Token saved to localStorage');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to save token to localStorage:', error);
+    }
+
+    // Cache the valid token in memory
+    this.cachedToken = token;
+    console.log('[Desktop AuthService] ✅ Token cached in memory');
 
     // Notify other parts of the system
     window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -56,20 +76,25 @@ export class AuthService {
    */
   private async getTokenFromAnySource(): Promise<string | null> {
     // Try Tauri store first
-    console.log('[Desktop AuthService] Retrieving token from Tauri store...');
-    const token = await invoke<string | null>('get_auth_token');
+    try {
+      const token = await invoke<string | null>('get_auth_token');
 
-    if (token) {
-      console.log(`[Desktop AuthService] Token found in Tauri store (length: ${token.length})`);
-      return token;
+      if (token) {
+        console.log(`[Desktop AuthService] ✅ Token found in Tauri store (length: ${token.length})`);
+        return token;
+      }
+
+      console.log('[Desktop AuthService] ℹ️ No token in Tauri store, checking localStorage...');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to read from Tauri store:', error);
     }
-
-    console.log('[Desktop AuthService] No token in Tauri store');
 
     // Fallback to localStorage
     const localStorageToken = localStorage.getItem('stirling_jwt');
     if (localStorageToken) {
-      console.log('[Desktop AuthService] Token found in localStorage (length:', localStorageToken.length, ')');
+      console.log(`[Desktop AuthService] ✅ Token found in localStorage (length: ${localStorageToken.length})`);
+    } else {
+      console.log('[Desktop AuthService] ❌ No token found in any storage');
     }
 
     return localStorageToken;
@@ -79,6 +104,10 @@ export class AuthService {
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
+    // Invalidate cache
+    this.cachedToken = null;
+    console.log('[Desktop AuthService] Cache invalidated');
+
     await invoke('clear_auth_token');
     localStorage.removeItem('stirling_jwt');
   }
@@ -183,7 +212,22 @@ export class AuthService {
 
   async getAuthToken(): Promise<string | null> {
     try {
-      return await this.getTokenFromAnySource();
+      // Return cached token if available
+      if (this.cachedToken) {
+        console.debug('[Desktop AuthService] ✅ Returning cached token');
+        return this.cachedToken;
+      }
+
+      console.debug('[Desktop AuthService] Cache miss, fetching from storage...');
+      const token = await this.getTokenFromAnySource();
+
+      // Cache the token if valid
+      if (token && token.trim().length > 0) {
+        this.cachedToken = token;
+        console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
+      }
+
+      return token;
     } catch (error) {
       console.error('[Desktop AuthService] Failed to get auth token:', error);
       return null;
