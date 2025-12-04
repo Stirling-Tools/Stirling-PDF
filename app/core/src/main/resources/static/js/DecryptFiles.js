@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 function formatProblemDetailsJson(input) {
   try {
     const obj = typeof input === 'string' ? JSON.parse(input) : input;
@@ -238,7 +244,7 @@ export class DecryptFile {
         return {isEncrypted: false, requiresPassword: false};
       }
 
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
 
       const arrayBuffer = await file.arrayBuffer();
       const arrayBufferForPdfLib = arrayBuffer.slice(0);
@@ -246,12 +252,14 @@ export class DecryptFile {
 
       if(this.decryptWorker == null){
         loadingTask = pdfjsLib.getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
           data: arrayBuffer,
         });
         this.decryptWorker = loadingTask._worker
 
       }else {
         loadingTask = pdfjsLib.getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
           data: arrayBuffer,
           worker: this.decryptWorker
         });
