@@ -1,4 +1,4 @@
-use keyring::Entry;
+use keyring::{Entry};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
@@ -21,53 +21,70 @@ pub struct UserInfo {
 }
 
 fn get_keyring_entry() -> Result<Entry, String> {
-    Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
-        .map_err(|e| format!("Failed to access keyring: {}", e))
+    log::debug!("Creating keyring entry with service='{}' username='{}'", KEYRING_SERVICE, KEYRING_TOKEN_KEY);
+    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
+        .map_err(|e| {
+            log::error!("Failed to create keyring entry: {}", e);
+            format!("Failed to access keyring: {}", e)
+        })?;
+    log::debug!("Keyring entry created successfully");
+    Ok(entry)
 }
 
 #[tauri::command]
 pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    log::info!("Saving auth token to keyring");
+    if token.is_empty() {
+        log::warn!("Attempted to save empty auth token");
+        return Err("Token cannot be empty".to_string());
+    }
 
     let entry = get_keyring_entry()?;
 
     entry
         .set_password(&token)
-        .map_err(|e| format!("Failed to save token to keyring: {}", e))?;
+        .map_err(|e| {
+            log::error!("Failed to set password in keyring: {}", e);
+            format!("Failed to save token to keyring: {}", e)
+        })?;
 
-    log::info!("Auth token saved successfully");
+    // Verify the save worked
+    match entry.get_password() {
+        Ok(retrieved_token) => {
+            if retrieved_token != token {
+                log::error!("Token verification failed: Retrieved token doesn't match");
+                return Err("Token verification failed after save".to_string());
+            }
+        }
+        Err(e) => {
+            log::error!("Token verification failed: {}", e);
+            return Err(format!("Token verification failed: {}", e));
+        }
+    }
+
     Ok(())
 }
 
 #[tauri::command]
 pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
-    log::debug!("Retrieving auth token from keyring");
-
     let entry = get_keyring_entry()?;
 
     match entry.get_password() {
         Ok(token) => Ok(Some(token)),
         Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(format!("Failed to retrieve token: {}", e)),
+        Err(e) => {
+            log::error!("Failed to retrieve token from keyring: {}", e);
+            Err(format!("Failed to retrieve token: {}", e))
+        },
     }
 }
 
 #[tauri::command]
 pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing auth token from keyring");
-
     let entry = get_keyring_entry()?;
 
     // Delete the token - ignore error if it doesn't exist
     match entry.delete_credential() {
-        Ok(_) => {
-            log::info!("Auth token cleared successfully");
-            Ok(())
-        }
-        Err(keyring::Error::NoEntry) => {
-            log::info!("Auth token was already cleared");
-            Ok(())
-        }
+        Ok(_) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(e) => Err(format!("Failed to clear token: {}", e)),
     }
 }
@@ -78,8 +95,6 @@ pub async fn save_user_info(
     username: String,
     email: Option<String>,
 ) -> Result<(), String> {
-    log::info!("Saving user info for: {}", username);
-
     let user_info = UserInfo { username, email };
 
     let store = app_handle
@@ -96,7 +111,6 @@ pub async fn save_user_info(
         .save()
         .map_err(|e| format!("Failed to save store: {}", e))?;
 
-    log::info!("User info saved successfully");
     Ok(())
 }
 
@@ -117,8 +131,6 @@ pub async fn get_user_info(app_handle: AppHandle) -> Result<Option<UserInfo>, St
 
 #[tauri::command]
 pub async fn clear_user_info(app_handle: AppHandle) -> Result<(), String> {
-    log::info!("Clearing user info");
-
     let store = app_handle
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
@@ -129,7 +141,6 @@ pub async fn clear_user_info(app_handle: AppHandle) -> Result<(), String> {
         .save()
         .map_err(|e| format!("Failed to save store: {}", e))?;
 
-    log::info!("User info cleared successfully");
     Ok(())
 }
 
@@ -186,12 +197,8 @@ pub async fn login(
     supabase_key: String,
     saas_server_url: String,
 ) -> Result<LoginResponse, String> {
-    log::info!("Login attempt for user: {} to server: {}", username, server_url);
-
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
-    // Compare against the configured SaaS server URL
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
-    log::info!("Authentication type: {}", if is_supabase { "Supabase (SaaS)" } else { "Spring Boot (Self-hosted)" });
 
     // Create HTTP client
     let client = reqwest::Client::new();
@@ -247,8 +254,6 @@ pub async fn login(
             .and_then(|m| m.full_name.clone())
             .or_else(|| email.clone())
             .unwrap_or_else(|| username);
-
-        log::info!("Supabase login successful for user: {}", username);
 
         Ok(LoginResponse {
             token: login_response.access_token,

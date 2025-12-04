@@ -5901,6 +5901,7 @@ subtitle = "Sign in with your Stirling account"
 [setup.selfhosted]
 title = "Sign in to Server"
 subtitle = "Enter your server credentials"
+link = "or connect to a self-hosted account"
 
 [setup.server]
 title = "Connect to Server"
@@ -5919,6 +5920,14 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 emptyUrl = "Please enter a server URL"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
+configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+
+[setup.server.error.securityDisabled]
+title = "Login Not Enabled"
+body = "This server does not have login enabled. To connect to this server, you must enable authentication:"
+step1 = "Set DOCKER_ENABLE_SECURITY=true in your environment"
+step2 = "Or set security.enableLogin=true in settings.yml"
+step3 = "Restart the server"
 
 [setup.login]
 title = "Sign In"
