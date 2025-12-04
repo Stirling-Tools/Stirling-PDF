@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  Accordion,
   ActionIcon,
   Alert,
   Badge,
@@ -14,18 +13,12 @@ import {
   Pagination,
   Progress,
   ScrollArea,
-  SegmentedControl,
   Stack,
-  Switch,
   Text,
-  Title,
   Tooltip,
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
-import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
-import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -34,7 +27,6 @@ import MergeTypeIcon from '@mui/icons-material/MergeType';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UploadFileIcon from '@mui/icons-material/UploadFileOutlined';
-import SaveIcon from '@mui/icons-material/SaveOutlined';
 import { Rnd } from 'react-rnd';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
@@ -46,7 +38,6 @@ import {
   TextGroup,
 } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import { getImageBounds, pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
-import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
 
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
@@ -327,9 +318,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const rndRefs = useRef<Map<string, any>>(new Map());
   const pendingDragUpdateRef = useRef<number | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
-  const [autoScaleText, setAutoScaleText] = useState(true);
   const [textScales, setTextScales] = useState<Map<string, number>>(new Map());
-  const [pendingModeChange, setPendingModeChange] = useState<GroupingMode | null>(null);
   const measurementKeyRef = useRef<string>('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -386,6 +375,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     hasChanges,
     forceSingleTextElement,
     groupingMode: externalGroupingMode,
+    autoScaleText,
     requestPagePreview,
     onSelectPage,
     onGroupEdit,
@@ -393,7 +383,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onImageTransform,
     onImageReset,
     onReset,
-    onDownloadJson,
     onGeneratePdf,
     onSaveToWorkbench,
     onForceSingleTextElementChange,
@@ -426,27 +415,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       pageCount: pages.length,
     } : null,
   });
-
-  const handleModeChangeRequest = useCallback((newMode: GroupingMode) => {
-    if (hasChanges && newMode !== externalGroupingMode) {
-      // Show confirmation dialog
-      setPendingModeChange(newMode);
-    } else {
-      // No changes, switch immediately
-      onGroupingModeChange(newMode);
-    }
-  }, [hasChanges, externalGroupingMode, onGroupingModeChange]);
-
-  const handleConfirmModeChange = useCallback(() => {
-    if (pendingModeChange) {
-      onGroupingModeChange(pendingModeChange);
-      setPendingModeChange(null);
-    }
-  }, [pendingModeChange, onGroupingModeChange]);
-
-  const handleCancelModeChange = useCallback(() => {
-    setPendingModeChange(null);
-  }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedGroupIds(new Set());
@@ -1435,223 +1403,16 @@ const selectionToolbarPosition = useMemo(() => {
         padding: '1.5rem',
         overflow: 'hidden',
         height: '100%',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) 320px',
-        gridTemplateRows: '1fr',
-        alignItems: hasDocument ? 'start' : 'stretch',
-        gap: '1.5rem',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <Card
-        withBorder
-        radius="md"
-        shadow="xs"
-        padding="md"
-        style={{
-          gridColumn: '2 / 3',
-          gridRow: 1,
-          maxHeight: 'calc(100vh - 3rem)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}
-      >
-        <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-          <Stack gap="sm" pb="md">
-            <Group justify="space-between" align="center">
-              <Group gap="xs" align="center">
-                <DescriptionIcon fontSize="small" />
-                <Title order={3}>{t('pdfTextEditor.title', 'PDF JSON Editor')}</Title>
-                {hasChanges && <Badge color="orange" variant="light" size="sm">{t('pdfTextEditor.badges.unsaved', 'Edited')}</Badge>}
-              </Group>
-            </Group>
-
-            <Stack gap="xs">
-              <Button
-                variant="subtle"
-                leftSection={<AutorenewIcon fontSize="small" />}
-                onClick={onReset}
-                disabled={!hasDocument || isConverting}
-                fullWidth
-              >
-                {t('pdfTextEditor.actions.reset', 'Reset Changes')}
-              </Button>
-              <Button
-                variant="default"
-                leftSection={<FileDownloadIcon fontSize="small" />}
-                onClick={onDownloadJson}
-                disabled={!hasDocument || isConverting}
-                fullWidth
-              >
-                {t('pdfTextEditor.actions.downloadJson', 'Download JSON')}
-              </Button>
-              <Button
-                leftSection={<PictureAsPdfIcon fontSize="small" />}
-                onClick={onGeneratePdf}
-                loading={isGeneratingPdf}
-                disabled={!hasDocument || !hasChanges || isConverting}
-                fullWidth
-              >
-                {t('pdfTextEditor.actions.generatePdf', 'Generate PDF')}
-              </Button>
-              <Button
-                variant="filled"
-                color="green"
-                leftSection={<SaveIcon fontSize="small" />}
-                onClick={onSaveToWorkbench}
-                loading={isSavingToWorkbench}
-                disabled={!hasDocument || !hasChanges || isConverting}
-                fullWidth
-              >
-                {t('pdfTextEditor.actions.saveChanges', 'Save Changes')}
-              </Button>
-            </Stack>
-
-            {fileName && (
-              <Text size="sm" c="dimmed">
-                {t('pdfTextEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
-              </Text>
-            )}
-
-            <Divider my="xs" />
-
-            <Group justify="space-between" align="center">
-              <div>
-                <Text fw={500} size="sm">
-                  {t('pdfTextEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    'pdfTextEditor.options.autoScaleText.description',
-                    'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
-                  )}
-                </Text>
-              </div>
-              <Switch
-                size="md"
-                checked={autoScaleText}
-                onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
-              />
-            </Group>
-
-            <Stack gap="xs">
-              <Group gap={4} align="center">
-                <Text fw={500} size="sm">
-                  {t('pdfTextEditor.options.groupingMode.title', 'Text Grouping Mode')}
-                </Text>
-                {externalGroupingMode === 'auto' && isParagraphPage && (
-                  <Badge size="xs" color="blue" variant="light" key={`para-${selectedPage}`}>
-                    {t('pdfTextEditor.pageType.paragraph', 'Paragraph page')}
-                  </Badge>
-                )}
-                {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
-                  <Badge size="xs" color="gray" variant="light" key={`sparse-${selectedPage}`}>
-                    {t('pdfTextEditor.pageType.sparse', 'Sparse text')}
-                  </Badge>
-                )}
-              </Group>
-              <Text size="xs" c="dimmed">
-                {externalGroupingMode === 'auto'
-                  ? t(
-                      'pdfTextEditor.options.groupingMode.autoDescription',
-                      'Automatically detects page type and groups text appropriately.'
-                    )
-                  : externalGroupingMode === 'paragraph'
-                    ? t(
-                        'pdfTextEditor.options.groupingMode.paragraphDescription',
-                        'Groups aligned lines into multi-line paragraph text boxes.'
-                      )
-                    : t(
-                        'pdfTextEditor.options.groupingMode.singleLineDescription',
-                        'Keeps each PDF text line as a separate text box.'
-                      )}
-              </Text>
-              <SegmentedControl
-                value={externalGroupingMode}
-                onChange={(value) => handleModeChangeRequest(value as GroupingMode)}
-                data={[
-                  { label: t('pdfTextEditor.groupingMode.auto', 'Auto'), value: 'auto' },
-                  { label: t('pdfTextEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
-                  { label: t('pdfTextEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
-                ]}
-                fullWidth
-              />
-            </Stack>
-
-            <Text size="xs" c="dimmed">
-              {t(
-                'pdfTextEditor.options.manualGrouping.descriptionInline',
-                'Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A floating toolbar will appear above the selection so you can merge, ungroup, or adjust widths.',
-              )}
-            </Text>
-
-            <Group justify="space-between" align="center">
-              <div>
-                <Text fw={500} size="sm">
-                  {t('pdfTextEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    'pdfTextEditor.options.forceSingleElement.description',
-                    'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
-                  )}
-                </Text>
-              </div>
-              <Switch
-                size="md"
-                checked={forceSingleTextElement}
-                onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
-              />
-            </Group>
-
-            <Divider my="xs" />
-
-            <Accordion variant="contained">
-              <Accordion.Item value="disclaimer">
-                <Accordion.Control>
-                  <Group gap="xs" wrap="nowrap">
-                    <InfoOutlinedIcon fontSize="small" />
-                    <Text size="sm" fw={500}>
-                      {t('pdfTextEditor.disclaimer.heading', 'Preview Limitations')}
-                    </Text>
-                  </Group>
-                </Accordion.Control>
-                <Accordion.Panel>
-                  <Stack gap={4}>
-                    <Text size="xs">
-                      {t(
-                        'pdfTextEditor.disclaimer.textFocus',
-                        'This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.'
-                      )}
-                    </Text>
-                    <Text size="xs">
-                      {t(
-                        'pdfTextEditor.disclaimer.previewVariance',
-                        'Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.'
-                      )}
-                    </Text>
-                    <Text size="xs">
-                      {t(
-                        'pdfTextEditor.disclaimer.alpha',
-                        'This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.'
-                      )}
-                    </Text>
-                  </Stack>
-                </Accordion.Panel>
-              </Accordion.Item>
-            </Accordion>
-
-            {hasDocument && <FontStatusPanel document={pdfDocument} pageIndex={selectedPage} />}
-          </Stack>
-        </ScrollArea>
-      </Card>
-
       {errorMessage && (
         <Alert
           icon={<WarningAmberIcon fontSize="small" />}
           color="red"
           radius="md"
-          style={{ gridColumn: '2 / 3' }}
+          mb="md"
         >
           {errorMessage}
         </Alert>
@@ -1661,7 +1422,7 @@ const selectionToolbarPosition = useMemo(() => {
         <Stack
           align="center"
           justify="center"
-          style={{ gridColumn: '1 / 2', gridRow: 1, height: '100%' }}
+          style={{ flex: 1, height: '100%' }}
         >
           <Dropzone
             onDrop={(files) => {
@@ -1700,7 +1461,7 @@ const selectionToolbarPosition = useMemo(() => {
       )}
 
       {isConverting && (
-        <Card withBorder radius="md" padding="xl" style={{ gridColumn: '1 / 2', gridRow: 1 }}>
+        <Card withBorder radius="md" padding="xl" style={{ flex: 1 }}>
           <Stack gap="md">
             <Group justify="space-between" align="flex-start">
               <div style={{ flex: 1 }}>
@@ -1735,10 +1496,8 @@ const selectionToolbarPosition = useMemo(() => {
           gap="lg"
           className="flex-1"
           style={{
-            gridColumn: '1 / 2',
-            gridRow: 1,
             minHeight: 0,
-            height: 'calc(100vh - 3rem)',
+            flex: 1,
             overflow: 'hidden',
           }}
         >
@@ -2463,31 +2222,6 @@ const selectionToolbarPosition = useMemo(() => {
 
         </Stack>
       )}
-
-      {/* Mode Change Confirmation Modal */}
-      <Modal
-        opened={pendingModeChange !== null}
-        onClose={handleCancelModeChange}
-        title={t('pdfTextEditor.modeChange.title', 'Confirm Mode Change')}
-        centered
-      >
-        <Stack gap="md">
-          <Text>
-            {t(
-              'pdfTextEditor.modeChange.warning',
-              'Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?'
-            )}
-          </Text>
-          <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={handleCancelModeChange}>
-              {t('pdfTextEditor.modeChange.cancel', 'Cancel')}
-            </Button>
-            <Button color="red" onClick={handleConfirmModeChange}>
-              {t('pdfTextEditor.modeChange.confirm', 'Reset and Change Mode')}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
 
       {/* Navigation Warning Modal */}
       <NavigationWarningModal
