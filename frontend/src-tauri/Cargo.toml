@@ -34,7 +34,7 @@ tauri-plugin-http = "2.5.4"
 tauri-plugin-single-instance = "2.3.6"
 tauri-plugin-store = "2.4.1"
 tauri-plugin-opener = "2.5.2"
-keyring = "3.6.3"
+keyring = { version = "3.6.3", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.48", features = ["time", "sync"] }
 reqwest = { version = "0.12", features = ["json"] }
 tiny_http = "0.12"
