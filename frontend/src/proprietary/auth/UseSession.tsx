@@ -1,19 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { springAuth } from '@app/auth/springAuthClient';
-import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
-
-/**
- * Auth Context Type
- * Simplified version without SaaS-specific features (credits, subscriptions)
- */
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  error: AuthError | null;
-  signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-}
+import type { Session, AuthError, AuthChangeEvent, AuthContextType } from '@app/auth/types';
 
 const AuthContext = createContext<AuthContextType>({
   session: null,

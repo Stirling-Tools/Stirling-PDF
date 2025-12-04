@@ -15,36 +15,29 @@ export class OperationRouter {
 
   /**
    * Determines where an operation should execute
-   * @param _operation - The operation name (for future operation classification)
+   * @param url - The request URL (can be path or full URL)
    * @returns 'local' or 'remote'
    */
-  async getExecutionTarget(_operation?: string): Promise<ExecutionTarget> {
+  async getExecutionTarget(url?: string): Promise<ExecutionTarget> {
     const mode = await connectionModeService.getCurrentMode();
 
-    // Current implementation: simple mode-based routing
     if (mode === 'saas') {
-      // SaaS mode: For now, all operations run locally
-      // Future enhancement: complex operations will be sent to SaaS server
+      if (url?.includes('/api/v1/auth/')) {
+        return 'remote';
+      }
       return 'local';
     }
-
-    // In self-hosted mode, currently all operations go to remote
-    // Future enhancement: check if operation is "simple" and route to local if so
-    // Example future logic:
-    // if (mode === 'selfhosted' && operation && this.isSimpleOperation(operation)) {
-    //   return 'local';
-    // }
 
     return 'remote';
   }
 
   /**
    * Gets the base URL for an operation based on execution target
-   * @param _operation - The operation name (for future operation classification)
+   * @param url - The request URL path
    * @returns Base URL for API calls
    */
-  async getBaseUrl(_operation?: string): Promise<string> {
-    const target = await this.getExecutionTarget(_operation);
+  async getBaseUrl(url?: string): Promise<string> {
+    const target = await this.getExecutionTarget(url);
 
     if (target === 'local') {
       // Use dynamically assigned port from backend service
