@@ -2,6 +2,12 @@
 
 This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-GB golden truth file.
 
+## Current Format: TOML
+
+**Stirling PDF uses TOML format for translations** in `frontend/public/locales/{lang}/translation.toml`.
+
+**All scripts now support TOML format!**
+
 ## Quick Start - Automated Translation (RECOMMENDED)
 
 The **fastest and easiest way** to translate a language is using the automated pipeline:
@@ -451,18 +457,15 @@ python scripts/translations/translation_merger.py fr-FR apply-translations --tra
 
 ## Translation File Structure
 
-Translation files are located in `frontend/public/locales/{language}/translation.json` with nested JSON structure:
+Translation files are located in `frontend/public/locales/{language}/translation.toml` with TOML structure:
 
-```json
-{
-  "addPageNumbers": {
-    "title": "Add Page Numbers",
-    "selectText": {
-      "1": "Select PDF file:",
-      "2": "Margin Size"
-    }
-  }
-}
+```toml
+[addPageNumbers]
+title = "Add Page Numbers"
+
+[addPageNumbers.selectText]
+"1" = "Select PDF file:"
+"2" = "Margin Size"
 ```
 
 Keys use dot notation internally (e.g., `addPageNumbers.selectText.1`).
@@ -478,7 +481,7 @@ All scripts preserve placeholders like `{n}`, `{total}`, `{filename}` in transla
 ### Automatic Backups
 Scripts create timestamped backups before modifying files:
 ```
-translation.backup.20241201_143022.json
+translation.backup.20241201_143022.toml
 ```
 
 ### Context-Aware Translation
