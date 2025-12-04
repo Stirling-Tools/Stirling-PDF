@@ -5,6 +5,7 @@ export type ConnectionMode = 'saas' | 'selfhosted';
 
 export interface ServerConfig {
   url: string;
+  enabledOAuthProviders?: string[];
 }
 
 export interface ConnectionConfig {
