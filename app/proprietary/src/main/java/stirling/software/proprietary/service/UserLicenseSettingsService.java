@@ -21,6 +21,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.UserLicenseSettingsRepository;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -343,7 +344,7 @@ public class UserLicenseSettingsService {
      * @param user The user to check
      * @return true if the user can use OAuth/SAML
      */
-    public boolean isOAuthEligible(stirling.software.proprietary.security.model.User user) {
+    public boolean isOAuthEligible(User user) {
         String username = (user != null) ? user.getUsername() : "<new user>";
         log.info("OAuth eligibility check for user: {}", username);
 
@@ -385,7 +386,7 @@ public class UserLicenseSettingsService {
      * @param user The user to check
      * @return true if the user can use SAML
      */
-    public boolean isSamlEligible(stirling.software.proprietary.security.model.User user) {
+    public boolean isSamlEligible(User user) {
         String username = (user != null) ? user.getUsername() : "<new user>";
         log.info("SAML2 eligibility check for user: {}", username);
 
