@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import jakarta.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -13,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
@@ -63,9 +62,10 @@ public class ReactRoutingController {
         }
     }
 
-    @GetMapping(value = {"/", "/index.html"}, produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request)
-            throws IOException {
+    @GetMapping(
+            value = {"/", "/index.html"},
+            produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) throws IOException {
         if (indexHtmlExists && cachedIndexHtml != null) {
             return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
         }
