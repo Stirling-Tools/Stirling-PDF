@@ -69,7 +69,6 @@ fi
 # # === tessdata ===
 # # Prepare Tesseract OCR data directory.
 REAL_TESSDATA="/usr/share/tesseract-ocr/5/tessdata"
-SEC_TESSDATA="/usr/share/tessdata"
 
 log_warn() {
   echo "[init][warn] $*" >&2

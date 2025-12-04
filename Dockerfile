@@ -101,6 +101,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 # Runtime environment variables
 # ==============================================================================
 ENV DISABLE_ADDITIONAL_FEATURES=true \
+    VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
