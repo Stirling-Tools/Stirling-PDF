@@ -226,10 +226,6 @@ export default function Login() {
     );
   }
 
-  // Known OAuth providers that have dedicated backend support
-  const KNOWN_OAUTH_PROVIDERS = ['github', 'google', 'apple', 'azure', 'keycloak', 'oidc'] as const;
-  type KnownOAuthProvider = typeof KNOWN_OAUTH_PROVIDERS[number];
-
   const signInWithProvider = async (provider: string) => {
     try {
       setIsSigningIn(true);

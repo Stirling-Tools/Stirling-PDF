@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
-import OAuthButtons from './OAuthButtons';
+import OAuthButtons from '@app/routes/login/OAuthButtons';
 
 // Mock i18n
 vi.mock('react-i18next', () => ({
@@ -156,8 +156,11 @@ describe('OAuthButtons', () => {
       </TestWrapper>
     );
 
-    // Should render null/nothing
-    expect(container.firstChild).toBeNull();
+    // Should render null/nothing (excluding Mantine's style tags)
+    const hasContent = Array.from(container.children).some(
+      child => child.tagName.toLowerCase() !== 'style'
+    );
+    expect(hasContent).toBe(false);
   });
 
   it('should render multiple unknown providers with correct IDs', async () => {
