@@ -42,7 +42,7 @@ dependencies {
     api 'com.github.junrar:junrar:7.5.5' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:2.10'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0"
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 }
