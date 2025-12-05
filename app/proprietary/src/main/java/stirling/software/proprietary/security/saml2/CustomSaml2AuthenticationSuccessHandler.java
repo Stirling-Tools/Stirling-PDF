@@ -74,12 +74,18 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                 if (user != null && !licenseSettingsService.isSamlEligible(user)) {
                     // User is not grandfathered and no ENTERPRISE license - block SAML login
+                    log.warn(
+                            "SAML2 login blocked for existing user '{}' - not eligible (not grandfathered and no ENTERPRISE license)",
+                            username);
                     response.sendRedirect(
                             request.getContextPath() + "/logout?saml2RequiresLicense=true");
                     return;
                 }
             } else if (!licenseSettingsService.isSamlEligible(null)) {
                 // No existing user and no ENTERPRISE license -> block auto creation
+                log.warn(
+                        "SAML2 login blocked for new user '{}' - not eligible (no ENTERPRISE license for auto-creation)",
+                        username);
                 response.sendRedirect(
                         request.getContextPath() + "/logout?saml2RequiresLicense=true");
                 return;

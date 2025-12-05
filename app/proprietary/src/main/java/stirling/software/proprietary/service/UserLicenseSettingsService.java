@@ -21,6 +21,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.UserLicenseSettingsRepository;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -331,28 +332,45 @@ public class UserLicenseSettingsService {
     }
 
     /**
-     * Checks if a user is eligible to use OAuth authentication.
+     * Checks if a user is eligible to use OAuth/SAML authentication.
      *
      * <p>A user is eligible if:
      *
      * <ul>
      *   <li>They are grandfathered for OAuth (existing user before policy change), OR
-     *   <li>The system has a paid license (SERVER or ENTERPRISE)
+     *   <li>The system has an ENTERPRISE license (SSO is enterprise-only)
      * </ul>
      *
      * @param user The user to check
-     * @return true if the user can use OAuth
+     * @return true if the user can use OAuth/SAML
      */
-    public boolean isOAuthEligible(stirling.software.proprietary.security.model.User user) {
+    public boolean isOAuthEligible(User user) {
+        String username = (user != null) ? user.getUsername() : "<new user>";
+        log.info("OAuth eligibility check for user: {}", username);
+
         // Grandfathered users always have OAuth access
         if (user != null && user.isOauthGrandfathered()) {
             log.debug("User {} is grandfathered for OAuth", user.getUsername());
             return true;
         }
 
+        // todo: remove
+        if (user != null) {
+            log.info(
+                    "User {} is NOT grandfathered (isOauthGrandfathered={})",
+                    username,
+                    user.isOauthGrandfathered());
+        } else {
+            log.info("New user attempting OAuth login - checking license requirement");
+        }
+
         // Users can use OAuth with SERVER or ENTERPRISE license
         boolean hasPaid = hasPaidLicense();
-        log.debug("OAuth eligibility check: hasPaidLicense={}", hasPaid);
+        log.info(
+                "OAuth eligibility result: hasPaidLicense={}, user={}, eligible={}",
+                hasPaid,
+                username,
+                hasPaid);
         return hasPaid;
     }
 
@@ -369,16 +387,32 @@ public class UserLicenseSettingsService {
      * @param user The user to check
      * @return true if the user can use SAML
      */
-    public boolean isSamlEligible(stirling.software.proprietary.security.model.User user) {
+    public boolean isSamlEligible(User user) {
+        String username = (user != null) ? user.getUsername() : "<new user>";
+        log.info("SAML2 eligibility check for user: {}", username);
+
         // Grandfathered users always have SAML access
         if (user != null && user.isOauthGrandfathered()) {
-            log.debug("User {} is grandfathered for SAML", user.getUsername());
+            log.info("User {} is grandfathered for SAML2 - ELIGIBLE", username);
             return true;
+        }
+
+        if (user != null) {
+            log.info(
+                    "User {} is NOT grandfathered (isOauthGrandfathered={})",
+                    username,
+                    user.isOauthGrandfathered());
+        } else {
+            log.info("New user attempting SAML2 login - checking license requirement");
         }
 
         // Users can use SAML only with ENTERPRISE license
         boolean hasEnterprise = hasEnterpriseLicense();
-        log.debug("SAML eligibility check: hasEnterpriseLicense={}", hasEnterprise);
+        log.info(
+                "SAML2 eligibility result: hasEnterpriseLicense={}, user={}, eligible={}",
+                hasEnterprise,
+                username,
+                hasEnterprise);
         return hasEnterprise;
     }
 
@@ -521,12 +555,17 @@ public class UserLicenseSettingsService {
         if (checker == null) {
             return false;
         }
+
         License license = checker.getPremiumLicenseEnabledResult();
-        return license == License.SERVER || license == License.ENTERPRISE;
+        boolean hasPaid = (license == License.SERVER || license == License.ENTERPRISE);
+        log.info("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
+
+        return hasPaid;
     }
 
     /**
-     * Checks if the system has an ENTERPRISE license. Used for enterprise-only features like SAML.
+     * Checks if the system has an ENTERPRISE license. Used for enterprise-only features like SSO
+     * (OAuth/SAML).
      *
      * @return true if ENTERPRISE license is active
      */
@@ -535,7 +574,19 @@ public class UserLicenseSettingsService {
         if (checker == null) {
             return false;
         }
+
         License license = checker.getPremiumLicenseEnabledResult();
+        log.info(
+                "License check result: type={}, requiresEnterprise=true, hasEnterprise={}",
+                license,
+                (license == License.ENTERPRISE));
+
+        if (license != License.ENTERPRISE) {
+            log.warn(
+                    "SAML2 requires ENTERPRISE license but found: {}. SAML2 login will be blocked.",
+                    license);
+        }
+
         return license == License.ENTERPRISE;
     }
 }

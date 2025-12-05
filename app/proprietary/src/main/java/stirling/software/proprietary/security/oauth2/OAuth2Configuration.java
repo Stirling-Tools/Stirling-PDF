@@ -67,9 +67,14 @@ public class OAuth2Configuration {
         keycloakClientRegistration().ifPresent(registrations::add);
 
         if (registrations.isEmpty()) {
-            log.error("No OAuth2 provider registered");
+            log.error("No OAuth2 provider registered - check your OAuth2 configuration");
             throw new NoProviderFoundException("At least one OAuth2 provider must be configured.");
         }
+
+        log.info(
+                "OAuth2 ClientRegistrationRepository created with {} provider(s): {}",
+                registrations.size(),
+                registrations.stream().map(ClientRegistration::getRegistrationId).toList());
 
         return new InMemoryClientRegistrationRepository(registrations);
     }
@@ -165,7 +170,6 @@ public class OAuth2Configuration {
                         githubClient.getUseAsUsername());
 
         boolean isValid = validateProvider(github);
-        log.info("Initialised GitHub OAuth2 provider");
 
         return isValid
                 ? Optional.of(
@@ -208,7 +212,19 @@ public class OAuth2Configuration {
                         null,
                         null);
 
-        return !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider)
+        boolean isValid =
+                !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider);
+        if (isValid) {
+            log.info(
+                    "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
+                    name,
+                    oauth.getIssuer(),
+                    REDIRECT_URI_PATH + name);
+        } else {
+            log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
+        }
+
+        return isValid
                 ? Optional.of(
                         ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
                                 .registrationId(name)
@@ -217,7 +233,7 @@ public class OAuth2Configuration {
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + "oidc")
+                                .redirectUri(REDIRECT_URI_PATH + name)
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
