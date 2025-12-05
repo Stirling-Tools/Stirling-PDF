@@ -65,7 +65,7 @@ export function useServerExperience(): ServerExperienceValue {
   const loginEnabled = config?.enableLogin !== false;
   const configIsAdmin = Boolean(config?.isAdmin);
   const effectiveIsAdmin = configIsAdmin || (!loginEnabled && selfReportedAdmin);
-  const hasPaidLicense = config?.license === 'PRO' || config?.license === 'ENTERPRISE';
+  const hasPaidLicense = config?.license === 'SERVER' || config?.license === 'PRO' || config?.license === 'ENTERPRISE';
 
   const setSelfReportedAdmin = useCallback((value: boolean) => {
     setSelfReportedAdminState(value);

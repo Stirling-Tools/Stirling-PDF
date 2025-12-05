@@ -249,7 +249,7 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
   }, [fetchUserCounts]);
 
   const hasPaidLicense = useMemo(() => {
-    return config?.license === 'PRO' || config?.license === 'ENTERPRISE';
+    return config?.license === 'SERVER' || config?.license === 'PRO' || config?.license === 'ENTERPRISE';
   }, [config?.license]);
 
   const licenseKeyValid = useMemo(() => {
