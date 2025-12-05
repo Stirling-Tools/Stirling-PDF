@@ -354,6 +354,7 @@ public class UserLicenseSettingsService {
             return true;
         }
 
+        // todo: remove
         if (user != null) {
             log.info(
                     "User {} is NOT grandfathered (isOauthGrandfathered={})",
@@ -558,12 +559,6 @@ public class UserLicenseSettingsService {
         License license = checker.getPremiumLicenseEnabledResult();
         boolean hasPaid = (license == License.SERVER || license == License.ENTERPRISE);
         log.info("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
-
-        if (!hasPaid) {
-            log.warn(
-                    "OAuth requires SERVER or ENTERPRISE license but found: {}. OAuth login will be blocked.",
-                    license);
-        }
 
         return hasPaid;
     }

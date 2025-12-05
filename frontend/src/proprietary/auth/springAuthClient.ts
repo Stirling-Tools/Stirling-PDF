@@ -10,6 +10,7 @@
 import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -252,10 +253,10 @@ class SpringAuthClient {
    * This redirects to the Spring OAuth2 authorization endpoint
    *
    * @param params.provider - OAuth provider ID (e.g., 'github', 'google', 'authentik', 'mycompany')
-   *                          Can be any string - the backend determines available providers
+   *                          Can be any known provider or custom string - the backend determines available providers
    */
   async signInWithOAuth(params: {
-    provider: string;
+    provider: OAuthProvider;
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {

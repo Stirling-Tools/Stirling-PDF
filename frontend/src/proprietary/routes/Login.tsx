@@ -10,6 +10,7 @@ import AuthLayout from '@app/routes/authShared/AuthLayout';
 import { useBackendProbe } from '@app/hooks/useBackendProbe';
 import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -31,7 +32,7 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
-  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
@@ -226,7 +227,7 @@ export default function Login() {
     );
   }
 
-  const signInWithProvider = async (provider: string) => {
+  const signInWithProvider = async (provider: OAuthProvider) => {
     try {
       setIsSigningIn(true);
       setError(null);
