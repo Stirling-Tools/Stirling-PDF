@@ -83,6 +83,16 @@ public class ConfigController {
                     applicationProperties.getSecurity().getEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
 
+            // SSO Provider settings
+            boolean enableOAuth =
+                    applicationProperties.getSecurity().getOauth2() != null
+                            && applicationProperties.getSecurity().getOauth2().getEnabled();
+            boolean enableSaml =
+                    applicationProperties.getSecurity().getSaml2() != null
+                            && applicationProperties.getSecurity().getSaml2().getEnabled();
+            configData.put("enableOAuth", enableOAuth);
+            configData.put("enableSaml", enableSaml);
+
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();
             boolean invitesEnabled = applicationProperties.getMail().isEnableInvites();
