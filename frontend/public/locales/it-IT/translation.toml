@@ -4176,7 +4176,7 @@ description = "Traccia azioni degli utenti ed eventi di sistema per conformità 
 
 [admin.settings.security.audit.level]
 label = "Livello audit"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=SPENTO, 1=BASE, 2=STANDARD, 3=DETTAGLIATO"
 
 [admin.settings.security.audit.retentionDays]
 label = "Conservazione audit (giorni)"
@@ -5177,7 +5177,7 @@ upgrade = "Esegui upgrade ora →"
 freeTitle = "Licenza server"
 overLimitTitle = "Licenza server necessaria"
 overLimitBody = "La nostra licenza consente fino a <strong>{{freeTierLimit}}</strong> utenti gratuiti per server. Hai <strong>{{overLimitUserCopy}}</strong> utenti Stirling. Per continuare senza interruzioni, esegui l'upgrade al piano Stirling Server - <strong>posti illimitati</strong>, modifica del testo PDF e pieno controllo admin a $99/server/mese."
-freeBody = "La nostra licenza <strong>Open-Core</strong> consente fino a <strong>{{freeTierLimit}}</strong> utenti gratuiti per server. Per scalare senza interruzioni e ottenere accesso anticipato al nuovo <strong>strumento di modifica testo PDF</strong>, consigliamo il piano Stirling Server - modifica completa e <strong>posti illimitati</strong> a $99/server/mese."
+freeBody = "La nostra licenza <strong>Open-Core</strong> consente fino a <strong>{{freeTierLimit}}</strong> utenti gratuiti per server. Per scalare senza interruzioni, consigliamo il piano Stirling Server - <strong>posti illimitati</strong> e <strong>supporto SSO</strong> a $99/server/mese."
 
 [onboarding.desktopInstall]
 title = "Download"
