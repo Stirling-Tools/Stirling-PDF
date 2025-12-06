@@ -3948,7 +3948,7 @@ files = "Fișiere"
 activity = "Jurnal"
 help = "Ajutor"
 account = "Cont"
-config = "Config"
+config = "Configurare"
 settings = "Setări"
 adminSettings = "Setări admin"
 allTools = "All Tools"
@@ -4176,7 +4176,7 @@ description = "Urmărește acțiunile utilizatorilor și evenimentele de sistem 
 
 [admin.settings.security.audit.level]
 label = "Nivel audit"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=OPRIT, 1=DE BAZĂ, 2=STANDARD, 3=DETALIAT"
 
 [admin.settings.security.audit.retentionDays]
 label = "Păstrare audit (zile)"
@@ -5177,7 +5177,7 @@ upgrade = "Fă upgrade acum →"
 freeTitle = "Licență server"
 overLimitTitle = "Necesită licență de server"
 overLimitBody = "Politica noastră de licențiere permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Ai <strong>{{overLimitUserCopy}}</strong> utilizatori Stirling. Pentru a continua fără întreruperi, fă upgrade la planul Stirling Server - <strong>locuri nelimitate</strong>, editare text PDF și control complet de admin pentru $99/server/lună."
-freeBody = "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru a scala fără întreruperi și a primi acces timpuriu la noul nostru <strong>instrument de editare text PDF</strong>, recomandăm planul Stirling Server - editare completă și <strong>locuri nelimitate</strong> pentru $99/server/lună."
+freeBody = "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru scalare fără întreruperi, recomandăm planul Stirling Server - <strong>locuri nelimitate</strong> și <strong>suport SSO</strong> pentru $99/server/lună."
 
 [onboarding.desktopInstall]
 title = "Descărcare"
@@ -5984,7 +5984,7 @@ warnings = "Avertizări"
 suggestions = "Note"
 currentPageFonts = "Fonturi pe această pagină"
 allFonts = "Toate fonturile"
-fallback = "fallback"
+fallback = "rezervă"
 missing = "lipsește"
 perfectMessage = "Toate fonturile pot fi redate perfect."
 warningMessage = "Unele fonturi pot să nu fie redate corect."

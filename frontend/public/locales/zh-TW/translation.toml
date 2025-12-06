@@ -5177,7 +5177,7 @@ upgrade = "立即升級 →"
 freeTitle = "伺服器授權"
 overLimitTitle = "需要伺服器授權"
 overLimitBody = "我們的授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。你有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 使用者。若要不中斷使用，請升級至 Stirling Server 方案 - <strong>不限席次</strong>、PDF 文字編輯，以及完整管理控制，每台伺服器 $99/月。"
-freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充並搶先體驗全新的 <strong>PDF 文字編輯工具</strong>，建議升級至 Stirling Server 方案 - 完整編輯與 <strong>不限席次</strong>，每台伺服器 $99/月。"
+freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充，我們建議選用 Stirling Server 方案 - <strong>不限席次</strong> 與 <strong>SSO 支援</strong>，每伺服器每月 $99。"
 
 [onboarding.desktopInstall]
 title = "下載"

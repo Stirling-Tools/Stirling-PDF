@@ -5177,7 +5177,7 @@ upgrade = "İndi yüksəlt →"
 freeTitle = "Server lisenziyası"
 overLimitTitle = "Server lisenziyası tələb olunur"
 overLimitBody = "Lisenziyalaşmamız hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Sizdə <strong>{{overLimitUserCopy}}</strong> Stirling istifadəçisi var. Fasiləsiz davam etmək üçün Stirling Server planına yüksəldin - <strong>limitsiz yerlər</strong>, PDF mətn redaktəsi və tam admin nəzarəti cəmi $99/server/ay."
-freeBody = "Bizim <strong>Open-Core</strong> lisenziyası hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslanmaq və yeni <strong>PDF mətn redaktəsi alətimizə</strong> erkən çıxış əldə etmək üçün Stirling Server planını tövsiyə edirik — tam redaktə və <strong>limitsiz yerlər</strong> $99/server/ay."
+freeBody = "Bizim <strong>Open-Core</strong> lisenziyalaşdırmamız hər server üçün pulsuz olaraq ən çox <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslama üçün Stirling Server planını tövsiyə edirik - <strong>limitsiz yerlər</strong> və <strong>SSO dəstəyi</strong> $99/server/ay."
 
 [onboarding.desktopInstall]
 title = "Yüklə"

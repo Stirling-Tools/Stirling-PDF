@@ -301,7 +301,7 @@ saveSettings = "Lưu cài đặt thao tác"
 pipelineNamePrompt = "Nhập tên pipeline tại đây"
 selectOperation = "Chọn thao tác"
 addOperationButton = "Thêm thao tác"
-pipelineHeader = "Pipeline:"
+pipelineHeader = "Chuỗi xử lý:"
 saveButton = "Tải xuống"
 validateButton = "Xác thực"
 
@@ -5177,7 +5177,7 @@ upgrade = "Nâng cấp ngay →"
 freeTitle = "Giấy phép Server"
 overLimitTitle = "Cần giấy phép Server"
 overLimitBody = "Giấy phép của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Bạn có <strong>{{overLimitUserCopy}}</strong> người dùng Stirling. Để tiếp tục không gián đoạn, hãy nâng cấp lên gói Stirling Server - <strong>số ghế không giới hạn</strong>, chỉnh sửa văn bản PDF và toàn quyền quản trị với $99/server/tháng."
-freeBody = "Giấy phép <strong>Open-Core</strong> của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Để mở rộng không gián đoạn và truy cập sớm <strong>công cụ chỉnh sửa văn bản PDF</strong> mới, chúng tôi khuyến nghị gói Stirling Server - chỉnh sửa đầy đủ và <strong>số ghế không giới hạn</strong> với $99/server/tháng."
+freeBody = "Giấy phép <strong>Open-Core</strong> của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí cho mỗi máy chủ. Để mở rộng quy mô liền mạch, chúng tôi khuyến nghị gói Stirling Server - <strong>số lượng người dùng không giới hạn</strong> và <strong>hỗ trợ SSO</strong> với giá $99/máy chủ/tháng."
 
 [onboarding.desktopInstall]
 title = "Tải xuống"

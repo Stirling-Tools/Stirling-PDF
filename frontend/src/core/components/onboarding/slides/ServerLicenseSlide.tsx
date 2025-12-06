@@ -39,7 +39,7 @@ export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlide
       components={{
         strong: <strong />,
       }}
-      defaults="Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+      defaults="Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
     />
   );
 

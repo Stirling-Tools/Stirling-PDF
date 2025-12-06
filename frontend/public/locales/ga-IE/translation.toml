@@ -5177,7 +5177,7 @@ upgrade = "Uasghrádaigh anois →"
 freeTitle = "Ceadúnas Freastalaí"
 overLimitTitle = "Ceadúnas Freastalaí de dhíth"
 overLimitBody = "Ceadaíonn ár gceadúnú suas le <strong>{{freeTierLimit}}</strong> úsáideoir in aisce in aghaidh freastalaí. Tá <strong>{{overLimitUserCopy}}</strong> úsáideoir Stirling agat. Chun leanúint gan bhriseadh, uasghrádaigh go plean Freastalaí Stirling - <strong>suíocháin neamhtheoranta</strong>, eagarthóireacht téacs PDF, agus lánrialú riaracháin ar $99/freastalaí/mí."
-freeBody = "Ceadaíonn ár gceadúnú <strong>Open-Core</strong> suas le <strong>{{freeTierLimit}}</strong> úsáideoir in aisce in aghaidh freastalaí. Chun méadú gan bhriseadh agus rochtain luath a fháil ar ár <strong>uirlis eagarthóireachta téacs PDF</strong> nua, molaimid Plean Freastalaí Stirling - eagarthóireacht iomlán agus <strong>suíocháin neamhtheoranta</strong> ar $99/freastalaí/mí."
+freeBody = "Ceadaíonn ár gceadúnú <strong>Open-Core</strong> suas le <strong>{{freeTierLimit}}</strong> úsáideoirí saor in aisce in aghaidh an fhreastalaí. Chun scálú gan bhriseadh, molaimid an plean Stirling Server - <strong>suíocháin neamhtheoranta</strong> agus <strong>tacaíocht SSO</strong> ar $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Íoslódáil"
@@ -5333,8 +5333,8 @@ emailDisabled = "Teastaíonn cumraíocht SMTP agus mail.enableInvites=true sna s
 [workspace.people.license]
 users = "úsáideoirí"
 availableSlots = "Áiteanna Ar Fáil"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
+grandfathered = "Ceadaithe roimhe seo"
+grandfatheredShort = "{{count}} ceadaithe roimhe seo"
 fromLicense = "ón gceadúnas"
 slotsAvailable = "{{count}} áit(í) úsáideora ar fáil"
 noSlotsAvailable = "Níl aon áiteanna ar fáil"

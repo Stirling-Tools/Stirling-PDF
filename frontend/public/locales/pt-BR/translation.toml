@@ -5177,7 +5177,7 @@ upgrade = "Fazer upgrade agora →"
 freeTitle = "Licença do servidor"
 overLimitTitle = "Necessária licença do servidor"
 overLimitBody = "Nossa licença permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Você tem <strong>{{overLimitUserCopy}}</strong> usuários do Stirling. Para continuar sem interrupções, faça upgrade para o plano Stirling Server - <strong>assentos ilimitados</strong>, edição de texto em PDF e controle total de admin por US$ 99/servidor/mês."
-freeBody = "Nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Para escalar sem interrupções e ter acesso antecipado à nova <strong>ferramenta de edição de texto em PDF</strong>, recomendamos o plano Stirling Server - edição completa e <strong>assentos ilimitados</strong> por US$ 99/servidor/mês."
+freeBody = "Nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> usuários gratuitos por servidor. Para escalar sem interrupções, recomendamos o plano Stirling Server - <strong>assentos ilimitados</strong> e <strong>suporte a SSO</strong> por US$ 99/servidor/mês."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5586,7 +5586,7 @@ emailInvalid = "Digite um endereço de e-mail válido"
 title = "Informe seu e-mail"
 description = "Usaremos isso para enviar sua chave de licença e recibos."
 emailLabel = "Endereço de e-mail"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "seu@email.com"
 continue = "Continuar"
 modalTitle = "Começar - {{planName}}"
 

@@ -5177,7 +5177,7 @@ upgrade = "Atualizar agora →"
 freeTitle = "Licença do servidor"
 overLimitTitle = "É necessária licença de servidor"
 overLimitBody = "A nossa licença permite até <strong>{{freeTierLimit}}</strong> utilizadores gratuitos por servidor. Tem <strong>{{overLimitUserCopy}}</strong> utilizadores Stirling. Para continuar sem interrupções, atualize para o plano Stirling Server - <strong>lugares ilimitados</strong>, edição de texto em PDF e controlo total de administração por $99/servidor/mês."
-freeBody = "A nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> utilizadores gratuitos por servidor. Para escalar sem interrupções e obter acesso antecipado à nossa nova <strong>ferramenta de edição de texto PDF</strong>, recomendamos o plano Stirling Server - edição completa e <strong>lugares ilimitados</strong> por $99/servidor/mês."
+freeBody = "O nosso licenciamento <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> utilizadores gratuitos por servidor. Para escalar sem interrupções, recomendamos o plano Stirling Server - <strong>lugares ilimitados</strong> e <strong>suporte SSO</strong> por $99/servidor/mês."
 
 [onboarding.desktopInstall]
 title = "Transferir"

@@ -363,7 +363,7 @@ connections = "Connexions"
 
 [settings.licensingAnalytics]
 title = "Licences et analyses"
-plan = "Plan"
+plan = "Forfait"
 audit = "Audit"
 usageAnalytics = "Analyses d'utilisation"
 
@@ -4550,7 +4550,7 @@ successMessage = "Fichier de licence téléversé et activé avec succès. Aucun
 title = "Licence active"
 file = "Source: Fichier de licence ({{path}})"
 key = "Source: Clé de licence"
-type = "Type: {{type}}"
+type = "Type : {{type}}"
 noInput = "Veuillez fournir une clé de licence ou téléverser un fichier de certificat"
 success = "Succès"
 
@@ -5177,7 +5177,7 @@ upgrade = "Mettre à niveau maintenant →"
 freeTitle = "Licence serveur"
 overLimitTitle = "Licence serveur requise"
 overLimitBody = "Notre licence autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Vous avez <strong>{{overLimitUserCopy}}</strong> utilisateurs Stirling. Pour continuer sans interruption, passez au plan Stirling Server — <strong>places illimitées</strong>, édition de texte PDF et contrôle d’administration complet pour 99 $/serveur/mois."
-freeBody = "Notre licence <strong>Open-Core</strong> autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Pour évoluer sans interruption et accéder en avant-première à notre nouvel <strong>outil d’édition de texte PDF</strong>, nous recommandons le plan Stirling Server — édition complète et <strong>places illimitées</strong> pour 99 $/serveur/mois."
+freeBody = "Notre régime de licence <strong>Open-Core</strong> autorise jusqu'à <strong>{{freeTierLimit}}</strong> utilisateurs gratuitement par serveur. Pour évoluer sans interruption, nous recommandons le forfait Stirling Server - <strong>places illimitées</strong> et <strong>prise en charge du SSO</strong> pour 99 $/serveur/mois."
 
 [onboarding.desktopInstall]
 title = "Télécharger"
@@ -5892,7 +5892,7 @@ paragraph = "Page de paragraphe"
 sparse = "Texte clairsemé"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatique"
 paragraph = "Paragraphe"
 singleLine = "Ligne unique"
 
