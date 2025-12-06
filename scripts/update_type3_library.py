@@ -17,14 +17,21 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SIGNATURES = REPO_ROOT / "docs" / "type3" / "signatures"
 DEFAULT_INDEX = (
-    REPO_ROOT / "app" / "core" / "src" / "main" / "resources" / "type3" / "library" / "index.json"
+    REPO_ROOT
+    / "app"
+    / "core"
+    / "src"
+    / "main"
+    / "resources"
+    / "type3"
+    / "library"
+    / "index.json"
 )
 
 
@@ -136,7 +143,12 @@ def update_library(
                 entry = alias_index[alias]
 
             if entry is None:
-                unmatched.append((font.get("baseName") or font.get("alias_raw") or "unknown", sig_file))
+                unmatched.append(
+                    (
+                        font.get("baseName") or font.get("alias_raw") or "unknown",
+                        sig_file,
+                    )
+                )
                 continue
 
             entry_modified = False
@@ -186,7 +198,9 @@ def update_library(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Update Type3 library index using signature dumps.")
+    parser = argparse.ArgumentParser(
+        description="Update Type3 library index using signature dumps."
+    )
     parser.add_argument(
         "--signatures-dir",
         type=Path,
@@ -209,7 +223,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    signatures_dir = args.signatures_dir if args.signatures_dir.is_absolute() else (REPO_ROOT / args.signatures_dir)
+    signatures_dir = (
+        args.signatures_dir
+        if args.signatures_dir.is_absolute()
+        else (REPO_ROOT / args.signatures_dir)
+    )
     index_path = args.index if args.index.is_absolute() else (REPO_ROOT / args.index)
 
     if not signatures_dir.exists():
