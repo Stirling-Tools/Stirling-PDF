@@ -106,6 +106,11 @@ jobs:
           # - libxtst-dev: X11 testing extensions for input simulation
           # - libxrandr-dev: X11 RandR extension for display configuration
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
+          
+      - name: Install macOS DMG tooling
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          brew list create-dmg >/dev/null 2>&1 || brew install create-dmg
 
       - name: Install dependencies (appimage only)
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
