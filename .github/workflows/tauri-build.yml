@@ -16,10 +16,10 @@ on:
   pull_request:
     branches: [main, V2, V2-tauri-windows]
     paths:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src/desktop/**'
-      - 'frontend/tsconfig.desktop.json'
-      - '.github/workflows/tauri-build.yml'
+      - "frontend/src-tauri/**"
+      - "frontend/src/desktop/**"
+      - "frontend/tsconfig.desktop.json"
+      - ".github/workflows/tauri-build.yml"
   push:
     branches: [main, V2]
 
@@ -89,7 +89,7 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' && matrix.name != 'linux-x86_64-appimage'
         run: |
@@ -106,7 +106,7 @@ jobs:
           # - libxtst-dev: X11 testing extensions for input simulation
           # - libxrandr-dev: X11 RandR extension for display configuration
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
-          
+
       - name: Install macOS DMG tooling
         if: startsWith(matrix.platform, 'macos')
         run: |
@@ -116,7 +116,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
-          
+
           sudo apt-get install -y \
             build-essential \
             curl \
@@ -150,7 +150,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
@@ -189,15 +189,15 @@ jobs:
           # Find the built JAR
           STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
           echo "✅ Built JAR: $STIRLING_JAR"
-          
+
           # Create Tauri directories
           mkdir -p ./frontend/src-tauri/libs
           mkdir -p ./frontend/src-tauri/runtime
-          
+
           # Copy JAR to Tauri libs
           cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
           echo "✅ JAR copied to Tauri libs"
-          
+
           # Analyze JAR dependencies for jlink modules
           echo "🔍 Analyzing JAR dependencies..."
           if command -v jdeps &> /dev/null; then
@@ -213,14 +213,14 @@ jobs:
             echo "⚠️ jdeps not available, using predefined modules"
             MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
           fi
-          
+
           # Create custom JRE with jlink (always rebuild)
           echo "🔧 Creating custom JRE with jlink..."
           echo "📋 Using modules: $MODULES"
-          
+
           # Remove any existing JRE
           rm -rf ./frontend/src-tauri/runtime/jre
-          
+
           # Create the custom JRE
           jlink \
             --add-modules "$MODULES" \
@@ -229,12 +229,12 @@ jobs:
             --no-header-files \
             --no-man-pages \
             --output ./frontend/src-tauri/runtime/jre
-          
+
           if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
             echo "❌ Failed to create JLink runtime"
             exit 1
           fi
-          
+
           # Test the bundled runtime
           if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
             RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
@@ -243,7 +243,7 @@ jobs:
             echo "❌ Custom JRE executable not found"
             exit 1
           fi
-          
+
           # Calculate runtime size
           RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
           echo "📊 Custom JRE size: $RUNTIME_SIZE"
@@ -692,7 +692,7 @@ jobs:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
           retention-days: 7
- 
+
       - name: Verify build artifacts
         shell: bash
         run: |

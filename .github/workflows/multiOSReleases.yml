@@ -197,11 +197,16 @@ jobs:
           # - libxrandr-dev: X11 RandR extension for display configuration
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
 
+      - name: Install macOS DMG tooling
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          brew list create-dmg >/dev/null 2>&1 || brew install create-dmg
+
       - name: Install dependencies (appimage only)
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
-          
+
           sudo apt-get install -y \
             build-essential \
             curl \
@@ -437,6 +442,17 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
+      - name: Check DMG creation dependencies (macOS only)
+        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        run: |
+          echo "🔍 Checking DMG creation dependencies on ${{ matrix.platform }}..."
+          echo "hdiutil version: $(hdiutil --version || echo 'NOT FOUND')"
+          echo "create-dmg availability: $(which create-dmg || echo 'NOT FOUND')"
+          echo "Available disk space: $(df -h /tmp | tail -1)"
+          echo "macOS version: $(sw_vers -productVersion)"
+          echo "Available tools:"
+          ls -la /usr/bin/hd* || echo "No hd* tools found"
+
       - name: Generate temporary GPG key for AppImage
         if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
         run: |
@@ -593,9 +609,12 @@ jobs:
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
-          else
+          elif [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          else
+            echo "Unknown platform: ${{ matrix.platform }}"
           fi
 
       - name: Upload build artifacts
