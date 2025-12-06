@@ -193,7 +193,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                     size="sm"
                     color={updateSummary.max_priority === 'urgent' ? 'red' : 'blue'}
                     onClick={() => setUpdateModalOpened(true)}
-                    leftSection={<LocalIcon icon="system-update-rounded" width="1rem" height="1rem" />}
+                    leftSection={<LocalIcon icon="system-update-alt-rounded" width="1rem" height="1rem" />}
                   >
                     {t('settings.general.updates.viewDetails', 'View Details')}
                   </Button>

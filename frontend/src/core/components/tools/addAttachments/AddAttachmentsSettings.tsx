@@ -42,7 +42,7 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
           component="label"
           htmlFor="attachments-input"
           disabled={disabled}
-          leftSection={<LocalIcon icon="plus" width="14" height="14" />}
+          leftSection={<LocalIcon icon="add" width="14" height="14" />}
         >
           {parameters.attachments?.length > 0
             ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
