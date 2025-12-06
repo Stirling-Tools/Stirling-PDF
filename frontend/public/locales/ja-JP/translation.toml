@@ -5177,7 +5177,7 @@ upgrade = "今すぐアップグレード →"
 freeTitle = "サーバーライセンス"
 overLimitTitle = "サーバーライセンスが必要です"
 overLimitBody = "当社のライセンスでは、サーバーごとに <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。現在 <strong>{{overLimitUserCopy}}</strong> の Stirling ユーザーがいます。中断なく利用を続けるには、Stirling Server プランにアップグレードしてください - <strong>無制限席数</strong>、PDF テキスト編集、完全な管理機能が $99/サーバー/月 です。"
-freeBody = "当社の <strong>オープンコア</strong> ライセンスでは、サーバーごとに最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。中断なく拡張し、新しい <strong>PDF テキスト編集ツール</strong> に早期アクセスするには、Stirling Server プランをお勧めします。完全編集と <strong>無制限席数</strong> が $99/サーバー/月 です。"
+freeBody = "当社の<strong>Open-Core</strong>ライセンスでは、サーバーごとに最大<strong>{{freeTierLimit}}</strong>ユーザーまで無料でご利用いただけます。中断なくスケールするには、Stirling Server プランをおすすめします - <strong>無制限の席数</strong>と<strong>SSO サポート</strong>で $99/サーバー/月。"
 
 [onboarding.desktopInstall]
 title = "ダウンロード"
