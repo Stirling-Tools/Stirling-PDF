@@ -5177,7 +5177,7 @@ upgrade = "Upgradovať teraz →"
 freeTitle = "Serverová licencia"
 overLimitTitle = "Potrebná serverová licencia"
 overLimitBody = "Naše licencovanie povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> používateľov Stirling. Ak chcete pokračovať bez prerušenia, prejdite na plán Stirling Server - <strong>neobmedzené miesta</strong>, úpravy textu PDF a plná správa pre $99/server/mo."
-freeBody = "Naše licencovanie <strong>Open-Core</strong> povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Ak chcete škálovať bez prerušenia a získať skorý prístup k nášmu novému <strong>nástroju na úpravu textu PDF</strong>, odporúčame plán Stirling Server - plné úpravy a <strong>neobmedzené miesta</strong> za $99/server/mo."
+freeBody = "Naše licencovanie <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> používateľov zadarmo na server. Na plynulé škálovanie odporúčame plán Stirling Server - <strong>neobmedzený počet používateľov</strong> a <strong>podporu SSO</strong> za $99/server/mes."
 
 [onboarding.desktopInstall]
 title = "Stiahnuť"

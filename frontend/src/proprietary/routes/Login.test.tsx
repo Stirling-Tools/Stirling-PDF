@@ -7,6 +7,7 @@ import Login from '@app/routes/Login';
 import { useAuth } from '@app/auth/UseSession';
 import { springAuth } from '@app/auth/springAuthClient';
 import { PreferencesProvider } from '@app/contexts/PreferencesContext';
+import apiClient from '@app/services/apiClient';
 
 // Mock i18n to return fallback text
 vi.mock('react-i18next', () => ({
@@ -36,8 +37,13 @@ vi.mock('@app/hooks/useDocumentMeta', () => ({
   useDocumentMeta: vi.fn(),
 }));
 
-// Mock fetch for provider list
-global.fetch = vi.fn();
+// Mock apiClient for provider list
+vi.mock('@app/services/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
+}));
 
 const mockNavigate = vi.fn();
 const mockBackendProbeState = {
@@ -89,14 +95,13 @@ describe('Login', () => {
       refreshSession: vi.fn(),
     });
 
-    // Mock fetch for login UI data
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    // Mock apiClient for login UI data
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
         enableLogin: true,
         providerList: {},
-      }),
-    } as Response);
+      },
+    });
   });
 
   it('should render login form', async () => {
@@ -239,6 +244,136 @@ describe('Login', () => {
     });
   });
 
+  it('should use actual provider ID for OAuth login (authentik)', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with authentik
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/authentik': 'Authentik',
+        },
+      },
+    });
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear
+    await waitFor(() => {
+      const button = screen.queryByText('Authentik');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('Authentik');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'authentik' directly, NOT map to 'oidc'
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'authentik',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
+  it('should use actual provider ID for OAuth login (custom provider)', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with custom provider 'mycompany'
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/mycompany': 'My Company SSO',
+        },
+      },
+    });
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear (will show 'Mycompany' as label)
+    await waitFor(() => {
+      const button = screen.queryByText('Mycompany');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('Mycompany');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'mycompany' directly - this is the critical fix
+      // Previously it would map unknown providers to 'oidc'
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'mycompany',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
+  it('should use oidc provider ID when explicitly configured', async () => {
+    const user = userEvent.setup();
+
+    // Mock provider list with 'oidc'
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enableLogin: true,
+        providerList: {
+          '/oauth2/authorization/oidc': 'OIDC',
+        },
+      },
+    });
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>
+    );
+
+    // Wait for OAuth button to appear
+    await waitFor(() => {
+      const button = screen.queryByText('OIDC');
+      expect(button).toBeTruthy();
+    }, { timeout: 3000 });
+
+    const oauthButton = screen.getByText('OIDC');
+    await user.click(oauthButton);
+
+    await waitFor(() => {
+      // Should use 'oidc' when explicitly configured
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'oidc',
+        options: { redirectTo: '/auth/callback' }
+      });
+    });
+  });
+
   it('should show error on failed login', async () => {
     const user = userEvent.setup();
     const errorMessage = 'Invalid credentials';
@@ -359,13 +494,12 @@ describe('Login', () => {
   it('should redirect to home when login disabled', async () => {
     mockBackendProbeState.loginDisabled = true;
     mockProbe.mockResolvedValueOnce({ status: 'up', loginDisabled: true, loading: false });
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
         enableLogin: false,
         providerList: {},
-      }),
-    } as Response);
+      },
+    });
 
     render(
       <TestWrapper>
@@ -381,15 +515,14 @@ describe('Login', () => {
   });
 
   it('should handle OAuth provider click', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
         enableLogin: true,
         providerList: {
           '/oauth2/authorization/github': 'GitHub',
         },
-      }),
-    } as Response);
+      },
+    });
 
     vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
       error: null,
@@ -416,13 +549,12 @@ describe('Login', () => {
   });
 
   it('should show email form by default when no SSO providers', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
         enableLogin: true,
         providerList: {}, // No providers
-      }),
-    } as Response);
+      },
+    });
 
     render(
       <TestWrapper>

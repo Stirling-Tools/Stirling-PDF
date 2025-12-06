@@ -4176,7 +4176,7 @@ description = "Sledovat akce uživatelů a systémové události pro compliance 
 
 [admin.settings.security.audit.level]
 label = "Úroveň auditu"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=VYPNUTO, 1=ZÁKLADNÍ, 2=STANDARDNÍ, 3=PODROBNÝ"
 
 [admin.settings.security.audit.retentionDays]
 label = "Doba uchování auditů (dny)"
@@ -5177,7 +5177,7 @@ upgrade = "Upgradovat nyní →"
 freeTitle = "Serverová licence"
 overLimitTitle = "Vyžadována serverová licence"
 overLimitBody = "Naše licencování umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> uživatelů Stirling. Pro nepřerušené používání přejděte na plán Stirling Server – <strong>neomezený počet míst</strong>, úpravy textu PDF a plná správa za 99 $/server/měsíc."
-freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušený růst a přednostní přístup k našemu novému <strong>nástroji pro úpravu textu PDF</strong> doporučujeme plán Stirling Server – plné úpravy a <strong>neomezený počet míst</strong> za 99 $/server/měsíc."
+freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušované škálování doporučujeme plán Stirling Server - <strong>neomezený počet míst</strong> a <strong>podpora SSO</strong> za $99/server/měs."
 
 [onboarding.desktopInstall]
 title = "Stáhnout"

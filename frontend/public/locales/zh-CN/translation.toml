@@ -5177,7 +5177,7 @@ upgrade = "立即升级 →"
 freeTitle = "服务器许可证"
 overLimitTitle = "需要服务器许可证"
 overLimitBody = "我们的许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。您有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为不间断使用，请升级至 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及 $99/server/mo 的完整管理员控制。"
-freeBody = "我们的 <strong>Open-Core</strong> 许可允许每台服务器最多免费 <strong>{{freeTierLimit}}</strong> 名用户。为无缝扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/server/mo。"
+freeBody = "我们的 <strong>Open-Core</strong> 许可允许每台服务器最多 <strong>{{freeTierLimit}}</strong> 名用户免费使用。为实现不间断扩展，我们推荐 Stirling Server 方案 - <strong>无限席位</strong> 和 <strong>SSO 支持</strong>，$99/server/mo."
 
 [onboarding.desktopInstall]
 title = "下载"

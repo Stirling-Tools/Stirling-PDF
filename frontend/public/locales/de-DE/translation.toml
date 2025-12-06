@@ -5177,7 +5177,7 @@ upgrade = "Jetzt upgraden →"
 freeTitle = "Server-Lizenz"
 overLimitTitle = "Server-Lizenz erforderlich"
 overLimitBody = "Unsere Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzer pro Server kostenlos. Sie haben <strong>{{overLimitUserCopy}}</strong> Stirling-Nutzer. Um ohne Unterbrechung fortzufahren, upgraden Sie auf den Stirling-Server-Plan – <strong>unbegrenzte Plätze</strong>, PDF-Textbearbeitung und volle Admin-Kontrolle für $99/Server/Monat."
-freeBody = "Unsere <strong>Open-Core</strong>-Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzer pro Server kostenlos. Für unterbrechungsfreies Skalieren und frühen Zugriff auf unser neues <strong>PDF-Textbearbeitungs-Tool</strong> empfehlen wir den Stirling-Server-Plan – volle Bearbeitung und <strong>unbegrenzte Plätze</strong> für $99/Server/Monat."
+freeBody = "Unsere <strong>Open-Core</strong>-Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzern pro Server kostenlos. Um unterbrechungsfrei zu skalieren, empfehlen wir den Stirling Server-Plan - <strong>unbegrenzte Plätze</strong> und <strong>SSO-Unterstützung</strong> für $99/Server/Monat."
 
 [onboarding.desktopInstall]
 title = "Download"

@@ -5177,7 +5177,7 @@ upgrade = "Eguneratu orain →"
 freeTitle = "Zerbitzari-lizentzia"
 overLimitTitle = "Beharrezkoa da zerbitzari-lizentzia"
 overLimitBody = "Gure lizentziak baimentzen ditu <strong>{{freeTierLimit}}</strong> erabiltzaile doan zerbitzari bakoitzeko. <strong>{{overLimitUserCopy}}</strong> Stirling erabiltzaile dituzu. Jarraitzeko etenik gabe, eguneratu Stirling Server planera - <strong>eserleku mugagabeak</strong>, PDF testu-edizioa, eta admin kontrol osoa $99/zerbitzari/hilean."
-freeBody = "Gure <strong>Open-Core</strong> lizentziak <strong>{{freeTierLimit}}</strong> erabiltzaile arte baimentzen ditu doan zerbitzari bakoitzeko. Etenik gabe eskalatzeko eta gure <strong>PDF testu-edizio tresna</strong> berrirako sarbide goiztiarra lortzeko, gomendatzen dugu Stirling Server plana - edizio osoa eta <strong>eserleku mugagabeak</strong> $99/zerbitzari/hilean."
+freeBody = "Gure <strong>Open-Core</strong> lizentziak zerbitzari bakoitzeko doan gehienez <strong>{{freeTierLimit}}</strong> erabiltzaile baimentzen ditu. Etenik gabe eskalatzeko, Stirling Server plana gomendatzen dugu - <strong>eserleku mugagabeak</strong> eta <strong>SSO euskarria</strong> $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Deskargatu"
