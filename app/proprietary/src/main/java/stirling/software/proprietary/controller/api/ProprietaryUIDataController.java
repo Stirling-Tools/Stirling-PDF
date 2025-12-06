@@ -328,6 +328,7 @@ public class ProprietaryUIDataController {
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
+        data.setMailEnabled(applicationProperties.getMail().isEnabled());
 
         return ResponseEntity.ok(data);
     }
@@ -510,6 +511,7 @@ public class ProprietaryUIDataController {
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
         private boolean premiumEnabled;
+        private boolean mailEnabled;
     }
 
     @Data

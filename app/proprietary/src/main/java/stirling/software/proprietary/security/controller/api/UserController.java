@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -582,6 +584,63 @@ public class UserController {
 
         userService.changeRole(user, role);
         return ResponseEntity.ok(Map.of("message", "User role updated successfully"));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/admin/changePasswordForUser")
+    public ResponseEntity<?> changePasswordForUser(
+            @RequestParam(name = "username") String username,
+            @RequestParam(name = "newPassword", required = false) String newPassword,
+            @RequestParam(name = "generateRandom", defaultValue = "false") boolean generateRandom,
+            @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
+            @RequestParam(name = "includePassword", defaultValue = "false") boolean includePassword,
+            HttpServletRequest request,
+            Authentication authentication)
+            throws SQLException, UnsupportedProviderException, MessagingException {
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+        }
+
+        String currentUsername = authentication.getName();
+        if (currentUsername.equalsIgnoreCase(username)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Cannot change your own password."));
+        }
+
+        User user = userOpt.get();
+
+        String finalPassword = newPassword;
+        if (generateRandom) {
+            finalPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        }
+
+        if (finalPassword == null || finalPassword.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "New password is required."));
+        }
+
+        userService.changePassword(user, finalPassword);
+
+        if (sendEmail) {
+            if (emailService.isEmpty() || !applicationProperties.getMail().isEnabled()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Email is not configured."));
+            }
+
+            if (user.getEmail() == null || user.getEmail().isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "User does not have an email address."));
+            }
+
+            String loginUrl = buildLoginUrl(request);
+            emailService
+                    .get()
+                    .sendPasswordChangedNotification(
+                            user.getEmail(), user.getUsername(), includePassword ? finalPassword : null, loginUrl);
+        }
+
+        return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

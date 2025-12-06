@@ -37,6 +37,7 @@ export interface AdminSettingsData {
   grandfatheredUserCount: number;
   licenseMaxUsers: number;
   premiumEnabled: boolean;
+  mailEnabled: boolean;
 }
 
 export interface CreateUserRequest {
@@ -95,6 +96,14 @@ export interface InviteToken {
   createdBy: string;
   createdAt: string;
   expiresAt: string;
+}
+
+export interface ChangeUserPasswordRequest {
+  username: string;
+  newPassword?: string;
+  generateRandom?: boolean;
+  sendEmail?: boolean;
+  includePassword?: boolean;
 }
 
 /**
@@ -253,5 +262,29 @@ export const userManagementService = {
   async cleanupExpiredInvites(): Promise<{ deletedCount: number }> {
     const response = await apiClient.post<{ deletedCount: number }>('/api/v1/invite/cleanup');
     return response.data;
+  },
+
+  /**
+   * Change another user's password (admin only)
+   */
+  async changeUserPassword(data: ChangeUserPasswordRequest): Promise<void> {
+    const formData = new FormData();
+    formData.append('username', data.username);
+    if (data.newPassword) {
+      formData.append('newPassword', data.newPassword);
+    }
+    if (data.generateRandom !== undefined) {
+      formData.append('generateRandom', data.generateRandom.toString());
+    }
+    if (data.sendEmail !== undefined) {
+      formData.append('sendEmail', data.sendEmail.toString());
+    }
+    if (data.includePassword !== undefined) {
+      formData.append('includePassword', data.includePassword.toString());
+    }
+
+    await apiClient.post('/api/v1/user/admin/changePasswordForUser', formData, {
+      suppressErrorToast: true, // Component will handle error display
+    } as any);
   },
 };
