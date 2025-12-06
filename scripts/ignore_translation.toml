@@ -762,8 +762,6 @@ ignore = [
 
 [sk_SK]
 ignore = [
-    'adminUserSettings.admin',
-    'info',
     'lang.ceb',
     'lang.chr',
     'lang.dzo',
@@ -963,7 +961,6 @@ ignore = [
     'lang.yid',
     'lang.yor',
     'language.direction',
-    'pipelineOptions.pipelineHeader',
     'showJS.tags',
 ]
 
