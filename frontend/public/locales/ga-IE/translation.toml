@@ -131,7 +131,7 @@ unsupported = "Ní thacaítear leis"
 
 [toolPanel]
 placeholder = "Roghnaigh uirlis chun tosú"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Gné Préimhe:"
 comingSoon = "Ag teacht go luath:"
 
@@ -2857,8 +2857,8 @@ label = "Fachtóir Scála"
 [adjustPageScale.pageSize]
 label = "Spriocmhéid Leathanaigh"
 keep = "Coinnigh an méid bunaidh"
-letter = "Letter"
-legal = "Legal"
+letter = "Litir"
+legal = "Dlíthiúil"
 
 [adjustPageScale.error]
 failed = "Tharla earráid agus scála na leathanach á choigeartú."
@@ -3036,6 +3036,91 @@ title = "Faigh eolas ar PDF"
 header = "Faigh eolas ar PDF"
 submit = "Faigh Eolas"
 downloadJson = "Íosluchtaigh ceol JSON"
+downloads = "Íoslódálacha"
+indexTitle = "Innéacs"
+noResults = "Rith an uirlis chun tuarascáil a ghiniúint."
+noneDetected = "Níor braitheadh ​​aon cheann"
+processing = "Ag baint eolais..."
+results = "Torthaí"
+
+[getPdfInfo.error]
+partial = "Níorbh fhéidir roinnt comhad a phróiseáil."
+unexpected = "Earráid gan choinne le linn eastósctha."
+
+[getPdfInfo.other]
+attachments = "Ceangaltáin"
+embeddedFiles = "Comhaid Leabaithe"
+javaScript = "JavaScript"
+layers = "Sraitheanna"
+structureTree = "CrannStruchtúir"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+annotations = "Anótálacha"
+fonts = "Clónna"
+images = "Íomhánna"
+links = "Naisc"
+multimedia = "Ilmheáin"
+size = "Méid"
+xobjects = "Comhaireamh XObject"
+
+[getPdfInfo.report]
+entryLabel = "Achoimre iomlán faisnéise"
+shortTitle = "Eolas PDF"
+
+[getPdfInfo.sections]
+basicInfo = "Eolas Bunúsach"
+compliance = "Comhlíonadh"
+documentInfo = "Eolas faoin Doiciméad"
+encryption = "Criptiú"
+formFields = "Réimsí Foirme"
+metadata = "Meiteashonraí"
+other = "Eile"
+perPageInfo = "Eolas In Aghaidh an Leathanaigh"
+permissions = "Ceadanna"
+tableOfContents = "Clár Ábhair"
+
+[getPdfInfo.status]
+complete = "Eastóscadh críochnaithe"
+
+[getPdfInfo.summary]
+author = "Údar"
+basic = "Faisnéis Bhunúsach"
+created = "Cruthaithe"
+documentInfo = "Faisnéis faoin Doiciméad"
+fileSize = "Méid an Chomhaid"
+hasCompliance = "Tá caighdeáin chomhlíontachta ann"
+language = "Innéacs"
+modified = "Modhnaithe"
+noCompliance = "Gan Chaighdeáin Chomhlíonta"
+overviewTitle = "Forbhreathnú PDF"
+pages = "Leathanaigh"
+pdfVersion = "Leagan PDF"
+permsAll = "Gach Cead Ceadaithe"
+permsMixed = "Tá roinnt ceadanna srianta"
+permsRestricted = "srianta {{count}}"
+securityTitle = "Stádas Slándála"
+technical = "Teicniúil"
+title = "Achoimre PDF"
+
+[getPdfInfo.summary.overview]
+text = "Is PDF {{pages}} leathanach dar teideal {{title}} é seo, cruthaithe ag {{author}} (leagan PDF {{version}})."
+unknown = "Údar Anaithnid"
+untitled = "doiciméad gan teideal"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF criptithe - Cosaint pasfhocail i láthair"
+unencrypted = "PDF Gan Chriptiú - Gan cosaint pasfhocail"
+
+[getPdfInfo.summary.tech]
+bookmarks = "Leabharmharcanna"
+embeddedFiles = "Comhaid Leabaithe"
+fonts = "Clónna"
+formFields = "Réimsí Foirme"
+images = "Íomhánna"
+javaScript = "JavaScript"
+layers = "Sraitheanna"
+multimedia = "Ilmheáin"
 
 [extractPage]
 tags = "sliocht"
@@ -3828,8 +3913,8 @@ title = "Anailísíocht"
 description = "Cuidíonn na fianáin seo linn a thuiscint conas a úsáidtear ár n-uirlisí, ionas gur féidir linn díriú ar na gnéithe is tábhachtaí dár bpobal a thógáil. Bí cinnte—ní féidir le Stirling PDF agus ní dhéanfaidh sé riamh ábhar na ndoiciméad a n-oibríonn tú leo a rianú."
 
 [cookieBanner.services]
-posthog = "PostHog Analytics"
-scarf = "Scarf Pixel"
+posthog = "Anailísíocht PostHog"
+scarf = "Scairf Picteilín"
 
 [removeMetadata]
 submit = "Bain Meiteashonraí"
@@ -4432,7 +4517,7 @@ description = "Cumraigh teorainneacha seisiúin agus teorainneacha ama do gach f
 libreOffice = "LibreOffice"
 pdfToHtml = "PDF go HTML"
 qpdf = "QPDF"
-tesseract = "Tesseract OCR"
+tesseract = "OCR Tesseract"
 pythonOpenCv = "Python OpenCV"
 weasyPrint = "WeasyPrint"
 installApp = "Suiteáil App"
@@ -4665,7 +4750,7 @@ searchFiles = "Cuardaigh comhaid..."
 recent = "Le Déanaí"
 localFiles = "Comhaid Logánta"
 googleDrive = "Google Drive"
-googleDriveShort = "Drive"
+googleDriveShort = "Tiomáint"
 myFiles = "Mo Chomhaid"
 noRecentFiles = "Níor aimsíodh comhaid le déanaí"
 googleDriveNotAvailable = "Níl comhtháthú Google Drive ar fáil"
@@ -5249,7 +5334,7 @@ user = "Úsáideoir"
 [workspace.people.addMember]
 title = "Cuir Ball Leis"
 username = "Ainm Úsáideora (R-phost)"
-usernamePlaceholder = "user@example.com"
+usernamePlaceholder = "úsáideoir@sampla.com"
 password = "Focal Faire"
 passwordPlaceholder = "Cuir isteach focal faire"
 role = "Ról"
@@ -5286,7 +5371,7 @@ error = "Theip ar an úsáideoir a scriosadh"
 tab = "Cuireadh Ríomhphoist"
 description = "Clóscríobh nó greamaigh seoltaí ríomhphoist thíos, scartha le camóga. Gheobhaidh úsáideoirí dintiúir logála isteach trí r-phost."
 emails = "Seoltaí Ríomhphoist"
-emailsPlaceholder = "user1@example.com, user2@example.com"
+emailsPlaceholder = "úsáideoir1@sampla.com, úsáideoir2@sampla.com"
 emailsRequired = "Tá ar a laghad seoladh ríomhphoist amháin de dhíth"
 submit = "Seol Cuirí"
 success = "Tugadh cuireadh d’úsáideoir(í) go rathúil"
@@ -5478,7 +5563,7 @@ highlight2 = "Uirlisí PDF Casta"
 highlight3 = "Gan comharthaí uisce"
 
 [plan.enterprise]
-name = "Enterprise"
+name = "Fiontar"
 highlight1 = "Praghsáil shaincheaptha"
 highlight2 = "Tacaíocht thiomnaithe"
 highlight3 = "Na gnéithe is déanaí"
@@ -5586,7 +5671,7 @@ emailInvalid = "Cuir isteach seoladh ríomhphoist bailí"
 title = "Cuir isteach do Ríomhphost"
 description = "Úsáidfimid é seo chun d’eochair cheadúnais agus admhálacha a sheoladh."
 emailLabel = "Seoladh Ríomhphoist"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "do@ríomhphost.com"
 continue = "Lean ar aghaidh"
 modalTitle = "Tosaigh - {{planName}}"
 
@@ -5815,6 +5900,7 @@ subtitle = "Sínigh isteach le do chuntas Stirling"
 [setup.selfhosted]
 title = "Sínigh isteach chuig an bhFreastalaí"
 subtitle = "Cuir isteach dintiúir do fhreastalaí"
+link = "nó ceangail le cuntas féinóstáilte"
 
 [setup.server]
 title = "Ceangail leis an bhFreastalaí"
@@ -5833,6 +5919,14 @@ description = "Cuir isteach URL iomlán do fhreastalaí Stirling PDF féin-óst�
 emptyUrl = "Cuir isteach URL freastalaí le do thoil"
 unreachable = "Níorbh fhéidir ceangal leis an bhfreastalaí"
 testFailed = "Theip ar thástáil an cheangail"
+configFetch = "Theip ar chumraíocht an fhreastalaí a fháil. Seiceáil an URL agus déan iarracht arís."
+
+[setup.server.error.securityDisabled]
+body = "Níl logáil isteach cumasaithe ar an bhfreastalaí seo. Chun ceangal leis an bhfreastalaí seo, ní mór duit fíordheimhniú a chumasú:"
+step1 = "Socraigh DOCKER_ENABLE_SECURITY=true i do thimpeallacht"
+step2 = "Nó socraigh security.enableLogin=true i settings.yml"
+step3 = "Atosaigh an freastalaí"
+title = "Logáil Isteach Gan Cumasú"
 
 [setup.login]
 title = "Sínigh Isteach"
@@ -5905,6 +5999,7 @@ earlyAccess = "Rochtain Luath"
 reset = "Athshocraigh Athruithe"
 downloadJson = "Íoslódáil JSON"
 generatePdf = "Gin PDF"
+saveChanges = "Sábháil Athruithe"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
@@ -5942,6 +6037,8 @@ alpha = "Tá an t-amharcóir alfa seo fós ag forbairt — d’fhéadfadh clónn
 [pdfTextEditor.empty]
 title = "Níl aon cháipéis luchtaithe"
 subtitle = "Luchtaigh comhad PDF nó JSON chun eagarthóireacht ar ábhar téacs a thosú."
+dropzone = "Tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
+dropzoneWithFiles = "Roghnaigh comhad ón táb Comhaid, nó tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
 
 [pdfTextEditor.welcomeBanner]
 title = "Fáilte go dtí Eagarthóir Téacs PDF (Rochtain Luath)"
