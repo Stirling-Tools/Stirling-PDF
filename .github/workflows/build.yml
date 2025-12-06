@@ -262,7 +262,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker-rev: ["docker/embedded/Dockerfile", "docker/embedded/Dockerfile.ultra-lite", "docker/embedded/Dockerfile.fat"]
+        include:
+          - docker-rev: docker/embedded/Dockerfile
+            artifact-suffix: Dockerfile
+          - docker-rev: docker/embedded/Dockerfile.ultra-lite
+            artifact-suffix: Dockerfile.ultra-lite
+          - docker-rev: docker/embedded/Dockerfile.fat
+            artifact-suffix: Dockerfile.fat
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -271,6 +277,13 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Free disk space on runner
+        run: |
+          echo "Disk space before cleanup:" && df -h
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
+          docker system prune -af || true
+          echo "Disk space after cleanup:" && df -h
 
       - name: Set up JDK 17
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -313,7 +326,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: reports-docker-${{ matrix.docker-rev }}
+          name: reports-docker-${{ matrix.artifact-suffix }}
           path: |
             build/reports/tests/
             build/test-results/
