@@ -55,14 +55,33 @@ class GlyphBuildResult:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Synthesize fonts from Type3 glyph JSON.")
-    parser.add_argument("--input", required=True, help="Path to glyph JSON emitted by the backend")
-    parser.add_argument("--otf-output", required=True, help="Destination path for the CFF/OTF font")
-    parser.add_argument("--ttf-output", help="Optional destination path for a TrueType font")
-    parser.add_argument("--family-name", default="Type3 Synth", help="Family name for the output")
-    parser.add_argument("--style-name", default="Regular", help="Style name for the output")
-    parser.add_argument("--units-per-em", type=int, default=1000, help="Units per EM value")
-    parser.add_argument("--cu2qu-error", type=float, default=1.0, help="Max error for cubic→quadratic conversion")
+    parser = argparse.ArgumentParser(
+        description="Synthesize fonts from Type3 glyph JSON."
+    )
+    parser.add_argument(
+        "--input", required=True, help="Path to glyph JSON emitted by the backend"
+    )
+    parser.add_argument(
+        "--otf-output", required=True, help="Destination path for the CFF/OTF font"
+    )
+    parser.add_argument(
+        "--ttf-output", help="Optional destination path for a TrueType font"
+    )
+    parser.add_argument(
+        "--family-name", default="Type3 Synth", help="Family name for the output"
+    )
+    parser.add_argument(
+        "--style-name", default="Regular", help="Style name for the output"
+    )
+    parser.add_argument(
+        "--units-per-em", type=int, default=1000, help="Units per EM value"
+    )
+    parser.add_argument(
+        "--cu2qu-error",
+        type=float,
+        default=1.0,
+        help="Max error for cubic→quadratic conversion",
+    )
     return parser.parse_args()
 
 
@@ -151,18 +170,22 @@ def iterate_glyphs(data: Dict[str, object]) -> List[GlyphSource]:
             char_code_value = record.get("code")
         if not isinstance(char_code_value, int):
             char_code_value = record.get("charCodeRaw")
-        if not isinstance(char_code_value, int) or not (0 <= char_code_value <= 0x10FFFF):
+        if not isinstance(char_code_value, int) or not (
+            0 <= char_code_value <= 0x10FFFF
+        ):
             char_code_value = None
         outline = record.get("outline")
         if not isinstance(outline, list):
             outline = []
         sources.append(
-                GlyphSource(
-                    name=name,
-                    width=float(width),
-                    unicode=unicode_value,
-                    char_code=char_code_value,
-                    outline=outline))
+            GlyphSource(
+                name=name,
+                width=float(width),
+                unicode=unicode_value,
+                char_code=char_code_value,
+                outline=outline,
+            )
+        )
     return sources
 
 
@@ -199,7 +222,10 @@ def build_cff_charstring(
             start_point = point
             open_path = True
         elif op == "L" and current is not None:
-            point = (float(command.get("x", current[0])), float(command.get("y", current[1])))
+            point = (
+                float(command.get("x", current[0])),
+                float(command.get("y", current[1])),
+            )
             pen.lineTo(point)
             update_bounds(point)
             current = point
