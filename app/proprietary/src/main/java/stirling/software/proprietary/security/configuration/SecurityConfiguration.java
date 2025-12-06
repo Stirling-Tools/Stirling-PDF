@@ -331,7 +331,9 @@ public class SecurityConfiguration {
                         formLogin ->
                                 formLogin
                                         .loginPage("/login") // Redirect here when unauthenticated
-                                        .loginProcessingUrl("/perform_login") // Process form posts here (not /login)
+                                        .loginProcessingUrl(
+                                                "/perform_login") // Process form posts here (not
+                                        // /login)
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
                                                         loginAttemptService,

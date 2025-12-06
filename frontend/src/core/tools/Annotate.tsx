@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, NumberInput } from '@mantine/core';
+import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, NumberInput, Tooltip } from '@mantine/core';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -9,6 +9,7 @@ import { BaseToolProps } from '@app/types/tool';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { ViewerContext } from '@app/contexts/ViewerContext';
 import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
+import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
 
@@ -17,7 +18,7 @@ const Annotate = (_props: BaseToolProps) => {
   const { setToolAndWorkbench } = useNavigation();
   const { selectedFiles } = useFileSelection();
   const { selectors } = useFileContext();
-  const { signatureApiRef } = useSignature();
+  const { signatureApiRef, historyApiRef, undo, redo } = useSignature();
   const viewerContext = useContext(ViewerContext);
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('highlight');
@@ -25,15 +26,21 @@ const Annotate = (_props: BaseToolProps) => {
   const [inkWidth, setInkWidth] = useState(2);
   const [highlightColor, setHighlightColor] = useState('#ffd54f');
   const [highlightOpacity, setHighlightOpacity] = useState(60);
+  const [freehandHighlighterWidth, setFreehandHighlighterWidth] = useState(6);
   const [underlineColor, setUnderlineColor] = useState('#ffb300');
+  const [underlineOpacity, setUnderlineOpacity] = useState(100);
   const [strikeoutColor, setStrikeoutColor] = useState('#e53935');
+  const [strikeoutOpacity, setStrikeoutOpacity] = useState(100);
   const [squigglyColor, setSquigglyColor] = useState('#00acc1');
+  const [squigglyOpacity, setSquigglyOpacity] = useState(100);
   const [textColor, setTextColor] = useState('#111111');
   const [textSize, setTextSize] = useState(14);
-  const [shapeStrokeColor, setShapeStrokeColor] = useState('#1565c0');
-  const [shapeFillColor, setShapeFillColor] = useState('#e3f2fd');
-  const [shapeOpacity, setShapeOpacity] = useState(35);
-  const [shapeThickness, setShapeThickness] = useState(2);
+  const [shapeStrokeColor, setShapeStrokeColor] = useState('#cf5b5b');
+  const [shapeFillColor, setShapeFillColor] = useState('#0000ff');
+  const [shapeOpacity, setShapeOpacity] = useState(50);
+  const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(50);
+  const [shapeFillOpacity, setShapeFillOpacity] = useState(50);
+  const [shapeThickness, setShapeThickness] = useState(1);
   const [colorPickerTarget, setColorPickerTarget] = useState<'ink' | 'highlight' | 'underline' | 'strikeout' | 'squiggly' | 'text' | 'shapeStroke' | 'shapeFill' | null>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [selectedAnn, setSelectedAnn] = useState<any | null>(null);
@@ -41,22 +48,25 @@ const Annotate = (_props: BaseToolProps) => {
   const [selectedTextDraft, setSelectedTextDraft] = useState<string>('');
   const [selectedFontSize, setSelectedFontSize] = useState<number>(14);
   const selectedUpdateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stampInputRef = useRef<HTMLInputElement | null>(null);
+  const [stampImageData, setStampImageData] = useState<string | undefined>();
+  const [isAnnotationPaused, setIsAnnotationPaused] = useState(false);
+  const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
+  const manualToolSwitch = useRef<boolean>(false);
 
   const buildToolOptions = useCallback((toolId: AnnotationToolId) => {
     switch (toolId) {
       case 'ink':
         return { color: inkColor, thickness: inkWidth };
       case 'inkHighlighter':
-        return { color: highlightColor, opacity: highlightOpacity / 100, thickness: 6 };
+        return { color: highlightColor, opacity: highlightOpacity / 100, thickness: freehandHighlighterWidth };
       case 'highlight':
         return { color: highlightColor, opacity: highlightOpacity / 100 };
       case 'underline':
-        return { color: underlineColor, opacity: 1 };
+        return { color: underlineColor, opacity: underlineOpacity / 100 };
       case 'strikeout':
-        return { color: strikeoutColor, opacity: 1 };
+        return { color: strikeoutColor, opacity: strikeoutOpacity / 100 };
       case 'squiggly':
-        return { color: squigglyColor, opacity: 1 };
+        return { color: squigglyColor, opacity: squigglyOpacity / 100 };
       case 'text':
         return { color: textColor, fontSize: textSize };
       case 'note':
@@ -65,9 +75,11 @@ const Annotate = (_props: BaseToolProps) => {
       case 'circle':
       case 'polygon':
         return {
-          color: shapeStrokeColor,
-          interiorColor: shapeFillColor,
+          color: shapeFillColor, // fill color
+          strokeColor: shapeStrokeColor, // border color
           opacity: shapeOpacity / 100,
+          strokeOpacity: shapeStrokeOpacity / 100,
+          fillOpacity: shapeFillOpacity / 100,
           borderWidth: shapeThickness,
         };
       case 'line':
@@ -75,17 +87,35 @@ const Annotate = (_props: BaseToolProps) => {
       case 'lineArrow':
         return {
           color: shapeStrokeColor,
-          opacity: shapeOpacity / 100,
+          strokeColor: shapeStrokeColor,
+          opacity: shapeStrokeOpacity / 100,
           borderWidth: shapeThickness,
         };
       default:
         return {};
     }
-  }, [highlightColor, highlightOpacity, inkColor, inkWidth, underlineColor, strikeoutColor, squigglyColor, textColor, textSize, shapeStrokeColor, shapeFillColor, shapeOpacity, shapeThickness]);
+  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, shapeStrokeColor, shapeFillColor, shapeStrokeOpacity, shapeFillOpacity, shapeThickness]);
 
   useEffect(() => {
     setToolAndWorkbench('annotate', 'viewer');
   }, [setToolAndWorkbench]);
+
+  // Monitor history state for undo/redo availability
+  useEffect(() => {
+    const historyApi = historyApiRef?.current;
+    if (!historyApi) return;
+
+    const checkHistory = () => {
+      setHistoryAvailability({
+        canUndo: historyApi.canUndo?.() ?? false,
+        canRedo: historyApi.canRedo?.() ?? false,
+      });
+    };
+
+    checkHistory();
+    const interval = setInterval(checkHistory, 200);
+    return () => clearInterval(interval);
+  }, [historyApiRef]);
 
   useEffect(() => {
     if (!viewerContext) return;
@@ -97,22 +127,43 @@ const Annotate = (_props: BaseToolProps) => {
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
     viewerContext?.setAnnotationMode(true);
+
+    // Mark as manual tool switch to prevent auto-switch back
+    manualToolSwitch.current = true;
+
+    // Deselect annotation in the viewer first
+    signatureApiRef?.current?.deselectAnnotation?.();
+
+    // Clear selection state to show default controls
+    setSelectedAnn(null);
+    setSelectedAnnId(null);
+
+    // Change the tool
     setActiveTool(toolId);
     const options = buildToolOptions(toolId);
-    signatureApiRef?.current?.activateAnnotationTool?.(toolId, options);
 
-    if (toolId === 'stamp') {
-      // Use existing add image flow for stamp assets
-      if (stampInputRef.current) {
-        stampInputRef.current.click();
-      }
+    // For stamp, apply the image if we have one
+    if (toolId === 'stamp' && stampImageData) {
+      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
+      signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: stampImageData });
+    } else {
+      signatureApiRef?.current?.activateAnnotationTool?.(toolId, options);
     }
+
+    // Reset flag after a short delay
+    setTimeout(() => {
+      manualToolSwitch.current = false;
+    }, 300);
   };
 
   useEffect(() => {
     // push style updates to EmbedPDF when sliders/colors change
-    signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
-  }, [activeTool, buildToolOptions, signatureApiRef]);
+    if (activeTool === 'stamp' && stampImageData) {
+      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
+    } else {
+      signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+    }
+  }, [activeTool, buildToolOptions, signatureApiRef, stampImageData]);
 
   // Allow exiting multi-point tools with Escape (e.g., polyline)
   useEffect(() => {
@@ -145,27 +196,74 @@ const Annotate = (_props: BaseToolProps) => {
         if (ann?.object?.fontSize !== undefined) {
           setSelectedFontSize(ann.object.fontSize ?? 14);
         }
+
+        // Switch active tool to match annotation type (unless user manually switched tools)
+        if (ann?.object?.type !== undefined && !manualToolSwitch.current) {
+          let matchingTool: AnnotationToolId | undefined;
+
+          // Special handling for INK type (15) - distinguish between pen and freehand highlighter
+          if (ann.object.type === 15) {
+            // Freehand highlighter typically has:
+            // - Higher opacity (> 0.8) OR
+            // - Larger width (> 4)
+            const opacity = ann.object.opacity ?? 1;
+            const width = ann.object.borderWidth ?? ann.object.strokeWidth ?? ann.object.lineWidth ?? 2;
+
+            if (opacity < 0.8 || width >= 5) {
+              matchingTool = 'inkHighlighter';
+            } else {
+              matchingTool = 'ink';
+            }
+          } else {
+            const typeToToolMap: Record<number, AnnotationToolId> = {
+              1: 'note',        // TEXT
+              3: 'text',        // FREETEXT
+              4: 'line',        // LINE
+              5: 'square',      // SQUARE
+              6: 'circle',      // CIRCLE
+              7: 'polygon',     // POLYGON
+              8: 'polyline',    // POLYLINE
+              9: 'highlight',   // HIGHLIGHT
+              10: 'underline',  // UNDERLINE
+              11: 'squiggly',   // SQUIGGLY
+              12: 'strikeout',  // STRIKEOUT
+              13: 'stamp',      // STAMP
+            };
+            matchingTool = typeToToolMap[ann.object.type];
+          }
+
+          if (matchingTool && matchingTool !== activeTool) {
+            setActiveTool(matchingTool);
+          }
+        }
       }
     }, 150);
     return () => clearInterval(interval);
-  }, [signatureApiRef, selectedAnnId]);
+  }, [signatureApiRef, selectedAnnId, activeTool]);
 
-  const annotationTools: { id: AnnotationToolId; label: string; icon: string }[] = [
+  const textMarkupTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'highlight', label: t('annotation.highlight', 'Highlight'), icon: 'highlight' },
     { id: 'underline', label: t('annotation.underline', 'Underline'), icon: 'format-underlined' },
     { id: 'strikeout', label: t('annotation.strikeout', 'Strikeout'), icon: 'strikethrough-s' },
     { id: 'squiggly', label: t('annotation.squiggly', 'Squiggly'), icon: 'show-chart' },
+  ];
+
+  const drawingTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'ink', label: t('annotation.pen', 'Pen'), icon: 'edit' },
-    { id: 'inkHighlighter', label: t('annotation.inkHighlighter', 'Ink Highlighter'), icon: 'brush' },
-    { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
-    { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
+    { id: 'inkHighlighter', label: t('annotation.freehandHighlighter', 'Freehand Highlighter'), icon: 'brush' },
+  ];
+
+  const shapeTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'square', label: t('annotation.square', 'Square'), icon: 'crop-square' },
     { id: 'circle', label: t('annotation.circle', 'Circle'), icon: 'radio-button-unchecked' },
     { id: 'line', label: t('annotation.line', 'Line'), icon: 'show-chart' },
-    { id: 'lineArrow', label: t('annotation.arrow', 'Arrow'), icon: 'trending-flat' },
-    { id: 'polyline', label: t('annotation.polyline', 'Polyline'), icon: 'polyline' },
     { id: 'polygon', label: t('annotation.polygon', 'Polygon'), icon: 'change-history' },
-    { id: 'stamp', label: t('annotation.stamp', 'Stamp'), icon: 'image' },
+  ];
+
+  const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
+    { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
+    { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
+    { id: 'stamp', label: t('annotation.stamp', 'Add Image'), icon: 'add-photo-alternate' },
   ];
 
   const activeColor =
@@ -188,9 +286,9 @@ const Annotate = (_props: BaseToolProps) => {
   const steps = useMemo(() => {
     if (selectedFiles.length === 0) return [];
 
-    const toolButtons = (
+    const renderToolButtons = (tools: { id: AnnotationToolId; label: string; icon: string }[]) => (
       <Group gap="xs">
-        {annotationTools.map((tool) => (
+        {tools.map((tool) => (
           <MantineTooltip key={tool.id} label={tool.label} withArrow>
             <ActionIcon
               variant={activeTool === tool.id ? 'filled' : 'subtle'}
@@ -206,233 +304,492 @@ const Annotate = (_props: BaseToolProps) => {
       </Group>
     );
 
-    const controls = (
+    const defaultStyleControls = (
       <Stack gap="sm">
-        <Group gap="sm" align="center">
-          <input
-            ref={stampInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              try {
-                const dataUrl: string = await new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(file);
-                });
-                // push into stamp defaults and activate stamp tool
-                signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl as string });
-                signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl as string });
-                setActiveTool('stamp');
-              } catch (err) {
-                console.error('Failed to load stamp image', err);
-              } finally {
-                e.target.value = '';
+        {activeTool === 'stamp' ? (
+          <>
+            <Text size="sm" fw={600}>{t('annotation.stampSettings', 'Stamp Settings')}</Text>
+            <ImageUploader
+              onImageChange={async (file) => {
+                if (file) {
+                  try {
+                    const dataUrl: string = await new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(reader.result as string);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(file);
+                    });
+                    setStampImageData(dataUrl);
+                    setIsAnnotationPaused(false);
+
+                    // Activate stamp tool with the image after a small delay
+                    setTimeout(() => {
+                      viewerContext?.setAnnotationMode(true);
+                      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl });
+                      signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl });
+                    }, 150);
+                  } catch (err) {
+                    console.error('Failed to load stamp image', err);
+                  }
+                } else {
+                  setStampImageData(undefined);
+                }
+              }}
+              disabled={false}
+            />
+            {stampImageData && (
+              <Stack gap="xs">
+                <Text size="xs" c="dimmed">{t('annotation.imagePreview', 'Preview')}</Text>
+                <img
+                  src={stampImageData}
+                  alt="Stamp preview"
+                  style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </Stack>
+            )}
+          </>
+        ) : (
+          <>
+            <Text size="sm" fw={600}>{t('annotation.settings', 'Settings')}</Text>
+            <Group gap="md">
+          <Stack gap={4} align="center">
+            <Text size="xs" c="dimmed">
+              {['square', 'circle', 'polygon'].includes(activeTool)
+                ? t('annotation.strokeColor', 'Stroke Color')
+                : t('annotation.color', 'Color')
               }
-            }}
-          />
-          <ColorSwatchButton
-            color={
-              activeTool === 'ink'
-                ? inkColor
-                : activeTool === 'highlight' || activeTool === 'inkHighlighter'
-                  ? highlightColor
-                  : activeTool === 'underline'
-                    ? underlineColor
-                    : activeTool === 'strikeout'
-                      ? strikeoutColor
-                      : activeTool === 'squiggly'
-                        ? squigglyColor
-                        : shapeStrokeColor
-            }
-            size={30}
-            onClick={() => {
-              const target =
-                activeTool === 'ink'
-                  ? 'ink'
-                  : activeTool === 'highlight' || activeTool === 'inkHighlighter'
-                    ? 'highlight'
-                  : activeTool === 'underline'
-                    ? 'underline'
-                  : activeTool === 'strikeout'
-                    ? 'strikeout'
-                  : activeTool === 'squiggly'
-                    ? 'squiggly'
-                  : ['square', 'circle', 'line', 'lineArrow', 'polyline', 'polygon'].includes(activeTool)
-                    ? 'shapeStroke'
-                    : 'text';
-              setColorPickerTarget(target);
-              setIsColorPickerOpen(true);
-            }}
-          />
-          {['square', 'circle', 'polygon'].includes(activeTool) && (
+            </Text>
             <ColorSwatchButton
-              color={shapeFillColor}
+              color={
+                activeTool === 'ink'
+                  ? inkColor
+                  : activeTool === 'highlight' || activeTool === 'inkHighlighter'
+                    ? highlightColor
+                    : activeTool === 'underline'
+                      ? underlineColor
+                      : activeTool === 'strikeout'
+                        ? strikeoutColor
+                        : activeTool === 'squiggly'
+                          ? squigglyColor
+                          : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
+                            ? shapeStrokeColor
+                            : textColor
+              }
               size={30}
               onClick={() => {
-                setColorPickerTarget('shapeFill');
+                const target =
+                  activeTool === 'ink'
+                    ? 'ink'
+                    : activeTool === 'highlight' || activeTool === 'inkHighlighter'
+                      ? 'highlight'
+                      : activeTool === 'underline'
+                        ? 'underline'
+                        : activeTool === 'strikeout'
+                          ? 'strikeout'
+                          : activeTool === 'squiggly'
+                            ? 'squiggly'
+                            : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
+                              ? 'shapeStroke'
+                              : 'text';
+                setColorPickerTarget(target);
                 setIsColorPickerOpen(true);
               }}
             />
-          )}
-          {activeTool === 'ink' && (
-            <>
-              <Text size="sm" c="dimmed">{t('annotation.strokeWidth', 'Width')}</Text>
-              <Slider min={1} max={12} value={inkWidth} onChange={setInkWidth} w={140} />
-            </>
-          )}
-          {(activeTool === 'highlight' || activeTool === 'inkHighlighter') && (
-            <>
-              <Text size="sm" c="dimmed">{t('annotation.opacity', 'Opacity')}</Text>
-              <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} w={140} />
-            </>
-          )}
-          {activeTool === 'text' && (
-            <>
-              <Text size="sm" c="dimmed">{t('annotation.fontSize', 'Font size')}</Text>
-              <Slider min={8} max={32} value={textSize} onChange={setTextSize} w={140} />
-            </>
-          )}
-          {['square', 'circle', 'line', 'lineArrow', 'polyline', 'polygon'].includes(activeTool) && (
-            <>
-              <Text size="sm" c="dimmed">{t('annotation.opacity', 'Opacity')}</Text>
-              <Slider min={10} max={100} value={shapeOpacity} onChange={setShapeOpacity} w={140} />
-              <Text size="sm" c="dimmed">{t('annotation.strokeWidth', 'Stroke')}</Text>
-              <Slider min={1} max={12} value={shapeThickness} onChange={setShapeThickness} w={140} />
-            </>
+          </Stack>
+          {['square', 'circle', 'polygon'].includes(activeTool) && (
+            <Stack gap={4} align="center">
+              <Text size="xs" c="dimmed">{t('annotation.fillColor', 'Fill Color')}</Text>
+              <ColorSwatchButton
+                color={shapeFillColor}
+                size={30}
+                onClick={() => {
+                  setColorPickerTarget('shapeFill');
+                  setIsColorPickerOpen(true);
+                }}
+              />
+            </Stack>
           )}
         </Group>
-        <Divider />
-        <Text size="sm" c="dimmed">
-          {t('annotation.tipPlace', 'Click anywhere on the PDF to place highlights, drawings, notes, or text.')}
-        </Text>
-          {selectedAnn && (
-            <Stack gap="xs">
-              <Text size="sm" fw={600}>{t('annotation.editSelected', 'Edit selected annotation')}</Text>
-              {(selectedAnn.object?.type === 9 || selectedAnn.object?.type === 1 || selectedAnn.object?.type === 3 || selectedAnn.object?.type === 15) && (
+
+        {activeTool === 'ink' && (
+          <Box>
+            <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+            <Slider min={1} max={12} value={inkWidth} onChange={setInkWidth} />
+          </Box>
+        )}
+
+        {(activeTool === 'highlight' || activeTool === 'inkHighlighter') && (
+          <Box>
+            <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+            <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} />
+          </Box>
+        )}
+
+        {activeTool === 'inkHighlighter' && (
+          <Box>
+            <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+            <Slider min={1} max={20} value={freehandHighlighterWidth} onChange={setFreehandHighlighterWidth} />
+          </Box>
+        )}
+
+        {activeTool === 'text' && (
+          <Box>
+            <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
+            <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
+          </Box>
+        )}
+
+        {['square', 'circle', 'line', 'polygon'].includes(activeTool) && (
+          <>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Slider min={10} max={100} value={shapeOpacity} onChange={(value) => {
+                setShapeOpacity(value);
+                setShapeStrokeOpacity(value);
+                setShapeFillOpacity(value);
+              }} />
+            </Box>
+            <Box>
+              {activeTool === 'line' ? (
                 <>
-                  <Text size="xs" c="dimmed">{t('annotation.opacity', 'Opacity')}</Text>
+                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+                  <Slider min={1} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                </>
+              ) : (
+                <Group gap="xs" align="flex-end">
+                  <Box style={{ flex: 1 }}>
+                    <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Stroke')}</Text>
+                    <Slider min={0} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                  </Box>
+                  <Button
+                    size="xs"
+                    variant={shapeThickness === 0 ? 'filled' : 'light'}
+                    onClick={() => setShapeThickness(shapeThickness === 0 ? 1 : 0)}
+                  >
+                    {shapeThickness === 0
+                      ? t('annotation.borderOff', 'Border: Off')
+                      : t('annotation.borderOn', 'Border: On')
+                    }
+                  </Button>
+                </Group>
+              )}
+            </Box>
+          </>
+        )}
+          </>
+        )}
+      </Stack>
+    );
+
+    const selectedAnnotationControls = selectedAnn && (() => {
+      const type = selectedAnn.object?.type;
+
+      // Type 9: Highlight, Type 10: Underline, Type 11: Squiggly, Type 12: Strikeout
+      if ([9, 10, 11, 12].includes(type)) {
+        return (
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('annotation.editTextMarkup', 'Edit Text Markup')}</Text>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
+              <ColorSwatchButton
+                color={selectedAnn.object?.color ?? highlightColor}
+                size={28}
+                onClick={() => {
+                  setColorPickerTarget('highlight');
+                  setIsColorPickerOpen(true);
+                }}
+              />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Slider
+                min={10}
+                max={100}
+                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { opacity: value / 100 }
+                  );
+                }}
+              />
+            </Box>
+          </Stack>
+        );
+      }
+
+      // Type 15: Ink (pen)
+      if (type === 15) {
+        return (
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('annotation.editInk', 'Edit Pen')}</Text>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
+              <ColorSwatchButton
+                color={selectedAnn.object?.color ?? inkColor}
+                size={28}
+                onClick={() => {
+                  setColorPickerTarget('ink');
+                  setIsColorPickerOpen(true);
+                }}
+              />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+              <Slider
+                min={1}
+                max={12}
+                value={selectedAnn.object?.borderWidth ?? inkWidth}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    {
+                      borderWidth: value,
+                      strokeWidth: value,
+                      lineWidth: value,
+                    }
+                  );
+                  setInkWidth(value);
+                }}
+              />
+            </Box>
+          </Stack>
+        );
+      }
+
+      // Type 3: Text box, Type 1: Note
+      if ([1, 3].includes(type)) {
+        return (
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{type === 3 ? t('annotation.editText', 'Edit Text Box') : t('annotation.editNote', 'Edit Note')}</Text>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
+              <ColorSwatchButton
+                color={selectedAnn.object?.textColor ?? selectedAnn.object?.color ?? textColor}
+                size={28}
+                onClick={() => {
+                  setColorPickerTarget('text');
+                  setIsColorPickerOpen(true);
+                }}
+              />
+            </Box>
+            <TextInput
+              label={t('annotation.text', 'Text')}
+              value={selectedTextDraft}
+              onChange={(e) => {
+                const val = e.currentTarget.value;
+                setSelectedTextDraft(val);
+                if (selectedUpdateTimer.current) {
+                  clearTimeout(selectedUpdateTimer.current);
+                }
+                selectedUpdateTimer.current = setTimeout(() => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { contents: val, textColor: selectedAnn.object?.textColor ?? textColor }
+                  );
+                }, 120);
+              }}
+            />
+            {type === 3 && (
+              <NumberInput
+                label={t('annotation.fontSize', 'Font size')}
+                min={6}
+                max={72}
+                value={selectedFontSize}
+                onChange={(val) => {
+                  const size = typeof val === 'number' ? val : 14;
+                  setSelectedFontSize(size);
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { fontSize: size }
+                  );
+                }}
+              />
+            )}
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Slider
+                min={10}
+                max={100}
+                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { opacity: value / 100 }
+                  );
+                }}
+              />
+            </Box>
+          </Stack>
+        );
+      }
+
+      // Type 4: Line
+      if (type === 4) {
+        return (
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('annotation.editLine', 'Edit Line')}</Text>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
+              <ColorSwatchButton
+                color={selectedAnn.object?.strokeColor ?? shapeStrokeColor}
+                size={28}
+                onClick={() => {
+                  setColorPickerTarget('shapeStroke');
+                  setIsColorPickerOpen(true);
+                }}
+              />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Slider
+                min={10}
+                max={100}
+                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { opacity: value / 100 }
+                  );
+                }}
+              />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+              <Slider
+                min={1}
+                max={12}
+                value={selectedAnn.object?.borderWidth ?? shapeThickness}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    {
+                      borderWidth: value,
+                      strokeWidth: value,
+                      lineWidth: value,
+                    }
+                  );
+                  setShapeThickness(value);
+                }}
+              />
+            </Box>
+          </Stack>
+        );
+      }
+
+      // Type 5: Square, Type 6: Circle, Type 7: Polygon
+      if ([5, 6, 7].includes(type)) {
+        const shapeName = type === 5 ? 'Square' : type === 6 ? 'Circle' : 'Polygon';
+        return (
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t(`annotation.edit${shapeName}`, `Edit ${shapeName}`)}</Text>
+            <Group gap="md">
+              <Stack gap={4} align="center">
+                <Text size="xs" c="dimmed">{t('annotation.strokeColor', 'Stroke Color')}</Text>
+                <ColorSwatchButton
+                  color={selectedAnn.object?.strokeColor ?? shapeStrokeColor}
+                  size={28}
+                  onClick={() => {
+                    setColorPickerTarget('shapeStroke');
+                    setIsColorPickerOpen(true);
+                  }}
+                />
+              </Stack>
+              <Stack gap={4} align="center">
+                <Text size="xs" c="dimmed">{t('annotation.fillColor', 'Fill Color')}</Text>
+                <ColorSwatchButton
+                  color={selectedAnn.object?.color ?? shapeFillColor}
+                  size={28}
+                  onClick={() => {
+                    setColorPickerTarget('shapeFill');
+                    setIsColorPickerOpen(true);
+                  }}
+                />
+              </Stack>
+            </Group>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Slider
+                min={10}
+                max={100}
+                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                onChange={(value) => {
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    { opacity: value / 100 }
+                  );
+                }}
+              />
+            </Box>
+            <Group gap="xs" align="flex-end">
+              <Box style={{ flex: 1 }}>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Stroke')}</Text>
                 <Slider
-                  min={10}
-                  max={100}
-                  value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                  min={0}
+                  max={12}
+                  value={selectedAnn.object?.borderWidth ?? shapeThickness}
                   onChange={(value) => {
                     signatureApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
-                      { opacity: value / 100 }
-                    );
-                  }}
-                />
-              </>
-              )}
-              {(selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15 || selectedAnn.object?.type === 3 || selectedAnn.object?.type === 1) && (
-                <ColorSwatchButton
-                  color={selectedAnn.object?.color ?? selectedAnn.object?.textColor ?? highlightColor}
-                  size={28}
-                  onClick={() => {
-                    setColorPickerTarget('highlight');
-                    setIsColorPickerOpen(true);
-                  }}
-                />
-              )}
-              {(selectedAnn.object?.type === 3 || selectedAnn.object?.type === 1) && (
-                <>
-                  <TextInput
-                    label={t('annotation.text', 'Text')}
-                    value={selectedTextDraft}
-                    onChange={(e) => {
-                      const val = e.currentTarget.value;
-                      setSelectedTextDraft(val);
-                      if (selectedUpdateTimer.current) {
-                        clearTimeout(selectedUpdateTimer.current);
+                      {
+                        borderWidth: value,
+                        strokeWidth: value,
+                        lineWidth: value,
                       }
-                      selectedUpdateTimer.current = setTimeout(() => {
-                        signatureApiRef?.current?.updateAnnotation?.(
-                          selectedAnn.object?.pageIndex ?? 0,
-                          selectedAnn.object?.id,
-                          { contents: val, textColor: selectedAnn.object?.textColor ?? textColor }
-                        );
-                      }, 120);
-                    }}
-                  />
-                  {selectedAnn.object?.type === 3 && (
-                    <NumberInput
-                      label={t('annotation.fontSize', 'Font size')}
-                      min={6}
-                      max={72}
-                      value={selectedFontSize}
-                      onChange={(val) => {
-                        const size = typeof val === 'number' ? val : 14;
-                        setSelectedFontSize(size);
-                        signatureApiRef?.current?.updateAnnotation?.(
-                          selectedAnn.object?.pageIndex ?? 0,
-                          selectedAnn.object?.id,
-                          { fontSize: size }
-                        );
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {['4','5','7','8','12','15'].includes(String(selectedAnn.object?.type)) && (
-                <>
-                  <Text size="xs" c="dimmed">{t('annotation.opacity', 'Opacity')}</Text>
-                  <Slider
-                    min={10}
-                    max={100}
-                    value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
-                    onChange={(value) => {
-                      signatureApiRef?.current?.updateAnnotation?.(
-                        selectedAnn.object?.pageIndex ?? 0,
-                        selectedAnn.object?.id,
-                        { opacity: value / 100 }
-                      );
-                    }}
-                  />
-                  <Text size="xs" c="dimmed">{t('annotation.strokeWidth', 'Stroke')}</Text>
-                  <Slider
-                    min={1}
-                    max={12}
-                    value={selectedAnn.object?.borderWidth ?? shapeThickness}
-                    onChange={(value) => {
-                      signatureApiRef?.current?.updateAnnotation?.(
-                        selectedAnn.object?.pageIndex ?? 0,
-                        selectedAnn.object?.id,
-                        { borderWidth: value }
-                      );
-                      setShapeThickness(value);
-                    }}
-                  />
-                  <Group gap="xs">
-                    <ColorSwatchButton
-                      color={selectedAnn.object?.color ?? shapeStrokeColor}
-                      size={28}
-                      onClick={() => {
-                        setColorPickerTarget('shapeStroke');
-                        setIsColorPickerOpen(true);
-                      }}
-                    />
-                    {['4','5','7','8','12'].includes(String(selectedAnn.object?.type)) && (
-                      <ColorSwatchButton
-                        color={selectedAnn.object?.interiorColor ?? shapeFillColor}
-                        size={28}
-                        onClick={() => {
-                          setColorPickerTarget('shapeFill');
-                          setIsColorPickerOpen(true);
-                        }}
-                      />
-                    )}
-                  </Group>
-                </>
-              )}
-            </Stack>
-          )}
+                    );
+                    setShapeThickness(value);
+                  }}
+                />
+              </Box>
+              <Button
+                size="xs"
+                variant={(selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 'filled' : 'light'}
+                onClick={() => {
+                  const newValue = (selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 1 : 0;
+                  signatureApiRef?.current?.updateAnnotation?.(
+                    selectedAnn.object?.pageIndex ?? 0,
+                    selectedAnn.object?.id,
+                    {
+                      borderWidth: newValue,
+                      strokeWidth: newValue,
+                      lineWidth: newValue,
+                    }
+                  );
+                  setShapeThickness(newValue);
+                }}
+              >
+                {(selectedAnn.object?.borderWidth ?? shapeThickness) === 0
+                  ? t('annotation.borderOff', 'Border: Off')
+                  : t('annotation.borderOn', 'Border: On')
+                }
+              </Button>
+            </Group>
+          </Stack>
+        );
+      }
+
+      // Default fallback
+      return (
+        <Stack gap="sm">
+          <Text size="sm" fw={600}>{t('annotation.editSelected', 'Edit Annotation')}</Text>
+          <Text size="xs" c="dimmed">{t('annotation.unsupportedType', 'This annotation type is not fully supported for editing.')}</Text>
+        </Stack>
+      );
+    })();
+
+    const saveAndColorPicker = (
+      <>
         <Button
+          fullWidth
           variant="light"
           leftSection={<LocalIcon icon="save" width="1rem" height="1rem" />}
           onClick={async () => {
@@ -457,6 +814,62 @@ const Annotate = (_props: BaseToolProps) => {
           isOpen={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
           selectedColor={activeColor}
+          showOpacity={colorPickerTarget !== 'text' && colorPickerTarget !== 'shapeStroke' && colorPickerTarget !== 'shapeFill' && colorPickerTarget !== null}
+          opacity={
+            colorPickerTarget === 'highlight' ? highlightOpacity :
+            colorPickerTarget === 'underline' ? underlineOpacity :
+            colorPickerTarget === 'strikeout' ? strikeoutOpacity :
+            colorPickerTarget === 'squiggly' ? squigglyOpacity :
+            colorPickerTarget === 'shapeStroke' ? shapeStrokeOpacity :
+            colorPickerTarget === 'shapeFill' ? shapeFillOpacity :
+            100
+          }
+          opacityLabel={
+            colorPickerTarget === 'shapeStroke' ? t('annotation.strokeOpacity', 'Stroke Opacity') :
+            colorPickerTarget === 'shapeFill' ? t('annotation.fillOpacity', 'Fill Opacity') :
+            undefined
+          }
+          onOpacityChange={(opacity) => {
+            if (colorPickerTarget === 'highlight') {
+              setHighlightOpacity(opacity);
+              if (activeTool === 'highlight' || activeTool === 'inkHighlighter') {
+                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+              }
+              if (selectedAnn?.object?.id && (selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15)) {
+                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+              }
+            } else if (colorPickerTarget === 'underline') {
+              setUnderlineOpacity(opacity);
+              signatureApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
+              if (selectedAnn?.object?.id && selectedAnn.object?.type === 10) {
+                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+              }
+            } else if (colorPickerTarget === 'strikeout') {
+              setStrikeoutOpacity(opacity);
+              signatureApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
+              if (selectedAnn?.object?.id && selectedAnn.object?.type === 12) {
+                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+              }
+            } else if (colorPickerTarget === 'squiggly') {
+              setSquigglyOpacity(opacity);
+              signatureApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
+              if (selectedAnn?.object?.id && selectedAnn.object?.type === 11) {
+                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+              }
+            } else if (colorPickerTarget === 'shapeStroke') {
+              setShapeStrokeOpacity(opacity);
+              const shapeTools = ['square', 'circle', 'polygon'] as AnnotationToolId[];
+              if (shapeTools.includes(activeTool)) {
+                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+              }
+            } else if (colorPickerTarget === 'shapeFill') {
+              setShapeFillOpacity(opacity);
+              const fillShapeTools = ['square', 'circle', 'polygon'] as AnnotationToolId[];
+              if (fillShapeTools.includes(activeTool)) {
+                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+              }
+            }
+          }}
           onColorChange={(color) => {
             if (colorPickerTarget === 'ink') {
               setInkColor(color);
@@ -504,24 +917,33 @@ const Annotate = (_props: BaseToolProps) => {
                 });
               }
             }
-            if (colorPickerTarget === 'shapeStroke' && ['square', 'circle', 'line', 'lineArrow', 'polyline', 'polygon'].includes(activeTool)) {
+            const shapeTools = ['square', 'circle', 'line', 'lineArrow', 'polyline', 'polygon'] as AnnotationToolId[];
+            const fillShapeTools = ['square', 'circle', 'polygon'] as AnnotationToolId[];
+
+            if (colorPickerTarget === 'shapeStroke') {
               setShapeStrokeColor(color);
-              signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+              const styleTool = shapeTools.includes(activeTool) ? activeTool : null;
+              if (styleTool) {
+                signatureApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+              }
               if (selectedAnn?.object?.id) {
                 signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
-                  color,
-                  strokeColor: color,
+                  strokeColor: color, // border color
+                  color: selectedAnn.object?.color ?? shapeFillColor, // preserve fill
                   borderWidth: shapeThickness,
                 });
               }
             }
-            if (colorPickerTarget === 'shapeFill' && ['square', 'circle', 'polygon'].includes(activeTool)) {
+            if (colorPickerTarget === 'shapeFill') {
               setShapeFillColor(color);
-              signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
-              if (selectedAnn && (selectedAnn.object?.interiorColor !== undefined || ['4','5','7','8','12'].includes(String(selectedAnn.object?.type)))) {
+              const styleTool = fillShapeTools.includes(activeTool) ? activeTool : null;
+              if (styleTool) {
+                signatureApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+              }
+              if (selectedAnn?.object?.id) {
                 signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
-                  interiorColor: color,
-                  fillColor: color,
+                  color, // fill color
+                  strokeColor: selectedAnn.object?.strokeColor ?? shapeStrokeColor, // preserve border
                   borderWidth: shapeThickness,
                 });
               }
@@ -529,7 +951,7 @@ const Annotate = (_props: BaseToolProps) => {
           }}
           title={t('annotation.chooseColor', 'Choose color')}
         />
-      </Stack>
+      </>
     );
 
     return [
@@ -539,27 +961,137 @@ const Annotate = (_props: BaseToolProps) => {
         onCollapsedClick: undefined,
         content: (
           <Stack gap="md">
-            <Alert color="blue" radius="md">
-              <Text size="sm" fw={600}>
-                {t('annotation.desc', 'Use highlight, pen, text, and notes. Changes stay live—no flattening required.')}
-              </Text>
-            </Alert>
+            {/* Annotation Controls */}
+            <Group gap="xs" wrap="nowrap">
+              {isAnnotationPaused ? (
+                <Tooltip label={t('annotation.resumeTooltip', 'Resume placement')}>
+                  <ActionIcon
+                    variant="default"
+                    size="lg"
+                    onClick={() => {
+                      viewerContext?.setAnnotationMode(true);
+                      signatureApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
+                      setIsAnnotationPaused(false);
+                    }}
+                    style={{
+                      width: 'auto',
+                      paddingInline: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}
+                  >
+                    <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                    <Text component="span" size="sm" fw={500}>
+                      {t('annotation.resume', 'Resume placement')}
+                    </Text>
+                  </ActionIcon>
+                </Tooltip>
+              ) : (
+                <Tooltip label={t('annotation.pauseTooltip', 'Pause placement')}>
+                  <ActionIcon
+                    variant="default"
+                    size="lg"
+                    onClick={() => {
+                      signatureApiRef?.current?.deactivateTools();
+                      setIsAnnotationPaused(true);
+                    }}
+                    style={{
+                      width: 'auto',
+                      paddingInline: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}
+                  >
+                    <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                    <Text component="span" size="sm" fw={500}>
+                      {t('annotation.pause', 'Pause placement')}
+                    </Text>
+                  </ActionIcon>
+                </Tooltip>
+              )}
+
+              <Tooltip label={t('annotation.undo', 'Undo')}>
+                <ActionIcon
+                  variant="default"
+                  size="lg"
+                  onClick={undo}
+                  disabled={!historyAvailability.canUndo}
+                >
+                  <LocalIcon icon="undo" width={20} height={20} />
+                </ActionIcon>
+              </Tooltip>
+
+              <Tooltip label={t('annotation.redo', 'Redo')}>
+                <ActionIcon
+                  variant="default"
+                  size="lg"
+                  onClick={redo}
+                  disabled={!historyAvailability.canRedo}
+                >
+                  <LocalIcon icon="redo" width={20} height={20} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+
+            {/* Text Markup Tools */}
             <Box>
-              <Text size="sm" mb="xs" fw={600}>{t('annotation.title', 'Annotate')}</Text>
-              {toolButtons}
+              <Text size="sm" fw={600} mb="xs">{t('annotation.textMarkup', 'Text Markup')}</Text>
+              {renderToolButtons(textMarkupTools)}
             </Box>
-            {controls}
+
+            {/* Drawing Tools */}
+            <Box>
+              <Text size="sm" fw={600} mb="xs">{t('annotation.drawing', 'Drawing')}</Text>
+              {renderToolButtons(drawingTools)}
+            </Box>
+
+            {/* Shape Tools */}
+            <Box>
+              <Text size="sm" fw={600} mb="xs">{t('annotation.shapes', 'Shapes')}</Text>
+              {renderToolButtons(shapeTools)}
+            </Box>
+
+            {/* Other Tools */}
+            <Box>
+              <Text size="sm" fw={600} mb="xs">{t('annotation.notesStamps', 'Notes & Stamps')}</Text>
+              {renderToolButtons(otherTools)}
+            </Box>
+
+            {/* Settings */}
+            {!selectedAnn && defaultStyleControls}
+
+            {/* Edit Selected */}
+            {selectedAnn && selectedAnnotationControls}
+
+            {/* Save Button */}
+            {saveAndColorPicker}
           </Stack>
         ),
       },
     ];
   }, [
     activeTool,
-    annotationTools,
+    textMarkupTools,
+    drawingTools,
+    shapeTools,
+    otherTools,
     highlightColor,
     highlightOpacity,
+    underlineColor,
+    underlineOpacity,
+    strikeoutColor,
+    strikeoutOpacity,
+    squigglyColor,
+    squigglyOpacity,
     inkColor,
     inkWidth,
+    shapeStrokeColor,
+    shapeFillColor,
+    shapeStrokeOpacity,
+    shapeFillOpacity,
+    shapeThickness,
     selectedFiles.length,
     t,
     selectedAnn,
@@ -567,6 +1099,12 @@ const Annotate = (_props: BaseToolProps) => {
     textSize,
     viewerContext?.exportActions,
     selectors,
+    signatureApiRef,
+    setActiveTool,
+    isColorPickerOpen,
+    colorPickerTarget,
+    activeColor,
+    buildToolOptions,
   ]);
 
   return createToolFlow({

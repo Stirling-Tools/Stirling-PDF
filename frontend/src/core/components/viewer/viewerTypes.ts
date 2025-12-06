@@ -17,7 +17,17 @@ export interface SignatureAPI {
   activateAnnotationTool?: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
   setAnnotationStyle?: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
   getSelectedAnnotation?: () => any | null;
+  deselectAnnotation?: () => void;
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: Partial<any>) => void;
+}
+
+export interface AnnotationAPI {
+  activateAnnotationTool: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
+  setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
+  getSelectedAnnotation: () => any | null;
+  deselectAnnotation: () => void;
+  updateAnnotation: (pageIndex: number, annotationId: string, patch: Partial<any>) => void;
+  deactivateTools: () => void;
 }
 
 export interface HistoryAPI {
@@ -52,6 +62,8 @@ export interface AnnotationToolOptions {
   color?: string;
   fillColor?: string;
   opacity?: number;
+  strokeOpacity?: number;
+  fillOpacity?: number;
   thickness?: number;
   fontSize?: number;
   fontFamily?: string;

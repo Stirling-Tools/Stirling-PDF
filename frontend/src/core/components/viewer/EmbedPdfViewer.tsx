@@ -11,6 +11,7 @@ import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
+import { useAnnotation } from '@app/contexts/AnnotationContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
@@ -67,8 +68,9 @@ const EmbedPdfViewerContent = ({
     }
   }, [rotationState.rotation]);
 
-  // Get signature context
+  // Get signature and annotation contexts
   const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+  const { annotationApiRef } = useAnnotation();
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();
@@ -324,6 +326,7 @@ const EmbedPdfViewerContent = ({
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
+              annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed

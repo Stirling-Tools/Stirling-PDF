@@ -533,6 +533,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     getSelectedAnnotation: () => {
       return annotationApi?.getSelectedAnnotation?.() ?? null;
     },
+    deselectAnnotation: () => {
+      const api = annotationApi as any;
+      api?.deselectAnnotation?.();
+    },
     updateAnnotation: (pageIndex: number, annotationId: string, patch: Partial<any>) => {
       annotationApi?.updateAnnotation?.(pageIndex, annotationId, patch);
     },

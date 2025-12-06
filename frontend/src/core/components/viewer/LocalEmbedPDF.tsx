@@ -38,8 +38,9 @@ import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
+import { AnnotationAPIBridge } from '@app/components/viewer/AnnotationAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
-import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, AnnotationAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
 import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
@@ -53,10 +54,11 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
+  annotationApiRef?: React.RefObject<AnnotationAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -329,6 +331,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                 color: '#1f2933',
                 opacity: 1,
                 borderWidth: 2,
+                lineWidth: 2,
+                strokeWidth: 2,
               },
               behavior: {
                 deactivateToolAfterCreate: false,
@@ -346,6 +350,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                 color: '#ffd54f',
                 opacity: 0.5,
                 borderWidth: 6,
+                lineWidth: 6,
+                strokeWidth: 6,
               },
               behavior: {
                 deactivateToolAfterCreate: false,
@@ -360,10 +366,12 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.SQUARE,
-                color: '#1565c0',
-                interiorColor: '#e3f2fd',
-                opacity: 0.35,
-                borderWidth: 2,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
+                strokeWidth: 1,
+                lineWidth: 1,
               },
               clickBehavior: {
                 enabled: true,
@@ -382,10 +390,12 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.CIRCLE,
-                color: '#1565c0',
-                interiorColor: '#e3f2fd',
-                opacity: 0.35,
-                borderWidth: 2,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
+                strokeWidth: 1,
+                lineWidth: 1,
               },
               clickBehavior: {
                 enabled: true,
@@ -407,6 +417,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                 color: '#1565c0',
                 opacity: 1,
                 borderWidth: 2,
+                strokeWidth: 2,
+                lineWidth: 2,
               },
               clickBehavior: {
                 enabled: true,
@@ -472,10 +484,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.POLYGON,
-                color: '#1565c0',
-                interiorColor: '#e3f2fd',
-                opacity: 0.35,
-                borderWidth: 2,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
               },
               clickBehavior: {
                 enabled: true,
@@ -604,6 +616,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
+        {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
         <BookmarkAPIBridge />
