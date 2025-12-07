@@ -410,6 +410,7 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+            private String embedpdfFrontend;
         }
     }
 
@@ -646,6 +647,7 @@ public class ApplicationProperties {
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int pdfiumRedactorSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -686,6 +688,10 @@ public class ApplicationProperties {
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
+
+            public int getPdfiumRedactorSessionLimit() {
+                return pdfiumRedactorSessionLimit > 0 ? pdfiumRedactorSessionLimit : 1;
+            }
         }
 
         @Data
@@ -712,6 +718,7 @@ public class ApplicationProperties {
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long pdfiumRedactorTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -751,6 +758,10 @@ public class ApplicationProperties {
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getPdfiumRedactorTimeoutMinutes() {
+                return pdfiumRedactorTimeoutMinutes > 0 ? pdfiumRedactorTimeoutMinutes : 30;
             }
         }
     }

@@ -97,6 +97,11 @@ public class ProcessExecutor {
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
                                 case CFF_CONVERTER -> 1;
+                                case PDFIUM_REDACTOR ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPdfiumRedactorSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -151,6 +156,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
+                                case PDFIUM_REDACTOR ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getPdfiumRedactorTimeoutMinutes();
                                 case CFF_CONVERTER -> 5L;
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
@@ -305,6 +315,7 @@ public class ProcessExecutor {
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
+        PDFIUM_REDACTOR,
         CFF_CONVERTER
     }
 
