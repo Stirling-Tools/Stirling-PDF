@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   stale:
-    if: ${{ hashFiles('.ci-lite') == '' }}
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     permissions:
       issues: write

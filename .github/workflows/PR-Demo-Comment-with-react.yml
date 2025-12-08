@@ -14,7 +14,7 @@ jobs:
     permissions:
       issues: write
     if: |
-      hashFiles('.ci-lite') == '' &&
+      vars.CI_PROFILE != 'lite' &&
       github.event.issue.pull_request &&
       (
         contains(github.event.comment.body, 'prdeploy') ||

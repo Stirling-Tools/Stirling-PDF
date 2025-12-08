@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   determine-matrix:
-    if: ${{ hashFiles('.ci-lite') == '' }}
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
