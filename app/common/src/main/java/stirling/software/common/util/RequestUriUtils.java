@@ -162,10 +162,27 @@ public class RequestUriUtils {
                 // enableLogin)
                 || trimmedUri.startsWith(
                         "/api/v1/ui-data/footer-info") // Public footer configuration
-                || trimmedUri.startsWith("/v1/api-docs")
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
+                || trimmedUri.startsWith("/v1/api-docs") // OpenAPI documentation (public)
                 || trimmedUri.contains("/v1/api-docs");
+    }
+
+    /**
+     * Checks if the request URI is a Swagger UI endpoint. These endpoints require authentication
+     * but should bypass filter-level authentication checks to allow Spring Security to handle auth.
+     *
+     * @param requestURI The full request URI
+     * @param contextPath The servlet context path
+     * @return true if the endpoint is a Swagger UI endpoint
+     */
+    public static boolean isSwaggerUiEndpoint(String requestURI, String contextPath) {
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
+        return trimmedUri.startsWith("/swagger-ui") || trimmedUri.contains("/swagger-ui");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

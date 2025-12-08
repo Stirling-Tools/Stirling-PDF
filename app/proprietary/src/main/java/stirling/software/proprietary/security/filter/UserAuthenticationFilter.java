@@ -241,24 +241,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
-        // Remove context path from URI to normalize path matching
-        String trimmedUri =
-                requestURI.startsWith(contextPath)
-                        ? requestURI.substring(contextPath.length())
-                        : requestURI;
-
-        // Public auth endpoints that don't require authentication
-        return trimmedUri.startsWith("/login")
-                || trimmedUri.startsWith("/auth/")
-                || trimmedUri.startsWith("/oauth2")
-                || trimmedUri.startsWith("/saml2")
-                || trimmedUri.startsWith("/api/v1/auth/login")
-                || trimmedUri.startsWith("/api/v1/auth/refresh")
-                || trimmedUri.startsWith("/api/v1/auth/logout")
-                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/login");
-    }
-
     private enum UserLoginType {
         USERDETAILS("UserDetails"),
         OAUTH2USER("OAuth2User"),
@@ -290,6 +272,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     || RequestUriUtils.isFrontendRoute(contextPath, uri)) {
                 return true;
             }
+        }
+
+        // Skip filter for Swagger UI - let Spring Security handle authentication
+        if (RequestUriUtils.isSwaggerUiEndpoint(uri, contextPath)) {
+            return true;
         }
 
         // For API routes, only skip filter for these public endpoints
