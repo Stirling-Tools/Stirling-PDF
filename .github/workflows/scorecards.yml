@@ -17,6 +17,7 @@ permissions: read-all
 
 jobs:
   analysis:
+    if: ${{ hashFiles('.ci-lite') == '' }}
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:

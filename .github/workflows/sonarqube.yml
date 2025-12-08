@@ -27,6 +27,7 @@ permissions:
 
 jobs:
   sonarqube:
+    if: ${{ hashFiles('.ci-lite') == '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner

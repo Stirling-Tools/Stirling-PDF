@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   deploy:
+    if: ${{ hashFiles('.ci-lite') == '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
