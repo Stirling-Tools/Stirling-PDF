@@ -34,6 +34,7 @@ public class ExternalAppDepConfig {
     private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+){0,2})");
 
     private final EndpointConfiguration endpointConfiguration;
+    private volatile boolean dependenciesChecked = false;
 
     private final boolean isWindows =
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
@@ -78,6 +79,10 @@ public class ExternalAppDepConfig {
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
+    public boolean isDependenciesChecked() {
+        return dependenciesChecked;
+    }
+
     @PostConstruct
     public void checkDependencies() {
         try {
@@ -95,6 +100,8 @@ public class ExternalAppDepConfig {
 
             // Python / OpenCV special handling
             checkPythonAndOpenCV();
+
+            dependenciesChecked = true;
         } finally {
             endpointConfiguration.logDisabledEndpointsSummary();
             pool.shutdown();

@@ -1,11 +1,9 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -22,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -44,52 +43,26 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public static final String KEY_SUFFIX = ".key";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
+    private final CacheManager cacheManager;
     private final Cache verifyingKeyCache;
 
     private volatile JwtVerificationKey activeKey;
 
+    @Autowired
     public KeyPersistenceService(
             ApplicationProperties applicationProperties, CacheManager cacheManager) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
+        this.cacheManager = cacheManager;
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
-    }
-
-    /** Move all key files from db/keys to backup/keys */
-    @Deprecated(since = "2.0.0", forRemoval = true)
-    private void moveKeysToBackup() {
-        Path sourceDir =
-                Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys").normalize();
-
-        if (!Files.exists(sourceDir)) {
-            log.info("Source directory does not exist: {}", sourceDir);
-            return;
-        }
-
-        Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath()).normalize();
-
-        try {
-            Files.createDirectories(targetDir);
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
-                for (Path entry : stream) {
-                    Files.move(
-                            entry,
-                            targetDir.resolve(entry.getFileName()),
-                            StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-        } catch (IOException e) {
-            log.error("Error moving key files to backup: {}", e.getMessage(), e);
-        }
     }
 
     @PostConstruct
     public void initializeKeystore() {
-        if (!jwtProperties.isEnabled()) {
+        if (!isKeystoreEnabled()) {
             return;
         }
 
         try {
-            moveKeysToBackup();
             ensurePrivateKeyDirectoryExists();
             loadKeyPair();
         } catch (Exception e) {
@@ -132,7 +105,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     @Override
     public Optional<KeyPair> getKeyPair(String keyId) {
-        if (!jwtProperties.isEnabled()) {
+        if (!isKeystoreEnabled()) {
             return Optional.empty();
         }
 
@@ -153,6 +126,11 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             log.error("Failed to load keypair for keyId: {}", keyId, e);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public boolean isKeystoreEnabled() {
+        return jwtProperties.isEnableKeystore();
     }
 
     @Override
@@ -181,7 +159,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 nativeCache.asMap().size());
 
         return nativeCache.asMap().values().stream()
-                .filter(JwtVerificationKey.class::isInstance)
+                .filter(value -> value instanceof JwtVerificationKey)
                 .map(value -> (JwtVerificationKey) value)
                 .filter(
                         key -> {
@@ -255,16 +233,11 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
-    @Override
     public PublicKey decodePublicKey(String encodedKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
-    }
-
-    public boolean isKeystoreEnabled() {
-        return jwtProperties.isEnabled();
     }
 }

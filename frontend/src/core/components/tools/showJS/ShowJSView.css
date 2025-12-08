@@ -1,0 +1,131 @@
+.showjs-code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.tok-kw {
+  color: var(--code-kw-color);
+  font-weight: 600;
+}
+.tok-str {
+  color: var(--code-str-color);
+}
+.tok-num {
+  color: var(--code-num-color);
+}
+.tok-com {
+  color: var(--code-com-color);
+  font-style: italic;
+}
+
+.code-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.code-gutter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 64px;
+  color: var(--text-muted);
+  user-select: none;
+}
+.line-number {
+  min-width: 28px;
+  text-align: right;
+}
+.fold-toggle {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 2px;
+}
+.fold-collapsed {
+  transform: translateY(-1px);
+}
+.fold-placeholder {
+  display: inline-block;
+  width: 10px;
+}
+.code-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1 1 auto;
+}
+.collapsed-indicator {
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: pointer;
+  padding-left: 8px;
+}
+.collapsed-inline {
+  color: var(--text-muted);
+  margin-left: 6px;
+}
+.search-hit {
+  background: rgba(255, 235, 59, 0.4); /* yellow highlight */
+  border-radius: 2px;
+}
+.search-hit-active {
+  background: rgba(33, 150, 243, 0.4); /* active blue */
+}
+
+.showjs-root {
+  height: 100%;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.showjs-container {
+  position: relative;
+  height: 100%;
+  min-height: 360px;
+  border: 1px solid var(--mantine-color-gray-4);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--right-rail-bg);
+}
+
+.showjs-toolbar {
+  position: sticky;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 0;
+  padding: 8px;
+  background: transparent;
+  margin-bottom: 10px;
+  margin-left: 6px;
+  pointer-events: none;
+}
+
+.showjs-toolbar-controls {
+  pointer-events: auto;
+}
+
+.showjs-search-input {
+  width: 220px;
+}
+
+.showjs-outline-button {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: var(--mantine-color-blue-5);
+}
+
+.showjs-scrollarea {
+  height: calc(100vh - 220px);
+}
+
+.showjs-inner {
+  padding: 40px 24px 24px 24px;
+}

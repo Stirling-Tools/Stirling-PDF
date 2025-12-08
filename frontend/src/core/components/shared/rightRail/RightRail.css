@@ -1,0 +1,164 @@
+.right-rail {
+  background-color: var(--right-rail-bg);
+  width: 3.5rem;
+  min-width: 3.5rem;
+  max-width: 3.5rem;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.right-rail-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0.5rem;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+.right-rail-section {
+  background-color: var(--right-rail-foreground);
+  border-radius: 12px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.right-rail-button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  animation: rightRailButtonReveal 200ms ease forwards;
+  transform-origin: top center;
+  opacity: 0;
+}
+
+.right-rail-tooltip-wrapper {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+}
+
+@keyframes rightRailButtonReveal {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.6) translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+.right-rail-divider {
+  width: 2.75rem;
+  border: none;
+  border-top: 1px solid var(--tool-subcategory-rule-color);
+  margin: 0.25rem 0;
+}
+
+.right-rail-icon {
+  color: var(--right-rail-icon);
+}
+
+.right-rail-icon[aria-disabled="true"],
+.right-rail-icon[disabled] {
+  color: var(--right-rail-icon-disabled) !important;
+  background-color: transparent !important;
+}
+
+/* When all buttons are disabled via context */
+.right-rail--all-disabled .right-rail-icon {
+  color: var(--right-rail-icon-disabled) !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+}
+
+.right-rail-spacer {
+  flex: 1;
+}
+
+/* Animated grow-down slot for buttons (mirrors current-tool-slot behavior) */
+.right-rail-slot {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 450ms ease-out, opacity 300ms ease-out;
+}
+
+.right-rail-enter {
+  animation: rightRailGrowDown 450ms ease-out;
+}
+
+.right-rail-exit {
+  animation: rightRailShrinkUp 450ms ease-out;
+}
+
+.right-rail-slot.visible {
+  max-height: 40rem; /* increased to fit additional controls + divider */
+  opacity: 1;
+}
+
+@keyframes rightRailGrowDown {
+  0% {
+    max-height: 0;
+    opacity: 0;
+  }
+  100% {
+    max-height: 40rem;
+    opacity: 1;
+  }
+}
+
+@keyframes rightRailShrinkUp {
+  0% {
+    max-height: 40rem;
+    opacity: 1;
+  }
+  100% {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+/* Remove bottom margin from close icon */
+.right-rail-slot .right-rail-icon {
+  margin-bottom: 0;
+}
+
+/* Inline appear/disappear animation for page-number selector button */
+.right-rail-fade {
+  transition-property: opacity, transform, max-height, visibility;
+  transition-duration: 220ms, 220ms, 220ms, 0s;
+  transition-timing-function: ease, ease, ease, linear;
+  transition-delay: 0s, 0s, 0s, 0s;
+  transform-origin: top center;
+  overflow: hidden;
+}
+
+.right-rail-fade.enter {
+  opacity: 1;
+  transform: scale(1);
+  max-height: 3rem;
+  visibility: visible;
+}
+
+.right-rail-fade.exit {
+  opacity: 0;
+  transform: scale(0.85);
+  max-height: 0;
+  visibility: hidden;
+  /* delay visibility change so opacity/max-height can finish */
+  transition-delay: 0s, 0s, 0s, 220ms;
+  pointer-events: none;
+}

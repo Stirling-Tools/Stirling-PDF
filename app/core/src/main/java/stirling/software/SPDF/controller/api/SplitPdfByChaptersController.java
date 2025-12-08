@@ -16,13 +16,9 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,7 +27,10 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -39,10 +38,8 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
+@GeneralApi
 @Slf4j
-@Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
 public class SplitPdfByChaptersController {
 
@@ -118,7 +115,10 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @PostMapping(value = "/split-pdf-by-chapters", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/split-pdf-by-chapters",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")

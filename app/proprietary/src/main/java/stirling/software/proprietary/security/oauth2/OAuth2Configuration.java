@@ -11,7 +11,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +41,7 @@ import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
 @Configuration
-@ConditionalOnBooleanProperty("security.oauth2.enabled")
+@ConditionalOnProperty(prefix = "security", name = "oauth2.enabled", havingValue = "true")
 public class OAuth2Configuration {
 
     public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
@@ -54,6 +53,9 @@ public class OAuth2Configuration {
             ApplicationProperties applicationProperties, @Lazy UserService userService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;
+        log.info(
+                "OAuth2Configuration initialized - OAuth2 enabled: {}",
+                applicationProperties.getSecurity().getOauth2().getEnabled());
     }
 
     @Bean
@@ -76,7 +78,7 @@ public class OAuth2Configuration {
     private Optional<ClientRegistration> keycloakClientRegistration() {
         OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
 
-        if (isOAuth2Enabled(oauth2) || isClientInitialised(oauth2)) {
+        if (isOAuth2Disabled(oauth2) || isClientInitialised(oauth2)) {
             return Optional.empty();
         }
 
@@ -106,7 +108,7 @@ public class OAuth2Configuration {
     private Optional<ClientRegistration> googleClientRegistration() {
         OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();
 
-        if (isOAuth2Enabled(oAuth2) || isClientInitialised(oAuth2)) {
+        if (isOAuth2Disabled(oAuth2) || isClientInitialised(oAuth2)) {
             return Optional.empty();
         }
 
@@ -139,12 +141,23 @@ public class OAuth2Configuration {
     private Optional<ClientRegistration> githubClientRegistration() {
         OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();
 
-        if (isOAuth2Enabled(oAuth2)) {
+        if (isOAuth2Disabled(oAuth2)) {
+            log.debug("OAuth2 is disabled, skipping GitHub client registration");
             return Optional.empty();
         }
 
         Client client = oAuth2.getClient();
+        if (client == null) {
+            log.debug("OAuth2 client configuration is null, skipping GitHub");
+            return Optional.empty();
+        }
+
         GitHubProvider githubClient = client.getGithub();
+        if (githubClient == null) {
+            log.debug("GitHub client configuration is null");
+            return Optional.empty();
+        }
+
         Provider github =
                 new GitHubProvider(
                         githubClient.getClientId(),
@@ -152,7 +165,10 @@ public class OAuth2Configuration {
                         githubClient.getScopes(),
                         githubClient.getUseAsUsername());
 
-        return validateProvider(github)
+        boolean isValid = validateProvider(github);
+        log.info("Initialised GitHub OAuth2 provider");
+
+        return isValid
                 ? Optional.of(
                         ClientRegistration.withRegistrationId(github.getName())
                                 .clientId(github.getClientId())
@@ -172,7 +188,7 @@ public class OAuth2Configuration {
     private Optional<ClientRegistration> oidcClientRegistration() {
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
 
-        if (isOAuth2Enabled(oauth) || isClientInitialised(oauth)) {
+        if (isOAuth2Disabled(oauth) || isClientInitialised(oauth)) {
             return Optional.empty();
         }
 
@@ -209,7 +225,7 @@ public class OAuth2Configuration {
                 : Optional.empty();
     }
 
-    private boolean isOAuth2Enabled(OAUTH2 oAuth2) {
+    private boolean isOAuth2Disabled(OAUTH2 oAuth2) {
         return oAuth2 == null || !oAuth2.getEnabled();
     }
 

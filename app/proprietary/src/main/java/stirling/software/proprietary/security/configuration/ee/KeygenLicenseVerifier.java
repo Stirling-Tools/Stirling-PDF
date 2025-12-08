@@ -31,7 +31,7 @@ public class KeygenLicenseVerifier {
 
     public enum License {
         NORMAL,
-        PRO,
+        SERVER,
         ENTERPRISE
     }
 
@@ -77,7 +77,7 @@ public class KeygenLicenseVerifier {
             log.info("Detected certificate-based license. Processing...");
             boolean isValid = verifyCertificateLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.SERVER;
             } else {
                 license = License.NORMAL;
             }
@@ -85,7 +85,7 @@ public class KeygenLicenseVerifier {
             log.info("Detected JWT-style license key. Processing...");
             boolean isValid = verifyJWTLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.SERVER;
             } else {
                 license = License.NORMAL;
             }
@@ -93,7 +93,7 @@ public class KeygenLicenseVerifier {
             log.info("Detected standard license key. Processing...");
             boolean isValid = verifyStandardLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.SERVER;
             } else {
                 license = License.NORMAL;
             }
@@ -262,10 +262,23 @@ public class KeygenLicenseVerifier {
                 // Extract metadata
                 JSONObject metadataObj = attributesObj.optJSONObject("metadata");
                 if (metadataObj != null) {
-                    int users = metadataObj.optInt("users", 1);
-                    applicationProperties.getPremium().setMaxUsers(users);
-                    log.info("License allows for {} users", users);
+                    // Check if this is an old license (no planType) with isEnterprise flag
                     context.isEnterpriseLicense = metadataObj.optBoolean("isEnterprise", false);
+
+                    // Extract user count - default based on license type
+                    // Old licenses: Only had isEnterprise flag
+                    // New licenses: Have planType field with "server" or "enterprise"
+                    int users = metadataObj.optInt("users", context.isEnterpriseLicense ? 1 : 0);
+
+                    // SERVER license (isEnterprise=false, users=0) = unlimited
+                    // ENTERPRISE license (isEnterprise=true, users>0) = limited seats
+                    if (!context.isEnterpriseLicense && users == 0) {
+                        log.info("SERVER license detected with unlimited users");
+                    } else if (context.isEnterpriseLicense && users > 0) {
+                        log.info("ENTERPRISE license allows for {} users", users);
+                    }
+
+                    applicationProperties.getPremium().setMaxUsers(users);
                 }
 
                 // Check license status if available
@@ -432,28 +445,31 @@ public class KeygenLicenseVerifier {
                 }
 
                 // Extract max users and isEnterprise from policy or metadata
-                int users = policyObj.optInt("users", 1);
                 context.isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
+                int users = policyObj.optInt("users", -1);
 
-                if (users > 0) {
-                    applicationProperties.getPremium().setMaxUsers(users);
-                    log.info("License allows for {} users", users);
-                } else {
-                    // Try to get users from metadata if present
+                if (users == -1) {
+                    // Try to get users from metadata if not at policy level
                     Object metadataObj = policyObj.opt("metadata");
                     if (metadataObj instanceof JSONObject metadata) {
-                        users = metadata.optInt("users", 1);
-                        applicationProperties.getPremium().setMaxUsers(users);
-                        log.info("License allows for {} users (from metadata)", users);
-
-                        // Check for isEnterprise flag in metadata
-                        context.isEnterpriseLicense = metadata.optBoolean("isEnterprise", false);
+                        context.isEnterpriseLicense =
+                                metadata.optBoolean("isEnterprise", context.isEnterpriseLicense);
+                        users = metadata.optInt("users", context.isEnterpriseLicense ? 1 : 0);
                     } else {
-                        // Default value
-                        applicationProperties.getPremium().setMaxUsers(1);
-                        log.info("Using default of 1 user for license");
+                        // Default based on license type
+                        users = context.isEnterpriseLicense ? 1 : 0;
                     }
                 }
+
+                // SERVER license (isEnterprise=false, users=0) = unlimited
+                // ENTERPRISE license (isEnterprise=true, users>0) = limited seats
+                if (!context.isEnterpriseLicense && users == 0) {
+                    log.info("SERVER license detected with unlimited users");
+                } else if (context.isEnterpriseLicense && users > 0) {
+                    log.info("ENTERPRISE license allows for {} users", users);
+                }
+
+                applicationProperties.getPremium().setMaxUsers(users);
             }
 
             return true;
@@ -587,17 +603,7 @@ public class KeygenLicenseVerifier {
                         context.maxMachines);
             }
 
-            // Extract user count, default to 1 if not specified
-            int users =
-                    jsonResponse
-                            .path("data")
-                            .path("attributes")
-                            .path("metadata")
-                            .path("users")
-                            .asInt(1);
-            applicationProperties.getPremium().setMaxUsers(users);
-
-            // Extract isEnterprise flag
+            // Extract isEnterprise flag first
             context.isEnterpriseLicense =
                     jsonResponse
                             .path("data")
@@ -606,6 +612,24 @@ public class KeygenLicenseVerifier {
                             .path("isEnterprise")
                             .asBoolean(false);
 
+            // Extract user count - default based on license type
+            int users =
+                    jsonResponse
+                            .path("data")
+                            .path("attributes")
+                            .path("metadata")
+                            .path("users")
+                            .asInt(context.isEnterpriseLicense ? 1 : 0);
+
+            // SERVER license (isEnterprise=false, users=0) = unlimited
+            // ENTERPRISE license (isEnterprise=true, users>0) = limited seats
+            if (!context.isEnterpriseLicense && users == 0) {
+                log.info("SERVER license detected with unlimited users");
+            } else if (context.isEnterpriseLicense && users > 0) {
+                log.info("ENTERPRISE license allows for {} users", users);
+            }
+
+            applicationProperties.getPremium().setMaxUsers(users);
             log.debug(applicationProperties.toString());
 
         } else {

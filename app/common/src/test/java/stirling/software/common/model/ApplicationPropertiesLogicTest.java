@@ -2,12 +2,10 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -47,15 +45,11 @@ class ApplicationPropertiesLogicTest {
         String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
         assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
-        tfm.setBaseTmpDir(File.separator + "custom" + File.separator + "base");
-        assertEquals(
-                File.separator + "custom" + File.separator + "base",
-                normalize.apply(tfm.getBaseTmpDir()));
+        tfm.setBaseTmpDir("/custom/base");
+        assertEquals(normalize.apply("/custom/base"), normalize.apply(tfm.getBaseTmpDir()));
 
-        tfm.setLibreofficeDir(File.separator + "opt" + File.separator + "libre");
-        assertEquals(
-                File.separator + "opt" + File.separator + "libre",
-                normalize.apply(tfm.getLibreofficeDir()));
+        tfm.setLibreofficeDir("/opt/libre");
+        assertEquals(normalize.apply("/opt/libre"), normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test
@@ -115,41 +109,17 @@ class ApplicationPropertiesLogicTest {
 
         UnsupportedProviderException ex =
                 assertThrows(UnsupportedProviderException.class, () -> client.get("unknown"));
-        assertTrue(ex.getMessage().toLowerCase(Locale.ROOT).contains("not supported"));
-    }
-
-    @Test
-    void premium_google_drive_getters_return_empty_string_on_null_or_blank() {
-        Premium.ProFeatures.GoogleDrive gd = new Premium.ProFeatures.GoogleDrive();
-
-        assertEquals("", gd.getClientId());
-        assertEquals("", gd.getApiKey());
-        assertEquals("", gd.getAppId());
-
-        gd.setClientId(" id ");
-        gd.setApiKey(" key ");
-        gd.setAppId(" app ");
-        assertEquals(" id ", gd.getClientId());
-        assertEquals(" key ", gd.getApiKey());
-        assertEquals(" app ", gd.getAppId());
+        assertTrue(ex.getMessage().toLowerCase().contains("not supported"));
     }
 
     @Test
     void ui_getters_return_null_for_blank() {
         ApplicationProperties.Ui ui = new ApplicationProperties.Ui();
-        ui.setAppName("   ");
-        ui.setHomeDescription("");
         ui.setAppNameNavbar(null);
 
-        assertNull(ui.getAppName());
-        assertNull(ui.getHomeDescription());
         assertNull(ui.getAppNameNavbar());
 
-        ui.setAppName("Stirling-PDF");
-        ui.setHomeDescription("Home");
         ui.setAppNameNavbar("Nav");
-        assertEquals("Stirling-PDF", ui.getAppName());
-        assertEquals("Home", ui.getHomeDescription());
         assertEquals("Nav", ui.getAppNameNavbar());
     }
 
@@ -238,7 +208,7 @@ class ApplicationPropertiesLogicTest {
         Collection<String> nullColl = null;
         Collection<String> empty = List.of();
 
-        assertFalse(oauth2.isValid((Collection<String>) null, "scopes"));
+        assertFalse(oauth2.isValid(nullColl, "scopes"));
         assertFalse(oauth2.isValid(empty, "scopes"));
     }
 
@@ -246,13 +216,12 @@ class ApplicationPropertiesLogicTest {
     void collection_isValid_true_when_non_empty_even_if_element_is_blank() {
         ApplicationProperties.Security.OAUTH2 oauth2 = new ApplicationProperties.Security.OAUTH2();
 
-        // Current behavior: checks ONLY !isEmpty(), not the content
+        // Aktuelles Verhalten: prüft NUR !isEmpty(), nicht Inhalt
         Collection<String> oneBlank = new ArrayList<>();
         oneBlank.add("   ");
 
         assertTrue(
                 oauth2.isValid(oneBlank, "scopes"),
-                "Documents current behavior: non-empty list is considered valid, even if an element"
-                        + " is empty/blank");
+                "Dokumentiert aktuelles Verhalten: nicht-leere Liste gilt als gültig, auch wenn Element leer/blank ist");
     }
 }

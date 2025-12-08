@@ -1,0 +1,143 @@
+# Unified Dockerfile - Frontend + Backend in single container
+# Supports MODE parameter: BOTH (default), FRONTEND, BACKEND
+
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend .
+# Override VITE_API_BASE_URL to use relative paths for production
+# This ensures frontend works with nginx proxy setup
+RUN DISABLE_ADDITIONAL_FEATURES=false VITE_API_BASE_URL=/ npm run build
+
+# Stage 2: Build Backend (server-only JAR - no UI)
+FROM gradle:8.14-jdk21 AS backend-build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+WORKDIR /app
+COPY . .
+
+# Build server-only JAR (no frontend, includes security features controlled by DOCKER_ENABLE_SECURITY at runtime)
+RUN DISABLE_ADDITIONAL_FEATURES=false \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Stage 3: Final unified image
+FROM alpine:3.22.1
+
+ARG VERSION_TAG
+
+# Labels
+LABEL org.opencontainers.image.title="Stirling-PDF Unified"
+LABEL org.opencontainers.image.description="Unified container for Stirling-PDF - Frontend + Backend with MODE parameter"
+LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Stirling-Tools"
+LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
+LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
+LABEL maintainer="Stirling-Tools"
+LABEL org.opencontainers.image.authors="Stirling-Tools"
+LABEL org.opencontainers.image.version="${VERSION_TAG}"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, unified, API, Spring Boot, React"
+
+# Copy backend files
+COPY scripts /scripts
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY --from=backend-build /app/app/core/build/libs/*.jar app.jar
+
+# Copy frontend files
+COPY --from=frontend-build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY docker/unified/nginx.conf /etc/nginx/nginx.conf
+COPY docker/unified/entrypoint.sh /entrypoint.sh
+
+# Environment Variables
+ENV VERSION_TAG=$VERSION_TAG \
+    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
+    PATH=$PATH:/opt/venv/bin \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    MODE=BOTH \
+    BACKEND_INTERNAL_PORT=8081 \
+    VITE_API_BASE_URL=http://localhost:8080
+
+# Install all dependencies
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    shadow \
+    su-exec \
+    openssl \
+    openssl-dev \
+    openjdk21-jre \
+    nginx \
+    # Doc conversion
+    gcompat \
+    libc6-compat \
+    libreoffice \
+    # pdftohtml
+    poppler-utils \
+    # OCR MY PDF
+    unpaper \
+    tesseract-ocr-data-eng \
+    tesseract-ocr-data-chi_sim \
+    tesseract-ocr-data-deu \
+    tesseract-ocr-data-fra \
+    tesseract-ocr-data-por \
+    ocrmypdf \
+    # CV
+    py3-opencv \
+    python3 \
+    py3-pip \
+    py3-pillow@testing \
+    py3-pdf2image@testing && \
+    python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip setuptools && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
+    mv /usr/share/tessdata /usr/share/tessdata-original && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p /var/lib/nginx/tmp /var/log/nginx && \
+    fc-cache -f -v && \
+    chmod +x /scripts/* && \
+    chmod +x /entrypoint.sh && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+EXPOSE 8080/tcp
+
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]

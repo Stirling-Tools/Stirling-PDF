@@ -12,9 +12,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,25 +25,25 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.SignatureFile;
-import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Tag(name = "General", description = "General APIs")
 @Slf4j
 public class GeneralWebController {
 
-    private final SignatureService signatureService;
+    private final SharedSignatureService signatureService;
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
 
     public GeneralWebController(
-            SignatureService signatureService,
+            SharedSignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader,
             RuntimePathConfig runtimePathConfig) {
@@ -55,7 +53,8 @@ public class GeneralWebController {
         this.runtimePathConfig = runtimePathConfig;
     }
 
-    @GetMapping("/pipeline")
+    @Deprecated
+    // @GetMapping("/pipeline")
     @Hidden
     public String pipelineForm(Model model) {
         model.addAttribute("currentPage", "pipeline");
@@ -105,91 +104,104 @@ public class GeneralWebController {
         return "pipeline";
     }
 
-    @GetMapping("/merge-pdfs")
+    @Deprecated
+    // @GetMapping("/merge-pdfs")
     @Hidden
     public String mergePdfForm(Model model) {
         model.addAttribute("currentPage", "merge-pdfs");
         return "merge-pdfs";
     }
 
-    @GetMapping("/split-pdf-by-sections")
+    @Deprecated
+    // @GetMapping("/split-pdf-by-sections")
     @Hidden
     public String splitPdfBySections(Model model) {
         model.addAttribute("currentPage", "split-pdf-by-sections");
         return "split-pdf-by-sections";
     }
 
-    @GetMapping("/split-pdf-by-chapters")
+    @Deprecated
+    // @GetMapping("/split-pdf-by-chapters")
     @Hidden
     public String splitPdfByChapters(Model model) {
         model.addAttribute("currentPage", "split-pdf-by-chapters");
         return "split-pdf-by-chapters";
     }
 
-    @GetMapping("/view-pdf")
+    @Deprecated
+    // @GetMapping("/view-pdf")
     @Hidden
     public String ViewPdfForm2(Model model) {
         model.addAttribute("currentPage", "view-pdf");
         return "view-pdf";
     }
 
-    @GetMapping("/edit-table-of-contents")
+    @Deprecated
+    // @GetMapping("/edit-table-of-contents")
     @Hidden
     public String editTableOfContents(Model model) {
         model.addAttribute("currentPage", "edit-table-of-contents");
         return "edit-table-of-contents";
     }
 
-    @GetMapping("/multi-tool")
+    @Deprecated
+    // @GetMapping("/multi-tool")
     @Hidden
     public String multiToolForm(Model model) {
         model.addAttribute("currentPage", "multi-tool");
         return "multi-tool";
     }
 
-    @GetMapping("/remove-pages")
+    @Deprecated
+    // @GetMapping("/remove-pages")
     @Hidden
     public String pageDeleter(Model model) {
         model.addAttribute("currentPage", "remove-pages");
         return "remove-pages";
     }
 
-    @GetMapping("/pdf-organizer")
+    @Deprecated
+    // @GetMapping("/pdf-organizer")
     @Hidden
     public String pageOrganizer(Model model) {
         model.addAttribute("currentPage", "pdf-organizer");
         return "pdf-organizer";
     }
 
-    @GetMapping("/extract-page")
+    @Deprecated
+    // @GetMapping("/extract-page")
     @Hidden
     public String extractPages(Model model) {
         model.addAttribute("currentPage", "extract-page");
         return "extract-page";
     }
 
-    @GetMapping("/pdf-to-single-page")
+    @Deprecated
+    // @GetMapping("/pdf-to-single-page")
     @Hidden
     public String pdfToSinglePage(Model model) {
         model.addAttribute("currentPage", "pdf-to-single-page");
         return "pdf-to-single-page";
     }
 
-    @GetMapping("/rotate-pdf")
+    @Deprecated
+    // @GetMapping("/rotate-pdf")
     @Hidden
     public String rotatePdfForm(Model model) {
         model.addAttribute("currentPage", "rotate-pdf");
         return "rotate-pdf";
     }
 
-    @GetMapping("/split-pdfs")
+    @Deprecated
+    // @GetMapping("/split-pdfs")
     @Hidden
     public String splitPdfForm(Model model) {
         model.addAttribute("currentPage", "split-pdfs");
         return "split-pdfs";
     }
 
-    @GetMapping("/sign")
+    @Deprecated
+    // @GetMapping("/sign")
     @Hidden
     public String signForm(Model model) {
         String username = "";
@@ -204,28 +216,32 @@ public class GeneralWebController {
         return "sign";
     }
 
-    @GetMapping("/multi-page-layout")
+    @Deprecated
+    // @GetMapping("/multi-page-layout")
     @Hidden
     public String multiPageLayoutForm(Model model) {
         model.addAttribute("currentPage", "multi-page-layout");
         return "multi-page-layout";
     }
 
-    @GetMapping("/scale-pages")
+    @Deprecated
+    // @GetMapping("/scale-pages")
     @Hidden
     public String scalePagesFrom(Model model) {
         model.addAttribute("currentPage", "scale-pages");
         return "scale-pages";
     }
 
-    @GetMapping("/split-by-size-or-count")
+    @Deprecated
+    // @GetMapping("/split-by-size-or-count")
     @Hidden
     public String splitBySizeOrCount(Model model) {
         model.addAttribute("currentPage", "split-by-size-or-count");
         return "split-by-size-or-count";
     }
 
-    @GetMapping("/overlay-pdf")
+    @Deprecated
+    // @GetMapping("/overlay-pdf")
     @Hidden
     public String overlayPdf(Model model) {
         model.addAttribute("currentPage", "overlay-pdf");
@@ -293,21 +309,24 @@ public class GeneralWebController {
         };
     }
 
-    @GetMapping("/crop")
+    @Deprecated
+    // @GetMapping("/crop")
     @Hidden
     public String cropForm(Model model) {
         model.addAttribute("currentPage", "crop");
         return "crop";
     }
 
-    @GetMapping("/auto-split-pdf")
+    @Deprecated
+    // @GetMapping("/auto-split-pdf")
     @Hidden
     public String autoSPlitPDFForm(Model model) {
         model.addAttribute("currentPage", "auto-split-pdf");
         return "auto-split-pdf";
     }
 
-    @GetMapping("/remove-image-pdf")
+    @Deprecated
+    // @GetMapping("/remove-image-pdf")
     @Hidden
     public String removeImagePdfForm(Model model) {
         model.addAttribute("currentPage", "remove-image-pdf");

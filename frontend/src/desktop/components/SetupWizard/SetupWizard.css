@@ -1,0 +1,23 @@
+.setup-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    light-dark(#f5f5f5, #1a1a1a) 0%,
+    light-dark(#e8e8e8, #0d0d0d) 100%
+  );
+  padding: 2rem;
+}
+
+.setup-wrapper {
+  width: 100%;
+  max-width: 600px;
+}
+
+.setup-card {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
+  box-shadow: 0 20px 60px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.4));
+}

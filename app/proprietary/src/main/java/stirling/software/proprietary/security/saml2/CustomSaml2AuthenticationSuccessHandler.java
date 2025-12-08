@@ -4,15 +4,21 @@ import static stirling.software.proprietary.security.model.AuthenticationType.SA
 import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -36,10 +42,15 @@ import stirling.software.proprietary.security.service.UserService;
 public class CustomSaml2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
+    private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
+    private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
+
     private LoginAttemptService loginAttemptService;
     private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
     private final JwtServiceInterface jwtService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService
+            licenseSettingsService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -53,6 +64,26 @@ public class CustomSaml2AuthenticationSuccessHandler
         if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {
             String username = saml2Principal.name();
             log.debug("Authenticated principal found for user: {}", username);
+
+            boolean userExists = userService.usernameExistsIgnoreCase(username);
+
+            // Check if user is eligible for SAML (grandfathered or system has paid license)
+            if (userExists) {
+                stirling.software.proprietary.security.model.User user =
+                        userService.findByUsernameIgnoreCase(username).orElse(null);
+
+                if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
+                    // User is not grandfathered and no paid license - block SAML login
+                    response.sendRedirect(
+                            request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                    return;
+                }
+            } else if (!licenseSettingsService.isOAuthEligible(null)) {
+                // No existing user and no paid license -> block auto creation
+                response.sendRedirect(
+                        request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                return;
+            }
 
             HttpSession session = request.getSession(false);
             String contextPath = request.getContextPath();
@@ -87,7 +118,6 @@ public class CustomSaml2AuthenticationSuccessHandler
                             "Your account has been locked due to too many failed login attempts.");
                 }
 
-                boolean userExists = userService.usernameExistsIgnoreCase(username);
                 boolean hasPassword = userExists && userService.hasPassword(username);
                 boolean isSSOUser =
                         userExists && userService.isAuthenticationTypeByUsername(username, SSO);
@@ -120,13 +150,45 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
-                    log.debug("Processing SSO post-login for user: {}", username);
+                    if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
+                        response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
+                        return;
+                    }
+
+                    // Extract SSO provider information from SAML2 assertion
+                    String ssoProviderId = saml2Principal.nameId();
+                    String ssoProvider = "saml2"; // fixme
+
+                    log.debug(
+                            "Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
+                            username,
+                            ssoProvider,
+                            ssoProviderId);
+
                     userService.processSSOPostLogin(
-                            username, saml2Properties.getAutoCreateUser(), SAML2);
+                            username,
+                            ssoProviderId,
+                            ssoProvider,
+                            saml2Properties.getAutoCreateUser(),
+                            SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    generateJwt(response, authentication);
-                    response.sendRedirect(contextPath + "/");
+                    // Generate JWT if v2 is enabled
+                    if (jwtService.isJwtEnabled()) {
+                        String jwt =
+                                jwtService.generateToken(
+                                        authentication,
+                                        Map.of("authType", AuthenticationType.SAML2));
+
+                        // Build context-aware redirect URL based on the original request
+                        String redirectUrl =
+                                buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+
+                        response.sendRedirect(redirectUrl);
+                    } else {
+                        // v1: redirect directly to home
+                        response.sendRedirect(contextPath + "/");
+                    }
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
@@ -140,12 +202,145 @@ public class CustomSaml2AuthenticationSuccessHandler
         }
     }
 
-    private void generateJwt(HttpServletResponse response, Authentication authentication) {
-        if (jwtService.isJwtEnabled()) {
-            String jwt =
-                    jwtService.generateToken(
-                            authentication, Map.of("authType", AuthenticationType.SAML2));
-            jwtService.addToken(response, jwt);
+    /**
+     * Builds a context-aware redirect URL based on the request's origin
+     *
+     * @param request The HTTP request
+     * @param contextPath The application context path
+     * @param jwt The JWT token to include
+     * @return The appropriate redirect URL
+     */
+    private String buildContextAwareRedirectUrl(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            String contextPath,
+            String jwt) {
+        String redirectPath = resolveRedirectPath(request, contextPath);
+        String origin =
+                resolveForwardedOrigin(request)
+                        .orElseGet(
+                                () ->
+                                        resolveOriginFromReferer(request)
+                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        clearRedirectCookie(response);
+        return origin + redirectPath + "#access_token=" + jwt;
+    }
+
+    private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        return extractRedirectPathFromCookie(request)
+                .filter(path -> path.startsWith("/"))
+                .orElseGet(() -> defaultCallbackPath(contextPath));
+    }
+
+    private Optional<String> extractRedirectPathFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return Optional.empty();
         }
+        for (Cookie cookie : cookies) {
+            if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
+                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
+                if (!value.isEmpty()) {
+                    return Optional.of(value);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String defaultCallbackPath(String contextPath) {
+        if (contextPath == null
+                || contextPath.isBlank()
+                || "/".equals(contextPath)
+                || "\\".equals(contextPath)) {
+            return DEFAULT_CALLBACK_PATH;
+        }
+        return contextPath + DEFAULT_CALLBACK_PATH;
+    }
+
+    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
+        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
+        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
+            return Optional.empty();
+        }
+        String host = forwardedHostHeader.split(",")[0].trim();
+        if (host.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
+        String proto =
+                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
+                        ? request.getScheme()
+                        : forwardedProtoHeader.split(",")[0].trim();
+
+        if (!host.contains(":")) {
+            String forwardedPort = request.getHeader("X-Forwarded-Port");
+            if (forwardedPort != null
+                    && !forwardedPort.isBlank()
+                    && !isDefaultPort(proto, forwardedPort.trim())) {
+                host = host + ":" + forwardedPort.trim();
+            }
+        }
+        return Optional.of(proto + "://" + host);
+    }
+
+    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                java.net.URL refererUrl = new java.net.URL(referer);
+                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                if (refererUrl.getPort() != -1
+                        && refererUrl.getPort() != 80
+                        && refererUrl.getPort() != 443) {
+                    origin += ":" + refererUrl.getPort();
+                }
+                return Optional.of(origin);
+            } catch (java.net.MalformedURLException e) {
+                log.debug(
+                        "Malformed referer URL: {}, falling back to request-based origin", referer);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String buildOriginFromRequest(HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+
+        StringBuilder origin = new StringBuilder();
+        origin.append(scheme).append("://").append(serverName);
+
+        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
+                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
+            origin.append(":").append(serverPort);
+        }
+
+        return origin.toString();
+    }
+
+    private boolean isDefaultPort(String scheme, String port) {
+        if (port == null) {
+            return true;
+        }
+        try {
+            int parsedPort = Integer.parseInt(port);
+            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
+                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void clearRedirectCookie(HttpServletResponse response) {
+        ResponseCookie cookie =
+                ResponseCookie.from(SPA_REDIRECT_COOKIE, "")
+                        .path("/")
+                        .sameSite("Lax")
+                        .maxAge(0)
+                        .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }

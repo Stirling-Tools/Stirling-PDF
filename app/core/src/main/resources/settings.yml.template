@@ -11,7 +11,7 @@
 #############################################################################################################
 
 security:
-  enableLogin: false # set to 'true' to enable login
+  enableLogin: true # set to 'true' to enable login
   csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
@@ -60,10 +60,26 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
-    enabled: false # Set to 'true' to enable JWT key store
-    keyCleanup: false # Set to 'true' to enable key pair cleanup
+    persistence: true # Set to 'true' to enable JWT key store
+    enableKeyRotation: true # Set to 'true' to enable key pair rotation
+    enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
-    secureCookie: true # Set to 'true' to use secure cookies for JWTs
+  validation: # PDF signature validation settings
+    trust:
+      serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
+      useSystemTrust: true # Trust Java/OS system trust store for PDF signature validation
+      useMozillaBundle: true # Trust bundled Mozilla CA bundle (~140 CAs) for PDF signature validation
+      useAATL: false # Trust Adobe Approved Trust List (AATL) for PDF signature validation - downloads from Adobe on startup if enabled
+      useEUTL: false # Trust EU Trusted List (EUTL) for eIDAS qualified certificates - downloads LOTL and national TSLs on startup if enabled
+    allowAIA: false # Allow JDK to fetch issuer certificates and revocation information from network (OCSP/CRL/AIA)
+    aatl:
+      url: https://trustlist.adobe.com/tl.pdf # Adobe Approved Trust List download URL
+    eutl:
+      lotlUrl: https://ec.europa.eu/tools/lotl/eu-lotl.xml # EU List Of Trusted Lists (LOTL) URL
+      acceptTransitional: false # Accept certificates with 'supervisionincessation' status (transitional state)
+    revocation:
+      mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
+      hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
@@ -75,11 +91,6 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
-    googleDrive:
-      enabled: false
-      clientId: ''
-      apiKey: ''
-      appId: ''
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging
@@ -95,6 +106,7 @@ premium:
 
 mail:
   enabled: false # set to 'true' to enable sending emails
+  enableInvites: false # set to 'true' to enable email invites for user management (requires mail.enabled and security.enableLogin)
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
   username: '' # SMTP server username
@@ -102,8 +114,8 @@ mail:
   from: '' # sender email address
 
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
-  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: https://www.stirling.com/legal/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
   accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
   impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
@@ -118,10 +130,17 @@ system:
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
-  enableScarf: null # Enable Scarf pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
+  enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
+  corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS.
+  frontendUrl: '' # Base URL for frontend (e.g. 'https://pdf.example.com'). Used for generating invite links in emails. If empty, falls back to backend URL.
+  serverCertificate:
+    enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
+    organizationName: Stirling-PDF # Organization name for generated certificates
+    validity: 365 # Certificate validity in days
+    regenerateOnStartup: false # Generate new certificate on each startup
   html:
     urlSecurity:
       enabled: true # Enable URL security restrictions for HTML processing
@@ -165,10 +184,26 @@ system:
   databaseBackup:
     cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
+stirling:
+  pdf:
+    fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
+    json:
+      font-normalization:
+        enabled: false # IMPORTANT: Disable to preserve ToUnicode CMaps for correct font rendering. Ghostscript strips Unicode mappings from CID fonts.
+      cff-converter:
+        enabled: true # Wrap CFF/Type1C fonts as OpenType-CFF for browser compatibility
+        method: python # Converter method: 'python' (fontTools, recommended - wraps as OTF), 'fontforge' (legacy - converts to TTF, may hang on CID fonts)
+        python-command: /opt/venv/bin/python3 # Python interpreter path
+        python-script: /scripts/convert_cff_to_ttf.py # Path to font wrapping script
+        fontforge-command: fontforge # Override if FontForge is installed under a different name/path
+      type3:
+        library:
+          enabled: true # Match common Type3 fonts against the built-in library of converted programs
+          index: classpath:/type3/library/index.json # Override to point at a custom index.json (supports http:, file:, classpath:)
+
 ui:
-  appName: '' # application's visible name
-  homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
+  logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
 endpoints:

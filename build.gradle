@@ -5,20 +5,13 @@ plugins {
     id "org.springframework.boot" version "3.5.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id "edu.sc.seis.launch4j" version "4.0.0"
     id "com.diffplug.spotless" version "8.1.0"
     id "com.github.jk1.dependency-license-report" version "3.0.1"
     //id "nebula.lint" version "19.0.3"
-    id "org.panteleyev.jpackageplugin" version "1.7.5"
     id "org.sonarqube" version "7.1.0.6387"
 }
 
 import com.github.jk1.license.render.*
-import org.gradle.internal.os.OperatingSystem
-import org.panteleyev.jpackage.ImageType
-
-import java.nio.file.Files
-import java.time.Year
 
 ext {
     springBootVersion = "3.5.7"
@@ -31,7 +24,6 @@ ext {
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.21"
-    tempJrePath = null
 }
 
 ext.isSecurityDisabled = { ->
@@ -65,7 +57,7 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '1.6.0'
+    version = '2.0.3'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -78,10 +70,6 @@ tasks.register('writeVersion', WriteProperties) {
     println "Writing version.properties to ${destinationFile.get().asFile.path}"
     comment = "${new Date()}"
     property 'version', project.provider { project.version.toString() }
-}
-
-tasks.named('createExe') {
-    dependsOn(":stirling-pdf:bootJar")
 }
 
 subprojects {
@@ -142,7 +130,9 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        dependsOn "spotlessApply"
+        if (!project.hasProperty("noSpotless")) {
+            dependsOn "spotlessApply"
+        }
     }
 
     compileJava {
@@ -219,7 +209,17 @@ subprojects {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    dependsOn "spotlessApply"
+    if (!project.hasProperty("noSpotless")) {
+        dependsOn "spotlessApply"
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    if (project.hasProperty("noSpotless")) {
+        tasks.matching { it.name.startsWith("spotless") }.configureEach {
+            enabled = false
+        }
+    }
 }
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
@@ -238,281 +238,6 @@ tasks.named('forkedSpringBootRun') {
     doFirst {
         println "Delegating forkedSpringBootRun to :stirling-pdf:bootRun"
     }
-}
-
-//0.11.5 to 2024.11.5
-static def getMacVersion(String version) {
-    def currentYear = Year.now().getValue()
-    def versionParts = version.split("\\.", 2)
-    return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
-}
-
-jpackage {
-    dependsOn(":stirling-pdf:bootJar")
-    input = layout.projectDirectory.dir("app/core/build/libs")
-    destination = layout.projectDirectory.dir("build/jpackage")
-    mainJar = "Stirling-PDF-${project.version}.jar"
-    appName = "Stirling PDF"
-    appVersion = project.version
-    vendor = "Stirling PDF Inc"
-    appDescription = "Stirling PDF - Your Local PDF Editor"
-    icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.ico")
-    verbose = true
-//    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
-
-    // JVM Options
-    javaOptions = [
-        "-DBROWSER_OPEN=true",
-        "-DSTIRLING_PDF_DESKTOP_UI=true",
-        "-DDISABLE_ADDITIONAL_FEATURES=false",
-        "-Djava.awt.headless=false",
-        "-Dapple.awt.UIElement=true",
-        "--add-opens=java.base/java.lang=ALL-UNNAMED",
-        "--add-opens=java.desktop/java.awt.event=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
-    ]
-
-    // Windows-specific configuration
-    windows {
-        launcherAsService = false
-        appVersion = project.version
-
-        winConsole = false
-        winMenu = true  // Creates start menu entry
-        winShortcut = true  // Creates desktop shortcut
-        winShortcutPrompt = true  // Lets user choose whether to create shortcuts
-        winDirChooser = true  // Allows users to choose installation directory
-        winPerUserInstall = false
-        winMenuGroup = "Stirling PDF"
-        winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
-        winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
-        winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
-        type = ImageType.EXE
-        installDir = "C:/Program Files/Stirling-PDF"
-    }
-
-    // MacOS-specific configuration
-    mac {
-        appVersion = getMacVersion(project.version.toString())
-        icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.icns")
-        type = ImageType.DMG
-        macPackageIdentifier = "Stirling PDF"
-        macPackageName = "Stirling PDF"
-        macAppCategory = "public.app-category.productivity"
-        macSign = false // Enable signing
-        macAppStore = false // Not targeting App Store initially
-
-//        // Add license and other documentation to DMG
-//        /*macDmgContent = [
-//            "README.md",
-//            "LICENSE",
-//            "CHANGELOG.md"
-//        ]*/
-//
-//        // Enable Mac-specific entitlements
-//        //macEntitlements = "entitlements.plist" // You'll need to create this file
-    }
-
-    // Linux-specific configuration
-    linux {
-        appVersion = project.version
-        icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.png")
-        type = ImageType.DEB // Can also use "rpm" for Red Hat-based systems
-
-        // Debian package configuration
-        //linuxPackageName = "stirlingpdf"
-        linuxDebMaintainer = "support@stirlingpdf.com"
-        linuxMenuGroup = "Office;PDF;Productivity"
-        linuxAppCategory = "Office"
-        linuxAppRelease = "1"
-        linuxPackageDeps = true
-
-        installDir = "/opt/Stirling-PDF"
-
-        // RPM-specific settings
-        //linuxRpmLicenseType = "MIT"
-    }
-
-    // Common additional options
-    //jLinkOptions = [
-    //    "--strip-debug",
-    //    "--compress=2",
-    //    "--no-header-files",
-    //    "--no-man-pages"
-    //]
-
-    // Add any additional modules required
-    /*addModules = [
-        "java.base",
-        "java.desktop",
-        "java.logging",
-        "java.sql",
-        "java.xml",
-        "jdk.crypto.ec"
-    ]*/
-
-    // Add copyright and license information
-    copyright = "Copyright © 2025 Stirling PDF Inc."
-    licenseFile = layout.projectDirectory.file("LICENSE")
-}
-
-//tasks.wrapper {
-//    gradleVersion = "8.14"
-//    distributionType = Wrapper.DistributionType.ALL
-//}
-
-tasks.register('jpackageMacX64') {
-    group = 'distribution'
-    description = 'Packages app for MacOS x86_64'
-
-    println "Running jpackageMacX64 task"
-
-    if (OperatingSystem.current().isMacOsX()) {
-        println "MacOS detected. Downloading temp JRE."
-        dependsOn("downloadTempJre")
-    } else {
-        return
-    }
-
-    doLast {
-        def jrePath = project.ext.tempJrePath
-
-        if (!jrePath) {
-            throw new GradleException("JRE path not found.")
-        }
-
-        def outputStream = new ByteArrayOutputStream()
-        def errorStream = new ByteArrayOutputStream()
-
-        def result = exec {
-            commandLine 'jpackage',
-                '--type', 'dmg',
-                '--name', 'Stirling PDF (x86_64)',
-                '--input', 'app/core/build/libs',
-                '--main-jar', "Stirling-PDF-${project.version}.jar",
-                '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
-                '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                '--dest', 'build/jpackage/x86_64',
-                '--icon', 'app/core/src/main/resources/static/favicon.icns',
-                '--app-version', getMacVersion(project.version.toString()),
-                '--mac-package-name', 'Stirling PDF (x86_64)',
-                '--mac-package-identifier', 'Stirling PDF (x86_64)',
-                '--mac-app-category', 'public.app-category.productivity',
-
-                // Java options
-                '--java-options', '-DBROWSER_OPEN=true',
-                '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
-                '--java-options', '-DDISABLE_ADDITIONAL_FEATURES=false',
-                '--java-options', '-Djava.awt.headless=false',
-                '--java-options', '-Dapple.awt.UIElement=true',
-                '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/java.awt.event=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/sun.awt=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED',
-                '--java-options', '--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED'
-
-            standardOutput = outputStream
-            errorOutput = errorStream
-            ignoreExitValue = true
-        }
-
-        def stdout = outputStream.toString("UTF-8")
-        def stderr = errorStream.toString("UTF-8")
-
-        if (!stdout.isBlank()) {
-            println "jpackage stdout:\n$stdout"
-        }
-
-        if (result.exitValue != 0) {
-            throw new GradleException("jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
-        }
-    }
-}
-
-tasks.register('downloadTempJre') {
-    group = 'distribution'
-    description = 'Downloads and extracts a temporary JRE'
-
-    doLast {
-        try {
-            def jreUrl = 'https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jre17.0.14-macosx_x64.tar.gz'
-            def tmpDir = Files.createTempDirectory('zulu-jre').toFile()
-            def jreArchive = new File(tmpDir, 'jre.tar.gz')
-            def jreDir = new File(tmpDir, 'jre')
-
-            println "Downloading JRE to $jreArchive"
-            jreArchive.withOutputStream { out ->
-                new URI(jreUrl).toURL().withInputStream { from -> out << from }
-            }
-
-            println "Extracting JRE to $jreDir"
-            jreDir.mkdirs()
-            providers.exec {
-                commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
-            }.result.get()
-
-            println "JRE ready at: $jreDir"
-            ext.tempJrePath = jreDir.absolutePath
-            project.ext.tempJrePath = jreDir.absolutePath
-        } catch (Exception e) {
-            println "Failed to download JRE. ${e.getLocalizedMessage()}"
-            cleanTempJre
-        }
-    }
-}
-
-tasks.register('cleanTempJre') {
-    dependsOn('jpackageMacX64')
-    group = 'distribution'
-    description = 'Deletes the temporary JRE'
-
-    doLast {
-        def path = project.ext.tempJrePath
-
-        if (path && new File("$path").exists()) {
-            println "Cleaning up temporary JRE: $path"
-            new File("$path").parentFile.deleteDir()
-        }
-    }
-}
-
-launch4j {
-    icon = "${projectDir}/app/core/src/main/resources/static/favicon.ico"
-
-    outfile="Stirling-PDF.exe"
-
-    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
-        headerType = "gui"
-    } else {
-        headerType = "console"
-    }
-    jarTask = project(":stirling-pdf").tasks.bootJar
-
-    errTitle="Encountered error, do you have Java 21?"
-    downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-
-    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
-        variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
-    } else {
-        variables=["BROWSER_OPEN=true"]
-    }
-
-    jreMinVersion="17"
-
-    mutexName="Stirling-PDF"
-    windowTitle="Stirling-PDF"
-
-    messagesStartupError="An error occurred while starting Stirling-PDF"
-    // messagesJreNotFoundError="This application requires a Java Runtime Environment, Please download Java 17."
-    messagesJreVersionError="You are running the wrong version of Java, Please download Java 21."
-    messagesLauncherError="Java is corrupted. Please uninstall and then install  Java 21."
-    messagesInstanceAlreadyExists="Stirling-PDF is already running."
 }
 
 spotless {
@@ -559,9 +284,9 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.1")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
@@ -578,12 +303,6 @@ tasks.register('printVersion') {
     }
 }
 
-tasks.register('printMacVersion') {
-    doLast {
-        println getMacVersion(project.version.toString())
-    }
-}
-
 tasks.named('bootRun') {
     group = 'application'
     description = 'Delegates to :stirling-pdf:bootRun'
@@ -597,9 +316,40 @@ tasks.named('bootRun') {
 tasks.named('build') {
     group = 'build'
     description = 'Delegates to :stirling-pdf:bootJar'
-    dependsOn ':stirling-pdf:bootJar'
+    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper'
 
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
+    }
+}
+
+// Task to compile RestartHelper.java
+tasks.register('compileRestartHelper', JavaCompile) {
+    group = 'build'
+    description = 'Compiles the RestartHelper utility'
+
+    source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
+    classpath = files()
+    destinationDirectory = file("${buildDir}/restart-helper-classes")
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// Task to create restart-helper.jar
+tasks.register('buildRestartHelper', Jar) {
+    group = 'build'
+    description = 'Builds the restart-helper.jar'
+    dependsOn 'compileRestartHelper'
+
+    from "${buildDir}/restart-helper-classes"
+    archiveFileName = 'restart-helper.jar'
+    destinationDirectory = file("${buildDir}/libs")
+
+    manifest {
+        attributes 'Main-Class': 'RestartHelper'
+    }
+
+    doLast {
+        println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
     }
 }

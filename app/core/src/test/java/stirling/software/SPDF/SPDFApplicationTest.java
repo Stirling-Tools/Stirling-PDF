@@ -1,12 +1,10 @@
 package stirling.software.SPDF;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -62,26 +60,5 @@ public class SPDFApplicationTest {
         assertEquals("8080", SPDFApplication.getStaticPort());
     }
 
-    @Test
-    public void testGetActiveProfileWithArgs() {
-        String[] args = {"--spring.profiles.active=security"};
-        String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"security"}, profiles);
-    }
-
-    @Test
-    @EnabledIfEnvironmentVariable(named = "DISABLE_ADDITIONAL_FEATURES", matches = "true")
-    public void testGetActiveProfileWithoutArgsAdditionalEnabled() {
-        String[] args = {};
-        String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"default"}, profiles);
-    }
-
-    @Test
-    @EnabledIfEnvironmentVariable(named = "DISABLE_ADDITIONAL_FEATURES", matches = "false")
-    public void testGetActiveProfileWithoutArgsAdditionalDisabled() {
-        String[] args = {};
-        String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"security"}, profiles);
-    }
+    // Tests for getActiveProfile removed - method is now private
 }

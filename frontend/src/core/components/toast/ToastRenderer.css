@@ -1,0 +1,216 @@
+/* Toast Container Styles */
+.toast-container {
+  position: fixed;
+  z-index: 10001; /* Always on top - must match Z_INDEX_TOAST in zIndex.ts */
+  display: flex;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast-container--top-left {
+  top: 16px;
+  left: 16px;
+  flex-direction: column;
+}
+
+.toast-container--top-right {
+  top: 16px;
+  right: 16px;
+  flex-direction: column;
+}
+
+.toast-container--bottom-left {
+  bottom: 16px;
+  left: 16px;
+  flex-direction: column-reverse;
+}
+
+.toast-container--bottom-right {
+  bottom: 16px;
+  right: 16px;
+  flex-direction: column-reverse;
+}
+
+.toast-container--bottom-center {
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column-reverse;
+}
+
+/* Toast Item Styles */
+.toast-item {
+  min-width: 320px;
+  max-width: 560px;
+  box-shadow: var(--shadow-lg);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+/* Toast Alert Type Colors */
+.toast-item--success {
+  background: var(--color-green-100);
+  color: var(--text-primary);
+  border: 1px solid var(--color-green-400);
+}
+
+.toast-item--error {
+  background: var(--color-red-100);
+  color: var(--text-primary);
+  border: 1px solid var(--color-red-400);
+}
+
+.toast-item--warning {
+  background: var(--color-yellow-100);
+  color: var(--text-primary);
+  border: 1px solid var(--color-yellow-400);
+}
+
+.toast-item--neutral {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+
+/* Toast Header Row */
+.toast-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-title-container {
+  font-weight: 700;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.toast-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.toast-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-expand-button {
+  transform: rotate(0deg);
+  transition: transform 160ms ease;
+}
+
+.toast-expand-button--expanded {
+  transform: rotate(180deg);
+}
+
+/* Progress Bar */
+.toast-progress-container {
+  margin-top: 8px;
+  height: 6px;
+  background: var(--bg-muted);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.toast-progress-bar {
+  height: 100%;
+  transition: width 160ms ease;
+}
+
+.toast-progress-bar--success {
+  background: var(--color-green-500);
+}
+
+.toast-progress-bar--error {
+  background: var(--color-red-500);
+}
+
+.toast-progress-bar--warning {
+  background: var(--color-yellow-500);
+}
+
+.toast-progress-bar--neutral {
+  background: var(--color-gray-500);
+}
+
+/* Toast Body */
+.toast-body {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-top: 8px;
+}
+
+/* Toast Action Button */
+.toast-action-container {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.toast-action-button {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.toast-action-button--success {
+  color: var(--text-primary);
+  border-color: var(--color-green-400);
+}
+
+.toast-action-button--error {
+  color: var(--text-primary);
+  border-color: var(--color-red-400);
+}
+
+.toast-action-button--warning {
+  color: var(--text-primary);
+  border-color: var(--color-yellow-400);
+}
+
+.toast-action-button--neutral {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}

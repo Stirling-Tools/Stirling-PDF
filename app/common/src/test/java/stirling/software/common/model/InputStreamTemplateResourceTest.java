@@ -1,16 +1,8 @@
 package stirling.software.common.model;
 
-import static org.junit.jupiter.api.Assertions.*;
+/* Commented out - InputStreamTemplateResource class removed with Thymeleaf migration
+ * This test will be removed when frontend migration to React is complete
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.Reader;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-
-import org.junit.jupiter.api.Test;
 
 public class InputStreamTemplateResourceTest {
 
@@ -48,7 +40,7 @@ public class InputStreamTemplateResourceTest {
     @Test
     void readerReturnsCorrectContent() throws Exception {
         String content = "Hello, world!";
-        InputStream is = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        InputStream is = new ByteArrayInputStream(content.getBytes("UTF-8"));
         InputStreamTemplateResource resource = new InputStreamTemplateResource(is, "UTF-8");
 
         try (Reader reader = resource.reader()) {
@@ -93,3 +85,4 @@ public class InputStreamTemplateResourceTest {
         assertFalse(resource.exists());
     }
 }
+*/

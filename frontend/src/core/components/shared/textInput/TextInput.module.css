@@ -1,0 +1,73 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-size: 16px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--search-text-and-icon-color);
+  opacity: 1;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input:read-only {
+  cursor: default;
+}
+
+.clearButton {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.clearButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] .clearButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,45 @@
+/* Glow effect for tour highlighted area */
+.tour-highlight-glow {
+  stroke: var(--mantine-primary-color-filled);
+  stroke-width: 3px;
+  rx: 8px;
+  ry: 8px;
+  filter: drop-shadow(0 0 10px var(--mantine-primary-color-filled));
+}
+
+/* Add glowing border to navigation items during admin tour */
+.modal-nav-item.tour-nav-glow {
+  position: relative;
+  box-shadow:
+    0 0 0 2px var(--mantine-primary-color-filled),
+    0 0 15px var(--mantine-primary-color-filled),
+    inset 0 0 15px rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px var(--mantine-primary-color-filled),
+      0 0 20px var(--mantine-primary-color-filled),
+      inset 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--mantine-primary-color-filled),
+      0 0 30px var(--mantine-primary-color-filled),
+      inset 0 0 30px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* RTL: mirror step indicator and controls in Reactour popovers */
+:root[dir='rtl'] .reactour__popover {
+  direction: rtl;
+}
+
+/* Minimal overrides retained for glow only */
+
+:root[dir='rtl'] .reactour__badge {
+  left: auto;
+  right: 16px;
+}

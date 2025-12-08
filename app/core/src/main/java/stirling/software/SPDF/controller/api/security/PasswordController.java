@@ -8,32 +8,30 @@ import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/security")
-@Tag(name = "Security", description = "Security APIs")
+@SecurityApi
 @RequiredArgsConstructor
 public class PasswordController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove password from a PDF file",
             description =
@@ -68,7 +66,8 @@ public class PasswordController {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-password")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-password")
+    @StandardPdfResponse
     @Operation(
             summary = "Add password to a PDF file",
             description =

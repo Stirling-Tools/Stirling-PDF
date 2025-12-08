@@ -1,11 +1,9 @@
 name: Build and Test Workflow
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -35,13 +33,17 @@ jobs:
       openapi: ${{ steps.changes.outputs.openapi }}
       docker: ${{ steps.changes.outputs.docker }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         with:
-          filters: ".github/config/.files.yaml"
+          filters: .github/config/.files.yaml
   build:
     runs-on: ubuntu-latest
 
@@ -69,10 +71,12 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
-          cache: gradle
-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build -x spotlessApply -x spotlessCheck -x sonarqube
+        run: ./gradlew clean build -PnoSpotless
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
@@ -155,8 +159,8 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: gradle
-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
@@ -274,13 +278,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker:
-          - name: "Dockerfile.ultra-lite"
-            tag: "ultra-lite"
-          - name: "Dockerfile.fat"
-            tag: "fat"
-          - name: "Dockerfile"
-            tag: "latest"
+        docker-rev: ["docker/embedded/Dockerfile", "docker/embedded/Dockerfile.ultra-lite", "docker/embedded/Dockerfile.fat"]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
@@ -321,6 +319,19 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64/v8
 
+      - name: Determine Docker variant tag
+        id: docker_tag
+        shell: bash
+        run: |
+          DOCKERFILE="${{ matrix.docker-rev }}"
+          if [[ "$DOCKERFILE" == *"ultra-lite"* ]]; then
+            echo "tag=ultra-lite" >> "$GITHUB_OUTPUT"
+          elif [[ "$DOCKERFILE" == *"fat"* ]]; then
+            echo "tag=fat" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Prepare branch tag
         id: branch_tag
         shell: bash
@@ -349,9 +360,9 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=${{ matrix.docker.tag }},enable=true
-            # type=raw,value=${{ matrix.docker.tag }}-${{ steps.branch_tag.outputs.safe_branch }},enable=true
-            # type=raw,value=${{ matrix.docker.tag }}-${{ steps.branch_tag.outputs.safe_branch }}-${{ steps.branch_tag.outputs.short_sha }},enable=true
+            type=raw,value=${{ steps.docker_tag.outputs.tag }},enable=true
+            # type=raw,value=${{ steps.docker_tag.outputs.tag }}-${{ steps.branch_tag.outputs.safe_branch }},enable=true
+            # type=raw,value=${{ steps.docker_tag.outputs.tag }}-${{ steps.branch_tag.outputs.safe_branch }}-${{ steps.branch_tag.outputs.short_sha }},enable=true
           labels: |
             org.opencontainers.image.title=Stirling-PDF Test
             org.opencontainers.image.description=CI test image for Stirling-PDF
@@ -359,7 +370,7 @@ jobs:
             org.opencontainers.image.documentation=https://docs.stirlingpdf.com
             org.opencontainers.image.authors=Stirling-Tools
             org.opencontainers.image.licenses=MIT
-            org.opencontainers.image.version=${{ matrix.docker.tag }}
+            org.opencontainers.image.version=${{ steps.docker_tag.outputs.tag }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repository }}
             maintainer=Stirling-Tools
@@ -369,7 +380,7 @@ jobs:
         shell: bash
         run: |
           IMAGE="ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test"
-          VARIANT="${{ matrix.docker.tag }}"
+          VARIANT="${{ steps.docker_tag.outputs.tag }}"
           BRANCH="${{ steps.branch_tag.outputs.safe_branch }}"
           SHA_SHORT="${{ steps.branch_tag.outputs.short_sha }}"
           CANDIDATE="$IMAGE:$VARIANT-$BRANCH-$SHA_SHORT"
@@ -403,7 +414,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./${{ matrix.docker.name }}
+          file: ./${{ matrix.docker-rev }}
           push: false
           load: true
           cache-from: type=gha
@@ -425,7 +436,7 @@ jobs:
       - name: Start amd64 image for 2 minutes
         run: |
           IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
-          CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-amd64"
+          CONTAINER_NAME="stirling-pdf-test-${{ steps.docker_tag.outputs.tag }}-amd64"
           echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
           docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
           echo "Waiting up to 2 minutes..."
@@ -447,7 +458,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./${{ matrix.docker.name }}
+          file: ./${{ matrix.docker-rev }}
           push: false
           load: true
           cache-from: type=gha
@@ -469,7 +480,7 @@ jobs:
       - name: Start arm64 image for 2 minutes
         run: |
           IMAGE_TAG="${{ steps.testtag.outputs.tag }}"
-          CONTAINER_NAME="stirling-pdf-test-${{ matrix.docker.tag }}-arm64"
+          CONTAINER_NAME="stirling-pdf-test-${{ steps.docker_tag.outputs.tag }}-arm64"
           echo "Starting container ${CONTAINER_NAME} from ${IMAGE_TAG}"
           docker run -d --name "${CONTAINER_NAME}" "${IMAGE_TAG}"
           echo "Waiting up to 2 minutes..."

@@ -29,6 +29,8 @@ class JwtAuthenticationEntryPointTest {
     @Test
     void testCommence() throws IOException {
         String errorMessage = "Authentication failed";
+
+        when(request.getRequestURI()).thenReturn("/redact");
         when(authException.getMessage()).thenReturn(errorMessage);
 
         jwtAuthenticationEntryPoint.commence(request, response, authException);

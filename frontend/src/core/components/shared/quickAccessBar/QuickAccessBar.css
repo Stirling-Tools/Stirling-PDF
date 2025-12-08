@@ -1,0 +1,294 @@
+.activeIconScale {
+  transform: scale(1);
+  transition: transform 0.2s;
+  z-index: 1;
+  width: calc(1.75rem + 10px) !important;
+  height: calc(1.75rem + 10px) !important;
+}
+
+.activeIconScale .iconContainer {
+  width: calc(1.5rem + 10px);
+  height: calc(1.5rem + 10px);
+}
+
+.activeIconScale .iconContainer svg,
+.activeIconScale .iconContainer img {
+  width: calc(1.25rem + 10px) !important;
+  height: calc(1.25rem + 10px) !important;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  transition: width 0.2s, height 0.2s;
+}
+
+/* Action icon styles */
+.action-icon-style {
+  background-color: var(--icon-user-bg);
+  color: var(--icon-user-color);
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Main container styles */
+.quick-access-bar-main {
+  background-color: var(--bg-muted);
+  width: 4rem;
+  min-width: 4rem;
+  max-width: 4rem;
+  position: relative;
+  z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr; /* keep layout stable when document is rtl */
+}
+
+/* Rainbow mode container */
+.quick-access-bar-main.rainbow-mode {
+  background-color: var(--bg-muted);
+  width: 4rem;
+  min-width: 4rem;
+  max-width: 4rem;
+  position: relative;
+  z-index: 10;
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  direction: ltr;
+}
+
+/* RTL adjustments keep the bar on-screen and separated from content */
+:root[dir='rtl'] .quick-access-bar-main,
+:root[dir='rtl'] .quick-access-bar-main.rainbow-mode {
+  border-right: none;
+  border-left: 1px solid var(--border-default);
+}
+
+/* Header padding */
+.quick-access-header {
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
+}
+
+.nav-header { 
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  gap: 0.5rem;
+}
+
+/* Nav header divider */
+.nav-header-divider {
+  width: 3rem;
+  border-color: var(--color-gray-300);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* All tools text styles */
+.all-tools-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+  text-align: center;
+  display: block;
+}
+
+.all-tools-text.active {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.all-tools-text.inactive {
+  color: var(--color-gray-700);
+  font-weight: normal;
+}
+
+/* Overflow divider */
+.overflow-divider {
+  width: 3rem;
+  border-color: var(--color-gray-300);
+  margin: 0 0.5rem;
+}
+
+/* Scrollable content area */
+.quick-access-bar {
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0.5rem 1rem 0.5rem;
+}
+
+/* Scrollable content container */
+.scrollable-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+/* Button text styles */
+.button-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+  text-align: center;
+  display: block;
+}
+
+/* Allow wrapping under the active top indicator; constrain to two lines */
+.current-tool-label {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* show up to two lines */
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: manual;
+}
+
+.button-text.active {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.button-text.inactive {
+  color: var(--color-gray-700);
+  font-weight: normal;
+}
+
+/* Content divider */
+.content-divider {
+  width: 3rem;
+  border-color: var(--color-gray-300);
+  margin: 1rem 0;
+}
+
+/* Spacer */
+.spacer {
+  flex: 1;
+  margin-top: 1rem;
+}
+
+/* Config button text */
+.config-button-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-gray-700);
+  font-weight: normal;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+/* Font size utility */
+.font-size-20 {
+  font-size: 20px;
+}
+
+/* Hide scrollbar by default, show on scroll (Webkit browsers - Chrome, Safari, Edge) */
+.quick-access-bar::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: transparent;
+}
+
+.quick-access-bar:hover::-webkit-scrollbar,
+.quick-access-bar:active::-webkit-scrollbar,
+.quick-access-bar:focus::-webkit-scrollbar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.quick-access-bar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.25rem;
+}
+
+.quick-access-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Firefox scrollbar styling */
+.quick-access-bar {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Animated current tool indicator that slides in from the top and pushes content down */
+/* Container grows down so it pushes items below during animation */
+.current-tool-slot {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 450ms ease-out, opacity 300ms ease-out;
+}
+
+.current-tool-enter {
+  animation: currentToolGrowDown 450ms ease-out;
+}
+
+.current-tool-slot.visible {
+  max-height: 8.25rem; /* icon + up to 3-line label + divider (132px) */
+  opacity: 1;
+  border-bottom: 1px solid var(--color-gray-300);
+  padding-bottom: 0.75rem; /* push border down for spacing */
+  margin-bottom: 1rem;
+}
+
+/* Replay the grow-down animation when switching tools while visible */
+.current-tool-slot.replay .current-tool-content {
+  animation: currentToolGrowDown 450ms ease-out;
+}
+
+/* Also animate the container itself when replaying so it "pushes down" again */
+.current-tool-slot.replay {
+  animation: currentToolGrowDown 450ms ease-out;
+}
+
+@keyframes currentToolGrowDown {
+  0% {
+    max-height: 0;
+    opacity: 0;
+  }
+  100% {
+    max-height: 7.875rem; /* enough space for icon + up to 3-line label (126px) */
+    opacity: 1;
+  }
+}
+
+/* Divider that animates growing from top */
+.current-tool-divider {
+  width: 3rem;
+  border-color: var(--color-gray-300);
+  margin: 0.5rem auto 0.5rem auto;
+  transform-origin: top;
+  animation: dividerGrowDown 350ms ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes dividerGrowDown {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}

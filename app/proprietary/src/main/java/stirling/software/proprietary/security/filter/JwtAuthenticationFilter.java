@@ -1,7 +1,10 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
-import static stirling.software.proprietary.security.model.AuthenticationType.*;
+import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
+import static stirling.software.proprietary.security.model.AuthenticationType.WEB;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -74,20 +77,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwtToken = jwtService.extractToken(request);
 
             if (jwtToken == null) {
-                // Any unauthenticated requests should redirect to /login
+                // Allow specific auth endpoints to pass through without JWT
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-                if (!requestURI.startsWith(contextPath + "/login")) {
-                    response.sendRedirect("/login");
+                if (!isPublicAuthEndpoint(requestURI, contextPath)) {
+                    // For API requests, return 401 JSON
+                    String acceptHeader = request.getHeader("Accept");
+                    if (requestURI.startsWith(contextPath + "/api/")
+                            || (acceptHeader != null
+                                    && acceptHeader.contains("application/json"))) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Authentication required\"}");
+                        return;
+                    }
+
+                    // For HTML requests (SPA routes), let React Router handle it (serve
+                    // index.html)
+                    filterChain.doFilter(request, response);
                     return;
                 }
+
+                // For public auth endpoints without JWT, continue to the endpoint
+                filterChain.doFilter(request, response);
+                return;
             }
 
             try {
                 jwtService.validateToken(jwtToken);
             } catch (AuthenticationFailureException e) {
-                jwtService.clearToken(response);
+                log.debug("JWT validation failed: {}", e.getMessage());
                 handleAuthenticationFailure(request, response, e);
                 return;
             }
@@ -174,21 +194,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void processUserAuthenticationType(Map<String, Object> claims, String username)
             throws SQLException, UnsupportedProviderException {
         AuthenticationType authenticationType =
-                AuthenticationType.valueOf(claims.getOrDefault("authType", WEB).toString());
+                AuthenticationType.valueOf(
+                        claims.getOrDefault("authType", WEB).toString().toUpperCase());
         log.debug("Processing {} login for {} user", authenticationType, username);
 
         switch (authenticationType) {
             case OAUTH2 -> {
                 ApplicationProperties.Security.OAUTH2 oauth2Properties =
                         securityProperties.getOauth2();
+                // Provider IDs should already be set during initial authentication
+                // Pass null here since this is validating an existing JWT token
                 userService.processSSOPostLogin(
-                        username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+                        username, null, null, oauth2Properties.getAutoCreateUser(), OAUTH2);
             }
             case SAML2 -> {
                 ApplicationProperties.Security.SAML2 saml2Properties =
                         securityProperties.getSaml2();
+                // Provider IDs should already be set during initial authentication
+                // Pass null here since this is validating an existing JWT token
                 userService.processSSOPostLogin(
-                        username, saml2Properties.getAutoCreateUser(), SAML2);
+                        username, null, null, saml2Properties.getAutoCreateUser(), SAML2);
             }
         }
     }

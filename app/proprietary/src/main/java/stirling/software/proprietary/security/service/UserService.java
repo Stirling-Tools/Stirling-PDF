@@ -62,19 +62,46 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
-    // Handle OAUTH2 login and user auto creation.
     public void processSSOPostLogin(
-            String username, boolean autoCreateUser, AuthenticationType type)
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            boolean autoCreateUser,
+            AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
         }
-        Optional<User> existingUser = findByUsernameIgnoreCase(username);
+
+        // Find user by SSO provider ID first
+        Optional<User> existingUser;
+        if (ssoProviderId != null && ssoProvider != null) {
+            existingUser =
+                    userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
+
+            if (existingUser.isPresent()) {
+                log.debug("User found by SSO provider ID: {}", ssoProviderId);
+                return;
+            }
+        }
+
+        existingUser = findByUsernameIgnoreCase(username);
         if (existingUser.isPresent()) {
+            User user = existingUser.get();
+
+            // Migrate existing user to use provider ID if not already set
+            if (user.getSsoProviderId() == null && ssoProviderId != null && ssoProvider != null) {
+                log.info("Migrating user {} to use SSO provider ID: {}", username, ssoProviderId);
+                user.setSsoProviderId(ssoProviderId);
+                user.setSsoProvider(ssoProvider);
+                userRepository.save(user);
+                databaseService.exportDatabase();
+            }
             return;
         }
+
         if (autoCreateUser) {
-            saveUser(username, type);
+            saveUser(username, ssoProviderId, ssoProvider, type);
         }
     }
 
@@ -157,6 +184,21 @@ public class UserService implements UserServiceInterface {
         saveUser(username, authenticationType, (Long) null, Role.USER.getRoleId());
     }
 
+    public void saveUser(
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            AuthenticationType authenticationType)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        saveUser(
+                username,
+                ssoProviderId,
+                ssoProvider,
+                authenticationType,
+                (Long) null,
+                Role.USER.getRoleId());
+    }
+
     private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
             user.get().setApiKey(apiKey);
@@ -171,6 +213,30 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 null, // password
+                null, // ssoProviderId
+                null, // ssoProvider
+                authenticationType, // authenticationType
+                teamId, // teamId
+                null, // team
+                role, // role
+                false, // firstLogin
+                true // enabled
+                );
+    }
+
+    public User saveUser(
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            AuthenticationType authenticationType,
+            Long teamId,
+            String role)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        return saveUserCore(
+                username, // username
+                null, // password
+                ssoProviderId, // ssoProviderId
+                ssoProvider, // ssoProvider
                 authenticationType, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -186,6 +252,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 null, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 authenticationType, // authenticationType
                 null, // teamId
                 team, // team
@@ -200,6 +268,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -215,6 +285,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 null, // teamId
                 team, // team
@@ -230,6 +302,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -250,6 +324,8 @@ public class UserService implements UserServiceInterface {
         saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -414,6 +490,8 @@ public class UserService implements UserServiceInterface {
      *
      * @param username Username for the new user
      * @param password Password for the user (may be null for SSO/OAuth users)
+     * @param ssoProviderId Unique identifier from SSO provider (may be null for non-SSO users)
+     * @param ssoProvider Name of the SSO provider (may be null for non-SSO users)
      * @param authenticationType Type of authentication (WEB, SSO, etc.)
      * @param teamId ID of the team to assign (may be null to use default)
      * @param team Team object to assign (takes precedence over teamId if both provided)
@@ -428,6 +506,8 @@ public class UserService implements UserServiceInterface {
     private User saveUserCore(
             String username,
             String password,
+            String ssoProviderId,
+            String ssoProvider,
             AuthenticationType authenticationType,
             Long teamId,
             Team team,
@@ -446,6 +526,12 @@ public class UserService implements UserServiceInterface {
         // Set password if provided
         if (password != null && !password.isEmpty()) {
             user.setPassword(passwordEncoder.encode(password));
+        }
+
+        // Set SSO provider details if provided
+        if (ssoProviderId != null && ssoProvider != null) {
+            user.setSsoProviderId(ssoProviderId);
+            user.setSsoProvider(ssoProvider);
         }
 
         // Set authentication type
@@ -566,6 +652,36 @@ public class UserService implements UserServiceInterface {
         return null;
     }
 
+    public boolean isCurrentUserAdmin() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null
+                    && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getPrincipal())) {
+                return authentication.getAuthorities().stream()
+                        .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
+            }
+        } catch (Exception e) {
+            log.debug("Error checking admin status", e);
+        }
+        return false;
+    }
+
+    public boolean isCurrentUserFirstLogin() {
+        try {
+            String username = getCurrentUsername();
+            if (username != null) {
+                Optional<User> userOpt = findByUsernameIgnoreCase(username);
+                if (userOpt.isPresent()) {
+                    return !userOpt.get().hasCompletedInitialSetup();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error checking first login status", e);
+        }
+        return false;
+    }
+
     @Transactional
     public void syncCustomApiUser(String customApiKey) {
         if (customApiKey == null || customApiKey.trim().isBlank()) {
@@ -622,5 +738,75 @@ public class UserService implements UserServiceInterface {
 
     public void saveAll(List<User> users) {
         userRepository.saveAll(users);
+    }
+
+    /**
+     * Counts the number of OAuth/SAML users. Includes users with sso_provider set OR
+     * authenticationType is sso/oauth2/saml2 (catches V1 users who never signed in).
+     *
+     * @return Count of OAuth users
+     */
+    public long countOAuthUsers() {
+        return userRepository.countSsoUsers();
+    }
+
+    /**
+     * Counts the number of OAuth users who are grandfathered.
+     *
+     * @return Count of grandfathered OAuth users
+     */
+    public long countGrandfatheredOAuthUsers() {
+        return userRepository.countByOauthGrandfatheredTrue();
+    }
+
+    /**
+     * Grandfathers all existing OAuth/SAML users. This marks all users with an SSO provider as
+     * grandfathered, allowing them to keep OAuth access even without a paid license.
+     *
+     * @return Number of users updated
+     */
+    @Transactional
+    public int grandfatherAllOAuthUsers() {
+        List<User> ssoUsers = userRepository.findAllSsoUsers();
+        int updated = 0;
+
+        for (User user : ssoUsers) {
+            if (!user.isOauthGrandfathered()) {
+                user.setOauthGrandfathered(true);
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            userRepository.saveAll(ssoUsers);
+        }
+
+        return updated;
+    }
+
+    /**
+     * Grandfathers SSO users who have never created a session (invited/pending accounts). These
+     * users would otherwise be blocked when SSO requires a paid license despite existing before the
+     * policy change.
+     *
+     * @return Number of pending users updated
+     */
+    @Transactional
+    public int grandfatherPendingSsoUsersWithoutSession() {
+        List<User> pendingUsers = userRepository.findPendingSsoUsersWithoutSession();
+        int updated = 0;
+
+        for (User user : pendingUsers) {
+            if (!user.isOauthGrandfathered()) {
+                user.setOauthGrandfathered(true);
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            userRepository.saveAll(pendingUsers);
+        }
+
+        return updated;
     }
 }

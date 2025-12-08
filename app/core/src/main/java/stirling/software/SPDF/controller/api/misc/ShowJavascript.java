@@ -9,30 +9,28 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.JavaScriptResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @RequiredArgsConstructor
 public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
+    @JavaScriptResponse
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")

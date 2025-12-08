@@ -1,24 +1,29 @@
 package stirling.software.proprietary.security.controller.api;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
@@ -28,23 +33,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.AdminApi;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.AppArgsCapture;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.JarPathUtil;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
 
-@Controller
-@Tag(name = "Admin Settings", description = "Admin-only Settings Management APIs")
-@RequestMapping("/api/v1/admin/settings")
+@AdminApi
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Slf4j
@@ -52,6 +57,7 @@ public class AdminSettingsController {
 
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
+    private final ApplicationContext applicationContext;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -186,7 +192,6 @@ public class AdminSettingsController {
 
             return ResponseEntity.ok(
                     String.format(
-                            Locale.ROOT,
                             "Successfully updated %d setting(s). Changes will take effect on"
                                     + " application restart.",
                             updatedCount));
@@ -209,8 +214,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get specific settings section",
             description =
-                    "Retrieve settings for a specific section (e.g., security, system, ui). Admin"
-                            + " access required.")
+                    "Retrieve settings for a specific section (e.g., security, system, ui). "
+                            + "By default includes pending changes with awaitingRestart flags. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
@@ -221,7 +226,9 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettingsSection(@PathVariable String sectionName) {
+    public ResponseEntity<?> getSettingsSection(
+            @PathVariable String sectionName,
+            @RequestParam(defaultValue = "true") boolean includePending) {
         try {
             Object sectionData = getSectionData(sectionName);
             if (sectionData == null) {
@@ -232,8 +239,24 @@ public class AdminSettingsController {
                                         + ". Valid sections: "
                                         + String.join(", ", VALID_SECTION_NAMES));
             }
-            log.debug("Admin requested settings section: {}", sectionName);
-            return ResponseEntity.ok(sectionData);
+
+            // Convert to Map for manipulation
+            @SuppressWarnings("unchecked")
+            Map<String, Object> sectionMap = objectMapper.convertValue(sectionData, Map.class);
+
+            if (includePending && !pendingChanges.isEmpty()) {
+                // Add pending changes block for this section
+                Map<String, Object> sectionPending = extractPendingForSection(sectionName);
+                if (!sectionPending.isEmpty()) {
+                    sectionMap.put("_pending", sectionPending);
+                }
+            }
+
+            log.debug(
+                    "Admin requested settings section: {} (includePending={})",
+                    sectionName,
+                    includePending);
+            return ResponseEntity.ok(sectionMap);
         } catch (IllegalArgumentException e) {
             log.error("Invalid section name {}: {}", sectionName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -276,6 +299,16 @@ public class AdminSettingsController {
                                         + String.join(", ", VALID_SECTION_NAMES));
             }
 
+            // Auto-enable premium features if license key is provided
+            if ("premium".equalsIgnoreCase(sectionName) && sectionData.containsKey("key")) {
+                Object keyValue = sectionData.get("key");
+                if (keyValue != null && !keyValue.toString().trim().isEmpty()) {
+                    // Automatically set enabled to true when a key is provided
+                    sectionData.put("enabled", true);
+                    log.info("Auto-enabling premium features because license key was provided");
+                }
+            }
+
             int updatedCount = 0;
             for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
                 String propertyKey = entry.getKey();
@@ -299,11 +332,9 @@ public class AdminSettingsController {
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
                     String.format(
-                            Locale.ROOT,
                             "Successfully updated %d setting(s) in section '%s'. Changes will take"
                                     + " effect on application restart.",
-                            updatedCount,
-                            escapedSectionName));
+                            updatedCount, escapedSectionName));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
@@ -392,7 +423,6 @@ public class AdminSettingsController {
             String escapedKey = HtmlUtils.htmlEscape(key);
             return ResponseEntity.ok(
                     String.format(
-                            Locale.ROOT,
                             "Successfully updated setting '%s'. Changes will take effect on"
                                     + " application restart.",
                             escapedKey));
@@ -410,12 +440,107 @@ public class AdminSettingsController {
         }
     }
 
+    @PostMapping("/restart")
+    @Operation(
+            summary = "Restart the application",
+            description =
+                    "Triggers a graceful restart of the Spring Boot application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Restart initiated successfully"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required"),
+                @ApiResponse(responseCode = "500", description = "Failed to initiate restart")
+            })
+    public ResponseEntity<String> restartApplication() {
+        try {
+            log.warn("Admin initiated application restart");
+
+            // Get paths to current JAR and restart helper
+            Path appJar = JarPathUtil.currentJar();
+            Path helperJar = JarPathUtil.restartHelperJar();
+
+            if (appJar == null) {
+                log.error("Cannot restart: not running from JAR (likely development mode)");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(
+                                "Restart not available in development mode. Please restart the application manually.");
+            }
+
+            if (helperJar == null || !Files.isRegularFile(helperJar)) {
+                log.error("Cannot restart: restart-helper.jar not found at expected location");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body("Restart helper not found. Please restart the application manually.");
+            }
+
+            // Get current application arguments
+            List<String> appArgs = AppArgsCapture.APP_ARGS.get();
+
+            // Write args to temp file to avoid command-line quoting issues
+            Path argsFile = Files.createTempFile("stirling-app-args-", ".txt");
+            Files.write(argsFile, appArgs, StandardCharsets.UTF_8);
+
+            // Get current process PID and java executable
+            long pid = ProcessHandle.current().pid();
+            String javaBin = JarPathUtil.javaExecutable();
+
+            // Build command to launch restart helper
+            List<String> cmd = new ArrayList<>();
+            cmd.add(javaBin);
+            cmd.add("-jar");
+            cmd.add(helperJar.toString());
+            cmd.add("--pid");
+            cmd.add(Long.toString(pid));
+            cmd.add("--app");
+            cmd.add(appJar.toString());
+            cmd.add("--argsFile");
+            cmd.add(argsFile.toString());
+            cmd.add("--backoffMs");
+            cmd.add("1000");
+
+            log.info("Launching restart helper: {}", String.join(" ", cmd));
+
+            // Launch restart helper process
+            new ProcessBuilder(cmd)
+                    .directory(appJar.getParent().toFile())
+                    .inheritIO() // Forward logs
+                    .start();
+
+            // Clear pending changes since we're restarting
+            pendingChanges.clear();
+
+            // Give the HTTP response time to complete, then exit
+            new Thread(
+                            () -> {
+                                try {
+                                    Thread.sleep(1000);
+                                    log.info("Shutting down for restart...");
+                                    SpringApplication.exit(applicationContext, () -> 0);
+                                    System.exit(0);
+                                } catch (InterruptedException e) {
+                                    log.error("Restart interrupted: {}", e.getMessage(), e);
+                                    Thread.currentThread().interrupt();
+                                }
+                            })
+                    .start();
+
+            return ResponseEntity.ok(
+                    "Application restart initiated. The server will be back online shortly.");
+
+        } catch (Exception e) {
+            log.error("Failed to initiate restart: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to initiate application restart: " + e.getMessage());
+        }
+    }
+
     private Object getSectionData(String sectionName) {
         if (sectionName == null || sectionName.trim().isEmpty()) {
             return null;
         }
 
-        return switch (sectionName.toLowerCase(Locale.ROOT)) {
+        return switch (sectionName.toLowerCase()) {
             case "security" -> applicationProperties.getSecurity();
             case "system" -> applicationProperties.getSystem();
             case "ui" -> applicationProperties.getUi();
@@ -478,7 +603,7 @@ public class AdminSettingsController {
         }
 
         // Ensure first part is a valid section name
-        if (parts.length > 0 && !VALID_SECTION_NAMES.contains(parts[0].toLowerCase(Locale.ROOT))) {
+        if (parts.length > 0 && !VALID_SECTION_NAMES.contains(parts[0].toLowerCase())) {
             return false;
         }
 
@@ -583,8 +708,8 @@ public class AdminSettingsController {
 
     /** Check if a field name indicates sensitive data with full path context */
     private boolean isSensitiveFieldWithPath(String fieldName, String fullPath) {
-        String lowerField = fieldName.toLowerCase(Locale.ROOT);
-        String lowerPath = fullPath.toLowerCase(Locale.ROOT);
+        String lowerField = fieldName.toLowerCase();
+        String lowerPath = fullPath.toLowerCase();
 
         // Don't mask premium.key specifically
         if ("key".equals(lowerField) && "premium.key".equals(lowerPath)) {
@@ -647,5 +772,63 @@ public class AdminSettingsController {
         }
 
         return mergedSettings;
+    }
+
+    /**
+     * Extract pending changes for a specific section
+     *
+     * @param sectionName The section name (e.g., "security", "system")
+     * @return Map of pending changes with nested structure for this section
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractPendingForSection(String sectionName) {
+        Map<String, Object> result = new HashMap<>();
+        String sectionPrefix = sectionName.toLowerCase() + ".";
+
+        // Find all pending changes for this section
+        for (Map.Entry<String, Object> entry : pendingChanges.entrySet()) {
+            String pendingKey = entry.getKey();
+
+            if (pendingKey.toLowerCase().startsWith(sectionPrefix)) {
+                // Extract the path within the section (e.g., "security.enableLogin" ->
+                // "enableLogin")
+                String pathInSection = pendingKey.substring(sectionPrefix.length());
+                Object pendingValue = entry.getValue();
+
+                // Build nested structure from dot notation
+                setNestedValue(result, pathInSection, pendingValue);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Set a value in a nested map using dot notation
+     *
+     * @param map The root map
+     * @param dotPath The dot notation path (e.g., "oauth2.clientSecret")
+     * @param value The value to set
+     */
+    @SuppressWarnings("unchecked")
+    private void setNestedValue(Map<String, Object> map, String dotPath, Object value) {
+        String[] parts = dotPath.split("\\.");
+        Map<String, Object> current = map;
+
+        // Navigate/create nested maps for all parts except the last
+        for (int i = 0; i < parts.length - 1; i++) {
+            String part = parts[i];
+            Object nested = current.get(part);
+
+            if (!(nested instanceof Map)) {
+                nested = new HashMap<String, Object>();
+                current.put(part, nested);
+            }
+
+            current = (Map<String, Object>) nested;
+        }
+
+        // Set the final value
+        current.put(parts[parts.length - 1], value);
     }
 }

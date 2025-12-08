@@ -13,29 +13,29 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
+@GeneralApi
 @RequiredArgsConstructor
 public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf-to-single-page")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf-to-single-page")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",
             description =

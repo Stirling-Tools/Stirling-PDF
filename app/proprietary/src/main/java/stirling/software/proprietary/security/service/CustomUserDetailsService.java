@@ -40,7 +40,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Your account has been locked due to too many failed login attempts.");
         }
 
-        // Handle legacy users without authenticationType (from versions < 1.3.0)
+        // TODO: Remove for SaaS - Handle legacy users without authenticationType (from versions <
+        // 1.3.0)
         String authTypeStr = user.getAuthenticationType();
         if (authTypeStr == null || authTypeStr.isEmpty()) {
             // Migrate legacy users by detecting authentication type based on password presence

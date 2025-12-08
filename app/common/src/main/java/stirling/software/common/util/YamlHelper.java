@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -135,6 +136,17 @@ public class YamlHelper {
                 } else if ("true".equals(newValue) || "false".equals(newValue)) {
                     newValueNode =
                             new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
+                } else if (newValue instanceof Map<?, ?> map) {
+                    // Handle Map objects - convert to MappingNode
+                    List<NodeTuple> mapTuples = new ArrayList<>();
+                    for (Map.Entry<?, ?> entry : map.entrySet()) {
+                        ScalarNode mapKeyNode =
+                                new ScalarNode(
+                                        Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
+                        Node mapValueNode = convertValueToNode(entry.getValue());
+                        mapTuples.add(new NodeTuple(mapKeyNode, mapValueNode));
+                    }
+                    newValueNode = new MappingNode(Tag.MAP, mapTuples, FlowStyle.BLOCK);
                 } else if (newValue instanceof List<?> list) {
                     List<Node> sequenceNodes = new ArrayList<>();
                     for (Object item : list) {
@@ -456,6 +468,43 @@ public class YamlHelper {
      */
     public static boolean isAnyInteger(Object object) {
         return isInteger(object) || isShort(object) || isByte(object) || isLong(object);
+    }
+
+    /**
+     * Converts a Java value to a YAML Node.
+     *
+     * @param value The value to convert.
+     * @return The corresponding YAML Node.
+     */
+    private Node convertValueToNode(Object value) {
+        if (value == null) {
+            return new ScalarNode(Tag.NULL, "null", ScalarStyle.PLAIN);
+        } else if (isAnyInteger(value)) {
+            return new ScalarNode(Tag.INT, String.valueOf(value), ScalarStyle.PLAIN);
+        } else if (isFloat(value)) {
+            Object floatValue = Float.valueOf(String.valueOf(value));
+            return new ScalarNode(Tag.FLOAT, String.valueOf(floatValue), ScalarStyle.PLAIN);
+        } else if (value instanceof Boolean || "true".equals(value) || "false".equals(value)) {
+            return new ScalarNode(Tag.BOOL, String.valueOf(value), ScalarStyle.PLAIN);
+        } else if (value instanceof Map<?, ?> map) {
+            // Recursively handle nested maps
+            List<NodeTuple> mapTuples = new ArrayList<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                ScalarNode mapKeyNode =
+                        new ScalarNode(Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
+                Node mapValueNode = convertValueToNode(entry.getValue());
+                mapTuples.add(new NodeTuple(mapKeyNode, mapValueNode));
+            }
+            return new MappingNode(Tag.MAP, mapTuples, FlowStyle.BLOCK);
+        } else if (value instanceof List<?> list) {
+            List<Node> sequenceNodes = new ArrayList<>();
+            for (Object item : list) {
+                sequenceNodes.add(convertValueToNode(item));
+            }
+            return new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);
+        } else {
+            return new ScalarNode(Tag.STR, String.valueOf(value), ScalarStyle.PLAIN);
+        }
     }
 
     /**

@@ -1,9 +1,13 @@
 package stirling.software.proprietary.security.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.contains;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -11,7 +15,6 @@ import static org.mockito.Mockito.when;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,13 +24,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -53,7 +53,7 @@ class JwtServiceTest {
     private JwtVerificationKey testVerificationKey;
 
     @BeforeEach
-    void setUp() throws NoSuchAlgorithmException {
+    void setUp() throws Exception {
         // Generate a test keypair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -132,7 +132,9 @@ class JwtServiceTest {
 
         assertThrows(
                 AuthenticationFailureException.class,
-                () -> jwtService.validateToken("invalid-token"));
+                () -> {
+                    jwtService.validateToken("invalid-token");
+                });
     }
 
     @Test
@@ -144,7 +146,9 @@ class JwtServiceTest {
         AuthenticationFailureException exception =
                 assertThrows(
                         AuthenticationFailureException.class,
-                        () -> jwtService.validateToken("malformed.token"));
+                        () -> {
+                            jwtService.validateToken("malformed.token");
+                        });
 
         assertTrue(exception.getMessage().contains("Invalid"));
     }
@@ -157,7 +161,10 @@ class JwtServiceTest {
 
         AuthenticationFailureException exception =
                 assertThrows(
-                        AuthenticationFailureException.class, () -> jwtService.validateToken(""));
+                        AuthenticationFailureException.class,
+                        () -> {
+                            jwtService.validateToken("");
+                        });
 
         assertTrue(
                 exception.getMessage().contains("Claims are empty")
@@ -211,7 +218,8 @@ class JwtServiceTest {
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
         assertEquals(username, extractedClaims.get("sub"));
-        assertEquals("Stirling PDF", extractedClaims.get("iss"));
+        // Verify the constant issuer is set correctly
+        assertEquals("https://stirling.com", extractedClaims.get("iss"));
     }
 
     @Test
@@ -226,64 +234,29 @@ class JwtServiceTest {
     }
 
     @Test
-    void testExtractTokenWithCookie() {
+    void testExtractTokenWithAuthorizationHeader() {
         String token = "test-token";
-        Cookie[] cookies = {new Cookie("stirling_jwt", token)};
-        when(request.getCookies()).thenReturn(cookies);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
 
         assertEquals(token, jwtService.extractToken(request));
     }
 
     @Test
-    void testExtractTokenWithNoCookies() {
-        when(request.getCookies()).thenReturn(null);
+    void testExtractTokenWithNoAuthorizationHeader() {
+        when(request.getHeader("Authorization")).thenReturn(null);
 
         assertNull(jwtService.extractToken(request));
     }
 
     @Test
-    void testExtractTokenWithWrongCookie() {
-        Cookie[] cookies = {new Cookie("OTHER_COOKIE", "value")};
-        when(request.getCookies()).thenReturn(cookies);
+    void testExtractTokenWithInvalidAuthorizationHeaderFormat() {
+        when(request.getHeader("Authorization")).thenReturn("InvalidFormat token");
 
         assertNull(jwtService.extractToken(request));
     }
 
     @Test
-    void testExtractTokenWithInvalidAuthorizationHeader() {
-        when(request.getCookies()).thenReturn(null);
-
-        assertNull(jwtService.extractToken(request));
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void testAddToken(boolean secureCookie) throws Exception {
-        String token = "test-token";
-
-        // Create new JwtService instance with the secureCookie parameter
-        JwtService testJwtService = createJwtServiceWithSecureCookie(secureCookie);
-
-        testJwtService.addToken(response, token);
-
-        verify(response).addHeader(eq("Set-Cookie"), contains("stirling_jwt=" + token));
-        verify(response).addHeader(eq("Set-Cookie"), contains("HttpOnly"));
-
-        if (secureCookie) {
-            verify(response).addHeader(eq("Set-Cookie"), contains("Secure"));
-        }
-    }
-
-    @Test
-    void testClearToken() {
-        jwtService.clearToken(response);
-
-        verify(response).addHeader(eq("Set-Cookie"), contains("stirling_jwt="));
-        verify(response).addHeader(eq("Set-Cookie"), contains("Max-Age=0"));
-    }
-
-    @Test
-    void testGenerateTokenWithKeyId() {
+    void testGenerateTokenWithKeyId() throws Exception {
         String username = "testuser";
         Map<String, Object> claims = new HashMap<>();
 
@@ -359,18 +332,5 @@ class JwtServiceTest {
 
         // Verify fallback logic was used
         verify(keystoreService, atLeast(1)).getActiveKey();
-    }
-
-    private JwtService createJwtServiceWithSecureCookie(boolean secureCookie) throws Exception {
-        // Use reflection to create JwtService with custom secureCookie value
-        JwtService testService = new JwtService(true, keystoreService);
-
-        // Set the secureCookie field using reflection
-        java.lang.reflect.Field secureCookieField =
-                JwtService.class.getDeclaredField("secureCookie");
-        secureCookieField.setAccessible(true);
-        secureCookieField.set(testService, secureCookie);
-
-        return testService;
     }
 }

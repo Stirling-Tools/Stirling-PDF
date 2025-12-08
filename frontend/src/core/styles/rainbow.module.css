@@ -1,0 +1,202 @@
+/* Rainbow Mode Styles - Easter Egg! */
+@keyframes rainbowBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes rainbowBorder {
+  0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
+  14% { border-color: #ff8800; box-shadow: 0 0 15px #ff8800; }
+  28% { border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
+  42% { border-color: #88ff00; box-shadow: 0 0 15px #88ff00; }
+  57% { border-color: #00ff88; box-shadow: 0 0 15px #00ff88; }
+  71% { border-color: #0088ff; box-shadow: 0 0 15px #0088ff; }
+  85% { border-color: #8800ff; box-shadow: 0 0 15px #8800ff; }
+  100% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
+}
+
+@keyframes rainbowText {
+  0% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+  14% { color: #ff8800; text-shadow: 0 0 10px #ff8800; }
+  28% { color: #ffff00; text-shadow: 0 0 10px #ffff00; }
+  42% { color: #88ff00; text-shadow: 0 0 10px #88ff00; }
+  57% { color: #00ff88; text-shadow: 0 0 10px #00ff88; }
+  71% { color: #0088ff; text-shadow: 0 0 10px #0088ff; }
+  85% { color: #8800ff; text-shadow: 0 0 10px #8800ff; }
+  100% { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+}
+
+@keyframes rainbowPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Main rainbow theme class */
+.rainbowMode {
+  background: linear-gradient(
+    -45deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088, #ff0000
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: rainbowBackground 3s ease infinite !important;
+  color: white !important;
+  overflow-x: hidden;
+}
+
+/* Rainbow components */
+.rainbowCard {
+  background: linear-gradient(
+    45deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: rainbowBackground 4s ease infinite, rainbowBorder 2s linear infinite !important;
+  color: white !important;
+  border: 2px solid !important;
+  border-radius: 15px !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+}
+
+.rainbowButton {
+  background: linear-gradient(
+    45deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088
+  ) !important;
+  background-size: 300% 300% !important;
+  animation: rainbowBackground 2s ease infinite, rainbowBorder 1s linear infinite !important;
+  border: 2px solid !important;
+  color: white !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  font-weight: bold !important;
+}
+
+.rainbowButton:hover {
+  transform: scale(1.05) !important;
+  animation: rainbowBackground 1s ease infinite, rainbowBorder 0.5s linear infinite, rainbowPulse 0.5s ease infinite !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6) !important;
+}
+
+.rainbowInput {
+  background: linear-gradient(
+    90deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088
+  ) !important;
+  background-size: 300% 300% !important;
+  animation: rainbowBackground 2.5s ease infinite, rainbowBorder 1.5s linear infinite !important;
+  border: 2px solid !important;
+  color: white !important;
+  border-radius: 8px !important;
+}
+
+.rainbowInput::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.rainbowText {
+  animation: rainbowText 3s linear infinite !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 10px currentColor !important;
+}
+
+.rainbowSegmentedControl {
+  background: linear-gradient(
+    45deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: rainbowBackground 3s ease infinite, rainbowBorder 2s linear infinite !important;
+  border: 2px solid !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+}
+
+.rainbowPaper {
+  background: linear-gradient(
+    90deg,
+  #00ffff, #0088ff, #8800ff, #ff0088
+  ) !important;
+  background-size: 100% 100% !important;
+  animation: rainbowBackground 3.5s ease infinite, rainbowBorder 2s linear infinite !important;
+  border: 2px solid !important;
+  color: white !important;
+  border-radius: 12px !important;
+}
+
+/* Easter egg notification */
+.rainbowNotification {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  background: linear-gradient(45deg,#ffff00, #88ff00, #00ff88, #00ffff) !important;
+  background-size: 300% 300% !important;
+  animation: rainbowBackground 1s ease infinite, rainbowBorder 0.5s linear infinite !important;
+  color: white !important;
+  padding: 15px 20px !important;
+  border-radius: 25px !important;
+  font-weight: bold !important;
+  font-size: 16px !important;
+  z-index: 10000 !important;
+  border: 2px solid white !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+/* Specific component overrides */
+.rainbowMode [data-mantine-color-scheme] {
+  background: linear-gradient(
+    -45deg,
+    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088, #ff0000
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: rainbowBackground 3s ease infinite !important;
+}
+
+/* Make all buttons rainbow in rainbow mode */
+.rainbowMode button {
+  background: linear-gradient(
+    45deg,
+     #ffff00, #88ff00, #00ff88, #00ffff
+  ) !important;
+  background-size: 100% 100% !important;
+  animation: rainbowBackground 2s ease infinite !important;
+  border: 2px solid !important;
+  animation: rainbowBackground 2s ease infinite, rainbowBorder 1.5s linear infinite !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* Make all inputs rainbow in rainbow mode */
+.rainbowMode input,
+.rainbowMode select,
+.rainbowMode textarea {
+  background: linear-gradient(
+    90deg,
+    #ffff00, #88ff00, #00ff88, #00ffff
+  ) !important;
+  background-size: 100% 100% !important;
+  animation: rainbowBackground 2.5s ease infinite !important;
+  border: 2px solid !important;
+  animation: rainbowBackground 2.5s ease infinite, rainbowBorder 1.5s linear infinite !important;
+  color: white !important;
+}
+
+/* Rainbow text class */
+.rainbowText {
+  animation: rainbowText 3s linear infinite !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 10px currentColor !important;
+}
+
+/* Make all text rainbow */
+.rainbowMode h1,
+.rainbowMode h2,
+.rainbowMode h3,
+.rainbowMode h4,
+.rainbowMode h5,
+.rainbowMode h6 {
+  animation: rainbowText 3s linear infinite !important;
+  font-weight: bold !important;
+}

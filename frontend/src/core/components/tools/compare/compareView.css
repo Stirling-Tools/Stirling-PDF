@@ -1,0 +1,516 @@
+.compare-dropdown-scrollwrap {
+  position: relative;
+}
+
+.compare-dropdown-sticky {
+  position: sticky;
+  z-index: 2;
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  pointer-events: none;
+}
+
+[data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+  border-bottom: 1px solid var(--border-default);
+}
+.compare-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  padding-top: 3rem;
+  height: 100%;
+  min-height: 0;
+  /* Allow the custom workbench to shrink within flex parents (prevents pushing right rail off-screen) */
+  min-width: 0;
+}
+
+.compare-workbench__content {
+  flex: 1;
+  min-height: 0;
+}
+
+.compare-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.compare-pane__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.compare-pane__content {
+  position: relative;
+}
+
+.compare-workbench__mode {
+  align-self: center;
+}
+
+.compare-workbench__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  grid-auto-rows: 1fr;
+}
+
+/* Stacked mode: two rows with synchronized scroll panes */
+.compare-workbench__columns--stacked {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.compare-workbench__columns > div {
+  /* Critical for responsive flex children inside non-wrapping layouts */
+  min-height: 0;
+  min-width: 0;
+}
+
+.compare-legend {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Sticky header styling overrides */
+.compare-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-toolbar);  
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.5rem;
+  margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+}
+
+/* Dropdown badge-like style - only style the dropdowns, not titles */
+.compare-changes-select {
+  background: var(--spdf-compare-removed-badge-bg) !important;
+  color: var(--spdf-compare-removed-badge-fg) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  min-width: 200px;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem !important;
+  box-sizing: border-box;
+}
+
+.compare-changes-select__placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.compare-changes-select__placeholder .mantine-Loader-root {
+  display: inline-flex;
+  margin: 0 0.125rem;
+}
+
+.compare-changes-select--comparison {
+  background: var(--spdf-compare-added-badge-bg) !important;
+  color: var(--spdf-compare-added-badge-fg) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+/* Wider dropdown menu for long block text */
+.compare-changes-dropdown {
+  min-width: 520px !important;
+  max-width: 70vw !important;
+  padding: 0 !important;
+  overflow: hidden; /* prevent inner elements from overflowing rounded edges */
+  border-radius: 8px !important; /* match dropdown container radius */
+}
+
+/* Ensure options text uses full width inside wider dropdown */
+.compare-dropdown-option__text {
+  max-width: 100%;
+}
+
+/* Remove default padding inside Mantine options list so sticky header touches edges */
+.compare-changes-dropdown .mantine-Combobox-options {
+  padding: 0 !important;
+}
+
+.compare-dropdown-scrollwrap { margin: 0; }
+
+/* Ensure search field sits flush and does not overflow */
+.compare-changes-dropdown .mantine-Combobox-search {
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: 0 !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+}
+
+/* Style the dropdown container */
+.compare-changes-select .mantine-Combobox-dropdown {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-dropdown {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+/* Custom scrollbar for ScrollArea */
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+  background: var(--bg-muted) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+  background: var(--border-strong) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted) !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+  background: var(--bg-muted) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+  background: var(--border-strong) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted) !important;
+}
+
+/* Style the dropdown options */
+.compare-changes-select .mantine-Combobox-option {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-option {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+}
+
+.compare-changes-select .mantine-Combobox-option:hover {
+  background-color: var(--spdf-compare-removed-badge-bg) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-option:hover {
+  background-color: var(--spdf-compare-added-badge-bg) !important;
+}
+
+/* Style the search input */
+.compare-changes-select .mantine-Combobox-search {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-search {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.compare-changes-select .mantine-Combobox-search::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-search::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Style the chevron - ensure proper coloring */
+.compare-changes-select .mantine-Combobox-chevron,
+.compare-changes-select--comparison .mantine-Combobox-chevron {
+  color: inherit !important;
+  margin-left: 0.5rem;
+}
+
+/* Flash/pulse highlight for navigated change */
+@keyframes compare-flash {
+  0% {
+    outline: 4px solid rgba(255, 235, 59, 0.0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    background-color: rgba(255, 235, 59, 0.2) !important;
+  }
+  25% {
+    outline: 4px solid rgba(255, 235, 59, 1.0);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+    background-color: rgba(255, 235, 59, 0.4) !important;
+  }
+  50% {
+    outline: 4px solid rgba(255, 235, 59, 1.0);
+    box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
+    background-color: rgba(255, 235, 59, 0.5) !important;
+  }
+  75% {
+    outline: 4px solid rgba(255, 235, 59, 0.8);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.6);
+    background-color: rgba(255, 235, 59, 0.3) !important;
+  }
+  100% {
+    outline: 4px solid rgba(255, 235, 59, 0.0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    background-color: rgba(255, 235, 59, 0.0) !important;
+  }
+}
+
+.compare-diff-highlight--flash {
+  animation: compare-flash 1.5s ease-in-out 1;
+  z-index: 1000;
+  position: relative;
+  /* Bonus: temporarily override red/green to yellow during flash for clarity */
+  background-color: rgba(255, 235, 59, 0.5) !important;
+}
+
+/* Union overlay for group flash */
+.compare-diff-flash-overlay {
+  animation: compare-flash 1.5s ease-in-out 1;
+  z-index: 999;
+  background-color: rgba(255, 235, 59, 0.4);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+.compare-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+}
+
+.compare-legend__swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.compare-summary__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.compare-summary__stat-card {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.compare-summary__segment {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.compare-diff-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compare-diff-page__canvas {
+  position: relative;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+  width: 100%;
+}
+
+/* Center canvas in stacked portrait mode (width/height set inline) */
+.compare-diff-page__canvas[style*="margin-left: auto"] {
+  display: block;
+}
+
+.compare-diff-page__canvas--zoom {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.compare-diff-page__inner {
+  position: relative;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  background-color: #fff; /* ensure stable white backing during load */
+  border: 1px solid var(--border-subtle);
+  will-change: transform;
+}
+
+.compare-diff-page__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Centered per-page title wrapper */
+.compare-page-title {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.compare-page-title .mantine-Text-root {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background-color: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+}
+
+/* Overlay loader to avoid flash when image not yet loaded */
+.compare-page-loader-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.compare-diff-highlight {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: normal; 
+}
+
+/* Compare dropdown option formatting (page + clamped text) */
+.compare-dropdown-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.compare-dropdown-option__page {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.compare-dropdown-option__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-clamp: 3;
+}
+
+/* Non-sticky in-flow group headers; sticky handled by floating header */
+.compare-dropdown-group {
+  position: static;
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.compare-dropdown-group.compare-dropdown-group--hidden {
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+[data-mantine-color-scheme="dark"] .compare-dropdown-group {
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Light grey rendering flag next to page labels in the dropdown */
+.compare-dropdown-rendering-flag {
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+/* Inline paragraph highlights in summary */
+.compare-inline {
+  border-radius: 0.2rem;
+  padding: 0.05rem 0.15rem;
+}
+.compare-inline--removed {
+  background-color: var(--spdf-compare-inline-removed-bg);
+}
+.compare-inline--added {
+  background-color: var(--spdf-compare-inline-added-bg);
+}
+
+.compare-pane-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-background);
+  padding: 0.25rem 0;
+}
+
+/* Compare tool thumbnail and details (moved from core/tools/compareTool.css) */
+.compare-tool__thumbnail {
+  width: 4rem;
+  height: 5.25rem;
+  flex-shrink: 0;
+}
+
+.compare-tool__details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mobile: remove side margins and let canvases take full width inside column */
+@media (max-width: 768px) {
+  .compare-workbench__columns {
+    grid-template-columns: 1fr;
+  }
+  .compare-diff-page__canvas.compare-diff-page__canvas--zoom {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .compare-diff-page__inner {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}

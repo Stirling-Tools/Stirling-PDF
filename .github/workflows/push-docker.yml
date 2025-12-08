@@ -107,7 +107,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile
+          file: ./docker/embedded/Dockerfile
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -152,7 +152,7 @@ jobs:
         if: github.ref != 'refs/heads/main'
         with:
           context: .
-          file: ./Dockerfile.ultra-lite
+          file: ./docker/embedded/Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -183,7 +183,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile.fat
+          file: ./docker/embedded/Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max

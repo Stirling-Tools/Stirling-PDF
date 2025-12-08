@@ -7,15 +7,12 @@ import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.annotation.PostConstruct;
 
@@ -26,11 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.SPDF.config.StartupApplicationListener;
+import stirling.software.SPDF.service.WeeklyActiveUsersService;
+import stirling.software.common.annotations.api.InfoApi;
 import stirling.software.common.model.ApplicationProperties;
 
-@RestController
-@RequestMapping("/api/v1/info")
-@Tag(name = "Info", description = "Info APIs")
+@InfoApi
 @Slf4j
 @RequiredArgsConstructor
 public class MetricsController {
@@ -38,6 +35,7 @@ public class MetricsController {
     private final ApplicationProperties applicationProperties;
     private final MeterRegistry meterRegistry;
     private final EndpointInspector endpointInspector;
+    private final Optional<WeeklyActiveUsersService> wauService;
     private boolean metricsEnabled;
 
     @PostConstruct
@@ -352,6 +350,36 @@ public class MetricsController {
         LocalDateTime now = LocalDateTime.now();
         Duration uptime = Duration.between(StartupApplicationListener.startTime, now);
         return ResponseEntity.ok(formatDuration(uptime));
+    }
+
+    @GetMapping("/wau")
+    @Operation(
+            summary = "Weekly Active Users statistics",
+            description =
+                    "Returns WAU (Weekly Active Users) count and total unique browsers. "
+                            + "Only available when security is disabled (no-login mode). "
+                            + "Tracks unique browsers via client-generated UUID in localStorage.")
+    public ResponseEntity<?> getWeeklyActiveUsers() {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+
+        // Check if WAU service is available (only when security.enableLogin=false)
+        if (wauService.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(
+                            "WAU tracking is only available when security is disabled (no-login mode)");
+        }
+
+        WeeklyActiveUsersService service = wauService.get();
+
+        Map<String, Object> wauStats = new HashMap<>();
+        wauStats.put("weeklyActiveUsers", service.getWeeklyActiveUsers());
+        wauStats.put("totalUniqueBrowsers", service.getTotalUniqueBrowsers());
+        wauStats.put("daysOnline", service.getDaysOnline());
+        wauStats.put("trackingSince", service.getStartTime().toString());
+
+        return ResponseEntity.ok(wauStats);
     }
 
     private String formatDuration(Duration duration) {

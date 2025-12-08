@@ -1,0 +1,15 @@
+export const SEARCH_CONSTANTS = {
+  HIGHLIGHT_COLORS: {
+    BACKGROUND: '#ffff00',
+    ACTIVE_BACKGROUND: '#ff6b35',
+    OPACITY: 0.4,
+  },
+  TIMING: {
+    DEBOUNCE_DELAY: 300,
+  },
+  UI: {
+    HIGHLIGHT_PADDING: 2,
+    MIN_SEARCH_LENGTH: 1,
+    MAX_RESULTS_DISPLAY: 100,
+  }
+} as const;

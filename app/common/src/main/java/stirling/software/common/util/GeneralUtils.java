@@ -43,6 +43,7 @@ public class GeneralUtils {
             Set.of(
                     "OCR images.json",
                     "Prepare-pdfs-for-email.json",
+                    "Pre-publish-sanitization.json",
                     "split-rotate-auto-rename.json");
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";

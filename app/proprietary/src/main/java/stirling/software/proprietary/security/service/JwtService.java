@@ -4,7 +4,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,15 +12,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import io.github.pixee.security.Newlines;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -29,9 +26,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,16 +38,13 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String JWT_COOKIE_NAME = "stirling_jwt";
-    private static final String ISSUER = "Stirling PDF";
-    private static final long EXPIRATION = 3600000;
-
-    @Value("${stirling.security.jwt.secureCookie:true}")
-    private boolean secureCookie;
+    private static final String ISSUER = "https://stirling.com";
+    private static final long EXPIRATION = 43200000;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
 
+    @Autowired
     public JwtService(
             @Qualifier("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService) {
@@ -93,8 +85,8 @@ public class JwtService implements JwtServiceInterface {
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(Date.from(Instant.now()))
-                            .expiration(Date.from(Instant.now().plusMillis(EXPIRATION)))
+                            .issuedAt(new Date())
+                            .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
@@ -130,7 +122,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(Date.from(Instant.now()));
+        return extractExpiration(token).before(new Date());
     }
 
     private Date extractExpiration(String token) {
@@ -154,8 +146,7 @@ public class JwtService implements JwtServiceInterface {
                     keyPair = specificKeyPair.get();
                 } else {
                     log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with an"
-                                    + " expired key",
+                            "Key ID {} not found in keystore, token may have been signed with an expired key",
                             keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
@@ -260,45 +251,14 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (JWT_COOKIE_NAME.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
+        // Extract from Authorization header Bearer token
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            return token;
         }
 
         return null;
-    }
-
-    @Override
-    public void addToken(HttpServletResponse response, String token) {
-        ResponseCookie cookie =
-                ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
-                        .httpOnly(true)
-                        .secure(secureCookie)
-                        .sameSite("Strict")
-                        .maxAge(EXPIRATION / 1000)
-                        .path("/")
-                        .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
-    }
-
-    @Override
-    public void clearToken(HttpServletResponse response) {
-        ResponseCookie cookie =
-                ResponseCookie.from(JWT_COOKIE_NAME, "")
-                        .httpOnly(true)
-                        .secure(secureCookie)
-                        .sameSite("None")
-                        .maxAge(0)
-                        .path("/")
-                        .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     @Override
@@ -320,10 +280,9 @@ public class JwtService implements JwtServiceInterface {
                                     .parse(token)
                                     .getHeader()
                                     .get("kid");
-            log.debug("Extracted key ID from token: {}", keyId);
             return keyId;
         } catch (Exception e) {
-            log.warn("Failed to extract key ID from token header: {}", e.getMessage());
+            log.debug("Failed to extract key ID from token header: {}", e.getMessage());
             return null;
         }
     }

@@ -1,0 +1,314 @@
+.panelGroup {
+  max-width: 100%;
+  flex-wrap: wrap;
+  min-width: 24rem;
+}
+
+.textInput {
+  flex: 1;
+  max-width: 100%;
+}
+
+.dropdownContainer {
+  margin-top: 0.5rem;
+}
+
+.menuDropdown {
+  min-width: 22.5rem;
+}
+
+.dropdownContent {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.leftCol {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 8rem - 0.75rem);
+  overflow: hidden;
+}
+
+.rightCol {
+  width: 8rem;
+  border-left: 0.0625rem solid var(--border-default);
+  padding-left: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.operatorGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.operatorChip {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 0.0625rem solid var(--bulk-card-border);
+  background-color: var(--bulk-card-bg);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  min-height: 2rem;
+}
+
+.operatorChip:hover:not(:disabled) {
+  border-color: var(--bulk-card-hover-border);
+  background-color: var(--hover-bg);
+  transform: translateY(-0.0625rem);
+  box-shadow: var(--shadow-sm);
+}
+
+.operatorChip:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
+.operatorChip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:global([data-mantine-color-scheme='dark']) .operatorChip {
+  background-color: var(--bulk-card-bg);
+  border-color: var(--bulk-card-border);
+  color: var(--text-primary);
+}
+
+:global([data-mantine-color-scheme='dark']) .operatorChip:hover:not(:disabled) {
+  background-color: var(--hover-bg);
+  border-color: var(--bulk-card-hover-border);
+  color: var(--text-primary);
+}
+ 
+ .dropdownHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 0.75rem;
+   border-bottom: 0.0625rem solid var(--border-default);
+   margin-bottom: 0.5rem;
+ }
+ 
+ .closeButton {
+   min-width: 1.5rem;
+   height: 1.5rem;
+   padding: 0;
+   font-size: 1.25rem;
+   font-weight: bold;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+.menuItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chevron {
+  color: var(--text-muted);
+}
+
+/* Icon-based chevrons */
+.chevronIcon {
+  transition: transform 150ms ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.chevronDown {
+  transform: rotate(90deg);
+}
+
+.chevronUp {
+  transform: rotate(270deg);
+}
+
+.inlineRow {
+  padding: 0.75rem 0.5rem;
+}
+
+.inlineRowCompact {
+  padding: 0.5rem 0.5rem 0.75rem 0.5rem;
+}
+
+.menuItemCloseHover {
+  background-color: var(--text-brand-accent);
+  opacity: 0.1;
+  transition: background-color 150ms ease;
+}
+
+:global([data-mantine-color-scheme='dark']) .menuItemCloseHover {
+  background-color: var(--text-brand-accent);
+  opacity: 0.2;
+}
+
+.selectedList {
+  max-height: 8rem;
+  overflow: auto;
+  background-color: var(--bg-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  min-width: 24rem;
+  color: var(--text-primary);
+}
+
+.selectedText {
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.advancedSection {
+  margin-top: 0.5rem;
+  min-width: 24rem;
+}
+
+.advancedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 0.0625rem solid var(--border-default);
+  margin-bottom: 0.5rem;
+}
+
+.advancedContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.advancedItem {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: background-color 150ms ease;
+}
+
+.advancedItem:hover {
+  background-color: var(--hover-bg);
+}
+
+:global([data-mantine-color-scheme='dark']) .advancedItem:hover {
+  background-color: var(--hover-bg);
+}
+
+.advancedCard {
+  background-color: var(--bulk-card-bg);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--text-primary);
+}
+
+:global([data-mantine-color-scheme='dark']) .advancedCard {
+  background-color: var(--bulk-card-bg);
+}
+
+.inputGroup {
+  width: 100%;
+}
+
+.fullWidthInput {
+  flex: 1;
+}
+
+.applyButton {
+  min-width: 4rem;
+  flex-shrink: 0;
+}
+
+/* Style inputs and buttons within advanced cards to match bg-raised */
+.advancedCard :global(.mantine-NumberInput-input) {
+  background-color: var(--bg-raised) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.advancedCard :global(.mantine-Button-root) {
+  background-color: var(--bg-raised) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.advancedCard :global(.mantine-Button-root:hover) {
+  background-color: var(--hover-bg) !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* Error helper text above the input */
+.errorText {
+  margin-top: 0.25rem;
+  color: var(--text-brand-accent);
+}
+
+/* Compact error container for inline tool settings */
+.errorCompact {
+  background-color: var(--bg-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+}
+
+/* Two-line clamp for compact error text */
+.errorTextClamp {
+  color: var(--text-brand-accent);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Dark-mode adjustments */
+:global([data-mantine-color-scheme='dark']) .selectedList {
+  background-color: var(--bg-raised);
+}
+
+/* Small screens: allow the section to shrink instead of enforcing a large min width */
+@media (max-width: 480px) {
+  .panelGroup,
+  .selectedList,
+  .advancedSection,
+  .panelContainer {
+    min-width: 0;
+  }
+}
+
+/* Outermost panel container scrolling */
+.panelContainer {
+  max-height: 95vh;
+  overflow: auto;
+  background-color: var(--bulk-panel-bg);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+}
+
+/* Override Mantine Popover dropdown background */
+:global(.mantine-Popover-dropdown) {
+  background-color: var(--bulk-panel-bg) !important;
+  border-color: var(--bulk-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Override Mantine Switch outline */
+.advancedSwitch :global(.mantine-Switch-input) {
+  outline: none !important;
+}
+
+.advancedSwitch :global(.mantine-Switch-input:focus) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+

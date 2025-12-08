@@ -1,0 +1,27 @@
+/* Base Hover Menu */
+.hoverMenu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg-toolbar);
+  border: 1px solid var(--border-default);
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+  pointer-events: auto;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Inside positioning (Page Editor style) - within container */
+.inside {
+  bottom: 8px;
+}
+
+/* Outside positioning (File Editor style) - below container */
+.outside {
+  bottom: -8px;
+}

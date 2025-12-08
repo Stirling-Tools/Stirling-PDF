@@ -13,7 +13,7 @@ public class RateLimitResetScheduler {
 
     private final IPRateLimitingFilter rateLimitingFilter;
 
-    @Scheduled(cron = "0 0 0 * * MON") // At 00:00 every Monday TODO: configurable
+    @Scheduled(cron = "${security.rate-limit.reset-schedule:0 0 0 * * MON}")
     public void resetRateLimit() {
         rateLimitingFilter.resetRequestCounts();
     }

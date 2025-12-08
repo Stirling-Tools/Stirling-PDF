@@ -25,20 +25,19 @@ import org.apache.xmpbox.xml.DomXmpParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -47,10 +46,8 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
+@GeneralApi
 @Slf4j
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
 public class MergeController {
 
@@ -152,6 +149,32 @@ public class MergeController {
         };
     }
 
+    // Parse client file IDs from JSON string
+    private String[] parseClientFileIds(String clientFileIds) {
+        if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
+            return new String[0];
+        }
+        try {
+            // Simple JSON array parsing - remove brackets and split by comma
+            String trimmed = clientFileIds.trim();
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+                String inside = trimmed.substring(1, trimmed.length() - 1).trim();
+                if (inside.isEmpty()) {
+                    return new String[0];
+                }
+                String[] parts = inside.split(",");
+                String[] result = new String[parts.length];
+                for (int i = 0; i < parts.length; i++) {
+                    result[i] = parts[i].trim().replaceAll("^\"|\"$", "");
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse client file IDs: {}", clientFileIds, e);
+        }
+        return new String[0];
+    }
+
     // Adds a table of contents to the merged document using filenames as chapter titles
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
         // Create the document outline
@@ -238,7 +261,8 @@ public class MergeController {
         return -1;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/merge-pdfs")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/merge-pdfs")
+    @StandardPdfResponse
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =
@@ -278,12 +302,23 @@ public class MergeController {
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
-            for (MultipartFile multipartFile : files) {
+            List<Integer> invalidIndexes = new ArrayList<>();
+            for (int index = 0; index < files.length; index++) {
+                MultipartFile multipartFile = files[index];
                 totalSize += multipartFile.getSize();
                 File tempFile =
                         tempFileManager.convertMultipartFileToFile(
                                 multipartFile); // Convert MultipartFile to File
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
+
+                // Pre-validate each PDF so we can report which one(s) are broken
+                // Use the original MultipartFile to avoid deleting the tempFile during validation
+                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
+                    // OK
+                } catch (IOException e) {
+                    ExceptionUtils.logException("PDF pre-validate", e);
+                    invalidIndexes.add(index);
+                }
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 

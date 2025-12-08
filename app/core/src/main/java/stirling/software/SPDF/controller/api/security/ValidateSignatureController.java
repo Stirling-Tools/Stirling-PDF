@@ -5,10 +5,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXCertPathBuilderResult;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,25 +29,24 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 
-@RestController
-@RequestMapping("/api/v1/security")
-@Tag(name = "Security", description = "Security APIs")
+@Slf4j
+@SecurityApi
 @RequiredArgsConstructor
 public class ValidateSignatureController {
 
@@ -64,22 +65,26 @@ public class ValidateSignatureController {
                 });
     }
 
+    @JsonDataResponse
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
-                    "Validates the digital signatures in a PDF file against default or custom"
-                            + " certificates. Input:PDF Output:JSON Type:SISO")
-    @PostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+                    "Validates the digital signatures in a PDF file using PKIX path building"
+                            + " and time-of-signing semantics. Supports custom trust anchors."
+                            + " Input:PDF Output:JSON Type:SISO")
+    @AutoJobPostMapping(
+            value = "/validate-signature",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();
         MultipartFile file = request.getFileInput();
-        MultipartFile certFile = request.getCertFile();
 
         // Load custom certificate if provided
         X509Certificate customCert = null;
-        if (certFile != null && !certFile.isEmpty()) {
-            try (ByteArrayInputStream certStream = new ByteArrayInputStream(certFile.getBytes())) {
+        if (request.getCertFile() != null && !request.getCertFile().isEmpty()) {
+            try (ByteArrayInputStream certStream =
+                    new ByteArrayInputStream(request.getCertFile().getBytes())) {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {
@@ -108,68 +113,150 @@ public class ValidateSignatureController {
                     Store<X509CertificateHolder> certStore = signedData.getCertificates();
                     SignerInformationStore signerStore = signedData.getSignerInfos();
 
-                    for (SignerInformation signer : signerStore.getSigners()) {
+                    for (SignerInformation signerInfo : signerStore.getSigners()) {
                         X509CertificateHolder certHolder =
                                 (X509CertificateHolder)
-                                        certStore.getMatches(signer.getSID()).iterator().next();
-                        X509Certificate cert =
+                                        certStore.getMatches(signerInfo.getSID()).iterator().next();
+                        X509Certificate signerCert =
                                 new JcaX509CertificateConverter().getCertificate(certHolder);
 
-                        boolean isValid =
-                                signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));
-                        result.setValid(isValid);
+                        // Extract intermediate certificates from CMS
+                        Collection<X509Certificate> intermediates =
+                                certValidationService.extractIntermediateCertificates(
+                                        certStore, signerCert);
 
-                        // Additional validations
-                        result.setChainValid(
-                                customCert != null
-                                        ? certValidationService
-                                                .validateCertificateChainWithCustomCert(
-                                                        cert, customCert)
-                                        : certValidationService.validateCertificateChain(cert));
+                        // Log what we found
+                        log.debug(
+                                "Found {} intermediate certificates in CMS signature",
+                                intermediates.size());
+                        for (X509Certificate inter : intermediates) {
+                            log.debug(
+                                    "  → Intermediate: {}",
+                                    inter.getSubjectX500Principal().getName());
+                            log.debug(
+                                    "    Issuer DN: {}", inter.getIssuerX500Principal().getName());
+                        }
 
-                        result.setTrustValid(
-                                customCert != null
-                                        ? certValidationService.validateTrustWithCustomCert(
-                                                cert, customCert)
-                                        : certValidationService.validateTrustStore(cert));
+                        // Determine validation time (TSA timestamp or signingTime, or current)
+                        CertificateValidationService.ValidationTime validationTimeResult =
+                                certValidationService.extractValidationTime(signerInfo);
+                        Date validationTime;
+                        if (validationTimeResult == null) {
+                            validationTime = new Date();
+                            result.setValidationTimeSource("current");
+                        } else {
+                            validationTime = validationTimeResult.date;
+                            result.setValidationTimeSource(validationTimeResult.source);
+                        }
 
-                        result.setNotRevoked(!certValidationService.isRevoked(cert));
-                        result.setNotExpired(
-                                Instant.now().isBefore(cert.getNotAfter().toInstant()));
+                        // Verify cryptographic signature
+                        boolean cmsValid =
+                                signerInfo.verify(
+                                        new JcaSimpleSignerInfoVerifierBuilder().build(signerCert));
+                        result.setValid(cmsValid);
+
+                        // Build and validate certificate path
+                        boolean chainValid = false;
+                        boolean trustValid = false;
+                        try {
+                            PKIXCertPathBuilderResult pathResult =
+                                    certValidationService.buildAndValidatePath(
+                                            signerCert, intermediates, customCert, validationTime);
+                            chainValid = true;
+                            trustValid = true; // Path ends at trust anchor
+                            result.setCertPathLength(
+                                    pathResult.getCertPath().getCertificates().size());
+                        } catch (Exception e) {
+                            String errorMsg = e.getMessage();
+                            result.setChainValidationError(errorMsg);
+                            chainValid = false;
+                            trustValid = false;
+                            // Log the full error for debugging
+                            log.warn(
+                                    "Certificate path validation failed for {}: {}",
+                                    signerCert.getSubjectX500Principal().getName(),
+                                    errorMsg);
+                            log.debug("Full stack trace:", e);
+                        }
+                        result.setChainValid(chainValid);
+                        result.setTrustValid(trustValid);
+
+                        // Check validity at validation time
+                        boolean outside =
+                                certValidationService.isOutsideValidityPeriod(
+                                        signerCert, validationTime);
+                        result.setNotExpired(!outside);
+
+                        // Revocation status determination
+                        boolean revocationEnabled = certValidationService.isRevocationEnabled();
+                        result.setRevocationChecked(revocationEnabled);
+
+                        if (!revocationEnabled) {
+                            result.setRevocationStatus("not-checked");
+                        } else if (chainValid && trustValid) {
+                            // Path building succeeded with revocation enabled = no revocation found
+                            result.setRevocationStatus("good");
+                        } else if (result.getChainValidationError() != null
+                                && result.getChainValidationError()
+                                        .toLowerCase()
+                                        .contains("revocation")) {
+                            // Check if failure was revocation-related
+                            if (result.getChainValidationError()
+                                    .toLowerCase()
+                                    .contains("unable to check")) {
+                                result.setRevocationStatus("soft-fail");
+                            } else {
+                                result.setRevocationStatus("revoked");
+                            }
+                        } else {
+                            result.setRevocationStatus("unknown");
+                        }
 
                         // Set basic signature info
                         result.setSignerName(sig.getName());
-                        result.setSignatureDate(sig.getSignDate().toInstant().toString());
+                        result.setSignatureDate(
+                                sig.getSignDate() != null
+                                        ? sig.getSignDate().getTime().toString()
+                                        : null);
                         result.setReason(sig.getReason());
                         result.setLocation(sig.getLocation());
 
-                        // Set new certificate details
-                        result.setIssuerDN(cert.getIssuerX500Principal().getName());
-                        result.setSubjectDN(cert.getSubjectX500Principal().getName());
-                        result.setSerialNumber(cert.getSerialNumber().toString(16)); // Hex format
-                        result.setValidFrom(cert.getNotBefore().toString());
-                        result.setValidUntil(cert.getNotAfter().toString());
-                        result.setSignatureAlgorithm(cert.getSigAlgName());
+                        // Set certificate details (from signer cert)
+                        result.setIssuerDN(signerCert.getIssuerX500Principal().getName());
+                        result.setSubjectDN(signerCert.getSubjectX500Principal().getName());
+                        result.setSerialNumber(
+                                signerCert.getSerialNumber().toString(16)); // Hex format
+                        result.setValidFrom(signerCert.getNotBefore().toString());
+                        result.setValidUntil(signerCert.getNotAfter().toString());
+                        result.setSignatureAlgorithm(signerCert.getSigAlgName());
 
                         // Get key size (if possible)
                         try {
                             result.setKeySize(
-                                    ((RSAPublicKey) cert.getPublicKey()).getModulus().bitLength());
+                                    ((RSAPublicKey) signerCert.getPublicKey())
+                                            .getModulus()
+                                            .bitLength());
                         } catch (Exception e) {
                             // If not RSA or error, set to 0
                             result.setKeySize(0);
                         }
 
-                        result.setVersion(String.valueOf(cert.getVersion()));
+                        result.setVersion(String.valueOf(signerCert.getVersion()));
 
                         // Set key usage
                         List<String> keyUsages = new ArrayList<>();
-                        boolean[] keyUsageFlags = cert.getKeyUsage();
+                        boolean[] keyUsageFlags = signerCert.getKeyUsage();
                         if (keyUsageFlags != null) {
                             String[] keyUsageLabels = {
-                                "Digital Signature", "Non-Repudiation", "Key Encipherment",
-                                "Data Encipherment", "Key Agreement", "Certificate Signing",
-                                "CRL Signing", "Encipher Only", "Decipher Only"
+                                "Digital Signature",
+                                "Non-Repudiation",
+                                "Key Encipherment",
+                                "Data Encipherment",
+                                "Key Agreement",
+                                "Certificate Signing",
+                                "CRL Signing",
+                                "Encipher Only",
+                                "Decipher Only"
                             };
                             for (int i = 0; i < keyUsageFlags.length; i++) {
                                 if (keyUsageFlags[i]) {
@@ -179,10 +266,8 @@ public class ValidateSignatureController {
                         }
                         result.setKeyUsages(keyUsages);
 
-                        // Check if self-signed
-                        result.setSelfSigned(
-                                cert.getSubjectX500Principal()
-                                        .equals(cert.getIssuerX500Principal()));
+                        // Check if self-signed (properly)
+                        result.setSelfSigned(certValidationService.isSelfSigned(signerCert));
                     }
                 } catch (Exception e) {
                     result.setValid(false);

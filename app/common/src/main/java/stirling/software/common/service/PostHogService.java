@@ -326,13 +326,16 @@ public class PostHogService {
                 properties,
                 "system_enableAnalytics",
                 applicationProperties.getSystem().isAnalyticsEnabled());
-
-        // Capture UI properties
-        addIfNotEmpty(properties, "ui_appName", applicationProperties.getUi().getAppName());
         addIfNotEmpty(
                 properties,
-                "ui_homeDescription",
-                applicationProperties.getUi().getHomeDescription());
+                "system_enablePosthog",
+                applicationProperties.getSystem().isPosthogEnabled());
+        addIfNotEmpty(
+                properties,
+                "system_enableScarf",
+                applicationProperties.getSystem().isScarfEnabled());
+
+        // Capture UI properties
         addIfNotEmpty(
                 properties, "ui_appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
 

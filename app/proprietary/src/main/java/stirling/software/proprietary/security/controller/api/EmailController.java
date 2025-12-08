@@ -6,12 +6,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -19,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.proprietary.security.model.api.Email;
 import stirling.software.proprietary.security.service.EmailService;
 
@@ -26,11 +24,9 @@ import stirling.software.proprietary.security.service.EmailService;
  * Controller for handling email-related API requests. This controller exposes an endpoint for
  * sending emails with attachments.
  */
-@RestController
-@RequestMapping("/api/v1/general")
+@GeneralApi
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "General", description = "General APIs")
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class EmailController {
     private final EmailService emailService;
@@ -43,7 +39,7 @@ public class EmailController {
      *     attachment.
      * @return ResponseEntity with success or error message.
      */
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/send-email")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/send-email")
     @Operation(
             summary = "Send an email with an attachment",
             description =

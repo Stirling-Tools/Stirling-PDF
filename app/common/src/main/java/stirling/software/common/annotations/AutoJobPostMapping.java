@@ -7,6 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 /**
  * Shortcut for a POST endpoint that is executed through the Stirling "auto‑job" framework.
  *
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @RequestMapping(method = RequestMethod.POST)
+@RequestBody(required = true)
 public @interface AutoJobPostMapping {
 
     /** Alias for {@link RequestMapping#value} – the path mapping of the endpoint. */

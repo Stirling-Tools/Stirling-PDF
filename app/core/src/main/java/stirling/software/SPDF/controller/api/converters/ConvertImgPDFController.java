@@ -21,24 +21,24 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.ConvertCbrToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbrRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
@@ -54,10 +54,8 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @Slf4j
-@Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
 public class ConvertImgPDFController {
 
@@ -72,7 +70,8 @@ public class ConvertImgPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
+    @MultiFileResponse
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -233,7 +232,8 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -261,7 +261,7 @@ public class ConvertImgPDFController {
                 GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
             description =
@@ -287,7 +287,7 @@ public class ConvertImgPDFController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
     @Operation(
             summary = "Convert PDF to CBZ comic book archive",
             description =
@@ -310,7 +310,7 @@ public class ConvertImgPDFController {
                 cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
             description =
@@ -336,7 +336,7 @@ public class ConvertImgPDFController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbr")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbr")
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
             description =

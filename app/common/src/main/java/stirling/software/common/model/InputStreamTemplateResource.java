@@ -1,14 +1,9 @@
 package stirling.software.common.model;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+/* Commented out entire InputStreamTemplateResource class - Thymeleaf dependency removed
+ * This class will be removed when frontend migration to React is complete
 
-import org.thymeleaf.templateresource.ITemplateResource;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
@@ -42,3 +37,4 @@ public class InputStreamTemplateResource implements ITemplateResource {
         return inputStream != null;
     }
 }
+*/
