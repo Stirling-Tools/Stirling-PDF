@@ -58,7 +58,9 @@ public class AttachmentController {
                         "_with_attachments.pdf"));
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-attachments")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-attachments")
     @Operation(
             summary = "Extract attachments from PDF",
             description =

@@ -28,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.util.FormUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")

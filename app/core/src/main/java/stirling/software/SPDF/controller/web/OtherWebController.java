@@ -221,7 +221,8 @@ public class OtherWebController {
         return "misc/add-attachments";
     }
 
-    @GetMapping("/extract-attachments")
+    @Deprecated
+    // @GetMapping("/extract-attachments")
     @Hidden
     public String extractAttachmentsForm(Model model) {
         model.addAttribute("currentPage", "extract-attachments");

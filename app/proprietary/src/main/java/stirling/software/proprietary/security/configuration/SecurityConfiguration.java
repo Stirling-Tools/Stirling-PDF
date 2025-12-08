@@ -198,7 +198,7 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.disable());
         }
 
-        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
+        if (securityProperties.isCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
 
@@ -210,7 +210,7 @@ public class SecurityConfiguration {
                     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
-            if (!securityProperties.getCsrfDisabled()) {
+            if (!securityProperties.isCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -331,7 +331,9 @@ public class SecurityConfiguration {
                         formLogin ->
                                 formLogin
                                         .loginPage("/login") // Redirect here when unauthenticated
-                                        .loginProcessingUrl("/perform_login") // Process form posts here (not /login)
+                                        .loginProcessingUrl(
+                                                "/perform_login") // Process form posts here (not
+                                        // /login)
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
                                                         loginAttemptService,
