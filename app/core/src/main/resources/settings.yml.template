@@ -105,6 +105,14 @@ mail:
   password: '' # SMTP server password
   from: '' # sender email address
 
+telegram:
+  enabled: false # set to 'true' to enable Telegram bot integration
+  botToken: '' # Telegram bot token obtained from BotFather
+  botUsername: '' # Telegram bot username (without @)
+  pipelineInboxFolder: telegram # Name of the pipeline inbox folder for Telegram uploads
+  processingTimeoutSeconds: 180 # Maximum time in seconds to wait for processing a Telegram request
+  pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
+
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirling.com/legal/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder

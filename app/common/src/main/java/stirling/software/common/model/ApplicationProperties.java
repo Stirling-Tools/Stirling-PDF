@@ -60,6 +60,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
 
@@ -574,6 +575,16 @@ public class ApplicationProperties {
         private String username;
         @ToString.Exclude private String password;
         private String from;
+    }
+
+    @Data
+    public static class Telegram {
+        private Boolean enabled = false;
+        private String botToken;
+        private String botUsername;
+        private String pipelineInboxFolder = "telegram";
+        private long processingTimeoutSeconds = 180;
+        private long pollingIntervalMillis = 2000;
     }
 
     @Data
