@@ -584,7 +584,7 @@ public class ApplicationProperties {
         private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
-        private Boolean customFolderSubfix = false;
+        private Boolean customFolderSuffix = false;
         private Boolean enableAllowUserIDs = false;
         private List<Long> allowUserIDs = new ArrayList<>();
         private Boolean enableAllowChannelIDs = false;
