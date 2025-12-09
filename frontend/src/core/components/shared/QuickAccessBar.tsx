@@ -153,6 +153,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
+  ];
+
+  const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
@@ -163,8 +166,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       onClick: handleFilesButtonClick
     },
   ];
-
-  const middleButtons: ButtonConfig[] = [];
   //TODO: Activity
   //{
   //  id: 'activity',
@@ -240,14 +241,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               </React.Fragment>
             ))}
           </Stack>
-
-          {/* Divider after main buttons (creates gap) */}
-          {middleButtons.length === 0 && (
-            <Divider
-              size="xs"
-              className="content-divider"
-            />
-          )}
 
           {/* Middle section */}
           {middleButtons.length > 0 && (
