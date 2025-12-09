@@ -24,8 +24,8 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility class for copying and transforming PDF form fields during page operations.
- * Used by multi-page layout and other page manipulation operations that need to preserve form fields.
+ * Utility class for copying and transforming PDF form fields during page operations. Used by
+ * multi-page layout and other page manipulation operations that need to preserve form fields.
  */
 @Slf4j
 @UtilityClass
@@ -192,7 +192,8 @@ public class GeneralFormCopyUtils {
                         continue;
                     }
 
-                    GeneralFormFieldTypeSupport handler = GeneralFormFieldTypeSupport.forField(terminalField);
+                    GeneralFormFieldTypeSupport handler =
+                            GeneralFormFieldTypeSupport.forField(terminalField);
                     if (handler == null) {
                         log.debug(
                                 "Skipping unsupported field type '{}' for widget '{}'",

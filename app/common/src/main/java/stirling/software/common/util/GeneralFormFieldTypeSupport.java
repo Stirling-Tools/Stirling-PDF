@@ -16,9 +16,9 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Simplified form field type support for general PDF operations.
- * This is a subset of the full proprietary FormFieldTypeSupport,
- * containing only what's needed for basic form field copying during page operations.
+ * Simplified form field type support for general PDF operations. This is a subset of the full
+ * proprietary FormFieldTypeSupport, containing only what's needed for basic form field copying
+ * during page operations.
  */
 @Slf4j
 public enum GeneralFormFieldTypeSupport {
