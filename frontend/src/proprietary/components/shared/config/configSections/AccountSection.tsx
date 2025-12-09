@@ -95,7 +95,7 @@ const AccountSection: React.FC = () => {
       showToast({
         alertType: 'success',
         title: t('changeCreds.credsUpdated', 'Account updated'),
-        message: t('changeCreds.description', 'Changes saved. Please log in again.'),
+        body: t('changeCreds.description', 'Changes saved. Please log in again.'),
       });
 
       setNewUsername('');
