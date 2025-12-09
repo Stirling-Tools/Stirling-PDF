@@ -5,6 +5,7 @@ export type OnboardingStepId =
   | 'security-check'
   | 'admin-overview'
   | 'tool-layout'
+  | 'tour-overview'
   | 'tour'
   | 'server-license'
   | 'analytics-choice';
@@ -20,6 +21,7 @@ export interface OnboardingRuntimeState {
   tourRequested: boolean;
   tourType: 'admin' | 'tools';
   isDesktopApp: boolean;
+  desktopSlideDisabled: boolean;
   analyticsNotConfigured: boolean;
   analyticsEnabled: boolean;
   licenseNotice: {
@@ -42,7 +44,7 @@ export interface OnboardingStep {
   id: OnboardingStepId;
   type: OnboardingStepType;
   condition: (ctx: OnboardingConditionContext) => boolean;
-  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license';
+  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license' | 'tour-overview' | 'analytics-choice';
 }
 
 export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
@@ -61,6 +63,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   requiresPasswordChange: false,
   firstLoginUsername: '',
   usingDefaultCredentials: false,
+  desktopSlideDisabled: false,
 };
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -69,6 +72,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: 'modal-slide',
     slideId: 'first-login',
     condition: (ctx) => ctx.requiresPasswordChange,
+  },
+  {
+    id: 'analytics-choice',
+    type: 'modal-slide',
+    slideId: 'analytics-choice',
+    condition: (ctx) => ctx.effectiveIsAdmin && ctx.analyticsNotConfigured,
   },
   {
     id: 'welcome',
@@ -80,13 +89,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'desktop-install',
     type: 'modal-slide',
     slideId: 'desktop-install',
-    condition: (ctx) => !ctx.isDesktopApp,
+    condition: (ctx) => !ctx.isDesktopApp && !ctx.desktopSlideDisabled,
   },
   {
     id: 'security-check',
     type: 'modal-slide',
     slideId: 'security-check',
-    condition: (ctx) => !ctx.loginEnabled && !ctx.isDesktopApp,
+    // condition: (ctx) => !ctx.loginEnabled && !ctx.isDesktopApp,
+    condition: () => false,
   },
   {
     id: 'admin-overview',
@@ -97,23 +107,25 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'tool-layout',
     type: 'tool-prompt',
-    condition: () => true,
+    // condition: () => true,
+    condition: () => false,
+  },
+  {
+    id: 'tour-overview',
+    type: 'modal-slide',
+    slideId: 'tour-overview',
+    condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== 'admin',
   },
   {
     id: 'tour',
     type: 'tour',
-    condition: (ctx) => ctx.tourRequested || !ctx.effectiveIsAdmin,
+    condition: (ctx) => ctx.tourRequested,
   },
   {
     id: 'server-license',
     type: 'modal-slide',
     slideId: 'server-license',
     condition: (ctx) => ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
-  },
-  {
-    id: 'analytics-choice',
-    type: 'analytics-modal',
-    condition: (ctx) => ctx.effectiveIsAdmin && ctx.analyticsNotConfigured,
   },
 ];
 

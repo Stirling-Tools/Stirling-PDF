@@ -62,6 +62,9 @@ export default function OnboardingModalSlide({
         {slideDefinition.hero.type === 'lock' && (
           <LocalIcon icon="lock-outline" width={64} height={64} className={styles.heroIcon} />
         )}
+        {slideDefinition.hero.type === 'analytics' && (
+          <LocalIcon icon="analytics" width={64} height={64} className={styles.heroIcon} />
+        )}
         {slideDefinition.hero.type === 'diamond' && <DiamondOutlinedIcon sx={{ fontSize: 64, color: '#000000' }} />}
         {slideDefinition.hero.type === 'logo' && (
           <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />

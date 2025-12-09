@@ -23,7 +23,9 @@ import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsCon
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
+// import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
 
 export default function Onboarding() {
@@ -39,6 +41,9 @@ export default function Onboarding() {
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
   const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
+  const { refetch: refetchConfig } = useAppConfig();
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
@@ -50,7 +55,26 @@ export default function Onboarding() {
     window.location.href = '/login';
   }, [actions]);
 
-  const handleButtonAction = useCallback((action: ButtonAction) => {
+  const handleAnalyticsChoice = useCallback(async (enableAnalytics: boolean) => {
+    if (analyticsLoading) return;
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('enabled', enableAnalytics.toString());
+
+      await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
+      await refetchConfig();
+      actions.updateRuntimeState({ analyticsNotConfigured: false, analyticsEnabled: enableAnalytics });
+      actions.complete();
+    } catch (error) {
+      setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
+      setAnalyticsLoading(false);
+    }
+  }, [actions, analyticsLoading, refetchConfig]);
+
+  const handleButtonAction = useCallback(async (action: ButtonAction) => {
     switch (action) {
       case 'next':
       case 'complete-close':
@@ -92,12 +116,23 @@ export default function Onboarding() {
         actions.updateRuntimeState({ tourRequested: false });
         actions.complete();
         break;
+      case 'skip-tour':
+        markStepSeen('tour');
+        actions.updateRuntimeState({ tourRequested: false });
+        actions.complete();
+        break;
       case 'see-plans':
         actions.complete();
         navigate('/settings/adminPlan');
         break;
+      case 'enable-analytics':
+        await handleAnalyticsChoice(true);
+        break;
+      case 'disable-analytics':
+        await handleAnalyticsChoice(false);
+        break;
     }
-  }, [actions, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
+  }, [actions, handleAnalyticsChoice, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
 
   const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -216,8 +251,10 @@ export default function Onboarding() {
       firstLoginUsername: runtimeState.firstLoginUsername,
       onPasswordChanged: handlePasswordChanged,
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
+      analyticsError,
+      analyticsLoading,
     });
-  }, [currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
+  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;
@@ -303,7 +340,9 @@ export default function Onboarding() {
       );
 
     case 'analytics-modal':
-      return <AdminAnalyticsChoiceModal opened={true} onClose={actions.complete} />;
+      // Deprecated: analytics step now uses standard onboarding slide styling.
+      // return <AdminAnalyticsChoiceModal opened={true} onClose={actions.complete} />;
+      return null;
 
     case 'modal-slide':
       if (!currentSlideDefinition || !currentSlideContent) return null;

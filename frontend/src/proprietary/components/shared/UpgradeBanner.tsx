@@ -26,6 +26,7 @@ const UpgradeBanner: React.FC = () => {
   const onAuthRoute = isAuthRoute(location.pathname);
   const { openCheckout } = useCheckout();
   const {
+    loginEnabled,
     totalUsers,
     userCountResolved,
     userCountLoading,
@@ -34,9 +35,11 @@ const UpgradeBanner: React.FC = () => {
     licenseLoading,
     freeTierLimit,
     overFreeTierLimit,
+    weeklyActiveUsers,
     scenarioKey,
   } = useServerExperience();
   const onboardingComplete = hasSeenStep('welcome');
+  console.log('onboardingComplete', onboardingComplete);
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
     const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
@@ -296,8 +299,18 @@ const UpgradeBanner: React.FC = () => {
     );
   };
 
+  const suppressForNoLogin =
+    !loginEnabled ||
+    (!loginEnabled && (weeklyActiveUsers ?? Number.POSITIVE_INFINITY) > 5);
+
   // Don't show on auth routes or if neither banner type should show
-  if (onAuthRoute || (!friendlyVisible && !shouldEvaluateUrgent)) {
+  // Also suppress entirely for no-login servers (treat them as regular users only)
+  // and, per request, never surface upgrade messaging there when WAU > 5.
+  if (
+    onAuthRoute ||
+    suppressForNoLogin ||
+    (!friendlyVisible && !shouldEvaluateUrgent)
+  ) {
     return null;
   }
 

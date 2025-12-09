@@ -35,12 +35,12 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
   if (typeof window === 'undefined') {
     return baseState;
   }
-  
+
   try {
     const tourRequested = sessionStorage.getItem(SESSION_TOUR_REQUESTED) === 'true';
     const tourType = (sessionStorage.getItem(SESSION_TOUR_TYPE) as 'admin' | 'tools') || 'tools';
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as 'admin' | 'user' | null;
-    
+
     return {
       ...baseState,
       tourRequested,
@@ -54,7 +54,7 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
 
 function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     if (state.tourRequested !== undefined) {
       sessionStorage.setItem(SESSION_TOUR_REQUESTED, state.tourRequested ? 'true' : 'false');
@@ -76,7 +76,7 @@ function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
 
 function clearRuntimeStateSession(): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     sessionStorage.removeItem(SESSION_TOUR_REQUESTED);
     sessionStorage.removeItem(SESSION_TOUR_TYPE);
@@ -145,7 +145,7 @@ export function useOnboardingOrchestrator(
   const location = useLocation();
   const bypassOnboarding = useBypassOnboarding();
 
-  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() => 
+  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() =>
     getInitialRuntimeState(defaultState)
   );
   const [isPaused, setIsPaused] = useState(false);
@@ -153,6 +153,7 @@ export function useOnboardingOrchestrator(
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const migrationDone = useRef(false);
   const initialIndexSet = useRef(false);
+  const skipAutoCompleteOnce = useRef(false);
 
   useEffect(() => {
     if (!migrationDone.current) {
@@ -166,6 +167,7 @@ export function useOnboardingOrchestrator(
       ...prev,
       analyticsEnabled: config?.enableAnalytics === true,
       analyticsNotConfigured: config?.enableAnalytics == null,
+      desktopSlideDisabled: config?.disableDesktopInstallSlide === true,
       licenseNotice: {
         totalUsers: serverExperience.totalUsers,
         freeTierLimit: serverExperience.freeTierLimit,
@@ -221,7 +223,7 @@ export function useOnboardingOrchestrator(
   const conditionContext = useMemo<OnboardingConditionContext>(() => ({
     ...serverExperience,
     ...runtimeState,
-    effectiveIsAdmin: serverExperience.effectiveIsAdmin || 
+    effectiveIsAdmin: serverExperience.effectiveIsAdmin ||
       (!serverExperience.loginEnabled && runtimeState.selectedRole === 'admin'),
   }), [serverExperience, runtimeState]);
 
@@ -235,14 +237,27 @@ export function useOnboardingOrchestrator(
 
   // Wait for config AND admin status before calculating initial step
   const adminStatusResolved = !configLoading && (
-    config?.enableLogin === false || 
-    config?.enableLogin === undefined || 
+    config?.enableLogin === false ||
+    config?.enableLogin === undefined ||
     config?.isAdmin !== undefined
   );
-  
-  useEffect(() => {
-    if (configLoading || !adminStatusResolved || activeFlow.length === 0) return;
 
+  useEffect(() => {
+    if (configLoading || !adminStatusResolved) return;
+
+    // If there are no steps to show, mark initialized/completed baseline
+    if (activeFlow.length === 0) {
+      setCurrentStepIndex(0);
+      initialIndexSet.current = true;
+      return;
+    }
+
+    // If all steps are already seen, jump to completion
+    if (activeFlow.every((step) => hasSeenStep(step.id))) {
+      setCurrentStepIndex(activeFlow.length);
+      initialIndexSet.current = true;
+      return;
+    }
     let firstUnseenIndex = -1;
     for (let i = 0; i < activeFlow.length; i++) {
       // Special case: first-login step should always be considered "unseen" if requiresPasswordChange is true
@@ -269,19 +284,20 @@ export function useOnboardingOrchestrator(
   }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
 
   const totalSteps = activeFlow.length;
-  
+
   const allStepsAlreadySeen = useMemo(() => {
     if (activeFlow.length === 0) return false;
     return activeFlow.every(step => hasSeenStep(step.id));
   }, [activeFlow]);
-  
-  const isComplete = isInitialized && initialIndexSet.current && 
-    (currentStepIndex >= totalSteps || allStepsAlreadySeen);
-  const currentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps && !allStepsAlreadySeen) 
-    ? activeFlow[currentStepIndex] 
+
+  const isComplete = isInitialized &&
+    (totalSteps === 0 || currentStepIndex >= totalSteps || allStepsAlreadySeen);
+  const rawCurrentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps && !allStepsAlreadySeen)
+    ? activeFlow[currentStepIndex]
     : null;
+  const currentStep = rawCurrentStep && hasSeenStep(rawCurrentStep.id) ? null : rawCurrentStep;
   const isActive = !shouldBlockOnboarding && !isPaused && !isComplete && isInitialized && currentStep !== null;
-  const isLoading = configLoading || !adminStatusResolved || !isInitialized || 
+  const isLoading = configLoading || !adminStatusResolved || !isInitialized ||
     !initialIndexSet.current || (currentStepIndex === -1 && activeFlow.length > 0);
 
   useEffect(() => {
@@ -298,6 +314,7 @@ export function useOnboardingOrchestrator(
   }, [currentStep, totalSteps]);
 
   const prev = useCallback(() => {
+    skipAutoCompleteOnce.current = true;
     setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
   }, []);
 
@@ -313,6 +330,10 @@ export function useOnboardingOrchestrator(
 
   useEffect(() => {
     if (!currentStep || isLoading) {
+      return;
+    }
+    if (skipAutoCompleteOnce.current) {
+      skipAutoCompleteOnce.current = false;
       return;
     }
     // Special case: never auto-complete first-login step if requiresPasswordChange is true
