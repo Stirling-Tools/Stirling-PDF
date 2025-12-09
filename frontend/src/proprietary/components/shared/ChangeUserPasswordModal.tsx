@@ -75,7 +75,7 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
     try {
       await navigator.clipboard.writeText(form.newPassword);
       alert({ alertType: 'success', title: t('workspace.people.changePassword.copiedToClipboard', 'Password copied to clipboard') });
-    } catch (error) {
+    } catch (_error) {
       alert({ alertType: 'error', title: t('workspace.people.changePassword.copyFailed', 'Failed to copy password') });
     }
   };

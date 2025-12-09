@@ -317,7 +317,6 @@ export function useOnboardingOrchestrator(
     }
     // Special case: never auto-complete first-login step if requiresPasswordChange is true
     const isFirstLoginStep = currentStep.id === 'first-login';
-    const shouldAutoComplete = isFirstLoginStep ? !runtimeState.requiresPasswordChange : hasSeenStep(currentStep.id);
 
     if (!isFirstLoginStep && hasSeenStep(currentStep.id)) {
       complete();
