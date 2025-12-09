@@ -628,7 +628,8 @@ public class UserController {
                         .body(Map.of("error", "Email is not configured."));
             }
 
-            if (user.getEmail() == null || user.getEmail().isBlank()) {
+            String userEmail = user.getUsername();
+            if (userEmail == null || userEmail.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "User does not have an email address."));
             }
@@ -637,7 +638,10 @@ public class UserController {
             emailService
                     .get()
                     .sendPasswordChangedNotification(
-                            user.getEmail(), user.getUsername(), includePassword ? finalPassword : null, loginUrl);
+                            userEmail,
+                            user.getUsername(),
+                            includePassword ? finalPassword : null,
+                            loginUrl);
         }
 
         return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
