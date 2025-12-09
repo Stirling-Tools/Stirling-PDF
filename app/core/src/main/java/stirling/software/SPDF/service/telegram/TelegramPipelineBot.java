@@ -107,7 +107,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 message.getMessageId(),
                 chat.getId(),
                 chatType,
-                message.getCaption());
+                message);
 
         if (message.hasDocument() || message.hasPhoto()) {
             handleIncomingFile(message);
@@ -127,7 +127,18 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     private void handleIncomingFile(Message message) {
         Long chatId = message.getChatId();
         String chatType = message.getChat() != null ? message.getChat().getType() : null;
-
+        String[] allowedMimeTypes = {"application/pdf"};
+        Document document = message.getDocument();
+        if (document != null) {
+            String mimeType = document.getMimeType();
+            if (mimeType != null && !List.of(allowedMimeTypes).contains(mimeType.toLowerCase())) {
+                sendMessage(
+                        message.getChatId(),
+                        String.format(
+                                "File mime type %s is not allowed. Allowed types are: %s",
+                                mimeType, String.join(", ", allowedMimeTypes)));
+            }
+        }
         try {
             // Only send status messages in private chats and groups, not in channels
             if (!Objects.equals(chatType, "channel")) {
@@ -141,7 +152,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 sendMessage(
                         chatId,
                         "No results were found in the pipeline finished folder. Please check your"
-                            + " pipeline configuration.");
+                                + " pipeline configuration.");
                 return;
             }
 
@@ -168,7 +179,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     private PipelineFileInfo downloadMessageFile(Message message)
             throws TelegramApiException, IOException {
         if (message.hasDocument()) {
-            return downloadDocument(message.getDocument());
+            return downloadDocument(message);
         }
         if (message.hasPhoto()) {
             PhotoSize photo =
@@ -176,20 +187,32 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                             .max(Comparator.comparing(PhotoSize::getFileSize))
                             .orElseThrow(
                                     () -> new IllegalStateException("Photo could not be loaded"));
-            return downloadFile(photo.getFileId(), "photo-" + message.getMessageId() + ".jpg");
+            return downloadFile(
+                    photo.getFileId(),
+                    "photo-" + message.getMessageId() + ".jpg",
+                    message.getCaption());
         }
         throw new IllegalArgumentException("Unsupported file type");
     }
 
-    private PipelineFileInfo downloadDocument(Document document)
+    private PipelineFileInfo downloadDocument(Message message)
             throws TelegramApiException, IOException {
+        Document document = message.getDocument();
         String filename = document.getFileName();
         String name =
                 StringUtils.isNotBlank(filename) ? filename : document.getFileUniqueId() + ".bin";
-        return downloadFile(document.getFileId(), name);
+        // Check file mime type and file size
+        // long maxFileSize = 100 * 1024 * 1024; // 100MB per file
+        // if (document.getFileSize() > maxFileSize) {
+        //     throw new IOException(
+        //             String.format(
+        //                     "File size %d exceeds maximum allowed size of %d bytes",
+        //                     document.getFileSize(), maxFileSize));
+        // }
+        return downloadFile(document.getFileId(), name, null);
     }
 
-    private PipelineFileInfo downloadFile(String fileId, String originalName)
+    private PipelineFileInfo downloadFile(String fileId, String originalName, String caption)
             throws TelegramApiException, IOException {
 
         GetFile getFile = new GetFile(fileId);
@@ -201,10 +224,12 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         URL downloadUrl = buildDownloadUrl(telegramFile.getFilePath());
 
-        Path targetDir =
-                Paths.get(
-                        runtimePathConfig.getPipelineWatchedFoldersPath(),
-                        telegramProperties.getPipelineInboxFolder());
+        String inboxFolder =
+                StringUtils.isNotBlank(caption)
+                        ? caption.trim()
+                        : telegramProperties.getPipelineInboxFolder();
+
+        Path targetDir = Paths.get(runtimePathConfig.getPipelineWatchedFoldersPath(), inboxFolder);
         Files.createDirectories(targetDir);
 
         String uniqueBaseName = FilenameUtils.getBaseName(originalName) + "-" + UUID.randomUUID();
@@ -250,11 +275,13 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 break;
             }
 
-            try {
-                Thread.sleep(pollInterval.toMillis());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            synchronized (this) {
+                try {
+                    wait(pollInterval.toMillis());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
 
