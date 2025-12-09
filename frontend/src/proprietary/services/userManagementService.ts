@@ -104,6 +104,7 @@ export interface ChangeUserPasswordRequest {
   generateRandom?: boolean;
   sendEmail?: boolean;
   includePassword?: boolean;
+  forcePasswordChange?: boolean;
 }
 
 /**
@@ -281,6 +282,9 @@ export const userManagementService = {
     }
     if (data.includePassword !== undefined) {
       formData.append('includePassword', data.includePassword.toString());
+    }
+    if (data.forcePasswordChange !== undefined) {
+      formData.append('forcePasswordChange', data.forcePasswordChange.toString());
     }
 
     await apiClient.post('/api/v1/user/admin/changePasswordForUser', formData, {

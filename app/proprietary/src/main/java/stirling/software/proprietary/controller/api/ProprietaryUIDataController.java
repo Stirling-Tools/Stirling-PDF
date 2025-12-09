@@ -377,7 +377,7 @@ public class ProprietaryUIDataController {
         data.setUsername(username);
         data.setRole(user.get().getRolesAsString());
         data.setSettings(settingsJson);
-        data.setChangeCredsFlag(user.get().isFirstLogin());
+        data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
 

@@ -578,8 +578,18 @@ export default function PeopleSection() {
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
-                          <Menu.Item onClick={() => openEditModal(user)} disabled={!loginEnabled}>{t('workspace.people.editRole')}</Menu.Item>
-                          <Menu.Item onClick={() => openChangePasswordModal(user)} disabled={!loginEnabled}>
+                          <Menu.Item
+                            leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
+                            onClick={() => openEditModal(user)}
+                            disabled={!loginEnabled}
+                          >
+                            {t('workspace.people.editRole')}
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
+                            onClick={() => openChangePasswordModal(user)}
+                            disabled={!loginEnabled}
+                          >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
                           <Menu.Item

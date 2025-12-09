@@ -238,6 +238,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
+        // Set flags before changing password so they're saved together
+        user.setForcePasswordChange(false);
         userService.changePassword(user, newPassword);
         userService.changeFirstUse(user, false);
         // Logout using Spring's utility
@@ -594,12 +596,15 @@ public class UserController {
             @RequestParam(name = "generateRandom", defaultValue = "false") boolean generateRandom,
             @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
             @RequestParam(name = "includePassword", defaultValue = "false") boolean includePassword,
+            @RequestParam(name = "forcePasswordChange", defaultValue = "false")
+                    boolean forcePasswordChange,
             HttpServletRequest request,
             Authentication authentication)
             throws SQLException, UnsupportedProviderException, MessagingException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found."));
         }
 
         String currentUsername = authentication.getName();
@@ -620,7 +625,12 @@ public class UserController {
                     .body(Map.of("error", "New password is required."));
         }
 
+        // Set force password change flag before changing password so both are saved together
+        user.setForcePasswordChange(forcePasswordChange);
         userService.changePassword(user, finalPassword);
+
+        // Invalidate all active sessions to force reauthentication
+        userService.invalidateUserSessions(username);
 
         if (sendEmail) {
             if (emailService.isEmpty() || !applicationProperties.getMail().isEnabled()) {
@@ -629,9 +639,13 @@ public class UserController {
             }
 
             String userEmail = user.getUsername();
-            if (userEmail == null || userEmail.isBlank()) {
+            // Check if username is a valid email format
+            if (userEmail == null || userEmail.isBlank() || !userEmail.contains("@")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "User does not have an email address."));
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "User's email is not a valid email address. Notifications are disabled."));
             }
 
             String loginUrl = buildLoginUrl(request);

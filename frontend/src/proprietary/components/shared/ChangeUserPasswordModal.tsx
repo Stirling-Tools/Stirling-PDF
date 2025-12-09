@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  ActionIcon,
   Button,
   Checkbox,
   CloseButton,
@@ -9,6 +10,7 @@ import {
   PasswordInput,
   Stack,
   Text,
+  Tooltip,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -38,9 +40,11 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
   const { t } = useTranslation();
   const [form, setForm] = useState({
     newPassword: '',
+    confirmPassword: '',
     generateRandom: false,
-    sendEmail: mailEnabled,
-    includePassword: true,
+    sendEmail: false,
+    includePassword: false,
+    forcePasswordChange: false,
   });
   const [processing, setProcessing] = useState(false);
 
@@ -48,15 +52,27 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
 
   const handleGeneratePassword = () => {
     const generated = generateSecurePassword();
-    setForm((prev) => ({ ...prev, newPassword: generated, generateRandom: true }));
+    setForm((prev) => ({ ...prev, newPassword: generated, confirmPassword: generated, generateRandom: true }));
+  };
+
+  const handleCopyPassword = async () => {
+    if (!form.newPassword) return;
+    try {
+      await navigator.clipboard.writeText(form.newPassword);
+      alert({ alertType: 'success', title: t('workspace.people.changePassword.copiedToClipboard', 'Password copied to clipboard') });
+    } catch (error) {
+      alert({ alertType: 'error', title: t('workspace.people.changePassword.copyFailed', 'Failed to copy password') });
+    }
   };
 
   const resetState = () => {
     setForm({
       newPassword: '',
+      confirmPassword: '',
       generateRandom: false,
-      sendEmail: mailEnabled,
-      includePassword: true,
+      sendEmail: false,
+      includePassword: false,
+      forcePasswordChange: false,
     });
   };
 
@@ -74,12 +90,18 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
       return;
     }
 
+    if (!form.generateRandom && form.newPassword !== form.confirmPassword) {
+      alert({ alertType: 'error', title: t('workspace.people.changePassword.passwordMismatch', 'Passwords do not match') });
+      return;
+    }
+
     const payload: ChangeUserPasswordRequest = {
       username: user.username,
-      newPassword: form.generateRandom ? undefined : form.newPassword,
-      generateRandom: form.generateRandom,
-      sendEmail: mailEnabled && form.sendEmail,
-      includePassword: mailEnabled && form.sendEmail && form.includePassword,
+      newPassword: form.newPassword, // Always send the password (frontend generates it when generateRandom is true)
+      generateRandom: false, // Not needed since we're generating on frontend
+      sendEmail: form.sendEmail,
+      includePassword: form.includePassword,
+      forcePasswordChange: form.forcePasswordChange,
     };
 
     try {
@@ -100,14 +122,23 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
     if (opened) {
       setForm({
         newPassword: '',
+        confirmPassword: '',
         generateRandom: false,
-        sendEmail: mailEnabled,
-        includePassword: true,
+        sendEmail: false,
+        includePassword: false,
+        forcePasswordChange: false,
       });
     }
-  }, [opened, mailEnabled, user?.username]);
+  }, [opened, user?.username]);
 
-  const canEmail = mailEnabled && !!user?.email;
+  // Check if username is a valid email format
+  const isValidEmail = (email: string | undefined) => {
+    if (!email) return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const canEmail = mailEnabled && isValidEmail(user?.username);
   const passwordPreview = useMemo(() => form.newPassword && form.generateRandom ? form.newPassword : '', [form.generateRandom, form.newPassword]);
 
   return (
@@ -149,8 +180,16 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
               placeholder={t('workspace.people.changePassword.placeholder', 'Enter a new password')}
               value={form.newPassword}
               onChange={(event) => setForm({ ...form, newPassword: event.currentTarget.value, generateRandom: false })}
-              disabled={processing || disabled}
+              disabled={processing || disabled || form.generateRandom}
               data-autofocus
+            />
+            <PasswordInput
+              label={t('workspace.people.changePassword.confirmPassword', 'Confirm password')}
+              placeholder={t('workspace.people.changePassword.confirmPlaceholder', 'Re-enter the new password')}
+              value={form.confirmPassword}
+              onChange={(event) => setForm({ ...form, confirmPassword: event.currentTarget.value, generateRandom: false })}
+              disabled={processing || disabled || form.generateRandom}
+              error={!form.generateRandom && form.confirmPassword && form.newPassword !== form.confirmPassword ? t('workspace.people.changePassword.passwordMismatch', 'Passwords do not match') : undefined}
             />
             <Group justify="space-between">
               <Checkbox
@@ -166,9 +205,22 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
                 }}
               />
               {passwordPreview && (
-                <Text size="xs" c="dimmed">
-                  {t('workspace.people.changePassword.generatedPreview', 'Generated password:')} <strong>{passwordPreview}</strong>
-                </Text>
+                <Group gap="xs" align="center">
+                  <Text size="xs" c="dimmed">
+                    {t('workspace.people.changePassword.generatedPreview', 'Generated password:')} <strong>{passwordPreview}</strong>
+                  </Text>
+                  <Tooltip label={t('workspace.people.changePassword.copyTooltip', 'Copy to clipboard')}>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="gray"
+                      onClick={handleCopyPassword}
+                      disabled={processing}
+                    >
+                      <LocalIcon icon="content-copy" width="0.9rem" height="0.9rem" />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
               )}
             </Group>
           </Stack>
@@ -176,20 +228,26 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
           <Stack gap="xs">
             <Checkbox
               label={t('workspace.people.changePassword.sendEmail', 'Email the user about this change')}
-              checked={form.sendEmail}
+              checked={canEmail && form.sendEmail}
               onChange={(event) => setForm({ ...form, sendEmail: event.currentTarget.checked })}
               disabled={!canEmail || processing}
             />
             <Checkbox
               label={t('workspace.people.changePassword.includePassword', 'Include the new password in the email')}
-              checked={form.includePassword}
+              checked={canEmail && form.sendEmail && form.includePassword}
               onChange={(event) => setForm({ ...form, includePassword: event.currentTarget.checked })}
               disabled={!canEmail || !form.sendEmail || processing}
+            />
+            <Checkbox
+              label={t('workspace.people.changePassword.forcePasswordChange', 'Force user to change password on next login')}
+              checked={form.forcePasswordChange}
+              onChange={(event) => setForm({ ...form, forcePasswordChange: event.currentTarget.checked })}
+              disabled={processing || disabled}
             />
             {!canEmail && (
               <Text size="xs" c="dimmed">
                 {mailEnabled
-                  ? t('workspace.people.changePassword.emailUnavailable', 'This user does not have an email address. Notifications are disabled.')
+                  ? t('workspace.people.changePassword.emailUnavailable', "This user's email is not a valid email address. Notifications are disabled.")
                   : t('workspace.people.changePassword.smtpDisabled', 'Email notifications require SMTP to be enabled in settings.')}
               </Text>
             )}
