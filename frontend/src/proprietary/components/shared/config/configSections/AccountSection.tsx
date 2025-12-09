@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Button, Group, Modal, Paper, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert as showToast } from '@app/components/toast';
 import { useAuth } from '@app/auth/UseSession';
@@ -11,8 +10,6 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [usernameModalOpen, setUsernameModalOpen] = useState(false);
 
@@ -29,13 +26,17 @@ const AccountSection: React.FC = () => {
 
   const userIdentifier = useMemo(() => user?.email || user?.username || '', [user?.email, user?.username]);
 
-  const handleLogout = async () => {
+  const redirectToLogin = useCallback(() => {
+    window.location.assign('/login');
+  }, []);
+
+  const handleLogout = useCallback(async () => {
     try {
       await signOut();
     } finally {
-      navigate('/login');
+      redirectToLogin();
     }
-  };
+  }, [redirectToLogin, signOut]);
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
