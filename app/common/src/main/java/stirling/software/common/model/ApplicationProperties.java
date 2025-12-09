@@ -548,6 +548,7 @@ public class ApplicationProperties {
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
+        @Deprecated
         @Data
         public static class CustomMetadata {
             private boolean autoUpdateMetadata;
@@ -583,6 +584,11 @@ public class ApplicationProperties {
         private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
+        private Boolean customFolderSubfix = false;
+        private Boolean enableAllowUserIDs = false;
+        private List<Long> allowUserIDs = new ArrayList<>();
+        private Boolean enableAllowChannelIDs = false;
+        private List<Long> allowChannelIDs = new ArrayList<>();
         private long processingTimeoutSeconds = 180;
         private long pollingIntervalMillis = 2000;
     }

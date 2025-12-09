@@ -3,6 +3,7 @@ package stirling.software.SPDF.service.telegram;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import jakarta.annotation.PostConstruct;
@@ -79,6 +81,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         Message message = null;
 
+        // 1) Regular messages
         if (update.hasMessage()) {
             message = update.getMessage();
         }
@@ -108,6 +111,93 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 chat.getId(),
                 chatType,
                 message);
+
+        User from = message.getFrom();
+        if (telegramProperties.getEnableAllowUserIDs()
+                || telegramProperties.getEnableAllowChannelIDs()) {
+            List<Long> allowUserIDs = telegramProperties.getAllowUserIDs();
+            List<Long> allowChannelIDs = telegramProperties.getAllowChannelIDs();
+            switch (chatType) {
+                case "channel" -> {
+                    // In private chats, messages are sent by users
+                    if (telegramProperties.getEnableAllowChannelIDs()) {
+                        if (allowChannelIDs.isEmpty()) {
+                            log.info(
+                                    "No allowed channel IDs configured, disabling all access from"
+                                            + " private chat id={}",
+                                    chat.getId());
+                        }
+                        if (from == null || !allowChannelIDs.contains(from.getId().longValue())) {
+                            log.info(
+                                    "Ignoring message {} from user id={} in private chat id={} due"
+                                            + " to channel access restrictions",
+                                    message.getMessageId(),
+                                    from != null ? from.getId() : "unknown",
+                                    chat.getId());
+                            sendMessage(
+                                    chat.getId(),
+                                    "You are not authorized to use this bot. Please contact the"
+                                            + " administrator.");
+                            return;
+                        }
+                    }
+                }
+                case "private" -> {
+                    // In channels, messages are always sent on behalf of the channel
+                    if (telegramProperties.getEnableAllowUserIDs()) {
+                        if (allowUserIDs.isEmpty()) {
+                            log.info(
+                                    "No allowed user IDs configured, disabling all access from"
+                                            + " channel id={}",
+                                    chat.getId());
+                        }
+                        if (from == null || !allowUserIDs.contains(from.getId().longValue())) {
+                            log.info(
+                                    "Ignoring message {} from channel id={} due to user access"
+                                            + " restrictions",
+                                    message.getMessageId(),
+                                    chat.getId());
+                            sendMessage(
+                                    chat.getId(),
+                                    "This channel is not authorized to use this bot. Please contact"
+                                            + " the administrator.");
+                            return;
+                        }
+                    }
+                }
+                case "group", "supergroup" -> {
+                    // group chats
+                }
+                default -> {
+                    // private chats
+                }
+            }
+            boolean userAllowed =
+                    !telegramProperties.getEnableAllowUserIDs()
+                            || (from != null && allowUserIDs.contains(from.getId()));
+            boolean channelAllowed =
+                    !telegramProperties.getEnableAllowChannelIDs()
+                            || allowChannelIDs.contains(chat.getId());
+            if (!userAllowed && !channelAllowed) {
+                log.info(
+                        "Ignoring message {} from user id={} in chat id={} due to access restrictions",
+                        message.getMessageId(),
+                        from != null ? from.getId() : "unknown",
+                        chat.getId());
+                sendMessage(
+                        chat.getId(),
+                        "You are not authorized to use this bot. Please contact the administrator.");
+                return;
+            }
+        }
+        if (from != null) {
+            log.info(
+                    "Message {} sent by user {} {} (id={})",
+                    message.getMessageId(),
+                    from.getFirstName(),
+                    from.getLastName() != null ? from.getLastName() : "",
+                    from.getId());
+        }
 
         if (message.hasDocument() || message.hasPhoto()) {
             handleIncomingFile(message);
@@ -248,8 +338,10 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     }
 
     private URL buildDownloadUrl(String filePath) throws MalformedURLException {
-        return new URL(
-                String.format("https://api.telegram.org/file/bot%s/%s", getBotToken(), filePath));
+        return URI.create(
+                        String.format(
+                                "https://api.telegram.org/file/bot%s/%s", getBotToken(), filePath))
+                .toURL();
     }
 
     private List<Path> waitForPipelineOutputs(PipelineFileInfo info) throws IOException {
