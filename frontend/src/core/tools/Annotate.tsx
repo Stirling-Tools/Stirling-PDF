@@ -35,6 +35,7 @@ const Annotate = (_props: BaseToolProps) => {
   const [squigglyOpacity, setSquigglyOpacity] = useState(100);
   const [textColor, setTextColor] = useState('#111111');
   const [textSize, setTextSize] = useState(14);
+  const [textAlignment, setTextAlignment] = useState<'left' | 'center' | 'right'>('left');
   const [shapeStrokeColor, setShapeStrokeColor] = useState('#cf5b5b');
   const [shapeFillColor, setShapeFillColor] = useState('#0000ff');
   const [shapeOpacity, setShapeOpacity] = useState(50);
@@ -53,24 +54,30 @@ const Annotate = (_props: BaseToolProps) => {
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
   const manualToolSwitch = useRef<boolean>(false);
 
-  const buildToolOptions = useCallback((toolId: AnnotationToolId) => {
+  const buildToolOptions = useCallback((toolId: AnnotationToolId, includeMetadata: boolean = true) => {
+    const metadata = includeMetadata ? {
+      customData: {
+        author: 'User', // Could be replaced with actual user name from auth context
+        createdAt: new Date().toISOString(),
+        modifiedAt: new Date().toISOString(),
+      }
+    } : {};
+
     switch (toolId) {
       case 'ink':
-        return { color: inkColor, thickness: inkWidth };
+        return { color: inkColor, thickness: inkWidth, ...metadata };
       case 'inkHighlighter':
-        return { color: highlightColor, opacity: highlightOpacity / 100, thickness: freehandHighlighterWidth };
+        return { color: highlightColor, opacity: highlightOpacity / 100, thickness: freehandHighlighterWidth, ...metadata };
       case 'highlight':
-        return { color: highlightColor, opacity: highlightOpacity / 100 };
+        return { color: highlightColor, opacity: highlightOpacity / 100, ...metadata };
       case 'underline':
-        return { color: underlineColor, opacity: underlineOpacity / 100 };
+        return { color: underlineColor, opacity: underlineOpacity / 100, ...metadata };
       case 'strikeout':
-        return { color: strikeoutColor, opacity: strikeoutOpacity / 100 };
+        return { color: strikeoutColor, opacity: strikeoutOpacity / 100, ...metadata };
       case 'squiggly':
-        return { color: squigglyColor, opacity: squigglyOpacity / 100 };
+        return { color: squigglyColor, opacity: squigglyOpacity / 100, ...metadata };
       case 'text':
-        return { color: textColor, fontSize: textSize };
-      case 'note':
-        return { color: textColor };
+        return { color: textColor, fontSize: textSize, textAlign: textAlignment, ...metadata };
       case 'square':
       case 'circle':
       case 'polygon':
@@ -81,6 +88,7 @@ const Annotate = (_props: BaseToolProps) => {
           strokeOpacity: shapeStrokeOpacity / 100,
           fillOpacity: shapeFillOpacity / 100,
           borderWidth: shapeThickness,
+          ...metadata,
         };
       case 'line':
       case 'polyline':
@@ -90,11 +98,12 @@ const Annotate = (_props: BaseToolProps) => {
           strokeColor: shapeStrokeColor,
           opacity: shapeStrokeOpacity / 100,
           borderWidth: shapeThickness,
+          ...metadata,
         };
       default:
         return {};
     }
-  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, shapeStrokeColor, shapeFillColor, shapeStrokeOpacity, shapeFillOpacity, shapeThickness]);
+  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, textAlignment, shapeStrokeColor, shapeFillColor, shapeOpacity, shapeStrokeOpacity, shapeFillOpacity, shapeThickness]);
 
   useEffect(() => {
     setToolAndWorkbench('annotate', 'viewer');
@@ -216,7 +225,6 @@ const Annotate = (_props: BaseToolProps) => {
             }
           } else {
             const typeToToolMap: Record<number, AnnotationToolId> = {
-              1: 'note',        // TEXT
               3: 'text',        // FREETEXT
               4: 'line',        // LINE
               5: 'square',      // SQUARE
@@ -262,7 +270,6 @@ const Annotate = (_props: BaseToolProps) => {
 
   const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
-    { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
     { id: 'stamp', label: t('annotation.stamp', 'Add Image'), icon: 'add-photo-alternate' },
   ];
 
@@ -433,10 +440,38 @@ const Annotate = (_props: BaseToolProps) => {
         )}
 
         {activeTool === 'text' && (
-          <Box>
-            <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
-            <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
-          </Box>
+          <>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
+              <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.textAlignment', 'Text Alignment')}</Text>
+              <Group gap="xs">
+                <ActionIcon
+                  variant={textAlignment === 'left' ? 'filled' : 'default'}
+                  onClick={() => setTextAlignment('left')}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-left" width={18} height={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant={textAlignment === 'center' ? 'filled' : 'default'}
+                  onClick={() => setTextAlignment('center')}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-center" width={18} height={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant={textAlignment === 'right' ? 'filled' : 'default'}
+                  onClick={() => setTextAlignment('right')}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-right" width={18} height={18} />
+                </ActionIcon>
+              </Group>
+            </Box>
+          </>
         )}
 
         {['square', 'circle', 'line', 'polygon'].includes(activeTool) && (
@@ -559,11 +594,11 @@ const Annotate = (_props: BaseToolProps) => {
         );
       }
 
-      // Type 3: Text box, Type 1: Note
-      if ([1, 3].includes(type)) {
+      // Type 3: Text box
+      if (type === 3) {
         return (
           <Stack gap="sm">
-            <Text size="sm" fw={600}>{type === 3 ? t('annotation.editText', 'Edit Text Box') : t('annotation.editNote', 'Edit Note')}</Text>
+            <Text size="sm" fw={600}>{t('annotation.editText', 'Edit Text Box')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
@@ -593,23 +628,21 @@ const Annotate = (_props: BaseToolProps) => {
                 }, 120);
               }}
             />
-            {type === 3 && (
-              <NumberInput
-                label={t('annotation.fontSize', 'Font size')}
-                min={6}
-                max={72}
-                value={selectedFontSize}
-                onChange={(val) => {
-                  const size = typeof val === 'number' ? val : 14;
-                  setSelectedFontSize(size);
-                  signatureApiRef?.current?.updateAnnotation?.(
-                    selectedAnn.object?.pageIndex ?? 0,
-                    selectedAnn.object?.id,
-                    { fontSize: size }
-                  );
-                }}
-              />
-            )}
+            <NumberInput
+              label={t('annotation.fontSize', 'Font size')}
+              min={6}
+              max={72}
+              value={selectedFontSize}
+              onChange={(val) => {
+                const size = typeof val === 'number' ? val : 14;
+                setSelectedFontSize(size);
+                signatureApiRef?.current?.updateAnnotation?.(
+                  selectedAnn.object?.pageIndex ?? 0,
+                  selectedAnn.object?.id,
+                  { fontSize: size }
+                );
+              }}
+            />
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
               <Slider

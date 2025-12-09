@@ -1,6 +1,6 @@
 import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
+import { PdfAnnotationSubtype, PdfAnnotationIcon, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
 import type { AnnotationToolId, AnnotationToolOptions, SignatureAPI } from '@app/components/viewer/viewerTypes';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
@@ -199,6 +199,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
+  const getIconEnum = (icon?: string): PdfAnnotationIcon => {
+    switch (icon) {
+      case 'Comment': return PdfAnnotationIcon.Comment;
+      case 'Key': return PdfAnnotationIcon.Key;
+      case 'Note': return PdfAnnotationIcon.Note;
+      case 'Help': return PdfAnnotationIcon.Help;
+      case 'NewParagraph': return PdfAnnotationIcon.NewParagraph;
+      case 'Paragraph': return PdfAnnotationIcon.Paragraph;
+      case 'Insert': return PdfAnnotationIcon.Insert;
+      default: return PdfAnnotationIcon.Comment;
+    }
+  };
+
   const buildAnnotationDefaults = useCallback(
     (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
       switch (toolId) {
@@ -256,13 +269,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
           };
         case 'note':
           return {
-            type: PdfAnnotationSubtype.FREETEXT,
-            textColor: options?.color ?? '#1b1b1b',
+            type: PdfAnnotationSubtype.TEXT,
             color: options?.color ?? '#ffa000',
-            interiorColor: options?.fillColor ?? '#fff8e1',
             opacity: options?.opacity ?? 1,
-            fontSize: options?.fontSize ?? 12,
-            contents: 'Note',
+            icon: getIconEnum(options?.icon),
+            contents: options?.contents ?? '',
           };
         case 'square':
           return {

@@ -68,4 +68,6 @@ export interface AnnotationToolOptions {
   fontSize?: number;
   fontFamily?: string;
   imageSrc?: string;
+  icon?: 'Comment' | 'Key' | 'Note' | 'Help' | 'NewParagraph' | 'Paragraph' | 'Insert';
+  contents?: string;
 }
