@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -62,11 +61,6 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @EnableWebSecurity
 @EnableMethodSecurity
 @DependsOn("runningProOrHigher")
-@ConditionalOnProperty(
-        prefix = "security.custom",
-        name = "enabled",
-        havingValue = "false",
-        matchIfMissing = true)
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
@@ -88,7 +82,6 @@ public class SecurityConfiguration {
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
-    private final List<HttpSecurityCustomizer> securityCustomizers;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -109,8 +102,8 @@ public class SecurityConfiguration {
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
                     OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
-            stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService,
-            @Autowired(required = false) List<HttpSecurityCustomizer> securityCustomizers) {
+            stirling.software.proprietary.service.UserLicenseSettingsService
+                    licenseSettingsService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -128,7 +121,6 @@ public class SecurityConfiguration {
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
         this.licenseSettingsService = licenseSettingsService;
-        this.securityCustomizers = securityCustomizers != null ? securityCustomizers : List.of();
     }
 
     @Bean
@@ -382,15 +374,6 @@ public class SecurityConfiguration {
         } else {
             log.debug("Login is not enabled.");
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
-        }
-
-        // Allow downstream builds to append/override configuration without modifying this file.
-        for (HttpSecurityCustomizer customizer : securityCustomizers) {
-            try {
-                customizer.customize(http);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to apply HttpSecurityCustomizer", e);
-            }
         }
         return http.build();
     }
