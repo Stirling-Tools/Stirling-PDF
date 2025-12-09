@@ -1,4 +1,4 @@
-package stirling.software.proprietary.util;
+package stirling.software.common.util;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,9 +23,13 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Utility class for copying and transforming PDF form fields during page operations.
+ * Used by multi-page layout and other page manipulation operations that need to preserve form fields.
+ */
 @Slf4j
 @UtilityClass
-public class FormCopyUtils {
+public class GeneralFormCopyUtils {
 
     public boolean hasAnyRotatedPage(PDDocument document) {
         try {
@@ -188,7 +192,7 @@ public class FormCopyUtils {
                         continue;
                     }
 
-                    FormFieldTypeSupport handler = FormFieldTypeSupport.forField(terminalField);
+                    GeneralFormFieldTypeSupport handler = GeneralFormFieldTypeSupport.forField(terminalField);
                     if (handler == null) {
                         log.debug(
                                 "Skipping unsupported field type '{}' for widget '{}'",
@@ -222,7 +226,7 @@ public class FormCopyUtils {
     }
 
     private void copyFieldUsingHandler(
-            FormFieldTypeSupport handler,
+            GeneralFormFieldTypeSupport handler,
             PDTerminalField sourceField,
             PDAcroForm newAcroForm,
             PDPage destinationPage,

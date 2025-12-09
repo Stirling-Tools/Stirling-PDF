@@ -28,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralFormCopyUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.proprietary.util.FormUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
@@ -143,12 +143,12 @@ public class MultiPageLayoutController {
         contentStream.close();
 
         // If any source page is rotated, skip form copying/transformation entirely
-        boolean hasRotation = FormUtils.hasAnyRotatedPage(sourceDocument);
+        boolean hasRotation = GeneralFormCopyUtils.hasAnyRotatedPage(sourceDocument);
         if (hasRotation) {
             log.info("Source document has rotated pages; skipping form field copying.");
         } else {
             try {
-                FormUtils.copyAndTransformFormFields(
+                GeneralFormCopyUtils.copyAndTransformFormFields(
                         sourceDocument,
                         newDocument,
                         totalPages,
