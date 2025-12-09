@@ -301,13 +301,13 @@ main() {
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version: $EXPECTED_VERSION"
 
-    # Build Ultra-Lite image (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
+    # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
     docker build --build-arg VERSION_TAG=alpha \
         -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
-        -f ./Dockerfile.ultra-lite .
+        -f ./docker/embedded/Dockerfile.ultra-lite .
 
     # Test Ultra-Lite configuration
-    run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
+    run_tests "Stirling-PDF-Ultra-Lite" "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml"
 
     echo "Testing webpage accessibility..."
     cd "testing"
@@ -328,7 +328,7 @@ main() {
         echo "Version verification failed for Stirling-PDF-Ultra-Lite"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down -v
+    docker-compose -f "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml" down -v
 
     # ==================================================================
     # 2. Full Fat + Security
@@ -343,13 +343,13 @@ main() {
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version with security enabled: $EXPECTED_VERSION"
 
-    # Build Fat (Security) image for GHCR tag used in all 'fat' compose files
+    # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
     docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
         -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
-        -f ./Dockerfile.fat .
+        -f ./docker/embedded/Dockerfile.fat .
 
     # Test fat + security compose
-    run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
+    run_tests "Stirling-PDF-Security-Fat" "./docker/embedded/compose/docker-compose-latest-fat-security.yml"
 
     echo "Testing webpage accessibility..."
     cd "testing"
@@ -370,17 +370,17 @@ main() {
         echo "Version verification failed for Stirling-PDF-Security-Fat"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down -v
+    docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-security.yml" down -v
 
     # ==================================================================
     # 3. Regression test with login (test_cicd.yml)
     # ==================================================================
-    run_tests "Stirling-PDF-Security-Fat-with-login" "./exampleYmlFiles/test_cicd.yml"
+    run_tests "Stirling-PDF-Security-Fat-with-login" "./docker/embedded/compose/test_cicd.yml"
 
     # Only run behave tests if the container started successfully
     if [[ " ${passed_tests[*]} " =~ "Stirling-PDF-Security-Fat-with-login" ]]; then
 
-        CONTAINER_NAME=$(docker-compose -f "./exampleYmlFiles/test_cicd.yml" ps --format '{{.Names}}' --filter "status=running" | head -n1)
+        CONTAINER_NAME=$(docker-compose -f "./docker/embedded/compose/test_cicd.yml" ps --format '{{.Names}}' --filter "status=running" | head -n1)
 
         SNAPSHOT_DIR="$PROJECT_ROOT/testing/file_snapshots"
         mkdir -p "$SNAPSHOT_DIR"
@@ -421,12 +421,12 @@ main() {
             compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
         fi
     fi
-    docker-compose -f "./exampleYmlFiles/test_cicd.yml" down -v
+    docker-compose -f "./docker/embedded/compose/test_cicd.yml" down -v
 
     # ==================================================================
     # 4. Disabled Endpoints Test
     # ==================================================================
-    run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml"
+    run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml"
 
     echo "Testing disabled endpoints..."
     if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
@@ -445,7 +445,7 @@ main() {
         echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down -v
+    docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml" down -v
 
     # ==================================================================
     # Final Report

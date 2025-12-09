@@ -24,7 +24,7 @@ Feature: API Validation
             | parameter | value         |
             | password  | wrongPassword |
         When I send the API request to the endpoint "/api/v1/security/remove-password"
-        Then the response status code should be 500
+        Then the response status code should be 400
         And the response should contain error message "Job failed: org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException: Cannot decrypt PDF, the password is incorrect"
 
     @positive @info
