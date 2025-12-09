@@ -15,10 +15,10 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./stirling/latest/data:/usr/share/tessdata:rw
-      - ./stirling/latest/config:/configs:rw
-      - ./stirling/latest/logs:/logs:rw
-      - ./testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
+      - ../../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../../stirling/latest/config:/configs:rw
+      - ../../../stirling/latest/logs:/logs:rw
+      - ../../../testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"

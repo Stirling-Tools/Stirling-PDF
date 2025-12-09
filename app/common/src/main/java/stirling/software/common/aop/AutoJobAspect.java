@@ -81,6 +81,12 @@ public class AutoJobAspect {
                                     "AutoJobAspect caught exception during job execution: {}",
                                     ex.getMessage(),
                                     ex);
+                            // Rethrow RuntimeException as-is to preserve exception type
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            }
+                            // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                            // BaseAppException
                             throw new RuntimeException(ex);
                         }
                     },
@@ -208,6 +214,12 @@ public class AutoJobAspect {
 
                     // If we get here, all retries failed
                     if (lastException != null) {
+                        // Rethrow RuntimeException as-is to preserve exception type
+                        if (lastException instanceof RuntimeException) {
+                            throw (RuntimeException) lastException;
+                        }
+                        // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                        // BaseAppException
                         throw new RuntimeException(
                                 "Job failed after "
                                         + maxRetries

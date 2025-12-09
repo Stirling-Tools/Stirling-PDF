@@ -40,7 +40,6 @@
 /pdf-to-text
 /pdf-to-word
 /pdf-to-xml
-/pipeline
 /redact
 /releases
 /remove-annotations

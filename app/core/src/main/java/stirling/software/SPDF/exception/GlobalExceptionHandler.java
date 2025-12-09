@@ -947,6 +947,96 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle RuntimeException and check for wrapped BaseAppException or BaseValidationException.
+     *
+     * <p>This handler unwraps RuntimeExceptions that contain typed exceptions from job execution
+     * (AutoJobAspect wraps checked exceptions in RuntimeException) and delegates to the appropriate
+     * specific handler.
+     *
+     * @param ex the RuntimeException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with appropriate HTTP status
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ProblemDetail> handleRuntimeException(
+            RuntimeException ex, HttpServletRequest request) {
+
+        // Check if this RuntimeException wraps a typed exception from job execution
+        Throwable cause = ex.getCause();
+        if (cause instanceof BaseAppException) {
+            // Delegate to specific BaseAppException handlers
+            BaseAppException appEx = (BaseAppException) cause;
+            if (appEx instanceof PdfPasswordException) {
+                return handlePdfPassword((PdfPasswordException) appEx, request);
+            } else if (appEx instanceof PdfCorruptedException
+                    || appEx instanceof PdfEncryptionException
+                    || appEx instanceof OutOfMemoryDpiException) {
+                return handlePdfAndDpiExceptions(appEx, request);
+            } else if (appEx instanceof GhostscriptException) {
+                return handleGhostscriptException((GhostscriptException) appEx, request);
+            } else if (appEx instanceof FfmpegRequiredException) {
+                return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
+            } else {
+                return handleBaseApp(appEx, request);
+            }
+        } else if (cause instanceof BaseValidationException) {
+            // Delegate to validation exception handlers
+            BaseValidationException valEx = (BaseValidationException) cause;
+            if (valEx instanceof CbrFormatException
+                    || valEx instanceof CbzFormatException
+                    || valEx instanceof EmlFormatException) {
+                return handleFormatExceptions(valEx, request);
+            } else {
+                return handleValidation(valEx, request);
+            }
+        } else if (cause instanceof IOException) {
+            // Unwrap and handle IOException (may contain PDF-specific errors)
+            return handleIOException((IOException) cause, request);
+        }
+
+        // Not a wrapped exception - treat as unexpected error
+        log.error(
+                "Unexpected RuntimeException at {}: {}",
+                request.getRequestURI(),
+                ex.getMessage(),
+                ex);
+
+        String userMessage =
+                getLocalizedMessage(
+                        "error.unexpected",
+                        "An unexpected error occurred. Please try again later.");
+
+        String title =
+                getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
+        problemDetail.setType(URI.create(ErrorTypes.UNEXPECTED));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title);
+
+        addStandardHints(
+                problemDetail,
+                "error.unexpected.hints",
+                List.of(
+                        "Retry the request after a short delay.",
+                        "If the problem persists, contact support with the timestamp and path.",
+                        "Check service status or logs for outages."));
+        problemDetail.setProperty(
+                "actionRequired",
+                "Retry later; if persistent, contact support with the error details.");
+
+        if (isDevelopmentMode()) {
+            problemDetail.setProperty("debugMessage", ex.getMessage());
+            problemDetail.setProperty("exceptionType", ex.getClass().getName());
+        }
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
+    /**
      * Handle IOException.
      *
      * <p>When thrown: When file I/O operations fail (read, write, corrupt file, etc.).

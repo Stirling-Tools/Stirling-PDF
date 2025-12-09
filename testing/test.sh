@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Usage function
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "Options:"
+    echo "  --rerun-failed              Rerun only the tests that failed in the last run"
+    echo "  --rerun \"test1,test2,...\"   Rerun specific tests (comma-separated)"
+    echo "  -h, --help                  Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                                    # Run all tests"
+    echo "  $0 --rerun-failed                     # Rerun tests that failed previously"
+    echo "  $0 --rerun \"Stirling-PDF-Regression Stirling-PDF-Security-Fat-with-login,Webpage-Accessibility-full\""
+    exit 0
+}
+
 # Find project root by locating build.gradle
 find_root() {
     local dir="$PWD"
@@ -25,18 +40,28 @@ check_health() {
     local end=$((SECONDS + timeout))
     local last_code="000"
 
-    echo "Waiting for $container_name to become reachable on http://localhost:8080/ (timeout ${timeout}s)..."
+    # Check if container has API key configured
+    local api_key=$(docker inspect "$container_name" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep "SECURITY_CUSTOMGLOBALAPIKEY=" | cut -d'=' -f2)
+    if [ -n "$api_key" ]; then
+        echo "Using API key for health check: ${api_key:0:3}***"
+    fi
+
+    echo "Waiting for $container_name to become reachable on http://localhost:8080/api/v1/info/status (timeout ${timeout}s)..."
     while [ $SECONDS -lt $end ]; do
         # Optional: check if container is running at all (nice for debugging)
         if ! docker ps --format '{{.Names}}' | grep -Fxq "$container_name"; then
             echo "  Container $container_name not running yet (still waiting)..."
         fi
 
-        # Try simple HTTP GET on the root page
-        last_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/") || last_code="000"
+        # Try API status endpoint with optional API key
+        if [ -n "$api_key" ]; then
+            last_code=$(curl -s -o /dev/null -w '%{http_code}' -H "X-API-KEY: $api_key" "http://localhost:8080/api/v1/info/status") || last_code="000"
+        else
+            last_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/api/v1/info/status") || last_code="000"
+        fi
 
-        # Treat any 2xx or 3xx as "ready"
-        if [ "$last_code" -ge 200 ] && [ "$last_code" -lt 400 ]; then
+        # Treat any 2xx as "ready"
+        if [ "$last_code" -ge 200 ] && [ "$last_code" -lt 300 ]; then
             echo "$container_name is reachable over HTTP (status $last_code)."
             echo "Printing logs for $container_name:"
             docker logs "$container_name" || true
@@ -197,23 +222,19 @@ verify_app_version() {
 
     echo "Checking version for $service_name (expecting $EXPECTED_VERSION)..."
 
-    # Try to access the homepage and extract the version
+    # Use the API endpoint to get version information
     local response
-    response=$(curl -s "$base_url")
+    response=$(curl -s "${base_url}/api/v1/info/status")
 
-    # Extract version from pixel tracking tag
+    # Extract version from JSON response using grep and sed
     local actual_version
-    actual_version=$(echo "$response" | grep -o 'appVersion=[0-9.]*' | head -1 | sed 's/appVersion=//')
+    actual_version=$(echo "$response" | grep -o '"version":"[^"]*"' | head -1 | sed 's/"version":"\(.*\)"/\1/')
 
-    # If we couldn't find the version in the pixel tag, try other approaches
+    # Check if we got a version
     if [ -z "$actual_version" ]; then
-        # Check for "App Version:" format
-        if echo "$response" | grep -q "App Version:"; then
-            actual_version=$(echo "$response" | grep -o "App Version: [0-9.]*" | sed 's/App Version: //')
-        else
-            echo "❌ Version verification failed: Could not find version information"
-            return 1
-        fi
+        echo "❌ Version verification failed: Could not find version in API response"
+        echo "API response: $response"
+        return 1
     fi
 
     # Check if the extracted version matches expected version
@@ -269,9 +290,66 @@ test_compose() {
 declare -a passed_tests
 declare -a failed_tests
 
+# File to store failed tests
+FAILED_TESTS_FILE="$PROJECT_ROOT/testing/.failed_tests"
+
+# Function to save failed tests to file
+# Note: This OVERWRITES (not appends) the file each run, so the list resets every time
+save_failed_tests() {
+    if [ ${#failed_tests[@]} -ne 0 ]; then
+        echo "Saving failed tests to $FAILED_TESTS_FILE"
+        printf "%s\n" "${failed_tests[@]}" > "$FAILED_TESTS_FILE"
+        echo "Failed tests saved. To rerun them: $0 --rerun-failed"
+    else
+        # Remove the file if all tests passed
+        rm -f "$FAILED_TESTS_FILE"
+        echo "All tests passed - cleared failed tests file"
+    fi
+}
+
+# Function to load failed tests from file
+load_failed_tests() {
+    if [ -f "$FAILED_TESTS_FILE" ]; then
+        echo "Loading failed tests from previous run..."
+        mapfile -t RERUN_TESTS < "$FAILED_TESTS_FILE"
+        echo "Found ${#RERUN_TESTS[@]} failed test(s) to rerun:"
+        for test in "${RERUN_TESTS[@]}"; do
+            echo "  - $test"
+        done
+        return 0
+    else
+        echo "No failed tests file found at $FAILED_TESTS_FILE"
+        echo "Run tests normally first, then use --rerun-failed"
+        exit 1
+    fi
+}
+
+# Function to check if a test should be run
+should_run_test() {
+    local test_name=$1
+    if [ ${#RERUN_TESTS[@]} -eq 0 ]; then
+        # No filter - run all tests
+        return 0
+    fi
+
+    # Check if this test is in the rerun list
+    for rerun_test in "${RERUN_TESTS[@]}"; do
+        if [[ "$test_name" == "$rerun_test" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 run_tests() {
     local test_name=$1
     local compose_file=$2
+
+    if ! should_run_test "$test_name"; then
+        echo "Skipping $test_name (not in rerun list)"
+        return 0
+    fi
+
     if test_compose "$compose_file" "$test_name"; then
         passed_tests+=("$test_name")
     else
@@ -284,48 +362,96 @@ main() {
     SECONDS=0
     cd "$PROJECT_ROOT"
 
+    # Parse command line arguments
+    RERUN_MODE=false
+    declare -a RERUN_TESTS
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --rerun-failed)
+                RERUN_MODE=true
+                load_failed_tests
+                shift
+                ;;
+            --rerun)
+                RERUN_MODE=true
+                if [[ -z "$2" ]]; then
+                    echo "Error: --rerun requires a comma-separated list of test names"
+                    usage
+                fi
+                # Split comma-separated list into array
+                IFS=',' read -ra RERUN_TESTS <<< "$2"
+                echo "Rerunning ${#RERUN_TESTS[@]} specified test(s):"
+                for test in "${RERUN_TESTS[@]}"; do
+                    echo "  - $test"
+                done
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                ;;
+            *)
+                echo "Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
     export DOCKER_CLI_EXPERIMENTAL=enabled
     export COMPOSE_DOCKER_CLI_BUILD=0
 
     # ==================================================================
     # 1. Ultra-Lite (no additional features)
     # ==================================================================
-    export DISABLE_ADDITIONAL_FEATURES=true
-    if ! ./gradlew clean build; then
-        echo "Gradle build failed with security disabled, exiting script."
-        exit 1
+    # Check if any ultra-lite tests need to run before building
+    if should_run_test "Stirling-PDF-Ultra-Lite" || \
+       should_run_test "Webpage-Accessibility-lite" || \
+       should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
+
+        export DISABLE_ADDITIONAL_FEATURES=true
+        if ! ./gradlew clean build; then
+            echo "Gradle build failed with security disabled, exiting script."
+            exit 1
+        fi
+
+        # Get expected version after the build to ensure version.properties is created
+        echo "Getting expected version from Gradle..."
+        EXPECTED_VERSION=$(get_expected_version)
+        echo "Expected version: $EXPECTED_VERSION"
+
+        # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
+        echo "Building ultra-lite image for tests that require it..."
+        docker build --build-arg VERSION_TAG=alpha \
+            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
+            -f ./docker/embedded/Dockerfile.ultra-lite .
+    else
+        echo "Skipping ultra-lite image build - no ultra-lite tests in rerun list"
     fi
-
-    # Get expected version after the build to ensure version.properties is created
-    echo "Getting expected version from Gradle..."
-    EXPECTED_VERSION=$(get_expected_version)
-    echo "Expected version: $EXPECTED_VERSION"
-
-    # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
-    docker build --build-arg VERSION_TAG=alpha \
-        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
-        -f ./docker/embedded/Dockerfile.ultra-lite .
 
     # Test Ultra-Lite configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml"
 
-    echo "Testing webpage accessibility..."
-    cd "testing"
-    if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
-        passed_tests+=("Webpage-Accessibility-lite")
-    else
-        failed_tests+=("Webpage-Accessibility-lite")
-        echo "Webpage accessibility lite tests failed"
+    if should_run_test "Webpage-Accessibility-lite"; then
+        echo "Testing webpage accessibility..."
+        cd "testing"
+        if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
+            passed_tests+=("Webpage-Accessibility-lite")
+        else
+            failed_tests+=("Webpage-Accessibility-lite")
+            echo "Webpage accessibility lite tests failed"
+        fi
+        cd "$PROJECT_ROOT"
     fi
-    cd "$PROJECT_ROOT"
 
-    echo "Testing version verification..."
-    if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
-        passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
-        echo "Version verification passed for Stirling-PDF-Ultra-Lite"
-    else
-        failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
-        echo "Version verification failed for Stirling-PDF-Ultra-Lite"
+    if should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
+        echo "Testing version verification..."
+        if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
+            passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+            echo "Version verification passed for Stirling-PDF-Ultra-Lite"
+        else
+            failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+            echo "Version verification failed for Stirling-PDF-Ultra-Lite"
+        fi
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml" down -v
@@ -333,41 +459,59 @@ main() {
     # ==================================================================
     # 2. Full Fat + Security
     # ==================================================================
-    export DISABLE_ADDITIONAL_FEATURES=false
-    if ! ./gradlew clean build; then
-        echo "Gradle build failed with security enabled, exiting script."
-        exit 1
+    # Check if any fat image tests need to run before building
+    if should_run_test "Stirling-PDF-Security-Fat" || \
+       should_run_test "Webpage-Accessibility-full" || \
+       should_run_test "Stirling-PDF-Security-Fat-Version-Check" || \
+       should_run_test "Stirling-PDF-Security-Fat-with-login" || \
+       should_run_test "Stirling-PDF-Regression Stirling-PDF-Security-Fat-with-login" || \
+       should_run_test "Stirling-PDF-Fat-Disable-Endpoints" || \
+       should_run_test "Disabled-Endpoints" || \
+       should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
+
+        export DISABLE_ADDITIONAL_FEATURES=false
+        if ! ./gradlew clean build; then
+            echo "Gradle build failed with security enabled, exiting script."
+            exit 1
+        fi
+
+        echo "Getting expected version from Gradle (security enabled)..."
+        EXPECTED_VERSION=$(get_expected_version)
+        echo "Expected version with security enabled: $EXPECTED_VERSION"
+
+        # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
+        echo "Building fat image for tests that require it..."
+        docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
+            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
+            -f ./docker/embedded/Dockerfile.fat .
+    else
+        echo "Skipping fat image build - no fat tests in rerun list"
     fi
-
-    echo "Getting expected version from Gradle (security enabled)..."
-    EXPECTED_VERSION=$(get_expected_version)
-    echo "Expected version with security enabled: $EXPECTED_VERSION"
-
-    # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
-        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
-        -f ./docker/embedded/Dockerfile.fat .
 
     # Test fat + security compose
     run_tests "Stirling-PDF-Security-Fat" "./docker/embedded/compose/docker-compose-latest-fat-security.yml"
 
-    echo "Testing webpage accessibility..."
-    cd "testing"
-    if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
-        passed_tests+=("Webpage-Accessibility-full")
-    else
-        failed_tests+=("Webpage-Accessibility-full")
-        echo "Webpage accessibility full tests failed"
+    if should_run_test "Webpage-Accessibility-full"; then
+        echo "Testing webpage accessibility..."
+        cd "testing"
+        if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
+            passed_tests+=("Webpage-Accessibility-full")
+        else
+            failed_tests+=("Webpage-Accessibility-full")
+            echo "Webpage accessibility full tests failed"
+        fi
+        cd "$PROJECT_ROOT"
     fi
-    cd "$PROJECT_ROOT"
 
-    echo "Testing version verification..."
-    if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
-        passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
-        echo "Version verification passed for Stirling-PDF-Security-Fat"
-    else
-        failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
-        echo "Version verification failed for Stirling-PDF-Security-Fat"
+    if should_run_test "Stirling-PDF-Security-Fat-Version-Check"; then
+        echo "Testing version verification..."
+        if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
+            passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+            echo "Version verification passed for Stirling-PDF-Security-Fat"
+        else
+            failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+            echo "Version verification failed for Stirling-PDF-Security-Fat"
+        fi
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-security.yml" down -v
@@ -428,21 +572,25 @@ main() {
     # ==================================================================
     run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml"
 
-    echo "Testing disabled endpoints..."
-    if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
-        passed_tests+=("Disabled-Endpoints")
-    else
-        failed_tests+=("Disabled-Endpoints")
-        echo "Disabled Endpoints tests failed"
+    if should_run_test "Disabled-Endpoints"; then
+        echo "Testing disabled endpoints..."
+        if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
+            passed_tests+=("Disabled-Endpoints")
+        else
+            failed_tests+=("Disabled-Endpoints")
+            echo "Disabled Endpoints tests failed"
+        fi
     fi
 
-    echo "Testing version verification..."
-    if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
-        passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
-        echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
-    else
-        failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
-        echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
+    if should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
+        echo "Testing version verification..."
+        if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
+            passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+            echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
+        else
+            failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+            echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
+        fi
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml" down -v
@@ -466,8 +614,12 @@ main() {
         done
     fi
 
+    # Save failed tests for potential rerun
+    save_failed_tests
+
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."
+        echo "To rerun only failed tests, use: $0 --rerun-failed"
         exit 1
     else
         echo "All tests passed successfully."
@@ -475,4 +627,4 @@ main() {
     fi
 }
 
-main
+main "$@"

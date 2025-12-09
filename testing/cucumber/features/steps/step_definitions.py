@@ -385,9 +385,11 @@ def step_check_response_status_code(context, status_code):
 @then('the response should contain error message "{message}"')
 def step_check_response_error_message(context, message):
     response_json = context.response.json()
+    # Check for error message in both "error" (old format) and "detail" (RFC 7807 ProblemDetail)
+    error_message = response_json.get("error") or response_json.get("detail")
     assert (
-        response_json.get("error") == message
-    ), f"Expected error message '{message}' but got '{response_json.get('error')}'"
+        error_message == message
+    ), f"Expected error message '{message}' but got '{error_message}'"
 
 
 @then('the response PDF metadata should include "{metadata_key}" as "{metadata_value}"')
