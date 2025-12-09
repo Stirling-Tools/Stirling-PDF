@@ -61,6 +61,18 @@ export const isWebFormat = (extension: string): boolean => {
 };
 
 /**
+ * Checks if the given extension is an office format (Word, Excel, PowerPoint, OpenOffice)
+ * These formats use LibreOffice for conversion and require individual file processing
+ */
+export const isOfficeFormat = (extension: string): boolean => {
+  return [
+    'docx', 'doc', 'odt',  // Word processors
+    'xlsx', 'xls', 'ods',  // Spreadsheets
+    'pptx', 'ppt', 'odp'   // Presentations
+  ].includes(extension.toLowerCase());
+};
+
+/**
  * Gets available target extensions for a given source extension
  * Extracted from useConvertParameters to be reusable in automation settings
  */
