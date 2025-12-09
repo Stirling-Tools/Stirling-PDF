@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon } from '@mantine/core';
+import { ActionIcon, Divider } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
@@ -195,6 +195,10 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                 className="button-text active current-tool-label"
               />
             </div>
+            <Divider
+              size="xs"
+              style={{ width: '3rem', margin: '0.75rem auto 0', display: 'block' }}
+            />
           </div>
         )}
       </div>

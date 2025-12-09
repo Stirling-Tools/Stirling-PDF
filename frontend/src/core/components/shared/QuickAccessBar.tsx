@@ -90,7 +90,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       <div
         key={config.id}
         className="flex flex-col items-center gap-1"
-        style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}
+        style={{
+          marginTop: index === 0 ? '0.5rem' : "0rem",
+          width: '100%',
+        }}
         data-tour={`${config.id}-button`}
       >
         <ActionIcon
@@ -215,7 +218,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       {isOverflow && (
         <Divider
           size="xs"
-          className="overflow-divider"
+          style={{ width: '3rem', margin: '0 auto', display: 'block' }}
         />
       )}
 
@@ -230,7 +233,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       >
         <div className="scrollable-content">
           {/* Main navigation section */}
-          <Stack gap="lg" align="center">
+          <Stack gap="lg" align="stretch">
             {mainButtons.map((config, index) => (
               <React.Fragment key={config.id}>
                 {renderNavButton(config, index, config.id === 'read' || config.id === 'automate')}
@@ -242,7 +245,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           {middleButtons.length === 0 && (
             <Divider
               size="xs"
-              className="content-divider"
+              style={{ width: '3rem', margin: '1rem auto', display: 'block' }}
             />
           )}
 
@@ -251,9 +254,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             <>
               <Divider
                 size="xs"
-                className="content-divider"
+                style={{ width: '3rem', margin: '1rem auto', display: 'block' }}
               />
-              <Stack gap="lg" align="center">
+              <Stack gap="lg" align="stretch">
                 {middleButtons.map((config, index) => (
                   <React.Fragment key={config.id}>
                     {renderNavButton(config, index)}
@@ -267,7 +270,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="spacer" />
 
           {/* Bottom section */}
-          <Stack gap="lg" align="center">
+          <Stack gap="lg" align="stretch">
             {bottomButtons.map((buttonConfig, index) => {
               // Handle help button with menu or direct action
               if (buttonConfig.id === 'help') {
