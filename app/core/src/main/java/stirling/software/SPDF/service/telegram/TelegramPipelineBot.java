@@ -151,7 +151,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                                             + " channel id={}",
                                     chat.getId());
                         }
-                        if (from == null || !allowUserIDs.contains(from.getId().longValue())) {
+                        if (from == null || !allowUserIDs.contains(from.getId())) {
                             log.info(
                                     "Ignoring message {} from channel id={} due to user access"
                                             + " restrictions",
@@ -171,23 +171,6 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 default -> {
                     // private chats
                 }
-            }
-            boolean userAllowed =
-                    !telegramProperties.getEnableAllowUserIDs()
-                            || (from != null && allowUserIDs.contains(from.getId()));
-            boolean channelAllowed =
-                    !telegramProperties.getEnableAllowChannelIDs()
-                            || allowChannelIDs.contains(chat.getId());
-            if (!userAllowed && !channelAllowed) {
-                log.info(
-                        "Ignoring message {} from user id={} in chat id={} due to access restrictions",
-                        message.getMessageId(),
-                        from != null ? from.getId() : "unknown",
-                        chat.getId());
-                sendMessage(
-                        chat.getId(),
-                        "You are not authorized to use this bot. Please contact the administrator.");
-                return;
             }
         }
         if (from != null) {
