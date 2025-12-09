@@ -43,7 +43,7 @@ export const useConfigNavSections = (
       preferencesSection.items.push({
         key: 'account',
         label: t('account.accountSettings', 'Account'),
-        icon: 'account-circle-rounded',
+        icon: 'person-rounded',
         component: <AccountSection />
       });
     }
@@ -250,7 +250,7 @@ export const createConfigNavSections = (
       preferencesSection.items.push({
         key: 'account',
         label: 'Account',
-        icon: 'account-circle-rounded',
+        icon: 'person-rounded',
         component: <AccountSection />
       });
     }
