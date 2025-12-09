@@ -4,28 +4,23 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,22 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.RequestUriUtils;
-import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
-import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
-import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
-import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
-import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
-import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
-import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -61,6 +46,11 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @EnableWebSecurity
 @EnableMethodSecurity
 @DependsOn("runningProOrHigher")
+@ConditionalOnProperty(
+        prefix = "security.custom",
+        name = "enabled",
+        havingValue = "false",
+        matchIfMissing = true)
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
@@ -181,201 +171,57 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(
-            HttpSecurity http,
+            HttpSecurity http, SecurityChainConfigurer securityChainConfigurer) throws Exception {
+        return securityChainConfigurer.configure(http);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(SecurityChainConfigurer.class)
+    public SecurityChainConfigurer defaultSecurityChainConfigurer(
+            CustomUserDetailsService userDetailsService,
+            @Lazy UserService userService,
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            AppConfig appConfig,
+            ApplicationProperties applicationProperties,
+            ApplicationProperties.Security securityProperties,
+            UserAuthenticationFilter userAuthenticationFilter,
+            JwtServiceInterface jwtService,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            LoginAttemptService loginAttemptService,
+            SessionPersistentRegistry sessionRegistry,
+            CorsConfigurationSource corsConfigurationSource,
             @Lazy IPRateLimitingFilter rateLimitingFilter,
-            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
-            throws Exception {
-        // Enable CORS only if we have configured origins
-        CorsConfigurationSource corsSource = corsConfigurationSource();
-        if (corsSource != null) {
-            http.cors(cors -> cors.configurationSource(corsSource));
-        } else {
-            // Explicitly disable CORS when no origins are configured
-            http.cors(cors -> cors.disable());
-        }
-
-        http.csrf(CsrfConfigurer::disable);
-
-        if (loginEnabledValue) {
-            boolean v2Enabled = appConfig.v2Enabled();
-
-            http.addFilterBefore(
-                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
-
-            http.sessionManagement(
-                    sessionManagement -> {
-                        if (v2Enabled) {
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
-                        } else {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
-                                    .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true");
-                        }
-                    });
-            http.authenticationProvider(daoAuthenticationProvider());
-            http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
-
-            // Configure exception handling for API endpoints
-            http.exceptionHandling(
-                    exceptions ->
-                            exceptions.defaultAuthenticationEntryPointFor(
-                                    jwtAuthenticationEntryPoint,
-                                    request -> {
-                                        String contextPath = request.getContextPath();
-                                        String requestURI = request.getRequestURI();
-                                        return requestURI.startsWith(contextPath + "/api/");
-                                    }));
-
-            http.logout(
-                    logout ->
-                            logout.logoutRequestMatcher(
-                                            PathPatternRequestMatcher.withDefaults()
-                                                    .matcher("/logout"))
-                                    .logoutSuccessHandler(
-                                            new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
-                                    .clearAuthentication(true)
-                                    .invalidateHttpSession(true)
-                                    .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
-            http.rememberMe(
-                    rememberMeConfigurer -> // Use the configurator directly
-                    rememberMeConfigurer
-                                    .tokenRepository(persistentTokenRepository())
-                                    .tokenValiditySeconds( // 14 days
-                                            14 * 24 * 60 * 60)
-                                    .userDetailsService( // Your existing UserDetailsService
-                                            userDetailsService)
-                                    .useSecureCookie( // Enable secure cookie
-                                            true)
-                                    .rememberMeParameter( // Form parameter name
-                                            "remember-me")
-                                    .rememberMeCookieName( // Cookie name
-                                            "remember-me")
-                                    .alwaysRemember(false));
-            http.authorizeHttpRequests(
-                    authz ->
-                            authz.requestMatchers(
-                                            req -> {
-                                                String uri = req.getRequestURI();
-                                                String contextPath = req.getContextPath();
-                                                // Check if it's a public auth endpoint or static
-                                                // resource
-                                                return RequestUriUtils.isStaticResource(
-                                                                contextPath, uri)
-                                                        || RequestUriUtils.isPublicAuthEndpoint(
-                                                                uri, contextPath);
-                                            })
-                                    .permitAll()
-                                    .anyRequest()
-                                    .authenticated());
-            // Handle User/Password Logins
-            if (securityProperties.isUserPass()) {
-                // v2: Authentication is handled via API (/api/v1/auth/login), not form login
-                // We configure form login to handle Spring Security redirects,
-                // but use /perform_login as the processing URL so /login remains a React route
-                http.formLogin(
-                        formLogin ->
-                                formLogin
-                                        .loginPage("/login") // Redirect here when unauthenticated
-                                        .loginProcessingUrl(
-                                                "/perform_login") // Process form posts here (not
-                                        // /login)
-                                        .successHandler(
-                                                new CustomAuthenticationSuccessHandler(
-                                                        loginAttemptService,
-                                                        userService,
-                                                        jwtService))
-                                        .failureHandler(
-                                                new CustomAuthenticationFailureHandler(
-                                                        loginAttemptService, userService))
-                                        .permitAll());
-            }
-            // Handle OAUTH2 Logins
-            if (securityProperties.isOauth2Active()) {
-                http.oauth2Login(
-                        oauth2 -> {
-                            // v1: Use /oauth2 as login page for Thymeleaf templates
-                            if (!v2Enabled) {
-                                oauth2.loginPage("/oauth2");
-                            }
-
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
-                            oauth2
-                                    /*
-                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                       is set as true, else login fails with an error message advising the same.
-                                    */
-                                    .successHandler(
-                                            new CustomOAuth2AuthenticationSuccessHandler(
-                                                    loginAttemptService,
-                                                    securityProperties.getOauth2(),
-                                                    userService,
-                                                    jwtService,
-                                                    licenseSettingsService))
-                                    .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
-                                    // Add existing Authorities from the database
-                                    .userInfoEndpoint(
-                                            userInfoEndpoint ->
-                                                    userInfoEndpoint
-                                                            .oidcUserService(
-                                                                    new CustomOAuth2UserService(
-                                                                            securityProperties
-                                                                                    .getOauth2(),
-                                                                            userService,
-                                                                            loginAttemptService))
-                                                            .userAuthoritiesMapper(
-                                                                    oAuth2userAuthoritiesMapper))
-                                    .permitAll();
-                        });
-            }
-            // Handle SAML
-            if (securityProperties.isSaml2Active() && runningProOrHigher) {
-                OpenSaml4AuthenticationProvider authenticationProvider =
-                        new OpenSaml4AuthenticationProvider();
-                authenticationProvider.setResponseAuthenticationConverter(
-                        new CustomSaml2ResponseAuthenticationConverter(userService));
-                http.authenticationProvider(authenticationProvider)
-                        .saml2Login(
-                                saml2 -> {
-                                    try {
-                                        // Only set login page for v1/Thymeleaf mode
-                                        if (!v2Enabled) {
-                                            saml2.loginPage("/saml2");
-                                        }
-
-                                        saml2.relyingPartyRegistrationRepository(
-                                                        saml2RelyingPartyRegistrations)
-                                                .authenticationManager(
-                                                        new ProviderManager(authenticationProvider))
-                                                .successHandler(
-                                                        new CustomSaml2AuthenticationSuccessHandler(
-                                                                loginAttemptService,
-                                                                securityProperties.getSaml2(),
-                                                                userService,
-                                                                jwtService,
-                                                                licenseSettingsService))
-                                                .failureHandler(
-                                                        new CustomSaml2AuthenticationFailureHandler())
-                                                .authenticationRequestResolver(
-                                                        saml2AuthenticationRequestResolver);
-                                    } catch (Exception e) {
-                                        log.error("Error configuring SAML 2 login", e);
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-            }
-        } else {
-            log.debug("Login is not enabled.");
-            http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
-        }
-        return http.build();
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
+            @Autowired(required = false)
+                    RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
+            @Autowired(required = false)
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            stirling.software.proprietary.service.UserLicenseSettingsService
+                    licenseSettingsService) {
+        return new DefaultSecurityChainConfigurer(
+                userDetailsService,
+                userService,
+                loginEnabledValue,
+                runningProOrHigher,
+                appConfig,
+                applicationProperties,
+                securityProperties,
+                userAuthenticationFilter,
+                jwtService,
+                jwtAuthenticationEntryPoint,
+                loginAttemptService,
+                sessionRegistry,
+                corsConfigurationSource,
+                rateLimitingFilter,
+                jwtAuthenticationFilter,
+                oAuth2userAuthoritiesMapper,
+                saml2RelyingPartyRegistrations,
+                saml2AuthenticationRequestResolver,
+                licenseSettingsService,
+                persistentTokenRepository(),
+                daoAuthenticationProvider());
     }
 
     public DaoAuthenticationProvider daoAuthenticationProvider() {
