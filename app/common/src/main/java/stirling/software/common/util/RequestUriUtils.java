@@ -164,8 +164,7 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
-                || trimmedUri.startsWith("/v1/api-docs")
-                || trimmedUri.contains("/v1/api-docs");
+                || trimmedUri.startsWith("/v1/api-docs");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {
