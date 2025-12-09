@@ -4,6 +4,7 @@ import apiClient from '@app/services/apiClient'; // Our configured instance
 import { processResponse, ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { isEmptyOutput } from '@app/services/errorUtils';
 import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import type { StirlingFile, FileId } from '@app/types/fileContext';
 
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);
@@ -18,14 +19,14 @@ export const useToolApiCalls = <TParams = void>() => {
 
   const processFiles = useCallback(async (
     params: TParams,
-    validFiles: File[],
+    validFiles: StirlingFile[],
     config: ApiCallsConfig<TParams>,
     onProgress: (progress: ProcessingProgress) => void,
     onStatus: (status: string) => void,
-    markFileError?: (fileId: string) => void,
-  ): Promise<{ outputFiles: File[]; successSourceIds: string[] }> => {
+    markFileError?: (fileId: FileId) => void,
+  ): Promise<{ outputFiles: File[]; successSourceIds: FileId[] }> => {
     const processedFiles: File[] = [];
-    const successSourceIds: string[] = [];
+    const successSourceIds: FileId[] = [];
     const failedFiles: string[] = [];
     const total = validFiles.length;
 
@@ -35,7 +36,7 @@ export const useToolApiCalls = <TParams = void>() => {
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
 
-      console.debug('[processFiles] Start', { index: i, total, name: file.name, fileId: (file as any).fileId });
+      console.debug('[processFiles] Start', { index: i, total, name: file.name, fileId: file.fileId });
       onProgress({ current: i + 1, total, currentFileName: file.name });
       onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
@@ -47,7 +48,7 @@ export const useToolApiCalls = <TParams = void>() => {
           responseType: 'blob',
           cancelToken: cancelTokenRef.current?.token,
         });
-        console.debug('[processFiles] Response OK', { name: file.name, status: (response as any)?.status });
+        console.debug('[processFiles] Response OK', { name: file.name, status: response.status });
 
         // Forward to shared response processor (uses tool-specific responseHandler if provided)
         const responseFiles = await processResponse(
@@ -63,7 +64,7 @@ export const useToolApiCalls = <TParams = void>() => {
           console.warn('[processFiles] Empty output treated as failure', { name: file.name });
           failedFiles.push(file.name);
           try {
-            (markFileError as any)?.((file as any).fileId);
+            markFileError?.(file.fileId);
           } catch (e) {
             console.debug('markFileError', e);
           }
@@ -71,7 +72,7 @@ export const useToolApiCalls = <TParams = void>() => {
         }
         processedFiles.push(...responseFiles);
         // record source id as successful
-        successSourceIds.push((file as any).fileId);
+        successSourceIds.push(file.fileId);
         console.debug('[processFiles] Success', { name: file.name, produced: responseFiles.length });
 
       } catch (error) {
@@ -82,7 +83,7 @@ export const useToolApiCalls = <TParams = void>() => {
         failedFiles.push(file.name);
         // mark errored file so UI can highlight
         try {
-          (markFileError as any)?.((file as any).fileId);
+          markFileError?.(file.fileId);
         } catch (e) {
           console.debug('markFileError', e);
         }

@@ -27,6 +27,7 @@ import AdjustContrastSingleStepSettings from "@app/components/tools/adjustContra
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import GetPdfInfo from "@app/tools/GetPdfInfo";
 import AddWatermark from "@app/tools/AddWatermark";
 import AddStamp from "@app/tools/AddStamp";
 import AddAttachments from "@app/tools/AddAttachments";
@@ -151,6 +152,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Proprietary tools (if any)
       ...proprietaryTools,
       // Recommended Tools in order
+      pdfTextEditor: {
+        icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.pdfTextEditor.title", "PDF Text Editor"),
+        component: PdfTextEditor,
+        description: t(
+          "home.pdfTextEditor.desc",
+          "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+        ),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 1,
+        endpoints: ["text-editor-pdf"],
+        synonyms: getSynonyms(t, "pdfTextEditor"),
+        supportsAutomate: false,
+        automationSettings: null,
+        versionStatus: "alpha",
+      },
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
@@ -324,14 +342,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       getPdfInfo: {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: null,
+        component: GetPdfInfo,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
-        automationSettings: null
+        automationSettings: null,
+        maxFiles: 1,
       },
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
@@ -890,23 +909,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: redactOperationConfig,
         automationSettings: RedactSingleStepSettings,
         synonyms: getSynonyms(t, "redact")
-      },
-      pdfTextEditor: {
-        icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: PdfTextEditor,
-        description: t(
-          "home.pdfTextEditor.desc",
-          "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
-        ),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: 1,
-        endpoints: ["text-editor-pdf"],
-        synonyms: getSynonyms(t, "pdfTextEditor"),
-        supportsAutomate: false,
-        automationSettings: null,
-        versionStatus: "alpha",
       },
     };
 

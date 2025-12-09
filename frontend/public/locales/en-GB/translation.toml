@@ -3036,6 +3036,91 @@ title = "Get Info on PDF"
 header = "Get Info on PDF"
 submit = "Get Info"
 downloadJson = "Download JSON"
+processing = "Extracting information..."
+results = "Results"
+noResults = "Run the tool to generate a report."
+downloads = "Downloads"
+noneDetected = "None detected"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Full information summary"
+shortTitle = "PDF Information"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Form Fields"
+basicInfo = "Basic Info"
+documentInfo = "Document Info"
+compliance = "Compliance"
+encryption = "Encryption"
+permissions = "Permissions"
+other = "Other"
+perPageInfo = "Per Page Info"
+tableOfContents = "Table of Contents"
+
+[getPdfInfo.other]
+attachments = "Attachments"
+embeddedFiles = "Embedded Files"
+javaScript = "JavaScript"
+layers = "Layers"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Size"
+annotations = "Annotations"
+images = "Images"
+links = "Links"
+fonts = "Fonts"
+xobjects = "XObject Counts"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Pages"
+fileSize = "File Size"
+pdfVersion = "PDF Version"
+language = "Language"
+title = "PDF Summary"
+author = "Author"
+created = "Created"
+modified = "Modified"
+permsAll = "All Permissions Allowed"
+permsRestricted = "{{count}} restrictions"
+permsMixed = "Some permissions restricted"
+hasCompliance = "Has compliance standards"
+noCompliance = "No Compliance Standards"
+basic = "Basic Information"
+documentInfo = "Document Information"
+securityTitle = "Security Status"
+technical = "Technical"
+overviewTitle = "PDF Overview"
+
+[getPdfInfo.summary.security]
+encrypted = "Encrypted PDF - Password protection present"
+unencrypted = "Unencrypted PDF - No password protection"
+
+[getPdfInfo.summary.tech]
+images = "Images"
+fonts = "Fonts"
+formFields = "Form Fields"
+embeddedFiles = "Embedded Files"
+javaScript = "JavaScript"
+layers = "Layers"
+bookmarks = "Bookmarks"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "an untitled document"
+unknown = "Unknown Author"
+text = "This is a {{pages}}-page PDF titled {{title}} created by {{author}} (PDF version {{version}})."
+
+[getPdfInfo.error]
+partial = "Some files could not be processed."
+unexpected = "Unexpected error during extraction."
+
+[getPdfInfo.status]
+complete = "Extraction complete"
 
 [extractPage]
 tags = "extract"
@@ -3454,8 +3539,8 @@ signinTitle = "Please sign in"
 ssoSignIn = "Login via Single Sign-on"
 oAuth2AutoCreateDisabled = "OAUTH2 Auto-Create User Disabled"
 oAuth2AdminBlockedUser = "Registration or logging in of non-registered users is currently blocked. Please contact the administrator."
-oAuth2RequiresLicense = "OAuth/SSO login requires a paid license (Server or Enterprise). Please contact the administrator to upgrade your plan."
-saml2RequiresLicense = "SAML login requires a paid license (Server or Enterprise). Please contact the administrator to upgrade your plan."
+oAuth2RequiresLicense = "OAuth/SSO login requires a Server or Enterprise license. Please contact the administrator to upgrade your plan."
+saml2RequiresLicense = "SAML login requires an Enterprise license. Please contact the administrator to upgrade your plan."
 maxUsersReached = "Maximum number of users reached for your current license. Please contact the administrator to upgrade your plan or add more seats."
 oauth2RequestNotFound = "Authorization request not found"
 oauth2InvalidUserInfoResponse = "Invalid User Info Response"
@@ -5178,7 +5263,7 @@ upgrade = "Upgrade now →"
 freeTitle = "Server License"
 overLimitTitle = "Server License Needed"
 overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
-freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5816,6 +5901,7 @@ subtitle = "Sign in with your Stirling account"
 [setup.selfhosted]
 title = "Sign in to Server"
 subtitle = "Enter your server credentials"
+link = "or connect to a self-hosted account"
 
 [setup.server]
 title = "Connect to Server"
@@ -5834,6 +5920,14 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 emptyUrl = "Please enter a server URL"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
+configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+
+[setup.server.error.securityDisabled]
+title = "Login Not Enabled"
+body = "This server does not have login enabled. To connect to this server, you must enable authentication:"
+step1 = "Set DOCKER_ENABLE_SECURITY=true in your environment"
+step2 = "Or set security.enableLogin=true in settings.yml"
+step3 = "Restart the server"
 
 [setup.login]
 title = "Sign In"
@@ -5906,6 +6000,7 @@ earlyAccess = "Early Access"
 reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
+saveChanges = "Save Changes"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -5943,6 +6038,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
+dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"

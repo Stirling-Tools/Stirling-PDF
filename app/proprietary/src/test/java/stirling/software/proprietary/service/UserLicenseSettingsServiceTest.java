@@ -267,4 +267,222 @@ class UserLicenseSettingsServiceTest {
         verify(userService, times(1)).grandfatherAllOAuthUsers();
         verify(userService, times(1)).grandfatherPendingSsoUsersWithoutSession();
     }
+
+    // ===== OAuth Eligibility Tests =====
+
+    @Test
+    void isOAuthEligible_grandfatheredUser_returnsTrue() {
+        // Grandfathered user should be eligible regardless of license
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("grandfathered-user");
+        user.setOauthGrandfathered(true);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+
+        boolean result = service.isOAuthEligible(user);
+
+        assertEquals(true, result, "Grandfathered user should be eligible for OAuth");
+    }
+
+    @Test
+    void isOAuthEligible_nonGrandfatheredUserWithServerLicense_returnsTrue() {
+        // Non-grandfathered user with SERVER license should be eligible
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+
+        boolean result = service.isOAuthEligible(user);
+
+        assertEquals(true, result, "Non-grandfathered user with SERVER license should be eligible");
+    }
+
+    @Test
+    void isOAuthEligible_nonGrandfatheredUserWithEnterpriseLicense_returnsTrue() {
+        // Non-grandfathered user with ENTERPRISE license should be eligible
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+
+        boolean result = service.isOAuthEligible(user);
+
+        assertEquals(
+                true, result, "Non-grandfathered user with ENTERPRISE license should be eligible");
+    }
+
+    @Test
+    void isOAuthEligible_nonGrandfatheredUserWithNoLicense_returnsFalse() {
+        // Non-grandfathered user without license should NOT be eligible
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+
+        boolean result = service.isOAuthEligible(user);
+
+        assertEquals(
+                false,
+                result,
+                "Non-grandfathered user without paid license should NOT be eligible");
+    }
+
+    @Test
+    void isOAuthEligible_newUserWithServerLicense_returnsTrue() {
+        // New user (null) with SERVER license should be eligible for auto-creation
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+
+        boolean result = service.isOAuthEligible(null);
+
+        assertEquals(
+                true, result, "New user with SERVER license should be eligible for auto-creation");
+    }
+
+    @Test
+    void isOAuthEligible_newUserWithNoLicense_returnsFalse() {
+        // New user (null) without license should NOT be eligible
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+
+        boolean result = service.isOAuthEligible(null);
+
+        assertEquals(
+                false,
+                result,
+                "New user without paid license should NOT be eligible for auto-creation");
+    }
+
+    @Test
+    void isOAuthEligible_licenseCheckerUnavailable_returnsFalse() {
+        // If LicenseKeyChecker is unavailable, OAuth should be blocked
+        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
+
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        boolean result = service.isOAuthEligible(user);
+
+        assertEquals(
+                false, result, "OAuth should be blocked when LicenseKeyChecker is unavailable");
+    }
+
+    // ===== SAML Eligibility Tests =====
+
+    @Test
+    void isSamlEligible_grandfatheredUser_returnsTrue() {
+        // Grandfathered user should be eligible for SAML regardless of license
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("grandfathered-user");
+        user.setOauthGrandfathered(true);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+
+        boolean result = service.isSamlEligible(user);
+
+        assertEquals(true, result, "Grandfathered user should be eligible for SAML");
+    }
+
+    @Test
+    void isSamlEligible_nonGrandfatheredUserWithEnterpriseLicense_returnsTrue() {
+        // Non-grandfathered user with ENTERPRISE license should be eligible
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+
+        boolean result = service.isSamlEligible(user);
+
+        assertEquals(
+                true,
+                result,
+                "Non-grandfathered user with ENTERPRISE license should be eligible for SAML");
+    }
+
+    @Test
+    void isSamlEligible_nonGrandfatheredUserWithServerLicense_returnsFalse() {
+        // Non-grandfathered user with SERVER license should NOT be eligible for SAML
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+
+        boolean result = service.isSamlEligible(user);
+
+        assertEquals(
+                false,
+                result,
+                "Non-grandfathered user with SERVER license should NOT be eligible for SAML");
+    }
+
+    @Test
+    void isSamlEligible_nonGrandfatheredUserWithNoLicense_returnsFalse() {
+        // Non-grandfathered user without license should NOT be eligible
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+
+        boolean result = service.isSamlEligible(user);
+
+        assertEquals(
+                false,
+                result,
+                "Non-grandfathered user without ENTERPRISE license should NOT be eligible for SAML");
+    }
+
+    @Test
+    void isSamlEligible_newUserWithEnterpriseLicense_returnsTrue() {
+        // New user (null) with ENTERPRISE license should be eligible for auto-creation
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+
+        boolean result = service.isSamlEligible(null);
+
+        assertEquals(
+                true,
+                result,
+                "New user with ENTERPRISE license should be eligible for SAML auto-creation");
+    }
+
+    @Test
+    void isSamlEligible_newUserWithServerLicense_returnsFalse() {
+        // New user (null) with SERVER license should NOT be eligible for SAML
+        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+
+        boolean result = service.isSamlEligible(null);
+
+        assertEquals(
+                false,
+                result,
+                "New user with SERVER license should NOT be eligible for SAML (requires ENTERPRISE)");
+    }
+
+    @Test
+    void isSamlEligible_licenseCheckerUnavailable_returnsFalse() {
+        // If LicenseKeyChecker is unavailable, SAML should be blocked
+        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
+
+        stirling.software.proprietary.security.model.User user =
+                new stirling.software.proprietary.security.model.User();
+        user.setUsername("test-user");
+        user.setOauthGrandfathered(false);
+
+        boolean result = service.isSamlEligible(user);
+
+        assertEquals(false, result, "SAML should be blocked when LicenseKeyChecker is unavailable");
+    }
 }

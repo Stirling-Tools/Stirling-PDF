@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import com.posthog.java.PostHog;
 
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
@@ -34,7 +33,6 @@ public class PostHogService {
     private final String uniqueId;
     private final String appVersion;
     private final ApplicationProperties applicationProperties;
-    private final RuntimePathConfig runtimePathConfig;
     private final UserServiceInterface userService;
     private final Environment env;
     private boolean configDirMounted;
@@ -45,14 +43,12 @@ public class PostHogService {
             @Qualifier("configDirMounted") boolean configDirMounted,
             @Qualifier("appVersion") String appVersion,
             ApplicationProperties applicationProperties,
-            RuntimePathConfig runtimePathConfig,
             @Autowired(required = false) UserServiceInterface userService,
             Environment env) {
         this.postHog = postHog;
         this.uniqueId = uuid;
         this.appVersion = appVersion;
         this.applicationProperties = applicationProperties;
-        this.runtimePathConfig = runtimePathConfig;
         this.userService = userService;
         this.env = env;
         this.configDirMounted = configDirMounted;
@@ -258,10 +254,7 @@ public class PostHogService {
                 properties,
                 "security_enableLogin",
                 applicationProperties.getSecurity().isEnableLogin());
-        addIfNotEmpty(
-                properties,
-                "security_csrfDisabled",
-                applicationProperties.getSecurity().isCsrfDisabled());
+        addIfNotEmpty(properties, "security_csrfDisabled", true);
         addIfNotEmpty(
                 properties,
                 "security_loginAttemptCount",
@@ -317,7 +310,10 @@ public class PostHogService {
                 properties,
                 "system_customHTMLFiles",
                 applicationProperties.getSystem().isCustomHTMLFiles());
-        addIfNotEmpty(properties, "system_tessdataDir", runtimePathConfig.getTessDataPath());
+        addIfNotEmpty(
+                properties,
+                "system_tessdataDir",
+                applicationProperties.getSystem().getTessdataDir());
         addIfNotEmpty(
                 properties,
                 "system_enableAlphaFunctionality",
@@ -401,7 +397,7 @@ public class PostHogService {
                 if (hardwareAddress != null) {
                     String[] hexadecimal = new String[hardwareAddress.length];
                     for (int i = 0; i < hardwareAddress.length; i++) {
-                        hexadecimal[i] = String.format(Locale.ROOT, "%02X", hardwareAddress[i]);
+                        hexadecimal[i] = String.format("%02X", hardwareAddress[i]);
                     }
                     return String.join("-", hexadecimal);
                 }
