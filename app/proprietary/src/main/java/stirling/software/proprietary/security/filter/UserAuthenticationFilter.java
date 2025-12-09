@@ -274,11 +274,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // Skip filter for Swagger UI - let Spring Security handle authentication
-        if (RequestUriUtils.isSwaggerUiEndpoint(uri, contextPath)) {
-            return true;
-        }
-
         // For API routes, only skip filter for these public endpoints
         String[] publicApiPatterns = {
             contextPath + "/api/v1/info/status",

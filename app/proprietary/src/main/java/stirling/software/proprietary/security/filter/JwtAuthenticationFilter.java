@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.filter;
 
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
-import static stirling.software.common.util.RequestUriUtils.isSwaggerUiEndpoint;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 import static stirling.software.proprietary.security.model.AuthenticationType.WEB;
@@ -63,12 +62,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
 
         if (isStaticResource(contextPath, requestURI)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Allow Swagger UI endpoints to pass through - Spring Security will handle auth
-        if (isSwaggerUiEndpoint(requestURI, contextPath)) {
             filterChain.doFilter(request, response);
             return;
         }
