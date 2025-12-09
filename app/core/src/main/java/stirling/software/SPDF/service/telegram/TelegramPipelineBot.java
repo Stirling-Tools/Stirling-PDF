@@ -137,6 +137,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                         String.format(
                                 "File mime type %s is not allowed. Allowed types are: %s",
                                 mimeType, String.join(", ", allowedMimeTypes)));
+                return;
             }
         }
         try {
