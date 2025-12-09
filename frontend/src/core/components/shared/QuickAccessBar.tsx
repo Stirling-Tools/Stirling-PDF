@@ -218,7 +218,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       {isOverflow && (
         <Divider
           size="xs"
-          style={{ width: '3rem', margin: '0 auto', display: 'block' }}
+          className="overflow-divider"
         />
       )}
 
@@ -245,7 +245,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           {middleButtons.length === 0 && (
             <Divider
               size="xs"
-              style={{ width: '3rem', margin: '1rem auto', display: 'block' }}
+              className="content-divider"
             />
           )}
 
@@ -254,7 +254,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             <>
               <Divider
                 size="xs"
-                style={{ width: '3rem', margin: '1rem auto', display: 'block' }}
+                className="content-divider"
               />
               <Stack gap="lg" align="stretch">
                 {middleButtons.map((config, index) => (

@@ -84,14 +84,6 @@
   gap: 0.5rem;
 }
 
-/* Nav header divider */
-.nav-header-divider {
-  width: 3rem;
-  border-color: var(--color-gray-300);
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-}
-
 /* All tools text styles */
 .all-tools-text {
   margin-top: 0.75rem;
@@ -139,8 +131,6 @@
 /* Button text styles */
 .button-text {
   margin-top: 0.75rem;
-  margin-left: 0;
-  margin-right: 0;
   font-size: 0.75rem;
   text-rendering: optimizeLegibility;
   font-synthesis: none;
@@ -269,27 +259,9 @@
   }
 }
 
-/* Divider that animates growing from top */
+/* Divider under active tool indicator */
 .current-tool-divider {
   width: 3rem;
   border-color: var(--color-gray-300);
-  margin: 0.5rem auto 0.5rem auto;
-  transform-origin: top;
-  animation: dividerGrowDown 350ms ease-out;
-  animation-fill-mode: both;
-}
-
-@keyframes dividerGrowDown {
-  0% {
-    transform: scaleY(0);
-    opacity: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-  100% {
-    transform: scaleY(1);
-    opacity: 1;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
+  margin: 0.75rem auto 0;
 }

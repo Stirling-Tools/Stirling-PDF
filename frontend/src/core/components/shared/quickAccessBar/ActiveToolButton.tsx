@@ -197,7 +197,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
             </div>
             <Divider
               size="xs"
-              style={{ width: '3rem', margin: '0.75rem auto 0', display: 'block' }}
+              className="current-tool-divider"
             />
           </div>
         )}
