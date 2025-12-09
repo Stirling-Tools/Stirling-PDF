@@ -511,6 +511,10 @@ oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -5088,6 +5092,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
