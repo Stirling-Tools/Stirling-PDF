@@ -29,8 +29,23 @@ function generateSecurePassword() {
   const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789@$!%*?&';
   const length = 14;
   let password = '';
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length);
+  const charsetLength = charset.length;
+  const uint8Array = new Uint8Array(length);
+  window.crypto.getRandomValues(uint8Array);
+  // To avoid modulo bias, discard values >= 256 - (256 % charsetLength)
+  for (let i = 0; password.length < length; ) {
+    const randomByte = uint8Array[i];
+    i++;
+    if (randomByte >= Math.floor(256 / charsetLength) * charsetLength) {
+      // Discard and generate a new random value
+      if (i >= uint8Array.length) {
+        // Exhausted the array, fill a new one
+        window.crypto.getRandomValues(uint8Array);
+        i = 0;
+      }
+      continue;
+    }
+    const randomIndex = randomByte % charsetLength;
     password += charset[randomIndex];
   }
   return password;
