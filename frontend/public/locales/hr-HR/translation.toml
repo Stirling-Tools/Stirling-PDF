@@ -5177,7 +5177,7 @@ upgrade = "Nadogradi odmah →"
 freeTitle = "Poslužiteljska licenca"
 overLimitTitle = "Potrebna poslužiteljska licenca"
 overLimitBody = "Naše licenciranje dopušta do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Imate <strong>{{overLimitUserCopy}}</strong> Stirling korisnika. Za nesmetan nastavak, nadogradite na Stirling Server plan - <strong>neograničena mjesta</strong>, uređivanje teksta u PDF-u i puna admin kontrola za $99/server/mo."
-freeBody = "Naše <strong>Open-Core</strong> licenciranje dopušta do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Za nesmetano skaliranje i rani pristup našem novom <strong>alatu za uređivanje teksta u PDF-u</strong>, preporučujemo Stirling Server plan - potpuno uređivanje i <strong>neograničena mjesta</strong> za $99/server/mo."
+freeBody = "Naše licenciranje <strong>Open-Core</strong> omogućuje do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Za neometano skaliranje preporučujemo Stirling Server plan - <strong>neograničena mjesta</strong> i <strong>podrška za SSO</strong> za $99/poslužitelj/mj."
 
 [onboarding.desktopInstall]
 title = "Preuzimanje"

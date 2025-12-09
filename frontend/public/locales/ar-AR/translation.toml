@@ -3828,8 +3828,8 @@ title = "التحليلات"
 description = "تساعدنا هذه الملفات على فهم كيفية استخدام أدواتنا، كي نركّز على بناء الميزات الأكثر قيمة لمجتمعنا. كن مطمئنًا—‏Stirling PDF لا يمكنه ولن يتتبع محتوى المستندات التي تعمل عليها."
 
 [cookieBanner.services]
-posthog = "PostHog Analytics"
-scarf = "Scarf Pixel"
+posthog = "تحليلات PostHog"
+scarf = "Scarf بكسل"
 
 [removeMetadata]
 submit = "إزالة البيانات الوصفية"
@@ -5177,7 +5177,7 @@ upgrade = "الترقية الآن →"
 freeTitle = "ترخيص الخادم"
 overLimitTitle = "مطلوب ترخيص خادم"
 overLimitBody = "ترخيصنا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. لديك <strong>{{overLimitUserCopy}}</strong> مستخدمي Stirling. للمتابعة دون انقطاع، ارقَ إلى خطة خادم Stirling - <strong>مقاعد غير محدودة</strong>، تحرير نصوص PDF، وتحكم إداري كامل مقابل $99/خادم/شهرياً."
-freeBody = "ترخيص <strong>Open-Core</strong> لدينا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. للتوسع بسلاسة والحصول على وصول مبكر إلى <strong>أداة تحرير نصوص PDF</strong> الجديدة، نوصي بخطة خادم Stirling - تحرير كامل و<strong>مقاعد غير محدودة</strong> مقابل $99/خادم/شهرياً."
+freeBody = "يتيح ترخيصنا <strong>Open-Core</strong> ما يصل إلى <strong>{{freeTierLimit}}</strong> مستخدمًا مجانًا لكل خادم. للتوسع دون انقطاع، نوصي بخطة Stirling Server - <strong>مقاعد غير محدودة</strong> و<strong>دعم SSO</strong> مقابل $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "تنزيل"
