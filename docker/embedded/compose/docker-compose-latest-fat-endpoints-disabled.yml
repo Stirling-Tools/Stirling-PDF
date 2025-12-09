@@ -18,7 +18,7 @@ services:
       - ./stirling/latest/data:/usr/share/tessdata:rw
       - ./stirling/latest/config:/configs:rw
       - ./stirling/latest/logs:/logs:rw
-      - ../testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
+      - ./testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
