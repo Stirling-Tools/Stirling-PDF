@@ -38,7 +38,10 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
 
   try {
     const tourRequested = sessionStorage.getItem(SESSION_TOUR_REQUESTED) === 'true';
-    const tourType = (sessionStorage.getItem(SESSION_TOUR_TYPE) as 'admin' | 'tools') || 'tools';
+    const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
+    const tourType = (sessionTourType === 'admin' || sessionTourType === 'tools' || sessionTourType === 'whatsnew')
+      ? sessionTourType
+      : 'whatsnew';
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as 'admin' | 'user' | null;
 
     return {

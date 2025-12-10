@@ -166,7 +166,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const bottomButtons: ButtonConfig[] = [
     {
       id: 'help',
-      name: t("quickAccess.help", "Help"),
+      name: t("quickAccess.tours", "Tours"),
       icon: <LocalIcon icon="help-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
       size: 'md',
@@ -192,6 +192,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
+      data-tour="quick-access-bar"
       className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}
@@ -247,21 +248,30 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               // Handle help button with menu or direct action
               if (buttonConfig.id === 'help') {
                 const isAdmin = config?.isAdmin === true;
+                const tourItems = [
+                  {
+                    key: 'whatsnew',
+                    icon: <LocalIcon icon="auto-awesome-rounded" width="1.25rem" height="1.25rem" />,
+                    title: t("quickAccess.helpMenu.whatsNewTour", "See what's new in V2"),
+                    description: t("quickAccess.helpMenu.whatsNewTourDesc", "Tour the updated layout"),
+                    onClick: () => requestStartTour('whatsnew'),
+                  },
+                  {
+                    key: 'tools',
+                    icon: <LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />,
+                    title: t("quickAccess.helpMenu.toolsTour", "Tools Tour"),
+                    description: t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do"),
+                    onClick: () => requestStartTour('tools'),
+                  },
+                  ...(isAdmin ? [{
+                    key: 'admin',
+                    icon: <LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />,
+                    title: t("quickAccess.helpMenu.adminTour", "Admin Tour"),
+                    description: t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features"),
+                    onClick: () => requestStartTour('admin'),
+                  }] : []),
+                ];
 
-                // If not admin, just show button that starts tools tour directly
-                if (!isAdmin) {
-                  return (
-                    <div
-                      key={buttonConfig.id}
-                      data-tour="help-button"
-                      onClick={() => requestStartTour('tools')}
-                    >
-                      {renderNavButton(buttonConfig, index)}
-                    </div>
-                  );
-                }
-
-                // If admin, show menu with both options
                 return (
                   <div key={buttonConfig.id} data-tour="help-button">
                     <Menu position={isRTL ? 'left' : 'right'} offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
@@ -269,32 +279,22 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         <div>{renderNavButton(buttonConfig, index)}</div>
                       </Menu.Target>
                       <Menu.Dropdown>
-                        <Menu.Item
-                          leftSection={<LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() => requestStartTour('tools')}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 500 }}>
-                              {t("quickAccess.helpMenu.toolsTour", "Tools Tour")}
+                        {tourItems.map((item) => (
+                          <Menu.Item
+                            key={item.key}
+                            leftSection={item.icon}
+                            onClick={item.onClick}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 500 }}>
+                                {item.title}
+                              </div>
+                              <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                                {item.description}
+                              </div>
                             </div>
-                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                              {t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do")}
-                            </div>
-                          </div>
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />}
-                          onClick={() => requestStartTour('admin')}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 500 }}>
-                              {t("quickAccess.helpMenu.adminTour", "Admin Tour")}
-                            </div>
-                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                              {t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features")}
-                            </div>
-                          </div>
-                        </Menu.Item>
+                          </Menu.Item>
+                        ))}
                       </Menu.Dropdown>
                     </Menu>
                   </div>

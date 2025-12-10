@@ -19,7 +19,7 @@ export type OnboardingStepType =
 export interface OnboardingRuntimeState {
   selectedRole: 'admin' | 'user' | null;
   tourRequested: boolean;
-  tourType: 'admin' | 'tools';
+  tourType: 'admin' | 'tools' | 'whatsnew';
   isDesktopApp: boolean;
   desktopSlideDisabled: boolean;
   analyticsNotConfigured: boolean;
@@ -50,7 +50,7 @@ export interface OnboardingStep {
 export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   selectedRole: null,
   tourRequested: false,
-  tourType: 'tools',
+  tourType: 'whatsnew',
   isDesktopApp: false,
   analyticsNotConfigured: false,
   analyticsEnabled: false,

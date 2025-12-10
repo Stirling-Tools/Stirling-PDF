@@ -20,6 +20,7 @@ import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import { useAdminTourOrchestration } from '@app/contexts/AdminTourOrchestrationContext';
 import { createUserStepsConfig } from '@app/components/onboarding/userStepsConfig';
 import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsConfig';
+import { createWhatsNewStepsConfig } from '@app/components/onboarding/whatsNewStepsConfig';
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useServerExperience } from '@app/hooks/useServerExperience';
@@ -93,7 +94,7 @@ export default function Onboarding() {
       case 'security-next':
         if (!runtimeState.selectedRole) return;
         if (runtimeState.selectedRole !== 'admin') {
-          actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
+          actions.updateRuntimeState({ tourRequested: true, tourType: 'whatsnew' });
         }
         actions.complete();
         break;
@@ -102,11 +103,11 @@ export default function Onboarding() {
         actions.complete();
         break;
       case 'launch-tools':
-        actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
+        actions.updateRuntimeState({ tourRequested: true, tourType: 'whatsnew' });
         actions.complete();
         break;
       case 'launch-auto': {
-        const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'tools';
+        const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'whatsnew';
         actions.updateRuntimeState({ tourRequested: true, tourType });
         actions.complete();
         break;
@@ -165,6 +166,22 @@ export default function Onboarding() {
     [t, tourOrch, closeFilesModal, openFilesModal]
   );
 
+  const whatsNewStepsConfig = useMemo(
+    () => createWhatsNewStepsConfig({
+      t,
+      actions: {
+        saveWorkbenchState: tourOrch.saveWorkbenchState,
+        closeFilesModal,
+        backToAllTools: tourOrch.backToAllTools,
+        openFilesModal,
+        loadSampleFile: tourOrch.loadSampleFile,
+        switchToViewer: tourOrch.switchToViewer,
+        selectFirstFile: tourOrch.selectFirstFile,
+      },
+    }),
+    [t, tourOrch, closeFilesModal, openFilesModal]
+  );
+
   const adminStepsConfig = useMemo(
     () => createAdminStepsConfig({
       t,
@@ -179,9 +196,15 @@ export default function Onboarding() {
   );
 
   const tourSteps = useMemo<StepType[]>(() => {
-    const config = runtimeState.tourType === 'admin' ? adminStepsConfig : userStepsConfig;
-    return Object.values(config);
-  }, [adminStepsConfig, runtimeState.tourType, userStepsConfig]);
+    switch (runtimeState.tourType) {
+      case 'admin':
+        return Object.values(adminStepsConfig);
+      case 'whatsnew':
+        return Object.values(whatsNewStepsConfig);
+      default:
+        return Object.values(userStepsConfig);
+    }
+  }, [adminStepsConfig, runtimeState.tourType, userStepsConfig, whatsNewStepsConfig]);
 
   useEffect(() => {
     if (currentStep?.id === 'tour' && !isTourOpen) {
