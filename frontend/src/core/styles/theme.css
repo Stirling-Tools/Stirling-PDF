@@ -620,6 +620,10 @@
   --paper-border-color: rgb(158, 158, 158) !important;
 }
 
+[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
+  color: rgb(221, 221, 221) !important;
+}
+
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
   background-color: #0A8BFF !important;
