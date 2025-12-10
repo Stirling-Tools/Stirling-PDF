@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -32,7 +33,6 @@ import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -143,7 +143,9 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                         if (allowChannelIDs.isEmpty()) {
                             // All channels are allowed, but log a warning
                             log.warn(
-                                    "No allowed channel IDs configured, allowing all channels access. Channel with id={} sent a message in chat id={}",
+                                    "No allowed channel IDs configured, allowing all channels"
+                                            + " access. Channel with id={} sent a message in chat"
+                                            + " id={}",
                                     senderChat != null ? senderChat.getId() : "unknown",
                                     chat.getId());
                         }
@@ -169,7 +171,8 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                         if (allowUserIDs.isEmpty()) {
                             // All users are allowed, but log a warning
                             log.warn(
-                                    "No allowed user IDs configured, allowing all users access. User with id={} sent a message in private chat id={}",
+                                    "No allowed user IDs configured, allowing all users access."
+                                            + " User with id={} sent a message in private chat id={}",
                                     from != null ? from.getId() : "unknown",
                                     chat.getId());
                         }
@@ -184,9 +187,13 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             }
         }
 
-        if (message.hasDocument() || message.hasPhoto()) {
+        if (message.hasDocument()) {
             handleIncomingFile(message);
+            return;
         }
+        sendMessage(
+                chat.getId(),
+                "No valid file found in the message. Please send a document to process.");
     }
 
     @Override
@@ -257,17 +264,6 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         if (message.hasDocument()) {
             return downloadDocument(message);
         }
-        if (message.hasPhoto()) {
-            PhotoSize photo =
-                    message.getPhoto().stream()
-                            .max(Comparator.comparing(PhotoSize::getFileSize))
-                            .orElseThrow(
-                                    () -> new IllegalStateException("Photo could not be loaded"));
-            return downloadFile(
-                    photo.getFileId(),
-                    "photo-" + message.getMessageId() + ".jpg",
-                    message.getCaption());
-        }
         throw new IllegalArgumentException("Unsupported file type");
     }
 
@@ -277,18 +273,10 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         String filename = document.getFileName();
         String name =
                 StringUtils.isNotBlank(filename) ? filename : document.getFileUniqueId() + ".bin";
-        // Check file mime type and file size
-        // long maxFileSize = 100 * 1024 * 1024; // 100MB per file
-        // if (document.getFileSize() > maxFileSize) {
-        //     throw new IOException(
-        //             String.format(
-        //                     "File size %d exceeds maximum allowed size of %d bytes",
-        //                     document.getFileSize(), maxFileSize));
-        // }
-        return downloadFile(document.getFileId(), name, null);
+        return downloadFile(document.getFileId(), name, message);
     }
 
-    private PipelineFileInfo downloadFile(String fileId, String originalName, String caption)
+    private PipelineFileInfo downloadFile(String fileId, String originalName, Message message)
             throws TelegramApiException, IOException {
 
         GetFile getFile = new GetFile(fileId);
@@ -300,19 +288,34 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         URL downloadUrl = buildDownloadUrl(telegramFile.getFilePath());
 
-        String inboxFolder =
-                StringUtils.isNotBlank(caption)
-                        ? caption.trim()
-                        : telegramProperties.getPipelineInboxFolder();
+        Chat chat = message.getChat();
+        Long chatId = chat != null ? chat.getId() : null;
 
-        Path targetDir = Paths.get(runtimePathConfig.getPipelineWatchedFoldersPath(), inboxFolder);
-        Files.createDirectories(targetDir);
+        Path baseInbox =
+                Paths.get(
+                        runtimePathConfig.getPipelineWatchedFoldersPath(),
+                        telegramProperties.getPipelineInboxFolder());
+
+        Files.createDirectories(baseInbox);
+
+        Path inboxFolder =
+                Optional.ofNullable(chatId)
+                        .map(Object::toString)
+                        .map(String::trim)
+                        .filter(StringUtils::isNotBlank)
+                        .map(baseInbox::resolve) // Unterordner: baseInbox + "/" + chatId
+                        .orElse(baseInbox); // fallback: nur der Basisordner
+
+        // Jetzt den eigentlichen Zielordner (mit chatId oder ohne) anlegen
+        Files.createDirectories(inboxFolder);
 
         String uniqueBaseName = FilenameUtils.getBaseName(originalName) + "-" + UUID.randomUUID();
         String extension = FilenameUtils.getExtension(originalName);
+
         String targetFilename =
                 extension.isBlank() ? uniqueBaseName : uniqueBaseName + "." + extension;
-        Path targetFile = targetDir.resolve(targetFilename);
+
+        Path targetFile = inboxFolder.resolve(targetFilename);
 
         try (InputStream inputStream = downloadUrl.openStream()) {
             Files.copy(inputStream, targetFile);
