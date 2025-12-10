@@ -3036,6 +3036,91 @@ title = "取得 PDF 資訊"
 header = "取得 PDF 資訊"
 submit = "取得資訊"
 downloadJson = "下載 JSON"
+processing = "正在擷取資訊..."
+results = "結果"
+noResults = "執行此工具以產生報告。"
+downloads = "下載"
+noneDetected = "未偵測到"
+indexTitle = "索引"
+
+[getPdfInfo.report]
+entryLabel = "完整資訊摘要"
+shortTitle = "PDF 資訊"
+
+[getPdfInfo.sections]
+metadata = "中繼資料"
+formFields = "表單欄位"
+basicInfo = "基本資訊"
+documentInfo = "文件資訊"
+compliance = "符合性"
+encryption = "加密"
+permissions = "權限"
+other = "其他"
+perPageInfo = "每頁資訊"
+tableOfContents = "目錄"
+
+[getPdfInfo.other]
+attachments = "附件"
+embeddedFiles = "內嵌檔案"
+javaScript = "JavaScript"
+layers = "圖層"
+structureTree = "結構樹"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "尺寸"
+annotations = "註解"
+images = "影像"
+links = "連結"
+fonts = "字型"
+xobjects = "XObject 數量"
+multimedia = "多媒體"
+
+[getPdfInfo.summary]
+pages = "頁數"
+fileSize = "檔案大小"
+pdfVersion = "PDF 版本"
+language = "語言"
+title = "PDF 摘要"
+author = "作者"
+created = "建立時間"
+modified = "修改時間"
+permsAll = "允許所有權限"
+permsRestricted = "{{count}} 個限制"
+permsMixed = "部分權限受限"
+hasCompliance = "具有符合性標準"
+noCompliance = "無符合性標準"
+basic = "基本資訊"
+documentInfo = "文件資訊"
+securityTitle = "安全性狀態"
+technical = "技術資訊"
+overviewTitle = "PDF 概覽"
+
+[getPdfInfo.summary.security]
+encrypted = "已加密的 PDF - 具有密碼保護"
+unencrypted = "未加密的 PDF - 無密碼保護"
+
+[getPdfInfo.summary.tech]
+images = "影像"
+fonts = "字型"
+formFields = "表單欄位"
+embeddedFiles = "內嵌檔案"
+javaScript = "JavaScript"
+layers = "圖層"
+bookmarks = "書籤"
+multimedia = "多媒體"
+
+[getPdfInfo.summary.overview]
+untitled = "未命名文件"
+unknown = "作者不詳"
+text = "這是一份 {{pages}} 頁的 PDF，標題為 {{title}}，作者 {{author}}（PDF 版本 {{version}}）。"
+
+[getPdfInfo.error]
+partial = "部分檔案無法處理。"
+unexpected = "擷取過程發生非預期錯誤。"
+
+[getPdfInfo.status]
+complete = "擷取完成"
 
 [extractPage]
 tags = "提取"
@@ -5177,7 +5262,7 @@ upgrade = "立即升級 →"
 freeTitle = "伺服器授權"
 overLimitTitle = "需要伺服器授權"
 overLimitBody = "我們的授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。你有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 使用者。若要不中斷使用，請升級至 Stirling Server 方案 - <strong>不限席次</strong>、PDF 文字編輯，以及完整管理控制，每台伺服器 $99/月。"
-freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充並搶先體驗全新的 <strong>PDF 文字編輯工具</strong>，建議升級至 Stirling Server 方案 - 完整編輯與 <strong>不限席次</strong>，每台伺服器 $99/月。"
+freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充，我們建議選用 Stirling Server 方案 - <strong>不限席次</strong> 與 <strong>SSO 支援</strong>，每伺服器每月 $99。"
 
 [onboarding.desktopInstall]
 title = "下載"
@@ -5281,6 +5366,31 @@ error = "更新使用者狀態失敗"
 [workspace.people.delete]
 success = "已成功刪除使用者"
 error = "刪除使用者失敗"
+
+[workspace.people.changePassword]
+action = "變更密碼"
+title = "變更密碼"
+subtitle = "為使用者更新密碼"
+newPassword = "新密碼"
+confirmPassword = "確認密碼"
+placeholder = "輸入新密碼"
+confirmPlaceholder = "再次輸入新密碼"
+passwordRequired = "請輸入新密碼"
+passwordMismatch = "密碼不相符"
+generateRandom = "產生安全密碼"
+generatedPreview = "產生的密碼："
+copyTooltip = "複製到剪貼簿"
+copiedToClipboard = "已將密碼複製到剪貼簿"
+copyFailed = "無法複製密碼"
+sendEmail = "以 Email 通知使用者此變更"
+includePassword = "在 Email 中包含新密碼"
+forcePasswordChange = "強制使用者下次登入時變更密碼"
+emailUnavailable = "此使用者的 Email 不是有效的 Email 位址。已停用通知。"
+smtpDisabled = "Email 通知需要在設定中啟用 SMTP。"
+notifyOnly = "將傳送不含密碼的 Email，通知使用者管理員已變更其密碼。"
+submit = "更新密碼"
+success = "密碼已成功更新"
+error = "更新密碼失敗"
 
 [workspace.people.emailInvite]
 tab = "電子郵件邀請"
@@ -5815,6 +5925,7 @@ subtitle = "使用你的 Stirling 帳戶登入"
 [setup.selfhosted]
 title = "登入伺服器"
 subtitle = "輸入你的伺服器認證資訊"
+link = "或連線到自行託管的帳戶"
 
 [setup.server]
 title = "連線至伺服器"
@@ -5833,6 +5944,14 @@ description = "輸入你自託管 Stirling PDF 伺服器的完整 URL"
 emptyUrl = "請輸入伺服器 URL"
 unreachable = "無法連線至伺服器"
 testFailed = "連線測試失敗"
+configFetch = "無法擷取伺服器組態。請檢查 URL 後再試一次。"
+
+[setup.server.error.securityDisabled]
+title = "未啟用登入"
+body = "此伺服器未啟用登入。若要連線至此伺服器，您必須啟用驗證："
+step1 = "在您的環境中設定 DOCKER_ENABLE_SECURITY=true"
+step2 = "或在 settings.yml 中將 security.enableLogin 設為 true"
+step3 = "重新啟動伺服器"
 
 [setup.login]
 title = "登入"
@@ -5905,6 +6024,7 @@ earlyAccess = "搶先體驗"
 reset = "重設變更"
 downloadJson = "下載 JSON"
 generatePdf = "產生 PDF"
+saveChanges = "儲存變更"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自動縮放文字以符合方框"
@@ -5942,6 +6062,8 @@ alpha = "此 Alpha 檢視器仍在演進中——部分字型、顏色、透明�
 [pdfTextEditor.empty]
 title = "尚未載入文件"
 subtitle = "載入 PDF 或 JSON 檔以開始編輯文字內容。"
+dropzone = "將 PDF 或 JSON 檔案拖放到此處，或點擊以瀏覽"
+dropzoneWithFiles = "從「檔案」分頁選取檔案，或將 PDF 或 JSON 檔案拖放到此處，或點擊以瀏覽"
 
 [pdfTextEditor.welcomeBanner]
 title = "歡迎使用 PDF 文字編輯器（搶先體驗）"

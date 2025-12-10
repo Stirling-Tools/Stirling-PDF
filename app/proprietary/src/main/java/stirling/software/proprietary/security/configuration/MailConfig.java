@@ -33,7 +33,8 @@ public class MailConfig {
 
         // Creates a new instance of JavaMailSenderImpl, which is a Spring implementation
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost(mailProperties.getHost());
+        String host = mailProperties.getHost();
+        mailSender.setHost(host);
         mailSender.setPort(mailProperties.getPort());
         mailSender.setDefaultEncoding("UTF-8");
 
@@ -70,8 +71,32 @@ public class MailConfig {
             log.info("SMTP authentication disabled - no credentials provided");
         }
 
+        boolean startTlsEnabled =
+                mailProperties.getStartTlsEnable() == null || mailProperties.getStartTlsEnable();
         // Enables STARTTLS to encrypt the connection if supported by the SMTP server
-        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.enable", Boolean.toString(startTlsEnabled));
+        if (mailProperties.getStartTlsRequired() != null) {
+            props.put(
+                    "mail.smtp.starttls.required", mailProperties.getStartTlsRequired().toString());
+        }
+
+        if (mailProperties.getSslEnable() != null) {
+            props.put("mail.smtp.ssl.enable", mailProperties.getSslEnable().toString());
+        }
+
+        // Trust the configured host to allow STARTTLS with self-signed certificates
+        String sslTrust = mailProperties.getSslTrust();
+        if (sslTrust == null || sslTrust.trim().isEmpty()) {
+            sslTrust = "*";
+        }
+        if (sslTrust != null && !sslTrust.trim().isEmpty()) {
+            props.put("mail.smtp.ssl.trust", sslTrust);
+        }
+        if (mailProperties.getSslCheckServerIdentity() != null) {
+            props.put(
+                    "mail.smtp.ssl.checkserveridentity",
+                    mailProperties.getSslCheckServerIdentity().toString());
+        }
 
         // Returns the configured mail sender, ready to send emails
         return mailSender;

@@ -131,7 +131,7 @@ unsupported = "Niet ondersteund"
 
 [toolPanel]
 placeholder = "Kies een tool om te beginnen"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Premiumfunctie:"
 comingSoon = "Binnenkort beschikbaar:"
 
@@ -3036,6 +3036,91 @@ title = "Informatie over PDF ophalen"
 header = "Informatie over PDF ophalen"
 submit = "Haal informatie op"
 downloadJson = "JSON downloaden"
+processing = "Informatie wordt geëxtraheerd..."
+results = "Resultaten"
+noResults = "Voer de tool uit om een rapport te genereren."
+downloads = "Downloads"
+noneDetected = "Niets gedetecteerd"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Volledig informatieoverzicht"
+shortTitle = "PDF-informatie"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formuliervelden"
+basicInfo = "Basisinformatie"
+documentInfo = "Documentinformatie"
+compliance = "Compliance"
+encryption = "Versleuteling"
+permissions = "Machtigingen"
+other = "Overig"
+perPageInfo = "Informatie per pagina"
+tableOfContents = "Inhoudsopgave"
+
+[getPdfInfo.other]
+attachments = "Bijlagen"
+embeddedFiles = "Ingesloten bestanden"
+javaScript = "JavaScript"
+layers = "Lagen"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Grootte"
+annotations = "Annotaties"
+images = "Afbeeldingen"
+links = "Koppelingen"
+fonts = "Lettertypen"
+xobjects = "Aantal XObjects"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Pagina's"
+fileSize = "Bestandsgrootte"
+pdfVersion = "PDF-versie"
+language = "Taal"
+title = "PDF-samenvatting"
+author = "Auteur"
+created = "Gemaakt"
+modified = "Gewijzigd"
+permsAll = "Alle machtigingen toegestaan"
+permsRestricted = "{{count}} beperkingen"
+permsMixed = "Sommige machtigingen beperkt"
+hasCompliance = "Voldoet aan compliancestandaarden"
+noCompliance = "Geen compliancestandaarden"
+basic = "Basisinformatie"
+documentInfo = "Documentinformatie"
+securityTitle = "Beveiligingsstatus"
+technical = "Technisch"
+overviewTitle = "PDF-overzicht"
+
+[getPdfInfo.summary.security]
+encrypted = "Versleutelde PDF - Wachtwoordbeveiliging aanwezig"
+unencrypted = "Onversleutelde PDF - Geen wachtwoordbeveiliging"
+
+[getPdfInfo.summary.tech]
+images = "Afbeeldingen"
+fonts = "Lettertypen"
+formFields = "Formuliervelden"
+embeddedFiles = "Ingesloten bestanden"
+javaScript = "JavaScript"
+layers = "Lagen"
+bookmarks = "Bladwijzers"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "een document zonder titel"
+unknown = "Onbekende auteur"
+text = "Dit is een PDF van {{pages}} pagina's met de titel {{title}}, gemaakt door {{author}} (PDF-versie {{version}})."
+
+[getPdfInfo.error]
+partial = "Sommige bestanden konden niet worden verwerkt."
+unexpected = "Onverwachte fout tijdens het extraheren."
+
+[getPdfInfo.status]
+complete = "Extractie voltooid"
 
 [extractPage]
 tags = "extraheren"
@@ -5177,7 +5262,7 @@ upgrade = "Nu upgraden →"
 freeTitle = "Serverlicentie"
 overLimitTitle = "Serverlicentie vereist"
 overLimitBody = "Onze licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Je hebt <strong>{{overLimitUserCopy}}</strong> Stirling-gebruikers. Om zonder onderbreking door te gaan, upgrade naar het Stirling Server-plan - <strong>onbeperkte plaatsen</strong>, PDF-tekstbewerking en volledige admincontrole voor $99/server/maand."
-freeBody = "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Om ononderbroken te schalen en vroege toegang te krijgen tot onze nieuwe <strong>PDF-tekstbewerkingstool</strong>, raden we het Stirling Server-plan aan - volledige bewerking en <strong>onbeperkte plaatsen</strong> voor $99/server/maand."
+freeBody = "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers per server gratis toe. Om ononderbroken op te schalen, raden we het Stirling Server-abonnement aan - <strong>onbeperkte plaatsen</strong> en <strong>SSO-ondersteuning</strong> voor $99/server/maand."
 
 [onboarding.desktopInstall]
 title = "Downloaden"
@@ -5281,6 +5366,31 @@ error = "Bijwerken van gebruikersstatus is mislukt"
 [workspace.people.delete]
 success = "Gebruiker succesvol verwijderd"
 error = "Gebruiker verwijderen is mislukt"
+
+[workspace.people.changePassword]
+action = "Wachtwoord wijzigen"
+title = "Wachtwoord wijzigen"
+subtitle = "Wachtwoord bijwerken voor"
+newPassword = "Nieuw wachtwoord"
+confirmPassword = "Wachtwoord bevestigen"
+placeholder = "Voer een nieuw wachtwoord in"
+confirmPlaceholder = "Voer het nieuwe wachtwoord opnieuw in"
+passwordRequired = "Voer een nieuw wachtwoord in"
+passwordMismatch = "Wachtwoorden komen niet overeen"
+generateRandom = "Beveiligd wachtwoord genereren"
+generatedPreview = "Gegenereerd wachtwoord:"
+copyTooltip = "Kopiëren naar klembord"
+copiedToClipboard = "Wachtwoord gekopieerd naar klembord"
+copyFailed = "Kopiëren van wachtwoord mislukt"
+sendEmail = "Gebruiker per e-mail informeren over deze wijziging"
+includePassword = "Nieuw wachtwoord in de e-mail opnemen"
+forcePasswordChange = "Gebruiker dwingen het wachtwoord bij de volgende aanmelding te wijzigen"
+emailUnavailable = "Het e-mailadres van deze gebruiker is ongeldig. Meldingen zijn uitgeschakeld."
+smtpDisabled = "E-mailmeldingen vereisen dat SMTP is ingeschakeld in de instellingen."
+notifyOnly = "Er wordt een e-mail verzonden zonder het wachtwoord, om de gebruiker te laten weten dat een beheerder het heeft gewijzigd."
+submit = "Wachtwoord bijwerken"
+success = "Wachtwoord succesvol bijgewerkt"
+error = "Bijwerken van wachtwoord mislukt"
 
 [workspace.people.emailInvite]
 tab = "E-mailuitnodiging"
@@ -5815,6 +5925,7 @@ subtitle = "Log in met je Stirling-account"
 [setup.selfhosted]
 title = "Inloggen bij server"
 subtitle = "Vul je servergegevens in"
+link = "of maak verbinding met een zelfgehost account"
 
 [setup.server]
 title = "Verbinden met server"
@@ -5833,6 +5944,14 @@ description = "Voer de volledige URL van je self-hosted Stirling PDF-server in"
 emptyUrl = "Voer een server-URL in"
 unreachable = "Kan geen verbinding maken met server"
 testFailed = "Verbindingstest mislukt"
+configFetch = "Ophalen van serverconfiguratie mislukt. Controleer de URL en probeer het opnieuw."
+
+[setup.server.error.securityDisabled]
+title = "Inloggen niet ingeschakeld"
+body = "Op deze server is inloggen niet ingeschakeld. Om verbinding te maken met deze server moet u authenticatie inschakelen:"
+step1 = "Stel DOCKER_ENABLE_SECURITY=true in in uw omgeving"
+step2 = "Of stel security.enableLogin=true in in settings.yml"
+step3 = "Start de server opnieuw"
 
 [setup.login]
 title = "Inloggen"
@@ -5905,6 +6024,7 @@ earlyAccess = "Vroege toegang"
 reset = "Wijzigingen resetten"
 downloadJson = "JSON downloaden"
 generatePdf = "PDF genereren"
+saveChanges = "Wijzigingen opslaan"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tekst automatisch schalen zodat deze in vakken past"
@@ -5942,6 +6062,8 @@ alpha = "Deze alpha-viewer is nog in ontwikkeling—bepaalde lettertypen, kleure
 [pdfTextEditor.empty]
 title = "Geen document geladen"
 subtitle = "Laad een PDF- of JSON-bestand om tekst te bewerken."
+dropzone = "Sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
+dropzoneWithFiles = "Selecteer een bestand op het tabblad Bestanden, of sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welkom bij PDF-teksteditor (Early Access)"

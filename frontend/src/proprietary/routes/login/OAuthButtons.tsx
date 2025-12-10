@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
 import { Button } from '@mantine/core';
 
 // Debug flag to show all providers for UI testing
@@ -23,10 +24,10 @@ export const oauthProviderConfig: Record<string, { label: string; file: string }
 const GENERIC_PROVIDER_ICON = 'oidc.svg';
 
 interface OAuthButtonsProps {
-  onProviderClick: (provider: string) => void
+  onProviderClick: (provider: OAuthProvider) => void
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
-  enabledProviders?: string[]  // List of enabled provider IDs from backend
+  enabledProviders?: OAuthProvider[]  // List of enabled provider IDs from backend
 }
 
 export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {

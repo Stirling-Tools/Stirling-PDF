@@ -223,4 +223,53 @@ public class EmailService {
 
         sendPlainEmail(to, subject, body, true);
     }
+
+    @Async
+    public void sendPasswordChangedNotification(
+            String to, String username, String newPassword, String loginUrl) throws MessagingException {
+        String subject = "Your Stirling PDF password has been updated";
+
+        String passwordSection =
+                newPassword == null
+                        ? ""
+                        : """
+                          <div style=\"background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;\">
+                            <p style=\"margin: 0;\"><strong>Temporary Password:</strong> %s</p>
+                          </div>
+                        """
+                                .formatted(newPassword);
+
+        String body =
+                """
+                <html><body style=\"margin: 0; padding: 0;\">
+                <div style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;\">
+                  <div style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;\">
+                    <div style=\"text-align: center; padding: 20px; background-color: #222;\">
+                      <img src=\"https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-transparent.svg\" alt=\"Stirling PDF\" style=\"max-height: 60px;\">
+                    </div>
+                    <div style=\"padding: 30px; color: #333;\">
+                      <h2 style=\"color: #222; margin-top: 0;\">Your password was changed</h2>
+                      <p>Hello %s,</p>
+                      <p>An administrator has updated the password for your Stirling PDF account.</p>
+                      %s
+                      <p>If you did not expect this change, please contact your administrator immediately.</p>
+                      <div style=\"text-align: center; margin: 30px 0;\">
+                        <a href=\"%s\" style=\"display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;\">Go to Stirling PDF</a>
+                      </div>
+                      <p style=\"font-size: 14px; color: #666;\">Or copy and paste this link in your browser:</p>
+                      <div style=\"background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;\">
+                        %s
+                      </div>
+                    </div>
+                    <div style=\"text-align: center; padding: 15px; font-size: 12px; color: #777; background-color: #f0f0f0;\">
+                      &copy; 2025 Stirling PDF. All rights reserved.
+                    </div>
+                  </div>
+                </div>
+                </body></html>
+                """
+                        .formatted(username, passwordSection, loginUrl, loginUrl);
+
+        sendPlainEmail(to, subject, body, true);
+    }
 }
