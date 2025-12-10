@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider, Menu, Indicator } from "@mantine/core";
+import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -17,6 +17,7 @@ import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
+import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
 
 import {
   isNavButtonActive,
@@ -83,40 +84,27 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       }
     };
 
+    const buttonStyle = getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+
     // Render navigation button with conditional URL support
     return (
       <div
         key={config.id}
-        className="flex flex-col items-center gap-1"
-        style={{
-          marginTop: index === 0 ? '0.5rem' : "0rem",
-          width: '100%',
-        }}
-        data-tour={`${config.id}-button`}
+        style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}
       >
-        <ActionIcon
-          {...(navProps ? {
-            component: "a" as const,
-            href: navProps.href,
-            onClick: (e: React.MouseEvent) => handleClick(e),
-            'aria-label': config.name
-          } : {
-            onClick: (e: React.MouseEvent) => handleClick(e),
-            'aria-label': config.name
-          })}
-          size={isActive ? 'lg' : 'md'}
-          variant="subtle"
-          style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-          className={isActive ? 'activeIconScale' : ''}
-          data-testid={`${config.id}-button`}
-        >
-          <span className="iconContainer">
-            {config.icon}
-          </span>
-        </ActionIcon>
-        <span className={`button-text ${isActive ? 'active' : 'inactive'}`}>
-          {config.name}
-        </span>
+        <QuickAccessButton
+          icon={config.icon}
+          label={config.name}
+          isActive={isActive}
+          onClick={handleClick}
+          href={navProps?.href}
+          ariaLabel={config.name}
+          backgroundColor={buttonStyle.backgroundColor}
+          color={buttonStyle.color}
+          component={navProps ? 'a' : 'button'}
+          dataTestId={`${config.id}-button`}
+          dataTour={`${config.id}-button`}
+        />
       </div>
     );
   };

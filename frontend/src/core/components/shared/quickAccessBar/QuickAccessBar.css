@@ -134,7 +134,7 @@
   text-rendering: optimizeLegibility;
   font-synthesis: none;
   text-align: center;
-  display: block;
+  width: 100%;
 }
 
 /* Allow wrapping under the active top indicator; constrain to three lines */
