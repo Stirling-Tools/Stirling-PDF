@@ -24,6 +24,7 @@ permissions:
 
 jobs:
   push:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-24.04-8core
     permissions:
       packages: write

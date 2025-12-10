@@ -353,7 +353,7 @@ title = "Konfigurasi"
 systemSettings = "Pengaturan Sistem"
 features = "Fitur"
 endpoints = "Endpoint"
-database = "Database"
+database = "Basis Data"
 advanced = "Lanjutan"
 
 [settings.securityAuth]
@@ -3036,6 +3036,91 @@ title = "Dapatkan Info tentang PDF"
 header = "Dapatkan Info tentang PDF"
 submit = "Dapatkan Info"
 downloadJson = "Unduh JSON"
+processing = "Mengekstrak informasi..."
+results = "Hasil"
+noResults = "Jalankan alat untuk menghasilkan laporan."
+downloads = "Unduhan"
+noneDetected = "Tidak ada yang terdeteksi"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Ringkasan informasi lengkap"
+shortTitle = "Informasi PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Bidang Formulir"
+basicInfo = "Info Dasar"
+documentInfo = "Info Dokumen"
+compliance = "Kepatuhan"
+encryption = "Enkripsi"
+permissions = "Izin"
+other = "Lainnya"
+perPageInfo = "Info per Halaman"
+tableOfContents = "Daftar Isi"
+
+[getPdfInfo.other]
+attachments = "Lampiran"
+embeddedFiles = "File Tertanam"
+javaScript = "JavaScript"
+layers = "Lapisan"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Ukuran"
+annotations = "Anotasi"
+images = "Gambar"
+links = "Tautan"
+fonts = "Font"
+xobjects = "Jumlah XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Halaman"
+fileSize = "Ukuran File"
+pdfVersion = "Versi PDF"
+language = "Bahasa"
+title = "Ringkasan PDF"
+author = "Penulis"
+created = "Dibuat"
+modified = "Diubah"
+permsAll = "Semua izin diperbolehkan"
+permsRestricted = "{{count}} pembatasan"
+permsMixed = "Beberapa izin dibatasi"
+hasCompliance = "Memiliki standar kepatuhan"
+noCompliance = "Tidak ada standar kepatuhan"
+basic = "Informasi Dasar"
+documentInfo = "Informasi Dokumen"
+securityTitle = "Status Keamanan"
+technical = "Teknis"
+overviewTitle = "Gambaran Umum PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF terenkripsi - Perlindungan kata sandi aktif"
+unencrypted = "PDF tidak terenkripsi - Tanpa perlindungan kata sandi"
+
+[getPdfInfo.summary.tech]
+images = "Gambar"
+fonts = "Font"
+formFields = "Bidang Formulir"
+embeddedFiles = "File Tertanam"
+javaScript = "JavaScript"
+layers = "Lapisan"
+bookmarks = "Bookmark"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "dokumen tanpa judul"
+unknown = "Penulis tidak diketahui"
+text = "Ini adalah PDF {{pages}} halaman berjudul {{title}} yang dibuat oleh {{author}} (versi PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Beberapa file tidak dapat diproses."
+unexpected = "Kesalahan tak terduga saat ekstraksi."
+
+[getPdfInfo.status]
+complete = "Ekstraksi selesai"
 
 [extractPage]
 tags = "ekstrak"
@@ -4305,7 +4390,7 @@ label = "Blokir Pendaftaran"
 description = "Cegah pendaftaran pengguna baru melalui SAML2"
 
 [admin.settings.database]
-title = "Database"
+title = "Basis Data"
 description = "Konfigurasikan pengaturan koneksi database kustom untuk penerapan enterprise."
 configuration = "Konfigurasi Database"
 
@@ -5282,6 +5367,31 @@ error = "Gagal memperbarui status pengguna"
 success = "Pengguna berhasil dihapus"
 error = "Gagal menghapus pengguna"
 
+[workspace.people.changePassword]
+action = "Ubah kata sandi"
+title = "Ubah kata sandi"
+subtitle = "Perbarui kata sandi untuk"
+newPassword = "Kata sandi baru"
+confirmPassword = "Konfirmasi kata sandi"
+placeholder = "Masukkan kata sandi baru"
+confirmPlaceholder = "Masukkan ulang kata sandi baru"
+passwordRequired = "Silakan masukkan kata sandi baru"
+passwordMismatch = "Kata sandi tidak cocok"
+generateRandom = "Buat kata sandi aman"
+generatedPreview = "Kata sandi yang dibuat:"
+copyTooltip = "Salin ke papan klip"
+copiedToClipboard = "Kata sandi disalin ke papan klip"
+copyFailed = "Gagal menyalin kata sandi"
+sendEmail = "Kirim email kepada pengguna tentang perubahan ini"
+includePassword = "Sertakan kata sandi baru dalam email"
+forcePasswordChange = "Paksa pengguna mengganti kata sandi saat login berikutnya"
+emailUnavailable = "Email pengguna ini bukan alamat email yang valid. Notifikasi dinonaktifkan."
+smtpDisabled = "Notifikasi email memerlukan SMTP diaktifkan di pengaturan."
+notifyOnly = "Email akan dikirim tanpa kata sandi, memberi tahu pengguna bahwa admin telah mengubahnya."
+submit = "Perbarui kata sandi"
+success = "Kata sandi berhasil diperbarui"
+error = "Gagal memperbarui kata sandi"
+
 [workspace.people.emailInvite]
 tab = "Undangan Email"
 description = "Ketik atau tempel email di bawah, dipisahkan dengan koma. Pengguna akan menerima kredensial login melalui email."
@@ -5815,6 +5925,7 @@ subtitle = "Masuk dengan akun Stirling Anda"
 [setup.selfhosted]
 title = "Masuk ke Server"
 subtitle = "Masukkan kredensial server Anda"
+link = "atau hubungkan ke akun self-hosted"
 
 [setup.server]
 title = "Sambungkan ke Server"
@@ -5833,6 +5944,14 @@ description = "Masukkan URL lengkap server Stirling PDF self-hosted Anda"
 emptyUrl = "Masukkan URL server"
 unreachable = "Tidak dapat terhubung ke server"
 testFailed = "Tes koneksi gagal"
+configFetch = "Gagal mengambil konfigurasi server. Periksa URL dan coba lagi."
+
+[setup.server.error.securityDisabled]
+title = "Login Tidak Diaktifkan"
+body = "Server ini tidak mengaktifkan login. Untuk terhubung ke server ini, Anda harus mengaktifkan autentikasi:"
+step1 = "Setel DOCKER_ENABLE_SECURITY=true di lingkungan Anda"
+step2 = "Atau setel security.enableLogin=true di settings.yml"
+step3 = "Mulai ulang server"
 
 [setup.login]
 title = "Masuk"
@@ -5905,6 +6024,7 @@ earlyAccess = "Akses Awal"
 reset = "Reset Perubahan"
 downloadJson = "Unduh JSON"
 generatePdf = "Buat PDF"
+saveChanges = "Simpan Perubahan"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Sesuaikan teks otomatis ke kotak"
@@ -5942,6 +6062,8 @@ alpha = "Penampil alpha ini masih berkembang—beberapa font, warna, efek transp
 [pdfTextEditor.empty]
 title = "Tidak ada dokumen dimuat"
 subtitle = "Muat file PDF atau JSON untuk mulai mengedit konten teks."
+dropzone = "Seret dan letakkan file PDF atau JSON di sini, atau klik untuk memilih"
+dropzoneWithFiles = "Pilih file dari tab File, atau seret dan letakkan file PDF atau JSON di sini, atau klik untuk memilih"
 
 [pdfTextEditor.welcomeBanner]
 title = "Selamat datang di PDF Text Editor (Akses Awal)"
