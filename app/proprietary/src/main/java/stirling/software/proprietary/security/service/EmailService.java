@@ -262,7 +262,8 @@ public class EmailService {
 
     @Async
     public void sendPasswordChangedNotification(
-            String to, String username, String newPassword, String loginUrl) throws MessagingException {
+            String to, String username, String newPassword, String loginUrl)
+            throws MessagingException {
         String subject = "Your Stirling PDF password has been updated";
 
         String passwordSection =
