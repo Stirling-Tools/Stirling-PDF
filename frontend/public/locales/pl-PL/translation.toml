@@ -3036,6 +3036,91 @@ title = "Pobierz informacje o pliku PDF"
 header = "Pobierz informacje o pliku PDF"
 submit = "Pobierz informacje"
 downloadJson = "Pobierz JSON z zawartością"
+processing = "Wyodrębnianie informacji..."
+results = "Wyniki"
+noResults = "Uruchom narzędzie, aby wygenerować raport."
+downloads = "Pobrania"
+noneDetected = "Nic nie wykryto"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Pełne podsumowanie informacji"
+shortTitle = "Informacje o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadane"
+formFields = "Pola formularza"
+basicInfo = "Informacje podstawowe"
+documentInfo = "Informacje o dokumencie"
+compliance = "Zgodność"
+encryption = "Szyfrowanie"
+permissions = "Uprawnienia"
+other = "Inne"
+perPageInfo = "Informacje dla każdej strony"
+tableOfContents = "Spis treści"
+
+[getPdfInfo.other]
+attachments = "Załączniki"
+embeddedFiles = "Osadzone pliki"
+javaScript = "JavaScript"
+layers = "Warstwy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Rozmiar"
+annotations = "Adnotacje"
+images = "Obrazy"
+links = "Linki"
+fonts = "Czcionki"
+xobjects = "Liczba XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Strony"
+fileSize = "Rozmiar pliku"
+pdfVersion = "Wersja PDF"
+language = "Język"
+title = "Podsumowanie PDF"
+author = "Autor"
+created = "Utworzono"
+modified = "Zmodyfikowano"
+permsAll = "Wszystkie uprawnienia dozwolone"
+permsRestricted = "{{count}} ograniczeń"
+permsMixed = "Niektóre uprawnienia ograniczone"
+hasCompliance = "Spełnia standardy zgodności"
+noCompliance = "Brak standardów zgodności"
+basic = "Informacje podstawowe"
+documentInfo = "Informacje o dokumencie"
+securityTitle = "Stan zabezpieczeń"
+technical = "Techniczne"
+overviewTitle = "Przegląd PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Zaszyfrowany PDF - obecne zabezpieczenie hasłem"
+unencrypted = "Niezaszyfrowany PDF - brak zabezpieczenia hasłem"
+
+[getPdfInfo.summary.tech]
+images = "Obrazy"
+fonts = "Czcionki"
+formFields = "Pola formularza"
+embeddedFiles = "Osadzone pliki"
+javaScript = "JavaScript"
+layers = "Warstwy"
+bookmarks = "Zakładki"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "niezatytułowany dokument"
+unknown = "Nieznany autor"
+text = "To jest {{pages}}-stronicowy plik PDF zatytułowany {{title}}, utworzony przez {{author}} (wersja PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Niektórych plików nie udało się przetworzyć."
+unexpected = "Nieoczekiwany błąd podczas wyodrębniania."
+
+[getPdfInfo.status]
+complete = "Zakończono wyodrębnianie"
 
 [extractPage]
 tags = "wydobycie,separacja,wyciaganie"
@@ -5282,6 +5367,31 @@ error = "Nie udało się zaktualizować statusu użytkownika"
 success = "Użytkownik usunięty pomyślnie"
 error = "Nie udało się usunąć użytkownika"
 
+[workspace.people.changePassword]
+action = "Zmień hasło"
+title = "Zmień hasło"
+subtitle = "Zaktualizuj hasło dla"
+newPassword = "Nowe hasło"
+confirmPassword = "Potwierdź hasło"
+placeholder = "Wprowadź nowe hasło"
+confirmPlaceholder = "Wprowadź ponownie nowe hasło"
+passwordRequired = "Wprowadź nowe hasło"
+passwordMismatch = "Hasła nie są zgodne"
+generateRandom = "Wygeneruj bezpieczne hasło"
+generatedPreview = "Wygenerowane hasło:"
+copyTooltip = "Kopiuj do schowka"
+copiedToClipboard = "Hasło skopiowano do schowka"
+copyFailed = "Nie udało się skopiować hasła"
+sendEmail = "Wyślij użytkownikowi e-mail o tej zmianie"
+includePassword = "Dołącz nowe hasło do e-maila"
+forcePasswordChange = "Wymuś zmianę hasła przy następnym logowaniu"
+emailUnavailable = "E-mail tego użytkownika nie jest prawidłowym adresem. Powiadomienia są wyłączone."
+smtpDisabled = "Powiadomienia e-mail wymagają włączenia SMTP w ustawieniach."
+notifyOnly = "Zostanie wysłany e-mail bez hasła, informujący użytkownika, że administrator je zmienił."
+submit = "Zaktualizuj hasło"
+success = "Hasło zaktualizowano pomyślnie"
+error = "Nie udało się zaktualizować hasła"
+
 [workspace.people.emailInvite]
 tab = "Zaproszenie e‑mail"
 description = "Wpisz lub wklej e‑maile poniżej, rozdzielone przecinkami. Użytkownicy otrzymają dane logowania e‑mailem."
@@ -5815,6 +5925,7 @@ subtitle = "Zaloguj się na konto Stirling"
 [setup.selfhosted]
 title = "Zaloguj się do serwera"
 subtitle = "Wprowadź dane logowania do serwera"
+link = "lub połącz się z kontem hostowanym samodzielnie"
 
 [setup.server]
 title = "Połącz z serwerem"
@@ -5833,6 +5944,14 @@ description = "Wpisz pełny URL własnego serwera Stirling PDF"
 emptyUrl = "Wpisz URL serwera"
 unreachable = "Nie można połączyć z serwerem"
 testFailed = "Test połączenia nie powiódł się"
+configFetch = "Nie udało się pobrać konfiguracji serwera. Sprawdź URL i spróbuj ponownie."
+
+[setup.server.error.securityDisabled]
+title = "Logowanie nie jest włączone"
+body = "Na tym serwerze logowanie nie jest włączone. Aby się połączyć, musisz włączyć uwierzytelnianie:"
+step1 = "Ustaw w środowisku DOCKER_ENABLE_SECURITY=true"
+step2 = "Lub ustaw security.enableLogin=true w pliku settings.yml"
+step3 = "Uruchom ponownie serwer"
 
 [setup.login]
 title = "Zaloguj się"
@@ -5905,6 +6024,7 @@ earlyAccess = "Wczesny dostęp"
 reset = "Resetuj zmiany"
 downloadJson = "Pobierz JSON"
 generatePdf = "Generuj PDF"
+saveChanges = "Zapisz zmiany"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automatycznie skaluj tekst do pól"
@@ -5942,6 +6062,8 @@ alpha = "Ten podgląd alfa jest wciąż rozwijany — niektóre czcionki, kolory
 [pdfTextEditor.empty]
 title = "Nie wczytano dokumentu"
 subtitle = "Wczytaj plik PDF lub JSON, aby rozpocząć edycję treści tekstowych."
+dropzone = "Przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
+dropzoneWithFiles = "Wybierz plik z karty Pliki, przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
 
 [pdfTextEditor.welcomeBanner]
 title = "Witamy w edytorze tekstu PDF (wczesny dostęp)"
