@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
@@ -41,7 +40,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
-  const isOverflow = useIsOverflowing(scrollableRef);
 
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
@@ -215,13 +213,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
       </div>
 
-      {/* Conditional divider when overflowing */}
-      {isOverflow && (
-        <Divider
-          size="xs"
-          className="overflow-divider"
-        />
-      )}
 
       {/* Scrollable content area */}
       <div

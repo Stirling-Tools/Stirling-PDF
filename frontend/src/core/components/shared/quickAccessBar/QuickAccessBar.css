@@ -115,8 +115,7 @@
 /* Scrollable content area */
 .quick-access-bar {
   overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: hidden;
   padding: 0 0.25rem 1rem 0.25rem;
 }
 
@@ -173,7 +172,7 @@
 /* Spacer */
 .spacer {
   flex: 1;
-  margin-top: 1rem;
+  min-height: 1rem;
 }
 
 /* Config button text */
