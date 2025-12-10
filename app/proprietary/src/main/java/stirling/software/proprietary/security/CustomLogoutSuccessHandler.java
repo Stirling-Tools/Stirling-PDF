@@ -168,7 +168,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     logoutUrl +=
                             "/protocol/openid-connect/logout"
                                     + "?client_id="
-                                    + oauth.getClientId()
+                                    + keycloak.getClientId()
                                     + "&post_logout_redirect_uri="
                                     + response.encodeRedirectURL(redirectUrl);
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
