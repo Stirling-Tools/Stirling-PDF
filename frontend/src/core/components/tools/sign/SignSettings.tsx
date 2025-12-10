@@ -477,6 +477,7 @@ const SignSettings = ({
         // Reset pause state and directly activate placement
         setPlacementManuallyPaused(false);
         lastAppliedPlacementKey.current = null;
+
         setImageSignatureData(result);
 
         // Directly activate placement on image upload
@@ -489,8 +490,6 @@ const SignSettings = ({
         console.error('Error reading file:', error);
       }
     } else if (!file) {
-      setImageSignatureData(undefined);
-      onDeactivateSignature?.();
       setImageSignatureData(undefined);
       onDeactivateSignature?.();
     }
@@ -835,6 +834,13 @@ const SignSettings = ({
           <ImageUploader
             onImageChange={handleImageChange}
             disabled={disabled}
+            allowBackgroundRemoval={true}
+            currentImageData={imageSignatureData}
+            onProcessedImageData={(dataUrl) => {
+              if (dataUrl) {
+                setImageSignatureData(dataUrl);
+              }
+            }}
           />
           {renderSaveButtonRow('image', hasImageSignature, handleSaveImageSignature)}
         </Stack>
