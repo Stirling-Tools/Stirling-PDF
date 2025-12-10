@@ -11,6 +11,7 @@ import { useBackendProbe } from '@app/hooks/useBackendProbe';
 import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { updateSupportedLanguages } from '@app/i18n';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -102,6 +103,11 @@ export default function Login() {
         // Set first-time setup flags
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
         setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+
+        // Apply language configuration from server
+        if (data.languages || data.defaultLocale) {
+          updateSupportedLanguages(data.languages, data.defaultLocale);
+        }
 
         // Extract provider IDs from the providerList map
         // The keys are like "/oauth2/authorization/google" - extract the last part

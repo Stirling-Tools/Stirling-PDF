@@ -74,6 +74,7 @@ public class ConfigController {
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
             configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
+            configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded

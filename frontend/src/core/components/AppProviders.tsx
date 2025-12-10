@@ -20,6 +20,7 @@ import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -81,6 +82,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 {...appConfigProviderProps}
               >
                 <ScarfTrackingInitializer />
+                <AppConfigLoader />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                   <AppInitializer />
                   <BrandingAssetManager />

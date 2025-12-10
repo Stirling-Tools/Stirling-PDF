@@ -58,6 +58,7 @@ public class InitialSetup {
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
+
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
