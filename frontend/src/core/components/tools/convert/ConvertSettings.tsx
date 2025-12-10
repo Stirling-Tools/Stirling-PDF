@@ -17,6 +17,8 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
+import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -142,6 +144,12 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('cbrOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('pdfToCbrOptions', {
+      dpi: 150,
+    });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
     });
@@ -209,6 +217,12 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('cbrOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('pdfToCbrOptions', {
+      dpi: 150,
     });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
@@ -361,6 +375,30 @@ const ConvertSettings = ({
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* CBR to PDF options */}
+      {parameters.fromExtension === 'cbr' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromCbrSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to CBR options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr' && (
+        <>
+          <Divider />
+          <ConvertToCbrSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
             disabled={disabled}
           />
         </>

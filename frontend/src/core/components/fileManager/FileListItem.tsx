@@ -52,6 +52,11 @@ const FileListItem: React.FC<FileListItemProps> = ({
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
 
+  // Check file extension
+  const extLower = (file.name?.match(/\.([a-z0-9]+)$/i)?.[1] || '').toLowerCase();
+  const isCBZ = extLower === 'cbz';
+  const isCBR = extLower === 'cbr';
+
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
 
@@ -240,7 +245,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               )}
 
               {/* Unzip option for ZIP files */}
-              {isZipFile && !isHistoryFile && (
+              {isZipFile && !isHistoryFile && !isCBZ && !isCBR && (
                 <>
                   <Menu.Item
                     leftSection={<UnarchiveIcon style={{ fontSize: 16 }} />}
