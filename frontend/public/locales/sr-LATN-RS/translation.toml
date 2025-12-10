@@ -3036,6 +3036,91 @@ title = "Informacije o PDF-u"
 header = "Informacije o PDF-u"
 submit = "Informacije"
 downloadJson = "Preuzmi JSON"
+processing = "Izdvajanje informacija..."
+results = "Rezultati"
+noResults = "Pokrenite alat da generišete izveštaj."
+downloads = "Preuzimanja"
+noneDetected = "Nije otkriveno ništa"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Potpuni sažetak informacija"
+shortTitle = "Informacije o PDF-u"
+
+[getPdfInfo.sections]
+metadata = "Metapodaci"
+formFields = "Polja obrasca"
+basicInfo = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+compliance = "Usklađenost"
+encryption = "Šifrovanje"
+permissions = "Dozvole"
+other = "Ostalo"
+perPageInfo = "Informacije po stranici"
+tableOfContents = "Sadržaj"
+
+[getPdfInfo.other]
+attachments = "Prilozi"
+embeddedFiles = "Ugrađene datoteke"
+javaScript = "JavaScript"
+layers = "Slojevi"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Veličina"
+annotations = "Anotacije"
+images = "Slike"
+links = "Linkovi"
+fonts = "Fontovi"
+xobjects = "Broj XObject-ova"
+multimedia = "Multimedija"
+
+[getPdfInfo.summary]
+pages = "Stranice"
+fileSize = "Veličina datoteke"
+pdfVersion = "PDF verzija"
+language = "Jezik"
+title = "PDF sažetak"
+author = "Autor"
+created = "Kreirano"
+modified = "Izmenjeno"
+permsAll = "Sve dozvole su omogućene"
+permsRestricted = "{{count}} ograničenja"
+permsMixed = "Neke dozvole su ograničene"
+hasCompliance = "Ima standarde usklađenosti"
+noCompliance = "Nema standarda usklađenosti"
+basic = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+securityTitle = "Status bezbednosti"
+technical = "Tehničko"
+overviewTitle = "Pregled PDF-a"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrovan PDF - prisutna zaštita lozinkom"
+unencrypted = "Nešifrovan PDF - bez zaštite lozinkom"
+
+[getPdfInfo.summary.tech]
+images = "Slike"
+fonts = "Fontovi"
+formFields = "Polja obrasca"
+embeddedFiles = "Ugrađene datoteke"
+javaScript = "JavaScript"
+layers = "Slojevi"
+bookmarks = "Obeleživači"
+multimedia = "Multimedija"
+
+[getPdfInfo.summary.overview]
+untitled = "neimenovani dokument"
+unknown = "Nepoznat autor"
+text = "Ovo je PDF od {{pages}} stranica pod nazivom {{title}} koji je kreirao {{author}} (PDF verzija {{version}})."
+
+[getPdfInfo.error]
+partial = "Neke datoteke nije bilo moguće obraditi."
+unexpected = "Neočekivana greška tokom izdvajanja."
+
+[getPdfInfo.status]
+complete = "Izdvajanje završeno"
 
 [extractPage]
 tags = "izdvajanje"
@@ -3790,7 +3875,7 @@ version = "Aktuelno izdanje"
 title = "API dokumentacija"
 header = "API dokumentacija"
 desc = "Pregledajte i testirajte Stirling PDF API endpoints"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,dokumentacija,swagger,krajnje tačke,razvoj"
 
 [cookieBanner.popUp]
 title = "Kako koristimo kolačiće"
@@ -5282,6 +5367,31 @@ error = "Ažuriranje statusa korisnika nije uspelo"
 success = "Korisnik uspešno obrisan"
 error = "Brisanje korisnika nije uspelo"
 
+[workspace.people.changePassword]
+action = "Promenite lozinku"
+title = "Promenite lozinku"
+subtitle = "Ažurirajte lozinku za"
+newPassword = "Nova lozinka"
+confirmPassword = "Potvrdite lozinku"
+placeholder = "Unesite novu lozinku"
+confirmPlaceholder = "Ponovo unesite novu lozinku"
+passwordRequired = "Unesite novu lozinku"
+passwordMismatch = "Lozinke se ne poklapaju"
+generateRandom = "Generišite bezbednu lozinku"
+generatedPreview = "Generisana lozinka:"
+copyTooltip = "Kopirajte u privremenu memoriju"
+copiedToClipboard = "Lozinka je kopirana u privremenu memoriju"
+copyFailed = "Nije uspelo kopiranje lozinke"
+sendEmail = "Pošaljite korisniku email o ovoj promeni"
+includePassword = "Uključite novu lozinku u email"
+forcePasswordChange = "Naterajte korisnika da promeni lozinku pri sledećoj prijavi"
+emailUnavailable = "Email ovog korisnika nije važeća email adresa. Obaveštenja su onemogućena."
+smtpDisabled = "Email obaveštenja zahtevaju da SMTP bude omogućen u podešavanjima."
+notifyOnly = "Biće poslat email bez lozinke, kako bi korisnik znao da je administrator promenio lozinku."
+submit = "Ažurirajte lozinku"
+success = "Lozinka je uspešno ažurirana"
+error = "Ažuriranje lozinke nije uspelo"
+
 [workspace.people.emailInvite]
 tab = "Poziv emailom"
 description = "Ukucajte ili nalepite email adrese ispod, odvojene zarezima. Korisnici će dobiti pristupne podatke putem emaila."
@@ -5815,6 +5925,7 @@ subtitle = "Prijavite se svojim Stirling nalogom"
 [setup.selfhosted]
 title = "Prijava na server"
 subtitle = "Unesite kredencijale servera"
+link = "ili se povežite na samohostovani nalog"
 
 [setup.server]
 title = "Poveži se na server"
@@ -5833,6 +5944,14 @@ description = "Unesite puni URL vašeg samohostovanog Stirling PDF servera"
 emptyUrl = "Unesite URL servera"
 unreachable = "Nije moguće povezati se sa serverom"
 testFailed = "Test veze nije uspeo"
+configFetch = "Nije uspelo preuzimanje konfiguracije servera. Proverite URL i pokušajte ponovo."
+
+[setup.server.error.securityDisabled]
+title = "Prijavljivanje nije omogućeno"
+body = "Na ovom serveru prijavljivanje nije omogućeno. Da biste se povezali na ovaj server, morate omogućiti autentikaciju:"
+step1 = "Postavite DOCKER_ENABLE_SECURITY=true u svom okruženju"
+step2 = "Ili postavite security.enableLogin=true u settings.yml"
+step3 = "Restartujte server"
 
 [setup.login]
 title = "Prijava"
@@ -5905,6 +6024,7 @@ earlyAccess = "Rani pristup"
 reset = "Poništi izmene"
 downloadJson = "Preuzmi JSON"
 generatePdf = "Generiši PDF"
+saveChanges = "Sačuvajte izmene"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automatski prilagodi tekst okvirima"
@@ -5942,6 +6062,8 @@ alpha = "Ovaj alfa pregledač je i dalje u razvoju—određeni fontovi, boje, ef
 [pdfTextEditor.empty]
 title = "Nijedan dokument nije učitan"
 subtitle = "Učitajte PDF ili JSON datoteku da biste počeli sa uređivanjem teksta."
+dropzone = "Prevucite i otpustite PDF ili JSON datoteku ovde ili kliknite da izaberete"
+dropzoneWithFiles = "Izaberite datoteku sa kartice Datoteke, ili prevucite i otpustite PDF ili JSON datoteku ovde, ili kliknite da izaberete"
 
 [pdfTextEditor.welcomeBanner]
 title = "Dobrodošli u Uređivač teksta za PDF (rani pristup)"

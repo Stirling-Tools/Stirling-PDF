@@ -17,6 +17,22 @@ vi.mock('react-i18next', () => ({
       return key;
     },
   }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: vi.fn(),
+  },
+}));
+
+// Mock i18n module to avoid initialization
+vi.mock('@app/i18n', () => ({
+  updateSupportedLanguages: vi.fn(),
+  supportedLanguages: { 'en-GB': 'English' },
+  rtlLanguages: [],
+  default: {
+    language: 'en-GB',
+    changeLanguage: vi.fn(),
+    options: {},
+  },
 }));
 
 // Mock useAuth hook
