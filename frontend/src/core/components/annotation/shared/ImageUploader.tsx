@@ -26,8 +26,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   currentImageData
 }) => {
   const { t } = useTranslation();
-  const [removeBackground, setRemoveBackground] = useState(true);
+  const [removeBackground, setRemoveBackground] = useState(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [originalImageData, setOriginalImageData] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const processImage = async (imageSource: File | string, shouldRemoveBackground: boolean) => {
@@ -47,6 +48,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         setIsProcessing(false);
       }
     } else {
+      if (originalImageData) {
+        onProcessedImageData?.(originalImageData);
+      }
       setIsProcessing(false);
     }
     return null;
@@ -63,6 +67,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         setCurrentFile(file);
         onImageChange(file);
+
+        const originalDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+
+        setOriginalImageData(originalDataUrl);
         await processImage(file, removeBackground);
       } catch (error) {
         console.error('Error processing image file:', error);
@@ -70,6 +83,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     } else if (!file) {
       // Clear image data when no file is selected
       setCurrentFile(null);
+      setOriginalImageData(null);
       onImageChange(null);
       onProcessedImageData?.(null);
     }
@@ -77,8 +91,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleBackgroundRemovalChange = async (checked: boolean) => {
     setRemoveBackground(checked);
-    if (currentImageData) {
-      await processImage(currentImageData, checked);
+    if (originalImageData) {
+      await processImage(originalImageData, checked);
     } else if (currentFile) {
       await processImage(currentFile, checked);
     }

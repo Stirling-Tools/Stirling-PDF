@@ -835,7 +835,6 @@ const SignSettings = ({
             onImageChange={handleImageChange}
             disabled={disabled}
             allowBackgroundRemoval={true}
-            currentImageData={imageSignatureData}
             onProcessedImageData={(dataUrl) => {
               if (dataUrl) {
                 setImageSignatureData(dataUrl);
