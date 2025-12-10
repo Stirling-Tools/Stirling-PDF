@@ -27,6 +27,7 @@ permissions:
 
 jobs:
   sonarqube:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner

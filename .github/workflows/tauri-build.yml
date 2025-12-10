@@ -28,6 +28,7 @@ permissions:
 
 jobs:
   determine-matrix:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -636,6 +637,8 @@ jobs:
           if [ "${{ needs.build.result }}" = "success" ]; then
             echo "✅ All Tauri builds completed successfully!"
             echo "Artifacts are ready for distribution."
+          elif [ "${{ needs.build.result }}" = "skipped" ]; then
+            echo "⏭️  Tauri builds skipped (CI lite mode enabled)"
           else
             echo "❌ Some Tauri builds failed."
             echo "Please check the logs and fix any issues."
