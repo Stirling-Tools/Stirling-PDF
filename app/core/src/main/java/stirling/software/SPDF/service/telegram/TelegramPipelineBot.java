@@ -102,6 +102,11 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 && !Objects.equals(chatType, "group")
                 && !Objects.equals(chatType, "supergroup")
                 && !Objects.equals(chatType, "channel")) {
+            log.debug(
+                    "Ignoring message {} in chat {} with unsupported chat type {}",
+                    message.getMessageId(),
+                    chat.getId(),
+                    chatType);
             return;
         }
 
@@ -112,50 +117,22 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                 chatType,
                 message);
 
-        User from = message.getFrom();
         if (telegramProperties.getEnableAllowUserIDs()
                 || telegramProperties.getEnableAllowChannelIDs()) {
             List<Long> allowUserIDs = telegramProperties.getAllowUserIDs();
             List<Long> allowChannelIDs = telegramProperties.getAllowChannelIDs();
             switch (chatType) {
                 case "channel" -> {
-                    // In private chats, messages are sent by users
+                    // In channels, messages are always sent on behalf of the channel
                     if (telegramProperties.getEnableAllowChannelIDs()) {
-                        if (allowChannelIDs.isEmpty()) {
-                            log.info(
-                                    "No allowed channel IDs configured, disabling all access from"
-                                            + " private chat id={}",
-                                    chat.getId());
-                        }
-                        if (from == null || !allowChannelIDs.contains(from.getId().longValue())) {
+                        Chat senderChat = message.getSenderChat();
+                        if ((senderChat == null || !allowChannelIDs.contains(senderChat.getId()))
+                                && !allowChannelIDs.isEmpty()) {
                             log.info(
                                     "Ignoring message {} from user id={} in private chat id={} due"
                                             + " to channel access restrictions",
                                     message.getMessageId(),
-                                    from != null ? from.getId() : "unknown",
-                                    chat.getId());
-                            sendMessage(
-                                    chat.getId(),
-                                    "You are not authorized to use this bot. Please contact the"
-                                            + " administrator.");
-                            return;
-                        }
-                    }
-                }
-                case "private" -> {
-                    // In channels, messages are always sent on behalf of the channel
-                    if (telegramProperties.getEnableAllowUserIDs()) {
-                        if (allowUserIDs.isEmpty()) {
-                            log.info(
-                                    "No allowed user IDs configured, disabling all access from"
-                                            + " channel id={}",
-                                    chat.getId());
-                        }
-                        if (from == null || !allowUserIDs.contains(from.getId())) {
-                            log.info(
-                                    "Ignoring message {} from channel id={} due to user access"
-                                            + " restrictions",
-                                    message.getMessageId(),
+                                    senderChat != null ? senderChat.getId() : "unknown",
                                     chat.getId());
                             sendMessage(
                                     chat.getId(),
@@ -163,23 +140,48 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                                             + " the administrator.");
                             return;
                         }
+                        if (allowChannelIDs.isEmpty()) {
+                            // All channels are allowed, but log a warning
+                            log.warn(
+                                    "No allowed channel IDs configured, allowing all channels access. Channel with id={} sent a message in chat id={}",
+                                    senderChat != null ? senderChat.getId() : "unknown",
+                                    chat.getId());
+                        }
+                    }
+                }
+                case "private" -> {
+                    // In private chats, messages are sent by users
+                    if (telegramProperties.getEnableAllowUserIDs()) {
+                        User from = message.getFrom();
+                        if ((from == null || !allowUserIDs.contains(from.getId()))
+                                && !allowUserIDs.isEmpty()) {
+                            log.info(
+                                    "Ignoring message {} from channel id={} due to user access"
+                                            + " restrictions",
+                                    message.getMessageId(),
+                                    chat.getId());
+                            sendMessage(
+                                    chat.getId(),
+                                    "You are not authorized to use this bot. Please contact the"
+                                            + " administrator.");
+                            return;
+                        }
+                        if (allowUserIDs.isEmpty()) {
+                            // All users are allowed, but log a warning
+                            log.warn(
+                                    "No allowed user IDs configured, allowing all users access. User with id={} sent a message in private chat id={}",
+                                    from != null ? from.getId() : "unknown",
+                                    chat.getId());
+                        }
                     }
                 }
                 case "group", "supergroup" -> {
                     // group chats
                 }
                 default -> {
-                    // private chats
+                    // should not reach here due to earlier chatType check
                 }
             }
-        }
-        if (from != null) {
-            log.info(
-                    "Message {} sent by user {} {} (id={})",
-                    message.getMessageId(),
-                    from.getFirstName(),
-                    from.getLastName() != null ? from.getLastName() : "",
-                    from.getId());
         }
 
         if (message.hasDocument() || message.hasPhoto()) {
