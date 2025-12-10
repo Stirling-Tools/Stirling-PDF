@@ -3036,6 +3036,91 @@ title = "Obteniu Informació del PDF"
 header = "Obteniu Informació del PDF"
 submit = "Obteniu Informació"
 downloadJson = "Descarrega JSON"
+processing = "Extraient informació..."
+results = "Resultats"
+noResults = "Executeu l'eina per generar un informe."
+downloads = "Descàrregues"
+noneDetected = "No se n'ha detectat cap"
+indexTitle = "Índex"
+
+[getPdfInfo.report]
+entryLabel = "Resum d'informació complet"
+shortTitle = "Informació del PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadades"
+formFields = "Camps de formulari"
+basicInfo = "Informació bàsica"
+documentInfo = "Informació del document"
+compliance = "Conformitat"
+encryption = "Xifratge"
+permissions = "Permisos"
+other = "Altres"
+perPageInfo = "Informació per pàgina"
+tableOfContents = "Taula de continguts"
+
+[getPdfInfo.other]
+attachments = "Fitxers adjunts"
+embeddedFiles = "Fitxers incrustats"
+javaScript = "JavaScript"
+layers = "Capes"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Mida"
+annotations = "Anotacions"
+images = "Imatges"
+links = "Enllaços"
+fonts = "Tipus de lletra"
+xobjects = "Recompte d'XObject"
+multimedia = "Multimèdia"
+
+[getPdfInfo.summary]
+pages = "Pàgines"
+fileSize = "Mida del fitxer"
+pdfVersion = "Versió del PDF"
+language = "Idioma"
+title = "Resum del PDF"
+author = "Autor"
+created = "Creat"
+modified = "Modificat"
+permsAll = "Tots els permisos permesos"
+permsRestricted = "{{count}} restriccions"
+permsMixed = "Alguns permisos restringits"
+hasCompliance = "Té estàndards de conformitat"
+noCompliance = "Sense estàndards de conformitat"
+basic = "Informació bàsica"
+documentInfo = "Informació del document"
+securityTitle = "Estat de seguretat"
+technical = "Tècnic"
+overviewTitle = "Visió general del PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF xifrat - Protecció amb contrasenya present"
+unencrypted = "PDF no xifrat - Sense protecció amb contrasenya"
+
+[getPdfInfo.summary.tech]
+images = "Imatges"
+fonts = "Tipus de lletra"
+formFields = "Camps de formulari"
+embeddedFiles = "Fitxers incrustats"
+javaScript = "JavaScript"
+layers = "Capes"
+bookmarks = "Marcadors"
+multimedia = "Multimèdia"
+
+[getPdfInfo.summary.overview]
+untitled = "un document sense títol"
+unknown = "Autor desconegut"
+text = "Aquest és un PDF de {{pages}} pàgines titulat {{title}} creat per {{author}} (versió del PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Alguns fitxers no s'han pogut processar."
+unexpected = "Error inesperat durant l'extracció."
+
+[getPdfInfo.status]
+complete = "Extracció completada"
 
 [extractPage]
 tags = "extreure"
@@ -5282,6 +5367,31 @@ error = "No s’ha pogut actualitzar l’estat de l’usuari"
 success = "Usuari suprimit correctament"
 error = "No s’ha pogut suprimir l’usuari"
 
+[workspace.people.changePassword]
+action = "Canvieu la contrasenya"
+title = "Canvi de contrasenya"
+subtitle = "Actualitza la contrasenya de"
+newPassword = "Contrasenya nova"
+confirmPassword = "Confirma la contrasenya"
+placeholder = "Introduïu una contrasenya nova"
+confirmPlaceholder = "Torneu a introduir la contrasenya nova"
+passwordRequired = "Introduïu una contrasenya nova"
+passwordMismatch = "Les contrasenyes no coincideixen"
+generateRandom = "Genereu una contrasenya segura"
+generatedPreview = "Contrasenya generada:"
+copyTooltip = "Copieu al portapapers"
+copiedToClipboard = "Contrasenya copiada al portapapers"
+copyFailed = "No s'ha pogut copiar la contrasenya"
+sendEmail = "Envieu un correu a l'usuari sobre aquest canvi"
+includePassword = "Incloeu la contrasenya nova al correu"
+forcePasswordChange = "Obligueu l'usuari a canviar la contrasenya en el pròxim inici de sessió"
+emailUnavailable = "El correu d'aquest usuari no és una adreça de correu vàlida. Les notificacions estan desactivades."
+smtpDisabled = "Les notificacions per correu electrònic requereixen habilitar SMTP als paràmetres."
+notifyOnly = "S'enviarà un correu sense la contrasenya, informant l'usuari que un administrador l'ha canviada."
+submit = "Actualitzeu la contrasenya"
+success = "La contrasenya s'ha actualitzat correctament"
+error = "No s'ha pogut actualitzar la contrasenya"
+
 [workspace.people.emailInvite]
 tab = "Invitació per correu"
 description = "Escriviu o enganxeu correus a continuació, separats per comes. Els usuaris rebran credencials d’inici de sessió per correu electrònic."
@@ -5815,6 +5925,7 @@ subtitle = "Inicia sessió amb el teu compte de Stirling"
 [setup.selfhosted]
 title = "Inicia sessió al servidor"
 subtitle = "Introdueix les credencials del servidor"
+link = "o connecteu-vos a un compte autoallotjat"
 
 [setup.server]
 title = "Connecta't al servidor"
@@ -5833,6 +5944,14 @@ description = "Introdueix la URL completa del teu servidor autoallotjat de Stirl
 emptyUrl = "Introdueix una URL de servidor"
 unreachable = "No s'ha pogut connectar amb el servidor"
 testFailed = "Ha fallat la prova de connexió"
+configFetch = "No s'ha pogut obtenir la configuració del servidor. Comproveu l'URL i torneu-ho a provar."
+
+[setup.server.error.securityDisabled]
+title = "Inici de sessió no habilitat"
+body = "Aquest servidor no té l'inici de sessió habilitat. Per connectar-hi, heu d'habilitar l'autenticació:"
+step1 = "Establiu DOCKER_ENABLE_SECURITY=true al vostre entorn"
+step2 = "O establiu security.enableLogin=true a settings.yml"
+step3 = "Reinicieu el servidor"
 
 [setup.login]
 title = "Inicia sessió"
@@ -5905,6 +6024,7 @@ earlyAccess = "Accés anticipat"
 reset = "Restableix els canvis"
 downloadJson = "Descarrega JSON"
 generatePdf = "Genera PDF"
+saveChanges = "Deseu els canvis"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoajusta el text a les caixes"
@@ -5942,6 +6062,8 @@ alpha = "Aquest visor alfa encara evoluciona—certs tipus de lletra, colors, ef
 [pdfTextEditor.empty]
 title = "No s'ha carregat cap document"
 subtitle = "Carrega un fitxer PDF o JSON per començar a editar el contingut de text."
+dropzone = "Arrossegueu i deixeu anar un fitxer PDF o JSON aquí, o feu clic per explorar"
+dropzoneWithFiles = "Seleccioneu un fitxer de la pestanya Fitxers o arrossegueu i deixeu anar aquí un fitxer PDF o JSON, o feu clic per explorar"
 
 [pdfTextEditor.welcomeBanner]
 title = "Benvingut a l'Editor de text PDF (accés anticipat)"
