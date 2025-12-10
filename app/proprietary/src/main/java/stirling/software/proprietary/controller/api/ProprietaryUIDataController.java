@@ -205,6 +205,10 @@ public class ProprietaryUIDataController {
         data.setLoginMethod(securityProps.getLoginMethod());
         data.setAltLogin(!providerList.isEmpty() && securityProps.isAltLogin());
 
+        // Add language configuration for login page
+        data.setLanguages(applicationProperties.getUi().getLanguages());
+        data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
+
         return ResponseEntity.ok(data);
     }
 
@@ -492,6 +496,8 @@ public class ProprietaryUIDataController {
         private boolean altLogin;
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
+        private List<String> languages;
+        private String defaultLocale;
     }
 
     @Data
