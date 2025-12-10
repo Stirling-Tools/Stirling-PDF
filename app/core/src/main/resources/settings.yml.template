@@ -12,6 +12,8 @@
 
 security:
   enableLogin: true # set to 'true' to enable login
+  custom:
+    enabled: false # set true to use custom auth instead of builtin Spring Auth
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
