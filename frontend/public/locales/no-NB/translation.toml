@@ -3036,6 +3036,91 @@ title = "Få Info om PDF"
 header = "Få Info om PDF"
 submit = "Få Info"
 downloadJson = "Last ned JSON"
+processing = "Henter ut informasjon..."
+results = "Resultater"
+noResults = "Kjør verktøyet for å generere en rapport."
+downloads = "Nedlastinger"
+noneDetected = "Ingen funnet"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Fullstendig informasjonsoppsummering"
+shortTitle = "PDF-informasjon"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Skjemafelt"
+basicInfo = "Grunnleggende info"
+documentInfo = "Dokumentinformasjon"
+compliance = "Samsvar"
+encryption = "Kryptering"
+permissions = "Tillatelser"
+other = "Annet"
+perPageInfo = "Informasjon per side"
+tableOfContents = "Innholdsfortegnelse"
+
+[getPdfInfo.other]
+attachments = "Vedlegg"
+embeddedFiles = "Innebygde filer"
+javaScript = "JavaScript"
+layers = "Lag"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Størrelse"
+annotations = "Merknader"
+images = "Bilder"
+links = "Lenker"
+fonts = "Skrifter"
+xobjects = "XObject-antall"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Sider"
+fileSize = "Filstørrelse"
+pdfVersion = "PDF-versjon"
+language = "Språk"
+title = "PDF-sammendrag"
+author = "Forfatter"
+created = "Opprettet"
+modified = "Endret"
+permsAll = "Alle tillatelser tillatt"
+permsRestricted = "{{count}} begrensninger"
+permsMixed = "Noen tillatelser begrenset"
+hasCompliance = "Har samsvarsstandarder"
+noCompliance = "Ingen samsvarsstandarder"
+basic = "Grunnleggende informasjon"
+documentInfo = "Dokumentinformasjon"
+securityTitle = "Sikkerhetsstatus"
+technical = "Teknisk"
+overviewTitle = "PDF-oversikt"
+
+[getPdfInfo.summary.security]
+encrypted = "Kryptert PDF - passordbeskyttelse er aktiv"
+unencrypted = "Ukryptert PDF - ingen passordbeskyttelse"
+
+[getPdfInfo.summary.tech]
+images = "Bilder"
+fonts = "Skrifter"
+formFields = "Skjemafelt"
+embeddedFiles = "Innebygde filer"
+javaScript = "JavaScript"
+layers = "Lag"
+bookmarks = "Bokmerker"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "et navnløst dokument"
+unknown = "Ukjent forfatter"
+text = "Dette er en PDF på {{pages}} sider med tittelen {{title}}, opprettet av {{author}} (PDF-versjon {{version}})."
+
+[getPdfInfo.error]
+partial = "Noen filer kunne ikke behandles."
+unexpected = "Uventet feil under uttrekk."
+
+[getPdfInfo.status]
+complete = "Uttrekk fullført"
 
 [extractPage]
 tags = "ekstrahere"
@@ -5282,6 +5367,31 @@ error = "Kunne ikke oppdatere brukerstatus"
 success = "Bruker slettet"
 error = "Kunne ikke slette bruker"
 
+[workspace.people.changePassword]
+action = "Endre passord"
+title = "Endre passord"
+subtitle = "Oppdater passordet for"
+newPassword = "Nytt passord"
+confirmPassword = "Bekreft passord"
+placeholder = "Angi et nytt passord"
+confirmPlaceholder = "Skriv inn det nye passordet på nytt"
+passwordRequired = "Angi et nytt passord"
+passwordMismatch = "Passordene samsvarer ikke"
+generateRandom = "Generer sikkert passord"
+generatedPreview = "Generert passord:"
+copyTooltip = "Kopier til utklippstavle"
+copiedToClipboard = "Passord kopiert til utklippstavle"
+copyFailed = "Kunne ikke kopiere passord"
+sendEmail = "Send e-post til brukeren om denne endringen"
+includePassword = "Inkluder det nye passordet i e-posten"
+forcePasswordChange = "Tving brukeren til å endre passord ved neste innlogging"
+emailUnavailable = "Denne brukerens e-post er ikke en gyldig e-postadresse. Varsler er deaktivert."
+smtpDisabled = "E-postvarsler krever at SMTP er aktivert i innstillingene."
+notifyOnly = "Det sendes en e-post uten passordet som informerer brukeren om at en admin har endret det."
+submit = "Oppdater passord"
+success = "Passord oppdatert"
+error = "Kunne ikke oppdatere passord"
+
 [workspace.people.emailInvite]
 tab = "E-postinvitasjon"
 description = "Skriv eller lim inn e-poster nedenfor, separert med komma. Brukere vil motta innloggingsdetaljer via e-post."
@@ -5815,6 +5925,7 @@ subtitle = "Logg inn med Stirling-kontoen din"
 [setup.selfhosted]
 title = "Logg inn på server"
 subtitle = "Oppgi serverlegitimasjonen din"
+link = "eller koble til en selvhostet konto"
 
 [setup.server]
 title = "Koble til server"
@@ -5833,6 +5944,14 @@ description = "Skriv inn full URL til din selvhostede Stirling PDF-server"
 emptyUrl = "Skriv inn en server-URL"
 unreachable = "Kunne ikke koble til server"
 testFailed = "Tilkoblingstest mislyktes"
+configFetch = "Kunne ikke hente serverkonfigurasjon. Kontroller URL-en og prøv igjen."
+
+[setup.server.error.securityDisabled]
+title = "Innlogging ikke aktivert"
+body = "Denne serveren har ikke innlogging aktivert. For å koble til denne serveren må du aktivere autentisering:"
+step1 = "Angi DOCKER_ENABLE_SECURITY=true i miljøet ditt"
+step2 = "Eller angi security.enableLogin=true i settings.yml"
+step3 = "Start serveren på nytt"
 
 [setup.login]
 title = "Logg inn"
@@ -5905,6 +6024,7 @@ earlyAccess = "Tidlig tilgang"
 reset = "Tilbakestill endringer"
 downloadJson = "Last ned JSON"
 generatePdf = "Generer PDF"
+saveChanges = "Lagre endringer"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoskalere tekst til å passe i bokser"
@@ -5942,6 +6062,8 @@ alpha = "Denne alfa-visningen er fortsatt under utvikling—visse skrifttyper, f
 [pdfTextEditor.empty]
 title = "Ingen dokument lastet inn"
 subtitle = "Last inn en PDF- eller JSON-fil for å begynne å redigere tekstinnhold."
+dropzone = "Dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
+dropzoneWithFiles = "Velg en fil fra fanen Filer, eller dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
 
 [pdfTextEditor.welcomeBanner]
 title = "Velkommen til PDF Text Editor (Tidlig tilgang)"
