@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, NumberInput, Tooltip } from '@mantine/core';
+import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, Textarea, NumberInput, Tooltip } from '@mantine/core';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useNavigation } from '@app/contexts/NavigationContext';
 import { useFileSelection, useFileContext } from '@app/contexts/FileContext';
 import { BaseToolProps } from '@app/types/tool';
 import { useSignature } from '@app/contexts/SignatureContext';
-import { ViewerContext } from '@app/contexts/ViewerContext';
+import { ViewerContext, useViewer } from '@app/contexts/ViewerContext';
 import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
 import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -18,8 +18,18 @@ const Annotate = (_props: BaseToolProps) => {
   const { setToolAndWorkbench } = useNavigation();
   const { selectedFiles } = useFileSelection();
   const { selectors } = useFileContext();
-  const { signatureApiRef, historyApiRef, undo, redo } = useSignature();
+  const {
+    signatureApiRef,
+    historyApiRef,
+    undo,
+    redo,
+    setSignatureConfig,
+    setPlacementMode,
+    placementPreviewSize,
+    activateSignaturePlacementMode,
+  } = useSignature();
   const viewerContext = useContext(ViewerContext);
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('highlight');
   const [inkColor, setInkColor] = useState('#1f2933');
@@ -53,6 +63,28 @@ const Annotate = (_props: BaseToolProps) => {
   const [isAnnotationPaused, setIsAnnotationPaused] = useState(false);
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
   const manualToolSwitch = useRef<boolean>(false);
+
+  // Zoom tracking for stamp size conversion
+  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
+
+  useEffect(() => {
+    return registerImmediateZoomUpdate((newZoom) => {
+      setCurrentZoom(newZoom);
+    });
+  }, [registerImmediateZoomUpdate]);
+
+  // CSS to PDF size conversion accounting for zoom
+  const cssToPdfSize = useCallback(
+    (size: { width: number; height: number }) => {
+      const zoom = currentZoom || 1;
+      const factor = 1 / zoom;
+      return {
+        width: size.width * factor,
+        height: size.height * factor,
+      };
+    },
+    [currentZoom]
+  );
 
   const buildToolOptions = useCallback((toolId: AnnotationToolId, includeMetadata: boolean = true) => {
     const metadata = includeMetadata ? {
@@ -135,6 +167,12 @@ const Annotate = (_props: BaseToolProps) => {
   }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions]);
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
+    // If leaving stamp tool, clean up placement mode
+    if (activeTool === 'stamp' && toolId !== 'stamp') {
+      setPlacementMode(false);
+      setSignatureConfig(null);
+    }
+
     viewerContext?.setAnnotationMode(true);
 
     // Mark as manual tool switch to prevent auto-switch back
@@ -174,6 +212,19 @@ const Annotate = (_props: BaseToolProps) => {
     }
   }, [activeTool, buildToolOptions, signatureApiRef, stampImageData]);
 
+  // Sync preview size from overlay to annotation engine
+  useEffect(() => {
+    // When preview size changes, update stamp annotation sizing
+    // The SignatureAPIBridge will use placementPreviewSize from SignatureContext
+    // and apply the converted size to the stamp tool automatically
+    if (activeTool === 'stamp' && placementPreviewSize && stampImageData) {
+      // Just update the image source; size is handled by SignatureAPIBridge
+      signatureApiRef?.current?.setAnnotationStyle?.('stamp', {
+        imageSrc: stampImageData,
+      });
+    }
+  }, [placementPreviewSize, activeTool, stampImageData, signatureApiRef]);
+
   // Allow exiting multi-point tools with Escape (e.g., polyline)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -195,9 +246,9 @@ const Annotate = (_props: BaseToolProps) => {
     const interval = setInterval(() => {
       const ann = signatureApiRef?.current?.getSelectedAnnotation?.();
       const annId = ann?.object?.id ?? null;
-      setSelectedAnn(ann || null);
-      // Only reset drafts when selection changes
+      // Only update state when selection actually changes
       if (annId !== selectedAnnId) {
+        setSelectedAnn(ann || null);
         setSelectedAnnId(annId);
         if (ann?.object?.contents !== undefined) {
           setSelectedTextDraft(ann.object.contents ?? '');
@@ -327,11 +378,19 @@ const Annotate = (_props: BaseToolProps) => {
                       reader.readAsDataURL(file);
                     });
                     setStampImageData(dataUrl);
+
+                    // Configure SignatureContext for placement preview
+                    setSignatureConfig({
+                      signatureType: 'image',
+                      signatureData: dataUrl,
+                    });
+
                     setIsAnnotationPaused(false);
 
-                    // Activate stamp tool with the image after a small delay
+                    // Activate placement mode with delay
                     setTimeout(() => {
                       viewerContext?.setAnnotationMode(true);
+                      setPlacementMode(true); // This shows the preview overlay
                       signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl });
                       signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl });
                     }, 150);
@@ -340,6 +399,8 @@ const Annotate = (_props: BaseToolProps) => {
                   }
                 } else {
                   setStampImageData(undefined);
+                  setPlacementMode(false);
+                  setSignatureConfig(null);
                 }
               }}
               disabled={false}
@@ -610,9 +671,41 @@ const Annotate = (_props: BaseToolProps) => {
                 }}
               />
             </Box>
-            <TextInput
+            <Textarea
               label={t('annotation.text', 'Text')}
               value={selectedTextDraft}
+              minRows={3}
+              maxRows={8}
+              autosize
+              onKeyDown={(e) => {
+                // Explicitly handle Enter key to insert newlines
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const target = e.currentTarget;
+                  const start = target.selectionStart;
+                  const end = target.selectionEnd;
+                  const val = selectedTextDraft;
+                  // Use \r\n for PDF compatibility
+                  const newVal = val.substring(0, start) + '\r\n' + val.substring(end);
+                  setSelectedTextDraft(newVal);
+                  // Update cursor position after state update
+                  setTimeout(() => {
+                    target.selectionStart = target.selectionEnd = start + 2;
+                  }, 0);
+                  // Trigger annotation update
+                  if (selectedUpdateTimer.current) {
+                    clearTimeout(selectedUpdateTimer.current);
+                  }
+                  selectedUpdateTimer.current = setTimeout(() => {
+                    signatureApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { contents: newVal, textColor: selectedAnn.object?.textColor ?? textColor }
+                    );
+                  }, 120);
+                }
+              }}
               onChange={(e) => {
                 const val = e.currentTarget.value;
                 setSelectedTextDraft(val);
@@ -628,35 +721,65 @@ const Annotate = (_props: BaseToolProps) => {
                 }, 120);
               }}
             />
-            <NumberInput
-              label={t('annotation.fontSize', 'Font size')}
-              min={6}
-              max={72}
-              value={selectedFontSize}
-              onChange={(val) => {
-                const size = typeof val === 'number' ? val : 14;
-                setSelectedFontSize(size);
-                signatureApiRef?.current?.updateAnnotation?.(
-                  selectedAnn.object?.pageIndex ?? 0,
-                  selectedAnn.object?.id,
-                  { fontSize: size }
-                );
-              }}
-            />
             <Box>
-              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
               <Slider
-                min={10}
-                max={100}
-                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
-                onChange={(value) => {
+                min={8}
+                max={32}
+                value={selectedFontSize}
+                onChange={(size) => {
+                  setSelectedFontSize(size);
                   signatureApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
-                    { opacity: value / 100 }
+                    { fontSize: size }
                   );
                 }}
               />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.textAlignment', 'Text Alignment')}</Text>
+              <Group gap="xs">
+                <ActionIcon
+                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'left' ? 'filled' : 'default'}
+                  onClick={() => {
+                    signatureApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { textAlign: 'left' }
+                    );
+                  }}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-left" width={18} height={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'center' ? 'filled' : 'default'}
+                  onClick={() => {
+                    signatureApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { textAlign: 'center' }
+                    );
+                  }}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-center" width={18} height={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'right' ? 'filled' : 'default'}
+                  onClick={() => {
+                    signatureApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { textAlign: 'right' }
+                    );
+                  }}
+                  size="md"
+                >
+                  <LocalIcon icon="format-align-right" width={18} height={18} />
+                </ActionIcon>
+              </Group>
             </Box>
           </Stack>
         );

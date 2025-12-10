@@ -91,7 +91,10 @@ const EmbedPdfViewerContent = ({
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotateTool || isAnnotationMode || isAnnotationsVisible;
   const isPlacementOverlayActive = Boolean(
-    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+    (isSignatureMode || (isAnnotateTool && signatureConfig?.signatureType === 'image')) &&
+    shouldEnableAnnotations &&
+    isPlacementMode &&
+    signatureConfig
   );
 
   // Track which file tab is active
