@@ -14,8 +14,9 @@ export default function AppConfigLoader() {
 
   useEffect(() => {
     if (!loading && config) {
-      // Update supported languages if config specifies a language filter
-      updateSupportedLanguages(config.languages);
+      // Update supported languages and apply default locale from server config
+      // Priority: localStorage > config.defaultLocale > browser detection > fallback
+      updateSupportedLanguages(config.languages, config.defaultLocale);
     }
   }, [config, loading]);
 

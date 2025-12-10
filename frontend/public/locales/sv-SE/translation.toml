@@ -3036,6 +3036,91 @@ title = "Hämta information om PDF"
 header = "Hämta information om PDF"
 submit = "Hämta information"
 downloadJson = "Ladda ner JSON"
+processing = "Extraherar information..."
+results = "Resultat"
+noResults = "Kör verktyget för att skapa en rapport."
+downloads = "Nedladdningar"
+noneDetected = "Inget upptäckt"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Fullständig informationssammanfattning"
+shortTitle = "PDF-information"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formulärfält"
+basicInfo = "Grundläggande info"
+documentInfo = "Dokumentinformation"
+compliance = "Efterlevnad"
+encryption = "Kryptering"
+permissions = "Behörigheter"
+other = "Övrigt"
+perPageInfo = "Information per sida"
+tableOfContents = "Innehållsförteckning"
+
+[getPdfInfo.other]
+attachments = "Bilagor"
+embeddedFiles = "Inbäddade filer"
+javaScript = "JavaScript"
+layers = "Lager"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Storlek"
+annotations = "Anteckningar"
+images = "Bilder"
+links = "Länkar"
+fonts = "Typsnitt"
+xobjects = "Antal XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Sidor"
+fileSize = "Filstorlek"
+pdfVersion = "PDF-version"
+language = "Språk"
+title = "PDF-sammanfattning"
+author = "Författare"
+created = "Skapad"
+modified = "Ändrad"
+permsAll = "Alla behörigheter tillåtna"
+permsRestricted = "{{count}} begränsningar"
+permsMixed = "Vissa behörigheter begränsade"
+hasCompliance = "Har efterlevnadsstandarder"
+noCompliance = "Inga efterlevnadsstandarder"
+basic = "Grundläggande information"
+documentInfo = "Dokumentinformation"
+securityTitle = "Säkerhetsstatus"
+technical = "Tekniskt"
+overviewTitle = "PDF-översikt"
+
+[getPdfInfo.summary.security]
+encrypted = "Krypterad PDF - Lösenordsskydd finns"
+unencrypted = "Okrypterad PDF - Inget lösenordsskydd"
+
+[getPdfInfo.summary.tech]
+images = "Bilder"
+fonts = "Typsnitt"
+formFields = "Formulärfält"
+embeddedFiles = "Inbäddade filer"
+javaScript = "JavaScript"
+layers = "Lager"
+bookmarks = "Bokmärken"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "ett namnlöst dokument"
+unknown = "Okänd författare"
+text = "Detta är en PDF på {{pages}} sidor med titeln {{title}}, skapad av {{author}} (PDF-version {{version}})."
+
+[getPdfInfo.error]
+partial = "Vissa filer kunde inte bearbetas."
+unexpected = "Oväntat fel under extrahering."
+
+[getPdfInfo.status]
+complete = "Extrahering klar"
 
 [extractPage]
 tags = "extrahera"
@@ -5177,7 +5262,7 @@ upgrade = "Uppgradera nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens krävs"
 overLimitBody = "Vår licensiering tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-användare. För att fortsätta utan avbrott, uppgradera till Stirling Server-planen - <strong>obegränsade platser</strong>, PDF-textredigering och full adminkontroll för $99/server/mån."
-freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
+freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott rekommenderar vi Stirling Server plan - <strong>obegränsat antal platser</strong> och <strong>SSO-stöd</strong> för $99/server/månad."
 
 [onboarding.desktopInstall]
 title = "Ladda ner"
@@ -5281,6 +5366,31 @@ error = "Misslyckades med att uppdatera användarstatus"
 [workspace.people.delete]
 success = "Användare borttagen"
 error = "Misslyckades med att ta bort användare"
+
+[workspace.people.changePassword]
+action = "Byt lösenord"
+title = "Byt lösenord"
+subtitle = "Uppdatera lösenordet för"
+newPassword = "Nytt lösenord"
+confirmPassword = "Bekräfta lösenord"
+placeholder = "Ange ett nytt lösenord"
+confirmPlaceholder = "Ange det nya lösenordet igen"
+passwordRequired = "Ange ett nytt lösenord"
+passwordMismatch = "Lösenorden matchar inte"
+generateRandom = "Generera säkert lösenord"
+generatedPreview = "Genererat lösenord:"
+copyTooltip = "Kopiera till urklipp"
+copiedToClipboard = "Lösenord kopierat till urklipp"
+copyFailed = "Det gick inte att kopiera lösenordet"
+sendEmail = "Skicka e-post till användaren om denna ändring"
+includePassword = "Inkludera det nya lösenordet i e-postmeddelandet"
+forcePasswordChange = "Tvinga användaren att byta lösenord vid nästa inloggning"
+emailUnavailable = "Den här användarens e-postadress är inte giltig. Aviseringar är inaktiverade."
+smtpDisabled = "E-postaviseringar kräver att SMTP är aktiverat i inställningarna."
+notifyOnly = "Ett e-postmeddelande skickas utan lösenordet och informerar användaren om att en admin har ändrat det."
+submit = "Uppdatera lösenord"
+success = "Lösenordet har uppdaterats"
+error = "Det gick inte att uppdatera lösenordet"
 
 [workspace.people.emailInvite]
 tab = "E-postinbjudan"
@@ -5815,6 +5925,7 @@ subtitle = "Logga in med ditt Stirling-konto"
 [setup.selfhosted]
 title = "Logga in på server"
 subtitle = "Ange dina serveruppgifter"
+link = "eller anslut till ett självhostat konto"
 
 [setup.server]
 title = "Anslut till server"
@@ -5833,6 +5944,14 @@ description = "Ange den fullständiga URL:en till din självhostade Stirling PDF
 emptyUrl = "Ange en server-URL"
 unreachable = "Kunde inte ansluta till servern"
 testFailed = "Anslutningstest misslyckades"
+configFetch = "Det gick inte att hämta serverkonfigurationen. Kontrollera URL:en och försök igen."
+
+[setup.server.error.securityDisabled]
+title = "Inloggning inte aktiverad"
+body = "Den här servern har inte inloggning aktiverad. För att ansluta till den här servern måste du aktivera autentisering:"
+step1 = "Ställ in DOCKER_ENABLE_SECURITY=true i din miljö"
+step2 = "Eller ställ in security.enableLogin=true i settings.yml"
+step3 = "Starta om servern"
 
 [setup.login]
 title = "Logga in"
@@ -5905,6 +6024,7 @@ earlyAccess = "Tidig åtkomst"
 reset = "Återställ ändringar"
 downloadJson = "Ladda ner JSON"
 generatePdf = "Skapa PDF"
+saveChanges = "Spara ändringar"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Skala text automatiskt för att passa rutor"
@@ -5942,6 +6062,8 @@ alpha = "Denna alfa-visare utvecklas fortfarande—vissa typsnitt, färger, tran
 [pdfTextEditor.empty]
 title = "Inget dokument inläst"
 subtitle = "Ladda en PDF- eller JSON-fil för att börja redigera textinnehåll."
+dropzone = "Dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
+dropzoneWithFiles = "Välj en fil från fliken Filer, eller dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
 
 [pdfTextEditor.welcomeBanner]
 title = "Välkommen till PDF Text Editor (Tidig åtkomst)"

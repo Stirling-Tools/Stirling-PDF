@@ -3036,6 +3036,91 @@ title = "Informacije o PDF-u"
 header = "Informacije o PDF-u"
 submit = "Informacije"
 downloadJson = "Preuzmite JSON"
+processing = "Izdvajanje informacija..."
+results = "Rezultati"
+noResults = "Pokrenite alat za generiranje izvješća."
+downloads = "Preuzimanja"
+noneDetected = "Ništa nije otkriveno"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Potpuni sažetak informacija"
+shortTitle = "Informacije o PDF-u"
+
+[getPdfInfo.sections]
+metadata = "Metapodaci"
+formFields = "Polja obrasca"
+basicInfo = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+compliance = "Sukladnost"
+encryption = "Šifriranje"
+permissions = "Dozvole"
+other = "Ostalo"
+perPageInfo = "Informacije po stranici"
+tableOfContents = "Sadržaj"
+
+[getPdfInfo.other]
+attachments = "Privici"
+embeddedFiles = "Ugrađene datoteke"
+javaScript = "JavaScript"
+layers = "Slojevi"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Veličina"
+annotations = "Bilješke"
+images = "Slike"
+links = "Poveznice"
+fonts = "Fontovi"
+xobjects = "Broj XObjecta"
+multimedia = "Multimedija"
+
+[getPdfInfo.summary]
+pages = "Stranice"
+fileSize = "Veličina datoteke"
+pdfVersion = "PDF verzija"
+language = "Jezik"
+title = "Sažetak PDF-a"
+author = "Autor"
+created = "Stvoreno"
+modified = "Izmijenjeno"
+permsAll = "Sve dozvole dopuštene"
+permsRestricted = "{{count}} ograničenja"
+permsMixed = "Neke dozvole su ograničene"
+hasCompliance = "Ima standarde sukladnosti"
+noCompliance = "Nema standarda sukladnosti"
+basic = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+securityTitle = "Status sigurnosti"
+technical = "Tehničko"
+overviewTitle = "Pregled PDF-a"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrirani PDF - prisutna zaštita lozinkom"
+unencrypted = "Nešifrirani PDF - bez zaštite lozinkom"
+
+[getPdfInfo.summary.tech]
+images = "Slike"
+fonts = "Fontovi"
+formFields = "Polja obrasca"
+embeddedFiles = "Ugrađene datoteke"
+javaScript = "JavaScript"
+layers = "Slojevi"
+bookmarks = "Oznake"
+multimedia = "Multimedija"
+
+[getPdfInfo.summary.overview]
+untitled = "neimenovani dokument"
+unknown = "Nepoznat autor"
+text = "Ovo je PDF od {{pages}} stranica pod nazivom {{title}}, čiji je autor {{author}} (PDF verzija {{version}})."
+
+[getPdfInfo.error]
+partial = "Neke datoteke nije bilo moguće obraditi."
+unexpected = "Neočekivana pogreška tijekom izdvajanja."
+
+[getPdfInfo.status]
+complete = "Izdvajanje dovršeno"
 
 [extractPage]
 tags = "izdvajanje"
@@ -5177,7 +5262,7 @@ upgrade = "Nadogradi odmah →"
 freeTitle = "Poslužiteljska licenca"
 overLimitTitle = "Potrebna poslužiteljska licenca"
 overLimitBody = "Naše licenciranje dopušta do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Imate <strong>{{overLimitUserCopy}}</strong> Stirling korisnika. Za nesmetan nastavak, nadogradite na Stirling Server plan - <strong>neograničena mjesta</strong>, uređivanje teksta u PDF-u i puna admin kontrola za $99/server/mo."
-freeBody = "Naše <strong>Open-Core</strong> licenciranje dopušta do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Za nesmetano skaliranje i rani pristup našem novom <strong>alatu za uređivanje teksta u PDF-u</strong>, preporučujemo Stirling Server plan - potpuno uređivanje i <strong>neograničena mjesta</strong> za $99/server/mo."
+freeBody = "Naše licenciranje <strong>Open-Core</strong> omogućuje do <strong>{{freeTierLimit}}</strong> korisnika besplatno po poslužitelju. Za neometano skaliranje preporučujemo Stirling Server plan - <strong>neograničena mjesta</strong> i <strong>podrška za SSO</strong> za $99/poslužitelj/mj."
 
 [onboarding.desktopInstall]
 title = "Preuzimanje"
@@ -5281,6 +5366,31 @@ error = "Nije uspjelo ažuriranje statusa korisnika"
 [workspace.people.delete]
 success = "Korisnik je uspješno izbrisan"
 error = "Nije uspjelo brisanje korisnika"
+
+[workspace.people.changePassword]
+action = "Promijeni lozinku"
+title = "Promijeni lozinku"
+subtitle = "Ažuriraj lozinku za"
+newPassword = "Nova lozinka"
+confirmPassword = "Potvrdi lozinku"
+placeholder = "Unesite novu lozinku"
+confirmPlaceholder = "Ponovno unesite novu lozinku"
+passwordRequired = "Unesite novu lozinku"
+passwordMismatch = "Lozinke se ne podudaraju"
+generateRandom = "Generiraj sigurnu lozinku"
+generatedPreview = "Generirana lozinka:"
+copyTooltip = "Kopiraj u međuspremnik"
+copiedToClipboard = "Lozinka kopirana u međuspremnik"
+copyFailed = "Nije uspjelo kopiranje lozinke"
+sendEmail = "Pošalji korisniku e-poruku o ovoj promjeni"
+includePassword = "Uključi novu lozinku u e-poruku"
+forcePasswordChange = "Prisili korisnika da promijeni lozinku pri sljedećoj prijavi"
+emailUnavailable = "E-adresa ovog korisnika nije valjana. Obavijesti su onemogućene."
+smtpDisabled = "Obavijesti e-poštom zahtijevaju da SMTP bude omogućen u postavkama."
+notifyOnly = "Poslat će se e-poruka bez lozinke kako bi se korisniku javilo da ju je administrator promijenio."
+submit = "Ažuriraj lozinku"
+success = "Lozinka je uspješno ažurirana"
+error = "Nije uspjelo ažuriranje lozinke"
 
 [workspace.people.emailInvite]
 tab = "Poziv e-poštom"
@@ -5815,6 +5925,7 @@ subtitle = "Prijavite se svojim Stirling računom"
 [setup.selfhosted]
 title = "Prijavite se na poslužitelj"
 subtitle = "Unesite vjerodajnice poslužitelja"
+link = "ili se povežite sa samohostiranim računom"
 
 [setup.server]
 title = "Povežite se s poslužiteljem"
@@ -5833,6 +5944,14 @@ description = "Unesite puni URL svog self-hosted Stirling PDF poslužitelja"
 emptyUrl = "Unesite URL poslužitelja"
 unreachable = "Nije moguće povezati se s poslužiteljem"
 testFailed = "Test veze nije uspio"
+configFetch = "Neuspjelo dohvaćanje konfiguracije poslužitelja. Provjerite URL i pokušajte ponovno."
+
+[setup.server.error.securityDisabled]
+title = "Prijava nije omogućena"
+body = "Na ovom poslužitelju prijava nije omogućena. Da biste se povezali s ovim poslužiteljem, morate omogućiti autentikaciju:"
+step1 = "Postavite DOCKER_ENABLE_SECURITY=true u svom okruženju"
+step2 = "Ili postavite security.enableLogin=true u settings.yml"
+step3 = "Ponovno pokrenite poslužitelj"
 
 [setup.login]
 title = "Prijava"
@@ -5905,6 +6024,7 @@ earlyAccess = "Rani pristup"
 reset = "Poništi promjene"
 downloadJson = "Preuzmi JSON"
 generatePdf = "Generiraj PDF"
+saveChanges = "Spremi promjene"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automatski skaliraj tekst kako bi stao u okvire"
@@ -5942,6 +6062,8 @@ alpha = "Ovaj alfa preglednik još se razvija — određeni fontovi, boje, efekt
 [pdfTextEditor.empty]
 title = "Nijedan dokument nije učitan"
 subtitle = "Učitajte PDF ili JSON datoteku kako biste započeli uređivanje teksta."
+dropzone = "Ovdje povucite i ispustite PDF ili JSON datoteku ili kliknite za pregledavanje"
+dropzoneWithFiles = "Odaberite datoteku s kartice Datoteke ili ovdje povucite i ispustite PDF ili JSON datoteku, ili kliknite za pregledavanje"
 
 [pdfTextEditor.welcomeBanner]
 title = "Dobrodošli u PDF uređivač teksta (rani pristup)"

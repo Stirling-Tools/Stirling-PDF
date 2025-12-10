@@ -36,7 +36,10 @@ export function useAutomateOperation() {
     );
 
     console.log(`✅ Automation completed, returning ${finalResults.length} files`);
-    return finalResults;
+    return {
+      files: finalResults,
+      consumedAllInputs: false,
+    };
   }, [toolRegistry]);
 
   return useToolOperation<AutomateParameters>({

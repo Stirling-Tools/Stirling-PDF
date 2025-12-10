@@ -12,7 +12,6 @@
 
 security:
   enableLogin: true # set to 'true' to enable login
-  csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
@@ -105,6 +104,11 @@ mail:
   username: '' # SMTP server username
   password: '' # SMTP server password
   from: '' # sender email address
+  startTlsEnable: true # enable STARTTLS (explicit TLS upgrade after connecting) when supported by the SMTP server
+  startTlsRequired: false # require STARTTLS; connection fails if the upgrade command is not supported
+  sslEnable: false # enable SSL/TLS wrapper for implicit TLS (typically used with port 465)
+  sslTrust: '' # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
+  sslCheckServerIdentity: false # enable hostname verification when using SSL/TLS
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
