@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
@@ -35,6 +36,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
+    public static final String KEYCLOAK_LOGOUT_PATH = "/protocol/openid-connect/logout";
 
     private final ApplicationProperties.Security securityProperties;
     private final JwtServiceInterface jwtService;
@@ -238,48 +240,57 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         registrationId = oAuthToken.getAuthorizedClientRegistrationId();
 
         // Redirect based on OAuth2 provider
-        switch (registrationId.toLowerCase(Locale.ROOT)) {
-            case "keycloak" -> {
-                KeycloakProvider keycloak = oauth.getClient().getKeycloak();
+        if (registrationId.equalsIgnoreCase("keycloak")) {
+            KeycloakProvider keycloak = oauth.getClient().getKeycloak();
 
-                boolean isKeycloak = !keycloak.getIssuer().isBlank();
-                boolean isCustomOAuth = !oauth.getIssuer().isBlank();
+            boolean isKeycloak = !keycloak.getIssuer().isBlank();
+            boolean isCustomOAuth = !oauth.getIssuer().isBlank();
 
-                String logoutUrl = redirectUrl;
+            String logoutUrl = redirectUrl;
 
-                if (isKeycloak) {
-                    logoutUrl = keycloak.getIssuer();
-                } else if (isCustomOAuth) {
-                    logoutUrl = oauth.getIssuer();
-                }
-                if (isKeycloak || isCustomOAuth) {
-                    logoutUrl +=
-                            "/protocol/openid-connect/logout"
-                                    + "?client_id="
-                                    + keycloak.getClientId()
-                                    + "&post_logout_redirect_uri="
-                                    + response.encodeRedirectURL(redirectUrl);
-                    log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
+            if (isKeycloak) {
+                logoutUrl = keycloak.getIssuer();
+            } else if (isCustomOAuth) {
+                logoutUrl = oauth.getIssuer();
+            }
+            if (isKeycloak || isCustomOAuth) {
+                StringBuilder logoutUrlBuilder = new StringBuilder(logoutUrl);
+                logoutUrlBuilder.append(KEYCLOAK_LOGOUT_PATH);
+
+                // Extract id_token_hint if available (OIDC)
+                // - Identifies the specific user session to terminate
+                // - Enables proper back-channel logout notifications
+                // - Skips the logout confirmation screen in Keycloak
+                Object principal = oAuthToken.getPrincipal();
+                if (principal instanceof OidcUser oidcUser) {
+                    String idToken = oidcUser.getIdToken().getTokenValue();
+                    logoutUrlBuilder.append("?id_token_hint=").append(idToken);
+                    logoutUrlBuilder
+                            .append("&post_logout_redirect_uri=")
+                            .append(response.encodeRedirectURL(redirectUrl));
+                    // client_id is optional when id_token_hint is present, but included for
+                    // compatibility
+                    logoutUrlBuilder.append("&client_id=").append(keycloak.getClientId());
                 } else {
-                    log.info(
-                            "No redirect URL for {} available. Redirecting to default logout URL:"
-                                    + " {}",
-                            registrationId,
-                            logoutUrl);
+                    // Fallback to client_id
+                    logoutUrlBuilder.append("?client_id=").append(keycloak.getClientId());
+                    logoutUrlBuilder
+                            .append("&post_logout_redirect_uri=")
+                            .append(response.encodeRedirectURL(redirectUrl));
                 }
-                response.sendRedirect(logoutUrl);
-            }
-            case "github", "google" -> {
+
+                logoutUrl = logoutUrlBuilder.toString();
+                log.debug("Keycloak logout URL: {}", logoutUrl);
+            } else {
                 log.info(
-                        "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                        "No Keycloak logout available for {}. Redirecting to default logout URL: {}",
                         registrationId,
-                        redirectUrl);
-                response.sendRedirect(redirectUrl);
+                        logoutUrl);
             }
-            default -> {
-                log.info("Redirecting to default logout URL: {}", redirectUrl);
-                response.sendRedirect(redirectUrl);
-            }
+            response.sendRedirect(logoutUrl);
+        } else {
+            log.info("Redirecting to default logout URL: {}", redirectUrl);
+            response.sendRedirect(redirectUrl);
         }
     }
 
