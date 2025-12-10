@@ -17,6 +17,7 @@ import {
   migrateFromLegacyPreferences,
 } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { accountService } from '@app/services/accountService';
+import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
 
 const AUTH_ROUTES = ['/login', '/signup', '/auth', '/invite'];
 const SESSION_TOUR_REQUESTED = 'onboarding::session::tour-requested';
@@ -142,6 +143,7 @@ export function useOnboardingOrchestrator(
   const serverExperience = useServerExperience();
   const { config, loading: configLoading } = useAppConfig();
   const location = useLocation();
+  const bypassOnboarding = useBypassOnboarding();
 
   const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() => 
     getInitialRuntimeState(defaultState)
@@ -193,7 +195,7 @@ export function useOnboardingOrchestrator(
           accountService.getAccountData(),
           accountService.getLoginPageData(),
         ]);
-        
+
         setRuntimeState((prev) => ({
           ...prev,
           requiresPasswordChange: accountData.changeCredsFlag,
@@ -213,7 +215,8 @@ export function useOnboardingOrchestrator(
   const isOnAuthRoute = AUTH_ROUTES.some((route) => location.pathname.startsWith(route));
   const loginEnabled = config?.enableLogin === true;
   const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
-  const shouldBlockOnboarding = isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
+  const shouldBlockOnboarding =
+    bypassOnboarding || isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
 
   const conditionContext = useMemo<OnboardingConditionContext>(() => ({
     ...serverExperience,
@@ -223,8 +226,12 @@ export function useOnboardingOrchestrator(
   }), [serverExperience, runtimeState]);
 
   const activeFlow = useMemo(() => {
+    // If password change is required, ONLY show the first-login step
+    if (runtimeState.requiresPasswordChange) {
+      return ONBOARDING_STEPS.filter((step) => step.id === 'first-login');
+    }
     return ONBOARDING_STEPS.filter((step) => step.condition(conditionContext));
-  }, [conditionContext]);
+  }, [conditionContext, runtimeState.requiresPasswordChange]);
 
   // Wait for config AND admin status before calculating initial step
   const adminStatusResolved = !configLoading && (
@@ -235,23 +242,31 @@ export function useOnboardingOrchestrator(
   
   useEffect(() => {
     if (configLoading || !adminStatusResolved || activeFlow.length === 0) return;
-    
+
     let firstUnseenIndex = -1;
     for (let i = 0; i < activeFlow.length; i++) {
-      if (!hasSeenStep(activeFlow[i].id)) {
+      // Special case: first-login step should always be considered "unseen" if requiresPasswordChange is true
+      const isFirstLoginStep = activeFlow[i].id === 'first-login';
+      const shouldTreatAsUnseen = isFirstLoginStep ? runtimeState.requiresPasswordChange : !hasSeenStep(activeFlow[i].id);
+
+      if (shouldTreatAsUnseen) {
         firstUnseenIndex = i;
         break;
       }
     }
-    
-    if (firstUnseenIndex === -1) {
+
+    // Force reset index when password change is required (overrides initialIndexSet)
+    if (runtimeState.requiresPasswordChange && firstUnseenIndex === 0) {
+      setCurrentStepIndex(0);
+      initialIndexSet.current = true;
+    } else if (firstUnseenIndex === -1) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
     } else if (!initialIndexSet.current) {
       setCurrentStepIndex(firstUnseenIndex);
       initialIndexSet.current = true;
     }
-  }, [activeFlow, configLoading, adminStatusResolved]);
+  }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
 
   const totalSteps = activeFlow.length;
   
@@ -300,10 +315,13 @@ export function useOnboardingOrchestrator(
     if (!currentStep || isLoading) {
       return;
     }
-    if (hasSeenStep(currentStep.id)) {
+    // Special case: never auto-complete first-login step if requiresPasswordChange is true
+    const isFirstLoginStep = currentStep.id === 'first-login';
+
+    if (!isFirstLoginStep && hasSeenStep(currentStep.id)) {
       complete();
     }
-  }, [currentStep, isLoading, complete]);
+  }, [currentStep, isLoading, complete, runtimeState.requiresPasswordChange]);
 
   const updateRuntimeState = useCallback((updates: Partial<OnboardingRuntimeState>) => {
     persistRuntimeState(updates);

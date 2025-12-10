@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
+@Slf4j
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -77,12 +79,18 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
             if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
                 // User is not grandfathered and no paid license - block OAuth login
+                log.warn(
+                        "OAuth login blocked for existing user '{}' - not eligible (not grandfathered and no paid license)",
+                        username);
                 response.sendRedirect(
                         request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
                 return;
             }
         } else if (!licenseSettingsService.isOAuthEligible(null)) {
             // No existing user and no paid license -> block auto creation
+            log.warn(
+                    "OAuth login blocked for new user '{}' - not eligible (no paid license for auto-creation)",
+                    username);
             response.sendRedirect(request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
             return;
         }

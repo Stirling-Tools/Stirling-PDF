@@ -1181,7 +1181,7 @@ selectFilesPlaceholder = "在主视图中选择文件以开始"
 settings = "设置"
 conversionCompleted = "转换完成"
 results = "结果"
-defaultFilename = "converted_file"
+defaultFilename = "已转换_文件"
 conversionResults = "转换结果"
 convertFrom = "从以下格式转换"
 convertTo = "转换为"
@@ -3036,6 +3036,91 @@ title = "PDF ཡི་གནས་ཚུལ་ལེན་པ།"
 header = "PDF ཡི་གནས་ཚུལ་ལེན་པ།"
 submit = "གནས་ཚུལ་ལེན་པ།"
 downloadJson = "JSON ཕབ་ལེན།"
+processing = "正在提取信息..."
+results = "结果"
+noResults = "运行此工具以生成报告。"
+downloads = "下载"
+noneDetected = "未检测到"
+indexTitle = "索引"
+
+[getPdfInfo.report]
+entryLabel = "完整信息摘要"
+shortTitle = "PDF 信息"
+
+[getPdfInfo.sections]
+metadata = "元数据"
+formFields = "表单字段"
+basicInfo = "基本信息"
+documentInfo = "文档信息"
+compliance = "合规性"
+encryption = "加密"
+permissions = "权限"
+other = "其他"
+perPageInfo = "每页信息"
+tableOfContents = "目录"
+
+[getPdfInfo.other]
+attachments = "附件"
+embeddedFiles = "嵌入文件"
+javaScript = "JavaScript"
+layers = "图层"
+structureTree = "结构树"
+xmp = "XMP 元数据"
+
+[getPdfInfo.perPage]
+size = "尺寸"
+annotations = "注释"
+images = "图像"
+links = "链接"
+fonts = "字体"
+xobjects = "XObject 数量"
+multimedia = "多媒体"
+
+[getPdfInfo.summary]
+pages = "页数"
+fileSize = "文件大小"
+pdfVersion = "PDF 版本"
+language = "语言"
+title = "PDF 摘要"
+author = "作者"
+created = "创建时间"
+modified = "修改时间"
+permsAll = "允许所有权限"
+permsRestricted = "{{count}} 项限制"
+permsMixed = "部分权限受限"
+hasCompliance = "符合合规标准"
+noCompliance = "无合规标准"
+basic = "基本信息"
+documentInfo = "文档信息"
+securityTitle = "安全状态"
+technical = "技术"
+overviewTitle = "PDF 概览"
+
+[getPdfInfo.summary.security]
+encrypted = "已加密的 PDF - 受密码保护"
+unencrypted = "未加密的 PDF - 无密码保护"
+
+[getPdfInfo.summary.tech]
+images = "图像"
+fonts = "字体"
+formFields = "表单字段"
+embeddedFiles = "嵌入文件"
+javaScript = "JavaScript"
+layers = "图层"
+bookmarks = "书签"
+multimedia = "多媒体"
+
+[getPdfInfo.summary.overview]
+untitled = "未命名文档"
+unknown = "作者未知"
+text = "这是一个 {{pages}} 页的 PDF，标题为 {{title}}，由 {{author}} 创建（PDF 版本 {{version}}）。"
+
+[getPdfInfo.error]
+partial = "部分文件无法处理。"
+unexpected = "提取过程中发生意外错误。"
+
+[getPdfInfo.status]
+complete = "提取完成"
 
 [extractPage]
 tags = "ཕྱིར་འདོན།"
@@ -5177,7 +5262,7 @@ upgrade = "立即升级 →"
 freeTitle = "服务器许可证"
 overLimitTitle = "需要服务器许可证"
 overLimitBody = "我们的许可每台服务器最多允许 <strong>{{freeTierLimit}}</strong> 名用户免费使用。您共有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为避免中断，请升级到 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及每台服务器 $99/月 的完整管理员控制。"
-freeBody = "我们的 <strong>开源内核（Open-Core）</strong> 许可允许每台服务器最多 <strong>{{freeTierLimit}}</strong> 名用户免费使用。为顺畅扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，我们推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/服务器/月。"
+freeBody = "我们的<strong>Open-Core</strong>许可允许每台服务器最多<strong>{{freeTierLimit}}</strong>名用户免费使用。为实现不中断的扩展，我们推荐 Stirling Server 方案 - <strong>不限席位</strong>并提供<strong>SSO 支持</strong>，$99/服务器/月。"
 
 [onboarding.desktopInstall]
 title = "下载"
@@ -5281,6 +5366,31 @@ error = "用户状态更新失败"
 [workspace.people.delete]
 success = "用户删除成功"
 error = "删除用户失败"
+
+[workspace.people.changePassword]
+action = "更改密码"
+title = "更改密码"
+subtitle = "为其更新密码"
+newPassword = "新密码"
+confirmPassword = "确认密码"
+placeholder = "输入新密码"
+confirmPlaceholder = "再次输入新密码"
+passwordRequired = "请输入新密码"
+passwordMismatch = "两次输入的密码不一致"
+generateRandom = "生成安全密码"
+generatedPreview = "已生成的密码："
+copyTooltip = "复制到剪贴板"
+copiedToClipboard = "密码已复制到剪贴板"
+copyFailed = "复制密码失败"
+sendEmail = "通过电子邮件通知用户此更改"
+includePassword = "在邮件中包含新密码"
+forcePasswordChange = "强制用户下次登录时更改密码"
+emailUnavailable = "该用户的邮箱地址无效，已禁用通知。"
+smtpDisabled = "邮件通知需要在设置中启用 SMTP。"
+notifyOnly = "将发送不包含密码的邮件，告知用户管理员已更改其密码。"
+submit = "更新密码"
+success = "密码更新成功"
+error = "密码更新失败"
 
 [workspace.people.emailInvite]
 tab = "邮件邀请"
@@ -5815,6 +5925,7 @@ subtitle = "使用您的 Stirling 账户登录"
 [setup.selfhosted]
 title = "登录服务器"
 subtitle = "输入您的服务器凭据"
+link = "或连接到自托管账户"
 
 [setup.server]
 title = "连接到服务器"
@@ -5833,6 +5944,14 @@ description = "输入自托管 Stirling PDF 服务器的完整 URL"
 emptyUrl = "请输入服务器 URL"
 unreachable = "无法连接到服务器"
 testFailed = "连接测试失败"
+configFetch = "获取服务器配置失败。请检查 URL 后重试。"
+
+[setup.server.error.securityDisabled]
+title = "未启用登录"
+body = "此服务器未启用登录。要连接到该服务器，必须启用身份验证："
+step1 = "在环境中设置 DOCKER_ENABLE_SECURITY=true"
+step2 = "或在 settings.yml 中设置 security.enableLogin=true"
+step3 = "重启服务器"
 
 [setup.login]
 title = "登录"
@@ -5905,6 +6024,7 @@ earlyAccess = "抢先体验"
 reset = "重置更改"
 downloadJson = "下载 JSON"
 generatePdf = "生成 PDF"
+saveChanges = "保存更改"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自动缩放文本以适配框"
@@ -5942,6 +6062,8 @@ alpha = "此 Alpha 预览器仍在演进中——某些字体、颜色、透明�
 [pdfTextEditor.empty]
 title = "未加载文档"
 subtitle = "加载 PDF 或 JSON 文件以开始编辑文本内容。"
+dropzone = "将 PDF 或 JSON 文件拖放到此处，或点击浏览"
+dropzoneWithFiles = "从“文件”选项卡选择文件，或将 PDF 或 JSON 文件拖放到此处，或点击浏览"
 
 [pdfTextEditor.welcomeBanner]
 title = "欢迎使用 PDF 文本编辑器（抢先体验）"
