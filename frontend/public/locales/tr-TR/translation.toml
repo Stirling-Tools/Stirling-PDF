@@ -3036,6 +3036,91 @@ title = "PDF Hakkında Bilgi Al"
 header = "PDF Hakkında Bilgi Al"
 submit = "Bilgi Al"
 downloadJson = "JSON İndir"
+processing = "Bilgi çıkarılıyor..."
+results = "Sonuçlar"
+noResults = "Bir rapor oluşturmak için aracı çalıştırın."
+downloads = "İndirmeler"
+noneDetected = "Hiçbiri tespit edilmedi"
+indexTitle = "Dizin"
+
+[getPdfInfo.report]
+entryLabel = "Tam bilgi özeti"
+shortTitle = "PDF Bilgileri"
+
+[getPdfInfo.sections]
+metadata = "Meta veriler"
+formFields = "Form Alanları"
+basicInfo = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+compliance = "Uyumluluk"
+encryption = "Şifreleme"
+permissions = "İzinler"
+other = "Diğer"
+perPageInfo = "Sayfa Başına Bilgi"
+tableOfContents = "İçindekiler"
+
+[getPdfInfo.other]
+attachments = "Ekler"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+structureTree = "Yapı Ağacı"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Boyut"
+annotations = "Açıklamalar"
+images = "Görüntüler"
+links = "Bağlantılar"
+fonts = "Yazı Tipleri"
+xobjects = "XObject Sayıları"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary]
+pages = "Sayfalar"
+fileSize = "Dosya Boyutu"
+pdfVersion = "PDF Sürümü"
+language = "Dil"
+title = "PDF Özeti"
+author = "Yazar"
+created = "Oluşturulma"
+modified = "Değiştirilme"
+permsAll = "Tüm izinlere izin verildi"
+permsRestricted = "{{count}} kısıtlama"
+permsMixed = "Bazı izinler kısıtlandı"
+hasCompliance = "Uyumluluk standartlarına sahip"
+noCompliance = "Uyumluluk standardı yok"
+basic = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+securityTitle = "Güvenlik Durumu"
+technical = "Teknik"
+overviewTitle = "PDF Genel Bakış"
+
+[getPdfInfo.summary.security]
+encrypted = "Şifrelenmiş PDF - Parola koruması var"
+unencrypted = "Şifrelenmemiş PDF - Parola koruması yok"
+
+[getPdfInfo.summary.tech]
+images = "Görüntüler"
+fonts = "Yazı Tipleri"
+formFields = "Form Alanları"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+bookmarks = "Yer İmleri"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary.overview]
+untitled = "başlıksız bir belge"
+unknown = "Bilinmeyen Yazar"
+text = "Bu, {{author}} tarafından oluşturulan, {{title}} başlıklı {{pages}} sayfalık bir PDF'dir (PDF sürümü {{version}})."
+
+[getPdfInfo.error]
+partial = "Bazı dosyalar işlenemedi."
+unexpected = "Çıkarma sırasında beklenmeyen bir hata oluştu."
+
+[getPdfInfo.status]
+complete = "Çıkarma tamamlandı"
 
 [extractPage]
 tags = "çıkar"
@@ -5282,6 +5367,31 @@ error = "Kullanıcı durumu güncellenemedi"
 success = "Kullanıcı başarıyla silindi"
 error = "Kullanıcı silinemedi"
 
+[workspace.people.changePassword]
+action = "Parolayı değiştir"
+title = "Parolayı değiştir"
+subtitle = "Şunun için parolayı güncelle"
+newPassword = "Yeni parola"
+confirmPassword = "Parolayı onayla"
+placeholder = "Yeni bir parola girin"
+confirmPlaceholder = "Yeni parolayı tekrar girin"
+passwordRequired = "Lütfen yeni bir parola girin"
+passwordMismatch = "Parolalar eşleşmiyor"
+generateRandom = "Güvenli parola oluştur"
+generatedPreview = "Oluşturulan parola:"
+copyTooltip = "Panoya kopyala"
+copiedToClipboard = "Parola panoya kopyalandı"
+copyFailed = "Parola kopyalanamadı"
+sendEmail = "Kullanıcıya bu değişiklik hakkında e-posta gönder"
+includePassword = "E-postaya yeni parolayı dahil et"
+forcePasswordChange = "Kullanıcının bir sonraki girişte parolasını değiştirmesini zorunlu kıl"
+emailUnavailable = "Bu kullanıcının e-posta adresi geçerli değil. Bildirimler devre dışı."
+smtpDisabled = "E-posta bildirimleri için ayarlarda SMTP'nin etkinleştirilmesi gerekir."
+notifyOnly = "Parola olmadan bir e-posta gönderilecek ve kullanıcıya bir yöneticinin parolayı değiştirdiği bildirilecek."
+submit = "Parolayı güncelle"
+success = "Parola başarıyla güncellendi"
+error = "Parola güncellenemedi"
+
 [workspace.people.emailInvite]
 tab = "E-posta Daveti"
 description = "Aşağıya e-postaları virgülle ayırarak yazın veya yapıştırın. Kullanıcılar giriş bilgilerini e-posta ile alacaktır."
@@ -5815,6 +5925,7 @@ subtitle = "Stirling hesabınızla oturum açın"
 [setup.selfhosted]
 title = "Sunucuda Oturum Açın"
 subtitle = "Sunucu kimlik bilgilerinizi girin"
+link = "veya kendi barındırdığınız bir hesaba bağlanın"
 
 [setup.server]
 title = "Sunucuya Bağlan"
@@ -5833,6 +5944,14 @@ description = "Öz barındırılan Stirling PDF sunucunuzun tam URL'sini girin"
 emptyUrl = "Lütfen bir sunucu URL'si girin"
 unreachable = "Sunucuya bağlanılamadı"
 testFailed = "Bağlantı testi başarısız"
+configFetch = "Sunucu yapılandırması alınamadı. Lütfen URL'yi kontrol edip tekrar deneyin."
+
+[setup.server.error.securityDisabled]
+title = "Giriş Etkin Değil"
+body = "Bu sunucuda giriş etkin değil. Bu sunucuya bağlanmak için kimlik doğrulamayı etkinleştirmelisiniz:"
+step1 = "Ortamınızda DOCKER_ENABLE_SECURITY=true olarak ayarlayın"
+step2 = "Ya da settings.yml içinde security.enableLogin=true olarak ayarlayın"
+step3 = "Sunucuyu yeniden başlatın"
 
 [setup.login]
 title = "Oturum Aç"
@@ -5905,6 +6024,7 @@ earlyAccess = "Erken Erişim"
 reset = "Değişiklikleri Sıfırla"
 downloadJson = "JSON'u İndir"
 generatePdf = "PDF Oluştur"
+saveChanges = "Değişiklikleri Kaydet"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Metni kutulara otomatik sığdır"
@@ -5942,6 +6062,8 @@ alpha = "Bu alfa görüntüleyici hâlâ gelişiyor—bazı yazı tipleri, renkl
 [pdfTextEditor.empty]
 title = "Belge yüklenmedi"
 subtitle = "Metin içeriğini düzenlemeye başlamak için bir PDF veya JSON dosyası yükleyin."
+dropzone = "Buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
+dropzoneWithFiles = "Dosyalar sekmesinden bir dosya seçin veya buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Metin Düzenleyiciye Hoş Geldiniz (Erken Erişim)"

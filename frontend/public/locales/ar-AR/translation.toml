@@ -3036,6 +3036,91 @@ title = "الحصول على معلومات عن PDF"
 header = "الحصول على معلومات عن PDF"
 submit = "الحصول على المعلومات"
 downloadJson = "تحميل JSON"
+processing = "جارٍ استخراج المعلومات..."
+results = "النتائج"
+noResults = "شغّل الأداة لإنشاء تقرير."
+downloads = "التنزيلات"
+noneDetected = "لم يتم اكتشاف أي شيء"
+indexTitle = "الفهرس"
+
+[getPdfInfo.report]
+entryLabel = "ملخص المعلومات الكامل"
+shortTitle = "معلومات PDF"
+
+[getPdfInfo.sections]
+metadata = "البيانات الوصفية"
+formFields = "حقول النماذج"
+basicInfo = "معلومات أساسية"
+documentInfo = "معلومات المستند"
+compliance = "الامتثال"
+encryption = "التشفير"
+permissions = "الأذونات"
+other = "أخرى"
+perPageInfo = "معلومات لكل صفحة"
+tableOfContents = "جدول المحتويات"
+
+[getPdfInfo.other]
+attachments = "المرفقات"
+embeddedFiles = "ملفات مضمنة"
+javaScript = "JavaScript"
+layers = "الطبقات"
+structureTree = "شجرة البنية"
+xmp = "بيانات XMP الوصفية"
+
+[getPdfInfo.perPage]
+size = "الحجم"
+annotations = "التعليقات التوضيحية"
+images = "الصور"
+links = "الروابط"
+fonts = "الخطوط"
+xobjects = "عدد كائنات XObject"
+multimedia = "وسائط متعددة"
+
+[getPdfInfo.summary]
+pages = "الصفحات"
+fileSize = "حجم الملف"
+pdfVersion = "إصدار PDF"
+language = "اللغة"
+title = "ملخص PDF"
+author = "المؤلف"
+created = "تم الإنشاء"
+modified = "تم التعديل"
+permsAll = "جميع الأذونات مسموح بها"
+permsRestricted = "{{count}} قيود"
+permsMixed = "بعض الأذونات مقيّدة"
+hasCompliance = "يتضمن معايير امتثال"
+noCompliance = "لا توجد معايير امتثال"
+basic = "معلومات أساسية"
+documentInfo = "معلومات المستند"
+securityTitle = "حالة الأمان"
+technical = "تقني"
+overviewTitle = "نظرة عامة على PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF مشفّر - توجد حماية بكلمة مرور"
+unencrypted = "PDF غير مُشفّر - لا توجد حماية بكلمة مرور"
+
+[getPdfInfo.summary.tech]
+images = "الصور"
+fonts = "الخطوط"
+formFields = "حقول النماذج"
+embeddedFiles = "ملفات مضمنة"
+javaScript = "JavaScript"
+layers = "الطبقات"
+bookmarks = "الإشارات المرجعية"
+multimedia = "وسائط متعددة"
+
+[getPdfInfo.summary.overview]
+untitled = "مستند بلا عنوان"
+unknown = "مؤلف غير معروف"
+text = "هذا ملف PDF يحتوي على {{pages}} صفحة بعنوان {{title}} وتم إنشاؤه بواسطة {{author}} (إصدار PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "تعذّر معالجة بعض الملفات."
+unexpected = "حدث خطأ غير متوقع أثناء الاستخراج."
+
+[getPdfInfo.status]
+complete = "اكتمل الاستخراج"
 
 [extractPage]
 tags = "استخراج"
@@ -5282,6 +5367,31 @@ error = "فشل تحديث حالة المستخدم"
 success = "تم حذف المستخدم بنجاح"
 error = "فشل حذف المستخدم"
 
+[workspace.people.changePassword]
+action = "تغيير كلمة المرور"
+title = "تغيير كلمة المرور"
+subtitle = "تحديث كلمة المرور لـ"
+newPassword = "كلمة مرور جديدة"
+confirmPassword = "تأكيد كلمة المرور"
+placeholder = "أدخل كلمة مرور جديدة"
+confirmPlaceholder = "أعد إدخال كلمة المرور الجديدة"
+passwordRequired = "يرجى إدخال كلمة مرور جديدة"
+passwordMismatch = "كلمتا المرور غير متطابقتين"
+generateRandom = "إنشاء كلمة مرور آمنة"
+generatedPreview = "كلمة المرور المُنشأة:"
+copyTooltip = "نسخ إلى الحافظة"
+copiedToClipboard = "تم نسخ كلمة المرور إلى الحافظة"
+copyFailed = "فشل نسخ كلمة المرور"
+sendEmail = "إرسال بريد إلكتروني للمستخدم حول هذا التغيير"
+includePassword = "تضمين كلمة المرور الجديدة في البريد الإلكتروني"
+forcePasswordChange = "إلزام المستخدم بتغيير كلمة المرور عند تسجيل الدخول التالي"
+emailUnavailable = "بريد هذا المستخدم الإلكتروني غير صالح. تم تعطيل الإشعارات."
+smtpDisabled = "تتطلب إشعارات البريد الإلكتروني تفعيل SMTP في الإعدادات."
+notifyOnly = "سيتم إرسال بريد إلكتروني بدون كلمة المرور لإبلاغ المستخدم بأن المشرف قد غيّرها."
+submit = "تحديث كلمة المرور"
+success = "تم تحديث كلمة المرور بنجاح"
+error = "فشل تحديث كلمة المرور"
+
 [workspace.people.emailInvite]
 tab = "دعوة عبر البريد الإلكتروني"
 description = "اكتب أو الصق عناوين البريد الإلكتروني أدناه مفصولة بفواصل. سيتلقى المستخدمون بيانات اعتماد تسجيل الدخول عبر البريد الإلكتروني."
@@ -5815,6 +5925,7 @@ subtitle = "سجّل الدخول بحساب Stirling الخاص بك"
 [setup.selfhosted]
 title = "سجّل الدخول إلى الخادم"
 subtitle = "أدخل بيانات اعتماد الخادم"
+link = "أو الاتصال بحساب مُستضاف ذاتيًا"
 
 [setup.server]
 title = "الاتصال بالخادم"
@@ -5833,6 +5944,14 @@ description = "أدخل عنوان URL الكامل لخادم Stirling PDF ال
 emptyUrl = "يرجى إدخال عنوان URL للخادم"
 unreachable = "تعذّر الاتصال بالخادم"
 testFailed = "فشل اختبار الاتصال"
+configFetch = "فشل في جلب إعدادات الخادم. يرجى التحقق من عنوان URL والمحاولة مرة أخرى."
+
+[setup.server.error.securityDisabled]
+title = "تسجيل الدخول غير مفعّل"
+body = "لا يحتوي هذا الخادم على تسجيل دخول مفعّل. للاتصال بهذا الخادم، يجب تمكين المصادقة:"
+step1 = "عيّن DOCKER_ENABLE_SECURITY=true في بيئتك"
+step2 = "أو عيّن security.enableLogin=true في settings.yml"
+step3 = "أعد تشغيل الخادم"
 
 [setup.login]
 title = "تسجيل الدخول"
@@ -5905,6 +6024,7 @@ earlyAccess = "وصول مبكر"
 reset = "إعادة تعيين التغييرات"
 downloadJson = "تنزيل JSON"
 generatePdf = "توليد PDF"
+saveChanges = "حفظ التغييرات"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ضبط النص تلقائياً ليتناسب مع الصناديق"
@@ -5942,6 +6062,8 @@ alpha = "هذا العارض بنسخة ألفا ولا يزال يتطور—ق
 [pdfTextEditor.empty]
 title = "لم يتم تحميل مستند"
 subtitle = "حمّل ملف PDF أو JSON لبدء تحرير محتوى النص."
+dropzone = "اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
+dropzoneWithFiles = "حدد ملفًا من علامة تبويب الملفات، أو اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
 
 [pdfTextEditor.welcomeBanner]
 title = "مرحباً بك في محرر نصوص PDF (وصول مبكر)"

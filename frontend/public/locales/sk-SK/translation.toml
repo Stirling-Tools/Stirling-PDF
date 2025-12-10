@@ -3036,6 +3036,91 @@ title = "Získať informácie o PDF"
 header = "Získať informácie o PDF"
 submit = "Získať info"
 downloadJson = "Stiahnuť JSON"
+processing = "Extrahujú sa informácie..."
+results = "Výsledky"
+noResults = "Spustite nástroj na vygenerovanie prehľadu."
+downloads = "Sťahovania"
+noneDetected = "Nič nebolo zistené"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Úplné zhrnutie informácií"
+shortTitle = "Informácie o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadáta"
+formFields = "Polia formulára"
+basicInfo = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+compliance = "Súlad"
+encryption = "Šifrovanie"
+permissions = "Oprávnenia"
+other = "Iné"
+perPageInfo = "Informácie pre strany"
+tableOfContents = "Obsah"
+
+[getPdfInfo.other]
+attachments = "Prílohy"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Veľkosť"
+annotations = "Anotácie"
+images = "Obrázky"
+links = "Odkazy"
+fonts = "Písma"
+xobjects = "Počty XObjectov"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary]
+pages = "Strany"
+fileSize = "Veľkosť súboru"
+pdfVersion = "Verzia PDF"
+language = "Jazyk"
+title = "Súhrn PDF"
+author = "Autor"
+created = "Vytvorené"
+modified = "Upravené"
+permsAll = "Všetky oprávnenia povolené"
+permsRestricted = "{{count}} obmedzení"
+permsMixed = "Niektoré oprávnenia obmedzené"
+hasCompliance = "Spĺňa štandardy súladu"
+noCompliance = "Žiadne štandardy súladu"
+basic = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+securityTitle = "Stav zabezpečenia"
+technical = "Technické"
+overviewTitle = "Prehľad PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrované PDF - prítomná ochrana heslom"
+unencrypted = "Nešifrované PDF - Bez ochrany heslom"
+
+[getPdfInfo.summary.tech]
+images = "Obrázky"
+fonts = "Písma"
+formFields = "Polia formulára"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+bookmarks = "Záložky"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary.overview]
+untitled = "nepomenovaný dokument"
+unknown = "Neznámy autor"
+text = "Toto je {{pages}}-stranové PDF s názvom {{title}} od autora {{author}} (verzia PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Niektoré súbory sa nepodarilo spracovať."
+unexpected = "Počas extrahovania došlo k neočakávanej chybe."
+
+[getPdfInfo.status]
+complete = "Extrahovanie dokončené"
 
 [extractPage]
 tags = "extrahovať"
@@ -3552,7 +3637,7 @@ title = "PDF na jednu stránku"
 header = "PDF na jednu stránku"
 submit = "Konvertovať na jednu stránku"
 description = "Tento nástroj zlúči všetky strany vášho PDF do jednej veľkej stránky. Šírka zostane rovnaká ako pri pôvodných stranách, výška bude súčtom výšok všetkých strán."
-filenamePrefix = "single_page"
+filenamePrefix = "jedna_strana"
 
 [pdfToSinglePage.files]
 placeholder = "Vyberte súbor PDF v hlavnom zobrazení, aby ste začali"
@@ -5282,6 +5367,31 @@ error = "Nepodarilo sa aktualizovať stav používateľa"
 success = "Používateľ bol úspešne odstránený"
 error = "Nepodarilo sa odstrániť používateľa"
 
+[workspace.people.changePassword]
+action = "Zmeniť heslo"
+title = "Zmeniť heslo"
+subtitle = "Aktualizovať heslo pre"
+newPassword = "Nové heslo"
+confirmPassword = "Potvrdiť heslo"
+placeholder = "Zadajte nové heslo"
+confirmPlaceholder = "Zadajte nové heslo ešte raz"
+passwordRequired = "Zadajte nové heslo"
+passwordMismatch = "Heslá sa nezhodujú"
+generateRandom = "Vygenerovať bezpečné heslo"
+generatedPreview = "Vygenerované heslo:"
+copyTooltip = "Kopírovať do schránky"
+copiedToClipboard = "Heslo skopírované do schránky"
+copyFailed = "Heslo sa nepodarilo skopírovať"
+sendEmail = "Odoslať používateľovi e-mail o tejto zmene"
+includePassword = "Zahrnúť nové heslo do e-mailu"
+forcePasswordChange = "Vynútiť zmenu hesla pri najbližšom prihlásení"
+emailUnavailable = "E-mailová adresa tohto používateľa nie je platná. Upozornenia sú vypnuté."
+smtpDisabled = "E-mailové upozornenia vyžadujú, aby bolo v nastaveniach povolené SMTP."
+notifyOnly = "Odošle sa e-mail bez hesla, ktorý používateľa informuje, že ho zmenil administrátor."
+submit = "Aktualizovať heslo"
+success = "Heslo bolo úspešne aktualizované"
+error = "Heslo sa nepodarilo aktualizovať"
+
 [workspace.people.emailInvite]
 tab = "Pozvánka e-mailom"
 description = "Nižšie napíšte alebo vložte e-mailové adresy oddelené čiarkami. Používatelia dostanú prihlasovacie údaje e-mailom."
@@ -5815,6 +5925,7 @@ subtitle = "Prihláste sa pomocou svojho účtu Stirling"
 [setup.selfhosted]
 title = "Prihlásiť sa na server"
 subtitle = "Zadajte prihlasovacie údaje k serveru"
+link = "alebo sa pripojte k self-hosted účtu"
 
 [setup.server]
 title = "Pripojiť sa na server"
@@ -5833,6 +5944,14 @@ description = "Zadajte úplnú URL svojho self-hostovaného servera Stirling PDF
 emptyUrl = "Zadajte URL servera"
 unreachable = "Nedá sa pripojiť k serveru"
 testFailed = "Test pripojenia zlyhal"
+configFetch = "Nepodarilo sa načítať konfiguráciu servera. Skontrolujte URL a skúste to znova."
+
+[setup.server.error.securityDisabled]
+title = "Prihlásenie nie je povolené"
+body = "Na tomto serveri nie je povolené prihlásenie. Ak sa chcete pripojiť k tomuto serveru, musíte povoliť overenie:"
+step1 = "Nastavte DOCKER_ENABLE_SECURITY=true vo svojom prostredí"
+step2 = "Alebo nastavte security.enableLogin=true v súbore settings.yml"
+step3 = "Reštartujte server"
 
 [setup.login]
 title = "Prihlásiť sa"
@@ -5905,6 +6024,7 @@ earlyAccess = "Skorý prístup"
 reset = "Resetovať zmeny"
 downloadJson = "Stiahnuť JSON"
 generatePdf = "Vygenerovať PDF"
+saveChanges = "Uložiť zmeny"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky prispôsobiť text do boxov"
@@ -5942,6 +6062,8 @@ alpha = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efe
 [pdfTextEditor.empty]
 title = "Žiadny dokument nie je načítaný"
 subtitle = "Načítajte súbor PDF alebo JSON a začnite upravovať textový obsah."
+dropzone = "Pretiahnite sem súbor PDF alebo JSON, alebo kliknite pre prehľadanie"
+dropzoneWithFiles = "Vyberte súbor na karte Súbory, alebo sem presuňte súbor PDF alebo JSON, prípadne kliknite pre prehľadanie"
 
 [pdfTextEditor.welcomeBanner]
 title = "Vitajte v PDF Text Editore (Early Access)"

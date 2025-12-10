@@ -3036,6 +3036,91 @@ title = "Získat informace o PDF"
 header = "Získat informace o PDF"
 submit = "Získat informace"
 downloadJson = "Stáhnout JSON"
+processing = "Probíhá extrahování informací..."
+results = "Výsledky"
+noResults = "Spusťte nástroj pro vygenerování zprávy."
+downloads = "Stažení"
+noneDetected = "Nic nebylo zjištěno"
+indexTitle = "Rejstřík"
+
+[getPdfInfo.report]
+entryLabel = "Úplné shrnutí informací"
+shortTitle = "Informace o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formulářová pole"
+basicInfo = "Základní informace"
+documentInfo = "Informace o dokumentu"
+compliance = "Shoda"
+encryption = "Šifrování"
+permissions = "Oprávnění"
+other = "Ostatní"
+perPageInfo = "Informace po stránkách"
+tableOfContents = "Obsah"
+
+[getPdfInfo.other]
+attachments = "Přílohy"
+embeddedFiles = "Vložené soubory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Velikost"
+annotations = "Anotace"
+images = "Obrázky"
+links = "Odkazy"
+fonts = "Písma"
+xobjects = "Počty XObjectů"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Stránky"
+fileSize = "Velikost souboru"
+pdfVersion = "Verze PDF"
+language = "Jazyk"
+title = "Souhrn PDF"
+author = "Autor"
+created = "Vytvořeno"
+modified = "Upraveno"
+permsAll = "Všechna oprávnění povolena"
+permsRestricted = "{{count}} omezení"
+permsMixed = "Některá oprávnění jsou omezena"
+hasCompliance = "Obsahuje standardy shody"
+noCompliance = "Žádné standardy shody"
+basic = "Základní informace"
+documentInfo = "Informace o dokumentu"
+securityTitle = "Stav zabezpečení"
+technical = "Technické"
+overviewTitle = "Přehled PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrované PDF – chráněno heslem"
+unencrypted = "Nešifrované PDF – bez ochrany heslem"
+
+[getPdfInfo.summary.tech]
+images = "Obrázky"
+fonts = "Písma"
+formFields = "Formulářová pole"
+embeddedFiles = "Vložené soubory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+bookmarks = "Záložky"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "nepojmenovaný dokument"
+unknown = "Neznámý autor"
+text = "Toto je PDF o {{pages}} stránkách s názvem {{title}} od autora {{author}} (verze PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Některé soubory se nepodařilo zpracovat."
+unexpected = "Během extrahování došlo k neočekávané chybě."
+
+[getPdfInfo.status]
+complete = "Extrahování dokončeno"
 
 [extractPage]
 tags = "extrahovat"
@@ -5282,6 +5367,31 @@ error = "Nepodařilo se aktualizovat stav uživatele"
 success = "Uživatel úspěšně smazán"
 error = "Nepodařilo se smazat uživatele"
 
+[workspace.people.changePassword]
+action = "Změnit heslo"
+title = "Změna hesla"
+subtitle = "Aktualizovat heslo pro"
+newPassword = "Nové heslo"
+confirmPassword = "Potvrzení hesla"
+placeholder = "Zadejte nové heslo"
+confirmPlaceholder = "Zadejte nové heslo znovu"
+passwordRequired = "Zadejte prosím nové heslo"
+passwordMismatch = "Hesla se neshodují"
+generateRandom = "Vygenerovat bezpečné heslo"
+generatedPreview = "Vygenerované heslo:"
+copyTooltip = "Zkopírovat do schránky"
+copiedToClipboard = "Heslo zkopírováno do schránky"
+copyFailed = "Heslo se nepodařilo zkopírovat"
+sendEmail = "Odeslat uživateli e-mail o této změně"
+includePassword = "Zahrnout nové heslo do e-mailu"
+forcePasswordChange = "Vynutit změnu hesla při příštím přihlášení"
+emailUnavailable = "E-mailová adresa tohoto uživatele není platná. Oznámení jsou deaktivována."
+smtpDisabled = "E-mailová oznámení vyžadují, aby bylo v nastavení povoleno SMTP."
+notifyOnly = "Bude odeslán e-mail bez hesla, který uživateli oznámí, že ho změnil administrátor."
+submit = "Aktualizovat heslo"
+success = "Heslo bylo úspěšně aktualizováno"
+error = "Heslo se nepodařilo aktualizovat"
+
 [workspace.people.emailInvite]
 tab = "Pozvánka e‑mailem"
 description = "Níže napište nebo vložte e‑maily oddělené čárkami. Uživatelé obdrží přihlašovací údaje e‑mailem."
@@ -5815,6 +5925,7 @@ subtitle = "Přihlaste se svým účtem Stirling"
 [setup.selfhosted]
 title = "Přihlásit se k serveru"
 subtitle = "Zadejte přihlašovací údaje k vašemu serveru"
+link = "nebo se připojte k účtu s vlastním hostováním"
 
 [setup.server]
 title = "Připojit k serveru"
@@ -5833,6 +5944,14 @@ description = "Zadejte úplnou URL vašeho samohostovaného serveru Stirling PDF
 emptyUrl = "Zadejte URL serveru"
 unreachable = "Nelze se připojit k serveru"
 testFailed = "Test připojení selhal"
+configFetch = "Nepodařilo se načíst konfiguraci serveru. Zkontrolujte prosím URL a zkuste to znovu."
+
+[setup.server.error.securityDisabled]
+title = "Přihlášení není povoleno"
+body = "Na tomto serveru není povoleno přihlašování. Pokud se chcete připojit, musíte povolit ověřování:"
+step1 = "Nastavte DOCKER_ENABLE_SECURITY=true ve svém prostředí"
+step2 = "Nebo nastavte security.enableLogin=true v souboru settings.yml"
+step3 = "Restartujte server"
 
 [setup.login]
 title = "Přihlášení"
@@ -5905,6 +6024,7 @@ earlyAccess = "Předběžný přístup"
 reset = "Obnovit změny"
 downloadJson = "Stáhnout JSON"
 generatePdf = "Vytvořit PDF"
+saveChanges = "Uložit změny"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky přizpůsobit text rámečkům"
@@ -5942,6 +6062,8 @@ alpha = "Tento alfa prohlížeč se stále vyvíjí — některé fonty, barvy, 
 [pdfTextEditor.empty]
 title = "Není načten žádný dokument"
 subtitle = "Načtěte soubor PDF nebo JSON a začněte upravovat text."
+dropzone = "Sem přetáhněte soubor PDF nebo JSON, případně kliknutím vyberte"
+dropzoneWithFiles = "Vyberte soubor na kartě Soubory, nebo sem přetáhněte soubor PDF či JSON, případně kliknutím vyberte"
 
 [pdfTextEditor.welcomeBanner]
 title = "Vítejte v editoru textu PDF (předběžný přístup)"

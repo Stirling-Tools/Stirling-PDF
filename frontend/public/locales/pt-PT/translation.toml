@@ -3036,6 +3036,91 @@ title = "Obter Informação do PDF"
 header = "Obter Informação do PDF"
 submit = "Obter Informação"
 downloadJson = "Transferir JSON"
+processing = "A extrair informações..."
+results = "Resultados"
+noResults = "Execute a ferramenta para gerar um relatório."
+downloads = "Transferências"
+noneDetected = "Nenhum detetado"
+indexTitle = "Índice"
+
+[getPdfInfo.report]
+entryLabel = "Resumo completo das informações"
+shortTitle = "Informações do PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadados"
+formFields = "Campos do formulário"
+basicInfo = "Informações básicas"
+documentInfo = "Informações do documento"
+compliance = "Conformidade"
+encryption = "Encriptação"
+permissions = "Permissões"
+other = "Outros"
+perPageInfo = "Informações por página"
+tableOfContents = "Índice"
+
+[getPdfInfo.other]
+attachments = "Anexos"
+embeddedFiles = "Ficheiros incorporados"
+javaScript = "JavaScript"
+layers = "Camadas"
+structureTree = "Árvore de estrutura"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Tamanho"
+annotations = "Anotações"
+images = "Imagens"
+links = "Ligações"
+fonts = "Tipos de letra"
+xobjects = "Contagens de XObject"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Páginas"
+fileSize = "Tamanho do ficheiro"
+pdfVersion = "Versão do PDF"
+language = "Idioma"
+title = "Resumo do PDF"
+author = "Autor"
+created = "Criado"
+modified = "Modificado"
+permsAll = "Todas as permissões autorizadas"
+permsRestricted = "{{count}} restrições"
+permsMixed = "Algumas permissões restritas"
+hasCompliance = "Tem normas de conformidade"
+noCompliance = "Sem normas de conformidade"
+basic = "Informações básicas"
+documentInfo = "Informações do documento"
+securityTitle = "Estado de segurança"
+technical = "Técnico"
+overviewTitle = "Visão geral do PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF encriptado - Proteção por palavra-passe presente"
+unencrypted = "PDF não encriptado - Sem proteção por palavra-passe"
+
+[getPdfInfo.summary.tech]
+images = "Imagens"
+fonts = "Tipos de letra"
+formFields = "Campos do formulário"
+embeddedFiles = "Ficheiros incorporados"
+javaScript = "JavaScript"
+layers = "Camadas"
+bookmarks = "Marcadores"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "um documento sem título"
+unknown = "Autor desconhecido"
+text = "Este é um PDF de {{pages}} páginas intitulado {{title}}, criado por {{author}} (versão do PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Alguns ficheiros não puderam ser processados."
+unexpected = "Erro inesperado durante a extração."
+
+[getPdfInfo.status]
+complete = "Extração concluída"
 
 [extractPage]
 tags = "extrair"
@@ -5282,6 +5367,31 @@ error = "Falha ao atualizar o estado do utilizador"
 success = "Utilizador eliminado com sucesso"
 error = "Falha ao eliminar utilizador"
 
+[workspace.people.changePassword]
+action = "Alterar palavra-passe"
+title = "Alterar palavra-passe"
+subtitle = "Atualizar a palavra-passe de"
+newPassword = "Nova palavra-passe"
+confirmPassword = "Confirmar palavra-passe"
+placeholder = "Introduza uma nova palavra-passe"
+confirmPlaceholder = "Introduza novamente a nova palavra-passe"
+passwordRequired = "Por favor, introduza uma nova palavra-passe"
+passwordMismatch = "As palavras-passe não coincidem"
+generateRandom = "Gerar palavra-passe segura"
+generatedPreview = "Palavra-passe gerada:"
+copyTooltip = "Copiar para a área de transferência"
+copiedToClipboard = "Palavra-passe copiada para a área de transferência"
+copyFailed = "Falha ao copiar a palavra-passe"
+sendEmail = "Enviar email ao utilizador sobre esta alteração"
+includePassword = "Incluir a nova palavra-passe no email"
+forcePasswordChange = "Obrigar o utilizador a alterar a palavra-passe no próximo início de sessão"
+emailUnavailable = "O email deste utilizador não é um endereço válido. As notificações estão desativadas."
+smtpDisabled = "As notificações por email requerem que o SMTP esteja ativado nas definições."
+notifyOnly = "Será enviado um email sem a palavra-passe, informando o utilizador de que um administrador a alterou."
+submit = "Guardar palavra-passe"
+success = "Palavra-passe atualizada com sucesso"
+error = "Falha ao atualizar a palavra-passe"
+
 [workspace.people.emailInvite]
 tab = "Convite por email"
 description = "Escreva ou cole emails abaixo, separados por vírgulas. Os utilizadores receberão credenciais de login por email."
@@ -5815,6 +5925,7 @@ subtitle = "Inicie sessão com a sua conta Stirling"
 [setup.selfhosted]
 title = "Iniciar sessão no servidor"
 subtitle = "Introduza as credenciais do seu servidor"
+link = "ou ligue-se a uma conta autoalojada"
 
 [setup.server]
 title = "Ligar ao servidor"
@@ -5833,6 +5944,14 @@ description = "Introduza o URL completo do seu servidor Stirling PDF autoalojado
 emptyUrl = "Introduza um URL de servidor"
 unreachable = "Não foi possível ligar ao servidor"
 testFailed = "Falha no teste de ligação"
+configFetch = "Falha ao obter a configuração do servidor. Verifique o URL e tente novamente."
+
+[setup.server.error.securityDisabled]
+title = "Início de sessão não ativado"
+body = "Este servidor não tem o início de sessão ativado. Para se ligar a este servidor, tem de ativar a autenticação:"
+step1 = "Defina DOCKER_ENABLE_SECURITY=true no seu ambiente"
+step2 = "Ou defina security.enableLogin=true no settings.yml"
+step3 = "Reinicie o servidor"
 
 [setup.login]
 title = "Iniciar sessão"
@@ -5905,6 +6024,7 @@ earlyAccess = "Acesso antecipado"
 reset = "Repor alterações"
 downloadJson = "Transferir JSON"
 generatePdf = "Gerar PDF"
+saveChanges = "Guardar alterações"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Dimensionar texto automaticamente para caber nas caixas"
@@ -5942,6 +6062,8 @@ alpha = "Este visualizador alpha ainda está a evoluir—certas fontes, cores, e
 [pdfTextEditor.empty]
 title = "Nenhum documento carregado"
 subtitle = "Carregue um ficheiro PDF ou JSON para começar a editar o conteúdo de texto."
+dropzone = "Arraste e largue aqui um ficheiro PDF ou JSON, ou clique para procurar"
+dropzoneWithFiles = "Selecione um ficheiro no separador Ficheiros, ou arraste e largue aqui um ficheiro PDF ou JSON, ou clique para procurar"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bem-vindo ao PDF Text Editor (Acesso Antecipado)"

@@ -3036,6 +3036,91 @@ title = "Obter Informações do PDF"
 header = "Obter Informações do PDF"
 submit = "Obter Informações"
 downloadJson = "Baixar JSON"
+processing = "Extraindo informações..."
+results = "Resultados"
+noResults = "Execute a ferramenta para gerar um relatório."
+downloads = "Downloads"
+noneDetected = "Nenhum detectado"
+indexTitle = "Índice"
+
+[getPdfInfo.report]
+entryLabel = "Resumo completo das informações"
+shortTitle = "Informações do PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadados"
+formFields = "Campos de formulário"
+basicInfo = "Informações básicas"
+documentInfo = "Informações do documento"
+compliance = "Conformidade"
+encryption = "Criptografia"
+permissions = "Permissões"
+other = "Outros"
+perPageInfo = "Informações por página"
+tableOfContents = "Sumário"
+
+[getPdfInfo.other]
+attachments = "Anexos"
+embeddedFiles = "Arquivos incorporados"
+javaScript = "JavaScript"
+layers = "Camadas"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Tamanho"
+annotations = "Anotações"
+images = "Imagens"
+links = "Links"
+fonts = "Fontes"
+xobjects = "Contagem de XObjects"
+multimedia = "Multimídia"
+
+[getPdfInfo.summary]
+pages = "Páginas"
+fileSize = "Tamanho do arquivo"
+pdfVersion = "Versão do PDF"
+language = "Idioma"
+title = "Resumo do PDF"
+author = "Autor"
+created = "Criado"
+modified = "Modificado"
+permsAll = "Todas as permissões permitidas"
+permsRestricted = "{{count}} restrições"
+permsMixed = "Algumas permissões restritas"
+hasCompliance = "Possui padrões de conformidade"
+noCompliance = "Sem padrões de conformidade"
+basic = "Informações básicas"
+documentInfo = "Informações do documento"
+securityTitle = "Status de segurança"
+technical = "Técnico"
+overviewTitle = "Visão geral do PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF criptografado - Proteção por senha ativada"
+unencrypted = "PDF não criptografado - Sem proteção por senha"
+
+[getPdfInfo.summary.tech]
+images = "Imagens"
+fonts = "Fontes"
+formFields = "Campos de formulário"
+embeddedFiles = "Arquivos incorporados"
+javaScript = "JavaScript"
+layers = "Camadas"
+bookmarks = "Marcadores"
+multimedia = "Multimídia"
+
+[getPdfInfo.summary.overview]
+untitled = "um documento sem título"
+unknown = "Autor desconhecido"
+text = "Este é um PDF de {{pages}} páginas intitulado {{title}} criado por {{author}} (versão do PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Alguns arquivos não puderam ser processados."
+unexpected = "Erro inesperado durante a extração."
+
+[getPdfInfo.status]
+complete = "Extração concluída"
 
 [extractPage]
 tags = "extrair"
@@ -5282,6 +5367,31 @@ error = "Falha ao atualizar o status do usuário"
 success = "Usuário excluído com sucesso"
 error = "Falha ao excluir usuário"
 
+[workspace.people.changePassword]
+action = "Alterar senha"
+title = "Alterar senha"
+subtitle = "Atualizar a senha de"
+newPassword = "Nova senha"
+confirmPassword = "Confirmar senha"
+placeholder = "Insira uma nova senha"
+confirmPlaceholder = "Digite novamente a nova senha"
+passwordRequired = "Por favor, insira uma nova senha"
+passwordMismatch = "As senhas não coincidem"
+generateRandom = "Gerar senha segura"
+generatedPreview = "Senha gerada:"
+copyTooltip = "Copiar para a área de transferência"
+copiedToClipboard = "Senha copiada para a área de transferência"
+copyFailed = "Falha ao copiar a senha"
+sendEmail = "Enviar email ao usuário sobre esta alteração"
+includePassword = "Incluir a nova senha no email"
+forcePasswordChange = "Exigir que o usuário altere a senha no próximo login"
+emailUnavailable = "O email deste usuário não é um endereço válido. As notificações estão desativadas."
+smtpDisabled = "As notificações por email exigem que o SMTP esteja habilitado nas configurações."
+notifyOnly = "Um email será enviado sem a senha, informando ao usuário que um administrador a alterou."
+submit = "Atualizar senha"
+success = "Senha atualizada com sucesso"
+error = "Falha ao atualizar a senha"
+
 [workspace.people.emailInvite]
 tab = "Convite por email"
 description = "Digite ou cole emails abaixo, separados por vírgulas. Os usuários receberão credenciais de login por email."
@@ -5815,6 +5925,7 @@ subtitle = "Entre com sua conta do Stirling"
 [setup.selfhosted]
 title = "Entrar no servidor"
 subtitle = "Informe suas credenciais do servidor"
+link = "ou conecte-se a uma conta auto-hospedada"
 
 [setup.server]
 title = "Conectar ao servidor"
@@ -5833,6 +5944,14 @@ description = "Informe a URL completa do seu servidor self-hosted Stirling PDF"
 emptyUrl = "Informe uma URL de servidor"
 unreachable = "Não foi possível conectar ao servidor"
 testFailed = "Falha no teste de conexão"
+configFetch = "Falha ao buscar a configuração do servidor. Verifique a URL e tente novamente."
+
+[setup.server.error.securityDisabled]
+title = "Login não habilitado"
+body = "Este servidor não tem o login habilitado. Para conectar-se a este servidor, você deve habilitar a autenticação:"
+step1 = "Defina DOCKER_ENABLE_SECURITY=true no seu ambiente"
+step2 = "Ou defina security.enableLogin=true em settings.yml"
+step3 = "Reinicie o servidor"
 
 [setup.login]
 title = "Entrar"
@@ -5905,6 +6024,7 @@ earlyAccess = "Acesso antecipado"
 reset = "Reverter alterações"
 downloadJson = "Baixar JSON"
 generatePdf = "Gerar PDF"
+saveChanges = "Salvar alterações"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Dimensionar texto automaticamente para caber nas caixas"
@@ -5942,6 +6062,8 @@ alpha = "Este visualizador alpha ainda está evoluindo—certas fontes, cores, e
 [pdfTextEditor.empty]
 title = "Nenhum documento carregado"
 subtitle = "Carregue um PDF ou JSON para começar a editar texto."
+dropzone = "Arraste e solte um arquivo PDF ou JSON aqui, ou clique para procurar"
+dropzoneWithFiles = "Selecione um arquivo na aba Arquivos ou arraste e solte um arquivo PDF ou JSON aqui, ou clique para procurar"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bem-vindo ao Editor de Texto PDF (Acesso antecipado)"

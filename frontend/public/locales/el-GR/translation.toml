@@ -3036,6 +3036,91 @@ title = "Λήψη πληροφοριών PDF"
 header = "Λήψη πληροφοριών PDF"
 submit = "Λήψη πληροφοριών"
 downloadJson = "Λήψη JSON"
+processing = "Εξαγωγή πληροφοριών..."
+results = "Αποτελέσματα"
+noResults = "Εκτελέστε το εργαλείο για να δημιουργήσετε αναφορά."
+downloads = "Λήψεις"
+noneDetected = "Δεν εντοπίστηκε κανένα"
+indexTitle = "Ευρετήριο"
+
+[getPdfInfo.report]
+entryLabel = "Πλήρης σύνοψη πληροφοριών"
+shortTitle = "Πληροφορίες PDF"
+
+[getPdfInfo.sections]
+metadata = "Μεταδεδομένα"
+formFields = "Πεδία φόρμας"
+basicInfo = "Βασικές πληροφορίες"
+documentInfo = "Πληροφορίες εγγράφου"
+compliance = "Συμμόρφωση"
+encryption = "Κρυπτογράφηση"
+permissions = "Δικαιώματα"
+other = "Άλλα"
+perPageInfo = "Πληροφορίες ανά σελίδα"
+tableOfContents = "Πίνακας περιεχομένων"
+
+[getPdfInfo.other]
+attachments = "Συνημμένα"
+embeddedFiles = "Ενσωματωμένα αρχεία"
+javaScript = "JavaScript"
+layers = "Επίπεδα"
+structureTree = "Δέντρο δομής"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Μέγεθος"
+annotations = "Επισημειώσεις"
+images = "Εικόνες"
+links = "Σύνδεσμοι"
+fonts = "Γραμματοσειρές"
+xobjects = "Πλήθος XObject"
+multimedia = "Πολυμέσα"
+
+[getPdfInfo.summary]
+pages = "Σελίδες"
+fileSize = "Μέγεθος αρχείου"
+pdfVersion = "Έκδοση PDF"
+language = "Γλώσσα"
+title = "Σύνοψη PDF"
+author = "Συγγραφέας"
+created = "Δημιουργήθηκε"
+modified = "Τροποποιήθηκε"
+permsAll = "Όλα τα δικαιώματα επιτρέπονται"
+permsRestricted = "{{count}} περιορισμοί"
+permsMixed = "Ορισμένα δικαιώματα είναι περιορισμένα"
+hasCompliance = "Διαθέτει πρότυπα συμμόρφωσης"
+noCompliance = "Χωρίς πρότυπα συμμόρφωσης"
+basic = "Βασικές πληροφορίες"
+documentInfo = "Πληροφορίες εγγράφου"
+securityTitle = "Κατάσταση ασφάλειας"
+technical = "Τεχνικά"
+overviewTitle = "Επισκόπηση PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Κρυπτογραφημένο PDF - Υπάρχει προστασία με κωδικό πρόσβασης"
+unencrypted = "Μη κρυπτογραφημένο PDF - Χωρίς προστασία με κωδικό πρόσβασης"
+
+[getPdfInfo.summary.tech]
+images = "Εικόνες"
+fonts = "Γραμματοσειρές"
+formFields = "Πεδία φόρμας"
+embeddedFiles = "Ενσωματωμένα αρχεία"
+javaScript = "JavaScript"
+layers = "Επίπεδα"
+bookmarks = "Σελιδοδείκτες"
+multimedia = "Πολυμέσα"
+
+[getPdfInfo.summary.overview]
+untitled = "ένα έγγραφο χωρίς τίτλο"
+unknown = "Άγνωστος συγγραφέας"
+text = "Πρόκειται για ένα PDF {{pages}} σελίδων με τίτλο {{title}} που δημιουργήθηκε από τον/την {{author}} (έκδοση PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Δεν ήταν δυνατή η επεξεργασία ορισμένων αρχείων."
+unexpected = "Μη αναμενόμενο σφάλμα κατά την εξαγωγή."
+
+[getPdfInfo.status]
+complete = "Η εξαγωγή ολοκληρώθηκε"
 
 [extractPage]
 tags = "εξαγωγή"
@@ -5282,6 +5367,31 @@ error = "Αποτυχία ενημέρωσης κατάστασης χρήστη
 success = "Ο χρήστης διαγράφηκε με επιτυχία"
 error = "Αποτυχία διαγραφής χρήστη"
 
+[workspace.people.changePassword]
+action = "Αλλαγή κωδικού πρόσβασης"
+title = "Αλλαγή κωδικού πρόσβασης"
+subtitle = "Ενημέρωση κωδικού πρόσβασης για"
+newPassword = "Νέος κωδικός πρόσβασης"
+confirmPassword = "Επιβεβαίωση κωδικού πρόσβασης"
+placeholder = "Εισαγάγετε νέο κωδικό πρόσβασης"
+confirmPlaceholder = "Εισαγάγετε ξανά τον νέο κωδικό πρόσβασης"
+passwordRequired = "Παρακαλούμε εισαγάγετε νέο κωδικό πρόσβασης"
+passwordMismatch = "Οι κωδικοί πρόσβασης δεν ταιριάζουν"
+generateRandom = "Δημιουργία ασφαλούς κωδικού πρόσβασης"
+generatedPreview = "Δημιουργημένος κωδικός πρόσβασης:"
+copyTooltip = "Αντιγραφή στο πρόχειρο"
+copiedToClipboard = "Ο κωδικός πρόσβασης αντιγράφηκε στο πρόχειρο"
+copyFailed = "Αποτυχία αντιγραφής κωδικού πρόσβασης"
+sendEmail = "Αποστολή email στον χρήστη για αυτήν την αλλαγή"
+includePassword = "Να συμπεριληφθεί ο νέος κωδικός πρόσβασης στο email"
+forcePasswordChange = "Υποχρεωτική αλλαγή κωδικού πρόσβασης κατά την επόμενη σύνδεση"
+emailUnavailable = "Το email αυτού του χρήστη δεν είναι έγκυρη διεύθυνση email. Οι ειδοποιήσεις είναι απενεργοποιημένες."
+smtpDisabled = "Οι ειδοποιήσεις μέσω email απαιτούν την ενεργοποίηση του SMTP στις ρυθμίσεις."
+notifyOnly = "Θα σταλεί email χωρίς τον κωδικό πρόσβασης, ενημερώνοντας τον χρήστη ότι ένας διαχειριστής τον άλλαξε."
+submit = "Ενημέρωση κωδικού πρόσβασης"
+success = "Ο κωδικός πρόσβασης ενημερώθηκε με επιτυχία"
+error = "Αποτυχία ενημέρωσης κωδικού πρόσβασης"
+
 [workspace.people.emailInvite]
 tab = "Πρόσκληση μέσω Email"
 description = "Πληκτρολογήστε ή επικολλήστε emails παρακάτω, χωρισμένα με κόμμα. Οι χρήστες θα λάβουν στοιχεία σύνδεσης μέσω email."
@@ -5815,6 +5925,7 @@ subtitle = "Συνδεθείτε με τον λογαριασμό Stirling"
 [setup.selfhosted]
 title = "Σύνδεση στον διακομιστή"
 subtitle = "Εισαγάγετε τα διαπιστευτήρια του διακομιστή σας"
+link = "ή συνδεθείτε σε έναν self-hosted λογαριασμό"
 
 [setup.server]
 title = "Σύνδεση σε διακομιστή"
@@ -5833,6 +5944,14 @@ description = "Εισαγάγετε το πλήρες URL του self-hosted δ�
 emptyUrl = "Εισαγάγετε URL διακομιστή"
 unreachable = "Αδυναμία σύνδεσης με τον διακομιστή"
 testFailed = "Αποτυχία ελέγχου σύνδεσης"
+configFetch = "Αποτυχία ανάκτησης της διαμόρφωσης του διακομιστή. Ελέγξτε το URL και δοκιμάστε ξανά."
+
+[setup.server.error.securityDisabled]
+title = "Η σύνδεση δεν είναι ενεργοποιημένη"
+body = "Σε αυτόν τον διακομιστή δεν είναι ενεργοποιημένη η σύνδεση. Για να συνδεθείτε σε αυτόν τον διακομιστή, πρέπει να ενεργοποιήσετε τον έλεγχο ταυτότητας:"
+step1 = "Ορίστε το DOCKER_ENABLE_SECURITY=true στο περιβάλλον σας"
+step2 = "Ή ορίστε security.enableLogin=true στο settings.yml"
+step3 = "Επανεκκινήστε τον διακομιστή"
 
 [setup.login]
 title = "Σύνδεση"
@@ -5905,6 +6024,7 @@ earlyAccess = "Πρόωρη πρόσβαση"
 reset = "Επαναφορά αλλαγών"
 downloadJson = "Λήψη JSON"
 generatePdf = "Δημιουργία PDF"
+saveChanges = "Αποθήκευση αλλαγών"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Αυτόματη προσαρμογή κειμένου στα πλαίσια"
@@ -5942,6 +6062,8 @@ alpha = "Αυτός ο προβολέας άλφα εξελίσσεται ακό
 [pdfTextEditor.empty]
 title = "Δεν φορτώθηκε έγγραφο"
 subtitle = "Φορτώστε ένα αρχείο PDF ή JSON για να ξεκινήσετε την επεξεργασία κειμένου."
+dropzone = "Σύρετε και αποθέστε εδώ ένα αρχείο PDF ή JSON, ή κάντε κλικ για περιήγηση"
+dropzoneWithFiles = "Επιλέξτε ένα αρχείο από την καρτέλα Αρχεία, ή σύρετε και αποθέστε εδώ ένα αρχείο PDF ή JSON, ή κάντε κλικ για περιήγηση"
 
 [pdfTextEditor.welcomeBanner]
 title = "Καλώς ορίσατε στο PDF Text Editor (Πρώιμη πρόσβαση)"

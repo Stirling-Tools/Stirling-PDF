@@ -45,9 +45,10 @@ def load_translation_file(file_path):
     with open(file_path, 'rb') as f:
         return tomllib.load(f)
 
-def extract_untranslated(language_code, batch_size=500):
+def extract_untranslated(language_code, batch_size=500, include_existing=False):
     """Extract untranslated entries and split into batches."""
-    print(f"\n🔍 Extracting untranslated entries for {language_code}...")
+    mode = "all untranslated (including existing)" if include_existing else "new (missing)"
+    print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
     golden_path = find_translation_file(Path('frontend/public/locales/en-GB'))
@@ -84,13 +85,19 @@ def extract_untranslated(language_code, batch_size=500):
     # Find untranslated
     untranslated = {}
     for key, value in golden_flat.items():
-        if (key not in lang_flat or
-            lang_flat.get(key) == value or
-            (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))):
-            untranslated[key] = value
+        if include_existing:
+            # Include missing keys, keys with English values, and [UNTRANSLATED] keys
+            if (key not in lang_flat or
+                lang_flat.get(key) == value or
+                (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))):
+                untranslated[key] = value
+        else:
+            # Only include missing keys (not in target file at all)
+            if key not in lang_flat:
+                untranslated[key] = value
 
     total = len(untranslated)
-    print(f"Found {total} untranslated entries")
+    print(f"Found {total} {mode} entries")
 
     if total == 0:
         print("✓ Language is already complete!")
@@ -268,6 +275,7 @@ Examples:
     parser.add_argument('--no-cleanup', action='store_true', help='Keep temporary batch files')
     parser.add_argument('--skip-verification', action='store_true', help='Skip final completion check')
     parser.add_argument('--timeout', type=int, default=600, help='Timeout per batch in seconds (default: 600 = 10 minutes)')
+    parser.add_argument('--include-existing', action='store_true', help='Also retranslate existing keys that match English (default: only translate missing keys)')
 
     args = parser.parse_args()
 
@@ -287,7 +295,7 @@ Examples:
 
     try:
         # Step 1: Extract and split
-        batch_files = extract_untranslated(args.language, args.batch_size)
+        batch_files = extract_untranslated(args.language, args.batch_size, args.include_existing)
         if batch_files is None:
             sys.exit(1)
 
