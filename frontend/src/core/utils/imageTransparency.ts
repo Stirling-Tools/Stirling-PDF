@@ -5,7 +5,7 @@ export interface TransparencyOptions {
   tolerance?: number;
 }
 
-const DEFAULT_LOWER_BOUND = { r: 238, g: 238, b: 238 }; // #EEEEEE
+const DEFAULT_LOWER_BOUND = { r: 200, g: 200, b: 200 };
 const DEFAULT_UPPER_BOUND = { r: 255, g: 255, b: 255 }; // #FFFFFF
 
 export async function removeWhiteBackground(
