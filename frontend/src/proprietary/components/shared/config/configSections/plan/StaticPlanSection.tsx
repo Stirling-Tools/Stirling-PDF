@@ -125,7 +125,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '1rem',
-            paddingBottom: '1rem',
+            paddingBottom: '0.1rem',
           }}
         >
           {staticPlans.map((plan) => (
