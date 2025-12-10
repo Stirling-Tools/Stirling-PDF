@@ -332,6 +332,7 @@ public class ProprietaryUIDataController {
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
+        data.setMailEnabled(applicationProperties.getMail().isEnabled());
 
         return ResponseEntity.ok(data);
     }
@@ -380,7 +381,7 @@ public class ProprietaryUIDataController {
         data.setUsername(username);
         data.setRole(user.get().getRolesAsString());
         data.setSettings(settingsJson);
-        data.setChangeCredsFlag(user.get().isFirstLogin());
+        data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
 
@@ -516,6 +517,7 @@ public class ProprietaryUIDataController {
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
         private boolean premiumEnabled;
+        private boolean mailEnabled;
     }
 
     @Data
