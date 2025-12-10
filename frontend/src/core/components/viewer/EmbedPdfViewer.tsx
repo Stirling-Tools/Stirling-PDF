@@ -43,6 +43,7 @@ const EmbedPdfViewerContent = ({
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
+    isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
     panActions: _panActions,
@@ -203,7 +204,13 @@ const EmbedPdfViewerContent = ({
         } else if (event.key === 'f' || event.key === 'F') {
           // Ctrl+F for search
           event.preventDefault();
-          searchInterfaceActions.open();
+          if (isSearchInterfaceVisible) {
+            // If already open, trigger refocus event
+            window.dispatchEvent(new CustomEvent('refocus-search-input'));
+          } else {
+            // Open search interface
+            searchInterfaceActions.open();
+          }
         }
       }
     };
@@ -212,7 +219,7 @@ const EmbedPdfViewerContent = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isViewerHovered, zoomActions, searchInterfaceActions]);
+  }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
