@@ -530,7 +530,6 @@ export default function PeopleSection() {
                     <Tooltip label={user.team.name} disabled={user.team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
                       <Text
                         size="sm"
-                        c="dimmed"
                         maw={150}
                         style={{
                           overflow: 'hidden',
@@ -542,7 +541,7 @@ export default function PeopleSection() {
                       </Text>
                     </Tooltip>
                   ) : (
-                    <Text size="sm" c="dimmed">—</Text>
+                    <Text size="sm">—</Text>
                   )}
                 </Table.Td>
                   <Table.Td>
@@ -565,7 +564,7 @@ export default function PeopleSection() {
                         withArrow
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
-                        <ActionIcon variant="subtle" color="gray" size="sm">
+                        <ActionIcon variant="subtle"size="sm">
                           <LocalIcon icon="info" width="1rem" height="1rem" />
                         </ActionIcon>
                       </Tooltip>
@@ -573,7 +572,7 @@ export default function PeopleSection() {
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray" disabled={!loginEnabled}>
+                          <ActionIcon variant="subtle"  disabled={!loginEnabled}>
                             <LocalIcon icon="more-vert" width="1rem" height="1rem" />
                           </ActionIcon>
                         </Menu.Target>

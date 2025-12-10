@@ -32,6 +32,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
         radius="md"
         withBorder
         style={getBaseCardStyle(isCurrentTier)}
+        className="plan-card"
       >
         {isCurrentTier && (
           <PricingBadge
@@ -67,7 +68,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
 
           <div style={{ flexGrow: 1 }} />
 
-          <Button variant="filled" disabled fullWidth>
+          <Button variant="filled" disabled fullWidth className="plan-button">
             {isCurrentTier
               ? t('plan.current', 'Current Plan')
               : t('plan.free.included', 'Included')}
@@ -96,6 +97,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
       radius="md"
       withBorder
       style={getBaseCardStyle(isCurrentTier)}
+      className="plan-card"
     >
       {isCurrentTier ? (
         <PricingBadge
@@ -176,6 +178,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
             fullWidth
             onClick={() => isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup)}
             disabled={!loginEnabled || isDowngrade || isEnterpriseBlockedForFree}
+            className="plan-button"
           >
             {isCurrentTier
               ? t('plan.manage', 'Manage')

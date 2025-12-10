@@ -17,6 +17,7 @@ export const PricingBadge: React.FC<PricingBadgeProps> = ({ type, label }) => {
       variant="filled"
       size={size}
       style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
+      className={type === 'current' ? 'current-plan-badge' : undefined}
     >
       {label}
     </Badge>
