@@ -66,7 +66,8 @@ public class OpenApiConfig {
         if (swaggerServerUrl != null && !swaggerServerUrl.trim().isEmpty()) {
             server = new Server().url(swaggerServerUrl).description("API Server");
         } else {
-            // Use relative path so Swagger uses the current browser origin to avoid CORS issues when accessing via different ports
+            // Use relative path so Swagger uses the current browser origin to avoid CORS issues
+            // when accessing via different ports
             server = new Server().url("/").description("Current Server");
         }
         openAPI.addServersItem(server);
