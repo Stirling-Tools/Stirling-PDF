@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [
           {
+            //provides static pdfium so embedpdf can run without cdn
             src: 'node_modules/@embedpdf/pdfium/dist/pdfium.wasm',
             dest: 'pdfium'
           }
