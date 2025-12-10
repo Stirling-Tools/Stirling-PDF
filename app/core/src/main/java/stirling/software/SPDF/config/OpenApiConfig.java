@@ -62,10 +62,14 @@ public class OpenApiConfig {
 
         // Add server configuration from environment variable
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");
+        Server server;
         if (swaggerServerUrl != null && !swaggerServerUrl.trim().isEmpty()) {
-            Server server = new Server().url(swaggerServerUrl).description("API Server");
-            openAPI.addServersItem(server);
+            server = new Server().url(swaggerServerUrl).description("API Server");
+        } else {
+            // Use relative path so Swagger uses the current browser origin to avoid CORS issues when accessing via different ports
+            server = new Server().url("/").description("Current Server");
         }
+        openAPI.addServersItem(server);
 
         // Add ErrorResponse schema to components
         Schema<?> errorResponseSchema =
