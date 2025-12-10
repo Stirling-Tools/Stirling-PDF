@@ -131,7 +131,7 @@ unsupported = "Niet ondersteund"
 
 [toolPanel]
 placeholder = "Kies een tool om te beginnen"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Premiumfunctie:"
 comingSoon = "Binnenkort beschikbaar:"
 
@@ -162,6 +162,11 @@ unfavorite = "Uit favorieten verwijderen"
 [toolPanel.toggle]
 fullscreen = "Overschakelen naar volledig scherm"
 sidebar = "Overschakelen naar zijbalkmodus"
+
+[backendStartup]
+notFoundTitle = "Backend niet gevonden"
+retry = "Opnieuw proberen"
+unreachable = "De applicatie kan momenteel geen verbinding maken met de backend. Controleer de status van de backend en de netwerkverbinding en probeer het vervolgens opnieuw."
 
 [zipWarning]
 title = "Groot ZIP-bestand"
@@ -347,7 +352,7 @@ teams = "Teams"
 title = "Configuratie"
 systemSettings = "Systeeminstellingen"
 features = "Functies"
-endpoints = "Endpoints"
+endpoints = "Eindpunten"
 database = "Database"
 advanced = "Geavanceerd"
 
@@ -556,7 +561,7 @@ totalEndpoints = "Totaal aantal endpoints"
 totalVisits = "Totaal aantal bezoeken"
 showing = "Weergeven"
 selectedVisits = "Geselecteerde bezoeken"
-endpoint = "Endpoint"
+endpoint = "Eindpunt"
 visits = "Bezoeken"
 percentage = "Percentage"
 loading = "Laden..."
@@ -912,6 +917,9 @@ desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal 
 desc = "Plaatst PDF's over een andere PDF heen"
 title = "PDF's overlappen"
 
+[home.pdfTextEditor]
+title = "PDF-teksteditor"
+desc = "Bewerk bestaande tekst en afbeeldingen in PDF's"
 
 [home.addText]
 tags = "tekst,annotatie,label"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Getekende handtekening"
 defaultImageLabel = "Geüploade handtekening"
 defaultTextLabel = "Getypte handtekening"
 saveButton = "Handtekening opslaan"
+savePersonal = "Als persoonlijk opslaan"
+saveShared = "Als gedeeld opslaan"
 saveUnavailable = "Maak eerst een handtekening om deze op te slaan."
 noChanges = "De huidige handtekening is al opgeslagen."
+tempStorageTitle = "Tijdelijke browseropslag"
+tempStorageDescription = "Handtekeningen worden alleen in je browser opgeslagen. Ze gaan verloren als je je browsergegevens wist of van browser wisselt."
+personalHeading = "Persoonlijke handtekeningen"
+sharedHeading = "Gedeelde handtekeningen"
+personalDescription = "Alleen jij kunt deze handtekeningen zien."
+sharedDescription = "Alle gebruikers kunnen deze handtekeningen zien en gebruiken."
 
 [sign.saved.type]
 canvas = "Tekening"
@@ -3020,6 +3036,91 @@ title = "Informatie over PDF ophalen"
 header = "Informatie over PDF ophalen"
 submit = "Haal informatie op"
 downloadJson = "JSON downloaden"
+processing = "Informatie wordt geëxtraheerd..."
+results = "Resultaten"
+noResults = "Voer de tool uit om een rapport te genereren."
+downloads = "Downloads"
+noneDetected = "Niets gedetecteerd"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Volledig informatieoverzicht"
+shortTitle = "PDF-informatie"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formuliervelden"
+basicInfo = "Basisinformatie"
+documentInfo = "Documentinformatie"
+compliance = "Compliance"
+encryption = "Versleuteling"
+permissions = "Machtigingen"
+other = "Overig"
+perPageInfo = "Informatie per pagina"
+tableOfContents = "Inhoudsopgave"
+
+[getPdfInfo.other]
+attachments = "Bijlagen"
+embeddedFiles = "Ingesloten bestanden"
+javaScript = "JavaScript"
+layers = "Lagen"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Grootte"
+annotations = "Annotaties"
+images = "Afbeeldingen"
+links = "Koppelingen"
+fonts = "Lettertypen"
+xobjects = "Aantal XObjects"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Pagina's"
+fileSize = "Bestandsgrootte"
+pdfVersion = "PDF-versie"
+language = "Taal"
+title = "PDF-samenvatting"
+author = "Auteur"
+created = "Gemaakt"
+modified = "Gewijzigd"
+permsAll = "Alle machtigingen toegestaan"
+permsRestricted = "{{count}} beperkingen"
+permsMixed = "Sommige machtigingen beperkt"
+hasCompliance = "Voldoet aan compliancestandaarden"
+noCompliance = "Geen compliancestandaarden"
+basic = "Basisinformatie"
+documentInfo = "Documentinformatie"
+securityTitle = "Beveiligingsstatus"
+technical = "Technisch"
+overviewTitle = "PDF-overzicht"
+
+[getPdfInfo.summary.security]
+encrypted = "Versleutelde PDF - Wachtwoordbeveiliging aanwezig"
+unencrypted = "Onversleutelde PDF - Geen wachtwoordbeveiliging"
+
+[getPdfInfo.summary.tech]
+images = "Afbeeldingen"
+fonts = "Lettertypen"
+formFields = "Formuliervelden"
+embeddedFiles = "Ingesloten bestanden"
+javaScript = "JavaScript"
+layers = "Lagen"
+bookmarks = "Bladwijzers"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "een document zonder titel"
+unknown = "Onbekende auteur"
+text = "Dit is een PDF van {{pages}} pagina's met de titel {{title}}, gemaakt door {{author}} (PDF-versie {{version}})."
+
+[getPdfInfo.error]
+partial = "Sommige bestanden konden niet worden verwerkt."
+unexpected = "Onverwachte fout tijdens het extraheren."
+
+[getPdfInfo.status]
+complete = "Extractie voltooid"
 
 [extractPage]
 tags = "extraheren"
@@ -3438,6 +3539,9 @@ signinTitle = "Gelieve in te loggen"
 ssoSignIn = "Inloggen via Single Sign-on"
 oAuth2AutoCreateDisabled = "OAUTH2 Automatisch aanmaken gebruiker uitgeschakeld"
 oAuth2AdminBlockedUser = "Registratie of inloggen van niet-registreerde gebruikers is helaas momenteel geblokkeerd. Neem contact op met de beheerder."
+oAuth2RequiresLicense = "OAuth/SSO-inloggen vereist een betaalde licentie (Server of Enterprise). Neem contact op met de beheerder om uw abonnement te upgraden."
+saml2RequiresLicense = "SAML-inloggen vereist een betaalde licentie (Server of Enterprise). Neem contact op met de beheerder om uw abonnement te upgraden."
+maxUsersReached = "Het maximumaantal gebruikers voor uw huidige licentie is bereikt. Neem contact op met de beheerder om uw abonnement te upgraden of extra plaatsen toe te voegen."
 oauth2RequestNotFound = "Autorisatieverzoek niet gevonden"
 oauth2InvalidUserInfoResponse = "Ongeldige reactie op gebruikersinfo"
 oauth2invalidRequest = "Ongeldig verzoek"
@@ -3805,7 +3909,7 @@ description = "These cookies are essential for the website to function properly.
 2 = "Altijd ingeschakeld"
 
 [cookieBanner.preferencesModal.analytics]
-title = "Analytics"
+title = "Analyse"
 description = "Deze cookies helpen ons te begrijpen hoe onze tools worden gebruikt, zodat we ons kunnen richten op het bouwen van de functies die onze community het meest waardeert. Wees gerust—Stirling PDF kan niet en zal nooit de inhoud van de documenten waarmee je werkt volgen."
 
 [cookieBanner.services]
@@ -3846,14 +3950,17 @@ fitToWidth = "Passend op breedte"
 actualSize = "Werkelijke grootte"
 
 [viewer]
+cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
+dualPageView = "Dubbele paginaweergave"
 firstPage = "Eerste pagina"
 lastPage = "Laatste pagina"
-previousPage = "Vorige pagina"
 nextPage = "Volgende pagina"
+onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
+previousPage = "Vorige pagina"
+singlePageView = "Enkele paginaweergave"
+unknownFile = "Onbekend bestand"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
-singlePageView = "Enkele paginaweergave"
-dualPageView = "Dubbele paginaweergave"
 
 [rightRail]
 closeSelected = "Geselecteerde bestanden sluiten"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Zijbalk tonen/verbergen"
 exportSelected = "Geselecteerde pagina's exporteren"
 toggleAnnotations = "Annotaties tonen/verbergen"
 annotationMode = "Annotatiemodus schakelen"
+print = "PDF afdrukken"
 draw = "Tekenen"
 save = "Opslaan"
 saveChanges = "Wijzigingen opslaan"
@@ -4343,7 +4451,7 @@ features = "Feature-flags"
 processing = "Verwerking"
 
 [admin.settings.advanced.endpoints]
-label = "Endpoints"
+label = "Eindpunten"
 manage = "API-endpoints beheren"
 description = "Endpointbeheer wordt geconfigureerd via YAML. Zie de documentatie voor details over het in-/uitschakelen van specifieke endpoints."
 
@@ -4494,6 +4602,7 @@ description = "URL of bestandsnaam van het impressum (in sommige jurisdicties ve
 title = "Premium & Enterprise"
 description = "Configureer je premium- of enterprise-licentiesleutel."
 license = "Licentieconfiguratie"
+noInput = "Geef een licentiesleutel of bestand op"
 
 [admin.settings.premium.licenseKey]
 toggle = "Heb je een licentiesleutel of certificaatbestand?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Waarschuwing: Bestaande licentie gedetecteerd"
 line1 = "Het overschrijven van je huidige licentiesleutel kan niet ongedaan worden gemaakt."
 line2 = "Je vorige licentie gaat permanent verloren, tenzij je er elders een back-up van hebt."
 line3 = "Belangrijk: houd licentiesleutels privé en veilig. Deel ze nooit openbaar."
+
+[admin.settings.premium.inputMethod]
+text = "Licentiesleutel"
+file = "Certificaatbestand"
+
+[admin.settings.premium.file]
+label = "Licentiecertificaatbestand"
+description = "Upload je .lic- of .cert-licentiebestand van offline aankopen"
+choose = "Kies licentiebestand"
+selected = "Geselecteerd: {{filename}} ({{size}})"
+successMessage = "Licentiebestand succesvol geüpload en geactiveerd. Herstarten niet vereist."
+
+[admin.settings.premium.currentLicense]
+title = "Actieve licentie"
+file = "Bron: licentiebestand ({{path}})"
+key = "Bron: licentiesleutel"
+type = "Type: {{type}}"
+noInput = "Geef een licentiesleutel op of upload een certificaatbestand"
+success = "Succes"
 
 [admin.settings.premium.enabled]
 label = "Premiumfuncties inschakelen"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} geselecteerd"
 download = "Downloaden"
 delete = "Verwijderen"
 unsupported = "Niet ondersteund"
+active = "Actief"
 addToUpload = "Aan upload toevoegen"
+closeFile = "Bestand sluiten"
 deleteAll = "Alles verwijderen"
 loadingFiles = "Bestanden laden..."
 noFiles = "Geen bestanden beschikbaar"
@@ -5132,7 +5262,7 @@ upgrade = "Nu upgraden →"
 freeTitle = "Serverlicentie"
 overLimitTitle = "Serverlicentie vereist"
 overLimitBody = "Onze licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Je hebt <strong>{{overLimitUserCopy}}</strong> Stirling-gebruikers. Om zonder onderbreking door te gaan, upgrade naar het Stirling Server-plan - <strong>onbeperkte plaatsen</strong>, PDF-tekstbewerking en volledige admincontrole voor $99/server/maand."
-freeBody = "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers gratis per server toe. Om ononderbroken te schalen en vroege toegang te krijgen tot onze nieuwe <strong>PDF-tekstbewerkingstool</strong>, raden we het Stirling Server-plan aan - volledige bewerking en <strong>onbeperkte plaatsen</strong> voor $99/server/maand."
+freeBody = "Onze <strong>Open-Core</strong>-licentie staat tot <strong>{{freeTierLimit}}</strong> gebruikers per server gratis toe. Om ononderbroken op te schalen, raden we het Stirling Server-abonnement aan - <strong>onbeperkte plaatsen</strong> en <strong>SSO-ondersteuning</strong> voor $99/server/maand."
 
 [onboarding.desktopInstall]
 title = "Downloaden"
@@ -5237,6 +5367,31 @@ error = "Bijwerken van gebruikersstatus is mislukt"
 success = "Gebruiker succesvol verwijderd"
 error = "Gebruiker verwijderen is mislukt"
 
+[workspace.people.changePassword]
+action = "Wachtwoord wijzigen"
+title = "Wachtwoord wijzigen"
+subtitle = "Wachtwoord bijwerken voor"
+newPassword = "Nieuw wachtwoord"
+confirmPassword = "Wachtwoord bevestigen"
+placeholder = "Voer een nieuw wachtwoord in"
+confirmPlaceholder = "Voer het nieuwe wachtwoord opnieuw in"
+passwordRequired = "Voer een nieuw wachtwoord in"
+passwordMismatch = "Wachtwoorden komen niet overeen"
+generateRandom = "Beveiligd wachtwoord genereren"
+generatedPreview = "Gegenereerd wachtwoord:"
+copyTooltip = "Kopiëren naar klembord"
+copiedToClipboard = "Wachtwoord gekopieerd naar klembord"
+copyFailed = "Kopiëren van wachtwoord mislukt"
+sendEmail = "Gebruiker per e-mail informeren over deze wijziging"
+includePassword = "Nieuw wachtwoord in de e-mail opnemen"
+forcePasswordChange = "Gebruiker dwingen het wachtwoord bij de volgende aanmelding te wijzigen"
+emailUnavailable = "Het e-mailadres van deze gebruiker is ongeldig. Meldingen zijn uitgeschakeld."
+smtpDisabled = "E-mailmeldingen vereisen dat SMTP is ingeschakeld in de instellingen."
+notifyOnly = "Er wordt een e-mail verzonden zonder het wachtwoord, om de gebruiker te laten weten dat een beheerder het heeft gewijzigd."
+submit = "Wachtwoord bijwerken"
+success = "Wachtwoord succesvol bijgewerkt"
+error = "Bijwerken van wachtwoord mislukt"
+
 [workspace.people.emailInvite]
 tab = "E-mailuitnodiging"
 description = "Typ of plak hieronder e-mailadressen, gescheiden door komma's. Gebruikers ontvangen inloggegevens via e-mail."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Er is minstens één e-mailadres vereist"
 submit = "Uitnodigingen verzenden"
 success = "Gebruiker(s) succesvol uitgenodigd"
-partialSuccess = "Sommige uitnodigingen zijn mislukt"
+partialFailure = "Sommige uitnodigingen zijn mislukt"
 allFailed = "Uitnodigen van gebruikers is mislukt"
 error = "Uitnodigingen verzenden is mislukt"
 
@@ -5709,7 +5864,7 @@ title = "Grafiek van endpointgebruik"
 
 [usage.table]
 title = "Gedetailleerde statistieken"
-endpoint = "Endpoint"
+endpoint = "Eindpunt"
 visits = "Bezoeken"
 percentage = "Percentage"
 noData = "Geen gegevens beschikbaar"
@@ -5770,6 +5925,7 @@ subtitle = "Log in met je Stirling-account"
 [setup.selfhosted]
 title = "Inloggen bij server"
 subtitle = "Vul je servergegevens in"
+link = "of maak verbinding met een zelfgehost account"
 
 [setup.server]
 title = "Verbinden met server"
@@ -5788,6 +5944,14 @@ description = "Voer de volledige URL van je self-hosted Stirling PDF-server in"
 emptyUrl = "Voer een server-URL in"
 unreachable = "Kan geen verbinding maken met server"
 testFailed = "Verbindingstest mislukt"
+configFetch = "Ophalen van serverconfiguratie mislukt. Controleer de URL en probeer het opnieuw."
+
+[setup.server.error.securityDisabled]
+title = "Inloggen niet ingeschakeld"
+body = "Op deze server is inloggen niet ingeschakeld. Om verbinding te maken met deze server moet u authenticatie inschakelen:"
+step1 = "Stel DOCKER_ENABLE_SECURITY=true in in uw omgeving"
+step2 = "Of stel security.enableLogin=true in in settings.yml"
+step3 = "Start de server opnieuw"
 
 [setup.login]
 title = "Inloggen"
@@ -5797,6 +5961,13 @@ submit = "Inloggen"
 signInWith = "Inloggen met"
 oauthPending = "Browser wordt geopend voor authenticatie..."
 orContinueWith = "Of ga verder met e-mail"
+serverRequirement = "Let op: op de server moet inloggen zijn ingeschakeld."
+showInstructions = "Hoe inschakelen?"
+hideInstructions = "Instructies verbergen"
+instructions = "Om inloggen op uw Stirling PDF-server in te schakelen:"
+instructionsEnvVar = "Stel de omgevingsvariabele in:"
+instructionsOrYml = "Of in settings.yml:"
+instructionsRestart = "Start vervolgens uw server opnieuw zodat de wijzigingen van kracht worden."
 
 [setup.login.username]
 label = "Gebruikersnaam"
@@ -5853,6 +6024,7 @@ earlyAccess = "Vroege toegang"
 reset = "Wijzigingen resetten"
 downloadJson = "JSON downloaden"
 generatePdf = "PDF genereren"
+saveChanges = "Wijzigingen opslaan"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tekst automatisch schalen zodat deze in vakken past"
@@ -5890,6 +6062,8 @@ alpha = "Deze alpha-viewer is nog in ontwikkeling—bepaalde lettertypen, kleure
 [pdfTextEditor.empty]
 title = "Geen document geladen"
 subtitle = "Laad een PDF- of JSON-bestand om tekst te bewerken."
+dropzone = "Sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
+dropzoneWithFiles = "Selecteer een bestand op het tabblad Bestanden, of sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welkom bij PDF-teksteditor (Early Access)"

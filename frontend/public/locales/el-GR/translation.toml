@@ -163,6 +163,11 @@ unfavorite = "Αφαίρεση από τα Αγαπημένα"
 fullscreen = "Μετάβαση σε λειτουργία πλήρους οθόνης"
 sidebar = "Μετάβαση σε λειτουργία πλευρικής γραμμής"
 
+[backendStartup]
+notFoundTitle = "Το backend δεν βρέθηκε"
+retry = "Επανάληψη"
+unreachable = "Η εφαρμογή δεν μπορεί προς το παρόν να συνδεθεί με το backend. Ελέγξτε την κατάσταση του backend και τη συνδεσιμότητα δικτύου, μετά δοκιμάστε ξανά."
+
 [zipWarning]
 title = "Μεγάλο αρχείο ZIP"
 message = "Αυτό το ZIP περιέχει {{count}} αρχεία. Να γίνει αποσυμπίεση ούτως ή άλλως;"
@@ -287,7 +292,7 @@ help = "Βοήθεια Pipeline"
 scanHelp = "Βοήθεια σάρωσης φακέλων"
 deletePrompt = "Είστε βέβαιοι ότι θέλετε να διαγράψετε το pipeline;"
 tags = "αυτοματοποίηση,ακολουθία,προγραμματισμένο,επεξεργασία-παρτίδας"
-title = "Pipeline"
+title = "Ροή"
 
 [pipelineOptions]
 header = "Διαμόρφωση Pipeline"
@@ -296,7 +301,7 @@ saveSettings = "Αποθήκευση ρυθμίσεων λειτουργίας"
 pipelineNamePrompt = "Εισάγετε όνομα pipeline εδώ"
 selectOperation = "Επιλογή λειτουργίας"
 addOperationButton = "Προσθήκη λειτουργίας"
-pipelineHeader = "Pipeline:"
+pipelineHeader = "Ροή:"
 saveButton = "Λήψη"
 validateButton = "Επικύρωση"
 
@@ -347,7 +352,7 @@ teams = "Ομάδες"
 title = "Διαμόρφωση"
 systemSettings = "Ρυθμίσεις συστήματος"
 features = "Δυνατότητες"
-endpoints = "Endpoints"
+endpoints = "Σημεία τερματισμού"
 database = "Βάση δεδομένων"
 advanced = "Προχωρημένα"
 
@@ -369,7 +374,7 @@ privacy = "Απόρρητο"
 
 [settings.developer]
 title = "Προγραμματιστής"
-apiKeys = "API Keys"
+apiKeys = "Κλειδιά API"
 
 [settings.tooltips]
 enableLoginFirst = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
@@ -383,7 +388,7 @@ logout = "Αποσύνδεση"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Αυτο-φιλοξενούμενο"
 
 [settings.general]
 title = "Γενικά"
@@ -912,6 +917,9 @@ desc = "Δημιουργήστε ροές πολλών βημάτων συνδέ
 desc = "Επικάλυψη PDF πάνω σε άλλο PDF"
 title = "Επικάλυψη PDF"
 
+[home.pdfTextEditor]
+title = "Επεξεργαστής κειμένου PDF"
+desc = "Επεξεργαστείτε υπάρχον κείμενο και εικόνες μέσα σε αρχεία PDF"
 
 [home.addText]
 tags = "κείμενο,σχολιασμός,ετικέτα"
@@ -1173,7 +1181,7 @@ selectFilesPlaceholder = "Επιλέξτε αρχεία στην κύρια πρ
 settings = "Ρυθμίσεις"
 conversionCompleted = "Η μετατροπή ολοκληρώθηκε"
 results = "Αποτελέσματα"
-defaultFilename = "converted_file"
+defaultFilename = "μετατραπμένο_αρχείο"
 conversionResults = "Αποτελέσματα μετατροπής"
 convertFrom = "Μετατροπή από"
 convertTo = "Μετατροπή σε"
@@ -1360,7 +1368,7 @@ title = "Προσθήκη υδατογραφήματος"
 desc = "Προσθέστε υδατογραφήματα κειμένου ή εικόνας σε αρχεία PDF"
 completed = "Το υδατογράφημα προστέθηκε"
 submit = "Προσθήκη υδατογραφήματος"
-filenamePrefix = "watermarked"
+filenamePrefix = "υδατογραφημένο"
 
 [watermark.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη υδατογραφήματος στο PDF."
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Σχεδιασμένη υπογραφή"
 defaultImageLabel = "Ανεβασμένη υπογραφή"
 defaultTextLabel = "Πληκτρολογημένη υπογραφή"
 saveButton = "Αποθήκευση υπογραφής"
+savePersonal = "Αποθήκευση ως Προσωπική"
+saveShared = "Αποθήκευση ως Κοινόχρηστη"
 saveUnavailable = "Δημιουργήστε πρώτα μια υπογραφή για να την αποθηκεύσετε."
 noChanges = "Η τρέχουσα υπογραφή είναι ήδη αποθηκευμένη."
+tempStorageTitle = "Προσωρινή αποθήκευση στον περιηγητή"
+tempStorageDescription = "Οι υπογραφές αποθηκεύονται μόνο στον περιηγητή σας. Θα χαθούν αν καθαρίσετε τα δεδομένα του περιηγητή ή αλλάξετε περιηγητή."
+personalHeading = "Προσωπικές υπογραφές"
+sharedHeading = "Κοινόχρηστες υπογραφές"
+personalDescription = "Μόνο εσείς μπορείτε να δείτε αυτές τις υπογραφές."
+sharedDescription = "Όλοι οι χρήστες μπορούν να βλέπουν και να χρησιμοποιούν αυτές τις υπογραφές."
 
 [sign.saved.type]
 canvas = "Σχέδιο"
@@ -2701,7 +2717,7 @@ header = "Αφαίρεση της ψηφιακής υπογραφής από τ�
 selectPDF = "Επιλέξτε ένα αρχείο PDF:"
 submit = "Αφαίρεση υπογραφής"
 description = "Αυτό το εργαλείο θα αφαιρέσει τις υπογραφές ψηφιακού πιστοποιητικού από το PDF σας."
-filenamePrefix = "unsigned"
+filenamePrefix = "ανυπόγραφο"
 
 [removeCertSign.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3020,6 +3036,91 @@ title = "Λήψη πληροφοριών PDF"
 header = "Λήψη πληροφοριών PDF"
 submit = "Λήψη πληροφοριών"
 downloadJson = "Λήψη JSON"
+processing = "Εξαγωγή πληροφοριών..."
+results = "Αποτελέσματα"
+noResults = "Εκτελέστε το εργαλείο για να δημιουργήσετε αναφορά."
+downloads = "Λήψεις"
+noneDetected = "Δεν εντοπίστηκε κανένα"
+indexTitle = "Ευρετήριο"
+
+[getPdfInfo.report]
+entryLabel = "Πλήρης σύνοψη πληροφοριών"
+shortTitle = "Πληροφορίες PDF"
+
+[getPdfInfo.sections]
+metadata = "Μεταδεδομένα"
+formFields = "Πεδία φόρμας"
+basicInfo = "Βασικές πληροφορίες"
+documentInfo = "Πληροφορίες εγγράφου"
+compliance = "Συμμόρφωση"
+encryption = "Κρυπτογράφηση"
+permissions = "Δικαιώματα"
+other = "Άλλα"
+perPageInfo = "Πληροφορίες ανά σελίδα"
+tableOfContents = "Πίνακας περιεχομένων"
+
+[getPdfInfo.other]
+attachments = "Συνημμένα"
+embeddedFiles = "Ενσωματωμένα αρχεία"
+javaScript = "JavaScript"
+layers = "Επίπεδα"
+structureTree = "Δέντρο δομής"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Μέγεθος"
+annotations = "Επισημειώσεις"
+images = "Εικόνες"
+links = "Σύνδεσμοι"
+fonts = "Γραμματοσειρές"
+xobjects = "Πλήθος XObject"
+multimedia = "Πολυμέσα"
+
+[getPdfInfo.summary]
+pages = "Σελίδες"
+fileSize = "Μέγεθος αρχείου"
+pdfVersion = "Έκδοση PDF"
+language = "Γλώσσα"
+title = "Σύνοψη PDF"
+author = "Συγγραφέας"
+created = "Δημιουργήθηκε"
+modified = "Τροποποιήθηκε"
+permsAll = "Όλα τα δικαιώματα επιτρέπονται"
+permsRestricted = "{{count}} περιορισμοί"
+permsMixed = "Ορισμένα δικαιώματα είναι περιορισμένα"
+hasCompliance = "Διαθέτει πρότυπα συμμόρφωσης"
+noCompliance = "Χωρίς πρότυπα συμμόρφωσης"
+basic = "Βασικές πληροφορίες"
+documentInfo = "Πληροφορίες εγγράφου"
+securityTitle = "Κατάσταση ασφάλειας"
+technical = "Τεχνικά"
+overviewTitle = "Επισκόπηση PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Κρυπτογραφημένο PDF - Υπάρχει προστασία με κωδικό πρόσβασης"
+unencrypted = "Μη κρυπτογραφημένο PDF - Χωρίς προστασία με κωδικό πρόσβασης"
+
+[getPdfInfo.summary.tech]
+images = "Εικόνες"
+fonts = "Γραμματοσειρές"
+formFields = "Πεδία φόρμας"
+embeddedFiles = "Ενσωματωμένα αρχεία"
+javaScript = "JavaScript"
+layers = "Επίπεδα"
+bookmarks = "Σελιδοδείκτες"
+multimedia = "Πολυμέσα"
+
+[getPdfInfo.summary.overview]
+untitled = "ένα έγγραφο χωρίς τίτλο"
+unknown = "Άγνωστος συγγραφέας"
+text = "Πρόκειται για ένα PDF {{pages}} σελίδων με τίτλο {{title}} που δημιουργήθηκε από τον/την {{author}} (έκδοση PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Δεν ήταν δυνατή η επεξεργασία ορισμένων αρχείων."
+unexpected = "Μη αναμενόμενο σφάλμα κατά την εξαγωγή."
+
+[getPdfInfo.status]
+complete = "Η εξαγωγή ολοκληρώθηκε"
 
 [extractPage]
 tags = "εξαγωγή"
@@ -3438,6 +3539,9 @@ signinTitle = "Παρακαλώ συνδεθείτε"
 ssoSignIn = "Σύνδεση μέσω Single Sign-on"
 oAuth2AutoCreateDisabled = "Η αυτόματη δημιουργία χρήστη OAUTH2 είναι απενεργοποιημένη"
 oAuth2AdminBlockedUser = "Η εγγραφή ή σύνδεση μη εγγεγραμμένων χρηστών είναι προς το παρόν αποκλεισμένη. Παρακαλώ επικοινωνήστε με τον διαχειριστή."
+oAuth2RequiresLicense = "Η σύνδεση μέσω OAuth/SSO απαιτεί επί πληρωμή άδεια (Server ή Enterprise). Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας."
+saml2RequiresLicense = "Η σύνδεση μέσω SAML απαιτεί επί πληρωμή άδεια (Server ή Enterprise). Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας."
+maxUsersReached = "Έχει επιτευχθεί ο μέγιστος αριθμός χρηστών για την τρέχουσα άδειά σας. Παρακαλούμε επικοινωνήστε με τον διαχειριστή για να αναβαθμίσετε το πλάνο σας ή να προσθέσετε περισσότερες θέσεις."
 oauth2RequestNotFound = "Το αίτημα εξουσιοδότησης δεν βρέθηκε"
 oauth2InvalidUserInfoResponse = "Μη έγκυρη απόκριση πληροφοριών χρήστη"
 oauth2invalidRequest = "Μη έγκυρο αίτημα"
@@ -3533,7 +3637,7 @@ title = "PDF σε μία σελίδα"
 header = "PDF σε μία σελίδα"
 submit = "Μετατροπή σε μία σελίδα"
 description = "Αυτό το εργαλείο θα συγχωνεύσει όλες τις σελίδες του PDF σας σε μία μεγάλη ενιαία σελίδα. Το πλάτος θα παραμείνει ίδιο με των αρχικών σελίδων, αλλά το ύψος θα είναι το άθροισμα όλων των υψών."
-filenamePrefix = "single_page"
+filenamePrefix = "μονοσέλιδο"
 
 [pdfToSinglePage.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3771,7 +3875,7 @@ version = "Τρέχουσα έκδοση"
 title = "Τεκμηρίωση API"
 header = "Τεκμηρίωση API"
 desc = "Προβάλετε και δοκιμάστε τα endpoints του Stirling PDF API"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,τεκμηρίωση,swagger,τελικά σημεία,ανάπτυξη"
 
 [cookieBanner.popUp]
 title = "Πώς χρησιμοποιούμε τα cookies"
@@ -3846,14 +3950,17 @@ fitToWidth = "Προσαρμογή στο πλάτος"
 actualSize = "Πραγματικό μέγεθος"
 
 [viewer]
+cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
+dualPageView = "Προβολή διπλής σελίδας"
 firstPage = "Πρώτη σελίδα"
 lastPage = "Τελευταία σελίδα"
-previousPage = "Προηγούμενη σελίδα"
 nextPage = "Επόμενη σελίδα"
+onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
+previousPage = "Προηγούμενη σελίδα"
+singlePageView = "Προβολή μίας σελίδας"
+unknownFile = "Άγνωστο αρχείο"
 zoomIn = "Μεγέθυνση"
 zoomOut = "Σμίκρυνση"
-singlePageView = "Προβολή μίας σελίδας"
-dualPageView = "Προβολή διπλής σελίδας"
 
 [rightRail]
 closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
 exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
 toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
 annotationMode = "Εναλλαγή λειτουργίας σχολιασμού"
+print = "Εκτύπωση PDF"
 draw = "Σχεδίαση"
 save = "Αποθήκευση"
 saveChanges = "Αποθήκευση αλλαγών"
@@ -4235,11 +4343,11 @@ label = "URL εκδότη"
 description = "Το URL εκδότη του παρόχου OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "Αναγνωριστικό πελάτη (Client ID)"
 description = "Το Client ID OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "Μυστικό πελάτη (Client Secret)"
 description = "Το Client Secret OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4459,7 +4567,7 @@ label = "Ενεργοποίηση προσκλήσεων μέσω email"
 description = "Να επιτρέπεται στους διαχειριστές να προσκαλούν χρήστες μέσω email με αυτόματα παραγόμενους κωδικούς"
 
 [admin.settings.mail.frontendUrl]
-label = "Frontend URL"
+label = "URL front-end"
 description = "Βασικό URL για το frontend (π.χ. https://pdf.example.com). Χρησιμοποιείται για τη δημιουργία συνδέσμων πρόσκλησης στα email. Αφήστε κενό για χρήση του backend URL."
 
 [admin.settings.legal]
@@ -4494,6 +4602,7 @@ description = "URL ή όνομα αρχείου για το impressum (απαι�
 title = "Premium & Enterprise"
 description = "Ρυθμίστε το κλειδί άδειας premium ή enterprise."
 license = "Διαμόρφωση άδειας"
+noInput = "Παρακαλώ δώστε ένα κλειδί άδειας ή αρχείο"
 
 [admin.settings.premium.licenseKey]
 toggle = "Έχετε κλειδί άδειας ή αρχείο πιστοποιητικού;"
@@ -4510,6 +4619,25 @@ title = "⚠️ Προειδοποίηση: Βρέθηκε υπάρχουσα ά
 line1 = "Η αντικατάσταση του τρέχοντος κλειδιού άδειας δεν μπορεί να αναιρεθεί."
 line2 = "Η προηγούμενη άδεια θα χαθεί οριστικά εκτός αν την έχετε αποθηκεύσει αλλού."
 line3 = "Σημαντικό: Κρατήστε τα κλειδιά άδειας ιδιωτικά και ασφαλή. Μην τα κοινοποιείτε δημόσια."
+
+[admin.settings.premium.inputMethod]
+text = "Κλειδί άδειας"
+file = "Αρχείο πιστοποιητικού"
+
+[admin.settings.premium.file]
+label = "Αρχείο πιστοποιητικού άδειας"
+description = "Μεταφορτώστε το αρχείο άδειας .lic ή .cert από αγορές εκτός σύνδεσης"
+choose = "Επιλέξτε αρχείο άδειας"
+selected = "Επιλεγμένο: {{filename}} ({{size}})"
+successMessage = "Το αρχείο άδειας μεταφορτώθηκε και ενεργοποιήθηκε με επιτυχία. Δεν απαιτείται επανεκκίνηση."
+
+[admin.settings.premium.currentLicense]
+title = "Ενεργή άδεια"
+file = "Πηγή: Αρχείο άδειας ({{path}})"
+key = "Πηγή: Κλειδί άδειας"
+type = "Τύπος: {{type}}"
+noInput = "Παρακαλώ δώστε ένα κλειδί άδειας ή μεταφορτώστε ένα αρχείο πιστοποιητικού"
+success = "Επιτυχία"
 
 [admin.settings.premium.enabled]
 label = "Ενεργοποίηση λειτουργιών premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} επιλεγμένα"
 download = "Λήψη"
 delete = "Διαγραφή"
 unsupported = "Μη υποστηριζόμενο"
+active = "Ενεργό"
 addToUpload = "Προσθήκη στη μεταφόρτωση"
+closeFile = "Κλείσιμο αρχείου"
 deleteAll = "Διαγραφή όλων"
 loadingFiles = "Φόρτωση αρχείων..."
 noFiles = "Δεν υπάρχουν διαθέσιμα αρχεία"
@@ -5132,7 +5262,7 @@ upgrade = "Αναβάθμιση τώρα →"
 freeTitle = "Άδεια διακομιστή"
 overLimitTitle = "Απαιτείται άδεια διακομιστή"
 overLimitBody = "Η αδειοδότηση μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Έχετε <strong>{{overLimitUserCopy}}</strong> χρήστες Stirling. Για να συνεχίσετε χωρίς διακοπές, αναβαθμίστε στο πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong>, επεξεργασία κειμένου PDF και πλήρης έλεγχος διαχειριστή για $99/server/μήνα."
-freeBody = "Η αδειοδότηση <strong>Open-Core</strong> μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση και έγκαιρη πρόσβαση στο νέο <strong>εργαλείο επεξεργασίας κειμένου PDF</strong>, προτείνουμε το πλάνο Stirling Server - πλήρης επεξεργασία και <strong>απεριόριστες θέσεις</strong> για $99/server/μήνα."
+freeBody = "Οι άδειες χρήσης <strong>Open-Core</strong> επιτρέπουν έως και <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση, προτείνουμε το πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong> και <strong>υποστήριξη SSO</strong> με $99/διακομιστή/μήνα."
 
 [onboarding.desktopInstall]
 title = "Λήψη"
@@ -5237,6 +5367,31 @@ error = "Αποτυχία ενημέρωσης κατάστασης χρήστη
 success = "Ο χρήστης διαγράφηκε με επιτυχία"
 error = "Αποτυχία διαγραφής χρήστη"
 
+[workspace.people.changePassword]
+action = "Αλλαγή κωδικού πρόσβασης"
+title = "Αλλαγή κωδικού πρόσβασης"
+subtitle = "Ενημέρωση κωδικού πρόσβασης για"
+newPassword = "Νέος κωδικός πρόσβασης"
+confirmPassword = "Επιβεβαίωση κωδικού πρόσβασης"
+placeholder = "Εισαγάγετε νέο κωδικό πρόσβασης"
+confirmPlaceholder = "Εισαγάγετε ξανά τον νέο κωδικό πρόσβασης"
+passwordRequired = "Παρακαλούμε εισαγάγετε νέο κωδικό πρόσβασης"
+passwordMismatch = "Οι κωδικοί πρόσβασης δεν ταιριάζουν"
+generateRandom = "Δημιουργία ασφαλούς κωδικού πρόσβασης"
+generatedPreview = "Δημιουργημένος κωδικός πρόσβασης:"
+copyTooltip = "Αντιγραφή στο πρόχειρο"
+copiedToClipboard = "Ο κωδικός πρόσβασης αντιγράφηκε στο πρόχειρο"
+copyFailed = "Αποτυχία αντιγραφής κωδικού πρόσβασης"
+sendEmail = "Αποστολή email στον χρήστη για αυτήν την αλλαγή"
+includePassword = "Να συμπεριληφθεί ο νέος κωδικός πρόσβασης στο email"
+forcePasswordChange = "Υποχρεωτική αλλαγή κωδικού πρόσβασης κατά την επόμενη σύνδεση"
+emailUnavailable = "Το email αυτού του χρήστη δεν είναι έγκυρη διεύθυνση email. Οι ειδοποιήσεις είναι απενεργοποιημένες."
+smtpDisabled = "Οι ειδοποιήσεις μέσω email απαιτούν την ενεργοποίηση του SMTP στις ρυθμίσεις."
+notifyOnly = "Θα σταλεί email χωρίς τον κωδικό πρόσβασης, ενημερώνοντας τον χρήστη ότι ένας διαχειριστής τον άλλαξε."
+submit = "Ενημέρωση κωδικού πρόσβασης"
+success = "Ο κωδικός πρόσβασης ενημερώθηκε με επιτυχία"
+error = "Αποτυχία ενημέρωσης κωδικού πρόσβασης"
+
 [workspace.people.emailInvite]
 tab = "Πρόσκληση μέσω Email"
 description = "Πληκτρολογήστε ή επικολλήστε emails παρακάτω, χωρισμένα με κόμμα. Οι χρήστες θα λάβουν στοιχεία σύνδεσης μέσω email."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Απαιτείται τουλάχιστον μία διεύθυνση email"
 submit = "Αποστολή προσκλήσεων"
 success = "στάλθηκαν προσκλήσεις με επιτυχία"
-partialSuccess = "Κάποιες προσκλήσεις απέτυχαν"
+partialFailure = "Ορισμένες προσκλήσεις απέτυχαν"
 allFailed = "Αποτυχία πρόσκλησης χρηστών"
 error = "Αποτυχία αποστολής προσκλήσεων"
 
@@ -5709,7 +5864,7 @@ title = "Διάγραμμα χρήσης Endpoints"
 
 [usage.table]
 title = "Αναλυτικά στατιστικά"
-endpoint = "Endpoint"
+endpoint = "Σημείο τερματισμού"
 visits = "Επισκέψεις"
 percentage = "Ποσοστό"
 noData = "Δεν υπάρχουν διαθέσιμα δεδομένα"
@@ -5770,6 +5925,7 @@ subtitle = "Συνδεθείτε με τον λογαριασμό Stirling"
 [setup.selfhosted]
 title = "Σύνδεση στον διακομιστή"
 subtitle = "Εισαγάγετε τα διαπιστευτήρια του διακομιστή σας"
+link = "ή συνδεθείτε σε έναν self-hosted λογαριασμό"
 
 [setup.server]
 title = "Σύνδεση σε διακομιστή"
@@ -5788,6 +5944,14 @@ description = "Εισαγάγετε το πλήρες URL του self-hosted δ�
 emptyUrl = "Εισαγάγετε URL διακομιστή"
 unreachable = "Αδυναμία σύνδεσης με τον διακομιστή"
 testFailed = "Αποτυχία ελέγχου σύνδεσης"
+configFetch = "Αποτυχία ανάκτησης της διαμόρφωσης του διακομιστή. Ελέγξτε το URL και δοκιμάστε ξανά."
+
+[setup.server.error.securityDisabled]
+title = "Η σύνδεση δεν είναι ενεργοποιημένη"
+body = "Σε αυτόν τον διακομιστή δεν είναι ενεργοποιημένη η σύνδεση. Για να συνδεθείτε σε αυτόν τον διακομιστή, πρέπει να ενεργοποιήσετε τον έλεγχο ταυτότητας:"
+step1 = "Ορίστε το DOCKER_ENABLE_SECURITY=true στο περιβάλλον σας"
+step2 = "Ή ορίστε security.enableLogin=true στο settings.yml"
+step3 = "Επανεκκινήστε τον διακομιστή"
 
 [setup.login]
 title = "Σύνδεση"
@@ -5797,6 +5961,13 @@ submit = "Σύνδεση"
 signInWith = "Σύνδεση με"
 oauthPending = "Άνοιγμα προγράμματος περιήγησης για έλεγχο ταυτότητας..."
 orContinueWith = "Ή συνεχίστε με email"
+serverRequirement = "Σημείωση: Ο διακομιστής πρέπει να έχει ενεργοποιημένη τη σύνδεση."
+showInstructions = "Πώς ενεργοποιείται;"
+hideInstructions = "Απόκρυψη οδηγιών"
+instructions = "Για να ενεργοποιήσετε τη σύνδεση στον διακομιστή Stirling PDF:"
+instructionsEnvVar = "Ορίστε τη μεταβλητή περιβάλλοντος:"
+instructionsOrYml = "Ή στο settings.yml:"
+instructionsRestart = "Στη συνέχεια, επανεκκινήστε τον διακομιστή σας για να εφαρμοστούν οι αλλαγές."
 
 [setup.login.username]
 label = "Όνομα χρήστη"
@@ -5853,6 +6024,7 @@ earlyAccess = "Πρόωρη πρόσβαση"
 reset = "Επαναφορά αλλαγών"
 downloadJson = "Λήψη JSON"
 generatePdf = "Δημιουργία PDF"
+saveChanges = "Αποθήκευση αλλαγών"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Αυτόματη προσαρμογή κειμένου στα πλαίσια"
@@ -5890,6 +6062,8 @@ alpha = "Αυτός ο προβολέας άλφα εξελίσσεται ακό
 [pdfTextEditor.empty]
 title = "Δεν φορτώθηκε έγγραφο"
 subtitle = "Φορτώστε ένα αρχείο PDF ή JSON για να ξεκινήσετε την επεξεργασία κειμένου."
+dropzone = "Σύρετε και αποθέστε εδώ ένα αρχείο PDF ή JSON, ή κάντε κλικ για περιήγηση"
+dropzoneWithFiles = "Επιλέξτε ένα αρχείο από την καρτέλα Αρχεία, ή σύρετε και αποθέστε εδώ ένα αρχείο PDF ή JSON, ή κάντε κλικ για περιήγηση"
 
 [pdfTextEditor.welcomeBanner]
 title = "Καλώς ορίσατε στο PDF Text Editor (Πρώιμη πρόσβαση)"

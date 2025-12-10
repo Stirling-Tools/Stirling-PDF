@@ -99,7 +99,7 @@ visitGithub = "Bisitatu Github biltegia"
 donate = "Dohaintza egin"
 color = "Color"
 sponsor = "Babestu"
-info = "Info"
+info = "Informazioa"
 pro = "Pro"
 page = "Orrialdea"
 pages = "Orrialdeak"
@@ -131,7 +131,7 @@ unsupported = "Ez da onartzen"
 
 [toolPanel]
 placeholder = "Aukeratu tresna bat hasteko"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Premium ezaugarria:"
 comingSoon = "Laster eskuragarri:"
 
@@ -162,6 +162,11 @@ unfavorite = "Kendu gogokoetatik"
 [toolPanel.toggle]
 fullscreen = "Aldatu pantaila osoko modura"
 sidebar = "Aldatu alboko barra modura"
+
+[backendStartup]
+notFoundTitle = "Backend-a ez da aurkitu"
+retry = "Saiatu berriro"
+unreachable = "Aplikazioak une honetan ezin du backend-arekin konektatu. Egiaztatu backend-aren egoera eta sare-konexioa, eta saiatu berriro."
 
 [zipWarning]
 title = "ZIP fitxategi handia"
@@ -274,7 +279,7 @@ iAgreeToThe = "Onartzen ditut honako hauek guztiak"
 terms = "Baldintzak eta erabilera-baldintzak"
 accessibility = "Irisgarritasuna"
 cookie = "Cookie politika"
-impressum = "Impressum"
+impressum = "Lege oharra"
 showCookieBanner = "Cookie-hobespenak"
 
 [pipeline]
@@ -296,7 +301,7 @@ saveSettings = "Gorde eragiketa-ezarpenak"
 pipelineNamePrompt = "Sartu hemen pipeline izena"
 selectOperation = "Aukeratu eragiketa"
 addOperationButton = "Gehitu eragiketa"
-pipelineHeader = "Pipeline:"
+pipelineHeader = "Pipelinea:"
 saveButton = "Distira"
 validateButton = "Balidatu"
 
@@ -347,7 +352,7 @@ teams = "Taldeak"
 title = "Konfigurazioa"
 systemSettings = "Sistemaren ezarpenak"
 features = "Eginbideak"
-endpoints = "Endpoints"
+endpoints = "Amaiera-puntuak"
 database = "Datu-basea"
 advanced = "Aurreratua"
 
@@ -364,7 +369,7 @@ usageAnalytics = "Erabilera-analitika"
 
 [settings.policiesPrivacy]
 title = "Politikak eta Pribatutasuna"
-legal = "Legal"
+legal = "Lege"
 privacy = "Pribatutasuna"
 
 [settings.developer]
@@ -513,7 +518,7 @@ syncToAccount = "Sync Kontua <- Nabigatzailea"
 [adminUserSettings]
 title = "Erabiltzailearen Ezarpenen Kontrolak"
 header = "Admin Erabiltzailearen Ezarpenen Kontrolak"
-admin = "Admin"
+admin = "Administratzailea"
 user = "Erabiltzaile"
 addUser = "Erabiltzaile berria"
 deleteUser = "Ezabatu erabiltzailea"
@@ -912,6 +917,9 @@ desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregi
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
+[home.pdfTextEditor]
+title = "PDF testu editorea"
+desc = "Editatu PDFetako lehendik dauden testuak eta irudiak"
 
 [home.addText]
 tags = "testua,anotazioa,etiketa"
@@ -1217,7 +1225,7 @@ odtExt = "OpenDocument testua (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "OpenDocument aurkezpena (.odp)"
 txtExt = "Testu laua (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Testu aberatsaren formatua (.rtf)"
 selectedFiles = "Hautatutako fitxategiak"
 noFileSelected = "Ez da fitxategirik hautatu. Erabili fitxategi-panela fitxategiak gehitzeko."
 convertFiles = "Bihurtu fitxategiak"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Marrazketa sinadura"
 defaultImageLabel = "Igotako sinadura"
 defaultTextLabel = "Idatzitako sinadura"
 saveButton = "Gorde sinadura"
+savePersonal = "Gorde pertsonala"
+saveShared = "Gorde partekatua"
 saveUnavailable = "Lehenik sortu sinadura bat gordetzeko."
 noChanges = "Uneko sinadura dagoeneko gorde da."
+tempStorageTitle = "Aldi baterako nabigatzaileko biltegiratzea"
+tempStorageDescription = "Sinadurak zure nabigatzailean bakarrik gordetzen dira. Nabigatzailearen datuak ezabatzen badituzu edo nabigatzailea aldatzen baduzu, galdu egingo dira."
+personalHeading = "Sinadura pertsonalak"
+sharedHeading = "Partekatutako sinadurak"
+personalDescription = "Zuk bakarrik ikus ditzakezu sinadura hauek."
+sharedDescription = "Erabiltzaile guztiek ikus eta erabil ditzakete sinadura hauek."
 
 [sign.saved.type]
 canvas = "Marrazkia"
@@ -3020,6 +3036,91 @@ title = "Lortu informazioa PDFn"
 header = "Lortu informazioa PDFn"
 submit = "Lortu informazioa"
 downloadJson = "Deskargatu JSON"
+processing = "Informazioa erauzten..."
+results = "Emaitzak"
+noResults = "Exekutatu tresna txosten bat sortzeko."
+downloads = "Deskargak"
+noneDetected = "Ez da ezer detektatu"
+indexTitle = "Indizea"
+
+[getPdfInfo.report]
+entryLabel = "Informazio osoaren laburpena"
+shortTitle = "PDFren informazioa"
+
+[getPdfInfo.sections]
+metadata = "Metadatuak"
+formFields = "Inprimaki-eremuak"
+basicInfo = "Oinarrizko informazioa"
+documentInfo = "Dokumentuaren informazioa"
+compliance = "Arauen betetzea"
+encryption = "Zifratzea"
+permissions = "Baimenak"
+other = "Bestelakoak"
+perPageInfo = "Orrialdeko informazioa"
+tableOfContents = "Aurkibidea"
+
+[getPdfInfo.other]
+attachments = "Eranskinak"
+embeddedFiles = "Txertatutako fitxategiak"
+javaScript = "JavaScript"
+layers = "Geruzak"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Tamaina"
+annotations = "Anotazioak"
+images = "Irudiak"
+links = "Estekak"
+fonts = "Letra-tipoak"
+xobjects = "XObject kopuruak"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Orriak"
+fileSize = "Fitxategi-tamaina"
+pdfVersion = "PDF bertsioa"
+language = "Hizkuntza"
+title = "PDFren laburpena"
+author = "Egilea"
+created = "Sortua"
+modified = "Aldatua"
+permsAll = "Baimen guztiak baimenduta"
+permsRestricted = "{{count}} murrizketa"
+permsMixed = "Zenbait baimen murriztuta"
+hasCompliance = "Betetze-estandarrak ditu"
+noCompliance = "Ez dago betetze-estandarrik"
+basic = "Oinarrizko informazioa"
+documentInfo = "Dokumentuaren informazioa"
+securityTitle = "Segurtasun-egoera"
+technical = "Teknikoa"
+overviewTitle = "PDFren ikuspegi orokorra"
+
+[getPdfInfo.summary.security]
+encrypted = "Zifratutako PDFa - Pasahitz-babesa dago"
+unencrypted = "Zifratu gabeko PDFa - Ez dago pasahitz-babesik"
+
+[getPdfInfo.summary.tech]
+images = "Irudiak"
+fonts = "Letra-tipoak"
+formFields = "Inprimaki-eremuak"
+embeddedFiles = "Txertatutako fitxategiak"
+javaScript = "JavaScript"
+layers = "Geruzak"
+bookmarks = "Laster-markak"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "izenbururik gabeko dokumentu bat"
+unknown = "Egile ezezaguna"
+text = "Hau {{pages}} orrialdeko PDF bat da; izenburua: {{title}}, egilea: {{author}} (PDF bertsioa: {{version}})."
+
+[getPdfInfo.error]
+partial = "Fitxategi batzuk ezin izan dira prozesatu."
+unexpected = "Ustekabeko errorea erauzketan zehar."
+
+[getPdfInfo.status]
+complete = "Erau zketa amaituta"
 
 [extractPage]
 tags = "erauzi"
@@ -3438,6 +3539,9 @@ signinTitle = "Mesedez, hasi saioa"
 ssoSignIn = "Hasi saioa Saioa hasteko modu bakarraren bidez"
 oAuth2AutoCreateDisabled = "OAUTH2 Sortu automatikoki erabiltzailea desgaituta dago"
 oAuth2AdminBlockedUser = "Erregistratu gabeko erabiltzaileen erregistroa edo saio-hasiera une honetan blokeatuta dago. Jarri harremanetan administratzailearekin."
+oAuth2RequiresLicense = "OAuth/SSO bidezko saio-hasierak lizentzia ordaindua behar du (Server edo Enterprise). Mesedez, jarri harremanetan administratzailearekin plana eguneratzeko."
+saml2RequiresLicense = "SAML bidezko saio-hasierak lizentzia ordaindua behar du (Server edo Enterprise). Mesedez, jarri harremanetan administratzailearekin plana eguneratzeko."
+maxUsersReached = "Zure uneko lizentziarekin erabiltzaile kopuru maximoa gainditu da. Mesedez, jarri harremanetan administratzailearekin plana eguneratzeko edo eserleku gehiago gehitzeko."
 oauth2RequestNotFound = "Baimen-eskaera ez da aurkitu"
 oauth2InvalidUserInfoResponse = "Erabiltzaile-informazioaren erantzun baliogabea"
 oauth2invalidRequest = "Eskaera baliogabea"
@@ -3533,7 +3637,7 @@ title = "PDF Orrialde bakarrera"
 header = "PDF Orrialde bakarrera"
 submit = "Orrialde bakarrera bihurtu"
 description = "Tresna honek zure PDFko orri guztiak orri handi bakarrean batuko ditu. Zabalera bera izango du jatorrizko orrienarekin, baina altuera orri guztien altueren batura izango da."
-filenamePrefix = "single_page"
+filenamePrefix = "orrialde_bakarra"
 
 [pdfToSinglePage.files]
 placeholder = "Hautatu PDF fitxategi bat ikuspegi nagusian hasteko"
@@ -3846,14 +3950,17 @@ fitToWidth = "Zabalera egokitu"
 actualSize = "Benetako tamaina"
 
 [viewer]
+cannotPreviewFile = "Ezin da fitxategia aurreikusi"
+dualPageView = "Orri biko ikuspegia"
 firstPage = "Lehen orria"
 lastPage = "Azken orria"
-previousPage = "Aurreko orria"
 nextPage = "Hurrengo orria"
+onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
+previousPage = "Aurreko orria"
+singlePageView = "Orri bakarreko ikuspegia"
+unknownFile = "Fitxategi ezezaguna"
 zoomIn = "Zoom handitu"
 zoomOut = "Zoom txikitu"
-singlePageView = "Orri bakarreko ikuspegia"
-dualPageView = "Orri biko ikuspegia"
 
 [rightRail]
 closeSelected = "Itxi hautatutako fitxategiak"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Alboko barra txandakatu"
 exportSelected = "Esportatu hautatutako orriak"
 toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
 annotationMode = "Oharpen modua txandakatu"
+print = "Inprimatu PDFa"
 draw = "Marraztu"
 save = "Gorde"
 saveChanges = "Aldaketak gorde"
@@ -4407,7 +4515,7 @@ description = "Sistema zabalagoko aldi baterako direktorioa garbitu ala ez (kont
 label = "Prozesu-exekutorearen mugak"
 description = "Konfiguratu saio-mugak eta denbora-mugak prozesu-exekutore bakoitzerako"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF to HTML"
+pdfToHtml = "PDFtik HTMLra"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4487,13 +4595,14 @@ label = "Cookieen politika"
 description = "Cookieen politikara doan URLa edo fitxategi-izena"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Lege oharra"
 description = "Impressum-era doan URLa edo fitxategi-izena (beharrezkoa jurisdikzio batzuetan)"
 
 [admin.settings.premium]
 title = "Premium eta Enterprise"
 description = "Konfiguratu zure premium edo enterprise lizentzia-gakoa."
 license = "Lizentziaren konfigurazioa"
+noInput = "Eman lizentzia-gakoa edo fitxategia, mesedez"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lizentzia-gakoa edo ziurtagiri-fitxategia duzu?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Abisua: Aurrezko lizentzia atzemanda"
 line1 = "Uneko lizentzia-gakoa gainidaztea ezin da desegin."
 line2 = "Aurreko lizentzia betiko galduko da beste nonbait babestu ezean."
 line3 = "Garrantzitsua: Mantendu lizentzia-gakoak pribatu eta seguru. Ez partekatu publikoki inoiz."
+
+[admin.settings.premium.inputMethod]
+text = "Lizentzia-gakoa"
+file = "Ziurtagiri-fitxategia"
+
+[admin.settings.premium.file]
+label = "Lizentzia-ziurtagiriaren fitxategia"
+description = "Igo zure .lic edo .cert lizentzia-fitxategia lineaz kanpoko erosketetatik"
+choose = "Aukeratu lizentzia-fitxategia"
+selected = "Hautatuta: {{filename}} ({{size}})"
+successMessage = "Lizentzia-fitxategia behar bezala igo eta aktibatu da. Ez da berrabiaraztea beharrezkoa."
+
+[admin.settings.premium.currentLicense]
+title = "Lizentzia aktiboa"
+file = "Iturburua: Lizentzia-fitxategia ({{path}})"
+key = "Iturburua: Lizentzia-gakoa"
+type = "Mota: {{type}}"
+noInput = "Eman lizentzia-gakoa edo igo ziurtagiri-fitxategi bat, mesedez"
+success = "Arrakasta"
 
 [admin.settings.premium.enabled]
 label = "Premium eginbideak gaitu"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} hautatuta"
 download = "Distira"
 delete = "ezabatu"
 unsupported = "Ez da onartzen"
+active = "Aktibo"
 addToUpload = "Gehitu igoerara"
+closeFile = "Itxi fitxategia"
 deleteAll = "Ezabatu denak"
 loadingFiles = "Fitxategiak kargatzen..."
 noFiles = "Ez dago fitxategirik eskuragarri"
@@ -5132,7 +5262,7 @@ upgrade = "Eguneratu orain →"
 freeTitle = "Zerbitzari-lizentzia"
 overLimitTitle = "Beharrezkoa da zerbitzari-lizentzia"
 overLimitBody = "Gure lizentziak baimentzen ditu <strong>{{freeTierLimit}}</strong> erabiltzaile doan zerbitzari bakoitzeko. <strong>{{overLimitUserCopy}}</strong> Stirling erabiltzaile dituzu. Jarraitzeko etenik gabe, eguneratu Stirling Server planera - <strong>eserleku mugagabeak</strong>, PDF testu-edizioa, eta admin kontrol osoa $99/zerbitzari/hilean."
-freeBody = "Gure <strong>Open-Core</strong> lizentziak <strong>{{freeTierLimit}}</strong> erabiltzaile arte baimentzen ditu doan zerbitzari bakoitzeko. Etenik gabe eskalatzeko eta gure <strong>PDF testu-edizio tresna</strong> berrirako sarbide goiztiarra lortzeko, gomendatzen dugu Stirling Server plana - edizio osoa eta <strong>eserleku mugagabeak</strong> $99/zerbitzari/hilean."
+freeBody = "Gure <strong>Open-Core</strong> lizentziak zerbitzari bakoitzeko doan gehienez <strong>{{freeTierLimit}}</strong> erabiltzaile baimentzen ditu. Etenik gabe eskalatzeko, Stirling Server plana gomendatzen dugu - <strong>eserleku mugagabeak</strong> eta <strong>SSO euskarria</strong> $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Deskargatu"
@@ -5178,7 +5308,7 @@ active = "Aktibo"
 disabled = "Desgaituta"
 activeSession = "Saio aktiboa"
 member = "Kidea"
-admin = "Admin"
+admin = "Administratzailea"
 editRole = "Rola editatu"
 enable = "Gaitu"
 disable = "Desgaitu"
@@ -5237,6 +5367,31 @@ error = "Ezin izan da erabiltzailearen egoera eguneratu"
 success = "Erabiltzailea ongi ezabatu da"
 error = "Ezin izan da erabiltzailea ezabatu"
 
+[workspace.people.changePassword]
+action = "Pasahitza aldatu"
+title = "Pasahitza aldatu"
+subtitle = "Honetarako pasahitza eguneratu"
+newPassword = "Pasahitz berria"
+confirmPassword = "Berretsi pasahitza"
+placeholder = "Sartu pasahitz berria"
+confirmPlaceholder = "Sartu berriro pasahitz berria"
+passwordRequired = "Sartu pasahitz berria"
+passwordMismatch = "Pasahitzak ez datoz bat"
+generateRandom = "Sortu pasahitz segurua"
+generatedPreview = "Sortutako pasahitza:"
+copyTooltip = "Kopiatu arbelera"
+copiedToClipboard = "Pasahitza arbelera kopiatu da"
+copyFailed = "Pasahitza kopiatzeak huts egin du"
+sendEmail = "Bidali mezu elektronikoa erabiltzaileari aldaketa honi buruz"
+includePassword = "Sartu pasahitz berria mezu elektronikoan"
+forcePasswordChange = "Behartu erabiltzailea hurrengo saio-hasieran pasahitza aldatzera"
+emailUnavailable = "Erabiltzaile honen helbide elektronikoa ez da baliozkoa. Jakinarazpenak desgaituta daude."
+smtpDisabled = "Posta elektroniko bidezko jakinarazpenek SMTP gaituta egotea eskatzen dute ezarpenetan."
+notifyOnly = "Pasahitzik gabe bidaliko da mezu elektronikoa; erabiltzaileari jakinaraziko zaio administratzaile batek aldatu duela."
+submit = "Eguneratu pasahitza"
+success = "Pasahitza ongi eguneratu da"
+error = "Pasahitza eguneratzeak huts egin du"
+
 [workspace.people.emailInvite]
 tab = "E-posta bidezko gonbidapena"
 description = "Idatzi edo itsatsi behean helbide elektronikoak, komaz bereizita. Erabiltzaileek saio-hasierako kredentzialak e-postaz jasoko dituzte."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Gutxienez helbide elektroniko bat behar da"
 submit = "Bidali gonbidapenak"
 success = "erabiltzaile(a)(k) ongi gonbidatu dira"
-partialSuccess = "Gonbidapen batzuek huts egin dute"
+partialFailure = "Gonbidapen batzuk huts egin dute"
 allFailed = "Ezin izan da erabiltzaileak gonbidatu"
 error = "Ezin izan dira gonbidapenak bidali"
 
@@ -5709,7 +5864,7 @@ title = "Endpoints erabileraren diagrama"
 
 [usage.table]
 title = "Estatistika xeheak"
-endpoint = "Endpoint"
+endpoint = "Amaiera-puntua"
 visits = "Bisitak"
 percentage = "Ehunekoa"
 noData = "Ez dago daturik eskuragarri"
@@ -5770,6 +5925,7 @@ subtitle = "Hasi saioa zure Stirling kontuarekin"
 [setup.selfhosted]
 title = "Hasi saioa zerbitzarian"
 subtitle = "Sartu zure zerbitzariaren kredentzialak"
+link = "edo konektatu autoostatutako kontu batera"
 
 [setup.server]
 title = "Konektatu zerbitzarira"
@@ -5788,6 +5944,14 @@ description = "Sartu zure auto-ostatuko Stirling PDF zerbitzariaren URLa osoa"
 emptyUrl = "Sartu zerbitzari baten URLa"
 unreachable = "Ezin izan da zerbitzarira konektatu"
 testFailed = "Konexio proba huts egin du"
+configFetch = "Ezin izan da zerbitzariaren konfigurazioa eskuratu. Egiaztatu URLa eta saiatu berriro."
+
+[setup.server.error.securityDisabled]
+title = "Saio-hasiera ez dago gaituta"
+body = "Zerbitzari honek ez du saio-hasiera gaituta. Zerbitzari honekin konektatzeko, autentifikazioa gaitu behar duzu:"
+step1 = "Ezarri DOCKER_ENABLE_SECURITY=true zure ingurunean"
+step2 = "Edo ezarri security.enableLogin=true settings.yml fitxategian"
+step3 = "Berrabiarazi zerbitzaria"
 
 [setup.login]
 title = "Hasi saioa"
@@ -5797,6 +5961,13 @@ submit = "Hasi saioa"
 signInWith = "Hasi saioa honekin"
 oauthPending = "Nabigatzailea irekitzen autentifikaziorako..."
 orContinueWith = "Edo jarraitu emailarekin"
+serverRequirement = "Oharra: zerbitzariak saioa hastea gaituta eduki behar du."
+showInstructions = "Nola gaitu?"
+hideInstructions = "Ezkutatu argibideak"
+instructions = "Saioa hastea gaitzeko zure Stirling PDF zerbitzarian:"
+instructionsEnvVar = "Ezarri ingurune-aldagaia:"
+instructionsOrYml = "Edo settings.yml fitxategian:"
+instructionsRestart = "Ondoren, berrabiarazi zerbitzaria aldaketak indarrean sartzeko."
 
 [setup.login.username]
 label = "Erabiltzaile-izena"
@@ -5840,7 +6011,7 @@ paragraph = "Paragrafo orria"
 sparse = "Testu sakabanatua"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatikoa"
 paragraph = "Paragrafoa"
 singleLine = "Lerro bakarra"
 
@@ -5853,6 +6024,7 @@ earlyAccess = "Sarbide goiztiarra"
 reset = "Aldaketak berrezarri"
 downloadJson = "JSON deskargatu"
 generatePdf = "PDF sortu"
+saveChanges = "Gorde aldaketak"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Testua automatikoki eskalatu kutxetara egokitzeko"
@@ -5890,6 +6062,8 @@ alpha = "Ikusle alfa hau oraindik eboluzioan dago—zenbait letra-tipo, kolore, 
 [pdfTextEditor.empty]
 title = "Ez da dokumenturik kargatu"
 subtitle = "Kargatu PDF edo JSON fitxategi bat testu-edukia editatzen hasteko."
+dropzone = "Arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
+dropzoneWithFiles = "Hautatu fitxategi bat Fitxategiak fitxatik, edo arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
 
 [pdfTextEditor.welcomeBanner]
 title = "Ongi etorri PDF Text Editor-era (Sarbide goiztiarra)"
