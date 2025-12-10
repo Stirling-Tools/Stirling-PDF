@@ -11,7 +11,8 @@ import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
-import { supportedLanguages } from '@app/i18n';
+import { supportedLanguages, toUnderscoreFormat, toUnderscoreLanguages } from '@app/i18n';
+import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface GeneralSettingsData {
   ui: {
@@ -44,9 +45,6 @@ interface GeneralSettingsData {
   };
 }
 
-const toUnderscoreLanguages = (languages?: string[]) =>
-  (languages || []).map(language => language.replace(/-/g, '_'));
-
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
@@ -55,7 +53,7 @@ export default function AdminGeneralSection() {
   const { setIsDirty, markClean } = useUnsavedChanges();
   const languageOptions = useMemo(
     () => Object.entries(supportedLanguages)
-      .map(([code, label]) => ({ value: code.replace(/-/g, '_'), label: `${label} (${code})` }))
+      .map(([code, label]) => ({ value: toUnderscoreFormat(code), label: `${label} (${code})` }))
       .sort((a, b) => a.label.localeCompare(b.label)),
     []
   );
@@ -165,7 +163,7 @@ export default function AdminGeneralSection() {
   });
 
   const selectedLanguages = useMemo(
-    () => toUnderscoreLanguages(settings.ui?.languages),
+    () => toUnderscoreLanguages(settings.ui?.languages || []),
     [settings.ui?.languages]
   );
 
@@ -402,7 +400,7 @@ export default function AdminGeneralSection() {
               searchable
               clearable
               placeholder={t('admin.settings.general.languages.placeholder', 'Select languages')}
-              comboboxProps={{ zIndex: 1400 }}
+              comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
               disabled={!loginEnabled}
             />
           </div>
@@ -422,7 +420,7 @@ export default function AdminGeneralSection() {
               searchable
               clearable
               placeholder="en_GB"
-              comboboxProps={{ zIndex: 1400 }}
+              comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
               disabled={!loginEnabled}
             />
           </div>

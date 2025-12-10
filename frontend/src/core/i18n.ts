@@ -105,7 +105,7 @@ i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
 });
 
-function normalizeLanguageCode(languageCode: string): string {
+export function normalizeLanguageCode(languageCode: string): string {
   // Replace underscores with hyphens to align with i18next/translation file naming
   const hyphenated = languageCode.replace(/_/g, '-');
   const [base, ...rest] = hyphenated.split('-');
@@ -116,6 +116,21 @@ function normalizeLanguageCode(languageCode: string): string {
 
   const normalizedParts = rest.map(part => (part.length <= 3 ? part.toUpperCase() : part));
   return [base.toLowerCase(), ...normalizedParts].join('-');
+}
+
+/**
+ * Convert language codes to underscore format (e.g., en-GB → en_GB)
+ * Used for backend API communication which expects underscore format
+ */
+export function toUnderscoreFormat(languageCode: string): string {
+  return languageCode.replace(/-/g, '_');
+}
+
+/**
+ * Convert array of language codes to underscore format
+ */
+export function toUnderscoreLanguages(languages: string[]): string[] {
+  return languages.map(toUnderscoreFormat);
 }
 
 /**
