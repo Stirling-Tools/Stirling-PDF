@@ -105,10 +105,10 @@ function detectCornerColor(imageData: ImageData): { r: number; g: number; b: num
 
   const sampleSize = 5;
   const corners = [
-    { x: sampleSize, y: sampleSize }, // top-left
-    { x: width - sampleSize - 1, y: sampleSize }, // top-right
-    { x: sampleSize, y: height - sampleSize - 1 }, // bottom-left
-    { x: width - sampleSize - 1, y: height - sampleSize - 1 } // bottom-right
+    { x: 0, y: 0 }, // top-left
+    { x: width - sampleSize, y: 0 }, // top-right
+    { x: 0, y: height - sampleSize }, // bottom-left
+    { x: width - sampleSize, y: height - sampleSize } // bottom-right
   ];
 
   let totalR = 0, totalG = 0, totalB = 0;

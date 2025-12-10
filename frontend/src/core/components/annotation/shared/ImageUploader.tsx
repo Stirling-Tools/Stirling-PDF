@@ -12,7 +12,6 @@ interface ImageUploaderProps {
   hint?: string;
   allowBackgroundRemoval?: boolean;
   onProcessedImageData?: (dataUrl: string | null) => void;
-  currentImageData?: string;
 }
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -22,8 +21,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   placeholder,
   hint,
   allowBackgroundRemoval = false,
-  onProcessedImageData,
-  currentImageData
+  onProcessedImageData
 }) => {
   const { t } = useTranslation();
   const [removeBackground, setRemoveBackground] = useState(false);
@@ -31,7 +29,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [originalImageData, setOriginalImageData] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const processImage = async (imageSource: File | string, shouldRemoveBackground: boolean) => {
+  const processImage = async (imageSource: File | string, shouldRemoveBackground: boolean): Promise<void> => {
     if (shouldRemoveBackground && allowBackgroundRemoval) {
       setIsProcessing(true);
       try {
@@ -40,7 +38,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           tolerance: 15
         });
         onProcessedImageData?.(transparentImageDataUrl);
-        return transparentImageDataUrl;
       } catch (error) {
         console.error('Error removing background:', error);
         onProcessedImageData?.(null);
@@ -48,12 +45,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         setIsProcessing(false);
       }
     } else {
-      if (originalImageData) {
-        onProcessedImageData?.(originalImageData);
+      // When background removal is disabled, return the original image data
+      if (typeof imageSource === 'string') {
+        onProcessedImageData?.(imageSource);
+      } else {
+        // Convert File to data URL if needed
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          onProcessedImageData?.(e.target?.result as string);
+        };
+        reader.readAsDataURL(imageSource);
       }
-      setIsProcessing(false);
     }
-    return null;
   };
 
   const handleImageChange = async (file: File | null) => {
@@ -90,11 +93,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleBackgroundRemovalChange = async (checked: boolean) => {
+    if (isProcessing) return; // Prevent race conditions
     setRemoveBackground(checked);
     if (originalImageData) {
       await processImage(originalImageData, checked);
-    } else if (currentFile) {
-      await processImage(currentFile, checked);
     }
   };
 

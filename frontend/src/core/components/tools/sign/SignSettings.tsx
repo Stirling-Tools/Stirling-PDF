@@ -461,24 +461,13 @@ const SignSettings = ({
   const handleImageChange = async (file: File | null) => {
     if (file && !disabled) {
       try {
-        const result = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              resolve(e.target.result as string);
-            } else {
-              reject(new Error('Failed to read file'));
-            }
-          };
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-
         // Reset pause state and directly activate placement
         setPlacementManuallyPaused(false);
         lastAppliedPlacementKey.current = null;
 
-        setImageSignatureData(result);
+        // Image data will be set by onProcessedImageData callback in ImageUploader
+        // This avoids the race condition where both handleImageChange and onProcessedImageData
+        // try to set the image data, potentially with the wrong version
 
         // Directly activate placement on image upload
         if (typeof window !== 'undefined') {
