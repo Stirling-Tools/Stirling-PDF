@@ -1,6 +1,7 @@
 import { type OnboardingStepId, ONBOARDING_STEPS } from '@app/components/onboarding/orchestrator/onboardingConfig';
 
 const STORAGE_PREFIX = 'onboarding';
+const TOURS_TOOLTIP_KEY = `${STORAGE_PREFIX}::tours-tooltip-shown`;
 
 export function getStorageKey(stepId: OnboardingStepId): string {
   return `${STORAGE_PREFIX}::${stepId}`;
@@ -45,6 +46,24 @@ export function resetAllOnboardingProgress(): void {
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   } catch (error) {
     console.error('[onboardingStorage] Error resetting all onboarding progress:', error);
+  }
+}
+
+export function hasShownToursTooltip(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(TOURS_TOOLTIP_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function markToursTooltipShown(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(TOURS_TOOLTIP_KEY, 'true');
+  } catch (error) {
+    console.error('[onboardingStorage] Error marking tours tooltip as shown:', error);
   }
 }
 

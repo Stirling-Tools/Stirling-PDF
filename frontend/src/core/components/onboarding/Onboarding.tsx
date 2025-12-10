@@ -176,6 +176,8 @@ export default function Onboarding() {
         openFilesModal,
         loadSampleFile: tourOrch.loadSampleFile,
         switchToViewer: tourOrch.switchToViewer,
+        switchToPageEditor: tourOrch.switchToPageEditor,
+        switchToActiveFiles: tourOrch.switchToActiveFiles,
         selectFirstFile: tourOrch.selectFirstFile,
       },
     }),

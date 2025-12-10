@@ -1,10 +1,6 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
 
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function waitForElement(selector: string, timeoutMs = 7000, intervalMs = 100): Promise<void> {
   if (typeof document === 'undefined') return;
   const start = Date.now();
@@ -50,6 +46,8 @@ export enum WhatsNewTourStep {
   FILE_UPLOAD,
   RIGHT_RAIL,
   TOP_BAR,
+  PAGE_EDITOR_VIEW,
+  ACTIVE_FILES_VIEW,
   WRAP_UP,
 }
 
@@ -60,6 +58,8 @@ interface WhatsNewStepActions {
   openFilesModal: () => void;
   loadSampleFile: () => Promise<void> | void;
   switchToViewer: () => void;
+  switchToPageEditor: () => void;
+  switchToActiveFiles: () => void;
   selectFirstFile: () => void;
 }
 
@@ -76,6 +76,8 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     openFilesModal,
     loadSampleFile,
     switchToViewer,
+    switchToPageEditor,
+    switchToActiveFiles,
     selectFirstFile,
   } = actions;
 
@@ -149,6 +151,34 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
       // Ensure the switcher has mounted before this step renders
       action: async () => {
         switchToViewer();
+        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
+      },
+    },
+    [WhatsNewTourStep.PAGE_EDITOR_VIEW]: {
+      selector: '[data-tour="view-switcher"]',
+      content: t(
+        'onboarding.whatsNew.pageEditorView',
+        'Switch to the Page Editor to reorder, rotate, or delete pages.'
+      ),
+      position: 'bottom',
+      padding: 8,
+      action: async () => {
+        switchToPageEditor();
+        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
+      },
+    },
+    [WhatsNewTourStep.ACTIVE_FILES_VIEW]: {
+      selector: '[data-tour="view-switcher"]',
+      content: t(
+        'onboarding.whatsNew.activeFilesView',
+        'Use Active Files to see everything you have open and pick what to work on.'
+      ),
+      position: 'bottom',
+      padding: 8,
+      action: async () => {
+        switchToActiveFiles();
         await waitForElement('[data-tour="view-switcher"]', 7000, 100);
         await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
       },

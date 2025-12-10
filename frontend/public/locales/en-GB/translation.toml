@@ -340,6 +340,10 @@ advance = "Advanced"
 edit = "View & Edit"
 popular = "Popular"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Preferences"
 
@@ -4060,12 +4064,20 @@ settings = "Settings"
 adminSettings = "Admin Settings"
 allTools = "Tools"
 reader = "Reader"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tools Tour"
 toolsTourDesc = "Learn what the tools can do"
 adminTour = "Admin Tour"
 adminTourDesc = "Explore admin settings & features"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Error"
@@ -5258,6 +5270,16 @@ next = "Next"
 finish = "Finish"
 startTour = "Start Tour"
 startTourDescription = "Take a guided tour of Stirling PDF's key features"
+
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [onboarding.welcomeModal]
 title = "Welcome to Stirling PDF!"

@@ -11,6 +11,7 @@ import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
 import '@app/components/shared/quickAccessBar/QuickAccessBar.css';
+import { Tooltip } from '@app/components/shared/Tooltip';
 import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
@@ -18,6 +19,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
 import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
+import { useToursTooltip } from '@app/components/shared/quickAccessBar/useToursTooltip';
 
 import {
   isNavButtonActive,
@@ -41,6 +43,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const {
+    tooltipOpen,
+    manualCloseOnly,
+    showCloseButton,
+    toursMenuOpen,
+    setToursMenuOpen,
+    handleTooltipOpenChange,
+  } = useToursTooltip();
 
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
@@ -167,7 +177,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     {
       id: 'help',
       name: t("quickAccess.tours", "Tours"),
-      icon: <LocalIcon icon="help-rounded" width="1.25rem" height="1.25rem" />,
+      icon: <LocalIcon icon="explore-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
       size: 'md',
       type: 'action',
@@ -248,6 +258,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               // Handle help button with menu or direct action
               if (buttonConfig.id === 'help') {
                 const isAdmin = config?.isAdmin === true;
+                const toursTooltipContent = isAdmin
+                  ? t('quickAccess.toursTooltip.admin', 'Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour.')
+                  : t('quickAccess.toursTooltip.user', 'Watch walkthroughs here: Tools tour and the New V2 layout tour.');
                 const tourItems = [
                   {
                     key: 'whatsnew',
@@ -272,9 +285,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   }] : []),
                 ];
 
-                return (
-                  <div key={buttonConfig.id} data-tour="help-button">
-                    <Menu position={isRTL ? 'left' : 'right'} offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
+                const helpButtonNode = (
+                  <div data-tour="help-button">
+                    <Menu
+                      position={isRTL ? 'left' : 'right'}
+                      offset={10}
+                      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+                      opened={toursMenuOpen}
+                      onChange={setToursMenuOpen}
+                    >
                       <Menu.Target>
                         <div>{renderNavButton(buttonConfig, index)}</div>
                       </Menu.Target>
@@ -298,6 +317,23 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       </Menu.Dropdown>
                     </Menu>
                   </div>
+                );
+
+                return (
+                  <Tooltip
+                    position="right"
+                    arrow
+                    offset={8}
+                    open={tooltipOpen}
+                    manualCloseOnly={manualCloseOnly}
+                    showCloseButton={showCloseButton}
+                    closeOnOutside={false}
+                    openOnFocus={false}
+                    content={toursTooltipContent}
+                    onOpenChange={handleTooltipOpenChange}
+                  >
+                    {helpButtonNode}
+                  </Tooltip>
                 );
               }
 
