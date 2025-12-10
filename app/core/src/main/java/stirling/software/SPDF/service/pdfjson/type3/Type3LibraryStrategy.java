@@ -23,8 +23,8 @@ import stirling.software.SPDF.service.pdfjson.type3.library.Type3FontLibraryPayl
 public class Type3LibraryStrategy implements Type3ConversionStrategy {
 
     private final Type3FontLibrary fontLibrary;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Value("${stirling.pdf.json.type3.library.enabled:true}")
     private boolean enabled;
 
     @Override
@@ -40,6 +40,12 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
     @Override
     public boolean isAvailable() {
         return enabled && fontLibrary != null && fontLibrary.isLoaded();
+    }
+
+    @jakarta.annotation.PostConstruct
+    private void loadConfiguration() {
+        var cfg = applicationProperties.getPdfEditor().getType3().getLibrary();
+        this.enabled = cfg.isEnabled();
     }
 
     @Override

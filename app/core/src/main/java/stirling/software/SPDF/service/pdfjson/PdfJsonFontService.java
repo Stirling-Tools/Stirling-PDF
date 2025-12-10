@@ -25,22 +25,18 @@ import stirling.software.common.util.TempFileManager;
 public class PdfJsonFontService {
 
     private final TempFileManager tempFileManager;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
     @Getter
-    @Value("${stirling.pdf.json.cff-converter.enabled:true}")
     private boolean cffConversionEnabled;
 
     @Getter
-    @Value("${stirling.pdf.json.cff-converter.method:python}")
     private String cffConverterMethod;
 
-    @Value("${stirling.pdf.json.cff-converter.python-command:/opt/venv/bin/python3}")
     private String pythonCommand;
 
-    @Value("${stirling.pdf.json.cff-converter.python-script:/scripts/convert_cff_to_ttf.py}")
     private String pythonScript;
 
-    @Value("${stirling.pdf.json.cff-converter.fontforge-command:fontforge}")
     private String fontforgeCommand;
 
     private volatile boolean pythonCffConverterAvailable;
@@ -48,6 +44,7 @@ public class PdfJsonFontService {
 
     @PostConstruct
     private void initialiseCffConverterAvailability() {
+        loadConfiguration();
         if (!cffConversionEnabled) {
             log.warn("[FONT-DEBUG] CFF conversion is DISABLED in configuration");
             pythonCffConverterAvailable = false;
@@ -75,6 +72,15 @@ public class PdfJsonFontService {
         }
 
         log.info("[FONT-DEBUG] Selected CFF converter method: {}", cffConverterMethod);
+    }
+
+    private void loadConfiguration() {
+        var cfg = applicationProperties.getPdfEditor().getCffConverter();
+        this.cffConversionEnabled = cfg.isEnabled();
+        this.cffConverterMethod = cfg.getMethod();
+        this.pythonCommand = cfg.getPythonCommand();
+        this.pythonScript = cfg.getPythonScript();
+        this.fontforgeCommand = cfg.getFontforgeCommand();
     }
 
     public byte[] convertCffProgramToTrueType(byte[] fontBytes, String toUnicode) {

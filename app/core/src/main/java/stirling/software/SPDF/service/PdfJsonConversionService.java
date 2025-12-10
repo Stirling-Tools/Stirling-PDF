@@ -144,14 +144,21 @@ public class PdfJsonConversionService {
     private final PdfJsonFontService fontService;
     private final Type3FontConversionService type3FontConversionService;
     private final Type3GlyphExtractor type3GlyphExtractor;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
     private final Map<String, PDFont> type3NormalizedFontCache = new ConcurrentHashMap<>();
     private final Map<String, Set<Integer>> type3GlyphCoverageCache = new ConcurrentHashMap<>();
 
-    @Value("${stirling.pdf.json.font-normalization.enabled:true}")
     private boolean fontNormalizationEnabled;
+    private long cacheMaxBytes;
+    private int cacheMaxPercent;
 
     /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
     private final Map<String, CachedPdfDocument> documentCache = new ConcurrentHashMap<>();
+    private final java.util.LinkedHashMap<String, CachedPdfDocument> lruCache =
+            new java.util.LinkedHashMap<>(16, 0.75f, true);
+    private final Object cacheLock = new Object();
+    private volatile long currentCacheBytes = 0L;
+    private volatile long cacheBudgetBytes = -1L;
 
     private volatile boolean ghostscriptAvailable;
 
@@ -161,7 +168,23 @@ public class PdfJsonConversionService {
 
     @PostConstruct
     private void initializeToolAvailability() {
+        loadConfigurationFromProperties();
         initializeGhostscriptAvailability();
+        initializeCacheBudget();
+    }
+
+    private void loadConfigurationFromProperties() {
+        stirling.software.common.model.ApplicationProperties.PdfEditor cfg =
+                applicationProperties.getPdfEditor();
+        if (cfg != null) {
+            fontNormalizationEnabled = cfg.getFontNormalization().isEnabled();
+            cacheMaxBytes = cfg.getCache().getMaxBytes();
+            cacheMaxPercent = cfg.getCache().getMaxPercent();
+        } else {
+            fontNormalizationEnabled = false;
+            cacheMaxBytes = -1;
+            cacheMaxPercent = 20;
+        }
     }
 
     private void initializeGhostscriptAvailability() {
@@ -199,6 +222,25 @@ public class PdfJsonConversionService {
             log.warn(
                     "Ghostscript executable not found or failed to start; font normalization will be skipped: {}",
                     ex.getMessage());
+        }
+    }
+
+    private void initializeCacheBudget() {
+        long effective = -1L;
+        if (cacheMaxBytes > 0) {
+            effective = cacheMaxBytes;
+        } else if (cacheMaxPercent > 0) {
+            long maxMem = Runtime.getRuntime().maxMemory();
+            effective = Math.max(0L, (maxMem * cacheMaxPercent) / 100);
+        }
+        cacheBudgetBytes = effective;
+        if (cacheBudgetBytes > 0) {
+            log.info(
+                    "PDF JSON cache budget configured: {} bytes (source: {})",
+                    cacheBudgetBytes,
+                    cacheMaxBytes > 0 ? "max-bytes" : "max-percent");
+        } else {
+            log.info("PDF JSON cache budget: unlimited");
         }
     }
 
@@ -318,9 +360,9 @@ public class PdfJsonConversionService {
 
             try (PDDocument document = pdfDocumentFactory.load(workingPath, true)) {
                 int totalPages = document.getNumberOfPages();
-                // Only use lazy images for real async jobs where client can access the cache
-                // Synchronous calls with synthetic jobId should do full extraction
-                boolean useLazyImages = totalPages > 5 && isRealJobId;
+                // Always enable lazy mode for real async jobs so cache is available regardless of
+                // page count. Synchronous calls with synthetic jobId still do full extraction.
+                boolean useLazyImages = isRealJobId;
                 Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
                 Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
                 log.debug(
@@ -435,15 +477,16 @@ public class PdfJsonConversionService {
                         cachedPdfBytes = Files.readAllBytes(workingPath);
                     }
                     CachedPdfDocument cached =
-                            new CachedPdfDocument(
-                                    cachedPdfBytes, docMetadata, fonts, pageFontResources);
-                    documentCache.put(jobId, cached);
+                            buildCachedDocument(
+                                    jobId, cachedPdfBytes, docMetadata, fonts, pageFontResources);
+                    putCachedDocument(jobId, cached);
                     log.debug(
-                            "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy images, jobId: {}",
-                            cachedPdfBytes.length,
+                            "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy images, jobId: {} (diskBacked={})",
+                            cached.getPdfSize(),
                             totalPages,
                             fonts.size(),
-                            jobId);
+                            jobId,
+                            cached.isDiskBacked());
                     scheduleDocumentCleanup(jobId);
                 }
 
@@ -2973,6 +3016,130 @@ public class PdfJsonConversionService {
         }
     }
 
+    // Cache helpers
+    private CachedPdfDocument buildCachedDocument(
+            String jobId,
+            byte[] pdfBytes,
+            PdfJsonDocumentMetadata metadata,
+            Map<String, PdfJsonFont> fonts,
+            Map<Integer, Map<PDFont, String>> pageFontResources)
+            throws IOException {
+        if (pdfBytes == null) {
+            throw new IllegalArgumentException("pdfBytes must not be null");
+        }
+        long budget = cacheBudgetBytes;
+        // If single document is larger than budget, spill straight to disk
+        if (budget > 0 && pdfBytes.length > budget) {
+            TempFile tempFile = new TempFile(tempFileManager, ".pdfjsoncache");
+            Files.write(tempFile.getPath(), pdfBytes);
+            log.debug(
+                    "Cached PDF spilled to disk ({} bytes exceeds budget {}) for jobId {}",
+                    pdfBytes.length,
+                    budget,
+                    jobId);
+            return new CachedPdfDocument(
+                    null, tempFile, pdfBytes.length, metadata, fonts, pageFontResources);
+        }
+        return new CachedPdfDocument(
+                pdfBytes, null, pdfBytes.length, metadata, fonts, pageFontResources);
+    }
+
+    private void putCachedDocument(String jobId, CachedPdfDocument cached) {
+        synchronized (cacheLock) {
+            CachedPdfDocument existing = documentCache.put(jobId, cached);
+            if (existing != null) {
+                lruCache.remove(jobId);
+                currentCacheBytes = Math.max(0L, currentCacheBytes - existing.getInMemorySize());
+                closeQuietly(existing.pdfTempFile);
+            }
+            lruCache.put(jobId, cached);
+            currentCacheBytes += cached.getInMemorySize();
+            enforceCacheBudget();
+        }
+    }
+
+    private CachedPdfDocument getCachedDocument(String jobId) {
+        synchronized (cacheLock) {
+            CachedPdfDocument cached = documentCache.get(jobId);
+            if (cached != null) {
+                lruCache.remove(jobId);
+                lruCache.put(jobId, cached);
+            }
+            return cached;
+        }
+    }
+
+    private void enforceCacheBudget() {
+        if (cacheBudgetBytes <= 0) {
+            return;
+        }
+        synchronized (cacheLock) {
+            java.util.Iterator<java.util.Map.Entry<String, CachedPdfDocument>> it =
+                    lruCache.entrySet().iterator();
+            while (currentCacheBytes > cacheBudgetBytes && it.hasNext()) {
+                java.util.Map.Entry<String, CachedPdfDocument> entry = it.next();
+                it.remove();
+                CachedPdfDocument removed = entry.getValue();
+                documentCache.remove(entry.getKey(), removed);
+                currentCacheBytes =
+                        Math.max(0L, currentCacheBytes - removed.getInMemorySize());
+                removed.close();
+                log.debug(
+                        "Evicted cached PDF for jobId {} to enforce cache budget", entry.getKey());
+            }
+            if (currentCacheBytes > cacheBudgetBytes && !lruCache.isEmpty()) {
+                // Spill the most recently used large entry to disk
+                String key =
+                        lruCache.entrySet().stream()
+                                .reduce((first, second) -> second)
+                                .map(java.util.Map.Entry::getKey)
+                                .orElse(null);
+                if (key != null) {
+                    CachedPdfDocument doc = lruCache.get(key);
+                    if (doc != null && doc.getInMemorySize() > 0) {
+                        try {
+                            CachedPdfDocument diskDoc =
+                                    buildCachedDocument(
+                                            key,
+                                            doc.getPdfBytes(),
+                                            doc.getMetadata(),
+                                            doc.getFonts(),
+                                            doc.getPageFontResources());
+                            lruCache.put(key, diskDoc);
+                            documentCache.put(key, diskDoc);
+                            currentCacheBytes =
+                                    Math.max(0L, currentCacheBytes - doc.getInMemorySize())
+                                            + diskDoc.getInMemorySize();
+                            doc.close();
+                            log.debug(
+                                    "Spilled cached PDF for jobId {} to disk to satisfy budget",
+                                    key);
+                        } catch (IOException ex) {
+                            log.warn(
+                                    "Failed to spill cached PDF for jobId {} to disk: {}",
+                                    key,
+                                    ex.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void removeCachedDocument(String jobId) {
+        CachedPdfDocument removed = null;
+        synchronized (cacheLock) {
+            removed = documentCache.remove(jobId);
+            if (removed != null) {
+                lruCache.remove(jobId);
+                currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
+            }
+        }
+        if (removed != null) {
+            removed.close();
+        }
+    }
+
     private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element)
             throws IOException {
         if (element.getCharacterSpacing() != null) {
@@ -5311,6 +5478,8 @@ public class PdfJsonConversionService {
      */
     private static class CachedPdfDocument {
         private final byte[] pdfBytes;
+        private final TempFile pdfTempFile;
+        private final long pdfSize;
         private final PdfJsonDocumentMetadata metadata;
         private final Map<String, PdfJsonFont> fonts; // Font map with UIDs for consistency
         private final Map<Integer, Map<PDFont, String>> pageFontResources; // Page font resources
@@ -5318,10 +5487,14 @@ public class PdfJsonConversionService {
 
         public CachedPdfDocument(
                 byte[] pdfBytes,
+                TempFile pdfTempFile,
+                long pdfSize,
                 PdfJsonDocumentMetadata metadata,
                 Map<String, PdfJsonFont> fonts,
                 Map<Integer, Map<PDFont, String>> pageFontResources) {
             this.pdfBytes = pdfBytes;
+            this.pdfTempFile = pdfTempFile;
+            this.pdfSize = pdfSize;
             this.metadata = metadata;
             // Create defensive copies to prevent mutation of shared maps
             this.fonts =
@@ -5336,8 +5509,14 @@ public class PdfJsonConversionService {
         }
 
         // Getters return defensive copies to prevent external mutation
-        public byte[] getPdfBytes() {
-            return pdfBytes;
+        public byte[] getPdfBytes() throws IOException {
+            if (pdfBytes != null) {
+                return pdfBytes;
+            }
+            if (pdfTempFile != null) {
+                return Files.readAllBytes(pdfTempFile.getPath());
+            }
+            throw new IOException("Cached PDF backing missing");
         }
 
         public PdfJsonDocumentMetadata getMetadata() {
@@ -5352,6 +5531,18 @@ public class PdfJsonConversionService {
             return new java.util.concurrent.ConcurrentHashMap<>(pageFontResources);
         }
 
+        public long getPdfSize() {
+            return pdfSize;
+        }
+
+        public long getInMemorySize() {
+            return pdfBytes != null ? pdfBytes.length : 0L;
+        }
+
+        public boolean isDiskBacked() {
+            return pdfBytes == null && pdfTempFile != null;
+        }
+
         public long getTimestamp() {
             return timestamp;
         }
@@ -5363,7 +5554,14 @@ public class PdfJsonConversionService {
         public CachedPdfDocument withUpdatedFonts(
                 byte[] nextBytes, Map<String, PdfJsonFont> nextFonts) {
             Map<String, PdfJsonFont> fontsToUse = nextFonts != null ? nextFonts : this.fonts;
-            return new CachedPdfDocument(nextBytes, metadata, fontsToUse, pageFontResources);
+            return new CachedPdfDocument(
+                    nextBytes, null, nextBytes != null ? nextBytes.length : 0, metadata, fontsToUse, pageFontResources);
+        }
+
+        public void close() {
+            if (pdfTempFile != null) {
+                pdfTempFile.close();
+            }
         }
     }
 
@@ -5444,14 +5642,15 @@ public class PdfJsonConversionService {
             // Cache PDF bytes, metadata, and fonts for lazy page loading
             if (jobId != null) {
                 CachedPdfDocument cached =
-                        new CachedPdfDocument(pdfBytes, docMetadata, fonts, pageFontResources);
-                documentCache.put(jobId, cached);
+                        buildCachedDocument(jobId, pdfBytes, docMetadata, fonts, pageFontResources);
+                putCachedDocument(jobId, cached);
                 log.debug(
-                        "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy loading, jobId: {}",
-                        pdfBytes.length,
+                        "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy loading, jobId: {} (diskBacked={})",
+                        cached.getPdfSize(),
                         totalPages,
                         fonts.size(),
-                        jobId);
+                        jobId,
+                        cached.isDiskBacked());
 
                 // Schedule cleanup after 30 minutes
                 scheduleDocumentCleanup(jobId);
@@ -5466,9 +5665,10 @@ public class PdfJsonConversionService {
 
     /** Extracts a single page from cached PDF bytes. Re-loads the PDF for each request. */
     public byte[] extractSinglePage(String jobId, int pageNumber) throws IOException {
-        CachedPdfDocument cached = documentCache.get(jobId);
+        CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
-            throw new IllegalArgumentException("No cached document found for jobId: " + jobId);
+            throw new stirling.software.SPDF.exception.CacheUnavailableException(
+                    "No cached document found for jobId: " + jobId);
         }
 
         int pageIndex = pageNumber - 1;
@@ -5480,8 +5680,8 @@ public class PdfJsonConversionService {
         }
 
         log.debug(
-                "Loading PDF from bytes ({} bytes) to extract page {} (jobId: {})",
-                cached.getPdfBytes().length,
+                "Loading PDF from {} to extract page {} (jobId: {})",
+                cached.isDiskBacked() ? "disk cache" : "memory cache",
                 pageNumber,
                 jobId);
 
@@ -5627,9 +5827,10 @@ public class PdfJsonConversionService {
         if (jobId == null || jobId.isBlank()) {
             throw new IllegalArgumentException("jobId is required for incremental export");
         }
-        CachedPdfDocument cached = documentCache.get(jobId);
+        CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
-            throw new IllegalArgumentException("No cached document available for jobId: " + jobId);
+            throw new stirling.software.SPDF.exception.CacheUnavailableException(
+                    "No cached document available for jobId: " + jobId);
         }
         if (updates == null || updates.getPages() == null || updates.getPages().isEmpty()) {
             log.debug(
@@ -5709,7 +5910,14 @@ public class PdfJsonConversionService {
             document.save(baos);
             byte[] updatedBytes = baos.toByteArray();
 
-            documentCache.put(jobId, cached.withUpdatedFonts(updatedBytes, mergedFonts));
+            CachedPdfDocument updated =
+                    buildCachedDocument(
+                            jobId,
+                            updatedBytes,
+                            cached.getMetadata(),
+                            mergedFonts,
+                            cached.getPageFontResources());
+            putCachedDocument(jobId, updated);
 
             // Clear Type3 cache entries for this incremental update
             clearType3CacheEntriesForJob(updateJobId);
@@ -5724,11 +5932,13 @@ public class PdfJsonConversionService {
 
     /** Clears a cached document. */
     public void clearCachedDocument(String jobId) {
-        CachedPdfDocument cached = documentCache.remove(jobId);
+        CachedPdfDocument cached = getCachedDocument(jobId);
+        removeCachedDocument(jobId);
         if (cached != null) {
             log.debug(
-                    "Removed cached PDF bytes ({} bytes) for jobId: {}",
-                    cached.getPdfBytes().length,
+                    "Removed cached PDF ({} bytes, diskBacked={}) for jobId: {}",
+                    cached.getPdfSize(),
+                    cached.isDiskBacked(),
                     jobId);
         }
 

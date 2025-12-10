@@ -238,6 +238,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
   const originalGroupsRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
+  const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
   const sourceFileIdRef = useRef<string | null>(null);
   const loadRequestIdRef = useRef(0);
@@ -251,6 +252,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
   const previewScaleRef = useRef<Map<number, number>>(new Map());
   const cachedJobIdRef = useRef<string | null>(null);
+  const cacheRecoveryInProgressRef = useRef(false);
+  const recoverCacheAndReloadRef = useRef<() => Promise<boolean>>(async () => false);
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
@@ -277,6 +280,13 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         pdfDocumentRef.current = null;
       }
     };
+  }, []);
+
+  const isCacheUnavailableError = useCallback((error: any): boolean => {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const code = (data && (data.error || data.code)) ?? undefined;
+    return status === 410 && code === 'cache_unavailable';
   }, []);
 
   const dirtyPages = useMemo(
@@ -316,6 +326,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       loadedImagePagesRef.current = new Set();
       loadingImagePagesRef.current = new Set();
       setSelectedPage(0);
+      setIsLazyMode(false);
+      setCachedJobId(null);
       return;
     }
     const cloned = deepCloneDocument(document);
@@ -404,7 +416,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   // Load images for a page in lazy mode
   const loadImagesForPage = useCallback(
-    async (pageIndex: number) => {
+    async (pageIndex: number, fromRecovery = false) => {
       if (!isLazyMode) {
         return;
       }
@@ -489,6 +501,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         );
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
+        if (!fromRecovery && isCacheUnavailableError(error)) {
+          const recovered = await recoverCacheAndReloadRef.current();
+          if (recovered) {
+            return loadImagesForPage(pageIndex, true);
+          }
+        }
       } finally {
         loadingImagePagesRef.current.delete(pageIndex);
         setLoadingImagePages((prev) => {
@@ -498,7 +516,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         });
       }
     },
-    [isLazyMode, cachedJobId],
+    [isLazyMode, cachedJobId, isCacheUnavailableError],
   );
 
   const handleLoadFile = useCallback(
@@ -507,6 +525,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
 
+      lastLoadedFileRef.current = file;
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
 
@@ -555,59 +574,35 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             message: 'Starting conversion...',
           });
 
-          let jobComplete = false;
-          let attempts = 0;
-          const maxAttempts = 600;
+        let jobComplete = false;
+        let attempts = 0;
+        const maxAttempts = 600;
+        let pollDelay = 500;
 
-          while (!jobComplete && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts += 1;
+        while (!jobComplete && attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, pollDelay));
+          attempts += 1;
+          if (pollDelay < 10000) {
+            pollDelay = Math.min(10000, Math.floor(pollDelay * 1.5));
+          }
 
             try {
               const statusResponse = await apiClient.get(`/api/v1/general/job/${jobId}`);
               const jobStatus = statusResponse.data;
               console.log(`Job status (attempt ${attempts}):`, jobStatus);
 
-              if (jobStatus.notes && jobStatus.notes.length > 0) {
-                const lastNote = jobStatus.notes[jobStatus.notes.length - 1];
-                console.log('Latest note:', lastNote);
-                const matchWithCount = lastNote.match(
-                  /\[(\d+)%\]\s+(\w+):\s+(.+?)\s+\((\d+)\/(\d+)\)/,
-                );
-                if (matchWithCount) {
-                  const percent = parseInt(matchWithCount[1], 10);
-                  const stage = matchWithCount[2];
-                  const message = matchWithCount[3];
-                  const current = parseInt(matchWithCount[4], 10);
-                  const total = parseInt(matchWithCount[5], 10);
-                  setConversionProgress({
-                    percent,
-                    stage,
-                    message,
-                    current,
-                    total,
-                  });
-                } else {
-                  const match = lastNote.match(/\[(\d+)%\]\s+(\w+):\s+(.+)/);
-                  if (match) {
-                    const percent = parseInt(match[1], 10);
-                    const stage = match[2];
-                    const message = match[3];
-                    setConversionProgress({
-                      percent,
-                      stage,
-                      message,
-                    });
-                  }
-                }
-              } else if (jobStatus.progress !== undefined) {
-                const percent = Math.min(Math.max(jobStatus.progress, 0), 100);
-                setConversionProgress({
-                  percent,
-                  stage: jobStatus.stage || 'processing',
-                  message: jobStatus.note || 'Converting PDF to JSON...',
-                });
-              }
+              const percent = Math.min(Math.max(jobStatus.progress ?? 0, 0), 100);
+              const stage = jobStatus.stage || 'processing';
+              const message = jobStatus.note || 'Converting PDF to JSON...';
+              const current = jobStatus.current ?? undefined;
+              const total = jobStatus.total ?? undefined;
+              setConversionProgress({
+                percent,
+                stage,
+                message,
+                current,
+                total,
+              });
 
               if (jobStatus.complete) {
                 if (jobStatus.error) {
@@ -719,6 +714,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(null);
         resetToDocument(null, groupingMode);
         clearPdfPreview();
+        setIsLazyMode(false);
+        setCachedJobId(null);
 
         if (isPdf) {
           const errorMsg =
@@ -742,6 +739,55 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     },
     [groupingMode, resetToDocument, t],
   );
+
+  const recoverCacheAndReload = useCallback(async () => {
+    if (cacheRecoveryInProgressRef.current) {
+      return false;
+    }
+    if ((recoverCacheAndReloadRef as any).attempts === undefined) {
+      (recoverCacheAndReloadRef as any).attempts = 0;
+    }
+    if ((recoverCacheAndReloadRef as any).attempts >= 2) {
+      setErrorMessage(
+        t(
+          'pdfTextEditor.errors.cacheRecoveryLimit',
+          'Cache was unavailable after multiple attempts. Please reload the file manually.',
+        ),
+      );
+      return false;
+    }
+    (recoverCacheAndReloadRef as any).attempts += 1;
+    const file = lastLoadedFileRef.current;
+    if (!file) {
+      setErrorMessage(
+        t(
+          'pdfTextEditor.errors.cacheMissingFile',
+          'Session expired. Please reload the PDF file to continue.',
+        ),
+      );
+      return false;
+    }
+    cacheRecoveryInProgressRef.current = true;
+    try {
+      await handleLoadFile(file);
+      return true;
+    } catch (error) {
+      console.error('[PdfTextEditor] Cache recovery failed', error);
+      setErrorMessage(
+        t(
+          'pdfTextEditor.errors.cacheReloadFailed',
+          'Cache expired and reload failed. Please reselect the file.',
+        ),
+      );
+      return false;
+    } finally {
+      cacheRecoveryInProgressRef.current = false;
+    }
+  }, [handleLoadFile, t]);
+
+  useEffect(() => {
+    recoverCacheAndReloadRef.current = recoverCacheAndReload;
+  }, [recoverCacheAndReload]);
 
   // Wrapper for loading files from the dropzone - adds to workbench first
   const handleLoadFileFromDropzone = useCallback(
@@ -1054,10 +1100,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
 
-        try {
+        let incrementalRetried = false;
+        const attemptIncrementalExport = async () => {
           const payload = buildPayload();
           if (!payload) {
-            return;
+            return false;
           }
 
           const { document, filename } = payload;
@@ -1076,7 +1123,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
           const expectedName = `${baseName || 'document'}.pdf`;
           const response = await apiClient.post(
-            `/api/v1/convert/pdf/text-editor/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
+            `/api/v1/convert/pdf/text-editor/partial/${cachedJobIdRef.current}?filename=${encodeURIComponent(expectedName)}`,
             partialDocument,
             {
               responseType: 'blob',
@@ -1094,8 +1141,26 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             onComplete([pdfFile]);
           }
           setErrorMessage(null);
-          return;
+          return true;
+        };
+
+        try {
+          const success = await attemptIncrementalExport();
+          if (success) {
+            return;
+          }
         } catch (incrementalError) {
+          if (!incrementalRetried && isCacheUnavailableError(incrementalError)) {
+            const recovered = await recoverCacheAndReloadRef.current();
+            incrementalRetried = true;
+            if (recovered) {
+              await ensureImagesForPages(dirtyPageIndices);
+              const success = await attemptIncrementalExport();
+              if (success) {
+                return;
+              }
+            }
+          }
           console.warn(
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
