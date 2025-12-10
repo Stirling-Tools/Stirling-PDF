@@ -13,6 +13,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const searchState = viewerContext?.getSearchState();
   const searchResults = searchState?.results;
@@ -33,6 +34,31 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       inputRef.current?.focus();
     }
   }, [visible]);
+
+  // Auto-search as user types (debounced)
+  useEffect(() => {
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // If query is empty, clear search immediately
+    if (!searchQuery.trim()) {
+      handleClearSearch();
+      return;
+    }
+
+    // Debounce search by 300ms
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   // Monitor search state changes
   useEffect(() => {
@@ -131,7 +157,14 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     }
   };
 
-  const _handleClose = () => {
+  const handleInputBlur = () => {
+    // Close popover on blur if no text is entered
+    if (!searchQuery.trim()) {
+      onClose();
+    }
+  };
+
+  const handleCloseClick = () => {
     handleClearSearch();
     onClose();
   };
@@ -143,11 +176,19 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         padding: '0px'
       }}
     >
-      {/* Header */}
-      <Group mb="md">
+      {/* Header with close button */}
+      <Group mb="md" justify="space-between">
         <Text size="sm" fw={600}>
           {t('search.title', 'Search PDF')}
         </Text>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={handleCloseClick}
+          aria-label="Close search"
+        >
+          <LocalIcon icon="close" width="1rem" height="1rem" />
+        </ActionIcon>
       </Group>
 
       {/* Search input */}
@@ -159,22 +200,20 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           onChange={(e) => {
             const newValue = e.currentTarget.value;
             setSearchQuery(newValue);
-            // If user clears the input, clear the search highlights
-            if (!newValue.trim()) {
-              handleClearSearch();
-            }
           }}
           onKeyDown={handleKeyDown}
+          onBlur={handleInputBlur}
           style={{ flex: 1 }}
           rightSection={
-            <ActionIcon
-              variant="subtle"
-              onClick={() => handleSearch(searchQuery)}
-              disabled={!searchQuery.trim() || isSearching}
-              loading={isSearching}
-            >
-              <LocalIcon icon="search" width="1rem" height="1rem" />
-            </ActionIcon>
+            searchQuery.trim() && (
+              <ActionIcon
+                variant="subtle"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+              >
+                <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
+              </ActionIcon>
+            )
           }
         />
       </Group>

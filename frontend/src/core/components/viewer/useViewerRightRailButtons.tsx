@@ -42,7 +42,7 @@ export function useViewerRightRailButtons() {
               shadow="md"
               offset={8}
               opened={viewer.isSearchInterfaceVisible}
-              onChange={viewer.searchInterfaceActions.toggle}
+              onClose={viewer.searchInterfaceActions.close}
             >
               <Popover.Target>
                 <div style={{ display: 'inline-flex' }}>
@@ -52,6 +52,7 @@ export function useViewerRightRailButtons() {
                     className="right-rail-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
+                    onClick={viewer.searchInterfaceActions.toggle}
                   >
                     <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
                   </ActionIcon>

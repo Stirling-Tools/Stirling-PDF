@@ -43,7 +43,6 @@ const EmbedPdfViewerContent = ({
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
-    isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
     panActions: _panActions,
