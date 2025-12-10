@@ -3036,6 +3036,91 @@ title = "Lortu informazioa PDFn"
 header = "Lortu informazioa PDFn"
 submit = "Lortu informazioa"
 downloadJson = "Deskargatu JSON"
+processing = "Informazioa erauzten..."
+results = "Emaitzak"
+noResults = "Exekutatu tresna txosten bat sortzeko."
+downloads = "Deskargak"
+noneDetected = "Ez da ezer detektatu"
+indexTitle = "Indizea"
+
+[getPdfInfo.report]
+entryLabel = "Informazio osoaren laburpena"
+shortTitle = "PDFren informazioa"
+
+[getPdfInfo.sections]
+metadata = "Metadatuak"
+formFields = "Inprimaki-eremuak"
+basicInfo = "Oinarrizko informazioa"
+documentInfo = "Dokumentuaren informazioa"
+compliance = "Arauen betetzea"
+encryption = "Zifratzea"
+permissions = "Baimenak"
+other = "Bestelakoak"
+perPageInfo = "Orrialdeko informazioa"
+tableOfContents = "Aurkibidea"
+
+[getPdfInfo.other]
+attachments = "Eranskinak"
+embeddedFiles = "Txertatutako fitxategiak"
+javaScript = "JavaScript"
+layers = "Geruzak"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Tamaina"
+annotations = "Anotazioak"
+images = "Irudiak"
+links = "Estekak"
+fonts = "Letra-tipoak"
+xobjects = "XObject kopuruak"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Orriak"
+fileSize = "Fitxategi-tamaina"
+pdfVersion = "PDF bertsioa"
+language = "Hizkuntza"
+title = "PDFren laburpena"
+author = "Egilea"
+created = "Sortua"
+modified = "Aldatua"
+permsAll = "Baimen guztiak baimenduta"
+permsRestricted = "{{count}} murrizketa"
+permsMixed = "Zenbait baimen murriztuta"
+hasCompliance = "Betetze-estandarrak ditu"
+noCompliance = "Ez dago betetze-estandarrik"
+basic = "Oinarrizko informazioa"
+documentInfo = "Dokumentuaren informazioa"
+securityTitle = "Segurtasun-egoera"
+technical = "Teknikoa"
+overviewTitle = "PDFren ikuspegi orokorra"
+
+[getPdfInfo.summary.security]
+encrypted = "Zifratutako PDFa - Pasahitz-babesa dago"
+unencrypted = "Zifratu gabeko PDFa - Ez dago pasahitz-babesik"
+
+[getPdfInfo.summary.tech]
+images = "Irudiak"
+fonts = "Letra-tipoak"
+formFields = "Inprimaki-eremuak"
+embeddedFiles = "Txertatutako fitxategiak"
+javaScript = "JavaScript"
+layers = "Geruzak"
+bookmarks = "Laster-markak"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "izenbururik gabeko dokumentu bat"
+unknown = "Egile ezezaguna"
+text = "Hau {{pages}} orrialdeko PDF bat da; izenburua: {{title}}, egilea: {{author}} (PDF bertsioa: {{version}})."
+
+[getPdfInfo.error]
+partial = "Fitxategi batzuk ezin izan dira prozesatu."
+unexpected = "Ustekabeko errorea erauzketan zehar."
+
+[getPdfInfo.status]
+complete = "Erau zketa amaituta"
 
 [extractPage]
 tags = "erauzi"
@@ -5177,7 +5262,7 @@ upgrade = "Eguneratu orain →"
 freeTitle = "Zerbitzari-lizentzia"
 overLimitTitle = "Beharrezkoa da zerbitzari-lizentzia"
 overLimitBody = "Gure lizentziak baimentzen ditu <strong>{{freeTierLimit}}</strong> erabiltzaile doan zerbitzari bakoitzeko. <strong>{{overLimitUserCopy}}</strong> Stirling erabiltzaile dituzu. Jarraitzeko etenik gabe, eguneratu Stirling Server planera - <strong>eserleku mugagabeak</strong>, PDF testu-edizioa, eta admin kontrol osoa $99/zerbitzari/hilean."
-freeBody = "Gure <strong>Open-Core</strong> lizentziak <strong>{{freeTierLimit}}</strong> erabiltzaile arte baimentzen ditu doan zerbitzari bakoitzeko. Etenik gabe eskalatzeko eta gure <strong>PDF testu-edizio tresna</strong> berrirako sarbide goiztiarra lortzeko, gomendatzen dugu Stirling Server plana - edizio osoa eta <strong>eserleku mugagabeak</strong> $99/zerbitzari/hilean."
+freeBody = "Gure <strong>Open-Core</strong> lizentziak zerbitzari bakoitzeko doan gehienez <strong>{{freeTierLimit}}</strong> erabiltzaile baimentzen ditu. Etenik gabe eskalatzeko, Stirling Server plana gomendatzen dugu - <strong>eserleku mugagabeak</strong> eta <strong>SSO euskarria</strong> $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Deskargatu"
@@ -5281,6 +5366,31 @@ error = "Ezin izan da erabiltzailearen egoera eguneratu"
 [workspace.people.delete]
 success = "Erabiltzailea ongi ezabatu da"
 error = "Ezin izan da erabiltzailea ezabatu"
+
+[workspace.people.changePassword]
+action = "Pasahitza aldatu"
+title = "Pasahitza aldatu"
+subtitle = "Honetarako pasahitza eguneratu"
+newPassword = "Pasahitz berria"
+confirmPassword = "Berretsi pasahitza"
+placeholder = "Sartu pasahitz berria"
+confirmPlaceholder = "Sartu berriro pasahitz berria"
+passwordRequired = "Sartu pasahitz berria"
+passwordMismatch = "Pasahitzak ez datoz bat"
+generateRandom = "Sortu pasahitz segurua"
+generatedPreview = "Sortutako pasahitza:"
+copyTooltip = "Kopiatu arbelera"
+copiedToClipboard = "Pasahitza arbelera kopiatu da"
+copyFailed = "Pasahitza kopiatzeak huts egin du"
+sendEmail = "Bidali mezu elektronikoa erabiltzaileari aldaketa honi buruz"
+includePassword = "Sartu pasahitz berria mezu elektronikoan"
+forcePasswordChange = "Behartu erabiltzailea hurrengo saio-hasieran pasahitza aldatzera"
+emailUnavailable = "Erabiltzaile honen helbide elektronikoa ez da baliozkoa. Jakinarazpenak desgaituta daude."
+smtpDisabled = "Posta elektroniko bidezko jakinarazpenek SMTP gaituta egotea eskatzen dute ezarpenetan."
+notifyOnly = "Pasahitzik gabe bidaliko da mezu elektronikoa; erabiltzaileari jakinaraziko zaio administratzaile batek aldatu duela."
+submit = "Eguneratu pasahitza"
+success = "Pasahitza ongi eguneratu da"
+error = "Pasahitza eguneratzeak huts egin du"
 
 [workspace.people.emailInvite]
 tab = "E-posta bidezko gonbidapena"
@@ -5815,6 +5925,7 @@ subtitle = "Hasi saioa zure Stirling kontuarekin"
 [setup.selfhosted]
 title = "Hasi saioa zerbitzarian"
 subtitle = "Sartu zure zerbitzariaren kredentzialak"
+link = "edo konektatu autoostatutako kontu batera"
 
 [setup.server]
 title = "Konektatu zerbitzarira"
@@ -5833,6 +5944,14 @@ description = "Sartu zure auto-ostatuko Stirling PDF zerbitzariaren URLa osoa"
 emptyUrl = "Sartu zerbitzari baten URLa"
 unreachable = "Ezin izan da zerbitzarira konektatu"
 testFailed = "Konexio proba huts egin du"
+configFetch = "Ezin izan da zerbitzariaren konfigurazioa eskuratu. Egiaztatu URLa eta saiatu berriro."
+
+[setup.server.error.securityDisabled]
+title = "Saio-hasiera ez dago gaituta"
+body = "Zerbitzari honek ez du saio-hasiera gaituta. Zerbitzari honekin konektatzeko, autentifikazioa gaitu behar duzu:"
+step1 = "Ezarri DOCKER_ENABLE_SECURITY=true zure ingurunean"
+step2 = "Edo ezarri security.enableLogin=true settings.yml fitxategian"
+step3 = "Berrabiarazi zerbitzaria"
 
 [setup.login]
 title = "Hasi saioa"
@@ -5905,6 +6024,7 @@ earlyAccess = "Sarbide goiztiarra"
 reset = "Aldaketak berrezarri"
 downloadJson = "JSON deskargatu"
 generatePdf = "PDF sortu"
+saveChanges = "Gorde aldaketak"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Testua automatikoki eskalatu kutxetara egokitzeko"
@@ -5942,6 +6062,8 @@ alpha = "Ikusle alfa hau oraindik eboluzioan dago—zenbait letra-tipo, kolore, 
 [pdfTextEditor.empty]
 title = "Ez da dokumenturik kargatu"
 subtitle = "Kargatu PDF edo JSON fitxategi bat testu-edukia editatzen hasteko."
+dropzone = "Arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
+dropzoneWithFiles = "Hautatu fitxategi bat Fitxategiak fitxatik, edo arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
 
 [pdfTextEditor.welcomeBanner]
 title = "Ongi etorri PDF Text Editor-era (Sarbide goiztiarra)"

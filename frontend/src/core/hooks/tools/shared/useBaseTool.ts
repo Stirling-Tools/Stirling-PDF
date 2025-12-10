@@ -47,6 +47,10 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const { selectedFiles } = useFileSelection();
   const previousFileCount = useRef(selectedFiles.length);
 
+  // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
+  const skipNextSelectionResetRef = useRef(false);
+  const previousSelectionRef = useRef<string>('');
+
   // Tool-specific hooks
   const params = useParams();
   const operation = useOperation();
@@ -54,19 +58,45 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   // Endpoint validation using parameters hook
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(params.getEndpointName());
 
+  // Standard computed state - defined early so it's available in useEffects
+  const hasFiles = selectedFiles.length >= minFiles;
+  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const settingsCollapsed = !hasFiles || hasResults;
+
   // Reset results when parameters change
   useEffect(() => {
     operation.resetResults();
     onPreviewFile?.(null);
   }, [params.parameters]);
 
-  // Reset results when selected files change
+  // When operation completes, flag the next selection change to skip reset
+  // (consumeFiles auto-selects outputs immediately after processing)
   useEffect(() => {
-    if (selectedFiles.length > 0) {
-      operation.resetResults();
-      onPreviewFile?.(null);
+    if (hasResults) {
+      skipNextSelectionResetRef.current = true;
     }
-  }, [selectedFiles.length]);
+  }, [hasResults]);
+
+  // Reset results when user manually changes file selection
+  useEffect(() => {
+    if (selectedFiles.length === 0) return;
+
+    const currentSelection = selectedFiles.map(f => f.fileId).sort().join(',');
+
+    if (currentSelection === previousSelectionRef.current) return; // No change
+
+    // Skip reset if this is the auto-selection after operation completed
+    if (skipNextSelectionResetRef.current) {
+      skipNextSelectionResetRef.current = false;
+      previousSelectionRef.current = currentSelection;
+      return;
+    }
+
+    // User manually selected different files - reset results
+    previousSelectionRef.current = currentSelection;
+    operation.resetResults();
+    onPreviewFile?.(null);
+  }, [selectedFiles]);
 
   // Reset parameters when transitioning from 0 files to at least 1 file
   useEffect(() => {
@@ -101,6 +131,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   }, [onPreviewFile, toolName]);
 
   const handleSettingsReset = useCallback(() => {
+    skipNextSelectionResetRef.current = false;
     operation.resetResults();
     onPreviewFile?.(null);
   }, [operation, onPreviewFile]);
@@ -109,11 +140,6 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     await operation.undoOperation();
     onPreviewFile?.(null);
   }, [operation, onPreviewFile]);
-
-  // Standard computed state
-  const hasFiles = selectedFiles.length >= minFiles;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
-  const settingsCollapsed = !hasFiles || hasResults;
 
   return {
     // File management

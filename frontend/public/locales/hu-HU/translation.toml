@@ -3036,6 +3036,91 @@ title = "PDF információk lekérése"
 header = "PDF információk lekérése"
 submit = "Információk lekérése"
 downloadJson = "JSON letöltése"
+processing = "Információk kinyerése..."
+results = "Eredmények"
+noResults = "Futtassa az eszközt a jelentés létrehozásához."
+downloads = "Letöltések"
+noneDetected = "Nem található"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Teljes információs összefoglaló"
+shortTitle = "PDF-információk"
+
+[getPdfInfo.sections]
+metadata = "Metaadatok"
+formFields = "Űrlapmezők"
+basicInfo = "Alapinformációk"
+documentInfo = "Dokumentuminformációk"
+compliance = "Megfelelőség"
+encryption = "Titkosítás"
+permissions = "Engedélyek"
+other = "Egyéb"
+perPageInfo = "Oldalankénti információk"
+tableOfContents = "Tartalomjegyzék"
+
+[getPdfInfo.other]
+attachments = "Mellékletek"
+embeddedFiles = "Beágyazott fájlok"
+javaScript = "JavaScript"
+layers = "Rétegek"
+structureTree = "Struktúrafa"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Méret"
+annotations = "Megjegyzések"
+images = "Képek"
+links = "Hivatkozások"
+fonts = "Betűtípusok"
+xobjects = "XObject-ek száma"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Oldalak"
+fileSize = "Fájlméret"
+pdfVersion = "PDF-verzió"
+language = "Nyelv"
+title = "PDF-összefoglaló"
+author = "Szerző"
+created = "Létrehozva"
+modified = "Módosítva"
+permsAll = "Minden jogosultság engedélyezve"
+permsRestricted = "{{count}} korlátozás"
+permsMixed = "Néhány jogosultság korlátozott"
+hasCompliance = "Megfelelőségi szabványokkal rendelkezik"
+noCompliance = "Nincsenek megfelelőségi szabványok"
+basic = "Alapinformációk"
+documentInfo = "Dokumentuminformációk"
+securityTitle = "Biztonsági állapot"
+technical = "Technikai"
+overviewTitle = "PDF-áttekintés"
+
+[getPdfInfo.summary.security]
+encrypted = "Titkosított PDF – jelszóvédelemmel"
+unencrypted = "Titkosítatlan PDF – nincs jelszóvédelem"
+
+[getPdfInfo.summary.tech]
+images = "Képek"
+fonts = "Betűtípusok"
+formFields = "Űrlapmezők"
+embeddedFiles = "Beágyazott fájlok"
+javaScript = "JavaScript"
+layers = "Rétegek"
+bookmarks = "Könyvjelzők"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "egy cím nélküli dokumentum"
+unknown = "Ismeretlen szerző"
+text = "Ez egy {{pages}} oldalas, {{title}} című PDF, amelyet {{author}} készített (PDF-verzió: {{version}})."
+
+[getPdfInfo.error]
+partial = "Néhány fájlt nem sikerült feldolgozni."
+unexpected = "Váratlan hiba a kinyerés során."
+
+[getPdfInfo.status]
+complete = "Kinyerés befejezve"
 
 [extractPage]
 tags = "kinyerés"
@@ -5177,7 +5262,7 @@ upgrade = "Frissítés most →"
 freeTitle = "Szerverlicenc"
 overLimitTitle = "Szerverlicenc szükséges"
 overLimitBody = "Licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. Önnek <strong>{{overLimitUserCopy}}</strong> Stirling felhasználója van. A zavartalan használathoz váltson a Stirling Server csomagra – <strong>korlátlan hely</strong>, PDF szövegszerkesztés és teljes adminisztrátori vezérlés $99/szerver/hó áron."
-freeBody = "Az <strong>Open-Core</strong> licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. A zavartalan bővüléshez és az új <strong>PDF szövegszerkesztő eszköz</strong> korai eléréséhez a Stirling Server csomagot ajánljuk – teljes szerkesztés és <strong>korlátlan hely</strong> $99/szerver/hó áron."
+freeBody = "A <strong>Open-Core</strong> licencünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót engedélyez ingyenesen. A zökkenőmentes skálázáshoz a Stirling Server csomagot ajánljuk - <strong>korlátlan felhasználó</strong> és <strong>SSO támogatás</strong> $99/szerver/hó."
 
 [onboarding.desktopInstall]
 title = "Letöltés"
@@ -5281,6 +5366,31 @@ error = "Nem sikerült frissíteni a felhasználói állapotot"
 [workspace.people.delete]
 success = "Felhasználó sikeresen törölve"
 error = "Nem sikerült törölni a felhasználót"
+
+[workspace.people.changePassword]
+action = "Jelszó módosítása"
+title = "Jelszó módosítása"
+subtitle = "Jelszó frissítése ehhez:"
+newPassword = "Új jelszó"
+confirmPassword = "Jelszó megerősítése"
+placeholder = "Adjon meg egy új jelszót"
+confirmPlaceholder = "Adja meg újra az új jelszót"
+passwordRequired = "Kérjük, adjon meg egy új jelszót"
+passwordMismatch = "A jelszavak nem egyeznek"
+generateRandom = "Biztonságos jelszó generálása"
+generatedPreview = "Generált jelszó:"
+copyTooltip = "Másolás a vágólapra"
+copiedToClipboard = "A jelszó a vágólapra másolva"
+copyFailed = "A jelszó másolása nem sikerült"
+sendEmail = "E-mail küldése a felhasználónak a változásról"
+includePassword = "Az új jelszó szerepeljen az e-mailben"
+forcePasswordChange = "A felhasználó kényszerítése a jelszó megváltoztatására a következő bejelentkezéskor"
+emailUnavailable = "Ennek a felhasználónak az e-mail címe érvénytelen. Az értesítések le vannak tiltva."
+smtpDisabled = "Az e-mail értesítésekhez az SMTP engedélyezése szükséges a beállításokban."
+notifyOnly = "E-mailt küldünk jelszó nélkül, amelyben értesítjük a felhasználót, hogy egy admin módosította a jelszót."
+submit = "Jelszó frissítése"
+success = "A jelszó sikeresen frissítve"
+error = "A jelszó frissítése nem sikerült"
 
 [workspace.people.emailInvite]
 tab = "E-mail meghívó"
@@ -5815,6 +5925,7 @@ subtitle = "Jelentkezzen be Stirling-fiókjával"
 [setup.selfhosted]
 title = "Bejelentkezés a szerverre"
 subtitle = "Adja meg a szerver hitelesítő adatait"
+link = "vagy csatlakozzon egy saját üzemeltetésű fiókhoz"
 
 [setup.server]
 title = "Csatlakozás a szerverhez"
@@ -5833,6 +5944,14 @@ description = "Adja meg az önhostolt Stirling PDF szerver teljes URL-jét"
 emptyUrl = "Adjon meg egy szerver URL-t"
 unreachable = "Nem sikerült kapcsolódni a szerverhez"
 testFailed = "A kapcsolat tesztje sikertelen"
+configFetch = "Nem sikerült letölteni a szerver konfigurációját. Ellenőrizze az URL-t, és próbálja meg újra."
+
+[setup.server.error.securityDisabled]
+title = "A bejelentkezés nincs engedélyezve"
+body = "Ezen a szerveren a bejelentkezés nincs engedélyezve. A csatlakozáshoz engedélyeznie kell a hitelesítést:"
+step1 = "Állítsa be a DOCKER_ENABLE_SECURITY=true értéket a környezetében"
+step2 = "Vagy állítsa be a security.enableLogin=true értéket a settings.yml fájlban"
+step3 = "Indítsa újra a szervert"
 
 [setup.login]
 title = "Bejelentkezés"
@@ -5905,6 +6024,7 @@ earlyAccess = "Korai hozzáférés"
 reset = "Módosítások visszaállítása"
 downloadJson = "JSON letöltése"
 generatePdf = "PDF generálása"
+saveChanges = "Változtatások mentése"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Szöveg automatikus méretezése a dobozokhoz"
@@ -5942,6 +6062,8 @@ alpha = "Ez az alfa néző még fejlődik—bizonyos betűtípusok, színek, át
 [pdfTextEditor.empty]
 title = "Nincs dokumentum betöltve"
 subtitle = "Töltsön be egy PDF- vagy JSON-fájlt a szövegtartalom szerkesztésének megkezdéséhez."
+dropzone = "Húzzon ide egy PDF vagy JSON fájlt, vagy kattintson a tallózáshoz"
+dropzoneWithFiles = "Válasszon fájlt a Fájlok fülön, vagy húzzon ide egy PDF vagy JSON fájlt, illetve kattintson a tallózáshoz"
 
 [pdfTextEditor.welcomeBanner]
 title = "Üdvözöljük a PDF Text Editorben (korai hozzáférés)"

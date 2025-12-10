@@ -10,6 +10,8 @@ import AuthLayout from '@app/routes/authShared/AuthLayout';
 import { useBackendProbe } from '@app/hooks/useBackendProbe';
 import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { updateSupportedLanguages } from '@app/i18n';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -31,7 +33,7 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
-  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
@@ -101,6 +103,11 @@ export default function Login() {
         // Set first-time setup flags
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
         setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+
+        // Apply language configuration from server
+        if (data.languages || data.defaultLocale) {
+          updateSupportedLanguages(data.languages, data.defaultLocale);
+        }
 
         // Extract provider IDs from the providerList map
         // The keys are like "/oauth2/authorization/google" - extract the last part
@@ -226,25 +233,17 @@ export default function Login() {
     );
   }
 
-  // Known OAuth providers that have dedicated backend support
-  const KNOWN_OAUTH_PROVIDERS = ['github', 'google', 'apple', 'azure', 'keycloak', 'oidc'] as const;
-  type KnownOAuthProvider = typeof KNOWN_OAUTH_PROVIDERS[number];
-
-  const signInWithProvider = async (provider: string) => {
+  const signInWithProvider = async (provider: OAuthProvider) => {
     try {
       setIsSigningIn(true);
       setError(null);
 
-      // Map unknown providers to 'oidc' for the backend redirect
-      const backendProvider: KnownOAuthProvider = KNOWN_OAUTH_PROVIDERS.includes(provider as KnownOAuthProvider)
-        ? (provider as KnownOAuthProvider)
-        : 'oidc';
+      console.log(`[Login] Signing in with provider: ${provider}`);
 
-      console.log(`[Login] Signing in with ${provider} (backend: ${backendProvider})`);
-
-      // Redirect to Spring OAuth2 endpoint
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
-        provider: backendProvider,
+        provider: provider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 

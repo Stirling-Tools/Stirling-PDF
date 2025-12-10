@@ -21,6 +21,7 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core';
+import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
 import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
@@ -32,9 +33,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import MergeTypeIcon from '@mui/icons-material/MergeType';
 import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import UploadFileIcon from '@mui/icons-material/UploadFileOutlined';
+import SaveIcon from '@mui/icons-material/SaveOutlined';
 import { Rnd } from 'react-rnd';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
+import { useFileContext } from '@app/contexts/FileContext';
 import {
   PdfTextEditorViewData,
   PdfJsonFont,
@@ -313,6 +317,7 @@ type GroupingMode = 'auto' | 'paragraph' | 'singleLine';
 
 const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const { t } = useTranslation();
+  const { activeFiles } = useFileContext();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
@@ -329,6 +334,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
+  const composingGroupsRef = useRef<Set<string>>(new Set());
   const lastSelectedGroupIdRef = useRef<string | null>(null);
   const widthOverridesRef = useRef<Map<string, number>>(widthOverrides);
   const resizingRef = useRef<{
@@ -375,6 +381,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     fileName,
     errorMessage,
     isGeneratingPdf,
+    isSavingToWorkbench,
     isConverting,
     conversionProgress,
     hasChanges,
@@ -389,11 +396,12 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onReset,
     onDownloadJson,
     onGeneratePdf,
-    onGeneratePdfForNavigation,
+    onSaveToWorkbench,
     onForceSingleTextElementChange,
     onGroupingModeChange,
     onMergeGroups,
     onUngroupGroup,
+    onLoadFile,
   } = data;
 
   // Define derived variables immediately after props destructuring, before any hooks
@@ -605,6 +613,18 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       });
     },
     [editingGroupId, onGroupEdit],
+  );
+
+  const handleCompositionStart = useCallback((groupId: string) => {
+    composingGroupsRef.current.add(groupId);
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (element: HTMLElement, pageIndex: number, groupId: string) => {
+      composingGroupsRef.current.delete(groupId);
+      syncEditorValue(element, pageIndex, groupId);
+    },
+    [syncEditorValue],
   );
 
   const handleMergeSelection = useCallback(() => {
@@ -1430,7 +1450,8 @@ const selectionToolbarPosition = useMemo(() => {
         height: '100%',
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr) 320px',
-        alignItems: 'start',
+        gridTemplateRows: '1fr',
+        alignItems: hasDocument ? 'start' : 'stretch',
         gap: '1.5rem',
       }}
     >
@@ -1485,6 +1506,17 @@ const selectionToolbarPosition = useMemo(() => {
                 fullWidth
               >
                 {t('pdfTextEditor.actions.generatePdf', 'Generate PDF')}
+              </Button>
+              <Button
+                variant="filled"
+                color="green"
+                leftSection={<SaveIcon fontSize="small" />}
+                onClick={onSaveToWorkbench}
+                loading={isSavingToWorkbench}
+                disabled={!hasDocument || !hasChanges || isConverting}
+                fullWidth
+              >
+                {t('pdfTextEditor.actions.saveChanges', 'Save Changes')}
               </Button>
             </Stack>
 
@@ -1639,17 +1671,45 @@ const selectionToolbarPosition = useMemo(() => {
       )}
 
       {!hasDocument && !isConverting && (
-        <Card withBorder radius="md" padding="xl" style={{ gridColumn: '1 / 2', gridRow: 1 }}>
-          <Stack align="center" gap="md">
-            <DescriptionIcon sx={{ fontSize: 48 }} />
-            <Text size="lg" fw={600}>
-              {t('pdfTextEditor.empty.title', 'No document loaded')}
-            </Text>
-            <Text size="sm" c="dimmed" ta="center" maw={420}>
-              {t('pdfTextEditor.empty.subtitle', 'Load a PDF or JSON file to begin editing text content.')}
-            </Text>
-          </Stack>
-        </Card>
+        <Stack
+          align="center"
+          justify="center"
+          style={{ gridColumn: '1 / 2', gridRow: 1, height: '100%' }}
+        >
+          <Dropzone
+            onDrop={(files) => {
+              if (files.length > 0) {
+                onLoadFile(files[0]);
+              }
+            }}
+            accept={['application/pdf', 'application/json']}
+            maxFiles={1}
+            style={{
+              width: '100%',
+              maxWidth: 480,
+              minHeight: 200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed var(--mantine-color-gray-4)',
+              borderRadius: 'var(--mantine-radius-lg)',
+              cursor: 'pointer',
+              transition: 'border-color 150ms ease, background-color 150ms ease',
+            }}
+          >
+            <Stack align="center" gap="md" style={{ pointerEvents: 'none' }}>
+              <UploadFileIcon sx={{ fontSize: 48, color: 'var(--mantine-color-blue-5)' }} />
+              <Text size="lg" fw={600}>
+                {t('pdfTextEditor.empty.title', 'No document loaded')}
+              </Text>
+              <Text size="sm" c="dimmed" ta="center" maw={420}>
+                {activeFiles.length > 0
+                  ? t('pdfTextEditor.empty.dropzoneWithFiles', 'Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse')
+                  : t('pdfTextEditor.empty.dropzone', 'Drag and drop a PDF or JSON file here, or click to browse')}
+              </Text>
+            </Stack>
+          </Dropzone>
+        </Stack>
       )}
 
       {isConverting && (
@@ -1683,7 +1743,7 @@ const selectionToolbarPosition = useMemo(() => {
         </Card>
       )}
 
-      {hasDocument && (
+      {hasDocument && !isConverting && (
         <Stack
           gap="lg"
           className="flex-1"
@@ -2232,6 +2292,10 @@ const selectionToolbarPosition = useMemo(() => {
                                 contentEditable
                                 suppressContentEditableWarning
                                 data-editor-group={group.id}
+                                onCompositionStart={() => handleCompositionStart(group.id)}
+                                onCompositionEnd={(event) =>
+                                  handleCompositionEnd(event.currentTarget, group.pageIndex, group.id)
+                                }
                                 onFocus={(event) => {
                                   const primaryFont = fontFamily.split(',')[0]?.replace(/['"]/g, '').trim();
                                   if (primaryFont && typeof document !== 'undefined') {
@@ -2253,6 +2317,7 @@ const selectionToolbarPosition = useMemo(() => {
                                   event.stopPropagation();
                                 }}
                                 onBlur={(event) => {
+                                  composingGroupsRef.current.delete(group.id);
                                   syncEditorValue(event.currentTarget, group.pageIndex, group.id, {
                                     skipCaretRestore: true,
                                   });
@@ -2262,6 +2327,9 @@ const selectionToolbarPosition = useMemo(() => {
                                   setEditingGroupId(null);
                                 }}
                                 onInput={(event) => {
+                                  if (composingGroupsRef.current.has(group.id)) {
+                                    return;
+                                  }
                                   syncEditorValue(event.currentTarget, group.pageIndex, group.id);
                                 }}
                                 style={{
@@ -2444,7 +2512,7 @@ const selectionToolbarPosition = useMemo(() => {
 
       {/* Navigation Warning Modal */}
       <NavigationWarningModal
-        onApplyAndContinue={onGeneratePdfForNavigation}
+        onApplyAndContinue={onSaveToWorkbench}
       />
     </Stack>
   );

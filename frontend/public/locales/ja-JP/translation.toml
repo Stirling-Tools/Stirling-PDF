@@ -3036,6 +3036,91 @@ title = "PDFの情報を入手"
 header = "PDFの情報を入手"
 submit = "情報を入手"
 downloadJson = "JSONでダウンロード"
+processing = "情報を抽出しています..."
+results = "結果"
+noResults = "レポートを生成するにはツールを実行してください。"
+downloads = "ダウンロード"
+noneDetected = "検出なし"
+indexTitle = "インデックス"
+
+[getPdfInfo.report]
+entryLabel = "全情報の概要"
+shortTitle = "PDF情報"
+
+[getPdfInfo.sections]
+metadata = "メタデータ"
+formFields = "フォームフィールド"
+basicInfo = "基本情報"
+documentInfo = "ドキュメント情報"
+compliance = "準拠"
+encryption = "暗号化"
+permissions = "権限"
+other = "その他"
+perPageInfo = "ページごとの情報"
+tableOfContents = "目次"
+
+[getPdfInfo.other]
+attachments = "添付ファイル"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+structureTree = "構造ツリー"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "サイズ"
+annotations = "注釈"
+images = "画像"
+links = "リンク"
+fonts = "フォント"
+xobjects = "XObject の数"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary]
+pages = "ページ数"
+fileSize = "ファイルサイズ"
+pdfVersion = "PDF バージョン"
+language = "言語"
+title = "PDF 概要"
+author = "作成者"
+created = "作成日"
+modified = "更新日"
+permsAll = "すべての権限が許可されています"
+permsRestricted = "{{count}} 件の制限"
+permsMixed = "一部の権限が制限されています"
+hasCompliance = "準拠規格あり"
+noCompliance = "準拠規格なし"
+basic = "基本情報"
+documentInfo = "ドキュメント情報"
+securityTitle = "セキュリティ状態"
+technical = "技術情報"
+overviewTitle = "PDF 概要"
+
+[getPdfInfo.summary.security]
+encrypted = "暗号化された PDF - パスワード保護あり"
+unencrypted = "暗号化されていない PDF - パスワード保護なし"
+
+[getPdfInfo.summary.tech]
+images = "画像"
+fonts = "フォント"
+formFields = "フォームフィールド"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+bookmarks = "ブックマーク"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary.overview]
+untitled = "無題のドキュメント"
+unknown = "不明な作成者"
+text = "これは {{author}} によって作成された、タイトル {{title}} の {{pages}} ページの PDF です（PDF バージョン {{version}}）。"
+
+[getPdfInfo.error]
+partial = "一部のファイルを処理できませんでした。"
+unexpected = "抽出中に予期しないエラーが発生しました。"
+
+[getPdfInfo.status]
+complete = "抽出が完了しました"
 
 [extractPage]
 tags = "抽出"
@@ -5177,7 +5262,7 @@ upgrade = "今すぐアップグレード →"
 freeTitle = "サーバーライセンス"
 overLimitTitle = "サーバーライセンスが必要です"
 overLimitBody = "当社のライセンスでは、サーバーごとに <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。現在 <strong>{{overLimitUserCopy}}</strong> の Stirling ユーザーがいます。中断なく利用を続けるには、Stirling Server プランにアップグレードしてください - <strong>無制限席数</strong>、PDF テキスト編集、完全な管理機能が $99/サーバー/月 です。"
-freeBody = "当社の <strong>オープンコア</strong> ライセンスでは、サーバーごとに最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。中断なく拡張し、新しい <strong>PDF テキスト編集ツール</strong> に早期アクセスするには、Stirling Server プランをお勧めします。完全編集と <strong>無制限席数</strong> が $99/サーバー/月 です。"
+freeBody = "当社の<strong>Open-Core</strong>ライセンスでは、サーバーごとに最大<strong>{{freeTierLimit}}</strong>ユーザーまで無料でご利用いただけます。中断なくスケールするには、Stirling Server プランをおすすめします - <strong>無制限の席数</strong>と<strong>SSO サポート</strong>で $99/サーバー/月。"
 
 [onboarding.desktopInstall]
 title = "ダウンロード"
@@ -5281,6 +5366,31 @@ error = "ユーザーのステータスの更新に失敗しました"
 [workspace.people.delete]
 success = "ユーザーを削除しました"
 error = "ユーザーの削除に失敗しました"
+
+[workspace.people.changePassword]
+action = "パスワードを変更"
+title = "パスワードを変更"
+subtitle = "のパスワードを更新"
+newPassword = "新しいパスワード"
+confirmPassword = "パスワードの確認"
+placeholder = "新しいパスワードを入力"
+confirmPlaceholder = "新しいパスワードを再入力"
+passwordRequired = "新しいパスワードを入力してください"
+passwordMismatch = "パスワードが一致しません"
+generateRandom = "安全なパスワードを生成"
+generatedPreview = "生成されたパスワード:"
+copyTooltip = "クリップボードにコピー"
+copiedToClipboard = "パスワードをクリップボードにコピーしました"
+copyFailed = "パスワードのコピーに失敗しました"
+sendEmail = "この変更についてユーザーにメールする"
+includePassword = "メールに新しいパスワードを含める"
+forcePasswordChange = "次回ログイン時にユーザーにパスワード変更を強制する"
+emailUnavailable = "このユーザーのメールは有効なメールアドレスではありません。通知は無効です。"
+smtpDisabled = "メール通知には設定で SMTP を有効にする必要があります。"
+notifyOnly = "パスワードを含めずにメールを送信し、管理者が変更したことをユーザーに知らせます。"
+submit = "パスワードを更新"
+success = "パスワードを更新しました"
+error = "パスワードの更新に失敗しました"
 
 [workspace.people.emailInvite]
 tab = "メール招待"
@@ -5815,6 +5925,7 @@ subtitle = "Stirling アカウントでサインイン"
 [setup.selfhosted]
 title = "サーバーにサインイン"
 subtitle = "サーバーの認証情報を入力"
+link = "またはセルフホスト型アカウントに接続"
 
 [setup.server]
 title = "サーバーに接続"
@@ -5833,6 +5944,14 @@ description = "セルフホストの Stirling PDF サーバーの完全な URL �
 emptyUrl = "サーバー URL を入力してください"
 unreachable = "サーバーに接続できませんでした"
 testFailed = "接続テストに失敗しました"
+configFetch = "サーバー構成の取得に失敗しました。URL を確認して、もう一度お試しください。"
+
+[setup.server.error.securityDisabled]
+title = "ログインが有効になっていません"
+body = "このサーバーではログインが有効になっていません。このサーバーに接続するには、認証を有効にする必要があります:"
+step1 = "環境で DOCKER_ENABLE_SECURITY=true を設定する"
+step2 = "または settings.yml で security.enableLogin=true を設定する"
+step3 = "サーバーを再起動する"
 
 [setup.login]
 title = "サインイン"
@@ -5905,6 +6024,7 @@ earlyAccess = "早期アクセス"
 reset = "変更をリセット"
 downloadJson = "JSON をダウンロード"
 generatePdf = "PDF を生成"
+saveChanges = "変更を保存"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ボックスに収まるようテキストを自動スケール"
@@ -5942,6 +6062,8 @@ alpha = "このアルファ版ビューアは開発途上です。一部のフ�
 [pdfTextEditor.empty]
 title = "ドキュメントが読み込まれていません"
 subtitle = "テキスト編集を開始するにはPDFまたはJSONファイルを読み込んでください。"
+dropzone = "ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
+dropzoneWithFiles = "ファイルタブからファイルを選択するか、ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Text Editor（早期アクセス）へようこそ"

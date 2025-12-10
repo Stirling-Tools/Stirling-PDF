@@ -363,7 +363,7 @@ connections = "Connexions"
 
 [settings.licensingAnalytics]
 title = "Licences et analyses"
-plan = "Plan"
+plan = "Forfait"
 audit = "Audit"
 usageAnalytics = "Analyses d'utilisation"
 
@@ -1225,7 +1225,7 @@ odtExt = "Texte OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Présentation OpenDocument (.odp)"
 txtExt = "Texte brut (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Format de texte enrichi (.rtf)"
 selectedFiles = "Fichiers sélectionnés"
 noFileSelected = "Aucun fichier sélectionné. Utilisez le panneau de fichiers pour ajouter des fichiers."
 convertFiles = "Convertir les fichiers"
@@ -3036,6 +3036,91 @@ title = "Récupérer les informations"
 header = "Récupérer les informations"
 submit = "Récupérer les informations"
 downloadJson = "Télécharger le JSON"
+processing = "Extraction des informations..."
+results = "Résultats"
+noResults = "Exécutez l'outil pour générer un rapport."
+downloads = "Téléchargements"
+noneDetected = "Aucun détecté"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Résumé complet des informations"
+shortTitle = "Informations PDF"
+
+[getPdfInfo.sections]
+metadata = "Métadonnées"
+formFields = "Champs de formulaire"
+basicInfo = "Informations de base"
+documentInfo = "Informations sur le document"
+compliance = "Conformité"
+encryption = "Chiffrement"
+permissions = "Autorisations"
+other = "Autre"
+perPageInfo = "Informations par page"
+tableOfContents = "Table des matières"
+
+[getPdfInfo.other]
+attachments = "Pièces jointes"
+embeddedFiles = "Fichiers intégrés"
+javaScript = "JavaScript"
+layers = "Calques"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Taille"
+annotations = "Annotations"
+images = "Images"
+links = "Liens"
+fonts = "Polices"
+xobjects = "Nombre d'objets XObject"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Pages"
+fileSize = "Taille du fichier"
+pdfVersion = "Version PDF"
+language = "Langue"
+title = "Résumé PDF"
+author = "Auteur"
+created = "Créé"
+modified = "Modifié"
+permsAll = "Toutes les autorisations accordées"
+permsRestricted = "{{count}} restrictions"
+permsMixed = "Certaines autorisations sont restreintes"
+hasCompliance = "Respecte des normes de conformité"
+noCompliance = "Aucune norme de conformité"
+basic = "Informations de base"
+documentInfo = "Informations sur le document"
+securityTitle = "État de sécurité"
+technical = "Technique"
+overviewTitle = "Aperçu du PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF chiffré - Protection par mot de passe présente"
+unencrypted = "PDF non chiffré - Aucune protection par mot de passe"
+
+[getPdfInfo.summary.tech]
+images = "Images"
+fonts = "Polices"
+formFields = "Champs de formulaire"
+embeddedFiles = "Fichiers intégrés"
+javaScript = "JavaScript"
+layers = "Calques"
+bookmarks = "Signets"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "un document sans titre"
+unknown = "Auteur inconnu"
+text = "Ceci est un PDF de {{pages}} pages intitulé {{title}} créé par {{author}} (version PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Certains fichiers n'ont pas pu être traités."
+unexpected = "Erreur inattendue lors de l'extraction."
+
+[getPdfInfo.status]
+complete = "Extraction terminée"
 
 [extractPage]
 tags = "extraire,extract"
@@ -4550,7 +4635,7 @@ successMessage = "Fichier de licence téléversé et activé avec succès. Aucun
 title = "Licence active"
 file = "Source: Fichier de licence ({{path}})"
 key = "Source: Clé de licence"
-type = "Type: {{type}}"
+type = "Type : {{type}}"
 noInput = "Veuillez fournir une clé de licence ou téléverser un fichier de certificat"
 success = "Succès"
 
@@ -5177,7 +5262,7 @@ upgrade = "Mettre à niveau maintenant →"
 freeTitle = "Licence serveur"
 overLimitTitle = "Licence serveur requise"
 overLimitBody = "Notre licence autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Vous avez <strong>{{overLimitUserCopy}}</strong> utilisateurs Stirling. Pour continuer sans interruption, passez au plan Stirling Server — <strong>places illimitées</strong>, édition de texte PDF et contrôle d’administration complet pour 99 $/serveur/mois."
-freeBody = "Notre licence <strong>Open-Core</strong> autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Pour évoluer sans interruption et accéder en avant-première à notre nouvel <strong>outil d’édition de texte PDF</strong>, nous recommandons le plan Stirling Server — édition complète et <strong>places illimitées</strong> pour 99 $/serveur/mois."
+freeBody = "Notre régime de licence <strong>Open-Core</strong> autorise jusqu'à <strong>{{freeTierLimit}}</strong> utilisateurs gratuitement par serveur. Pour évoluer sans interruption, nous recommandons le forfait Stirling Server - <strong>places illimitées</strong> et <strong>prise en charge du SSO</strong> pour 99 $/serveur/mois."
 
 [onboarding.desktopInstall]
 title = "Télécharger"
@@ -5281,6 +5366,31 @@ error = "Échec de la mise à jour du statut de l’utilisateur"
 [workspace.people.delete]
 success = "Utilisateur supprimé avec succès"
 error = "Échec de la suppression de l’utilisateur"
+
+[workspace.people.changePassword]
+action = "Changer le mot de passe"
+title = "Changer le mot de passe"
+subtitle = "Mettre à jour le mot de passe de"
+newPassword = "Nouveau mot de passe"
+confirmPassword = "Confirmer le mot de passe"
+placeholder = "Saisissez un nouveau mot de passe"
+confirmPlaceholder = "Saisissez à nouveau le nouveau mot de passe"
+passwordRequired = "Veuillez saisir un nouveau mot de passe"
+passwordMismatch = "Les mots de passe ne correspondent pas"
+generateRandom = "Générer un mot de passe sécurisé"
+generatedPreview = "Mot de passe généré :"
+copyTooltip = "Copier dans le presse-papiers"
+copiedToClipboard = "Mot de passe copié dans le presse-papiers"
+copyFailed = "Échec de la copie du mot de passe"
+sendEmail = "Envoyer un e-mail à l'utilisateur à propos de ce changement"
+includePassword = "Inclure le nouveau mot de passe dans l'e-mail"
+forcePasswordChange = "Forcer l'utilisateur à changer son mot de passe à la prochaine connexion"
+emailUnavailable = "L'e-mail de cet utilisateur n'est pas une adresse valide. Les notifications sont désactivées."
+smtpDisabled = "Les notifications par e-mail nécessitent l'activation de SMTP dans les paramètres."
+notifyOnly = "Un e-mail sera envoyé sans le mot de passe, informant l'utilisateur qu'un administrateur l'a modifié."
+submit = "Mettre à jour le mot de passe"
+success = "Mot de passe mis à jour avec succès"
+error = "Échec de la mise à jour du mot de passe"
 
 [workspace.people.emailInvite]
 tab = "Invitation par e-mail"
@@ -5815,6 +5925,7 @@ subtitle = "Connectez-vous avec votre compte Stirling"
 [setup.selfhosted]
 title = "Se connecter au serveur"
 subtitle = "Saisissez les identifiants du serveur"
+link = "ou connectez-vous à un compte auto-hébergé"
 
 [setup.server]
 title = "Connexion au serveur"
@@ -5833,6 +5944,14 @@ description = "Saisissez l’URL complète de votre serveur Stirling PDF auto‑
 emptyUrl = "Veuillez saisir une URL de serveur"
 unreachable = "Connexion au serveur impossible"
 testFailed = "Échec du test de connexion"
+configFetch = "Échec de la récupération de la configuration du serveur. Veuillez vérifier l'URL et réessayer."
+
+[setup.server.error.securityDisabled]
+title = "Connexion non activée"
+body = "La connexion n'est pas activée sur ce serveur. Pour vous y connecter, vous devez activer l'authentification :"
+step1 = "Définissez DOCKER_ENABLE_SECURITY=true dans votre environnement"
+step2 = "Ou définissez security.enableLogin=true dans settings.yml"
+step3 = "Redémarrez le serveur"
 
 [setup.login]
 title = "Se connecter"
@@ -5892,7 +6011,7 @@ paragraph = "Page de paragraphe"
 sparse = "Texte clairsemé"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatique"
 paragraph = "Paragraphe"
 singleLine = "Ligne unique"
 
@@ -5905,6 +6024,7 @@ earlyAccess = "Accès anticipé"
 reset = "Réinitialiser les modifications"
 downloadJson = "Télécharger le JSON"
 generatePdf = "Générer le PDF"
+saveChanges = "Enregistrer les modifications"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Ajuster automatiquement le texte aux cadres"
@@ -5942,6 +6062,8 @@ alpha = "Ce visualiseur alpha évolue encore — certaines polices, couleurs, ef
 [pdfTextEditor.empty]
 title = "Aucun document chargé"
 subtitle = "Chargez un fichier PDF ou JSON pour commencer à modifier le texte."
+dropzone = "Glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
+dropzoneWithFiles = "Sélectionnez un fichier depuis l'onglet Fichiers, ou glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bienvenue dans l'éditeur de texte PDF (accès anticipé)"

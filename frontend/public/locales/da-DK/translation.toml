@@ -1221,9 +1221,9 @@ pdfaDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Dette vil 
 fileFormat = "Filformat"
 wordDoc = "Word-dokument"
 wordDocExt = "Word-dokument (.docx)"
-odtExt = "OpenDocument Text (.odt)"
+odtExt = "OpenDocument-tekst (.odt)"
 pptExt = "PowerPoint (.pptx)"
-odpExt = "OpenDocument Presentation (.odp)"
+odpExt = "OpenDocument-præsentation (.odp)"
 txtExt = "Almindelig tekst (.txt)"
 rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Valgte filer"
@@ -3036,6 +3036,91 @@ title = "Få Info om PDF"
 header = "Få Info om PDF"
 submit = "Få Info"
 downloadJson = "Download JSON"
+processing = "Udtrækker oplysninger..."
+results = "Resultater"
+noResults = "Kør værktøjet for at generere en rapport."
+downloads = "Downloads"
+noneDetected = "Ingen registreret"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Fuldt informationsresumé"
+shortTitle = "PDF-oplysninger"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formularfelter"
+basicInfo = "Grundlæggende info"
+documentInfo = "Dokumentinfo"
+compliance = "Overensstemmelse"
+encryption = "Kryptering"
+permissions = "Tilladelser"
+other = "Andet"
+perPageInfo = "Info pr. side"
+tableOfContents = "Indholdsfortegnelse"
+
+[getPdfInfo.other]
+attachments = "Vedhæftninger"
+embeddedFiles = "Indlejrede filer"
+javaScript = "JavaScript"
+layers = "Lag"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Størrelse"
+annotations = "Anmærkninger"
+images = "Billeder"
+links = "Links"
+fonts = "Skrifttyper"
+xobjects = "Antal XObjects"
+multimedia = "Multimedie"
+
+[getPdfInfo.summary]
+pages = "Sider"
+fileSize = "Filstørrelse"
+pdfVersion = "PDF-version"
+language = "Sprog"
+title = "PDF-resumé"
+author = "Forfatter"
+created = "Oprettet"
+modified = "Ændret"
+permsAll = "Alle tilladelser tilladt"
+permsRestricted = "{{count}} begrænsninger"
+permsMixed = "Nogle tilladelser er begrænsede"
+hasCompliance = "Har overensstemmelsesstandarder"
+noCompliance = "Ingen overensstemmelsesstandarder"
+basic = "Grundlæggende oplysninger"
+documentInfo = "Dokumentoplysninger"
+securityTitle = "Sikkerhedsstatus"
+technical = "Teknisk"
+overviewTitle = "PDF-oversigt"
+
+[getPdfInfo.summary.security]
+encrypted = "Krypteret PDF - med adgangskodebeskyttelse"
+unencrypted = "Ukrypteret PDF - ingen adgangskodebeskyttelse"
+
+[getPdfInfo.summary.tech]
+images = "Billeder"
+fonts = "Skrifttyper"
+formFields = "Formularfelter"
+embeddedFiles = "Indlejrede filer"
+javaScript = "JavaScript"
+layers = "Lag"
+bookmarks = "Bogmærker"
+multimedia = "Multimedie"
+
+[getPdfInfo.summary.overview]
+untitled = "et dokument uden titel"
+unknown = "Ukendt forfatter"
+text = "Dette er en PDF på {{pages}} sider med titlen {{title}}, oprettet af {{author}} (PDF-version {{version}})."
+
+[getPdfInfo.error]
+partial = "Nogle filer kunne ikke behandles."
+unexpected = "Uventet fejl under udtrækning."
+
+[getPdfInfo.status]
+complete = "Udtrækning fuldført"
 
 [extractPage]
 tags = "udtræk"
@@ -3790,7 +3875,7 @@ version = "Nuværende udgivelse"
 title = "API-dokumentation"
 header = "API-dokumentation"
 desc = "Se og test Stirling PDF API-endpoints"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,dokumentation,swagger,endepunkter,udvikling"
 
 [cookieBanner.popUp]
 title = "Sådan bruger vi cookies"
@@ -4258,11 +4343,11 @@ label = "Issuer-URL"
 description = "OAuth2-udbyderens issuer-URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "Klient-ID"
 description = "OAuth2 Client ID fra din udbyder"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "Klienthemmelighed"
 description = "OAuth2 Client Secret fra din udbyder"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -5177,7 +5262,7 @@ upgrade = "Opgrader nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens påkrævet"
 overLimitBody = "Vores licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brugere. For at fortsætte uden afbrydelser skal du opgradere til Stirling Server-abonnementet – <strong>ubegrænsede pladser</strong>, PDF-tekstredigering og fuld admin-kontrol for $99/server/md."
-freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
+freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser anbefaler vi Stirling Server-planen – <strong>ubegrænsede pladser</strong> og <strong>SSO-understøttelse</strong> for $99/server/md."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5281,6 +5366,31 @@ error = "Kunne ikke opdatere brugerstatus"
 [workspace.people.delete]
 success = "Bruger slettet"
 error = "Kunne ikke slette bruger"
+
+[workspace.people.changePassword]
+action = "Skift adgangskode"
+title = "Skift adgangskode"
+subtitle = "Opdater adgangskoden for"
+newPassword = "Ny adgangskode"
+confirmPassword = "Bekræft adgangskode"
+placeholder = "Indtast en ny adgangskode"
+confirmPlaceholder = "Indtast den nye adgangskode igen"
+passwordRequired = "Angiv en ny adgangskode"
+passwordMismatch = "Adgangskoderne matcher ikke"
+generateRandom = "Generér sikker adgangskode"
+generatedPreview = "Genereret adgangskode:"
+copyTooltip = "Kopiér til udklipsholder"
+copiedToClipboard = "Adgangskode kopieret til udklipsholderen"
+copyFailed = "Kunne ikke kopiere adgangskoden"
+sendEmail = "Send en e-mail til brugeren om denne ændring"
+includePassword = "Medtag den nye adgangskode i e-mailen"
+forcePasswordChange = "Tving brugeren til at ændre adgangskode ved næste login"
+emailUnavailable = "Denne brugers e-mail er ikke en gyldig e-mailadresse. Meddelelser er deaktiveret."
+smtpDisabled = "E-mailmeddelelser kræver, at SMTP er aktiveret i indstillingerne."
+notifyOnly = "Der sendes en e-mail uden adgangskoden, som informerer brugeren om, at en administrator har ændret den."
+submit = "Opdater adgangskode"
+success = "Adgangskoden blev opdateret"
+error = "Kunne ikke opdatere adgangskoden"
 
 [workspace.people.emailInvite]
 tab = "E-mailinvitation"
@@ -5815,6 +5925,7 @@ subtitle = "Log ind med din Stirling-konto"
 [setup.selfhosted]
 title = "Log ind på server"
 subtitle = "Indtast dine server-loginoplysninger"
+link = "eller opret forbindelse til en selvhostet konto"
 
 [setup.server]
 title = "Forbind til server"
@@ -5833,6 +5944,14 @@ description = "Indtast den fulde URL til din selvhostede Stirling PDF-server"
 emptyUrl = "Indtast en server-URL"
 unreachable = "Kunne ikke forbinde til server"
 testFailed = "Forbindelsestest mislykkedes"
+configFetch = "Kunne ikke hente serverkonfiguration. Kontrollér URL'en, og prøv igen."
+
+[setup.server.error.securityDisabled]
+title = "Login ikke aktiveret"
+body = "Denne server har ikke login aktiveret. For at oprette forbindelse til denne server skal du aktivere godkendelse:"
+step1 = "Sæt DOCKER_ENABLE_SECURITY=true i dit miljø"
+step2 = "Eller sæt security.enableLogin=true i settings.yml"
+step3 = "Genstart serveren"
 
 [setup.login]
 title = "Log ind"
@@ -5905,6 +6024,7 @@ earlyAccess = "Tidlig adgang"
 reset = "Nulstil ændringer"
 downloadJson = "Download JSON"
 generatePdf = "Generer PDF"
+saveChanges = "Gem ændringer"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoskalér tekst, så den passer i bokse"
@@ -5942,6 +6062,8 @@ alpha = "Denne alpha-fremviser er stadig under udvikling—visse skrifttyper, fa
 [pdfTextEditor.empty]
 title = "Intet dokument indlæst"
 subtitle = "Indlæs en PDF- eller JSON-fil for at begynde at redigere tekstindhold."
+dropzone = "Træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
+dropzoneWithFiles = "Vælg en fil fra fanen Filer, eller træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Velkommen til PDF-teksteditor (Early Access)"

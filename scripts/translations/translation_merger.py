@@ -117,8 +117,7 @@ class TranslationMerger:
         missing = set(golden_flat.keys()) - set(target_flat.keys())
         return sorted(missing - ignore_set)
 
-    def add_missing_translations(self, target_file: Path, keys_to_add: List[str] = None,
-                               mark_untranslated: bool = True) -> Dict:
+    def add_missing_translations(self, target_file: Path, keys_to_add: List[str] = None) -> Dict:
         """Add missing translations from en-GB to target file."""
         if not target_file.exists():
             target_data = {}
@@ -132,10 +131,7 @@ class TranslationMerger:
         for key in missing_keys:
             if key in golden_flat:
                 value = golden_flat[key]
-                if mark_untranslated and isinstance(value, str):
-                    # Mark as untranslated for AI to translate later
-                    value = f"[UNTRANSLATED] {value}"
-
+                # Add the English value directly without [UNTRANSLATED] marker
                 self._set_nested_value(target_data, key, value)
                 added_count += 1
 
@@ -282,8 +278,6 @@ def main():
     # Add missing command
     add_parser = subparsers.add_parser('add-missing', help='Add missing translations from en-GB')
     add_parser.add_argument('--backup', action='store_true', help='Create backup before modifying files')
-    add_parser.add_argument('--mark-untranslated', action='store_true', default=True,
-                           help='Mark added translations as [UNTRANSLATED]')
 
     # Extract untranslated command
     extract_parser = subparsers.add_parser('extract-untranslated', help='Extract untranslated entries')
@@ -312,10 +306,7 @@ def main():
 
     if args.command == 'add-missing':
         print(f"Adding missing translations to {args.language}...")
-        result = merger.add_missing_translations(
-            target_file,
-            mark_untranslated=args.mark_untranslated
-        )
+        result = merger.add_missing_translations(target_file)
 
         merger._save_translation_file(result['data'], target_file, backup=args.backup)
         print(f"Added {result['added_count']} missing translations")
