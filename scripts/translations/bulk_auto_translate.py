@@ -87,7 +87,7 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
         return None
 
 
-def translate_language(language: str, api_key: str, batch_size: int, timeout: int, skip_verification: bool) -> Tuple[str, bool, str]:
+def translate_language(language: str, api_key: str, batch_size: int, timeout: int, skip_verification: bool, include_existing: bool) -> Tuple[str, bool, str]:
     """
     Translate a single language.
     Returns: (language_code, success, message)
@@ -104,6 +104,9 @@ def translate_language(language: str, api_key: str, batch_size: int, timeout: in
 
     if skip_verification:
         cmd.append('--skip-verification')
+
+    if include_existing:
+        cmd.append('--include-existing')
 
     try:
         result = subprocess.run(
@@ -170,6 +173,8 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                         help='Path to locales directory')
     parser.add_argument('--skip-verification', action='store_true',
                         help='Skip final completion verification for each language')
+    parser.add_argument('--include-existing', action='store_true',
+                        help='Also retranslate existing keys that match English (default: only translate missing keys)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Show what would be translated without actually translating')
 
@@ -253,7 +258,8 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 api_key,
                 args.batch_size,
                 args.timeout,
-                args.skip_verification
+                args.skip_verification,
+                args.include_existing
             ): lang
             for lang in languages
         }
