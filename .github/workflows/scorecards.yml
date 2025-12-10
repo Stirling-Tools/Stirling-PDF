@@ -17,6 +17,7 @@ permissions: read-all
 
 jobs:
   analysis:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
