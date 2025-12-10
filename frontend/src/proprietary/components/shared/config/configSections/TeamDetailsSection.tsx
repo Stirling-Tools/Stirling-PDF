@@ -22,6 +22,7 @@ import { alert } from '@app/components/toast';
 import { teamService, Team } from '@app/services/teamService';
 import { User, userManagementService } from '@app/services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
 
 interface TeamDetailsSectionProps {
   teamId: number;
@@ -38,6 +39,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const [userLastRequest, setUserLastRequest] = useState<Record<string, number>>({});
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [changeTeamModalOpened, setChangeTeamModalOpened] = useState(false);
+  const [changePasswordModalOpened, setChangePasswordModalOpened] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
@@ -47,6 +50,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const [licenseInfo, setLicenseInfo] = useState<{
     availableSlots: number;
   } | null>(null);
+  const [mailEnabled, setMailEnabled] = useState(false);
 
   useEffect(() => {
     fetchTeamDetails();
@@ -70,6 +74,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setLicenseInfo({
         availableSlots: adminData.availableSlots,
       });
+      setMailEnabled(adminData.mailEnabled);
     } catch (error) {
       console.error('Failed to fetch team details:', error);
       alert({ alertType: 'error', title: t('workspace.teams.loadError', 'Failed to load team details') });
@@ -170,6 +175,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
     setSelectedUser(user);
     setSelectedTeamId(user.team?.id?.toString() || '');
     setChangeTeamModalOpened(true);
+  };
+
+  const openChangePasswordModal = (user: User) => {
+    setPasswordUser(user);
+    setChangePasswordModalOpened(true);
+  };
+
+  const closeChangePasswordModal = () => {
+    setChangePasswordModalOpened(false);
+    setPasswordUser(null);
   };
 
   const handleChangeTeam = async () => {
@@ -398,6 +413,13 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           >
                             {t('workspace.teams.changeTeam.label', 'Change Team')}
                           </Menu.Item>
+                          <Menu.Item
+                            leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
+                            onClick={() => openChangePasswordModal(user)}
+                            disabled={processing}
+                          >
+                            {t('workspace.people.changePassword.action', 'Change password')}
+                          </Menu.Item>
                           {team.name !== 'Internal' && team.name !== 'Default' && (
                             <Menu.Item
                               leftSection={<LocalIcon icon="person-remove" width="1rem" height="1rem" />}
@@ -426,6 +448,14 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
             )}
           </Table.Tbody>
       </Table>
+
+      <ChangeUserPasswordModal
+        opened={changePasswordModalOpened}
+        onClose={closeChangePasswordModal}
+        user={passwordUser}
+        onSuccess={fetchTeamDetails}
+        mailEnabled={mailEnabled}
+      />
 
       {/* Add Member Modal */}
       <Modal

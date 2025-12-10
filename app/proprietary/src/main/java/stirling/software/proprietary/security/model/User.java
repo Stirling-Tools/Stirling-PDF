@@ -59,6 +59,9 @@ public class User implements UserDetails, Serializable {
     @Column(name = "hasCompletedInitialSetup")
     private Boolean hasCompletedInitialSetup = false;
 
+    @Column(name = "forcePasswordChange")
+    private Boolean forcePasswordChange = false;
+
     @Column(name = "roleName")
     private String roleName;
 
@@ -115,6 +118,14 @@ public class User implements UserDetails, Serializable {
 
     public void setHasCompletedInitialSetup(boolean hasCompletedInitialSetup) {
         this.hasCompletedInitialSetup = hasCompletedInitialSetup;
+    }
+
+    public boolean isForcePasswordChange() {
+        return forcePasswordChange != null && forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
     }
 
     public void setAuthenticationType(AuthenticationType authenticationType) {
