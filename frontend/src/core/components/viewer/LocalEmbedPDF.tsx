@@ -167,8 +167,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     ];
   }, [pdfUrl]);
 
-  // Initialize the engine with the React hook
-  const { engine, isLoading, error } = usePdfiumEngine();
+  // Initialize the engine with the React hook - use local WASM for offline support
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: '/pdfium/pdfium.wasm',
+  });
 
 
   // Early return if no file or URL provided
