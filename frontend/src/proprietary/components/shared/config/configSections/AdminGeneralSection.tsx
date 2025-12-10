@@ -55,7 +55,7 @@ export default function AdminGeneralSection() {
   const { setIsDirty, markClean } = useUnsavedChanges();
   const languageOptions = useMemo(
     () => Object.entries(supportedLanguages)
-      .map(([code, label]) => ({ value: code.replace(/-/g, '_'), label }))
+      .map(([code, label]) => ({ value: code.replace(/-/g, '_'), label: `${label} (${code})` }))
       .sort((a, b) => a.label.localeCompare(b.label)),
     []
   );
@@ -168,6 +168,16 @@ export default function AdminGeneralSection() {
     () => toUnderscoreLanguages(settings.ui?.languages),
     [settings.ui?.languages]
   );
+
+  // Filter default locale options based on available languages setting
+  const defaultLocaleOptions = useMemo(() => {
+    // If no languages are selected (empty), show all languages
+    if (!selectedLanguages || selectedLanguages.length === 0) {
+      return languageOptions;
+    }
+    // Otherwise, only show languages that are in the selected list
+    return languageOptions.filter(option => selectedLanguages.includes(option.value));
+  }, [selectedLanguages, languageOptions]);
 
   useEffect(() => {
     // Only fetch real settings if login is enabled
@@ -408,10 +418,11 @@ export default function AdminGeneralSection() {
               description={t('admin.settings.general.defaultLocale.description', 'The default language for new users (e.g., en_US, es_ES)')}
               value={settings.system?.defaultLocale || ''}
               onChange={(value) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: value || '' } })}
-              data={languageOptions}
+              data={defaultLocaleOptions}
               searchable
               clearable
               placeholder="en_GB"
+              comboboxProps={{ zIndex: 1400 }}
               disabled={!loginEnabled}
             />
           </div>

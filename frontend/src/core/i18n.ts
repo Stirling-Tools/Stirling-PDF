@@ -123,10 +123,21 @@ function normalizeLanguageCode(languageCode: string): string {
  * If configLanguages is null/empty, all languages remain available
  * Otherwise, only the specified languages are enabled with the first valid
  * option (preferring en-GB when present) used as the fallback language.
+ *
+ * @param configLanguages - Optional array of language codes from server config (ui.languages)
+ * @param defaultLocale - Optional default language for new users (system.defaultLocale)
  */
-export function updateSupportedLanguages(configLanguages?: string[] | null) {
+export function updateSupportedLanguages(configLanguages?: string[] | null, defaultLocale?: string | null) {
+  // Normalize and validate default locale if provided
+  const normalizedDefault = defaultLocale ? normalizeLanguageCode(defaultLocale) : null;
+  const validDefault = normalizedDefault && normalizedDefault in supportedLanguages ? normalizedDefault : null;
+
   if (!configLanguages || configLanguages.length === 0) {
     // No filter specified - keep all languages
+    // But still apply default locale if provided and user has no preference
+    if (validDefault) {
+      applyDefaultLocale(validDefault);
+    }
     return;
   }
 
@@ -139,7 +150,12 @@ export function updateSupportedLanguages(configLanguages?: string[] | null) {
     return;
   }
 
-  const fallback = validLanguages.includes('en-GB') ? 'en-GB' : validLanguages[0];
+  // Determine fallback: prefer validDefault if in the list, then en-GB, then first valid language
+  const fallback = validDefault && validLanguages.includes(validDefault)
+    ? validDefault
+    : validLanguages.includes('en-GB')
+      ? 'en-GB'
+      : validLanguages[0];
 
   i18n.options.supportedLngs = validLanguages;
   i18n.options.fallbackLng = fallback;
@@ -148,6 +164,20 @@ export function updateSupportedLanguages(configLanguages?: string[] | null) {
   const currentLang = normalizeLanguageCode(i18n.language || '');
   if (currentLang && !validLanguages.includes(currentLang)) {
     i18n.changeLanguage(fallback);
+  } else if (validDefault && !localStorage.getItem('i18nextLng')) {
+    // User has no saved preference - apply server default
+    i18n.changeLanguage(validDefault);
+  }
+}
+
+/**
+ * Apply server default locale when user has no saved language preference
+ * This respects the priority: localStorage > defaultLocale > browser detection > fallback
+ */
+function applyDefaultLocale(defaultLocale: string) {
+  // Only apply if user has no saved preference
+  if (!localStorage.getItem('i18nextLng')) {
+    i18n.changeLanguage(defaultLocale);
   }
 }
 
