@@ -1,5 +1,4 @@
 use tauri::{Manager, RunEvent, WindowEvent, Emitter};
-use urlencoding::decode;
 
 mod utils;
 mod commands;
@@ -153,6 +152,8 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
+          use urlencoding::decode;
+
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let mut added_files = false;
 
