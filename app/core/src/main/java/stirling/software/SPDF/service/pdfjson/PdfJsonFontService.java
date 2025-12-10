@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -27,11 +26,9 @@ public class PdfJsonFontService {
     private final TempFileManager tempFileManager;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Getter
-    private boolean cffConversionEnabled;
+    @Getter private boolean cffConversionEnabled;
 
-    @Getter
-    private String cffConverterMethod;
+    @Getter private String cffConverterMethod;
 
     private String pythonCommand;
 

@@ -86,7 +86,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.DateConverter;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -154,6 +153,7 @@ public class PdfJsonConversionService {
 
     /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
     private final Map<String, CachedPdfDocument> documentCache = new ConcurrentHashMap<>();
+
     private final java.util.LinkedHashMap<String, CachedPdfDocument> lruCache =
             new java.util.LinkedHashMap<>(16, 0.75f, true);
     private final Object cacheLock = new Object();
@@ -3081,8 +3081,7 @@ public class PdfJsonConversionService {
                 it.remove();
                 CachedPdfDocument removed = entry.getValue();
                 documentCache.remove(entry.getKey(), removed);
-                currentCacheBytes =
-                        Math.max(0L, currentCacheBytes - removed.getInMemorySize());
+                currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
                 removed.close();
                 log.debug(
                         "Evicted cached PDF for jobId {} to enforce cache budget", entry.getKey());
@@ -5555,7 +5554,12 @@ public class PdfJsonConversionService {
                 byte[] nextBytes, Map<String, PdfJsonFont> nextFonts) {
             Map<String, PdfJsonFont> fontsToUse = nextFonts != null ? nextFonts : this.fonts;
             return new CachedPdfDocument(
-                    nextBytes, null, nextBytes != null ? nextBytes.length : 0, metadata, fontsToUse, pageFontResources);
+                    nextBytes,
+                    null,
+                    nextBytes != null ? nextBytes.length : 0,
+                    metadata,
+                    fontsToUse,
+                    pageFontResources);
         }
 
         public void close() {
