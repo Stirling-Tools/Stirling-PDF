@@ -5279,6 +5279,10 @@ download = "Download →"
 showMeAround = "Show me around"
 skipTheTour = "Skip the tour"
 
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+
 [onboarding.serverLicense]
 skip = "Skip for now"
 seePlans = "See Plans →"
