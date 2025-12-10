@@ -288,8 +288,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         URL downloadUrl = buildDownloadUrl(telegramFile.getFilePath());
 
-        Chat chat = message.getChat();
-        Long chatId = chat != null ? chat.getId() : null;
+        Long chatId = message.getChat() != null ? message.getChat().getId() : null;
 
         Path baseInbox =
                 Paths.get(
@@ -298,16 +297,21 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         Files.createDirectories(baseInbox);
 
-        Path inboxFolder =
-                Optional.ofNullable(chatId)
-                        .map(Object::toString)
-                        .map(String::trim)
-                        .filter(StringUtils::isNotBlank)
-                        .map(baseInbox::resolve) // Unterordner: baseInbox + "/" + chatId
-                        .orElse(baseInbox); // fallback: nur der Basisordner
+        Path inboxFolder = baseInbox;
+        if (telegramProperties.getCustomFolderSuffix() && chatId != null) {
+            inboxFolder = baseInbox.resolve(chatId.toString());
+        }
 
-        // Jetzt den eigentlichen Zielordner (mit chatId oder ohne) anlegen
         Files.createDirectories(inboxFolder);
+
+        boolean hasJsonConfig = Files.list(inboxFolder)
+            .filter(Files::isRegularFile)
+            .anyMatch(p -> p.toString().endsWith(".json"));
+
+        if (!hasJsonConfig) {
+            log.info("No JSON configuration file found in inbox folder {}", inboxFolder);
+            sendMessage(chatId, "No JSON configuration file found in the inbox folder. Please contact the administrator.");
+        }
 
         String uniqueBaseName = FilenameUtils.getBaseName(originalName) + "-" + UUID.randomUUID();
         String extension = FilenameUtils.getExtension(originalName);
