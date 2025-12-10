@@ -624,6 +624,11 @@
   color: rgb(221, 221, 221) !important;
 }
 
+/* Current plan badge - use light mode green in dark mode */
+[data-mantine-color-scheme="dark"] .current-plan-badge {
+  background-color: var(--color-green-300) !important;
+}
+
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
   background-color: #0A8BFF !important;
