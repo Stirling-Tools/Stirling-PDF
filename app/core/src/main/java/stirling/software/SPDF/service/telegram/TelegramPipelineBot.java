@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -304,13 +303,16 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         Files.createDirectories(inboxFolder);
 
-        boolean hasJsonConfig = Files.list(inboxFolder)
-            .filter(Files::isRegularFile)
-            .anyMatch(p -> p.toString().endsWith(".json"));
+        boolean hasJsonConfig =
+                Files.list(inboxFolder)
+                        .filter(Files::isRegularFile)
+                        .anyMatch(p -> p.toString().endsWith(".json"));
 
         if (!hasJsonConfig) {
             log.info("No JSON configuration file found in inbox folder {}", inboxFolder);
-            sendMessage(chatId, "No JSON configuration file found in the inbox folder. Please contact the administrator.");
+            sendMessage(
+                    chatId,
+                    "No JSON configuration file found in the inbox folder. Please contact the administrator.");
         }
 
         String uniqueBaseName = FilenameUtils.getBaseName(originalName) + "-" + UUID.randomUUID();
