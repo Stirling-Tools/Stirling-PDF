@@ -33,6 +33,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -68,8 +69,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
         // Check if user is eligible for OAuth (grandfathered or system has paid license)
         if (userExists) {
-            stirling.software.proprietary.security.model.User user =
-                    userService.findByUsernameIgnoreCase(username).orElse(null);
+            User user = userService.findByUsernameIgnoreCase(username).orElse(null);
 
             if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
                 // User is not grandfathered and no paid license - block OAuth login
@@ -148,7 +148,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             OAUTH2);
                 }
 
-                // Generate JWT if v2 is enabled
                 if (jwtService.isJwtEnabled()) {
                     String jwt =
                             jwtService.generateToken(
