@@ -615,6 +615,32 @@
   border-color: var(--landing-drop-inner-paper-border) !important;
 }
 
+/* Plan section card borders - only override in dark mode */
+[data-mantine-color-scheme="dark"] .plan-card {
+  --paper-border-color: rgb(158, 158, 158) !important;
+}
+
+/* Plan section button colors */
+.plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #0A8BFF !important;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #1C598E !important;
+}
+
+/* Lighter grey for disabled plan buttons */
+.plan-button:disabled,
+.plan-button[data-disabled] {
+  background-color: #7e7e7e !important;
+  color: white;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:disabled,
+[data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
+  background-color: #6b7280 !important;
+}
+
 /* Smooth transitions for theme switching */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
