@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, TextInput, ActionIcon, Text, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LocalIcon } from '@app/components/shared/LocalIcon';
@@ -12,7 +12,8 @@ interface SearchInterfaceProps {
 export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
-  
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const searchState = viewerContext?.getSearchState();
   const searchResults = searchState?.results;
   const searchActiveIndex = searchState?.activeIndex;
@@ -25,6 +26,13 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     query: string;
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Auto-focus search input when visible
+  useEffect(() => {
+    if (visible) {
+      inputRef.current?.focus();
+    }
+  }, [visible]);
 
   // Monitor search state changes
   useEffect(() => {
@@ -145,6 +153,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       {/* Search input */}
       <Group mb="md">
         <TextInput
+          ref={inputRef}
           placeholder={t('search.placeholder', 'Enter search term...')}
           value={searchQuery}
           onChange={(e) => {
