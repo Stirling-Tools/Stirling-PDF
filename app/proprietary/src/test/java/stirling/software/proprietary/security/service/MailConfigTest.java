@@ -25,6 +25,11 @@ class MailConfigTest {
         when(mailProps.getPort()).thenReturn(587);
         when(mailProps.getUsername()).thenReturn("user@example.com");
         when(mailProps.getPassword()).thenReturn("password");
+        when(mailProps.getStartTlsEnable()).thenReturn(null);
+        when(mailProps.getStartTlsRequired()).thenReturn(null);
+        when(mailProps.getSslEnable()).thenReturn(null);
+        when(mailProps.getSslTrust()).thenReturn(null);
+        when(mailProps.getSslCheckServerIdentity()).thenReturn(null);
     }
 
     @Test
@@ -48,6 +53,32 @@ class MailConfigTest {
                 () -> assertEquals("password", impl.getPassword()),
                 () -> assertEquals("UTF-8", impl.getDefaultEncoding()),
                 () -> assertEquals("true", props.getProperty("mail.smtp.auth")),
-                () -> assertEquals("true", props.getProperty("mail.smtp.starttls.enable")));
+                () -> assertEquals("true", props.getProperty("mail.smtp.starttls.enable")),
+                () -> assertEquals(null, props.getProperty("mail.smtp.starttls.required")),
+                () -> assertEquals(null, props.getProperty("mail.smtp.ssl.enable")),
+                () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")));
+    }
+
+    @Test
+    void shouldRespectExplicitTlsOverrides() {
+        ApplicationProperties appProps = mock(ApplicationProperties.class);
+        when(mailProps.getStartTlsEnable()).thenReturn(false);
+        when(mailProps.getStartTlsRequired()).thenReturn(true);
+        when(mailProps.getSslEnable()).thenReturn(true);
+        when(mailProps.getSslTrust()).thenReturn("*");
+        when(mailProps.getSslCheckServerIdentity()).thenReturn(true);
+        when(appProps.getMail()).thenReturn(mailProps);
+
+        MailConfig config = new MailConfig(appProps);
+        JavaMailSenderImpl impl = (JavaMailSenderImpl) config.javaMailSender();
+
+        Properties props = impl.getJavaMailProperties();
+
+        assertAll(
+                () -> assertEquals("false", props.getProperty("mail.smtp.starttls.enable")),
+                () -> assertEquals("true", props.getProperty("mail.smtp.starttls.required")),
+                () -> assertEquals("true", props.getProperty("mail.smtp.ssl.enable")),
+                () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")),
+                () -> assertEquals("true", props.getProperty("mail.smtp.ssl.checkserveridentity")));
     }
 }

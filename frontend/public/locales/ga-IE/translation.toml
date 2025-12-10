@@ -3036,6 +3036,91 @@ title = "Faigh eolas ar PDF"
 header = "Faigh eolas ar PDF"
 submit = "Faigh Eolas"
 downloadJson = "Íosluchtaigh ceol JSON"
+processing = "Ag eastóscadh faisnéise..."
+results = "Torthaí"
+noResults = "Rith an uirlis chun tuairisc a ghiniúint."
+downloads = "Íoslódálacha"
+noneDetected = "Níor braitheadh aon cheann"
+indexTitle = "Innéacs"
+
+[getPdfInfo.report]
+entryLabel = "Achoimre iomlán eolais"
+shortTitle = "Eolas PDF"
+
+[getPdfInfo.sections]
+metadata = "Meiteashonraí"
+formFields = "Réimsí Foirme"
+basicInfo = "Buneolas"
+documentInfo = "Eolas faoin Doiciméad"
+compliance = "Comhlíonadh"
+encryption = "Criptiú"
+permissions = "Ceadanna"
+other = "Eile"
+perPageInfo = "Eolas in aghaidh an leathanaigh"
+tableOfContents = "Clár Ábhair"
+
+[getPdfInfo.other]
+attachments = "Iatáin"
+embeddedFiles = "Comhaid Leabaithe"
+javaScript = "JavaScript"
+layers = "Sraitheanna"
+structureTree = "Crann Struchtúir"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Méid"
+annotations = "Anótálacha"
+images = "Íomhánna"
+links = "Naisc"
+fonts = "Clónna"
+xobjects = "Líon XObjectanna"
+multimedia = "Ilmheáin"
+
+[getPdfInfo.summary]
+pages = "Leathanaigh"
+fileSize = "Méid Comhaid"
+pdfVersion = "Leagan PDF"
+language = "Teanga"
+title = "Achoimre PDF"
+author = "Údar"
+created = "Cruthaithe"
+modified = "Athraithe"
+permsAll = "Gach cead ceadaithe"
+permsRestricted = "{{count}} srianta"
+permsMixed = "Tá roinnt ceadanna srianta"
+hasCompliance = "Tá caighdeáin chomhlíonta ann"
+noCompliance = "Gan chaighdeáin chomhlíonta"
+basic = "Buneolas"
+documentInfo = "Eolas faoin Doiciméad"
+securityTitle = "Stádas Slándála"
+technical = "Teicniúil"
+overviewTitle = "Forbhreathnú PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF criptithe - cosaint le focal faire"
+unencrypted = "PDF neamchriptithe - gan chosaint le focal faire"
+
+[getPdfInfo.summary.tech]
+images = "Íomhánna"
+fonts = "Clónna"
+formFields = "Réimsí Foirme"
+embeddedFiles = "Comhaid Leabaithe"
+javaScript = "JavaScript"
+layers = "Sraitheanna"
+bookmarks = "Leabharmharcanna"
+multimedia = "Ilmheáin"
+
+[getPdfInfo.summary.overview]
+untitled = "doiciméad gan teideal"
+unknown = "Údar Anaithnid"
+text = "Is PDF {{pages}} leathanach dar teideal {{title}} é, a chruthaigh {{author}} (leagan PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Níorbh fhéidir roinnt comhad a phróiseáil."
+unexpected = "Earráid gan choinne le linn eastósctha."
+
+[getPdfInfo.status]
+complete = "Eastóscadh críochnaithe"
 
 [extractPage]
 tags = "sliocht"
@@ -5282,6 +5367,31 @@ error = "Theip ar stádas úsáideora a nuashonrú"
 success = "Scriosadh an t-úsáideoir go rathúil"
 error = "Theip ar an úsáideoir a scriosadh"
 
+[workspace.people.changePassword]
+action = "Athraigh an focal faire"
+title = "Athraigh an focal faire"
+subtitle = "Nuashonraigh an focal faire do"
+newPassword = "Focal faire nua"
+confirmPassword = "Deimhnigh an focal faire"
+placeholder = "Cuir focal faire nua isteach"
+confirmPlaceholder = "Cuir an focal faire nua isteach arís"
+passwordRequired = "Cuir focal faire nua isteach le do thoil"
+passwordMismatch = "Ní hionann na focail faire"
+generateRandom = "Gin focal faire slán"
+generatedPreview = "Focal faire ginte:"
+copyTooltip = "Cóipeáil chuig an ngearrthaisce"
+copiedToClipboard = "Cóipeáladh an focal faire chuig an ngearrthaisce"
+copyFailed = "Níor éirigh le cóipeáil an fhocail fhaire"
+sendEmail = "Seol ríomhphost chuig an úsáideoir faoin athrú seo"
+includePassword = "Cuir an focal faire nua san ríomhphost"
+forcePasswordChange = "Cuir iallach ar an úsáideoir an focal faire a athrú ag an gcéad logáil isteach eile"
+emailUnavailable = "Níl seoladh ríomhphoist bailí ag an úsáideoir seo. Tá fógraí díchumasaithe."
+smtpDisabled = "Teastaíonn SMTP cumasaithe sna socruithe le haghaidh fógraí ríomhphoist."
+notifyOnly = "Seolfar ríomhphost gan an focal faire, ag cur in iúl don úsáideoir gur d’athraigh riarthóir é."
+submit = "Nuashonraigh an focal faire"
+success = "Nuashonraíodh an focal faire go rathúil"
+error = "Níor éirigh le focal faire a nuashonrú"
+
 [workspace.people.emailInvite]
 tab = "Cuireadh Ríomhphoist"
 description = "Clóscríobh nó greamaigh seoltaí ríomhphoist thíos, scartha le camóga. Gheobhaidh úsáideoirí dintiúir logála isteach trí r-phost."
@@ -5815,6 +5925,7 @@ subtitle = "Sínigh isteach le do chuntas Stirling"
 [setup.selfhosted]
 title = "Sínigh isteach chuig an bhFreastalaí"
 subtitle = "Cuir isteach dintiúir do fhreastalaí"
+link = "nó ceangail le cuntas féinóstáilte"
 
 [setup.server]
 title = "Ceangail leis an bhFreastalaí"
@@ -5833,6 +5944,14 @@ description = "Cuir isteach URL iomlán do fhreastalaí Stirling PDF féin-óst�
 emptyUrl = "Cuir isteach URL freastalaí le do thoil"
 unreachable = "Níorbh fhéidir ceangal leis an bhfreastalaí"
 testFailed = "Theip ar thástáil an cheangail"
+configFetch = "Níor éirigh le cumraíocht an fhreastalaí a fháil. Seiceáil an URL agus bain triail eile as."
+
+[setup.server.error.securityDisabled]
+title = "Níl an Logáil Isteach Cumasaithe"
+body = "Níl logáil isteach cumasaithe ar an bhfreastalaí seo. Chun ceangal leis an bhfreastalaí seo, ní mór duit fíordheimhniú a chumasú:"
+step1 = "Socraigh DOCKER_ENABLE_SECURITY=true i do thimpeallacht"
+step2 = "Nó socraigh security.enableLogin=true i settings.yml"
+step3 = "Atosaigh an freastalaí"
 
 [setup.login]
 title = "Sínigh Isteach"
@@ -5905,6 +6024,7 @@ earlyAccess = "Rochtain Luath"
 reset = "Athshocraigh Athruithe"
 downloadJson = "Íoslódáil JSON"
 generatePdf = "Gin PDF"
+saveChanges = "Sábháil Athruithe"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
@@ -5942,6 +6062,8 @@ alpha = "Tá an t-amharcóir alfa seo fós ag forbairt — d’fhéadfadh clónn
 [pdfTextEditor.empty]
 title = "Níl aon cháipéis luchtaithe"
 subtitle = "Luchtaigh comhad PDF nó JSON chun eagarthóireacht ar ábhar téacs a thosú."
+dropzone = "Tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
+dropzoneWithFiles = "Roghnaigh comhad ón gcluaisín Comhaid, nó tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
 
 [pdfTextEditor.welcomeBanner]
 title = "Fáilte go dtí Eagarthóir Téacs PDF (Rochtain Luath)"

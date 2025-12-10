@@ -578,6 +578,16 @@ public class ApplicationProperties {
         private String username;
         @ToString.Exclude private String password;
         private String from;
+        // STARTTLS upgrades a plain SMTP connection to TLS after connecting (RFC 3207)
+        private Boolean startTlsEnable = true;
+        private Boolean startTlsRequired;
+        // SSL/TLS wrapper for implicit TLS (typically port 465)
+        private Boolean sslEnable;
+        // Hostnames or patterns (e.g., "smtp.example.com" or "*") to trust for TLS certificates;
+        // defaults to "*" (trust all) when not set
+        private String sslTrust;
+        // Enables hostname verification for TLS connections
+        private Boolean sslCheckServerIdentity;
     }
 
     @Data
