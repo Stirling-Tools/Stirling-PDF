@@ -8,10 +8,15 @@ import AuditEventsTable from '@app/components/shared/config/configSections/audit
 import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRequiredBanner';
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
+  const { config } = useAppConfig();
+  const runningEE = config?.runningEE ?? false;
+  const showDemoData = !loginEnabled || !runningEE;
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +35,11 @@ const AdminAuditSection: React.FC = () => {
       }
     };
 
-    if (loginEnabled) {
+    if (!showDemoData) {
       fetchSystemStatus();
     } else {
-      // Provide example audit system status when login is disabled
+      // Provide example audit system status when running in demo mode
+      setError(null);
       setSystemStatus({
         enabled: true,
         level: 'INFO',
@@ -42,10 +48,10 @@ const AdminAuditSection: React.FC = () => {
       });
       setLoading(false);
     }
-  }, [loginEnabled]);
+  }, [loginEnabled, showDemoData]);
 
-  // Override loading state when login is disabled
-  const actualLoading = loginEnabled ? loading : false;
+  // Override loading state when showing demo data
+  const actualLoading = showDemoData ? false : loading;
 
   if (actualLoading) {
     return (
@@ -74,6 +80,10 @@ const AdminAuditSection: React.FC = () => {
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
+      <EnterpriseRequiredBanner
+        show={!runningEE}
+        featureName={t('settings.licensingAnalytics.audit', 'Audit')}
+      />
       <AuditSystemStatus status={systemStatus} />
 
       {systemStatus.enabled ? (
