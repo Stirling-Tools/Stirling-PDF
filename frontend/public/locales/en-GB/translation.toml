@@ -435,6 +435,24 @@ latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Keyboard Shortcuts"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
@@ -493,6 +511,10 @@ oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -5070,6 +5092,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
