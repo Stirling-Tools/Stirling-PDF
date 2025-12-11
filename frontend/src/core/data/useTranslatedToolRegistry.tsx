@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
+import { devApiLink } from "@app/constants/links";
 import SplitPdfPanel from "@app/tools/Split";
 import CompressPdfPanel from "@app/tools/Compress";
 import OCRPanel from "@app/tools/OCR";
@@ -784,7 +785,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devApi.desc", "Link to API documentation"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
+        link: devApiLink,
         synonyms: getSynonyms(t, "devApi"),
         supportsAutomate: false,
         automationSettings: null

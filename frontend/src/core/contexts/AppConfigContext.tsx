@@ -20,6 +20,7 @@ export interface AppConfig {
   serverPort?: number;
   appNameNavbar?: string;
   languages?: string[];
+  defaultLocale?: string;
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
   enableEmailInvites?: boolean;

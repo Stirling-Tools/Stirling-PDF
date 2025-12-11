@@ -53,16 +53,15 @@ const FitText: React.FC<FitTextProps> = ({
   const clampStyles: CSSProperties = {
     // Multi-line clamp with ellipsis fallback
     whiteSpace: lines === 1 ? 'nowrap' : 'normal',
-    overflow: 'visible',
+    overflow: 'hidden',
     textOverflow: 'ellipsis',
-    display: lines > 1 ? ('-webkit-box' as any) : undefined,
-    WebkitBoxOrient: lines > 1 ? ('vertical' as any) : undefined,
-    WebkitLineClamp: lines > 1 ? (lines as any) : undefined,
-    lineClamp: lines > 1 ? (lines as any) : undefined,
-    // Favor shrinking over breaking words; only break at natural spaces or softBreakChars
-    wordBreak: lines > 1 ? ('keep-all' as any) : ('normal' as any),
-    overflowWrap: 'normal',
-    hyphens: 'manual',
+    display: lines > 1 ? '-webkit-box' : undefined,
+    WebkitBoxOrient: lines > 1 ? 'vertical' : undefined,
+    WebkitLineClamp: lines > 1 ? lines : undefined,
+    // Favor breaking words when necessary to prevent overflow
+    wordBreak: lines > 1 ? 'break-word' : 'normal',
+    overflowWrap: lines > 1 ? 'break-word' : 'normal',
+    hyphens: lines > 1 ? 'auto' : 'manual',
     // fontSize expects rem values (e.g., 1.2, 0.9) to scale with global font size
     fontSize: fontSize ? `${fontSize}rem` : undefined,
   };
