@@ -256,10 +256,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
         (children.props as any)?.onBlur?.(e);
         return;
       }
+      clearTimers();
       if (!isPinned) setOpen(false);
       (children.props as any)?.onBlur?.(e);
     },
-    [isPinned, setOpen, children.props]
+    [isPinned, setOpen, children.props, clearTimers]
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
