@@ -435,6 +435,7 @@ public class ApplicationProperties {
                 private GoogleProvider google = new GoogleProvider();
                 private GitHubProvider github = new GitHubProvider();
                 private KeycloakProvider keycloak = new KeycloakProvider();
+                private String endSessionEndpoint;
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
                     return switch (registrationId.toLowerCase(Locale.ROOT)) {
