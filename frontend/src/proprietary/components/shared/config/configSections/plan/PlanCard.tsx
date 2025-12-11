@@ -6,6 +6,7 @@ import { PricingBadge } from '@app/components/shared/stripeCheckout/components/P
 import { PriceDisplay } from '@app/components/shared/stripeCheckout/components/PriceDisplay';
 import { calculateDisplayPricing } from '@app/components/shared/stripeCheckout/utils/pricingUtils';
 import { getBaseCardStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
+import { isEnterpriseBlockedForFree as checkIsEnterpriseBlockedForFree } from '@app/utils/planTierUtils';
 
 interface PlanCardProps {
   planGroup: PlanTierGroup;
@@ -83,7 +84,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
   const isEnterprise = planGroup.tier === 'enterprise';
 
   // Block enterprise for free tier users (must have server first)
-  const isEnterpriseBlockedForFree = isEnterprise && currentTier === 'free';
+  const isEnterpriseBlockedForFree = checkIsEnterpriseBlockedForFree(currentTier, planGroup.tier);
 
   // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
   const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(
@@ -174,7 +175,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ planGroup, isCurrentTier, isDowngra
           withArrow
         >
           <Button
-            variant={isCurrentTier ? 'filled' : isDowngrade ? 'filled' : isEnterpriseBlockedForFree ? 'light' : 'filled'}
+            variant="filled"
             fullWidth
             onClick={() => isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup)}
             disabled={!loginEnabled || isDowngrade || isEnterpriseBlockedForFree}
