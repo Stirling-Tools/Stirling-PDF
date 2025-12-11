@@ -116,25 +116,6 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     return () => clearInterval(interval);
   }, [visible, searchResults, searchActiveIndex, searchQuery]);
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      // If query is empty, clear the search
-      handleClearSearch();
-      return;
-    }
-
-    if (query.trim() && searchActions) {
-      setIsSearching(true);
-      try {
-        await searchActions.search(query.trim());
-      } catch (error) {
-        console.error('Search failed:', error);
-      } finally {
-        setIsSearching(false);
-      }
-    }
-  };
-
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       // Navigate to next result on Enter
