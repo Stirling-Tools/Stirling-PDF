@@ -163,6 +163,11 @@ unfavorite = "Seçilmişlərdən çıxar"
 fullscreen = "Tam ekran rejiminə keç"
 sidebar = "Yan panel rejiminə keç"
 
+[backendStartup]
+notFoundTitle = "Backend tapılmadı"
+retry = "Yenidən cəhd et"
+unreachable = "Tətbiq hazırda backend-ə qoşula bilmir. Backend-in vəziyyətini və şəbəkə bağlantısını yoxlayın, sonra yenidən cəhd edin."
+
 [zipWarning]
 title = "Böyük ZIP faylı"
 message = "Bu ZIP {{count}} fayl ehtiva edir. Yenə də çıxarılsın?"
@@ -914,7 +919,7 @@ title = "Üst-Üstə Qoy"
 
 [home.pdfTextEditor]
 title = "PDF Mətn Redaktoru"
-desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
+desc = "PDF-lərin içindəki mövcud mətn və şəkilləri redaktə edin"
 
 [home.addText]
 tags = "mətn,şərh,etiket"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Çəkilmiş imza"
 defaultImageLabel = "Yüklənmiş imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzanı saxla"
+savePersonal = "Şəxsi yadda saxla"
+saveShared = "Paylaşılanı yadda saxla"
 saveUnavailable = "Saxlamaq üçün əvvəlcə imza yaradın."
 noChanges = "Cari imza artıq saxlanıb."
+tempStorageTitle = "Müvəqqəti brauzer yaddaşı"
+tempStorageDescription = "İmzalar yalnız brauzerinizdə saxlanılır. Brauzer məlumatlarını təmizləsəniz və ya brauzer dəyişsəniz, itəcək."
+personalHeading = "Şəxsi imzalar"
+sharedHeading = "Paylaşılan imzalar"
+personalDescription = "Bu imzaları yalnız siz görə bilirsiniz."
+sharedDescription = "Bütün istifadəçilər bu imzaları görə və istifadə edə bilərlər."
 
 [sign.saved.type]
 canvas = "Rəsm"
@@ -3023,6 +3036,91 @@ title = "PDF Barəsində Məlumat Əldə Et"
 header = "PDF Barəsində Məlumat Əldə Et"
 submit = "Məlumat Əldə Et"
 downloadJson = "JSON yüklə"
+processing = "Məlumat çıxarılır..."
+results = "Nəticələr"
+noResults = "Hesabat yaratmaq üçün aləti işə salın."
+downloads = "Yükləmələr"
+noneDetected = "Heç nə aşkar edilmədi"
+indexTitle = "İndeks"
+
+[getPdfInfo.report]
+entryLabel = "Tam məlumat xülasəsi"
+shortTitle = "PDF Məlumatı"
+
+[getPdfInfo.sections]
+metadata = "Metaməlumat"
+formFields = "Forma sahələri"
+basicInfo = "Əsas Məlumat"
+documentInfo = "Sənəd Məlumatı"
+compliance = "Uyğunluq"
+encryption = "Şifrələmə"
+permissions = "İcazələr"
+other = "Digər"
+perPageInfo = "Hər səhifə üzrə məlumat"
+tableOfContents = "Mündəricat"
+
+[getPdfInfo.other]
+attachments = "Əlavələr"
+embeddedFiles = "Gömülü fayllar"
+javaScript = "JavaScript"
+layers = "Qatlar"
+structureTree = "Struktur ağacı"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Ölçü"
+annotations = "Annotasiyalar"
+images = "Şəkillər"
+links = "Keçidlər"
+fonts = "Şriftlər"
+xobjects = "XObject sayları"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Səhifələr"
+fileSize = "Fayl Ölçüsü"
+pdfVersion = "PDF Versiyası"
+language = "Dil"
+title = "PDF Xülasəsi"
+author = "Müəllif"
+created = "Yaradılıb"
+modified = "Dəyişdirilib"
+permsAll = "Bütün icazələr verilib"
+permsRestricted = "{{count}} məhdudiyyət"
+permsMixed = "Bəzi icazələr məhdudlaşdırılıb"
+hasCompliance = "Uyğunluq standartları mövcuddur"
+noCompliance = "Uyğunluq standartları yoxdur"
+basic = "Əsas Məlumat"
+documentInfo = "Sənəd Məlumatı"
+securityTitle = "Təhlükəsizlik Vəziyyəti"
+technical = "Texniki"
+overviewTitle = "PDF İcmalı"
+
+[getPdfInfo.summary.security]
+encrypted = "Şifrələnmiş PDF - Parol ilə qorunur"
+unencrypted = "Şifrələnməmiş PDF - Parol qorunması yoxdur"
+
+[getPdfInfo.summary.tech]
+images = "Şəkillər"
+fonts = "Şriftlər"
+formFields = "Forma sahələri"
+embeddedFiles = "Gömülü fayllar"
+javaScript = "JavaScript"
+layers = "Qatlar"
+bookmarks = "Əlfəcinlər"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "adsız sənəd"
+unknown = "Naməlum müəllif"
+text = "Bu, {{author}} tərəfindən yaradılmış, {{title}} adlı, {{pages}} səhifəlik PDF-dir (PDF versiyası {{version}})."
+
+[getPdfInfo.error]
+partial = "Bəzi faylları emal etmək mümkün olmadı."
+unexpected = "Çıxarılma zamanı gözlənilməz xəta baş verdi."
+
+[getPdfInfo.status]
+complete = "Çıxarılma tamamlandı"
 
 [extractPage]
 tags = "çıxar"
@@ -3441,6 +3539,9 @@ signinTitle = "Zəhmət olmasa, daxil olun"
 ssoSignIn = "Single Sign-on vasitəsilə daxil olun"
 oAuth2AutoCreateDisabled = "OAUTH2 Auto-Create İstifadəçisi Deaktivləşdirilmişdir"
 oAuth2AdminBlockedUser = "Qeydiyyatdan keçməmiş istifadəçilərin qeydiyyatı və daxil olması hal-hazırda bloklanmışdır. Zəhmət olmasa, administratorla əlaqə saxlayın."
+oAuth2RequiresLicense = "OAuth/SSO ilə giriş üçün ödənişli lisenziya (Server və ya Enterprise) tələb olunur. Planınızı yüksəltmək üçün administratorla əlaqə saxlayın."
+saml2RequiresLicense = "SAML ilə giriş üçün ödənişli lisenziya (Server və ya Enterprise) tələb olunur. Planınızı yüksəltmək üçün administratorla əlaqə saxlayın."
+maxUsersReached = "Mövcud lisenziyanız üçün maksimum istifadəçi sayına çatılıb. Planınızı yüksəltmək və ya əlavə yerlər əlavə etmək üçün administratorla əlaqə saxlayın."
 oauth2RequestNotFound = "Təsdiqlənmə sorğusu tapılmadı"
 oauth2InvalidUserInfoResponse = "Yanlış İstifadəçi Məlumatı Cavabı"
 oauth2invalidRequest = "Etibarsız Sorğu"
@@ -3849,14 +3950,17 @@ fitToWidth = "Eninə sığdır"
 actualSize = "Həqiqi ölçü"
 
 [viewer]
+cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
+dualPageView = "İki Səhifə Görünüşü"
 firstPage = "Birinci səhifə"
 lastPage = "Son səhifə"
-previousPage = "Əvvəlki səhifə"
 nextPage = "Növbəti səhifə"
+onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
+previousPage = "Əvvəlki səhifə"
+singlePageView = "Tək Səhifə Görünüşü"
+unknownFile = "Naməlum fayl"
 zoomIn = "Böyüt"
 zoomOut = "Kiçilt"
-singlePageView = "Tək Səhifə Görünüşü"
-dualPageView = "İki Səhifə Görünüşü"
 
 [rightRail]
 closeSelected = "Seçilmiş faylları bağla"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Yan paneli aç/bağla"
 exportSelected = "Seçilmiş səhifələri ixrac et"
 toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
 annotationMode = "Annotasiya rejimini dəyiş"
+print = "PDF-i çap et"
 draw = "Rəsm çək"
 save = "Yadda saxla"
 saveChanges = "Dəyişiklikləri yadda saxla"
@@ -4410,7 +4515,7 @@ description = "Daha geniş sistem müvəqqəti qovluğunu təmizləyib-təmizlə
 label = "Proses İcraedicisi Limitləri"
 description = "Hər icraedici üçün sessiya limitlərini və taym-outları konfiqurasiya edin"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF to HTML"
+pdfToHtml = "PDF-dən HTML-ə"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4497,6 +4602,7 @@ description = "Impressum üçün URL və ya fayl adı (bəzi yurisdiksiyalarda t
 title = "Premium və Enterprise"
 description = "Premium və ya enterprise lisenziya açarınızı konfiqurasiya edin."
 license = "Lisenziya Konfiqurasiyası"
+noInput = "Zəhmət olmasa lisenziya açarı və ya fayl təqdim edin"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisenziya açarınız və ya sertifikat faylınız var?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Xəbərdarlıq: Mövcud lisenziya aşkarlandı"
 line1 = "Cari lisenziya açarının üzərinə yazmaq geri alına bilməz."
 line2 = "Ehtiyat nüsxəsi yoxdursa, əvvəlki lisenziyanız birdəfəlik itəcək."
 line3 = "Vacibdir: Lisenziya açarlarını məxfi və təhlükəsiz saxlayın. Heç vaxt onları ictimai paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisenziya açarı"
+file = "Sertifikat faylı"
+
+[admin.settings.premium.file]
+label = "Lisenziya sertifikat faylı"
+description = "Oflayn alışdan əldə etdiyiniz .lic və ya .cert lisenziya faylını yükləyin"
+choose = "Lisenziya faylını seçin"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisenziya faylı uğurla yüklənib və aktivləşdirilib. Yenidən başlatmağa ehtiyac yoxdur."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv lisenziya"
+file = "Mənbə: Lisenziya faylı ({{path}})"
+key = "Mənbə: Lisenziya açarı"
+type = "Növ: {{type}}"
+noInput = "Zəhmət olmasa lisenziya açarı verin və ya sertifikat faylı yükləyin"
+success = "Uğurlu"
 
 [admin.settings.premium.enabled]
 label = "Premium Xüsusiyyətlərini aktiv et"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} seçildi"
 download = "Endir"
 delete = "Sil"
 unsupported = "Dəstəklənmir"
+active = "Aktiv"
 addToUpload = "Yükləməyə əlavə et"
+closeFile = "Faylı bağla"
 deleteAll = "Hamısını sil"
 loadingFiles = "Fayllar yüklənir..."
 noFiles = "Fayl mövcud deyil"
@@ -5135,7 +5262,7 @@ upgrade = "İndi yüksəlt →"
 freeTitle = "Server lisenziyası"
 overLimitTitle = "Server lisenziyası tələb olunur"
 overLimitBody = "Lisenziyalaşmamız hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Sizdə <strong>{{overLimitUserCopy}}</strong> Stirling istifadəçisi var. Fasiləsiz davam etmək üçün Stirling Server planına yüksəldin - <strong>limitsiz yerlər</strong>, PDF mətn redaktəsi və tam admin nəzarəti cəmi $99/server/ay."
-freeBody = "Bizim <strong>Open-Core</strong> lisenziyası hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslanmaq və yeni <strong>PDF mətn redaktəsi alətimizə</strong> erkən çıxış əldə etmək üçün Stirling Server planını tövsiyə edirik — tam redaktə və <strong>limitsiz yerlər</strong> $99/server/ay."
+freeBody = "Bizim <strong>Open-Core</strong> lisenziyalaşdırmamız hər server üçün pulsuz olaraq ən çox <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslama üçün Stirling Server planını tövsiyə edirik - <strong>limitsiz yerlər</strong> və <strong>SSO dəstəyi</strong> $99/server/ay."
 
 [onboarding.desktopInstall]
 title = "Yüklə"
@@ -5240,6 +5367,31 @@ error = "İstifadəçi statusunu yeniləmək alınmadı"
 success = "İstifadəçi uğurla silindi"
 error = "İstifadəçini silmək alınmadı"
 
+[workspace.people.changePassword]
+action = "Parolu dəyiş"
+title = "Parolu dəyiş"
+subtitle = "Aşağıdakı istifadəçi üçün parolu yeniləyin"
+newPassword = "Yeni parol"
+confirmPassword = "Parolu təsdiq edin"
+placeholder = "Yeni parolu daxil edin"
+confirmPlaceholder = "Yeni parolu yenidən daxil edin"
+passwordRequired = "Zəhmət olmasa yeni parolu daxil edin"
+passwordMismatch = "Parollar uyğun gəlmir"
+generateRandom = "Təhlükəsiz parol yaradın"
+generatedPreview = "Yaradılmış parol:"
+copyTooltip = "Buferə kopyala"
+copiedToClipboard = "Parol buferə kopyalandı"
+copyFailed = "Parolu kopyalamaq alınmadı"
+sendEmail = "Bu dəyişiklik barədə istifadəçiyə e-poçt göndərin"
+includePassword = "E-poçta yeni parolu daxil edin"
+forcePasswordChange = "Növbəti girişdə istifadəçini parolu dəyişməyə məcbur et"
+emailUnavailable = "Bu istifadəçinin e-poçtu etibarlı e-poçt ünvanı deyil. Bildirişlər söndürülüb."
+smtpDisabled = "E-poçt bildirişləri üçün parametrlərdə SMTP aktiv olmalıdır."
+notifyOnly = "Parol olmadan e-poçt göndəriləcək; istifadəçiyə adminin onu dəyişdiyi bildiriləcək."
+submit = "Parolu yenilə"
+success = "Parol uğurla yeniləndi"
+error = "Parolu yeniləmək alınmadı"
+
 [workspace.people.emailInvite]
 tab = "E-poçt Dəvəti"
 description = "Aşağıya vergüllə ayrılmış e-poçtları yazın və ya yapışdırın. İstifadəçilərə giriş məlumatları e-poçtla göndəriləcək."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Ən azı bir e-poçt ünvanı tələb olunur"
 submit = "Dəvətnamələri göndər"
 success = "istifadəçi(lər) uğurla dəvət olundu"
-partialSuccess = "Bəzi dəvətnamələr alınmadı"
+partialFailure = "Bəzi dəvətlər uğursuz oldu"
 allFailed = "İstifadəçiləri dəvət etmək alınmadı"
 error = "Dəvətnamələri göndərmək alınmadı"
 
@@ -5291,8 +5443,8 @@ emailDisabled = "E-poçt dəvətləri üçün ayarlarda SMTP konfiqurasiyası v�
 [workspace.people.license]
 users = "istifadəçi"
 availableSlots = "Mövcud yerlər"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
+grandfathered = "Əvvəlki şərtlərlə"
+grandfatheredShort = "{{count}} əvvəlki şərtlərlə"
 fromLicense = "lisenziyadan"
 slotsAvailable = "{{count}} istifadəçi yeri mövcuddur"
 noSlotsAvailable = "Mövcud yer yoxdur"
@@ -5773,6 +5925,7 @@ subtitle = "Stirling hesabınızla daxil olun"
 [setup.selfhosted]
 title = "Serverə daxil olun"
 subtitle = "Server məlumatlarınızı daxil edin"
+link = "və ya self-hosted hesaba qoşulun"
 
 [setup.server]
 title = "Serverə qoşulun"
@@ -5791,6 +5944,14 @@ description = "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
 emptyUrl = "Zəhmət olmasa server URL-i daxil edin"
 unreachable = "Serverə qoşulmaq mümkün olmadı"
 testFailed = "Bağlantı testi uğursuz oldu"
+configFetch = "Server konfiqurasiyasını əldə etmək mümkün olmadı. URL-i yoxlayın və yenidən cəhd edin."
+
+[setup.server.error.securityDisabled]
+title = "Giriş aktiv deyil"
+body = "Bu serverdə giriş aktiv deyil. Bu serverə qoşulmaq üçün autentifikasiya aktiv edilməlidir:"
+step1 = "Mühitinizdə DOCKER_ENABLE_SECURITY=true təyin edin"
+step2 = "Yaxud settings.yml faylında security.enableLogin=true təyin edin"
+step3 = "Serveri yenidən başladın"
 
 [setup.login]
 title = "Daxil ol"
@@ -5800,6 +5961,13 @@ submit = "Daxil ol"
 signInWith = "Bununla daxil ol"
 oauthPending = "Təsdiqləmə üçün brauzer açılır..."
 orContinueWith = "Və ya e-poçt ilə davam edin"
+serverRequirement = "Qeyd: Serverdə giriş funksiyası aktiv olmalıdır."
+showInstructions = "Necə aktivləşdirmək olar?"
+hideInstructions = "Təlimatları gizlət"
+instructions = "Stirling PDF serverinizdə girişi aktivləşdirmək üçün:"
+instructionsEnvVar = "Mühit dəyişənini təyin edin:"
+instructionsOrYml = "Və ya settings.yml faylında:"
+instructionsRestart = "Dəyişikliklərin qüvvəyə minməsi üçün serveri yenidən başladın."
 
 [setup.login.username]
 label = "İstifadəçi adı"
@@ -5856,6 +6024,7 @@ earlyAccess = "Erkən Giriş"
 reset = "Dəyişiklikləri sıfırla"
 downloadJson = "JSON-u endir"
 generatePdf = "PDF yarat"
+saveChanges = "Dəyişiklikləri yadda saxla"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Mətni avtomatik miqyasla"
@@ -5893,6 +6062,8 @@ alpha = "Bu alfa görüntüləyici hələ inkişaf edir—bəzi şriftlər, rən
 [pdfTextEditor.empty]
 title = "Sənəd yüklənməyib"
 subtitle = "Mətn məzmununu redaktə etməyə başlamaq üçün PDF və ya JSON faylı yükləyin."
+dropzone = "Buraya PDF və ya JSON faylını sürükləyib buraxın və ya baxmaq üçün klikləyin"
+dropzoneWithFiles = "Fayllar vərəqindən bir fayl seçin və ya buraya PDF və ya JSON faylını sürükləyib buraxın, yaxud baxmaq üçün klikləyin"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Text Editor-ə xoş gəldiniz (Erkən Giriş)"

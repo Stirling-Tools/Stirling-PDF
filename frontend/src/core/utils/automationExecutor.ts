@@ -1,4 +1,4 @@
-import axios from 'axios';
+import apiClient from '@app/services/apiClient';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
@@ -58,7 +58,7 @@ const executeApiRequest = async (
   filePrefix: string,
   preserveBackendFilename?: boolean
 ): Promise<File[]> => {
-  const response = await axios.post(endpoint, formData, {
+  const response = await apiClient.post(endpoint, formData, {
     responseType: 'blob',
     timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
   });
@@ -158,8 +158,8 @@ export const executeToolOperationWithPrefix = async (
   try {
     // Check if tool uses custom processor (like Convert tool)
     if (config.customProcessor) {
-      const resultFiles = await config.customProcessor(parameters, files);
-      return resultFiles;
+      const result = await config.customProcessor(parameters, files);
+      return result.files;
     }
 
     // Execute based on tool type
