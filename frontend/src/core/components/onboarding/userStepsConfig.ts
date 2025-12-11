@@ -8,12 +8,8 @@ export enum TourStep {
   FILES_BUTTON,
   FILE_SOURCES,
   WORKBENCH,
-  VIEW_SWITCHER,
-  VIEWER,
-  PAGE_EDITOR,
   ACTIVE_FILES,
   FILE_CHECKBOX,
-  SELECT_CONTROLS,
   CROP_SETTINGS,
   RUN_BUTTON,
   RESULTS,
@@ -28,10 +24,7 @@ interface UserStepActions {
   backToAllTools: () => void;
   selectCropTool: () => void;
   loadSampleFile: () => void;
-  switchToViewer: () => void;
-  switchToPageEditor: () => void;
   switchToActiveFiles: () => void;
-  selectFirstFile: () => void;
   pinFile: () => void;
   modifyCropSettings: () => void;
   executeTool: () => void;
@@ -43,17 +36,14 @@ interface CreateUserStepsConfigArgs {
   actions: UserStepActions;
 }
 
-export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs): Partial<Record<TourStep, StepType>> {
+export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs): Record<TourStep, StepType> {
   const {
     saveWorkbenchState,
     closeFilesModal,
     backToAllTools,
     selectCropTool,
     loadSampleFile,
-    switchToViewer: _switchToViewer,
-    switchToPageEditor: _switchToPageEditor,
     switchToActiveFiles,
-    selectFirstFile: _selectFirstFile,
     pinFile,
     modifyCropSettings,
     executeTool,
