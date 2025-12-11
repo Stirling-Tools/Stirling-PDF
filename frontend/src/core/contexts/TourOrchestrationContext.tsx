@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
+import { BASE_PATH } from '@app/constants/app';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
@@ -110,7 +111,7 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const loadSampleFile = useCallback(async () => {
     try {
-      const response = await fetch('samples/Sample.pdf');
+      const response = await fetch(`${BASE_PATH}/samples/Sample.pdf`);
       const blob = await response.blob();
       const file = new File([blob], 'Sample.pdf', { type: 'application/pdf' });
 
