@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -50,13 +49,7 @@ class PipelineProcessorTest {
         PipelineConfig config = new PipelineConfig();
         config.setOperations(List.of(op));
 
-        Resource file =
-                new ByteArrayResource("data".getBytes()) {
-                    @Override
-                    public String getFilename() {
-                        return "test.pdf";
-                    }
-                };
+        Resource file = new MyFileByteArrayResource();
 
         List<Resource> files = List.of(file);
 
@@ -77,5 +70,16 @@ class PipelineProcessorTest {
                 "Filter flag should be true when operation filters file");
         assertFalse(result.isHasErrors(), "No errors should occur");
         assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
+    }
+
+    private static class MyFileByteArrayResource extends ByteArrayResource {
+        public MyFileByteArrayResource() {
+            super("data".getBytes());
+        }
+
+        @Override
+        public String getFilename() {
+            return "test.pdf";
+        }
     }
 }

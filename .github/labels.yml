@@ -184,3 +184,6 @@
 - name: "codex"
   color: "ededed"
   description: "chatgpt AI generated code"
+- name: "break-change"
+  color: "FF0000"
+  description: "This PR introduces a breaking API change."

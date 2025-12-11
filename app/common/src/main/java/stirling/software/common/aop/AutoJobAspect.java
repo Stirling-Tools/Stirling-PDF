@@ -37,7 +37,7 @@ public class AutoJobAspect {
 
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
-            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
+            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) throws Exception {
         // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
@@ -81,6 +81,12 @@ public class AutoJobAspect {
                                     "AutoJobAspect caught exception during job execution: {}",
                                     ex.getMessage(),
                                     ex);
+                            // Rethrow RuntimeException as-is to preserve exception type
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            }
+                            // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                            // BaseAppException
                             throw new RuntimeException(ex);
                         }
                     },
@@ -109,7 +115,8 @@ public class AutoJobAspect {
             int maxRetries,
             boolean trackProgress,
             boolean queueable,
-            int resourceWeight) {
+            int resourceWeight)
+            throws Exception {
 
         // Keep jobId reference for progress tracking in TaskManager
         AtomicReference<String> jobIdRef = new AtomicReference<>();
@@ -207,6 +214,12 @@ public class AutoJobAspect {
 
                     // If we get here, all retries failed
                     if (lastException != null) {
+                        // Rethrow RuntimeException as-is to preserve exception type
+                        if (lastException instanceof RuntimeException) {
+                            throw (RuntimeException) lastException;
+                        }
+                        // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                        // BaseAppException
                         throw new RuntimeException(
                                 "Job failed after "
                                         + maxRetries

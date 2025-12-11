@@ -1,8 +1,6 @@
 package stirling.software.common.util.misc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -33,22 +31,9 @@ import stirling.software.common.model.api.misc.ReplaceAndInvert;
 class InvertFullColorStrategyTest {
 
     private InvertFullColorStrategy strategy;
-    private MultipartFile mockPdfFile;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        // Create a simple PDF document for testing
-        byte[] pdfBytes = createSimplePdfWithRectangle();
-        mockPdfFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        // Create the strategy instance
-        strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);
-    }
 
     /** Helper method to create a simple PDF with a colored rectangle for testing */
-    private byte[] createSimplePdfWithRectangle() throws IOException {
+    private static byte[] createSimplePdfWithRectangle() throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
         document.addPage(page);
@@ -66,6 +51,18 @@ class InvertFullColorStrategyTest {
         document.close();
 
         return baos.toByteArray();
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        // Create a simple PDF document for testing
+        byte[] pdfBytes = createSimplePdfWithRectangle();
+        MultipartFile mockPdfFile =
+                new MockMultipartFile(
+                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        // Create the strategy instance
+        strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);
     }
 
     @Test

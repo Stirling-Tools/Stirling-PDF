@@ -24,7 +24,20 @@
                 <div class="form-check ms-3">
                   <input id="flattenOnlyForms" name="flattenOnlyForms" type="checkbox">
                   <label for="flattenOnlyForms" th:text="#{flatten.flattenOnlyForms}" ></label>
-                </div>         
+                </div>
+                <div class="form-group ms-3 mt-2">
+                  <label class="form-label" for="renderDpi" th:text="#{flatten.renderDpi}"></label>
+                  <input
+                    class="form-control"
+                    id="renderDpi"
+                    min="72"
+                    name="renderDpi"
+                    step="1"
+                    th:attr="aria-describedby=${'renderDpiHelp'}"
+                    type="number"
+                  >
+                  <small class="form-text text-muted" id="renderDpiHelp" th:text="#{flatten.renderDpi.help}"></small>
+                </div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{flatten.submit}"></button>
               </form>

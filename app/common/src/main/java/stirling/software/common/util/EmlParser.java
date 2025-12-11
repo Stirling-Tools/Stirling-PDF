@@ -11,6 +11,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -229,7 +230,8 @@ public class EmlParser {
                 Method getContentType = message.getClass().getMethod("getContentType");
                 String contentType = (String) getContentType.invoke(message);
 
-                if (contentType != null && contentType.toLowerCase().contains(TEXT_HTML)) {
+                if (contentType != null
+                        && contentType.toLowerCase(Locale.ROOT).contains(TEXT_HTML)) {
                     content.setHtmlBody(stringContent);
                 } else {
                     content.setTextBody(stringContent);
@@ -296,7 +298,7 @@ public class EmlParser {
             String contentType = (String) getContentType.invoke(part);
 
             String normalizedDisposition =
-                    disposition != null ? ((String) disposition).toLowerCase() : null;
+                    disposition != null ? ((String) disposition).toLowerCase(Locale.ROOT) : null;
 
             if ((Boolean) isMimeType.invoke(part, TEXT_PLAIN) && normalizedDisposition == null) {
                 Object partContent = getContent.invoke(part);
@@ -422,7 +424,7 @@ public class EmlParser {
                     RegexPatternUtils.getInstance().getNewlineSplitPattern().split(emlContent);
             for (int i = 0; i < lines.length; i++) {
                 String line = lines[i];
-                if (line.toLowerCase().startsWith(headerName.toLowerCase())) {
+                if (line.toLowerCase(Locale.ROOT).startsWith(headerName.toLowerCase(Locale.ROOT))) {
                     StringBuilder value =
                             new StringBuilder(line.substring(headerName.length()).trim());
                     for (int j = i + 1; j < lines.length; j++) {
@@ -444,7 +446,7 @@ public class EmlParser {
 
     private static String extractHtmlBody(String emlContent) {
         try {
-            String lowerContent = emlContent.toLowerCase();
+            String lowerContent = emlContent.toLowerCase(Locale.ROOT);
             int htmlStart = lowerContent.indexOf(HEADER_CONTENT_TYPE + " " + TEXT_HTML);
             if (htmlStart == -1) return null;
 
@@ -463,7 +465,7 @@ public class EmlParser {
 
     private static String extractTextBody(String emlContent) {
         try {
-            String lowerContent = emlContent.toLowerCase();
+            String lowerContent = emlContent.toLowerCase(Locale.ROOT);
             int textStart = lowerContent.indexOf(HEADER_CONTENT_TYPE + " " + TEXT_PLAIN);
             if (textStart == -1) {
                 int bodyStart = emlContent.indexOf("\r\n\r\n");
@@ -516,7 +518,7 @@ public class EmlParser {
             String currentEncoding = "";
 
             for (String line : lines) {
-                String lowerLine = line.toLowerCase().trim();
+                String lowerLine = line.toLowerCase(Locale.ROOT).trim();
 
                 if (line.trim().isEmpty()) {
                     inHeaders = false;
@@ -554,9 +556,12 @@ public class EmlParser {
     }
 
     private static boolean isAttachment(String disposition, String filename, String contentType) {
-        return (disposition.toLowerCase().contains(DISPOSITION_ATTACHMENT) && !filename.isEmpty())
-                || (!filename.isEmpty() && !contentType.toLowerCase().startsWith("text/"))
-                || (contentType.toLowerCase().contains("application/") && !filename.isEmpty());
+        return (disposition.toLowerCase(Locale.ROOT).contains(DISPOSITION_ATTACHMENT)
+                        && !filename.isEmpty())
+                || (!filename.isEmpty()
+                        && !contentType.toLowerCase(Locale.ROOT).startsWith("text/"))
+                || (contentType.toLowerCase(Locale.ROOT).contains("application/")
+                        && !filename.isEmpty());
     }
 
     private static String extractFilenameFromDisposition(String disposition) {
@@ -565,8 +570,8 @@ public class EmlParser {
         }
 
         // Handle filename*= (RFC 2231 encoded filename)
-        if (disposition.toLowerCase().contains("filename*=")) {
-            int filenameStarStart = disposition.toLowerCase().indexOf("filename*=") + 10;
+        if (disposition.toLowerCase(Locale.ROOT).contains("filename*=")) {
+            int filenameStarStart = disposition.toLowerCase(Locale.ROOT).indexOf("filename*=") + 10;
             int filenameStarEnd = disposition.indexOf(";", filenameStarStart);
             if (filenameStarEnd == -1) filenameStarEnd = disposition.length();
             String extendedFilename =
@@ -586,7 +591,7 @@ public class EmlParser {
         }
 
         // Handle regular filename=
-        int filenameStart = disposition.toLowerCase().indexOf("filename=") + 9;
+        int filenameStart = disposition.toLowerCase(Locale.ROOT).indexOf("filename=") + 9;
         int filenameEnd = disposition.indexOf(";", filenameStart);
         if (filenameEnd == -1) filenameEnd = disposition.length();
         String filename = disposition.substring(filenameStart, filenameEnd).trim();

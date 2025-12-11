@@ -96,7 +96,7 @@ public class OpenApiConfig {
 
         Components components = new Components().addSchemas("ErrorResponse", errorResponseSchema);
 
-        if (!applicationProperties.getSecurity().getEnableLogin()) {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
             return openAPI.components(components);
         } else {
             SecurityScheme apiKeyScheme =

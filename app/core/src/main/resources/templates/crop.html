@@ -23,6 +23,12 @@
                 <input id="width" type="hidden" name="width">
                 <input id="height" type="hidden" name="height">
                 
+                <div class="form-check mb-3">
+                  <input id="autoCrop" name="autoCrop" type="checkbox">
+                  <label for="autoCrop" th:text="#{crop.autoCrop}"></label>
+                  <input name="autoCrop" type="hidden" value="false" />
+                </div>
+                
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{crop.submit}"></button>
               </form>
               <div id="canvasesContainer" style="position: relative; margin: 20px 0; width: auto;">

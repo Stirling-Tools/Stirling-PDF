@@ -11,6 +11,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.api.Email;
@@ -20,6 +21,7 @@ import stirling.software.proprietary.security.model.api.Email;
  * JavaMailSender to send the email and is designed to handle both the message content and file
  * attachments.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
@@ -72,6 +74,40 @@ public class EmailService {
 
         // Sends the email via the configured mail sender
         mailSender.send(message);
+        log.debug(
+                "Email sent successfully to {} with subject: {} body: {}",
+                email.getTo(),
+                email.getSubject(),
+                email.getBody());
+    }
+
+    /**
+     * Sends a simple email without attachments asynchronously.
+     *
+     * @param to the recipient address
+     * @param subject subject line
+     * @param body message body
+     * @throws MessagingException if sending fails or address is invalid
+     */
+    @Async
+    public void sendSimpleMail(String to, String subject, String body) throws MessagingException {
+        if (to == null || to.trim().isEmpty()) {
+            throw new MessagingException("Invalid Addresses");
+        }
+
+        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, false);
+        helper.addTo(to);
+        helper.setSubject(subject);
+        helper.setText(body, false);
+        helper.setFrom(mailProperties.getFrom());
+        mailSender.send(message);
+        log.debug(
+                "Simple email sent successfully to {} with subject: {} body: {}",
+                to,
+                subject,
+                body);
     }
 
     /**

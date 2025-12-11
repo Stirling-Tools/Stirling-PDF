@@ -5,6 +5,7 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -173,8 +174,8 @@ public class ResourceMonitor {
                 log.info("System resource status changed from {} to {}", oldStatus, newStatus);
                 log.info(
                         "Current metrics - CPU: {}%, Memory: {}%, Free Memory: {} MB",
-                        String.format("%.1f", cpuUsage * 100),
-                        String.format("%.1f", memoryUsage * 100),
+                        String.format(Locale.ROOT, "%.1f", cpuUsage * 100),
+                        String.format(Locale.ROOT, "%.1f", memoryUsage * 100),
                         freeMemory / (1024 * 1024));
             }
         } catch (Exception e) {

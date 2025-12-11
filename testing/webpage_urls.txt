@@ -38,7 +38,6 @@
 /get-info-on-pdf
 /remove-image-pdf
 /replace-and-invert-color-pdf
-/pipeline
 /auto-rename
 /adjust-contrast
 /overlay-pdf

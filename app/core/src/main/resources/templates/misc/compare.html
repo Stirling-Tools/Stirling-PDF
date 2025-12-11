@@ -79,7 +79,7 @@
               </div>
             </div>
 
-            <button class="btn btn-primary" onclick="comparePDFs()" th:text="#{compare.submit}"></button>
+            <button class="btn btn-primary" id="compareBtn" onclick="comparePDFs(event)" th:text="#{compare.submit}"></button>
 
             <div class="row">
               <div class="col-md-6">
@@ -105,7 +105,8 @@
               result2.addEventListener('scroll', function () {
                 result1.scrollTop = result2.scrollTop;
               });
-              async function comparePDFs() {
+
+              async function comparePDFs(event) {
                 const file1 = document.getElementById("fileInput-input").files[0];
                 const file2 = document.getElementById("fileInput2-input").files[0];
                 var color1 = document.getElementById('color-box1').value;
@@ -113,137 +114,216 @@
 
                 const complexMessage = /*[[#{compare.complex.message}]]*/ 'One or both of the provided documents are large files, accuracy of comparison may be reduced';
                 const largeFilesMessage = /*[[#{compare.large.file.message}]]*/ 'One or Both of the provided documents are too large to process';
-                const noTextMessage = /*[[#{compare.no.text.message}]]*/ 'One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."';
+                const noTextMessage = /*[[#{compare.no.text.message}]]*/ 'One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.';
+                const invalidPdfMessage = /*[[#{compare.invalid.pdf.message}]]*/ 'One or both files are not valid PDFs. Please check and re-upload.';
+                const submitText = /*[[#{compare.submit}]]*/ 'Compare';
 
                 if (!file1 || !file2) {
-                  console.error("Please select two PDF files to compare");
+                  alert('Please select two PDF files to compare');
                   return;
                 }
 
-                pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-
-                const [pdf1, pdf2] = await Promise.all([
-                  pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,
-                  pdfjsLib.getDocument(URL.createObjectURL(file2)).promise
-                ]);
-
-                const extractText = async (pdf) => {
-                  const pages = [];
-                  for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    const strings = content.items.map(item => item.str);
-                    pages.push(strings.join(" "));
-                  }
-                  return pages.join(" ");
-                };
-
-                const [text1, text2] = await Promise.all([
-                  extractText(pdf1),
-                  extractText(pdf2)
-                ]);
-
-                if (text1.trim() === "" || text2.trim() === "") {
-                  alert(noTextMessage);
+                // Basic checks
+                if (file1.size === 0 || file2.size === 0) {
+                  alert('One or both files are empty.');
+                  return;
+                }
+                if (file1.size > 100 * 1024 * 1024 || file2.size > 100 * 1024 * 1024) {
+                  alert(largeFilesMessage);
                   return;
                 }
 
-                const resultDiv1 = document.getElementById("result1");
-                const resultDiv2 = document.getElementById("result2");
-                const loading = /*[[#{loading}]]*/ 'Loading...';
-
-                resultDiv1.innerHTML = loading;
-                resultDiv2.innerHTML = loading;
-
-                // Create a new Worker
-                const worker = new Worker('./js/compare/pdfWorker.js');
-
-
-                // Post messages to the worker
-                worker.postMessage({
-                  type: 'SET_COMPLEX_MESSAGE',
-                  message: complexMessage
-                });
-
-                worker.postMessage({
-                  type: 'SET_TOO_LARGE_MESSAGE',
-                  message: largeFilesMessage
-                });
-
-                // Error handling for the worker
-                worker.onerror = function (error) {
-                  console.error('Worker error:', error);
+                // PDF.js setup (Legacy-safe: Worker disabled)
+                const PDFJS_DEFAULT_OPTIONS = {
+                  cMapUrl: pdfjsPath + 'cmaps/',
+                  cMapPacked: true,
+                  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+                  disableWorker: true  // Avoids Legacy CMap errors without changing PDF.js
                 };
-                worker.onmessage = function (e) {
-                  const { status, differences, message } = e.data;
-                  if (status === 'error') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
 
-                    resultDiv1.innerHTML = '';
-                    resultDiv2.innerHTML = '';
-                    alert(message);
-                    return;
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Processing...';
+
+                try {
+                  // Load ArrayBuffer
+                  const [data1, data2] = await Promise.all([
+                    readFileAsArrayBuffer(file1),
+                    readFileAsArrayBuffer(file2)
+                  ]);
+
+                  // Header validation (prevents InvalidPDFException)
+                  await validatePdfHeader(data1, 'File 1');
+                  await validatePdfHeader(data2, 'File 2');
+
+                  // Load PDFs
+                  const [pdf1, pdf2] = await Promise.all([
+                    loadPdfWithErrorHandling({ ...PDFJS_DEFAULT_OPTIONS, data: data1 }, 'File 1'),
+                    loadPdfWithErrorHandling({ ...PDFJS_DEFAULT_OPTIONS, data: data2 }, 'File 2')
+                  ]);
+
+                  // Extract text
+                  result1.innerHTML = 'Extracting text from File 1...';
+                  result2.innerHTML = 'Extracting text from File 2...';
+                  const [text1, text2] = await Promise.all([
+                    extractText(pdf1, 'File 1', result1),
+                    extractText(pdf2, 'File 2', result2)
+                  ]);
+
+                  if (text1.trim() === "" || text2.trim() === "") {
+                    throw new Error(noTextMessage);
                   }
-                  if (status === 'success' && differences) {
-                    console.log('Differences:', differences);
-                    displayDifferences(differences);
-                  }
-                  if (event.data.status === 'warning') {
-                    console.warn(event.data.message);
-                    alert(event.data.message);
-                  }
-                };
 
-                worker.postMessage({ text1, text2, color1, color2 });
+                  // Worker diff
+                  await processWithWorker(text1, text2, color1, color2, complexMessage, largeFilesMessage);
 
-                const displayDifferences = (differences) => {
-                  const resultDiv1 = document.getElementById("result1");
-                  const resultDiv2 = document.getElementById("result2");
-                  resultDiv1.innerHTML = "";
-                  resultDiv2.innerHTML = "";
-
-                  differences.forEach(([color, word]) => {
-                    const span1 = document.createElement("span");
-                    const span2 = document.createElement("span");
-
-                    if (color === color2) {
-                      span1.style.color = "transparent";
-                      span1.style.userSelect = "none";
-                      span2.style.color = color;
-                    }
-                    // If it's a deletion, show it in  in the first document and transparent in the second
-                    else if (color === color1) {
-                      span1.style.color = color;
-                      span2.style.color = "transparent";
-                      span2.style.userSelect = "none";
-                    }
-                    // If it's unchanged, show it in black in both
-                    else {
-                      span1.style.color = color;
-                      span2.style.color = color;
-                    }
-
-                    span1.textContent = word;
-                    span2.textContent = word;
-                    resultDiv1.appendChild(span1);
-                    resultDiv2.appendChild(span2);
-
-                    // Add space after each word, or a new line if the word ends with a full stop
-                    const spaceOrNewline1 = document.createElement("span");
-                    const spaceOrNewline2 = document.createElement("span");
-                    if (word.endsWith(".")) {
-                      spaceOrNewline1.innerHTML = "<br>";
-                      spaceOrNewline2.innerHTML = "<br>";
-                    } else {
-                      spaceOrNewline1.textContent = " ";
-                      spaceOrNewline2.textContent = " ";
-                    }
-                    resultDiv1.appendChild(spaceOrNewline1);
-                    resultDiv2.appendChild(spaceOrNewline2);
-                  });
-                };
+                } catch (error) {
+                  console.error('Comparison failed:', error);
+                  alert(error.message || invalidPdfMessage);
+                  result1.innerHTML = '';
+                  result2.innerHTML = '';
+                } finally {
+                  button.disabled = false;
+                  button.textContent = submitText;
+                }
               }
 
+              // FileReader helper
+              function readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result);
+                  reader.onerror = reject;
+                  reader.readAsArrayBuffer(file);
+                });
+              }
 
+              // Header validation (PDF.js-specific, but client-side)
+              async function validatePdfHeader(data, fileName) {
+                const header = new Uint8Array(data.slice(0, 8));
+                const headerStr = String.fromCharCode(...header);
+                console.log(`${fileName} header:`, headerStr);
+                if (!headerStr.startsWith('%PDF-')) {
+                  throw new Error(`${fileName} is not a valid PDF (header: ${headerStr}).`);
+                }
+                if (data.byteLength < 100) {
+                  throw new Error(`${fileName} is too short.`);
+                }
+              }
+
+              // PDF loading with catch
+              function loadPdfWithErrorHandling(options, fileName) {
+                return pdfjsLib.getDocument(options).promise
+                  .then(pdf => {
+                    console.log(`${fileName} loaded: ${pdf.numPages} pages`);
+                    return pdf;
+                  })
+                  .catch(err => {
+                    console.error(`${fileName} load failed:`, err);
+                    if (err.name === 'InvalidPDFException') {
+                      throw new Error(`${fileName}: Invalid PDF structure. Re-upload.`);
+                    }
+                    throw err;
+                  });
+              }
+
+              // Text extraction
+              async function extractText(pdf, fileName, statusElement) {
+                const pages = [];
+                const totalPages = pdf.numPages;
+                for (let i = 1; i <= totalPages; i++) {
+                  const page = await pdf.getPage(i);
+                  const content = await page.getTextContent();
+                  const strings = content.items.map(item => item.str).join(' ');
+                  pages.push(strings);
+                  statusElement.innerHTML = `${fileName}: ${Math.round((i / totalPages) * 100)}%`;
+                }
+                return pages.join(' ');
+              }
+
+              // Worker processing
+              async function processWithWorker(text1, text2, color1, color2, complexMessage, largeFilesMessage) {
+                return new Promise((resolve, reject) => {
+                  const worker = new Worker('./js/compare/pdfWorker.js');
+                  const timeout = setTimeout(() => {
+                    worker.terminate();
+                    reject(new Error('Timeout: Files too complex.'));
+                  }, 30000);
+
+                  worker.postMessage({ type: 'SET_COMPLEX_MESSAGE', message: complexMessage });
+                  worker.postMessage({ type: 'SET_TOO_LARGE_MESSAGE', message: largeFilesMessage });
+
+                  worker.onerror = (error) => {
+                    clearTimeout(timeout);
+                    worker.terminate();
+                    reject(new Error('Worker error: ' + error.message));
+                  };
+
+                  worker.onmessage = (e) => {
+                    clearTimeout(timeout);
+                    const { status, differences, message } = e.data;
+                    if (status === 'error') {
+                      worker.terminate();
+                      reject(new Error(message));
+                      return;
+                    }
+                    if (status === 'warning') {
+                      alert(message);
+                    }
+                    if (status === 'success' && differences) {
+                      displayDifferences(differences, color1, color2);
+                      worker.terminate();
+                      resolve();
+                    }
+                  };
+
+                  worker.postMessage({ type: 'COMPARE', text1, text2, color1, color2 });
+                });
+              }
+
+              // Display differences
+              function displayDifferences(differences, color1, color2) {
+                const resultDiv1 = document.getElementById("result1");
+                const resultDiv2 = document.getElementById("result2");
+                resultDiv1.innerHTML = "";
+                resultDiv2.innerHTML = "";
+
+                differences.forEach(([color, word]) => {
+                  const span1 = document.createElement("span");
+                  const span2 = document.createElement("span");
+
+                  if (color === color2) {
+                    span1.style.color = "transparent";
+                    span1.style.userSelect = "none";
+                    span2.style.color = color;
+                  } else if (color === color1) {
+                    span1.style.color = color;
+                    span2.style.color = "transparent";
+                    span2.style.userSelect = "none";
+                  } else {
+                    span1.style.color = color || 'black';
+                    span2.style.color = color || 'black';
+                  }
+
+                  span1.textContent = word;
+                  span2.textContent = word;
+                  resultDiv1.appendChild(span1);
+                  resultDiv2.appendChild(span2);
+
+                  const spaceOrNewline1 = document.createElement("span");
+                  const spaceOrNewline2 = document.createElement("span");
+                  if (word.endsWith(".")) {
+                    spaceOrNewline1.innerHTML = "<br>";
+                    spaceOrNewline2.innerHTML = "<br>";
+                  } else {
+                    spaceOrNewline1.textContent = " ";
+                    spaceOrNewline2.textContent = " ";
+                  }
+                  resultDiv1.appendChild(spaceOrNewline1);
+                  resultDiv2.appendChild(spaceOrNewline2);
+                });
+              }
             </script>
           </div>
         </div>

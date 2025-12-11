@@ -83,4 +83,12 @@ class DatabaseConfigTest {
 
         assertThrows(UnsupportedProviderException.class, () -> databaseConfig.dataSource());
     }
+
+    @Test
+    void getDriverClassName_returnsH2Driver() throws Exception {
+        var m = DatabaseConfig.class.getDeclaredMethod("getDriverClassName", String.class);
+        m.setAccessible(true);
+        String driver = (String) m.invoke(databaseConfig, "h2");
+        assertEquals(org.springframework.boot.jdbc.DatabaseDriver.H2.getDriverClassName(), driver);
+    }
 }

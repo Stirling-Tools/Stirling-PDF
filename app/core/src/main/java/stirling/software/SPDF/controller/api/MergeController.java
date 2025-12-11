@@ -69,19 +69,29 @@ public class MergeController {
     // fileOrder is newline-delimited original filenames in the desired order.
     private static MultipartFile[] reorderFilesByProvidedOrder(
             MultipartFile[] files, String fileOrder) {
-        String[] desired = fileOrder.split("\n", -1);
+        // Split by various line endings and trim each entry
+        String[] desired =
+                stirling.software.common.util.RegexPatternUtils.getInstance()
+                        .getNewlineSplitPattern()
+                        .split(fileOrder);
+
         List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
         List<MultipartFile> ordered = new ArrayList<>(files.length);
 
         for (String name : desired) {
-            if (name == null || name.isEmpty()) continue;
+            name = name.trim();
+            if (name.isEmpty()) {
+                log.debug("Skipping empty entry");
+                continue;
+            }
             int idx = indexOfByOriginalFilename(remaining, name);
             if (idx >= 0) {
                 ordered.add(remaining.remove(idx));
+            } else {
+                log.debug("Filename from order list not found in uploaded files: {}", name);
             }
         }
 
-        // Append any files not explicitly listed, preserving their relative order
         ordered.addAll(remaining);
         return ordered.toArray(new MultipartFile[0]);
     }
@@ -276,8 +286,10 @@ public class MergeController {
 
         // If front-end provided explicit visible order, honor it and override backend sorting
         if (fileOrder != null && !fileOrder.isBlank()) {
+            log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
+            log.info("Sorting files based on sortType: {}", request.getSortType());
             Arrays.sort(
                     files,
                     getSortComparator(

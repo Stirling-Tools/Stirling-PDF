@@ -3,6 +3,19 @@ import './cookieconsent.umd.js';
 // Enable dark mode
 document.documentElement.classList.add('cc--darkmode');
 
+// Build analytics services dynamically based on backend config
+const analyticsServices = {};
+if (typeof posthogEnabled !== 'undefined' && posthogEnabled) {
+    analyticsServices.posthog = {
+        label: cookieBannerPreferencesModalPosthogLabel
+    };
+}
+if (typeof scarfEnabled !== 'undefined' && scarfEnabled) {
+    analyticsServices.scarf = {
+        label: cookieBannerPreferencesModalScarfLabel
+    };
+}
+
 CookieConsent.run({
     guiOptions: {
         consentModal: {
@@ -22,7 +35,9 @@ CookieConsent.run({
         necessary: {
             readOnly: true
         },
-        analytics: {}
+        analytics: {
+            services: analyticsServices
+        }
     },
     language: {
         default: "en",

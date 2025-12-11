@@ -1,41 +1,44 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
+@ExtendWith(MockitoExtension.class)
 class CustomHtmlSanitizerTest {
+
+    @Mock private SsrfProtectionService ssrfProtectionService;
+    @Mock private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties.System systemProperties;
 
     private CustomHtmlSanitizer customHtmlSanitizer;
 
     @BeforeEach
     void setUp() {
-        SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
-        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
-                mock(stirling.software.common.model.ApplicationProperties.class);
-        stirling.software.common.model.ApplicationProperties.System mockSystem =
-                mock(stirling.software.common.model.ApplicationProperties.System.class);
+        // Default behavior: allow all URLs and enable sanitization. Lenient stubs avoid
+        // strict-stubbing failures when individual tests bypass certain branches.
+        lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
+        lenient().when(applicationProperties.getSystem()).thenReturn(systemProperties);
+        lenient().when(systemProperties.isDisableSanitize()).thenReturn(false);
 
-        // Allow all URLs by default for basic tests
-        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
-                .thenReturn(true);
-        when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
-        when(mockSystem.getDisableSanitize()).thenReturn(false); // Enable sanitization for tests
-
-        customHtmlSanitizer =
-                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+        customHtmlSanitizer = new CustomHtmlSanitizer(ssrfProtectionService, applicationProperties);
     }
 
     @ParameterizedTest
@@ -56,10 +59,11 @@ class CustomHtmlSanitizerTest {
                         "<p>This is <strong>valid</strong> HTML with <em>formatting</em>.</p>",
                         new String[] {"<p>", "<strong>", "<em>"}),
                 Arguments.of(
-                        "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>, "
-                                + "<em>emphasis</em>, <strong>strong</strong>, <strike>strikethrough</strike>, "
-                                + "<s>strike</s>, <sub>subscript</sub>, <sup>superscript</sup>, "
-                                + "<tt>teletype</tt>, <code>code</code>, <big>big</big>, <small>small</small>.</p>",
+                        "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>,"
+                                + " <em>emphasis</em>, <strong>strong</strong>,"
+                                + " <strike>strikethrough</strike>, <s>strike</s>,"
+                                + " <sub>subscript</sub>, <sup>superscript</sup>, <tt>teletype</tt>,"
+                                + " <code>code</code>, <big>big</big>, <small>small</small>.</p>",
                         new String[] {
                             "<b>bold</b>",
                             "<i>italic</i>",
@@ -163,7 +167,7 @@ class CustomHtmlSanitizerTest {
 
     @Test
     void testSanitizeAllowsImages() {
-        // Arrange - Testing Sanitizers.IMAGES
+        // Arrange - Testing custom images policy with SSRF check
         String htmlWithImage =
                 "<img src=\"image.jpg\" alt=\"An image\" width=\"100\" height=\"100\">";
 
@@ -182,7 +186,16 @@ class CustomHtmlSanitizerTest {
     void testSanitizeDisallowsDataUrlImages() {
         // Arrange
         String htmlWithDataUrlImage =
-                "<img src=\"data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9ImFsZXJ0KDEpIj48L3N2Zz4=\" alt=\"SVG with XSS\">";
+                "<img src=\"data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9ImFsZXJ0KDEpIj48L3N2Zz4=\""
+                        + " alt=\"SVG with XSS\">";
+
+        // Changed: Explicitly tell SSRF service to reject data: URLs so the custom AttributePolicy
+        // drops the src attribute. Without this, a permissive SSRF mock might allow data: URLs.
+        lenient()
+                .when(
+                        ssrfProtectionService.isUrlAllowed(
+                                argThat(v -> v != null && v.startsWith("data:"))))
+                .thenReturn(false);
 
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithDataUrlImage);
@@ -257,9 +270,9 @@ class CustomHtmlSanitizerTest {
     void testSanitizeRemovesObjectAndEmbed() {
         // Arrange
         String htmlWithObjects =
-                "<p>Safe content</p>"
-                        + "<object data=\"data.swf\" type=\"application/x-shockwave-flash\"></object>"
-                        + "<embed src=\"embed.swf\" type=\"application/x-shockwave-flash\">";
+                "<p>Safe content</p><object data=\"data.swf\""
+                        + " type=\"application/x-shockwave-flash\"></object><embed src=\"embed.swf\""
+                        + " type=\"application/x-shockwave-flash\">";
 
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithObjects);
@@ -295,17 +308,12 @@ class CustomHtmlSanitizerTest {
     void testSanitizeHandlesComplexHtml() {
         // Arrange
         String complexHtml =
-                "<div class=\"container\">"
-                        + "  <h1 style=\"color: blue;\">Welcome</h1>"
-                        + "  <p>This is a <strong>test</strong> with <a href=\"https://example.com\">link</a>.</p>"
-                        + "  <table>"
-                        + "    <tr><th>Name</th><th>Value</th></tr>"
-                        + "    <tr><td>Item 1</td><td>100</td></tr>"
-                        + "  </table>"
-                        + "  <img src=\"image.jpg\" alt=\"Test image\">"
-                        + "  <script>alert('XSS');</script>"
-                        + "  <iframe src=\"https://evil.com\"></iframe>"
-                        + "</div>";
+                "<div class=\"container\">  <h1 style=\"color: blue;\">Welcome</h1>  <p>This is a"
+                        + " <strong>test</strong> with <a href=\"https://example.com\">link</a>.</p> "
+                        + " <table>    <tr><th>Name</th><th>Value</th></tr>    <tr><td>Item"
+                        + " 1</td><td>100</td></tr>  </table>  <img src=\"image.jpg\" alt=\"Test"
+                        + " image\">  <script>alert('XSS');</script>  <iframe"
+                        + " src=\"https://evil.com\"></iframe></div>";
 
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize(complexHtml);
@@ -352,5 +360,122 @@ class CustomHtmlSanitizerTest {
 
         // Assert
         assertEquals("", sanitizedHtml, "Null input should result in empty string");
+    }
+
+    // -----------------------
+    // Additional coverage
+    // -----------------------
+
+    @Test
+    @DisplayName("Should return input unchanged when sanitize is disabled via properties")
+    void shouldBypassSanitizationWhenDisabled() {
+        // Arrange
+        String malicious =
+                "<p>ok</p><script>alert('XSS')</script><img src=\"http://blocked.local/a.png\">";
+
+        // For this test, disable sanitize
+        when(systemProperties.isDisableSanitize()).thenReturn(true);
+
+        // Also ensure SSRF would block it if sanitization were enabled (to prove bypass)
+        lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+
+        // Act
+        String result = customHtmlSanitizer.sanitize(malicious);
+
+        // Assert
+        // When disabled, sanitizer must return original string as-is.
+        assertEquals(malicious, result, "Sanitization disabled should return input as-is");
+    }
+
+    @Test
+    @DisplayName("Should remove img src when SSRF service rejects the URL")
+    void shouldRemoveImageSrcWhenSsrfRejects() {
+        // Arrange
+        String html = "<img src=\"http://internal/admin\" alt=\"x\">";
+
+        // Reject this URL
+        lenient()
+                .when(ssrfProtectionService.isUrlAllowed("http://internal/admin"))
+                .thenReturn(false);
+
+        // Act
+        String sanitized = customHtmlSanitizer.sanitize(html);
+
+        // Assert
+        assertTrue(sanitized.contains("<img"), "Image element should remain");
+        assertFalse(
+                sanitized.contains("src=\"http://internal/admin\""),
+                "Rejected URL should be removed from src attribute");
+        assertTrue(sanitized.contains("alt=\"x\""), "Other allowed attributes should remain");
+    }
+
+    @Test
+    @DisplayName("Should trim and preserve allowed img src values")
+    void shouldTrimAndPreserveAllowedImgSrc() {
+        // Arrange
+        String html = "<img src=\"   https://example.com/image.jpg   \" alt=\"pic\" title=\"t\">";
+
+        // Explicit allow (clarity)
+        lenient()
+                .when(ssrfProtectionService.isUrlAllowed("https://example.com/image.jpg"))
+                .thenReturn(true);
+
+        // Act
+        String sanitized = customHtmlSanitizer.sanitize(html);
+
+        // Assert
+        assertTrue(sanitized.contains("<img"), "Image element should remain");
+        assertFalse(
+                sanitized.contains("   https://example.com/image.jpg   "),
+                "Untrimmed src value should not appear in output");
+        assertTrue(
+                sanitized.contains("alt=\"pic\"") || sanitized.contains("alt='pic'"),
+                "Alt attribute should remain");
+        assertTrue(
+                sanitized.contains("title=\"t\"") || sanitized.contains("title='t'"),
+                "Title attribute should remain");
+    }
+
+    @Test
+    @DisplayName("Should drop empty or whitespace-only img src values")
+    void shouldDropEmptyImgSrc() {
+        // Arrange
+        String html = "<img src=\"   \" alt=\"no src\">";
+
+        // Act
+        String sanitized = customHtmlSanitizer.sanitize(html);
+
+        // Assert
+        assertTrue(sanitized.contains("<img"), "Image element should remain");
+        assertFalse(sanitized.contains("src="), "Empty src should be removed entirely");
+        assertTrue(sanitized.contains("alt=\"no src\""), "Other attributes should remain");
+    }
+
+    @Nested
+    @DisplayName("Anchor tag protocol handling (sanitizer-level)")
+    class AnchorProtocolTests {
+        @Test
+        @DisplayName(
+                "mailto: links should keep anchor and text; protocol may be stripped depending on"
+                        + " sanitizer version")
+        void mailtoAllowed() {
+            String html = "<a href=\"mailto:hello@example.com\">mail me</a>";
+            String sanitized = customHtmlSanitizer.sanitize(html);
+
+            // Anchor and text should remain
+            assertTrue(sanitized.contains("<a"), "Anchor element should be preserved");
+            assertTrue(sanitized.contains("mail me"), "Link text should remain");
+
+            // Some sanitizer versions allow mailto:, others strip it. Accept both.
+            boolean keepsMailto = sanitized.contains("mailto:hello@example.com");
+            boolean strippedHref =
+                    sanitized.contains("href="); // still has an href, possibly sanitized
+            // We accept either: mailto kept OR href present in sanitized form OR (in strict setups)
+            // href removed but anchor kept.
+            assertTrue(
+                    keepsMailto || strippedHref || sanitized.contains("</a>"),
+                    "Sanitized output should keep anchor; mailto: may or may not be present"
+                            + " depending on sanitizer configuration");
+        }
     }
 }

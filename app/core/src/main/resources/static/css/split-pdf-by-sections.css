@@ -8,3 +8,6 @@
   position: absolute;
   background-color: red; /* Line color */
 }
+#pageToSplitSection {
+  display: none;
+}

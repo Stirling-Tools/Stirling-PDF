@@ -1,11 +1,9 @@
 package stirling.software.SPDF.service;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
@@ -33,12 +31,19 @@ class LanguageServiceBasicTest {
         languageService = new LanguageServiceForTest(applicationProperties);
     }
 
+    // Helper methods
+    private static Resource createMockResource(String filename) {
+        Resource mockResource = mock(Resource.class);
+        when(mockResource.getFilename()).thenReturn(filename);
+        return mockResource;
+    }
+
     @Test
-    void testGetSupportedLanguages_BasicFunctionality() throws IOException {
+    void testGetSupportedLanguages_BasicFunctionality() {
         // Set up mocked resources
         Resource enResource = createMockResource("messages_en_US.properties");
         Resource frResource = createMockResource("messages_fr_FR.properties");
-        Resource[] mockResources = new Resource[] {enResource, frResource};
+        Resource[] mockResources = {enResource, frResource};
 
         // Configure the test service
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
@@ -53,14 +58,13 @@ class LanguageServiceBasicTest {
     }
 
     @Test
-    void testGetSupportedLanguages_FilteringInvalidFiles() throws IOException {
+    void testGetSupportedLanguages_FilteringInvalidFiles() {
         // Set up mocked resources with invalid files
-        Resource[] mockResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"), // Valid
-                    createMockResource("invalid_file.properties"), // Invalid
-                    createMockResource(null) // Null filename
-                };
+        Resource[] mockResources = {
+            createMockResource("messages_en_US.properties"), // Valid
+            createMockResource("invalid_file.properties"), // Invalid
+            createMockResource(null) // Null filename
+        };
 
         // Configure the test service
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
@@ -77,15 +81,14 @@ class LanguageServiceBasicTest {
     }
 
     @Test
-    void testGetSupportedLanguages_WithRestrictions() throws IOException {
+    void testGetSupportedLanguages_WithRestrictions() {
         // Set up test resources
-        Resource[] mockResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"),
-                    createMockResource("messages_fr_FR.properties"),
-                    createMockResource("messages_de_DE.properties"),
-                    createMockResource("messages_en_GB.properties")
-                };
+        Resource[] mockResources = {
+            createMockResource("messages_en_US.properties"),
+            createMockResource("messages_fr_FR.properties"),
+            createMockResource("messages_de_DE.properties"),
+            createMockResource("messages_en_GB.properties")
+        };
 
         // Configure the test service
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
@@ -104,13 +107,6 @@ class LanguageServiceBasicTest {
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 
-    // Helper methods
-    private Resource createMockResource(String filename) {
-        Resource mockResource = mock(Resource.class);
-        when(mockResource.getFilename()).thenReturn(filename);
-        return mockResource;
-    }
-
     // Test subclass
     private static class LanguageServiceForTest extends LanguageService {
         private Resource[] mockResources;
@@ -124,7 +120,7 @@ class LanguageServiceBasicTest {
         }
 
         @Override
-        protected Resource[] getResourcesFromPattern(String pattern) throws IOException {
+        protected Resource[] getResourcesFromPattern(String pattern) {
             return mockResources;
         }
     }

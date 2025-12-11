@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 let currentSort = {
   field: null,
   descending: false,
@@ -73,7 +79,13 @@ async function displayFiles(files) {
 
 async function getPDFPageCount(file) {
   const blobUrl = URL.createObjectURL(file);
-  const pdf = await pdfjsLib.getDocument(blobUrl).promise;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+  const pdf = await pdfjsLib
+    .getDocument({
+      ...PDFJS_DEFAULT_OPTIONS,
+      url: blobUrl,
+    })
+    .promise;
   URL.revokeObjectURL(blobUrl);
   return pdf.numPages;
 }
@@ -123,39 +135,38 @@ function attachMoveButtons() {
   }
 }
 
-document.getElementById("sortByNameBtn").addEventListener("click", function () {
+document.getElementById("sortByNameBtn").addEventListener("click", async function () {
   if (currentSort.field === "name" && !currentSort.descending) {
     currentSort.descending = true;
-    sortFiles((a, b) => b.name.localeCompare(a.name));
+    await sortFiles((a, b) => b.name.localeCompare(a.name));
   } else {
     currentSort.field = "name";
     currentSort.descending = false;
-    sortFiles((a, b) => a.name.localeCompare(b.name));
+    await sortFiles((a, b) => a.name.localeCompare(b.name));
   }
 });
 
-document.getElementById("sortByDateBtn").addEventListener("click", function () {
+document.getElementById("sortByDateBtn").addEventListener("click", async function () {
   if (currentSort.field === "lastModified" && !currentSort.descending) {
     currentSort.descending = true;
-    sortFiles((a, b) => b.lastModified - a.lastModified);
+    await sortFiles((a, b) => b.lastModified - a.lastModified);
   } else {
     currentSort.field = "lastModified";
     currentSort.descending = false;
-    sortFiles((a, b) => a.lastModified - b.lastModified);
+    await sortFiles((a, b) => a.lastModified - b.lastModified);
   }
 });
 
-function sortFiles(comparator) {
+async function sortFiles(comparator) {
   // Convert FileList to array and sort
   const sortedFilesArray = Array.from(document.getElementById("fileInput-input").files).sort(comparator);
 
-  // Refresh displayed list
-  displayFiles(sortedFilesArray);
+  // Refresh displayed list (wait for it to complete since it's async)
+  await displayFiles(sortedFilesArray);
 
-  // Update the files property
-  const dataTransfer = new DataTransfer();
-  sortedFilesArray.forEach((file) => dataTransfer.items.add(file));
-  document.getElementById("fileInput-input").files = dataTransfer.files;
+  // Update the file input and fileOrder based on the current display order
+  // This ensures consistency between display and file input
+  updateFiles();
 }
 
 function updateFiles() {
@@ -163,25 +174,36 @@ function updateFiles() {
   var liElements = document.querySelectorAll("#selectedFiles li");
   const files = document.getElementById("fileInput-input").files;
 
+  console.log("updateFiles: found", liElements.length, "LI elements and", files.length, "files");
+
   for (var i = 0; i < liElements.length; i++) {
     var fileNameFromList = liElements[i].querySelector(".filename").innerText;
-    var fileFromFiles;
+    var found = false;
     for (var j = 0; j < files.length; j++) {
       var file = files[j];
       if (file.name === fileNameFromList) {
         dataTransfer.items.add(file);
+        found = true;
         break;
       }
     }
+    if (!found) {
+      console.warn("updateFiles: Could not find file:", fileNameFromList);
+    }
   }
+
   document.getElementById("fileInput-input").files = dataTransfer.files;
+  console.log("updateFiles: Updated file input with", dataTransfer.files.length, "files");
 
   // Also populate hidden fileOrder to preserve visible order
   const order = Array.from(liElements)
     .map((li) => li.querySelector(".filename").innerText)
     .join("\n");
   const orderInput = document.getElementById("fileOrder");
-  if (orderInput) orderInput.value = order;
+  if (orderInput) {
+    orderInput.value = order;
+    console.log("Updated fileOrder:", order);
+  }
 }
 
 document.querySelector("#resetFileInputBtn").addEventListener("click", ()=>{

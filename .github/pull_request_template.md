@@ -27,6 +27,10 @@ Closes #(issue_number)
 - [ ] I have updated relevant docs on [Stirling-PDF's doc repo](https://github.com/Stirling-Tools/Stirling-Tools.github.io/blob/main/docs/) (if functionality has heavily changed)
 - [ ] I have read the section [Add New Translation Tags](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/HowToAddNewLanguage.md#add-new-translation-tags) (for new translation tags only)
 
+### Translations (if applicable)
+
+- [ ] I ran [`scripts/counter_translation.py`](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/counter_translation.md)
+
 ### UI Changes (if applicable)
 
 - [ ] Screenshots or videos demonstrating the UI changes are attached (e.g., as comments or direct attachments in the PR)

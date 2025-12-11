@@ -28,6 +28,10 @@ public class ReplaceAndInvertColorFactory {
             String backGroundColor,
             String textColor) {
 
+        if (replaceAndInvertOption == null) {
+            return null;
+        }
+
         // Check Ghostscript availability for CMYK conversion
         if (replaceAndInvertOption == ReplaceAndInvert.COLOR_SPACE_CONVERSION
                 && !endpointConfiguration.isGroupEnabled("Ghostscript")) {

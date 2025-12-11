@@ -253,7 +253,7 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "security_enableLogin",
-                applicationProperties.getSecurity().getEnableLogin());
+                applicationProperties.getSecurity().isEnableLogin());
         addIfNotEmpty(properties, "security_csrfDisabled", true);
         addIfNotEmpty(
                 properties,
@@ -299,13 +299,13 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "system_googlevisibility",
-                applicationProperties.getSystem().getGooglevisibility());
+                applicationProperties.getSystem().isGooglevisibility());
         addIfNotEmpty(
                 properties, "system_showUpdate", applicationProperties.getSystem().isShowUpdate());
         addIfNotEmpty(
                 properties,
                 "system_showUpdateOnlyAdmin",
-                applicationProperties.getSystem().getShowUpdateOnlyAdmin());
+                applicationProperties.getSystem().isShowUpdateOnlyAdmin());
         addIfNotEmpty(
                 properties,
                 "system_customHTMLFiles",
@@ -317,7 +317,7 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "system_enableAlphaFunctionality",
-                applicationProperties.getSystem().getEnableAlphaFunctionality());
+                applicationProperties.getSystem().isEnableAlphaFunctionality());
         addIfNotEmpty(
                 properties,
                 "system_enableAnalytics",
@@ -337,7 +337,7 @@ public class PostHogService {
 
         // Capture Metrics properties
         addIfNotEmpty(
-                properties, "metrics_enabled", applicationProperties.getMetrics().getEnabled());
+                properties, "metrics_enabled", applicationProperties.getMetrics().isEnabled());
 
         // Capture EnterpriseEdition properties
         addIfNotEmpty(

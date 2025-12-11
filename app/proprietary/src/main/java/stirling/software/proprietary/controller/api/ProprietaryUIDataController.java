@@ -118,7 +118,7 @@ public class ProprietaryUIDataController {
         Security securityProps = applicationProperties.getSecurity();
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
-        data.setEnableLogin(securityProps.getEnableLogin());
+        data.setEnableLogin(securityProps.isEnableLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -186,7 +186,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         if (securityProps.isSaml2Active()
-                && applicationProperties.getSystem().getEnableAlphaFunctionality()
+                && applicationProperties.getSystem().isEnableAlphaFunctionality()
                 && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();

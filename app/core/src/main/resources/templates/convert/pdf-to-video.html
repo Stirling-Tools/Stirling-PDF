@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfToVideo.title}, header=#{pdfToVideo.header})}"></th:block>
+  <script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+      const maxDPI = /*[[${maxDPI}]]*/ 500;
+      const labelTemplate = /*[[#{pdfToVideo.dpiLabel}]]*/ "DPI (The server limit is {0} dpi)";
+      const dpiLabel = document.querySelector('label[for="dpi"]');
+      if (dpiLabel) {
+        dpiLabel.textContent = labelTemplate.replace("{0}", maxDPI);
+      }
+      const dpiInput = document.getElementById("dpi");
+      if (dpiInput) {
+        dpiInput.setAttribute("max", maxDPI);
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convert">movie</span>
+              <span class="tool-header-text" th:text="#{pdfToVideo.header}"></span>
+            </div>
+            <p th:text="#{processTimeWarning}"></p>
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/video'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+              <div class="mb-3">
+                <label for="videoFormat" th:text="#{pdfToVideo.videoFormat}"></label>
+                <select id="videoFormat" class="form-control" name="videoFormat">
+                  <option value="mp4">MP4</option>
+                  <option value="webm">WebM</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="secondsPerPage" th:text="#{pdfToVideo.secondsPerPage}"></label>
+                <input id="secondsPerPage" type="number" class="form-control" name="secondsPerPage" min="1" max="30" value="3"
+                  required>
+              </div>
+              <div class="mb-3">
+                <label for="resolution" th:text="#{pdfToVideo.resolution}"></label>
+                <select id="resolution" class="form-control" name="resolution">
+                  <option value="ORIGINAL" th:text="#{pdfToVideo.resolutionOriginal}"></option>
+                  <option value="1080p">1080p</option>
+                  <option value="720p">720p</option>
+                  <option value="480p">480p</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="dpi">DPI</label>
+                <input id="dpi" type="number" class="form-control" name="dpi" min="72" max="500" value="150" required>
+              </div>
+              <div class="mb-3">
+                <label for="watermarkText" th:text="#{pdfToVideo.watermarkText}"></label>
+                <input id="watermarkText" type="text" class="form-control" name="watermarkText" placeholder="Stirling Software">
+              </div>
+              <div class="mb-3">
+                <label for="opacity" th:text="#{pdfToVideo.opacity}"></label>
+                <input id="opacity" type="number" step="0.01" class="form-control" name="opacity" min="0.0" max="1.0" value="0.1">
+              </div>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToVideo.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>

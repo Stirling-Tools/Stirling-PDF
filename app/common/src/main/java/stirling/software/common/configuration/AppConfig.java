@@ -69,7 +69,7 @@ public class AppConfig {
 
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        return applicationProperties.getSecurity().getEnableLogin();
+        return applicationProperties.getSecurity().isEnableLogin();
     }
 
     @Bean(name = "appName")
@@ -113,9 +113,7 @@ public class AppConfig {
 
     @Bean(name = "enableAlphaFunctionality")
     public boolean enableAlphaFunctionality() {
-        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null
-                ? applicationProperties.getSystem().getEnableAlphaFunctionality()
-                : false;
+        return applicationProperties.getSystem().isEnableAlphaFunctionality();
     }
 
     @Bean(name = "rateLimit")
@@ -258,9 +256,14 @@ public class AppConfig {
         return "NORMAL";
     }
 
-    @Bean(name = "disablePixel")
-    public boolean disablePixel() {
-        return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));
+    @Bean(name = "scarfEnabled")
+    public boolean scarfEnabled() {
+        return applicationProperties.getSystem().isScarfEnabled();
+    }
+
+    @Bean(name = "posthogEnabled")
+    public boolean posthogEnabled() {
+        return applicationProperties.getSystem().isPosthogEnabled();
     }
 
     @Bean(name = "machineType")

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -122,7 +123,7 @@ public class ExtractCSVController {
     }
 
     private String generateEntryName(String baseName, int pageNum, int tableIndex) {
-        return String.format("%s_p%d_t%d.csv", baseName, pageNum, tableIndex);
+        return String.format(Locale.ROOT, "%s_p%d_t%d.csv", baseName, pageNum, tableIndex);
     }
 
     private String getBaseName(String filename) {

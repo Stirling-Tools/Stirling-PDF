@@ -1,20 +1,21 @@
 package stirling.software.SPDF.controller.api;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
+@ExtendWith({MockitoExtension.class})
 class RearrangePagesPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory mockPdfDocumentFactory;
@@ -23,7 +24,6 @@ class RearrangePagesPDFControllerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         sut = new RearrangePagesPDFController(mockPdfDocumentFactory);
     }
 

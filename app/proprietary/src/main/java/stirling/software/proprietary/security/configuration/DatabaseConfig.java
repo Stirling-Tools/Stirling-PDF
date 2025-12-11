@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
+import java.util.Locale;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -133,7 +135,7 @@ public class DatabaseConfig {
     private String getDriverClassName(String driverName) throws UnsupportedProviderException {
         try {
             ApplicationProperties.Driver driver =
-                    ApplicationProperties.Driver.valueOf(driverName.toUpperCase());
+                    ApplicationProperties.Driver.valueOf(driverName.toUpperCase(Locale.ROOT));
 
             return switch (driver) {
                 case H2 -> {
