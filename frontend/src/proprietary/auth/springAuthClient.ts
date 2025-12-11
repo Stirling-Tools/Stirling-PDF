@@ -282,12 +282,17 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
+      // Extract token before removing it (needed for OAuth/SAML logout)
+      const token = localStorage.getItem('stirling_jwt');
+
       // Clean up local storage before logout
       localStorage.removeItem('stirling_jwt');
 
       // Call Spring Security's logout endpoint
       // This will handle OAuth2/SAML logout redirects and clear session
+      // Include the token so Spring knows which authentication type to logout from
       const response = await apiClient.post('/logout', null, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         withCredentials: true,
         maxRedirects: 0, // Don't follow redirects - we'll handle them
         validateStatus: (status) => status === 302 || status === 200, // Accept redirects as success
