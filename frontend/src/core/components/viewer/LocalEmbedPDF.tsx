@@ -46,6 +46,7 @@ import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
+import { absoluteWithBasePath } from '@app/constants/app';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -167,8 +168,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     ];
   }, [pdfUrl]);
 
-  // Initialize the engine with the React hook
-  const { engine, isLoading, error } = usePdfiumEngine();
+  // Initialize the engine with the React hook - use local WASM for offline support
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: absoluteWithBasePath('/pdfium/pdfium.wasm'),
+  });
 
 
   // Early return if no file or URL provided

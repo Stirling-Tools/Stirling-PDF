@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig(({ mode }) => {
   // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
@@ -20,6 +21,15 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      viteStaticCopy({
+        targets: [
+          {
+            //provides static pdfium so embedpdf can run without cdn
+            src: 'node_modules/@embedpdf/pdfium/dist/pdfium.wasm',
+            dest: 'pdfium'
+          }
+        ]
+      })
     ],
     server: {
       host: true,
