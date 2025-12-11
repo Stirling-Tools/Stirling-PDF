@@ -152,15 +152,27 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
+          use urlencoding::decode;
+
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let mut added_files = false;
 
           for url in urls {
             let url_str = url.as_str();
             if url_str.starts_with("file://") {
-              let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
+              let encoded_path = url_str.strip_prefix("file://").unwrap_or(url_str);
+
+              // Decode URL-encoded characters (%20 -> space, etc.)
+              let file_path = match decode(encoded_path) {
+                Ok(decoded) => decoded.into_owned(),
+                Err(e) => {
+                  add_log(format!("⚠️ Failed to decode file path: {} - {}", encoded_path, e));
+                  encoded_path.to_string() // Fallback to encoded path
+                }
+              };
+
               add_log(format!("📂 Processing opened file: {}", file_path));
-              add_opened_file(file_path.to_string());
+              add_opened_file(file_path);
               added_files = true;
             }
           }
