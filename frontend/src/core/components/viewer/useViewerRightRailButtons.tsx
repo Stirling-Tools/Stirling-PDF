@@ -36,7 +36,14 @@ export function useViewerRightRailButtons() {
         order: 10,
         render: ({ disabled }) => (
           <Tooltip content={searchLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
-            <Popover position={tooltipPosition} withArrow shadow="md" offset={8}>
+            <Popover
+              position={tooltipPosition}
+              withArrow
+              shadow="md"
+              offset={8}
+              opened={viewer.isSearchInterfaceVisible}
+              onClose={viewer.searchInterfaceActions.close}
+            >
               <Popover.Target>
                 <div style={{ display: 'inline-flex' }}>
                   <ActionIcon
@@ -45,6 +52,7 @@ export function useViewerRightRailButtons() {
                     className="right-rail-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
+                    onClick={viewer.searchInterfaceActions.toggle}
                   >
                     <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
                   </ActionIcon>
@@ -52,7 +60,7 @@ export function useViewerRightRailButtons() {
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: '20rem' }}>
-                  <SearchInterface visible={true} onClose={() => {}} />
+                  <SearchInterface visible={viewer.isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
                 </div>
               </Popover.Dropdown>
             </Popover>

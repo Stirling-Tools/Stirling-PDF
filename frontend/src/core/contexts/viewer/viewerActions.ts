@@ -52,6 +52,7 @@ export interface SearchActions {
   next: () => void;
   previous: () => void;
   clear: () => void;
+  goToResult: (index: number) => void;
 }
 
 export interface ExportActions {
@@ -285,6 +286,12 @@ export function createViewerActions({
       const api = registry.current.search?.api;
       if (api?.clear) {
         api.clear();
+      }
+    },
+    goToResult: (index: number) => {
+      const api = registry.current.search?.api;
+      if (api?.goToResult) {
+        api.goToResult(index);
       }
     },
   };

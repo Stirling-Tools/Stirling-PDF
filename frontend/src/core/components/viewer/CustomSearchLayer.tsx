@@ -44,8 +44,10 @@ export function CustomSearchLayer({
     }
 
     const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
+      if (!state) return;
+
       // Auto-scroll to active search result
-      if (state?.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
+      if (state.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
         const activeResult = state.results[state.activeResultIndex];
         if (activeResult) {
           const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
