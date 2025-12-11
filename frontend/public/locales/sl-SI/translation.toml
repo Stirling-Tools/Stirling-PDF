@@ -163,6 +163,11 @@ unfavorite = "Odstrani iz priljubljenih"
 fullscreen = "Preklopi na celozaslonski način"
 sidebar = "Preklopi na način stranske vrstice"
 
+[backendStartup]
+notFoundTitle = "Zaledje ni najdeno"
+retry = "Poskusi znova"
+unreachable = "Aplikacija se trenutno ne more povezati z zaledjem. Preverite stanje zaledja in omrežno povezavo, nato poskusite znova."
+
 [zipWarning]
 title = "Velika datoteka ZIP"
 message = "Ta ZIP vsebuje {{count}} datotek. Vseeno razpakiram?"
@@ -912,6 +917,9 @@ desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za pona
 desc = "Prekriva PDF-je na vrhu drugega PDF-ja"
 title = "Prekrivanje PDF-jev"
 
+[home.pdfTextEditor]
+title = "Urejevalnik besedila PDF"
+desc = "Urejajte obstoječe besedilo in slike v PDF-jih"
 
 [home.addText]
 tags = "besedilo,pripomba,oznaka"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Narisan podpis"
 defaultImageLabel = "Naložen podpis"
 defaultTextLabel = "Vpisan podpis"
 saveButton = "Shrani podpis"
+savePersonal = "Shrani osebno"
+saveShared = "Shrani deljeno"
 saveUnavailable = "Najprej ustvarite podpis, da ga lahko shranite."
 noChanges = "Trenutni podpis je že shranjen."
+tempStorageTitle = "Začasno shranjevanje v brskalniku"
+tempStorageDescription = "Podpisi so shranjeni samo v vašem brskalniku. Izgubite jih, če počistite podatke brskalnika ali zamenjate brskalnik."
+personalHeading = "Osebni podpisi"
+sharedHeading = "Deljeni podpisi"
+personalDescription = "Te podpise vidite samo vi."
+sharedDescription = "Vsi uporabniki lahko te podpise vidijo in uporabljajo."
 
 [sign.saved.type]
 canvas = "Risba"
@@ -3020,6 +3036,91 @@ title = "Pridobite informacije o PDF-ju"
 header = "Pridobite informacije o PDF-ju"
 submit = "Pridobi informacije"
 downloadJson = "Prenesite JSON"
+processing = "Pridobivanje informacij..."
+results = "Rezultati"
+noResults = "Za ustvarjanje poročila zaženite orodje."
+downloads = "Prenosi"
+noneDetected = "Ni zaznanih"
+indexTitle = "Kazalo"
+
+[getPdfInfo.report]
+entryLabel = "Celoviti povzetek informacij"
+shortTitle = "Informacije o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metapodatki"
+formFields = "Polja obrazca"
+basicInfo = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+compliance = "Skladnost"
+encryption = "Šifriranje"
+permissions = "Dovoljenja"
+other = "Drugo"
+perPageInfo = "Informacije po strani"
+tableOfContents = "Kazalo vsebine"
+
+[getPdfInfo.other]
+attachments = "Priloge"
+embeddedFiles = "Vdelane datoteke"
+javaScript = "JavaScript"
+layers = "Plasti"
+structureTree = "Drevo strukture"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Velikost"
+annotations = "Opombe"
+images = "Slike"
+links = "Povezave"
+fonts = "Pisave"
+xobjects = "Število XObject"
+multimedia = "Večpredstavnost"
+
+[getPdfInfo.summary]
+pages = "Strani"
+fileSize = "Velikost datoteke"
+pdfVersion = "Različica PDF"
+language = "Jezik"
+title = "Povzetek PDF"
+author = "Avtor"
+created = "Ustvarjeno"
+modified = "Spremenjeno"
+permsAll = "Vsa dovoljenja so dovoljena"
+permsRestricted = "{{count}} omejitev"
+permsMixed = "Nekatera dovoljenja omejena"
+hasCompliance = "Ima standarde skladnosti"
+noCompliance = "Brez standardov skladnosti"
+basic = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+securityTitle = "Varnostno stanje"
+technical = "Tehnično"
+overviewTitle = "Pregled PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifriran PDF - prisotna zaščita z geslom"
+unencrypted = "Nešifriran PDF - brez zaščite z geslom"
+
+[getPdfInfo.summary.tech]
+images = "Slike"
+fonts = "Pisave"
+formFields = "Polja obrazca"
+embeddedFiles = "Vdelane datoteke"
+javaScript = "JavaScript"
+layers = "Plasti"
+bookmarks = "Zaznamki"
+multimedia = "Večpredstavnost"
+
+[getPdfInfo.summary.overview]
+untitled = "neimenovan dokument"
+unknown = "Neznani avtor"
+text = "To je {{pages}}-stranski PDF z naslovom {{title}}, ki ga je ustvaril {{author}} (različica PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Nekaterih datotek ni bilo mogoče obdelati."
+unexpected = "Nepričakovana napaka med pridobivanjem."
+
+[getPdfInfo.status]
+complete = "Pridobivanje zaključeno"
 
 [extractPage]
 tags = "izvleček"
@@ -3438,6 +3539,9 @@ signinTitle = "Prosim prijavite se"
 ssoSignIn = "Prijava prek enotne prijave"
 oAuth2AutoCreateDisabled = "OAUTH2 Samodejno ustvarjanje uporabnika onemogočeno"
 oAuth2AdminBlockedUser = "Registracija ali prijava neregistriranih uporabnikov je trenutno blokirana. Prosimo kontaktirajte skrbnika."
+oAuth2RequiresLicense = "Prijava prek OAuth/SSO zahteva plačljivo licenco (Server ali Enterprise). Obrnite se na skrbnika, da nadgradi vaš načrt."
+saml2RequiresLicense = "Prijava prek SAML zahteva plačljivo licenco (Server ali Enterprise). Obrnite se na skrbnika, da nadgradi vaš načrt."
+maxUsersReached = "Doseženo je največje število uporabnikov za vašo trenutno licenco. Obrnite se na skrbnika, da nadgradi vaš načrt ali doda več mest."
 oauth2RequestNotFound = "Zahteva za avtorizacijo ni bila najdena"
 oauth2InvalidUserInfoResponse = "Neveljaven odgovor z informacijami o uporabniku"
 oauth2invalidRequest = "Neveljavna zahteva"
@@ -3846,14 +3950,17 @@ fitToWidth = "Prilagodi širini"
 actualSize = "Dejanska velikost"
 
 [viewer]
+cannotPreviewFile = "Predogled datoteke ni mogoč"
+dualPageView = "Dvo-stranski pogled"
 firstPage = "Prva stran"
 lastPage = "Zadnja stran"
-previousPage = "Prejšnja stran"
 nextPage = "Naslednja stran"
+onlyPdfSupported = "Pregledovalnik podpira samo PDF datoteke. Ta datoteka je videti v drugačnem formatu."
+previousPage = "Prejšnja stran"
+singlePageView = "Enostranski pogled"
+unknownFile = "Neznana datoteka"
 zoomIn = "Povečaj"
 zoomOut = "Pomanjšaj"
-singlePageView = "Enostranski pogled"
-dualPageView = "Dvo-stranski pogled"
 
 [rightRail]
 closeSelected = "Zapri izbrane datoteke"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Preklopi stransko vrstico"
 exportSelected = "Izvozi izbrane strani"
 toggleAnnotations = "Preklopi vidnost opomb"
 annotationMode = "Preklopi način opomb"
+print = "Natisni PDF"
 draw = "Riši"
 save = "Shrani"
 saveChanges = "Shrani spremembe"
@@ -4494,6 +4602,7 @@ description = "URL ali ime datoteke do impressuma (zahtevano v nekaterih jurisdi
 title = "Premium in Enterprise"
 description = "Konfigurirajte svoj ključ licence Premium ali Enterprise."
 license = "Konfiguracija licence"
+noInput = "Navedite licenčni ključ ali datoteko"
 
 [admin.settings.premium.licenseKey]
 toggle = "Imate licenčni ključ ali potrdilno datoteko?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Opozorilo: Zaznana obstoječa licenca"
 line1 = "Prepis trenutnega licenčnega ključa ni mogoče razveljaviti."
 line2 = "Prejšnja licenca bo trajno izgubljena, razen če ste jo varnostno kopirali drugje."
 line3 = "Pomembno: Licenčne ključe hranite zasebno in varno. Nikoli jih ne delite javno."
+
+[admin.settings.premium.inputMethod]
+text = "Licenčni ključ"
+file = "Datoteka potrdila"
+
+[admin.settings.premium.file]
+label = "Datoteka licenčnega potrdila"
+description = "Naložite svojo licenčno datoteko .lic ali .cert iz nakupov brez povezave"
+choose = "Izberite licenčno datoteko"
+selected = "Izbrano: {{filename}} ({{size}})"
+successMessage = "Licenčna datoteka je bila uspešno naložena in aktivirana. Ponovni zagon ni potreben."
+
+[admin.settings.premium.currentLicense]
+title = "Aktivna licenca"
+file = "Vir: licenčna datoteka ({{path}})"
+key = "Vir: licenčni ključ"
+type = "Vrsta: {{type}}"
+noInput = "Navedite licenčni ključ ali naložite datoteko potrdila"
+success = "Uspešno"
 
 [admin.settings.premium.enabled]
 label = "Omogoči funkcije Premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} izbranih"
 download = "Prenos"
 delete = "Izbriši"
 unsupported = "Nepodprto"
+active = "Aktivno"
 addToUpload = "Dodaj k nalaganju"
+closeFile = "Zapri datoteko"
 deleteAll = "Izbriši vse"
 loadingFiles = "Nalaganje datotek..."
 noFiles = "Ni razpoložljivih datotek"
@@ -5132,7 +5262,7 @@ upgrade = "Nadgradi zdaj →"
 freeTitle = "Licenca strežnika"
 overLimitTitle = "Potrebna licenca strežnika"
 overLimitBody = "Naše licenciranje brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Imate <strong>{{overLimitUserCopy}}</strong> uporabnikov Stirling. Za nemoteno uporabo nadgradite na načrt Stirling Server – <strong>neomejena mesta</strong>, urejanje besedila PDF in popoln skrbniški nadzor za $99/strežnik/mesec."
-freeBody = "Naše licenciranje <strong>Open-Core</strong> brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Za nemoteno rast in zgodnji dostop do našega novega <strong>orodja za urejanje besedila PDF</strong> priporočamo načrt Stirling Server – polno urejanje in <strong>neomejena mesta</strong> za $99/strežnik/mesec."
+freeBody = "Naše licenciranje <strong>Open-Core</strong> omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov brezplačno na strežnik. Za nemoteno skaliranje priporočamo načrt Stirling Server - <strong>neomejena mesta</strong> in <strong>podpora za SSO</strong> za $99/strežnik/mesec."
 
 [onboarding.desktopInstall]
 title = "Prenesi"
@@ -5237,6 +5367,31 @@ error = "Stanja uporabnika ni bilo mogoče posodobiti"
 success = "Uporabnik uspešno izbrisan"
 error = "Uporabnika ni bilo mogoče izbrisati"
 
+[workspace.people.changePassword]
+action = "Spremeni geslo"
+title = "Spremeni geslo"
+subtitle = "Posodobite geslo za"
+newPassword = "Novo geslo"
+confirmPassword = "Potrdi geslo"
+placeholder = "Vnesite novo geslo"
+confirmPlaceholder = "Znova vnesite novo geslo"
+passwordRequired = "Prosimo, vnesite novo geslo"
+passwordMismatch = "Gesli se ne ujemata"
+generateRandom = "Ustvari varno geslo"
+generatedPreview = "Ustvarjeno geslo:"
+copyTooltip = "Kopiraj v odložišče"
+copiedToClipboard = "Geslo je kopirano v odložišče"
+copyFailed = "Kopiranje gesla ni uspelo"
+sendEmail = "Uporabniku pošlji e-pošto o tej spremembi"
+includePassword = "V e-pošto vključi novo geslo"
+forcePasswordChange = "Prisili uporabnika, da ob naslednji prijavi spremeni geslo"
+emailUnavailable = "E-poštni naslov tega uporabnika ni veljaven. Obvestila so onemogočena."
+smtpDisabled = "Za e-poštna obvestila mora biti v nastavitvah omogočen SMTP."
+notifyOnly = "Poslano bo e-poštno sporočilo brez gesla, ki bo uporabnika obvestilo, da ga je skrbnik spremenil."
+submit = "Posodobi geslo"
+success = "Geslo je bilo uspešno posodobljeno"
+error = "Posodobitev gesla ni uspela"
+
 [workspace.people.emailInvite]
 tab = "E-poštno povabilo"
 description = "Spodaj vnesite ali prilepite e-poštne naslove, ločene z vejicami. Uporabniki bodo prejeli prijavne podatke po e-pošti."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Zahtevan je vsaj en e-poštni naslov"
 submit = "Pošlji povabila"
 success = "uporabnik(i) uspešno povabljen(i)"
-partialSuccess = "Nekatera povabila niso uspela"
+partialFailure = "Nekatera povabila niso uspela"
 allFailed = "Uporabnikov ni bilo mogoče povabiti"
 error = "Pošiljanje povabil ni uspelo"
 
@@ -5770,6 +5925,7 @@ subtitle = "Prijavite se s svojim računom Stirling"
 [setup.selfhosted]
 title = "Prijavite se v strežnik"
 subtitle = "Vnesite poverilnice strežnika"
+link = "ali se povežite z računom na lastnem strežniku"
 
 [setup.server]
 title = "Poveži se s strežnikom"
@@ -5788,6 +5944,14 @@ description = "Vnesite celoten URL svojega samogostovanega strežnika Stirling P
 emptyUrl = "Vnesite URL strežnika"
 unreachable = "Povezava s strežnikom ni uspela"
 testFailed = "Preizkus povezave ni uspel"
+configFetch = "Pridobitev konfiguracije strežnika ni uspela. Preverite URL in poskusite znova."
+
+[setup.server.error.securityDisabled]
+title = "Prijava ni omogočena"
+body = "Na tem strežniku prijava ni omogočena. Za povezavo s tem strežnikom morate omogočiti overjanje:"
+step1 = "V svojem okolju nastavite DOCKER_ENABLE_SECURITY=true"
+step2 = "Ali nastavite security.enableLogin=true v settings.yml"
+step3 = "Znova zaženite strežnik"
 
 [setup.login]
 title = "Prijava"
@@ -5797,6 +5961,13 @@ submit = "Prijava"
 signInWith = "Prijavite se z"
 oauthPending = "Odpiranje brskalnika za overjanje..."
 orContinueWith = "Ali nadaljujte z e-pošto"
+serverRequirement = "Opomba: Strežnik mora imeti omogočeno prijavo."
+showInstructions = "Kako omogočiti?"
+hideInstructions = "Skrij navodila"
+instructions = "Za omogočanje prijave na vašem strežniku Stirling PDF:"
+instructionsEnvVar = "Nastavite okoljsko spremenljivko:"
+instructionsOrYml = "Ali v settings.yml:"
+instructionsRestart = "Nato znova zaženite strežnik, da spremembe začnejo veljati."
 
 [setup.login.username]
 label = "Uporabniško ime"
@@ -5853,6 +6024,7 @@ earlyAccess = "Zgodnji dostop"
 reset = "Ponastavi spremembe"
 downloadJson = "Prenesi JSON"
 generatePdf = "Ustvari PDF"
+saveChanges = "Shrani spremembe"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Samodejno prilagodi besedilo okvirjem"
@@ -5890,6 +6062,8 @@ alpha = "Ta alfa pregledovalnik se še razvija — nekatere pisave, barve, učin
 [pdfTextEditor.empty]
 title = "Ni naloženega dokumenta"
 subtitle = "Naložite datoteko PDF ali JSON, da začnete urejati besedilo."
+dropzone = "Sem povlecite in spustite datoteko PDF ali JSON ali kliknite za brskanje"
+dropzoneWithFiles = "Izberite datoteko na zavihku Datoteke ali sem povlecite in spustite datoteko PDF ali JSON oziroma kliknite za brskanje"
 
 [pdfTextEditor.welcomeBanner]
 title = "Dobrodošli v PDF Text Editor (zgodnji dostop)"

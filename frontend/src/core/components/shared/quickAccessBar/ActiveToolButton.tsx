@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import FitText from '@app/components/shared/FitText';
@@ -31,6 +32,8 @@ const NAV_IDS = ['read', 'sign', 'automate'];
 
 const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = 'right' }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+  const { hasUnsavedChanges } = useNavigationState();
+  const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
@@ -150,10 +153,16 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                   component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
-                    handleUnlessSpecialClick(e, () => {
+                    const performNavigation = () => {
                       setActiveButton('tools');
                       handleBackToTools();
-                    });
+                    };
+                    if (hasUnsavedChanges) {
+                      e.preventDefault();
+                      navigationActions.requestNavigation(performNavigation);
+                      return;
+                    }
+                    handleUnlessSpecialClick(e, performNavigation);
                   }}
                   size={'lg'}
                   variant="subtle"

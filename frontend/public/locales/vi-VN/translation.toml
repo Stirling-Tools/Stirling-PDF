@@ -163,6 +163,11 @@ unfavorite = "Xóa khỏi Mục yêu thích"
 fullscreen = "Chuyển sang chế độ toàn màn hình"
 sidebar = "Chuyển sang chế độ thanh bên"
 
+[backendStartup]
+notFoundTitle = "Không tìm thấy Backend"
+retry = "Thử lại"
+unreachable = "Ứng dụng hiện không thể kết nối tới Backend. Hãy kiểm tra trạng thái Backend và kết nối mạng, sau đó thử lại."
+
 [zipWarning]
 title = "Tệp ZIP lớn"
 message = "ZIP này chứa {{count}} tệp. Vẫn giải nén?"
@@ -296,7 +301,7 @@ saveSettings = "Lưu cài đặt thao tác"
 pipelineNamePrompt = "Nhập tên pipeline tại đây"
 selectOperation = "Chọn thao tác"
 addOperationButton = "Thêm thao tác"
-pipelineHeader = "Pipeline:"
+pipelineHeader = "Chuỗi xử lý:"
 saveButton = "Tải xuống"
 validateButton = "Xác thực"
 
@@ -347,7 +352,7 @@ teams = "Nhóm"
 title = "Cấu hình"
 systemSettings = "Cài đặt hệ thống"
 features = "Tính năng"
-endpoints = "Endpoints"
+endpoints = "Điểm cuối"
 database = "Cơ sở dữ liệu"
 advanced = "Nâng cao"
 
@@ -359,7 +364,7 @@ connections = "Kết nối"
 [settings.licensingAnalytics]
 title = "Giấy phép & Phân tích"
 plan = "Gói"
-audit = "Audit"
+audit = "Kiểm toán"
 usageAnalytics = "Phân tích sử dụng"
 
 [settings.policiesPrivacy]
@@ -369,7 +374,7 @@ privacy = "Quyền riêng tư"
 
 [settings.developer]
 title = "Nhà phát triển"
-apiKeys = "API Keys"
+apiKeys = "Khóa API"
 
 [settings.tooltips]
 enableLoginFirst = "Bật chế độ đăng nhập trước"
@@ -912,6 +917,9 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 desc = "Chồng lớp PDF lên trên PDF khác"
 title = "Chồng lớp PDF"
 
+[home.pdfTextEditor]
+title = "Trình chỉnh sửa văn bản PDF"
+desc = "Chỉnh sửa văn bản và hình ảnh hiện có bên trong PDF"
 
 [home.addText]
 tags = "văn bản,chú thích,nhãn"
@@ -1173,7 +1181,7 @@ selectFilesPlaceholder = "Chọn tệp trong khung chính để bắt đầu"
 settings = "Cài đặt"
 conversionCompleted = "Hoàn tất chuyển đổi"
 results = "Kết quả"
-defaultFilename = "converted_file"
+defaultFilename = "tep_da_chuyen_doi"
 conversionResults = "Kết quả chuyển đổi"
 convertFrom = "Chuyển từ"
 convertTo = "Sang"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Chữ ký vẽ"
 defaultImageLabel = "Chữ ký đã tải lên"
 defaultTextLabel = "Chữ ký nhập"
 saveButton = "Lưu chữ ký"
+savePersonal = "Lưu cá nhân"
+saveShared = "Lưu dùng chung"
 saveUnavailable = "Hãy tạo chữ ký trước để lưu."
 noChanges = "Chữ ký hiện tại đã được lưu."
+tempStorageTitle = "Bộ nhớ tạm của trình duyệt"
+tempStorageDescription = "Chữ ký chỉ được lưu trong trình duyệt của bạn. Chúng sẽ bị mất nếu bạn xóa dữ liệu trình duyệt hoặc đổi sang trình duyệt khác."
+personalHeading = "Chữ ký cá nhân"
+sharedHeading = "Chữ ký dùng chung"
+personalDescription = "Chỉ mình bạn có thể xem các chữ ký này."
+sharedDescription = "Tất cả người dùng đều có thể xem và sử dụng các chữ ký này."
 
 [sign.saved.type]
 canvas = "Vẽ"
@@ -2567,7 +2583,7 @@ stopButton = "Dừng so sánh"
 [certSign]
 tags = "xác thực,PEM,P12,chính thức,mã hóa"
 title = "Ký bằng chứng chỉ"
-filenamePrefix = "signed"
+filenamePrefix = "da_ky"
 chooseCertificate = "Chọn tệp chứng chỉ"
 chooseJksFile = "Chọn tệp JKS"
 chooseP12File = "Chọn tệp PKCS12"
@@ -2701,7 +2717,7 @@ header = "Xóa chứng chỉ số khỏi PDF"
 selectPDF = "Chọn một tệp PDF:"
 submit = "Xóa chữ ký"
 description = "Công cụ này sẽ xóa chữ ký chứng chỉ số khỏi tài liệu PDF của bạn."
-filenamePrefix = "unsigned"
+filenamePrefix = "chua_ky"
 
 [removeCertSign.files]
 placeholder = "Chọn một tệp PDF trong màn hình chính để bắt đầu"
@@ -3020,6 +3036,91 @@ title = "Lấy thông tin PDF"
 header = "Lấy thông tin PDF"
 submit = "Lấy thông tin"
 downloadJson = "Tải xuống JSON"
+processing = "Đang trích xuất thông tin..."
+results = "Kết quả"
+noResults = "Chạy công cụ để tạo báo cáo."
+downloads = "Tải xuống"
+noneDetected = "Không phát hiện"
+indexTitle = "Chỉ mục"
+
+[getPdfInfo.report]
+entryLabel = "Tóm tắt thông tin đầy đủ"
+shortTitle = "Thông tin PDF"
+
+[getPdfInfo.sections]
+metadata = "Siêu dữ liệu"
+formFields = "Trường biểu mẫu"
+basicInfo = "Thông tin cơ bản"
+documentInfo = "Thông tin tài liệu"
+compliance = "Tuân thủ"
+encryption = "Mã hóa"
+permissions = "Quyền"
+other = "Khác"
+perPageInfo = "Thông tin theo trang"
+tableOfContents = "Mục lục"
+
+[getPdfInfo.other]
+attachments = "Tệp đính kèm"
+embeddedFiles = "Tệp nhúng"
+javaScript = "JavaScript"
+layers = "Lớp"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Kích thước"
+annotations = "Chú thích"
+images = "Hình ảnh"
+links = "Liên kết"
+fonts = "Phông chữ"
+xobjects = "Số lượng XObject"
+multimedia = "Đa phương tiện"
+
+[getPdfInfo.summary]
+pages = "Trang"
+fileSize = "Kích thước tệp"
+pdfVersion = "Phiên bản PDF"
+language = "Ngôn ngữ"
+title = "Tóm tắt PDF"
+author = "Tác giả"
+created = "Đã tạo"
+modified = "Đã sửa đổi"
+permsAll = "Tất cả quyền được cho phép"
+permsRestricted = "{{count}} giới hạn"
+permsMixed = "Một số quyền bị hạn chế"
+hasCompliance = "Có tiêu chuẩn tuân thủ"
+noCompliance = "Không có tiêu chuẩn tuân thủ"
+basic = "Thông tin cơ bản"
+documentInfo = "Thông tin tài liệu"
+securityTitle = "Trạng thái bảo mật"
+technical = "Kỹ thuật"
+overviewTitle = "Tổng quan PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF đã mã hóa - Có bảo vệ bằng mật khẩu"
+unencrypted = "PDF không mã hóa - Không có bảo vệ bằng mật khẩu"
+
+[getPdfInfo.summary.tech]
+images = "Hình ảnh"
+fonts = "Phông chữ"
+formFields = "Trường biểu mẫu"
+embeddedFiles = "Tệp nhúng"
+javaScript = "JavaScript"
+layers = "Lớp"
+bookmarks = "Dấu trang"
+multimedia = "Đa phương tiện"
+
+[getPdfInfo.summary.overview]
+untitled = "một tài liệu không tiêu đề"
+unknown = "Tác giả không xác định"
+text = "Đây là PDF {{pages}} trang có tiêu đề {{title}} do {{author}} tạo (phiên bản PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Một số tệp không thể xử lý."
+unexpected = "Lỗi không mong muốn trong quá trình trích xuất."
+
+[getPdfInfo.status]
+complete = "Hoàn tất trích xuất"
 
 [extractPage]
 tags = "trích xuất"
@@ -3438,6 +3539,9 @@ signinTitle = "Vui lòng đăng nhập"
 ssoSignIn = "Đăng nhập qua Single Sign-on"
 oAuth2AutoCreateDisabled = "Tự động tạo người dùng OAUTH2 bị vô hiệu hóa"
 oAuth2AdminBlockedUser = "Hiện đang chặn đăng ký hoặc đăng nhập người dùng chưa đăng ký. Vui lòng liên hệ quản trị viên."
+oAuth2RequiresLicense = "Đăng nhập OAuth/SSO cần giấy phép trả phí (Server hoặc Enterprise). Vui lòng liên hệ quản trị viên để nâng cấp gói của bạn."
+saml2RequiresLicense = "Đăng nhập SAML cần giấy phép trả phí (Server hoặc Enterprise). Vui lòng liên hệ quản trị viên để nâng cấp gói của bạn."
+maxUsersReached = "Đã đạt số lượng người dùng tối đa cho giấy phép hiện tại của bạn. Vui lòng liên hệ quản trị viên để nâng cấp gói hoặc thêm suất."
 oauth2RequestNotFound = "Không tìm thấy yêu cầu ủy quyền"
 oauth2InvalidUserInfoResponse = "Phản hồi thông tin người dùng không hợp lệ"
 oauth2invalidRequest = "Yêu cầu không hợp lệ"
@@ -3533,7 +3637,7 @@ title = "PDF thành một trang"
 header = "PDF thành một trang"
 submit = "Chuyển đổi thành một trang"
 description = "Công cụ này sẽ gộp tất cả các trang của PDF của bạn thành một trang đơn lớn. Chiều rộng giữ nguyên như các trang gốc, còn chiều cao sẽ bằng tổng chiều cao của tất cả các trang."
-filenamePrefix = "single_page"
+filenamePrefix = "mot_trang"
 
 [pdfToSinglePage.files]
 placeholder = "Chọn một tệp PDF ở màn hình chính để bắt đầu"
@@ -3846,14 +3950,17 @@ fitToWidth = "Vừa chiều rộng"
 actualSize = "Kích thước thật"
 
 [viewer]
+cannotPreviewFile = "Không thể xem trước tệp"
+dualPageView = "Chế độ xem hai trang"
 firstPage = "Trang đầu"
 lastPage = "Trang cuối"
-previousPage = "Trang trước"
 nextPage = "Trang tiếp"
+onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
+previousPage = "Trang trước"
+singlePageView = "Chế độ xem trang đơn"
+unknownFile = "Tệp không xác định"
 zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
-singlePageView = "Chế độ xem trang đơn"
-dualPageView = "Chế độ xem hai trang"
 
 [rightRail]
 closeSelected = "Đóng các tệp đã chọn"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Chuyển đổi thanh bên"
 exportSelected = "Xuất các trang đã chọn"
 toggleAnnotations = "Chuyển đổi hiển thị chú thích"
 annotationMode = "Chuyển đổi chế độ chú thích"
+print = "In PDF"
 draw = "Vẽ"
 save = "Lưu"
 saveChanges = "Lưu thay đổi"
@@ -4494,6 +4602,7 @@ description = "URL hoặc tên tệp cho impressum (bắt buộc ở một số 
 title = "Premium & Enterprise"
 description = "Cấu hình khóa giấy phép premium hoặc enterprise của bạn."
 license = "Cấu hình giấy phép"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tệp"
 
 [admin.settings.premium.licenseKey]
 toggle = "Có license key hoặc tệp chứng chỉ?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Cảnh báo: Phát hiện license hiện có"
 line1 = "Ghi đè license key hiện tại không thể hoàn tác."
 line2 = "License trước đó sẽ bị mất vĩnh viễn trừ khi bạn đã sao lưu ở nơi khác."
 line3 = "Quan trọng: Giữ license key riêng tư và an toàn. Không bao giờ chia sẻ công khai."
+
+[admin.settings.premium.inputMethod]
+text = "Khóa giấy phép"
+file = "Tệp chứng chỉ"
+
+[admin.settings.premium.file]
+label = "Tệp chứng chỉ giấy phép"
+description = "Tải lên tệp giấy phép .lic hoặc .cert từ các lần mua ngoại tuyến của bạn"
+choose = "Chọn tệp giấy phép"
+selected = "Đã chọn: {{filename}} ({{size}})"
+successMessage = "Tệp giấy phép đã được tải lên và kích hoạt thành công. Không cần khởi động lại."
+
+[admin.settings.premium.currentLicense]
+title = "Giấy phép đang hoạt động"
+file = "Nguồn: Tệp giấy phép ({{path}})"
+key = "Nguồn: Khóa giấy phép"
+type = "Loại: {{type}}"
+noInput = "Vui lòng cung cấp khóa giấy phép hoặc tải lên tệp chứng chỉ"
+success = "Thành công"
 
 [admin.settings.premium.enabled]
 label = "Bật tính năng Premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} đã chọn"
 download = "Tải xuống"
 delete = "Xóa"
 unsupported = "Không được hỗ trợ"
+active = "Hoạt động"
 addToUpload = "Thêm vào tải lên"
+closeFile = "Đóng tệp"
 deleteAll = "Xóa tất cả"
 loadingFiles = "Đang tải tệp..."
 noFiles = "Không có tệp nào"
@@ -5132,7 +5262,7 @@ upgrade = "Nâng cấp ngay →"
 freeTitle = "Giấy phép Server"
 overLimitTitle = "Cần giấy phép Server"
 overLimitBody = "Giấy phép của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Bạn có <strong>{{overLimitUserCopy}}</strong> người dùng Stirling. Để tiếp tục không gián đoạn, hãy nâng cấp lên gói Stirling Server - <strong>số ghế không giới hạn</strong>, chỉnh sửa văn bản PDF và toàn quyền quản trị với $99/server/tháng."
-freeBody = "Giấy phép <strong>Open-Core</strong> của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí mỗi server. Để mở rộng không gián đoạn và truy cập sớm <strong>công cụ chỉnh sửa văn bản PDF</strong> mới, chúng tôi khuyến nghị gói Stirling Server - chỉnh sửa đầy đủ và <strong>số ghế không giới hạn</strong> với $99/server/tháng."
+freeBody = "Giấy phép <strong>Open-Core</strong> của chúng tôi cho phép tối đa <strong>{{freeTierLimit}}</strong> người dùng miễn phí cho mỗi máy chủ. Để mở rộng quy mô liền mạch, chúng tôi khuyến nghị gói Stirling Server - <strong>số lượng người dùng không giới hạn</strong> và <strong>hỗ trợ SSO</strong> với giá $99/máy chủ/tháng."
 
 [onboarding.desktopInstall]
 title = "Tải xuống"
@@ -5237,6 +5367,31 @@ error = "Cập nhật trạng thái người dùng thất bại"
 success = "Xóa người dùng thành công"
 error = "Xóa người dùng thất bại"
 
+[workspace.people.changePassword]
+action = "Đổi mật khẩu"
+title = "Đổi mật khẩu"
+subtitle = "Cập nhật mật khẩu cho"
+newPassword = "Mật khẩu mới"
+confirmPassword = "Xác nhận mật khẩu"
+placeholder = "Nhập mật khẩu mới"
+confirmPlaceholder = "Nhập lại mật khẩu mới"
+passwordRequired = "Vui lòng nhập mật khẩu mới"
+passwordMismatch = "Mật khẩu không khớp"
+generateRandom = "Tạo mật khẩu an toàn"
+generatedPreview = "Mật khẩu đã tạo:"
+copyTooltip = "Sao chép vào bộ nhớ tạm"
+copiedToClipboard = "Đã sao chép mật khẩu vào bộ nhớ tạm"
+copyFailed = "Không thể sao chép mật khẩu"
+sendEmail = "Gửi email cho người dùng về thay đổi này"
+includePassword = "Bao gồm mật khẩu mới trong email"
+forcePasswordChange = "Buộc người dùng đổi mật khẩu ở lần đăng nhập tiếp theo"
+emailUnavailable = "Email của người dùng này không phải là địa chỉ email hợp lệ. Đã tắt thông báo."
+smtpDisabled = "Thông báo email yêu cầu bật SMTP trong cài đặt."
+notifyOnly = "Sẽ gửi một email không kèm mật khẩu, cho người dùng biết quản trị viên đã thay đổi mật khẩu."
+submit = "Cập nhật mật khẩu"
+success = "Cập nhật mật khẩu thành công"
+error = "Không thể cập nhật mật khẩu"
+
 [workspace.people.emailInvite]
 tab = "Mời qua Email"
 description = "Nhập hoặc dán email bên dưới, phân tách bằng dấu phẩy. Người dùng sẽ nhận thông tin đăng nhập qua email."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Yêu cầu ít nhất một địa chỉ email"
 submit = "Gửi lời mời"
 success = "Mời người dùng thành công"
-partialSuccess = "Một số lời mời thất bại"
+partialFailure = "Một số lời mời không thành công"
 allFailed = "Mời người dùng thất bại"
 error = "Gửi lời mời thất bại"
 
@@ -5770,6 +5925,7 @@ subtitle = "Đăng nhập bằng tài khoản Stirling"
 [setup.selfhosted]
 title = "Đăng nhập vào server"
 subtitle = "Nhập thông tin đăng nhập server"
+link = "hoặc kết nối tới tài khoản tự lưu trữ"
 
 [setup.server]
 title = "Kết nối đến server"
@@ -5788,6 +5944,14 @@ description = "Nhập URL đầy đủ của server Stirling PDF tự lưu trữ
 emptyUrl = "Vui lòng nhập URL server"
 unreachable = "Không thể kết nối đến server"
 testFailed = "Kiểm tra kết nối thất bại"
+configFetch = "Không thể lấy cấu hình máy chủ. Vui lòng kiểm tra URL và thử lại."
+
+[setup.server.error.securityDisabled]
+title = "Chưa bật đăng nhập"
+body = "Máy chủ này chưa bật chức năng đăng nhập. Để kết nối tới máy chủ này, bạn phải bật xác thực:"
+step1 = "Đặt DOCKER_ENABLE_SECURITY=true trong môi trường của bạn"
+step2 = "Hoặc đặt security.enableLogin=true trong settings.yml"
+step3 = "Khởi động lại máy chủ"
 
 [setup.login]
 title = "Đăng nhập"
@@ -5797,6 +5961,13 @@ submit = "Đăng nhập"
 signInWith = "Đăng nhập với"
 oauthPending = "Đang mở trình duyệt để xác thực..."
 orContinueWith = "Hoặc tiếp tục bằng email"
+serverRequirement = "Lưu ý: Máy chủ phải bật đăng nhập."
+showInstructions = "Cách bật?"
+hideInstructions = "Ẩn hướng dẫn"
+instructions = "Để bật đăng nhập trên máy chủ Stirling PDF của bạn:"
+instructionsEnvVar = "Đặt biến môi trường:"
+instructionsOrYml = "Hoặc trong settings.yml:"
+instructionsRestart = "Sau đó khởi động lại máy chủ để các thay đổi có hiệu lực."
 
 [setup.login.username]
 label = "Tên người dùng"
@@ -5853,6 +6024,7 @@ earlyAccess = "Truy cập sớm"
 reset = "Đặt lại thay đổi"
 downloadJson = "Tải JSON"
 generatePdf = "Tạo PDF"
+saveChanges = "Lưu thay đổi"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tự căn chỉnh văn bản cho vừa hộp"
@@ -5890,6 +6062,8 @@ alpha = "Trình xem alpha này vẫn đang phát triển—một số font, màu
 [pdfTextEditor.empty]
 title = "Chưa tải tài liệu"
 subtitle = "Tải tệp PDF hoặc JSON để bắt đầu chỉnh sửa nội dung văn bản."
+dropzone = "Kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
+dropzoneWithFiles = "Chọn một tệp từ tab Tệp, hoặc kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
 
 [pdfTextEditor.welcomeBanner]
 title = "Chào mừng đến với PDF Text Editor (Truy cập sớm)"

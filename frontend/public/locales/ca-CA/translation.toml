@@ -163,6 +163,11 @@ unfavorite = "Elimina dels preferits"
 fullscreen = "Canvia al mode de pantalla completa"
 sidebar = "Canvia al mode de barra lateral"
 
+[backendStartup]
+notFoundTitle = "Backend no trobat"
+retry = "Torneu-ho a intentar"
+unreachable = "L'aplicació no pot connectar-se al backend ara mateix. Verifiqueu l'estat del backend i la connectivitat de xarxa i torneu-ho a intentar."
+
 [zipWarning]
 title = "Fitxer ZIP gran"
 message = "Aquest ZIP conté {{count}} fitxers. Vols extreure'l igualment?"
@@ -347,7 +352,7 @@ teams = "Equips"
 title = "Configuració"
 systemSettings = "Configuració del sistema"
 features = "Funcions"
-endpoints = "Endpoints"
+endpoints = "Punts finals"
 database = "Base de dades"
 advanced = "Avançat"
 
@@ -556,7 +561,7 @@ totalEndpoints = "Total d'endpoints"
 totalVisits = "Total de visites"
 showing = "Mostrant"
 selectedVisits = "Visites seleccionades"
-endpoint = "Endpoint"
+endpoint = "Punt final"
 visits = "Visites"
 percentage = "Percentatge"
 loading = "Carregant..."
@@ -912,6 +917,9 @@ desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal pe
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de text PDF"
+desc = "Edita el text i les imatges existents dins dels PDF"
 
 [home.addText]
 tags = "text,anotació,etiqueta"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Signatura dibuixada"
 defaultImageLabel = "Signatura pujada"
 defaultTextLabel = "Signatura teclejada"
 saveButton = "Desa la signatura"
+savePersonal = "Desa com a personal"
+saveShared = "Desa com a compartida"
 saveUnavailable = "Crea una signatura primer per poder-la desar."
 noChanges = "La signatura actual ja està desada."
+tempStorageTitle = "Emmagatzematge temporal del navegador"
+tempStorageDescription = "Les signatures només s'emmagatzemen al vostre navegador. Es perdran si netegeu les dades del navegador o canvieu de navegador."
+personalHeading = "Signatures personals"
+sharedHeading = "Signatures compartides"
+personalDescription = "Només vosaltres podeu veure aquestes signatures."
+sharedDescription = "Tots els usuaris poden veure i utilitzar aquestes signatures."
 
 [sign.saved.type]
 canvas = "Dibuix"
@@ -3020,6 +3036,91 @@ title = "Obteniu Informació del PDF"
 header = "Obteniu Informació del PDF"
 submit = "Obteniu Informació"
 downloadJson = "Descarrega JSON"
+processing = "Extraient informació..."
+results = "Resultats"
+noResults = "Executeu l'eina per generar un informe."
+downloads = "Descàrregues"
+noneDetected = "No se n'ha detectat cap"
+indexTitle = "Índex"
+
+[getPdfInfo.report]
+entryLabel = "Resum d'informació complet"
+shortTitle = "Informació del PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadades"
+formFields = "Camps de formulari"
+basicInfo = "Informació bàsica"
+documentInfo = "Informació del document"
+compliance = "Conformitat"
+encryption = "Xifratge"
+permissions = "Permisos"
+other = "Altres"
+perPageInfo = "Informació per pàgina"
+tableOfContents = "Taula de continguts"
+
+[getPdfInfo.other]
+attachments = "Fitxers adjunts"
+embeddedFiles = "Fitxers incrustats"
+javaScript = "JavaScript"
+layers = "Capes"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Mida"
+annotations = "Anotacions"
+images = "Imatges"
+links = "Enllaços"
+fonts = "Tipus de lletra"
+xobjects = "Recompte d'XObject"
+multimedia = "Multimèdia"
+
+[getPdfInfo.summary]
+pages = "Pàgines"
+fileSize = "Mida del fitxer"
+pdfVersion = "Versió del PDF"
+language = "Idioma"
+title = "Resum del PDF"
+author = "Autor"
+created = "Creat"
+modified = "Modificat"
+permsAll = "Tots els permisos permesos"
+permsRestricted = "{{count}} restriccions"
+permsMixed = "Alguns permisos restringits"
+hasCompliance = "Té estàndards de conformitat"
+noCompliance = "Sense estàndards de conformitat"
+basic = "Informació bàsica"
+documentInfo = "Informació del document"
+securityTitle = "Estat de seguretat"
+technical = "Tècnic"
+overviewTitle = "Visió general del PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF xifrat - Protecció amb contrasenya present"
+unencrypted = "PDF no xifrat - Sense protecció amb contrasenya"
+
+[getPdfInfo.summary.tech]
+images = "Imatges"
+fonts = "Tipus de lletra"
+formFields = "Camps de formulari"
+embeddedFiles = "Fitxers incrustats"
+javaScript = "JavaScript"
+layers = "Capes"
+bookmarks = "Marcadors"
+multimedia = "Multimèdia"
+
+[getPdfInfo.summary.overview]
+untitled = "un document sense títol"
+unknown = "Autor desconegut"
+text = "Aquest és un PDF de {{pages}} pàgines titulat {{title}} creat per {{author}} (versió del PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Alguns fitxers no s'han pogut processar."
+unexpected = "Error inesperat durant l'extracció."
+
+[getPdfInfo.status]
+complete = "Extracció completada"
 
 [extractPage]
 tags = "extreure"
@@ -3438,6 +3539,9 @@ signinTitle = "Autenticat"
 ssoSignIn = "Inicia sessió mitjançant inici de sessió únic"
 oAuth2AutoCreateDisabled = "La creació automàtica d'usuaris OAUTH2 està desactivada"
 oAuth2AdminBlockedUser = "El registre o inici de sessió d'usuaris no registrats està actualment bloquejat. Si us plau, contacta amb l'administrador."
+oAuth2RequiresLicense = "L'inici de sessió OAuth/SSO requereix una llicència de pagament (Server o Enterprise). Poseu-vos en contacte amb l'administrador per actualitzar el vostre pla."
+saml2RequiresLicense = "L'inici de sessió SAML requereix una llicència de pagament (Server o Enterprise). Poseu-vos en contacte amb l'administrador per actualitzar el vostre pla."
+maxUsersReached = "S'ha assolit el nombre màxim d'usuaris de la vostra llicència actual. Poseu-vos en contacte amb l'administrador per actualitzar el vostre pla o afegir més places."
 oauth2RequestNotFound = "Sol·licitud d'autorització no trobada"
 oauth2InvalidUserInfoResponse = "Resposta d'informació d'usuari no vàlida"
 oauth2invalidRequest = "Sol·licitud no vàlida"
@@ -3846,14 +3950,17 @@ fitToWidth = "Ajusta a l'amplada"
 actualSize = "Mida real"
 
 [viewer]
+cannotPreviewFile = "No es pot previsualitzar el fitxer"
+dualPageView = "Vista de dues pàgines"
 firstPage = "Primera pàgina"
 lastPage = "Última pàgina"
-previousPage = "Pàgina anterior"
 nextPage = "Pàgina següent"
+onlyPdfSupported = "El visualitzador només admet fitxers PDF. Aquest fitxer sembla ser d'un format diferent."
+previousPage = "Pàgina anterior"
+singlePageView = "Vista d'una sola pàgina"
+unknownFile = "Fitxer desconegut"
 zoomIn = "Amplia"
 zoomOut = "Redueix"
-singlePageView = "Vista d'una sola pàgina"
-dualPageView = "Vista de dues pàgines"
 
 [rightRail]
 closeSelected = "Tanca els fitxers seleccionats"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Mostra/oculta la barra lateral"
 exportSelected = "Exporta les pàgines seleccionades"
 toggleAnnotations = "Mostra/oculta les anotacions"
 annotationMode = "Activa/desactiva el mode d'anotació"
+print = "Imprimeix el PDF"
 draw = "Dibuixa"
 save = "Desa"
 saveChanges = "Desa els canvis"
@@ -3925,7 +4033,7 @@ files = "Fitxers"
 activity = "Registre"
 help = "Ajuda"
 account = "Compte"
-config = "Config"
+config = "Configuració"
 settings = "Ajustos"
 adminSettings = "Ajustos admin"
 allTools = "All Tools"
@@ -4343,7 +4451,7 @@ features = "Banderes de funcions"
 processing = "Processament"
 
 [admin.settings.advanced.endpoints]
-label = "Endpoints"
+label = "Punts finals"
 manage = "Gestiona els endpoints de l'API"
 description = "La gestió d'endpoints es configura via YAML. Consulteu la documentació per a detalls sobre com habilitar/deshabilitar endpoints específics."
 
@@ -4494,6 +4602,7 @@ description = "URL o nom de fitxer de l'impressum (requerit en algunes jurisdicc
 title = "Premium i Enterprise"
 description = "Configureu la clau de llicència Premium o Enterprise."
 license = "Configuració de llicència"
+noInput = "Proporcioneu una clau de llicència o un fitxer"
 
 [admin.settings.premium.licenseKey]
 toggle = "Tens una clau de llicència o un fitxer de certificat?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Avís: s'ha detectat una llicència existent"
 line1 = "Sobreescriure la clau de llicència actual no es pot desfer."
 line2 = "La llicència anterior es perdrà permanentment si no en tens una còpia de seguretat."
 line3 = "Important: mantén les claus de llicència privades i segures. No les comparteixis mai públicament."
+
+[admin.settings.premium.inputMethod]
+text = "Clau de llicència"
+file = "Fitxer de certificat"
+
+[admin.settings.premium.file]
+label = "Fitxer de certificat de llicència"
+description = "Pugeu el vostre fitxer de llicència .lic o .cert de compres fora de línia"
+choose = "Trieu el fitxer de llicència"
+selected = "Seleccionat: {{filename}} ({{size}})"
+successMessage = "Fitxer de llicència pujat i activat correctament. No cal reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Llicència activa"
+file = "Origen: Fitxer de llicència ({{path}})"
+key = "Origen: Clau de llicència"
+type = "Tipus: {{type}}"
+noInput = "Proporcioneu una clau de llicència o pugeu un fitxer de certificat"
+success = "Èxit"
 
 [admin.settings.premium.enabled]
 label = "Habilita les funcions Premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} seleccionats"
 download = "Descarrega"
 delete = "Esborra"
 unsupported = "No compatible"
+active = "Actiu"
 addToUpload = "Afegeix a la pujada"
+closeFile = "Tanca el fitxer"
 deleteAll = "Suprimeix-ho tot"
 loadingFiles = "Carregant fitxers..."
 noFiles = "No hi ha fitxers disponibles"
@@ -5132,7 +5262,7 @@ upgrade = "Actualitza ara →"
 freeTitle = "Llicència del servidor"
 overLimitTitle = "Cal una llicència de servidor"
 overLimitBody = "La nostra llicència permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Tens <strong>{{overLimitUserCopy}}</strong> usuaris de Stirling. Per continuar sense interrupcions, actualitza al pla Stirling Server: <strong>seients il·limitats</strong>, edició de text de PDF i control d'administració complet per 99 $/servidor/mes."
-freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions i obtenir accés anticipat a la nova <strong>eina d'edició de text PDF</strong>, recomanem el pla Stirling Server: edició completa i <strong>seients il·limitats</strong> per 99 $/servidor/mes."
+freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions, recomanem el pla Stirling Server - <strong>places il·limitades</strong> i <strong>suport SSO</strong> per $99/servidor/mes."
 
 [onboarding.desktopInstall]
 title = "Baixa"
@@ -5237,6 +5367,31 @@ error = "No s’ha pogut actualitzar l’estat de l’usuari"
 success = "Usuari suprimit correctament"
 error = "No s’ha pogut suprimir l’usuari"
 
+[workspace.people.changePassword]
+action = "Canvieu la contrasenya"
+title = "Canvi de contrasenya"
+subtitle = "Actualitza la contrasenya de"
+newPassword = "Contrasenya nova"
+confirmPassword = "Confirma la contrasenya"
+placeholder = "Introduïu una contrasenya nova"
+confirmPlaceholder = "Torneu a introduir la contrasenya nova"
+passwordRequired = "Introduïu una contrasenya nova"
+passwordMismatch = "Les contrasenyes no coincideixen"
+generateRandom = "Genereu una contrasenya segura"
+generatedPreview = "Contrasenya generada:"
+copyTooltip = "Copieu al portapapers"
+copiedToClipboard = "Contrasenya copiada al portapapers"
+copyFailed = "No s'ha pogut copiar la contrasenya"
+sendEmail = "Envieu un correu a l'usuari sobre aquest canvi"
+includePassword = "Incloeu la contrasenya nova al correu"
+forcePasswordChange = "Obligueu l'usuari a canviar la contrasenya en el pròxim inici de sessió"
+emailUnavailable = "El correu d'aquest usuari no és una adreça de correu vàlida. Les notificacions estan desactivades."
+smtpDisabled = "Les notificacions per correu electrònic requereixen habilitar SMTP als paràmetres."
+notifyOnly = "S'enviarà un correu sense la contrasenya, informant l'usuari que un administrador l'ha canviada."
+submit = "Actualitzeu la contrasenya"
+success = "La contrasenya s'ha actualitzat correctament"
+error = "No s'ha pogut actualitzar la contrasenya"
+
 [workspace.people.emailInvite]
 tab = "Invitació per correu"
 description = "Escriviu o enganxeu correus a continuació, separats per comes. Els usuaris rebran credencials d’inici de sessió per correu electrònic."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Cal almenys una adreça de correu"
 submit = "Envia invitacions"
 success = "usuari(s) convidat(s) correctament"
-partialSuccess = "Algunes invitacions han fallat"
+partialFailure = "Algunes invitacions han fallat"
 allFailed = "No s’ha pogut convidar els usuaris"
 error = "No s’han pogut enviar les invitacions"
 
@@ -5709,7 +5864,7 @@ title = "Gràfic d'ús dels endpoints"
 
 [usage.table]
 title = "Estadístiques detallades"
-endpoint = "Endpoint"
+endpoint = "Punt final"
 visits = "Visites"
 percentage = "Percentatge"
 noData = "No hi ha dades disponibles"
@@ -5770,6 +5925,7 @@ subtitle = "Inicia sessió amb el teu compte de Stirling"
 [setup.selfhosted]
 title = "Inicia sessió al servidor"
 subtitle = "Introdueix les credencials del servidor"
+link = "o connecteu-vos a un compte autoallotjat"
 
 [setup.server]
 title = "Connecta't al servidor"
@@ -5788,6 +5944,14 @@ description = "Introdueix la URL completa del teu servidor autoallotjat de Stirl
 emptyUrl = "Introdueix una URL de servidor"
 unreachable = "No s'ha pogut connectar amb el servidor"
 testFailed = "Ha fallat la prova de connexió"
+configFetch = "No s'ha pogut obtenir la configuració del servidor. Comproveu l'URL i torneu-ho a provar."
+
+[setup.server.error.securityDisabled]
+title = "Inici de sessió no habilitat"
+body = "Aquest servidor no té l'inici de sessió habilitat. Per connectar-hi, heu d'habilitar l'autenticació:"
+step1 = "Establiu DOCKER_ENABLE_SECURITY=true al vostre entorn"
+step2 = "O establiu security.enableLogin=true a settings.yml"
+step3 = "Reinicieu el servidor"
 
 [setup.login]
 title = "Inicia sessió"
@@ -5797,6 +5961,13 @@ submit = "Inicia sessió"
 signInWith = "Inicia sessió amb"
 oauthPending = "Obrint el navegador per autenticar-te..."
 orContinueWith = "O continua amb el correu electrònic"
+serverRequirement = "Nota: el servidor ha de tenir l'inici de sessió habilitat."
+showInstructions = "Com s'habilita?"
+hideInstructions = "Amagueu les instruccions"
+instructions = "Per habilitar l'inici de sessió al vostre servidor de Stirling PDF:"
+instructionsEnvVar = "Establiu la variable d'entorn:"
+instructionsOrYml = "O a settings.yml:"
+instructionsRestart = "A continuació, reinicieu el servidor perquè els canvis tinguin efecte."
 
 [setup.login.username]
 label = "Nom d'usuari"
@@ -5853,6 +6024,7 @@ earlyAccess = "Accés anticipat"
 reset = "Restableix els canvis"
 downloadJson = "Descarrega JSON"
 generatePdf = "Genera PDF"
+saveChanges = "Deseu els canvis"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoajusta el text a les caixes"
@@ -5890,6 +6062,8 @@ alpha = "Aquest visor alfa encara evoluciona—certs tipus de lletra, colors, ef
 [pdfTextEditor.empty]
 title = "No s'ha carregat cap document"
 subtitle = "Carrega un fitxer PDF o JSON per començar a editar el contingut de text."
+dropzone = "Arrossegueu i deixeu anar un fitxer PDF o JSON aquí, o feu clic per explorar"
+dropzoneWithFiles = "Seleccioneu un fitxer de la pestanya Fitxers o arrossegueu i deixeu anar aquí un fitxer PDF o JSON, o feu clic per explorar"
 
 [pdfTextEditor.welcomeBanner]
 title = "Benvingut a l'Editor de text PDF (accés anticipat)"
