@@ -11,8 +11,7 @@ export type OnboardingStepId =
 
 export type OnboardingStepType =
   | 'modal-slide'
-  | 'tool-prompt'
-  | 'analytics-modal';
+  | 'tool-prompt';
 
 export interface OnboardingRuntimeState {
   selectedRole: 'admin' | 'user' | null;
@@ -93,7 +92,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'security-check',
     type: 'modal-slide',
     slideId: 'security-check',
-    // condition: (ctx) => !ctx.loginEnabled && !ctx.isDesktopApp,
     condition: () => false,
   },
   {
@@ -105,7 +103,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'tool-layout',
     type: 'tool-prompt',
-    // condition: () => true,
     condition: () => false,
   },
   {

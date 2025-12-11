@@ -23,7 +23,6 @@ import { createWhatsNewStepsConfig } from '@app/components/onboarding/whatsNewSt
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-// import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
@@ -297,7 +296,7 @@ export default function Onboarding() {
       licenseNotice: effectiveLicenseNotice,
       loginEnabled: serverExperience.loginEnabled,
     });
-    
+
     return (
       <OnboardingModalSlide
         slideDefinition={slideDefinition}
@@ -345,10 +344,6 @@ export default function Onboarding() {
   switch (currentStep.type) {
     case 'tool-prompt':
       return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;
-
-    case 'analytics-modal':
-      // Deprecated: analytics step now uses standard onboarding slide styling.
-      return null;
 
     case 'modal-slide':
       if (!currentSlideDefinition || !currentSlideContent) return null;
