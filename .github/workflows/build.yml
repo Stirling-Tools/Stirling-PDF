@@ -199,7 +199,7 @@ jobs:
       - name: Run version sync
         run: ./gradlew syncAppVersion
 
-      - name: check is git changed write change file to output
+      - name: Check if version files have changed
         id: git-check
         run: |
           if [[ -n $(git status --porcelain) ]]; then
@@ -209,7 +209,7 @@ jobs:
           fi
 
       - name: Post comment on PR
-        if: steps.git-check.outputs.changes == 'true'
+        if: steps.git-check.outputs.changes == 'true' && github.event_name != 'workflow_dispatch'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
