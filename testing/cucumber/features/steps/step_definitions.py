@@ -321,7 +321,15 @@ def step_send_api_request(context, endpoint):
 
     form_data = []
     for key, value in context.request_data.items():
-        form_data.append((key, (None, value)))
+        # Handle list parameters (like 'languages') - send multiple form fields
+        # Split comma-separated values or treat single values as single-item lists
+        if key == "languages":
+            # Split by comma if present, otherwise treat as single value
+            values = [v.strip() for v in value.split(",")] if "," in value else [value]
+            for val in values:
+                form_data.append((key, (None, val)))
+        else:
+            form_data.append((key, (None, value)))
 
     for key, file in files.items():
         mime_type, _ = mimetypes.guess_type(file.name)
