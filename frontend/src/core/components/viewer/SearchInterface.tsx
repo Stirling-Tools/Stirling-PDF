@@ -281,15 +281,6 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           >
             <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
           </ActionIcon>
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            onClick={handleClearSearch}
-            disabled={!searchQuery.trim()}
-            aria-label="Clear search"
-          >
-            <LocalIcon icon="close" width="1rem" height="1rem" />
-          </ActionIcon>
         </Group>
       </Group>
 
