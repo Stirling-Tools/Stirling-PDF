@@ -6,7 +6,7 @@ plugins {
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "7.2.1"
-    id "com.github.jk1.dependency-license-report" version "2.9"
+    id "com.github.jk1.dependency-license-report" version "3.0.1"
     //id "nebula.lint" version "19.0.3"
     id "org.sonarqube" version "6.3.1.5724"
 }
