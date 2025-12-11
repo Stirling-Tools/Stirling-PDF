@@ -12,8 +12,8 @@ import {
   DEFAULT_RUNTIME_STATE,
 } from '@app/components/onboarding/orchestrator/onboardingConfig';
 import {
-  hasSeenStep,
-  markStepSeen,
+  isOnboardingCompleted,
+  markOnboardingCompleted,
   migrateFromLegacyPreferences,
 } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { accountService } from '@app/services/accountService';
@@ -156,7 +156,6 @@ export function useOnboardingOrchestrator(
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const migrationDone = useRef(false);
   const initialIndexSet = useRef(false);
-  const skipAutoCompleteOnce = useRef(false);
 
   useEffect(() => {
     if (!migrationDone.current) {
@@ -255,50 +254,27 @@ export function useOnboardingOrchestrator(
       return;
     }
 
-    // If all steps are already seen, jump to completion
-    if (activeFlow.every((step) => hasSeenStep(step.id))) {
+    // If onboarding has been completed, don't show it
+    if (isOnboardingCompleted() && !runtimeState.requiresPasswordChange) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
       return;
     }
-    let firstUnseenIndex = -1;
-    for (let i = 0; i < activeFlow.length; i++) {
-      // Special case: first-login step should always be considered "unseen" if requiresPasswordChange is true
-      const isFirstLoginStep = activeFlow[i].id === 'first-login';
-      const shouldTreatAsUnseen = isFirstLoginStep ? runtimeState.requiresPasswordChange : !hasSeenStep(activeFlow[i].id);
 
-      if (shouldTreatAsUnseen) {
-        firstUnseenIndex = i;
-        break;
-      }
-    }
-
-    // Force reset index when password change is required (overrides initialIndexSet)
-    if (runtimeState.requiresPasswordChange && firstUnseenIndex === 0) {
+    // Start from the beginning
+    if (!initialIndexSet.current) {
       setCurrentStepIndex(0);
-      initialIndexSet.current = true;
-    } else if (firstUnseenIndex === -1) {
-      setCurrentStepIndex(activeFlow.length);
-      initialIndexSet.current = true;
-    } else if (!initialIndexSet.current) {
-      setCurrentStepIndex(firstUnseenIndex);
       initialIndexSet.current = true;
     }
   }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
 
   const totalSteps = activeFlow.length;
 
-  const allStepsAlreadySeen = useMemo(() => {
-    if (activeFlow.length === 0) return false;
-    return activeFlow.every(step => hasSeenStep(step.id));
-  }, [activeFlow]);
-
   const isComplete = isInitialized &&
-    (totalSteps === 0 || currentStepIndex >= totalSteps || allStepsAlreadySeen);
-  const rawCurrentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps && !allStepsAlreadySeen)
+    (totalSteps === 0 || currentStepIndex >= totalSteps || isOnboardingCompleted());
+  const currentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps)
     ? activeFlow[currentStepIndex]
     : null;
-  const currentStep = rawCurrentStep && hasSeenStep(rawCurrentStep.id) ? null : rawCurrentStep;
   const isActive = !shouldBlockOnboarding && !isPaused && !isComplete && isInitialized && currentStep !== null;
   const isLoading = configLoading || !adminStatusResolved || !isInitialized ||
     !initialIndexSet.current || (currentStepIndex === -1 && activeFlow.length > 0);
@@ -312,40 +288,33 @@ export function useOnboardingOrchestrator(
   }, [isComplete]);
 
   const next = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex >= totalSteps) {
+      // Reached the end, mark onboarding as completed
+      markOnboardingCompleted();
+    }
+    setCurrentStepIndex(nextIndex);
+  }, [currentStepIndex, totalSteps]);
 
   const prev = useCallback(() => {
-    skipAutoCompleteOnce.current = true;
     setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
   }, []);
 
   const skip = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
+    // Skip marks the entire onboarding as completed
+    markOnboardingCompleted();
+    setCurrentStepIndex(totalSteps);
+  }, [totalSteps]);
 
   const complete = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex >= totalSteps) {
+      // Reached the end, mark onboarding as completed
+      markOnboardingCompleted();
+    }
+    setCurrentStepIndex(nextIndex);
+  }, [currentStepIndex, totalSteps]);
 
-  useEffect(() => {
-    if (!currentStep || isLoading) {
-      return;
-    }
-    if (skipAutoCompleteOnce.current) {
-      skipAutoCompleteOnce.current = false;
-      return;
-    }
-    // Special case: never auto-complete first-login step if requiresPasswordChange is true
-    const isFirstLoginStep = currentStep.id === 'first-login';
-
-    if (!isFirstLoginStep && hasSeenStep(currentStep.id)) {
-      complete();
-    }
-  }, [currentStep, isLoading, complete, runtimeState.requiresPasswordChange]);
 
   const updateRuntimeState = useCallback((updates: Partial<OnboardingRuntimeState>) => {
     persistRuntimeState(updates);

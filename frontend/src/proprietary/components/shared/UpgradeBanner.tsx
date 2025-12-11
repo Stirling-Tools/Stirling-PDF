@@ -13,7 +13,7 @@ import {
   UPGRADE_BANNER_ALERT_EVENT,
 } from '@core/constants/events';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-import { hasSeenStep } from '@core/components/onboarding/orchestrator/onboardingStorage';
+import { isOnboardingCompleted } from '@core/components/onboarding/orchestrator/onboardingStorage';
 
 const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -38,7 +38,7 @@ const UpgradeBanner: React.FC = () => {
     weeklyActiveUsers,
     scenarioKey,
   } = useServerExperience();
-  const onboardingComplete = hasSeenStep('welcome');
+  const onboardingComplete = isOnboardingCompleted();
   console.log('onboardingComplete', onboardingComplete);
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
     if (typeof window === 'undefined') return false;

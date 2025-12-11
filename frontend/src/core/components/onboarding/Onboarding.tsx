@@ -5,7 +5,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { isAuthRoute } from '@app/constants/routes';
 import { dispatchTourState } from '@app/constants/events';
 import { useOnboardingOrchestrator } from '@app/components/onboarding/orchestrator/useOnboardingOrchestrator';
-import { markStepSeen } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
 import OnboardingTour, { type AdvanceArgs, type CloseArgs } from '@app/components/onboarding/OnboardingTour';
 import OnboardingModalSlide from '@app/components/onboarding/OnboardingModalSlide';
@@ -94,32 +93,29 @@ export default function Onboarding() {
       case 'security-next':
         if (!runtimeState.selectedRole) return;
         if (runtimeState.selectedRole !== 'admin') {
-          actions.updateRuntimeState({ tourRequested: true, tourType: 'whatsnew' });
+          actions.updateRuntimeState({ tourType: 'whatsnew' });
+          setIsTourOpen(true);
         }
         actions.complete();
         break;
       case 'launch-admin':
-        actions.updateRuntimeState({ tourRequested: true, tourType: 'admin' });
-        actions.complete();
+        actions.updateRuntimeState({ tourType: 'admin' });
+        setIsTourOpen(true);
         break;
       case 'launch-tools':
-        actions.updateRuntimeState({ tourRequested: true, tourType: 'whatsnew' });
-        actions.complete();
+        actions.updateRuntimeState({ tourType: 'whatsnew' });
+        setIsTourOpen(true);
         break;
       case 'launch-auto': {
         const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'whatsnew';
-        actions.updateRuntimeState({ tourRequested: true, tourType });
-        actions.complete();
+        actions.updateRuntimeState({ tourType });
+        setIsTourOpen(true);
         break;
       }
       case 'skip-to-license':
-        markStepSeen('tour');
-        actions.updateRuntimeState({ tourRequested: false });
         actions.complete();
         break;
       case 'skip-tour':
-        markStepSeen('tour');
-        actions.updateRuntimeState({ tourRequested: false });
         actions.complete();
         break;
       case 'see-plans':
@@ -209,16 +205,8 @@ export default function Onboarding() {
   }, [adminStepsConfig, runtimeState.tourType, userStepsConfig, whatsNewStepsConfig]);
 
   useEffect(() => {
-    if (currentStep?.id === 'tour' && !isTourOpen) {
-      markStepSeen('tour');
-      setIsTourOpen(true);
-    }
-  }, [currentStep, isTourOpen, activeFlow]);
-
-  useEffect(() => {
     if (externalTourRequested) {
-      actions.updateRuntimeState({ tourRequested: true, tourType: requestedTourType });
-      markStepSeen('tour');
+      actions.updateRuntimeState({ tourType: requestedTourType });
       setIsTourOpen(true);
       clearTourRequest();
     }
@@ -236,9 +224,9 @@ export default function Onboarding() {
     } else {
       tourOrch.restoreWorkbenchState();
     }
-    markStepSeen('tour');
-    if (currentStep?.id === 'tour') actions.complete();
-  }, [actions, adminTourOrch, currentStep?.id, runtimeState.tourType, tourOrch]);
+    // Advance to next onboarding step after tour completes
+    actions.complete();
+  }, [actions, adminTourOrch, runtimeState.tourType, tourOrch]);
 
   const handleAdvanceTour = useCallback((args: AdvanceArgs) => {
     const { setCurrentStep, currentStep: tourCurrentStep, steps, setIsOpen } = args;
@@ -333,40 +321,36 @@ export default function Onboarding() {
     );
   }
 
+  // Always render the tour component (it controls its own visibility with isOpen)
+  const tourComponent = (
+    <OnboardingTour
+      isOpen={isTourOpen}
+      tourSteps={tourSteps}
+      tourType={runtimeState.tourType}
+      isRTL={isRTL}
+      t={t}
+      onAdvance={handleAdvanceTour}
+      onClose={handleCloseTour}
+    />
+  );
+
+  // If no active onboarding, just show the tour (which may or may not be open)
   if (isLoading || !isActive || !currentStep) {
-    return (
-      <OnboardingTour
-        isOpen={isTourOpen}
-        tourSteps={tourSteps}
-        tourType={runtimeState.tourType}
-        isRTL={isRTL}
-        t={t}
-        onAdvance={handleAdvanceTour}
-        onClose={handleCloseTour}
-      />
-    );
+    return tourComponent;
   }
 
+  // If tour is open, hide the onboarding modal and just show the tour
+  if (isTourOpen) {
+    return tourComponent;
+  }
+
+  // Render the current onboarding step
   switch (currentStep.type) {
     case 'tool-prompt':
       return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;
 
-    case 'tour':
-      return (
-        <OnboardingTour
-          isOpen={true}
-          tourSteps={tourSteps}
-          tourType={runtimeState.tourType}
-          isRTL={isRTL}
-          t={t}
-          onAdvance={handleAdvanceTour}
-          onClose={handleCloseTour}
-        />
-      );
-
     case 'analytics-modal':
       // Deprecated: analytics step now uses standard onboarding slide styling.
-      // return <AdminAnalyticsChoiceModal opened={true} onClose={actions.complete} />;
       return null;
 
     case 'modal-slide':

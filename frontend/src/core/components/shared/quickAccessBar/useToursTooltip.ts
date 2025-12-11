@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
-import { hasSeenStep, hasShownToursTooltip, markToursTooltipShown } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { isOnboardingCompleted, hasShownToursTooltip, markToursTooltipShown } from '@app/components/onboarding/orchestrator/onboardingStorage';
 
 export interface ToursTooltipState {
   tooltipOpen: boolean | undefined;
@@ -42,8 +42,7 @@ export function useToursTooltip(): ToursTooltipState {
 
   // Show once after onboarding is complete
   useEffect(() => {
-    const onboardingComplete = hasSeenStep('welcome');
-    if (onboardingComplete && !hasShownToursTooltip()) {
+    if (isOnboardingCompleted() && !hasShownToursTooltip()) {
       setShowToursTooltip(true);
     }
   }, []);

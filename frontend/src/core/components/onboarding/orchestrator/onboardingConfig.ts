@@ -6,14 +6,12 @@ export type OnboardingStepId =
   | 'admin-overview'
   | 'tool-layout'
   | 'tour-overview'
-  | 'tour'
   | 'server-license'
   | 'analytics-choice';
 
 export type OnboardingStepType =
   | 'modal-slide'
   | 'tool-prompt'
-  | 'tour'
   | 'analytics-modal';
 
 export interface OnboardingRuntimeState {
@@ -115,11 +113,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: 'modal-slide',
     slideId: 'tour-overview',
     condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== 'admin',
-  },
-  {
-    id: 'tour',
-    type: 'tour',
-    condition: (ctx) => ctx.tourRequested,
   },
   {
     id: 'server-license',

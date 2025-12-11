@@ -5843,6 +5843,8 @@ notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Error loading audit system"

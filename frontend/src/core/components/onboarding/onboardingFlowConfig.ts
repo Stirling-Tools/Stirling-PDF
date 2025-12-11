@@ -204,6 +204,13 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
     hero: { type: 'dual-icon' },
     buttons: [
       {
+        key: 'license-back',
+        type: 'icon',
+        icon: 'chevron-left',
+        group: 'left',
+        action: 'prev',
+      },
+      {
         key: 'license-close',
         type: 'button',
         label: 'onboarding.buttons.skipForNow',
@@ -226,6 +233,13 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
     createSlide: () => TourOverviewSlide(),
     hero: { type: 'rocket' },
     buttons: [
+      {
+        key: 'tour-overview-back',
+        type: 'icon',
+        icon: 'chevron-left',
+        group: 'left',
+        action: 'prev',
+      },
       {
         key: 'tour-overview-skip',
         type: 'button',
