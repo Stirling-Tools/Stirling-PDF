@@ -158,7 +158,6 @@ public class RequestUriUtils {
 
         // Public auth endpoints that don't require authentication
         return trimmedUri.startsWith("/login")
-                || trimmedUri.startsWith("/logout")
                 || trimmedUri.startsWith("/auth/")
                 || trimmedUri.startsWith("/oauth2")
                 || trimmedUri.startsWith("/saml2")

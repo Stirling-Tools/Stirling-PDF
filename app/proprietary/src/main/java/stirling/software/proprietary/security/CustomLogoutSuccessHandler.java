@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
@@ -244,7 +245,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase(Locale.ROOT)) {
-            case "keycloak" -> handleOidcLogout(request, response, oAuthToken, oauth, redirectUrl);
             case "github", "google" -> {
                 // These providers don't support OIDC logout
                 log.info(
@@ -253,10 +253,69 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                         redirectUrl);
                 response.sendRedirect(redirectUrl);
             }
-            default -> {
-                // Try generic OIDC logout for any other provider
-                handleOidcLogout(request, response, oAuthToken, oauth, redirectUrl);
+            default -> handleOidcLogout(response, oAuthToken, oauth, redirectUrl);
+        }
+    }
+
+    // Redirect for JWT-based OAuth2 authentication logout
+    private void handleJwtOAuth2Logout(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        OAUTH2 oauth = securityProperties.getOauth2();
+        String path = checkForErrors(request);
+        String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
+
+        // For JWT-based auth, we don't have OAuth2AuthenticationToken
+        // Attempt generic OIDC logout
+        String issuer = null;
+        String clientId = null;
+
+        if (oauth.getClient() != null && oauth.getClient().getKeycloak() != null) {
+            KeycloakProvider keycloak = oauth.getClient().getKeycloak();
+            if (keycloak.getIssuer() != null && !keycloak.getIssuer().isBlank()) {
+                issuer = keycloak.getIssuer();
+                clientId = keycloak.getClientId();
+            } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
+                issuer = oauth.getIssuer();
+                clientId = oauth.getClientId();
             }
+        } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
+            issuer = oauth.getIssuer();
+            clientId = oauth.getClientId();
+        }
+
+        String endSessionEndpoint = getEndSessionEndpoint(oauth, issuer);
+
+        // If no endpoint found, try Keycloak fallback
+        if (endSessionEndpoint == null && issuer != null) {
+            endSessionEndpoint = issuer + "/protocol/openid-connect/logout";
+            log.debug("Using Keycloak fallback logout path: {}", endSessionEndpoint);
+        }
+
+        // If we have an endpoint, construct the logout URL
+        if (endSessionEndpoint != null) {
+            StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
+            logoutUrlBuilder.append(endSessionEndpoint.contains("?") ? "&" : "?");
+
+            // Without OAuth2AuthenticationToken, we don't have id_token_hint
+            // Just use client_id and post_logout_redirect_uri
+            if (clientId != null && !clientId.isBlank()) {
+                logoutUrlBuilder.append("client_id=").append(clientId);
+                logoutUrlBuilder.append("&");
+            }
+            logoutUrlBuilder
+                    .append("post_logout_redirect_uri=")
+                    .append(response.encodeRedirectURL(redirectUrl));
+
+            String logoutUrl = logoutUrlBuilder.toString();
+            log.info("JWT-based OAuth2 logout URL: {}", logoutUrl);
+            response.sendRedirect(logoutUrl);
+        } else {
+            // No OIDC logout endpoint available - fallback to local logout
+            log.info(
+                    "No OIDC logout endpoint available for issuer: {}. Using local logout: {}",
+                    issuer,
+                    redirectUrl);
+            response.sendRedirect(redirectUrl);
         }
     }
 
@@ -265,7 +324,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      * Discovered endpoint 3. Keycloak fallback (if isKeycloak=true) 4. Local logout
      */
     private void handleOidcLogout(
-            HttpServletRequest request,
             HttpServletResponse response,
             OAuth2AuthenticationToken oAuthToken,
             OAUTH2 oauth,

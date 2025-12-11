@@ -6,17 +6,20 @@ import static stirling.software.proprietary.security.model.AuthenticationType.OA
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 import static stirling.software.proprietary.security.model.AuthenticationType.WEB;
 
+import io.jsonwebtoken.Jwts;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,7 +29,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -40,7 +42,6 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtServiceInterface jwtService;
@@ -48,6 +49,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final ApplicationProperties.Security securityProperties;
+
+    public JwtAuthenticationFilter(
+            JwtServiceInterface jwtService,
+            UserService userService,
+            CustomUserDetailsService userDetailsService,
+            AuthenticationEntryPoint authenticationEntryPoint,
+            ApplicationProperties.Security securityProperties) {
+        this.jwtService = jwtService;
+        this.userService = userService;
+        this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.securityProperties = securityProperties;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -111,7 +125,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String tokenUsername = claims.get("sub").toString();
 
             try {
-                authenticate(request, claims);
+                authenticate(request, jwtToken, claims);
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
                 handleAuthenticationFailure(
@@ -165,7 +179,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private void authenticate(HttpServletRequest request, Map<String, Object> claims)
+    private void authenticate(
+            HttpServletRequest request, String jwtToken, Map<String, Object> claims)
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
@@ -174,9 +189,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                Jwt jwt =
+                        Jwt.withTokenValue(jwtToken)
+                                .headers(headers -> headers.put("alg", Jwts.SIG.RS256.getId()))
+                                .claims(claimsMap -> claimsMap.putAll(claims))
+                                .build();
+
+                JwtAuthenticationToken authToken =
+                        new JwtAuthenticationToken(jwt, userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 log.debug("Setting authentication for user: {}", username);
