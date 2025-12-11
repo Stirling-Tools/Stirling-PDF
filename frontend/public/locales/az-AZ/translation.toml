@@ -3036,6 +3036,91 @@ title = "PDF Barəsində Məlumat Əldə Et"
 header = "PDF Barəsində Məlumat Əldə Et"
 submit = "Məlumat Əldə Et"
 downloadJson = "JSON yüklə"
+processing = "Məlumat çıxarılır..."
+results = "Nəticələr"
+noResults = "Hesabat yaratmaq üçün aləti işə salın."
+downloads = "Yükləmələr"
+noneDetected = "Heç nə aşkar edilmədi"
+indexTitle = "İndeks"
+
+[getPdfInfo.report]
+entryLabel = "Tam məlumat xülasəsi"
+shortTitle = "PDF Məlumatı"
+
+[getPdfInfo.sections]
+metadata = "Metaməlumat"
+formFields = "Forma sahələri"
+basicInfo = "Əsas Məlumat"
+documentInfo = "Sənəd Məlumatı"
+compliance = "Uyğunluq"
+encryption = "Şifrələmə"
+permissions = "İcazələr"
+other = "Digər"
+perPageInfo = "Hər səhifə üzrə məlumat"
+tableOfContents = "Mündəricat"
+
+[getPdfInfo.other]
+attachments = "Əlavələr"
+embeddedFiles = "Gömülü fayllar"
+javaScript = "JavaScript"
+layers = "Qatlar"
+structureTree = "Struktur ağacı"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Ölçü"
+annotations = "Annotasiyalar"
+images = "Şəkillər"
+links = "Keçidlər"
+fonts = "Şriftlər"
+xobjects = "XObject sayları"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Səhifələr"
+fileSize = "Fayl Ölçüsü"
+pdfVersion = "PDF Versiyası"
+language = "Dil"
+title = "PDF Xülasəsi"
+author = "Müəllif"
+created = "Yaradılıb"
+modified = "Dəyişdirilib"
+permsAll = "Bütün icazələr verilib"
+permsRestricted = "{{count}} məhdudiyyət"
+permsMixed = "Bəzi icazələr məhdudlaşdırılıb"
+hasCompliance = "Uyğunluq standartları mövcuddur"
+noCompliance = "Uyğunluq standartları yoxdur"
+basic = "Əsas Məlumat"
+documentInfo = "Sənəd Məlumatı"
+securityTitle = "Təhlükəsizlik Vəziyyəti"
+technical = "Texniki"
+overviewTitle = "PDF İcmalı"
+
+[getPdfInfo.summary.security]
+encrypted = "Şifrələnmiş PDF - Parol ilə qorunur"
+unencrypted = "Şifrələnməmiş PDF - Parol qorunması yoxdur"
+
+[getPdfInfo.summary.tech]
+images = "Şəkillər"
+fonts = "Şriftlər"
+formFields = "Forma sahələri"
+embeddedFiles = "Gömülü fayllar"
+javaScript = "JavaScript"
+layers = "Qatlar"
+bookmarks = "Əlfəcinlər"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "adsız sənəd"
+unknown = "Naməlum müəllif"
+text = "Bu, {{author}} tərəfindən yaradılmış, {{title}} adlı, {{pages}} səhifəlik PDF-dir (PDF versiyası {{version}})."
+
+[getPdfInfo.error]
+partial = "Bəzi faylları emal etmək mümkün olmadı."
+unexpected = "Çıxarılma zamanı gözlənilməz xəta baş verdi."
+
+[getPdfInfo.status]
+complete = "Çıxarılma tamamlandı"
 
 [extractPage]
 tags = "çıxar"
@@ -5282,6 +5367,31 @@ error = "İstifadəçi statusunu yeniləmək alınmadı"
 success = "İstifadəçi uğurla silindi"
 error = "İstifadəçini silmək alınmadı"
 
+[workspace.people.changePassword]
+action = "Parolu dəyiş"
+title = "Parolu dəyiş"
+subtitle = "Aşağıdakı istifadəçi üçün parolu yeniləyin"
+newPassword = "Yeni parol"
+confirmPassword = "Parolu təsdiq edin"
+placeholder = "Yeni parolu daxil edin"
+confirmPlaceholder = "Yeni parolu yenidən daxil edin"
+passwordRequired = "Zəhmət olmasa yeni parolu daxil edin"
+passwordMismatch = "Parollar uyğun gəlmir"
+generateRandom = "Təhlükəsiz parol yaradın"
+generatedPreview = "Yaradılmış parol:"
+copyTooltip = "Buferə kopyala"
+copiedToClipboard = "Parol buferə kopyalandı"
+copyFailed = "Parolu kopyalamaq alınmadı"
+sendEmail = "Bu dəyişiklik barədə istifadəçiyə e-poçt göndərin"
+includePassword = "E-poçta yeni parolu daxil edin"
+forcePasswordChange = "Növbəti girişdə istifadəçini parolu dəyişməyə məcbur et"
+emailUnavailable = "Bu istifadəçinin e-poçtu etibarlı e-poçt ünvanı deyil. Bildirişlər söndürülüb."
+smtpDisabled = "E-poçt bildirişləri üçün parametrlərdə SMTP aktiv olmalıdır."
+notifyOnly = "Parol olmadan e-poçt göndəriləcək; istifadəçiyə adminin onu dəyişdiyi bildiriləcək."
+submit = "Parolu yenilə"
+success = "Parol uğurla yeniləndi"
+error = "Parolu yeniləmək alınmadı"
+
 [workspace.people.emailInvite]
 tab = "E-poçt Dəvəti"
 description = "Aşağıya vergüllə ayrılmış e-poçtları yazın və ya yapışdırın. İstifadəçilərə giriş məlumatları e-poçtla göndəriləcək."
@@ -5815,6 +5925,7 @@ subtitle = "Stirling hesabınızla daxil olun"
 [setup.selfhosted]
 title = "Serverə daxil olun"
 subtitle = "Server məlumatlarınızı daxil edin"
+link = "və ya self-hosted hesaba qoşulun"
 
 [setup.server]
 title = "Serverə qoşulun"
@@ -5833,6 +5944,14 @@ description = "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
 emptyUrl = "Zəhmət olmasa server URL-i daxil edin"
 unreachable = "Serverə qoşulmaq mümkün olmadı"
 testFailed = "Bağlantı testi uğursuz oldu"
+configFetch = "Server konfiqurasiyasını əldə etmək mümkün olmadı. URL-i yoxlayın və yenidən cəhd edin."
+
+[setup.server.error.securityDisabled]
+title = "Giriş aktiv deyil"
+body = "Bu serverdə giriş aktiv deyil. Bu serverə qoşulmaq üçün autentifikasiya aktiv edilməlidir:"
+step1 = "Mühitinizdə DOCKER_ENABLE_SECURITY=true təyin edin"
+step2 = "Yaxud settings.yml faylında security.enableLogin=true təyin edin"
+step3 = "Serveri yenidən başladın"
 
 [setup.login]
 title = "Daxil ol"
@@ -5905,6 +6024,7 @@ earlyAccess = "Erkən Giriş"
 reset = "Dəyişiklikləri sıfırla"
 downloadJson = "JSON-u endir"
 generatePdf = "PDF yarat"
+saveChanges = "Dəyişiklikləri yadda saxla"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Mətni avtomatik miqyasla"
@@ -5942,6 +6062,8 @@ alpha = "Bu alfa görüntüləyici hələ inkişaf edir—bəzi şriftlər, rən
 [pdfTextEditor.empty]
 title = "Sənəd yüklənməyib"
 subtitle = "Mətn məzmununu redaktə etməyə başlamaq üçün PDF və ya JSON faylı yükləyin."
+dropzone = "Buraya PDF və ya JSON faylını sürükləyib buraxın və ya baxmaq üçün klikləyin"
+dropzoneWithFiles = "Fayllar vərəqindən bir fayl seçin və ya buraya PDF və ya JSON faylını sürükləyib buraxın, yaxud baxmaq üçün klikləyin"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Text Editor-ə xoş gəldiniz (Erkən Giriş)"
