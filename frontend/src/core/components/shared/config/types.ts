@@ -3,6 +3,7 @@ export const VALID_NAV_KEYS = [
   'preferences',
   'notifications',
   'connections',
+  'account',
   'general',
   'people',
   'teams',

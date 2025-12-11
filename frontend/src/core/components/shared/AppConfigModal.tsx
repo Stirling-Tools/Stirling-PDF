@@ -69,7 +69,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   }), []);
 
   // Get isAdmin and runningEE from app config
-  const isAdmin = true // config?.isAdmin ?? false;
+  const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
