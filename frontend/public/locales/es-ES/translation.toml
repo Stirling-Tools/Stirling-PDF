@@ -163,6 +163,11 @@ unfavorite = "Quitar de favoritos"
 fullscreen = "Cambiar a modo pantalla completa"
 sidebar = "Cambiar a modo barra lateral"
 
+[backendStartup]
+notFoundTitle = "Backend no encontrado"
+retry = "Reintentar"
+unreachable = "La aplicación no puede conectarse actualmente al backend. Verifique el estado del backend y la conectividad de red, luego inténtelo de nuevo."
+
 [zipWarning]
 title = "Archivo ZIP grande"
 message = "Este ZIP contiene {{count}} archivos. ¿Extraer de todos modos?"
@@ -347,7 +352,7 @@ teams = "Equipos"
 title = "Configuración"
 systemSettings = "Ajustes del sistema"
 features = "Funciones"
-endpoints = "Endpoints"
+endpoints = "Puntos de conexión"
 database = "Base de datos"
 advanced = "Avanzado"
 
@@ -912,6 +917,9 @@ desc = "Crear flujos de trabajo de múltiples pasos encadenando acciones de PDF.
 desc = "Superponer PDFs encima de otro PDF"
 title = "Superponer PDFs"
 
+[home.pdfTextEditor]
+title = "Editor de texto de PDF"
+desc = "Edita texto e imágenes existentes dentro de archivos PDF"
 
 [home.addText]
 tags = "texto,anotación,etiqueta"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Firma dibujada"
 defaultImageLabel = "Firma subida"
 defaultTextLabel = "Firma escrita"
 saveButton = "Guardar firma"
+savePersonal = "Guardar personal"
+saveShared = "Guardar compartida"
 saveUnavailable = "Cree primero una firma para guardarla."
 noChanges = "La firma actual ya está guardada."
+tempStorageTitle = "Almacenamiento temporal del navegador"
+tempStorageDescription = "Las firmas se almacenan solo en tu navegador. Se perderán si borras los datos del navegador o cambias de navegador."
+personalHeading = "Firmas personales"
+sharedHeading = "Firmas compartidas"
+personalDescription = "Solo tú puedes ver estas firmas."
+sharedDescription = "Todos los usuarios pueden ver y usar estas firmas."
 
 [sign.saved.type]
 canvas = "Dibujo"
@@ -3020,6 +3036,91 @@ title = "Obtener Información del PDF"
 header = "Obtener Información del PDF"
 submit = "Obtener Información"
 downloadJson = "Descargar JSON"
+processing = "Extrayendo información..."
+results = "Resultados"
+noResults = "Ejecute la herramienta para generar un informe."
+downloads = "Descargas"
+noneDetected = "Ninguno detectado"
+indexTitle = "Índice"
+
+[getPdfInfo.report]
+entryLabel = "Resumen completo de información"
+shortTitle = "Información del PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadatos"
+formFields = "Campos de formulario"
+basicInfo = "Información básica"
+documentInfo = "Información del documento"
+compliance = "Conformidad"
+encryption = "Cifrado"
+permissions = "Permisos"
+other = "Otros"
+perPageInfo = "Información por página"
+tableOfContents = "Tabla de contenidos"
+
+[getPdfInfo.other]
+attachments = "Adjuntos"
+embeddedFiles = "Archivos incrustados"
+javaScript = "JavaScript"
+layers = "Capas"
+structureTree = "Árbol de estructura"
+xmp = "Metadatos XMP"
+
+[getPdfInfo.perPage]
+size = "Tamaño"
+annotations = "Anotaciones"
+images = "Imágenes"
+links = "Enlaces"
+fonts = "Fuentes"
+xobjects = "Recuento de XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Páginas"
+fileSize = "Tamaño del archivo"
+pdfVersion = "Versión de PDF"
+language = "Idioma"
+title = "Resumen del PDF"
+author = "Autor"
+created = "Creado"
+modified = "Modificado"
+permsAll = "Todos los permisos permitidos"
+permsRestricted = "{{count}} restricciones"
+permsMixed = "Algunos permisos restringidos"
+hasCompliance = "Cumple con estándares"
+noCompliance = "Sin estándares de conformidad"
+basic = "Información básica"
+documentInfo = "Información del documento"
+securityTitle = "Estado de seguridad"
+technical = "Técnico"
+overviewTitle = "Vista general del PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF cifrado: protección con contraseña presente"
+unencrypted = "PDF sin cifrar: sin protección con contraseña"
+
+[getPdfInfo.summary.tech]
+images = "Imágenes"
+fonts = "Fuentes"
+formFields = "Campos de formulario"
+embeddedFiles = "Archivos incrustados"
+javaScript = "JavaScript"
+layers = "Capas"
+bookmarks = "Marcadores"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "un documento sin título"
+unknown = "Autor desconocido"
+text = "Este es un PDF de {{pages}} páginas titulado {{title}} creado por {{author}} (versión de PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Algunos archivos no se pudieron procesar."
+unexpected = "Error inesperado durante la extracción."
+
+[getPdfInfo.status]
+complete = "Extracción completada"
 
 [extractPage]
 tags = "extraer"
@@ -3438,6 +3539,9 @@ signinTitle = "Por favor, inicie sesión"
 ssoSignIn = "Iniciar sesión a través del inicio de sesión único"
 oAuth2AutoCreateDisabled = "Usuario de creación automática de OAUTH2 DESACTIVADO"
 oAuth2AdminBlockedUser = "El registro o inicio de sesión de usuarios no registrados está actualmente bloqueado. Por favor, póngase en contacto con el administrador."
+oAuth2RequiresLicense = "El inicio de sesión OAuth/SSO requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+saml2RequiresLicense = "El inicio de sesión SAML requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+maxUsersReached = "Se alcanzó el número máximo de usuarios para su licencia actual. Póngase en contacto con el administrador para actualizar su plan o añadir más plazas."
 oauth2RequestNotFound = "Solicitud de autorización no encontrada"
 oauth2InvalidUserInfoResponse = "Respuesta de información de usuario no válida"
 oauth2invalidRequest = "Solicitud no válida"
@@ -3846,14 +3950,17 @@ fitToWidth = "Ajustar al Ancho"
 actualSize = "Tamaño Real"
 
 [viewer]
+cannotPreviewFile = "No se puede previsualizar el archivo"
+dualPageView = "Vista de Página Doble"
 firstPage = "Primera Página"
 lastPage = "Última Página"
-previousPage = "Página Anterior"
 nextPage = "Página Siguiente"
+onlyPdfSupported = "El visor solo admite archivos PDF. Este archivo parece ser de un formato diferente."
+previousPage = "Página Anterior"
+singlePageView = "Vista de Página Única"
+unknownFile = "Archivo desconocido"
 zoomIn = "Acercar"
 zoomOut = "Alejar"
-singlePageView = "Vista de Página Única"
-dualPageView = "Vista de Página Doble"
 
 [rightRail]
 closeSelected = "Cerrar Archivos Seleccionados"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Alternar Barra Lateral"
 exportSelected = "Exportar páginas seleccionadas"
 toggleAnnotations = "Mostrar/ocultar anotaciones"
 annotationMode = "Cambiar modo de anotaciones"
+print = "Imprimir PDF"
 draw = "Dibujar"
 save = "Guardar"
 saveChanges = "Guardar cambios"
@@ -4494,6 +4602,7 @@ description = "URL o nombre de archivo del impressum (requerido en algunas juris
 title = "Premium y Enterprise"
 description = "Configura tu clave de licencia premium o enterprise."
 license = "Configuración de licencia"
+noInput = "Proporciona una clave o archivo de licencia"
 
 [admin.settings.premium.licenseKey]
 toggle = "¿Tiene una clave de licencia o un archivo de certificado?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Advertencia: se detectó una licencia existente"
 line1 = "Sobrescribir su clave de licencia actual no se puede deshacer."
 line2 = "Su licencia anterior se perderá de forma permanente a menos que la haya respaldado en otro lugar."
 line3 = "Importante: mantenga las claves de licencia privadas y seguras. Nunca las comparta públicamente."
+
+[admin.settings.premium.inputMethod]
+text = "Clave de licencia"
+file = "Archivo de certificado"
+
+[admin.settings.premium.file]
+label = "Archivo de certificado de licencia"
+description = "Sube tu archivo de licencia .lic o .cert de compras sin conexión"
+choose = "Elegir archivo de licencia"
+selected = "Seleccionado: {{filename}} ({{size}})"
+successMessage = "Archivo de licencia subido y activado correctamente. No es necesario reiniciar."
+
+[admin.settings.premium.currentLicense]
+title = "Licencia activa"
+file = "Origen: Archivo de licencia ({{path}})"
+key = "Origen: Clave de licencia"
+type = "Tipo: {{type}}"
+noInput = "Proporciona una clave de licencia o sube un archivo de certificado"
+success = "Éxito"
 
 [admin.settings.premium.enabled]
 label = "Habilitar funciones Premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} seleccionados"
 download = "Descargar"
 delete = "Borrar"
 unsupported = "No Soportado"
+active = "Activo"
 addToUpload = "Añadir a la subida"
+closeFile = "Cerrar archivo"
 deleteAll = "Eliminar todo"
 loadingFiles = "Cargando archivos..."
 noFiles = "No hay archivos disponibles"
@@ -5132,7 +5262,7 @@ upgrade = "Actualizar ahora →"
 freeTitle = "Licencia del servidor"
 overLimitTitle = "Se necesita licencia de servidor"
 overLimitBody = "Nuestra licencia permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Tiene <strong>{{overLimitUserCopy}}</strong> usuarios de Stirling. Para continuar sin interrupciones, actualice al plan Stirling Server: <strong>plazas ilimitadas</strong>, edición de texto PDF y control total de administración por 99 $/servidor/mes."
-freeBody = "Nuestra licencia <strong>Open-Core</strong> permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Para escalar sin interrupciones y obtener acceso anticipado a nuestra nueva <strong>herramienta de edición de texto PDF</strong>, recomendamos el plan Stirling Server: edición completa y <strong>plazas ilimitadas</strong> por 99 $/servidor/mes."
+freeBody = "Nuestra licencia <strong>Open-Core</strong> permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Para escalar sin interrupciones, recomendamos el plan Stirling Server - <strong>plazas ilimitadas</strong> y <strong>soporte SSO</strong> por $99/servidor/mes."
 
 [onboarding.desktopInstall]
 title = "Descargar"
@@ -5204,7 +5334,7 @@ user = "Usuario"
 [workspace.people.addMember]
 title = "Añadir miembro"
 username = "Nombre de usuario (correo)"
-usernamePlaceholder = "user@example.com"
+usernamePlaceholder = "usuario@ejemplo.com"
 password = "Contraseña"
 passwordPlaceholder = "Introduce la contraseña"
 role = "Rol"
@@ -5237,15 +5367,40 @@ error = "No se pudo actualizar el estado del usuario"
 success = "Usuario eliminado correctamente"
 error = "No se pudo eliminar el usuario"
 
+[workspace.people.changePassword]
+action = "Cambiar contraseña"
+title = "Cambiar contraseña"
+subtitle = "Actualizar la contraseña de"
+newPassword = "Nueva contraseña"
+confirmPassword = "Confirmar contraseña"
+placeholder = "Introduzca una nueva contraseña"
+confirmPlaceholder = "Vuelva a introducir la nueva contraseña"
+passwordRequired = "Introduzca una nueva contraseña"
+passwordMismatch = "Las contraseñas no coinciden"
+generateRandom = "Generar contraseña segura"
+generatedPreview = "Contraseña generada:"
+copyTooltip = "Copiar al portapapeles"
+copiedToClipboard = "Contraseña copiada al portapapeles"
+copyFailed = "Error al copiar la contraseña"
+sendEmail = "Enviar un correo al usuario sobre este cambio"
+includePassword = "Incluir la nueva contraseña en el correo"
+forcePasswordChange = "Obligar al usuario a cambiar la contraseña en el próximo inicio de sesión"
+emailUnavailable = "El correo de este usuario no es una dirección válida. Las notificaciones están desactivadas."
+smtpDisabled = "Las notificaciones por correo requieren que SMTP esté habilitado en la configuración."
+notifyOnly = "Se enviará un correo sin la contraseña, informando al usuario de que un administrador la cambió."
+submit = "Actualizar contraseña"
+success = "Contraseña actualizada correctamente"
+error = "No se pudo actualizar la contraseña"
+
 [workspace.people.emailInvite]
 tab = "Invitación por correo electrónico"
 description = "Escribe o pega correos a continuación, separados por comas. Los usuarios recibirán credenciales de inicio de sesión por correo electrónico."
 emails = "Direcciones de correo electrónico"
-emailsPlaceholder = "user1@example.com, user2@example.com"
+emailsPlaceholder = "usuario1@ejemplo.com, usuario2@ejemplo.com"
 emailsRequired = "Se requiere al menos una dirección de correo electrónico"
 submit = "Enviar invitaciones"
 success = "usuario(s) invitado(s) correctamente"
-partialSuccess = "Algunas invitaciones fallaron"
+partialFailure = "Algunas invitaciones fallaron"
 allFailed = "No se pudo invitar a los usuarios"
 error = "No se pudieron enviar las invitaciones"
 
@@ -5541,7 +5696,7 @@ emailInvalid = "Introduzca una dirección de correo válida"
 title = "Introduzca su correo electrónico"
 description = "Lo usaremos para enviar su clave de licencia y recibos."
 emailLabel = "Dirección de correo electrónico"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "su@email.com"
 continue = "Continuar"
 modalTitle = "Comenzar - {{planName}}"
 
@@ -5770,6 +5925,7 @@ subtitle = "Inicie sesión con su cuenta de Stirling"
 [setup.selfhosted]
 title = "Inicie sesión en el servidor"
 subtitle = "Introduzca las credenciales de su servidor"
+link = "o conectarse a una cuenta autoalojada"
 
 [setup.server]
 title = "Conectar con el servidor"
@@ -5788,6 +5944,14 @@ description = "Introduzca la URL completa de su servidor autoalojado de Stirling
 emptyUrl = "Introduzca una URL de servidor"
 unreachable = "No se pudo conectar con el servidor"
 testFailed = "Falló la prueba de conexión"
+configFetch = "No se pudo obtener la configuración del servidor. Compruebe la URL e inténtelo de nuevo."
+
+[setup.server.error.securityDisabled]
+title = "Inicio de sesión no habilitado"
+body = "Este servidor no tiene habilitado el inicio de sesión. Para conectarse a este servidor, debe habilitar la autenticación:"
+step1 = "Establezca DOCKER_ENABLE_SECURITY=true en su entorno"
+step2 = "O establezca security.enableLogin=true en settings.yml"
+step3 = "Reinicie el servidor"
 
 [setup.login]
 title = "Iniciar sesión"
@@ -5797,13 +5961,20 @@ submit = "Iniciar sesión"
 signInWith = "Iniciar sesión con"
 oauthPending = "Abriendo el navegador para autenticación..."
 orContinueWith = "O continuar con email"
+serverRequirement = "Nota: el servidor debe tener el inicio de sesión habilitado."
+showInstructions = "¿Cómo habilitarlo?"
+hideInstructions = "Ocultar instrucciones"
+instructions = "Para habilitar el inicio de sesión en su servidor de Stirling PDF:"
+instructionsEnvVar = "Establezca la variable de entorno:"
+instructionsOrYml = "O en settings.yml:"
+instructionsRestart = "Luego reinicie su servidor para que los cambios surtan efecto."
 
 [setup.login.username]
 label = "Nombre de usuario"
 placeholder = "Introduzca su nombre de usuario"
 
 [setup.login.email]
-label = "Email"
+label = "Correo electrónico"
 placeholder = "Introduzca su email"
 
 [setup.login.password]
@@ -5840,7 +6011,7 @@ paragraph = "Página de párrafos"
 sparse = "Texto disperso"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automático"
 paragraph = "Párrafo"
 singleLine = "Línea única"
 
@@ -5853,6 +6024,7 @@ earlyAccess = "Acceso anticipado"
 reset = "Restablecer cambios"
 downloadJson = "Descargar JSON"
 generatePdf = "Generar PDF"
+saveChanges = "Guardar cambios"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Escalar texto automáticamente para ajustar a las cajas"
@@ -5890,6 +6062,8 @@ alpha = "Este visor alfa sigue evolucionando: ciertas fuentes, colores, efectos 
 [pdfTextEditor.empty]
 title = "Ningún documento cargado"
 subtitle = "Carga un archivo PDF o JSON para empezar a editar el contenido de texto."
+dropzone = "Arrastre y suelte un archivo PDF o JSON aquí, o haga clic para explorar"
+dropzoneWithFiles = "Seleccione un archivo de la pestaña Archivos, o arrastre y suelte un archivo PDF o JSON aquí, o haga clic para explorar"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bienvenido a PDF Text Editor (Acceso anticipado)"

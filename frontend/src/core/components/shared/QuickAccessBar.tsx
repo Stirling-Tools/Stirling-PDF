@@ -1,12 +1,12 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider, Menu, Indicator } from "@mantine/core";
+import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
@@ -17,6 +17,7 @@ import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
+import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
 
 import {
   isNavButtonActive,
@@ -32,13 +33,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { hasUnsavedChanges } = useNavigationState();
+  const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
-  const isOverflow = useIsOverflowing(scrollableRef);
 
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
@@ -58,7 +60,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   // Helper function to render navigation buttons with URL support
-  const renderNavButton = (config: ButtonConfig, index: number) => {
+  const renderNavButton = (config: ButtonConfig, index: number, shouldGuardNavigation = false) => {
     const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
 
     // Check if this button has URL navigation support
@@ -67,6 +69,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       : null;
 
     const handleClick = (e?: React.MouseEvent) => {
+      // If there are unsaved changes and this button should guard navigation, show warning modal
+      if (shouldGuardNavigation && hasUnsavedChanges) {
+        e?.preventDefault();
+        navigationActions.requestNavigation(() => {
+          config.onClick();
+        });
+        return;
+      }
       if (navProps && e) {
         handleUnlessSpecialClick(e, config.onClick);
       } else {
@@ -74,37 +84,27 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       }
     };
 
+    const buttonStyle = getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+
     // Render navigation button with conditional URL support
     return (
       <div
         key={config.id}
-        className="flex flex-col items-center gap-1"
         style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}
-        data-tour={`${config.id}-button`}
       >
-        <ActionIcon
-          {...(navProps ? {
-            component: "a" as const,
-            href: navProps.href,
-            onClick: (e: React.MouseEvent) => handleClick(e),
-            'aria-label': config.name
-          } : {
-            onClick: () => handleClick(),
-            'aria-label': config.name
-          })}
-          size={isActive ? 'lg' : 'md'}
-          variant="subtle"
-          style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-          className={isActive ? 'activeIconScale' : ''}
-          data-testid={`${config.id}-button`}
-        >
-          <span className="iconContainer">
-            {config.icon}
-          </span>
-        </ActionIcon>
-        <span className={`button-text ${isActive ? 'active' : 'inactive'}`}>
-          {config.name}
-        </span>
+        <QuickAccessButton
+          icon={config.icon}
+          label={config.name}
+          isActive={isActive}
+          onClick={handleClick}
+          href={navProps?.href}
+          ariaLabel={config.name}
+          backgroundColor={buttonStyle.backgroundColor}
+          color={buttonStyle.color}
+          component={navProps ? 'a' : 'button'}
+          dataTestId={`${config.id}-button`}
+          dataTour={`${config.id}-button`}
+        />
       </div>
     );
   };
@@ -139,6 +139,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
+  ];
+
+  const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
@@ -149,8 +152,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       onClick: handleFilesButtonClick
     },
   ];
-
-  const middleButtons: ButtonConfig[] = [];
   //TODO: Activity
   //{
   //  id: 'activity',
@@ -200,13 +201,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
       </div>
 
-      {/* Conditional divider when overflowing */}
-      {isOverflow && (
-        <Divider
-          size="xs"
-          className="overflow-divider"
-        />
-      )}
 
       {/* Scrollable content area */}
       <div
@@ -219,21 +213,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       >
         <div className="scrollable-content">
           {/* Main navigation section */}
-          <Stack gap="lg" align="center">
+          <Stack gap="lg" align="stretch">
             {mainButtons.map((config, index) => (
               <React.Fragment key={config.id}>
-                {renderNavButton(config, index)}
+                {renderNavButton(config, index, config.id === 'read' || config.id === 'automate')}
               </React.Fragment>
             ))}
           </Stack>
-
-          {/* Divider after main buttons (creates gap) */}
-          {middleButtons.length === 0 && (
-            <Divider
-              size="xs"
-              className="content-divider"
-            />
-          )}
 
           {/* Middle section */}
           {middleButtons.length > 0 && (
@@ -242,7 +228,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 size="xs"
                 className="content-divider"
               />
-              <Stack gap="lg" align="center">
+              <Stack gap="lg" align="stretch">
                 {middleButtons.map((config, index) => (
                   <React.Fragment key={config.id}>
                     {renderNavButton(config, index)}
@@ -256,7 +242,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="spacer" />
 
           {/* Bottom section */}
-          <Stack gap="lg" align="center">
+          <Stack gap="lg" align="stretch">
             {bottomButtons.map((buttonConfig, index) => {
               // Handle help button with menu or direct action
               if (buttonConfig.id === 'help') {
