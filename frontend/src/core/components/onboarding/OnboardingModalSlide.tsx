@@ -6,8 +6,9 @@
  */
 
 import React from 'react';
-import { Modal, Stack } from '@mantine/core';
+import { Modal, Stack, ActionIcon } from '@mantine/core';
 import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 
 import type { SlideDefinition, ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
 import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
@@ -28,6 +29,7 @@ interface OnboardingModalSlideProps {
   currentModalSlideIndex: number;
   onSkip: () => void;
   onAction: (action: ButtonAction) => void;
+  allowDismiss?: boolean;
 }
 
 export default function OnboardingModalSlide({
@@ -38,6 +40,7 @@ export default function OnboardingModalSlide({
   currentModalSlideIndex,
   onSkip,
   onAction,
+  allowDismiss = true,
 }: OnboardingModalSlideProps) {
 
   const renderHero = () => {
@@ -78,7 +81,7 @@ export default function OnboardingModalSlide({
       opened={true}
       onClose={onSkip}
       closeOnClickOutside={false}
-      closeOnEscape={false}
+      closeOnEscape={allowDismiss}
       centered
       size="lg"
       radius="lg"
@@ -97,6 +100,31 @@ export default function OnboardingModalSlide({
             isActive
             slideKey={slideContent.key}
           />
+          {allowDismiss && (
+            <ActionIcon
+              onClick={onSkip}
+              radius="md"
+              size={36}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                backdropFilter: 'blur(4px)',
+                zIndex: 10,
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </ActionIcon>
+          )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>
             {renderHero()}
           </div>

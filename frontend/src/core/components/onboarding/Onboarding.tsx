@@ -320,12 +320,18 @@ export default function Onboarding() {
             await handleAnalyticsChoice(false);
           }
         }}
+        allowDismiss={false}
       />
     );
   }
 
   if (showLicenseSlide) {
-    const slideDefinition = SLIDE_DEFINITIONS['server-license'];
+    const baseSlideDefinition = SLIDE_DEFINITIONS['server-license'];
+    // Remove back button for external license notice
+    const slideDefinition = {
+      ...baseSlideDefinition,
+      buttons: baseSlideDefinition.buttons.filter(btn => btn.key !== 'license-back')
+    };
     const effectiveLicenseNotice = externalLicenseNotice || runtimeState.licenseNotice;
     const slideContent = slideDefinition.createSlide({
       osLabel: '',
