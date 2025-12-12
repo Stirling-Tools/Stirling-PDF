@@ -6131,8 +6131,8 @@ tags = "text,anmerkung,beschriftung"
 applySignatures = "Text anwenden"
 
 [addText.text]
-name = "Textinhalt"
-placeholder = "Geben Sie den hinzuzufügenden Text ein"
+name = "Text"
+placeholder = "Text eingeben"
 fontLabel = "Schriftart"
 fontSizeLabel = "Schriftgröße"
 fontSizePlaceholder = "Schriftgröße eingeben oder wählen (8-200)"
