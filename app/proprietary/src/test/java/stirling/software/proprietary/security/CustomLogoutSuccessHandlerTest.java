@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.time.Instant;
@@ -378,7 +380,6 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(anyString())).thenReturn(redirectUrl);
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
@@ -405,7 +406,6 @@ class CustomLogoutSuccessHandlerTest {
         // Test that Keycloak logout without OidcUser falls back to client_id only
         String issuerUrl = "https://keycloak.example.com/realms/test";
         String clientId = "stirling-pdf";
-        String redirectUrl = "http://localhost:8080/login?logout=true";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -426,7 +426,6 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(anyString())).thenReturn(redirectUrl);
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
@@ -451,7 +450,6 @@ class CustomLogoutSuccessHandlerTest {
         // Test that custom OAuth provider uses custom issuer URL
         String customIssuerUrl = "https://custom-oauth.example.com";
         String clientId = "stirling-pdf";
-        String redirectUrl = "http://localhost:8080/login?logout=true";
         String idTokenValue = "custom.id.token";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -480,7 +478,6 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(anyString())).thenReturn(redirectUrl);
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
@@ -757,7 +754,6 @@ class CustomLogoutSuccessHandlerTest {
         String issuerUrl = "https://authentik.example.com/application/o/stirling-pdf/";
         String clientId = "stirling-pdf";
         String idTokenValue = "test.id.token";
-        String redirectUrl = "http://localhost:8080/login?logout=true";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -784,7 +780,6 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(anyString())).thenReturn(redirectUrl);
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
@@ -812,7 +807,6 @@ class CustomLogoutSuccessHandlerTest {
         String discoveredEndpoint = "https://authentik.example.com/application/o/end-session/";
         String clientId = "stirling-pdf";
         String idTokenValue = "test.id.token";
-        String redirectUrl = "http://localhost:8080/login?logout=true";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -839,7 +833,6 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(anyString())).thenReturn(redirectUrl);
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
@@ -1006,5 +999,215 @@ class CustomLogoutSuccessHandlerTest {
             // Verify fallback to local logout
             verify(response).sendRedirect(redirectUrl);
         }
+    }
+
+    @Test
+    void testJwtLogout_ApiRequest_ReturnsJsonWithLogoutUrl() throws IOException {
+        // Test that API requests (Accept: application/json) get JSON response with logout URL
+        String issuerUrl = "https://keycloak.example.com/realms/test";
+        String clientId = "stirling-pdf";
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+                jwtAuth =
+                        mock(
+                                org.springframework.security.oauth2.server.resource.authentication
+                                        .JwtAuthenticationToken.class);
+        org.springframework.security.oauth2.jwt.Jwt jwt =
+                mock(org.springframework.security.oauth2.jwt.Jwt.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        ApplicationProperties.Security.OAUTH2.Client client =
+                mock(ApplicationProperties.Security.OAUTH2.Client.class);
+        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
+        when(request.getParameter("errorOAuth")).thenReturn(null);
+        when(request.getScheme()).thenReturn("http");
+        when(request.getServerName()).thenReturn("localhost");
+        when(request.getServerPort()).thenReturn(8080);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getHeader("Accept")).thenReturn("application/json"); // API request
+        when(request.getHeader("X-Requested-With")).thenReturn(null);
+        when(response.getWriter()).thenReturn(printWriter);
+
+        when(jwtAuth.getToken()).thenReturn(jwt);
+        when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getClient()).thenReturn(client);
+        when(client.getEndSessionEndpoint()).thenReturn(null);
+        when(client.getKeycloak()).thenReturn(keycloakProvider);
+        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
+        when(keycloakProvider.getClientId()).thenReturn(clientId);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
+
+        // Verify JSON response
+        verify(response).setStatus(HttpServletResponse.SC_OK);
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+        verify(response).getWriter();
+
+        String jsonResponse = stringWriter.toString();
+        assert jsonResponse.contains("\"logoutUrl\":");
+        assert jsonResponse.contains(issuerUrl);
+    }
+
+    @Test
+    void testJwtLogout_XhrRequest_ReturnsJsonWithLogoutUrl() throws IOException {
+        // Test that XHR requests (X-Requested-With: XMLHttpRequest) get JSON response
+        String issuerUrl = "https://keycloak.example.com/realms/test";
+        String clientId = "stirling-pdf";
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+                jwtAuth =
+                        mock(
+                                org.springframework.security.oauth2.server.resource.authentication
+                                        .JwtAuthenticationToken.class);
+        org.springframework.security.oauth2.jwt.Jwt jwt =
+                mock(org.springframework.security.oauth2.jwt.Jwt.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        ApplicationProperties.Security.OAUTH2.Client client =
+                mock(ApplicationProperties.Security.OAUTH2.Client.class);
+        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
+        when(request.getParameter("errorOAuth")).thenReturn(null);
+        when(request.getScheme()).thenReturn("http");
+        when(request.getServerName()).thenReturn("localhost");
+        when(request.getServerPort()).thenReturn(8080);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getHeader("Accept")).thenReturn("text/html"); // Not JSON Accept header
+        when(request.getHeader("X-Requested-With")).thenReturn("XMLHttpRequest"); // XHR request
+        when(response.getWriter()).thenReturn(printWriter);
+
+        when(jwtAuth.getToken()).thenReturn(jwt);
+        when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getClient()).thenReturn(client);
+        when(client.getEndSessionEndpoint()).thenReturn(null);
+        when(client.getKeycloak()).thenReturn(keycloakProvider);
+        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
+        when(keycloakProvider.getClientId()).thenReturn(clientId);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
+
+        // Verify JSON response
+        verify(response).setStatus(HttpServletResponse.SC_OK);
+        verify(response).setContentType("application/json");
+    }
+
+    @Test
+    void testJwtLogout_BrowserRequest_RedirectsToLogoutUrl() throws IOException {
+        // Test that browser requests (no Accept: application/json) get redirected
+        String issuerUrl = "https://keycloak.example.com/realms/test";
+        String clientId = "stirling-pdf";
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+                jwtAuth =
+                        mock(
+                                org.springframework.security.oauth2.server.resource.authentication
+                                        .JwtAuthenticationToken.class);
+        org.springframework.security.oauth2.jwt.Jwt jwt =
+                mock(org.springframework.security.oauth2.jwt.Jwt.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        ApplicationProperties.Security.OAUTH2.Client client =
+                mock(ApplicationProperties.Security.OAUTH2.Client.class);
+        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
+
+        when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
+        when(request.getParameter("errorOAuth")).thenReturn(null);
+        when(request.getScheme()).thenReturn("http");
+        when(request.getServerName()).thenReturn("localhost");
+        when(request.getServerPort()).thenReturn(8080);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getHeader("Accept")).thenReturn("text/html"); // Browser request
+        when(request.getHeader("X-Requested-With")).thenReturn(null);
+
+        when(jwtAuth.getToken()).thenReturn(jwt);
+        when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getClient()).thenReturn(client);
+        when(client.getEndSessionEndpoint()).thenReturn(null);
+        when(client.getKeycloak()).thenReturn(keycloakProvider);
+        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
+        when(keycloakProvider.getClientId()).thenReturn(clientId);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
+
+        // Verify redirect (not JSON)
+        verify(response).sendRedirect(contains(issuerUrl + "/protocol/openid-connect/logout"));
+        verify(response).sendRedirect(contains("client_id=" + clientId));
+        verify(response).sendRedirect(contains("post_logout_redirect_uri="));
+    }
+
+    @Test
+    void testJwtLogout_ApiRequest_NoOidcEndpoint_ReturnsLocalLogoutUrl() throws IOException {
+        // Test that API requests with no OIDC endpoint return local logout URL as JSON
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+                jwtAuth =
+                        mock(
+                                org.springframework.security.oauth2.server.resource.authentication
+                                        .JwtAuthenticationToken.class);
+        org.springframework.security.oauth2.jwt.Jwt jwt =
+                mock(org.springframework.security.oauth2.jwt.Jwt.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        ApplicationProperties.Security.OAUTH2.Client client =
+                mock(ApplicationProperties.Security.OAUTH2.Client.class);
+
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
+        when(request.getParameter("errorOAuth")).thenReturn(null);
+        when(request.getScheme()).thenReturn("http");
+        when(request.getServerName()).thenReturn("localhost");
+        when(request.getServerPort()).thenReturn(8080);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getHeader("Accept")).thenReturn("application/json");
+        when(request.getHeader("X-Requested-With")).thenReturn(null);
+        when(response.getWriter()).thenReturn(printWriter);
+
+        when(jwtAuth.getToken()).thenReturn(jwt);
+        when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getClient()).thenReturn(client);
+        when(client.getEndSessionEndpoint()).thenReturn(null);
+        when(client.getKeycloak()).thenReturn(null); // No Keycloak configured
+        when(oauth.getIssuer()).thenReturn(""); // No issuer
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
+
+        // Verify JSON response with local logout URL
+        verify(response).setStatus(HttpServletResponse.SC_OK);
+        verify(response).setContentType("application/json");
+
+        String jsonResponse = stringWriter.toString();
+        assert jsonResponse.contains("\"logoutUrl\":");
+        assert jsonResponse.contains("/login?logout=true");
     }
 }
