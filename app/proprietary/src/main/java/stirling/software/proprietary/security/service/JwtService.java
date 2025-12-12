@@ -79,13 +79,14 @@ public class JwtService implements JwtServiceInterface {
             }
 
             KeyPair keyPair = keyPairOpt.get();
-
+            Date now = new Date();
             var builder =
                     Jwts.builder()
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(new Date())
+                            .issuedAt(now)
+                            .notBefore(now)
                             .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
@@ -251,7 +252,6 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        // Extract from Authorization header Bearer token
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // Remove "Bearer " prefix

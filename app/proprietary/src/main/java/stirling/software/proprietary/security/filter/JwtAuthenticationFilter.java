@@ -6,10 +6,9 @@ import static stirling.software.proprietary.security.model.AuthenticationType.OA
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 import static stirling.software.proprietary.security.model.AuthenticationType.WEB;
 
-import io.jsonwebtoken.Jwts;
-
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +22,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import io.jsonwebtoken.Jwts;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -189,6 +190,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
+                // Convert timestamp claims from Long to Instant (jjwt stores as Long,
+                // Spring Security Jwt expects Instant)
+                convertTimestampClaim(claims, "iat");
+                convertTimestampClaim(claims, "exp");
+                convertTimestampClaim(claims, "nbf");
+
                 Jwt jwt =
                         Jwt.withTokenValue(jwtToken)
                                 .headers(headers -> headers.put("alg", Jwts.SIG.RS256.getId()))
@@ -235,6 +242,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         username, null, null, saml2Properties.getAutoCreateUser(), SAML2);
             }
         }
+    }
+
+    private void convertTimestampClaim(Map<String, Object> claims, String claimName) {
+        Long timestamp = (Long) claims.get(claimName);
+        claims.put(claimName, Instant.ofEpochSecond(timestamp));
     }
 
     private void handleAuthenticationFailure(
