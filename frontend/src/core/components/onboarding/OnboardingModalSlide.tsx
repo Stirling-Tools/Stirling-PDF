@@ -146,7 +146,9 @@ export default function OnboardingModalSlide({
               <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
             </div>
 
-            <OnboardingStepper totalSteps={modalSlideCount} activeStep={currentModalSlideIndex} />
+            {modalSlideCount > 1 && (
+              <OnboardingStepper totalSteps={modalSlideCount} activeStep={currentModalSlideIndex} />
+            )}
 
             <div className={styles.buttonContainer}>
               <SlideButtons
