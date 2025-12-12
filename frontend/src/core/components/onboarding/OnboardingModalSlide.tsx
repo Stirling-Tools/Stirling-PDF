@@ -78,6 +78,7 @@ export default function OnboardingModalSlide({
       opened={true}
       onClose={onSkip}
       closeOnClickOutside={false}
+      closeOnEscape={false}
       centered
       size="lg"
       radius="lg"
