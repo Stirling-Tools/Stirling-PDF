@@ -289,21 +289,22 @@ class SpringAuthClient {
       localStorage.removeItem('stirling_jwt');
 
       // Call Spring Security's logout endpoint
-      // This will handle OAuth2/SAML logout redirects and clear session
+      // This will handle OAuth2/SAML logout and return JSON with logout URL for OIDC providers
       // Include the token so Spring knows which authentication type to logout from
       const response = await apiClient.post('/logout', null, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'Accept': 'application/json', // Request JSON response for SPA
+        },
         withCredentials: true,
-        maxRedirects: 0, // Don't follow redirects - we'll handle them
-        validateStatus: (status) => status === 302 || status === 200, // Accept redirects as success
       });
 
       // Notify listeners
       this.notifyListeners('SIGNED_OUT', null);
 
-      // If we got a redirect (302), follow it to complete OAuth2/SAML logout
-      if (response.status === 302 && response.headers.location) {
-        window.location.href = response.headers.location;
+      // If we got a logout URL (for OIDC/OAuth2 providers), navigate to it
+      if (response.data?.logoutUrl) {
+        window.location.href = response.data.logoutUrl;
       }
 
       return { error: null };

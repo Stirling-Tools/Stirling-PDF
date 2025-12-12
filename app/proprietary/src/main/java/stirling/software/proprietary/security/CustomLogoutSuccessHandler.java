@@ -66,24 +66,24 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         if (!response.isCommitted()) {
             if (authentication != null) {
                 // Check for JWT-based authentication and extract authType claim
-                String authType = null;
+                String authType;
                 if (authentication instanceof JwtAuthenticationToken jwtAuth) {
                     authType =
                             (String) jwtAuth.getToken().getClaims().getOrDefault("authType", null);
+
                     log.debug("JWT-based logout detected with authType: {}", authType);
                 }
 
                 if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    getRedirect_saml2(request, response, samlAuthentication);
+                    getRedirectSaml2(request, response, samlAuthentication);
                 } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
                     log.info("OAuth2 logout via JWT - attempting OIDC logout");
                     getRedirect_oauth2(request, response, oAuthToken);
                 } else if (authentication
                         instanceof JwtAuthenticationToken jwtAuthenticationToken) {
                     getRedirectJwt(request, response, jwtAuthenticationToken);
-                } else if (authentication instanceof UsernamePasswordAuthenticationToken
-                        || authentication instanceof JwtAuthenticationToken) {
-                    // Handle Username/Password logout (or JWT without OAUTH2/SAML2 authType)
+                } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
+                    // Handle Username/Password logout
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 } else {
                     // Handle unknown authentication types
@@ -108,7 +108,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for SAML2 authentication logout
-    private void getRedirect_saml2(
+
+    private void getRedirectSaml2(
             HttpServletRequest request,
             HttpServletResponse response,
             Saml2Authentication samlAuthentication)
@@ -157,6 +158,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for OAuth2 authentication logout
+
     private void getRedirect_oauth2(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -184,6 +186,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for JWT-based OAuth2 authentication logout
+
     private void getRedirectJwt(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -192,6 +195,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
+        boolean isApi = isApiRequest(request);
 
         // For JWT-based auth, we don't have OAuth2AuthenticationToken
         // Attempt generic OIDC logout
@@ -220,31 +224,37 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             log.debug("Using Keycloak fallback logout path: {}", endSessionEndpoint);
         }
 
-        // If we have an endpoint, construct the logout URL
         if (endSessionEndpoint != null) {
             StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
             logoutUrlBuilder.append(endSessionEndpoint.contains("?") ? "&" : "?");
 
-            // Without OAuth2AuthenticationToken, we don't have id_token_hint
-            // Just use client_id and post_logout_redirect_uri
+            // Use client_id and post_logout_redirect_uri
             if (clientId != null && !clientId.isBlank()) {
-                logoutUrlBuilder.append("client_id=").append(clientId);
-                logoutUrlBuilder.append("&");
+                logoutUrlBuilder.append("client_id=").append(clientId).append("&");
             }
-            logoutUrlBuilder
-                    .append("post_logout_redirect_uri=")
-                    .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
+            String encodedRedirectUri = URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8);
+            logoutUrlBuilder.append("post_logout_redirect_uri=").append(encodedRedirectUri);
 
             String logoutUrl = logoutUrlBuilder.toString();
             log.info("JWT-based OAuth2 logout URL: {}", logoutUrl);
-            response.sendRedirect(logoutUrl);
+
+            // Return JSON for API requests, redirect for browser requests
+            if (isApi) {
+                sendJsonLogoutResponse(response, logoutUrl);
+            } else {
+                response.sendRedirect(logoutUrl);
+            }
         } else {
             // No OIDC logout endpoint available - fallback to local logout
             log.info(
                     "No OIDC logout endpoint available for issuer: {}. Using local logout: {}",
                     issuer,
                     redirectUrl);
-            response.sendRedirect(redirectUrl);
+            if (isApi) {
+                sendJsonLogoutResponse(response, redirectUrl);
+            } else {
+                response.sendRedirect(redirectUrl);
+            }
         }
     }
 
@@ -287,18 +297,21 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             log.debug("Using Keycloak fallback logout path: {}", endSessionEndpoint);
         }
 
-        // If we have an endpoint, construct the logout URL
         if (endSessionEndpoint != null) {
             StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
 
-            // Extract id_token_hint if available (OIDC)
+            // Extract id_token_hint if available
             Object principal = oAuthToken.getPrincipal();
+
             if (principal instanceof OidcUser oidcUser) {
                 String idToken = oidcUser.getIdToken().getTokenValue();
-                logoutUrlBuilder.append(
-                        endSessionEndpoint.contains("?") ? "&" : "?"); // Handle existing params
-                logoutUrlBuilder.append("id_token_hint=").append(idToken);
                 logoutUrlBuilder
+                        .append(
+                                endSessionEndpoint.contains("?")
+                                        ? "&"
+                                        : "?") // Handle existing params
+                        .append("id_token_hint=")
+                        .append(idToken)
                         .append("&post_logout_redirect_uri=")
                         .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
 
@@ -308,23 +321,20 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     logoutUrlBuilder.append("&client_id=").append(clientId);
                 }
 
-                log.info("OIDC logout with id_token_hint (session-aware): {}", endSessionEndpoint);
+                log.info("Session-aware OIDC logout: {}", endSessionEndpoint);
             } else {
-                // Fallback to client_id only (less ideal, may show confirmation screen)
                 logoutUrlBuilder.append(endSessionEndpoint.contains("?") ? "&" : "?");
                 if (clientId != null && !clientId.isBlank()) {
-                    logoutUrlBuilder.append("client_id=").append(clientId);
-                    logoutUrlBuilder.append("&");
+                    logoutUrlBuilder.append("client_id=").append(clientId).append("&");
                 }
                 logoutUrlBuilder
                         .append("post_logout_redirect_uri=")
                         .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
-
-                log.warn("OIDC logout without id_token_hint - user may see confirmation screen");
             }
 
             String logoutUrl = logoutUrlBuilder.toString();
             log.debug("OIDC logout URL: {}", logoutUrl);
+
             response.sendRedirect(logoutUrl);
         } else {
             // No OIDC logout endpoint available - fallback to local logout
@@ -358,6 +368,116 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 idpIssuer,
                 certificates,
                 SamlClient.SamlIdpBinding.POST);
+    }
+
+    /**
+     * Gets the OIDC end_session_endpoint from: 1. Configuration first 2. Fall back to discovery 3.
+     * Return null if not available
+     *
+     * @param oauth The OAuth2 configuration
+     * @param issuer The OIDC issuer URL
+     * @return The end_session_endpoint URL, or null if not available
+     */
+    private String getEndSessionEndpoint(
+            ApplicationProperties.Security.OAUTH2 oauth, String issuer) {
+        if (oauth != null && oauth.getClient() != null) {
+            String configuredEndpoint = oauth.getClient().getEndSessionEndpoint();
+
+            if (configuredEndpoint != null && !configuredEndpoint.isBlank()) {
+                log.debug("Using configured end_session_endpoint: {}", configuredEndpoint);
+                return configuredEndpoint;
+            }
+        }
+
+        if (issuer != null && !issuer.isBlank()) {
+            return discoverEndSessionEndpoint(issuer);
+        }
+
+        return null;
+    }
+
+    /**
+     * Discovers the OIDC end_session_endpoint from the provider's .well-known/openid-configuration
+     * Uses a cache to avoid repeated HTTP calls
+     *
+     * @param issuer The OIDC issuer URL
+     * @return The end_session_endpoint URL, or null if not found/supported
+     */
+    private String discoverEndSessionEndpoint(String issuer) {
+        if (endSessionEndpointCache.containsKey(issuer)) {
+            return endSessionEndpointCache.get(issuer);
+        }
+
+        try {
+            String discoveryUrl = issuer;
+            if (!discoveryUrl.endsWith("/")) {
+                discoveryUrl += "/";
+            }
+            discoveryUrl += ".well-known/openid-configuration";
+
+            log.debug("Discovery URL: {}", discoveryUrl);
+
+            // Make HTTP request with timeout using Spring's RestClient
+            RestClient restClient =
+                    RestClient.builder()
+                            .baseUrl(discoveryUrl)
+                            .defaultHeaders(headers -> headers.set("Accept", "application/json"))
+                            .build();
+
+            // Fetch and parse OIDC discovery document
+            Map discoveryDoc =
+                    restClient
+                            .get()
+                            .retrieve()
+                            .onStatus(
+                                    status -> !status.is2xxSuccessful(),
+                                    (request, response) ->
+                                            log.warn(
+                                                    "Failed to discover OIDC endpoints for {}: HTTP status {}",
+                                                    issuer,
+                                                    response.getStatusCode().value()))
+                            .body(Map.class);
+
+            if (discoveryDoc != null && discoveryDoc.containsKey("end_session_endpoint")) {
+                String endpoint = (String) discoveryDoc.get("end_session_endpoint");
+                if (endpoint != null && !endpoint.isBlank()) {
+                    log.info("Discovered end_session_endpoint for {}: {}", issuer, endpoint);
+                    // Cache the result
+                    endSessionEndpointCache.put(issuer, endpoint);
+                    return endpoint;
+                }
+            }
+
+            log.info(
+                    "Provider {} does not advertise end_session_endpoint in OIDC discovery",
+                    issuer);
+            // Cache null result to avoid repeated failed attempts
+            endSessionEndpointCache.put(issuer, null);
+            return null;
+
+        } catch (Exception e) {
+            log.warn("Error discovering end_session_endpoint for {}: {}", issuer, e.getMessage());
+            return null;
+        }
+    }
+
+    /** Check if the request expects a JSON response (API/XHR request) */
+    private boolean isApiRequest(HttpServletRequest request) {
+        String accept = request.getHeader("Accept");
+        String xRequestedWith = request.getHeader("X-Requested-With");
+        return (accept != null && accept.contains("application/json"))
+                || "XMLHttpRequest".equals(xRequestedWith);
+    }
+
+    /** Send JSON response with logout URL for API requests */
+    private void sendJsonLogoutResponse(HttpServletResponse response, String logoutUrl)
+            throws IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        // Escape the URL for JSON
+        String escapedUrl = logoutUrl.replace("\\", "\\\\").replace("\"", "\\\"");
+        response.getWriter().write("{\"logoutUrl\":\"" + escapedUrl + "\"}");
     }
 
     /**
@@ -407,101 +527,5 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 .getInputSanitizePattern()
                 .matcher(input)
                 .replaceAll("");
-    }
-
-    /**
-     * Discovers the OIDC end_session_endpoint from the provider's .well-known/openid-configuration
-     * Uses a cache to avoid repeated HTTP calls
-     *
-     * @param issuer The OIDC issuer URL
-     * @return The end_session_endpoint URL, or null if not found/supported
-     */
-    private String discoverEndSessionEndpoint(String issuer) {
-        // Check cache first
-        if (endSessionEndpointCache.containsKey(issuer)) {
-            return endSessionEndpointCache.get(issuer);
-        }
-
-        try {
-            // Construct discovery URL
-            String discoveryUrl = issuer;
-            if (!discoveryUrl.endsWith("/")) {
-                discoveryUrl += "/";
-            }
-            discoveryUrl += ".well-known/openid-configuration";
-
-            log.debug("Discovering OIDC endpoints from: {}", discoveryUrl);
-
-            // Make HTTP request with timeout using Spring's RestClient
-            RestClient restClient =
-                    RestClient.builder()
-                            .baseUrl(discoveryUrl)
-                            .defaultHeaders(
-                                    headers -> {
-                                        headers.set("Accept", "application/json");
-                                    })
-                            .build();
-
-            // Fetch and parse OIDC discovery document
-            Map<String, Object> discoveryDoc =
-                    restClient
-                            .get()
-                            .retrieve()
-                            .onStatus(
-                                    status -> !status.is2xxSuccessful(),
-                                    (request, response) ->
-                                            log.warn(
-                                                    "Failed to discover OIDC endpoints for {}: HTTP {}",
-                                                    issuer,
-                                                    response.getStatusCode().value()))
-                            .body(Map.class);
-
-            if (discoveryDoc != null && discoveryDoc.containsKey("end_session_endpoint")) {
-                String endpoint = (String) discoveryDoc.get("end_session_endpoint");
-                if (endpoint != null && !endpoint.isBlank()) {
-                    log.info("Discovered end_session_endpoint for {}: {}", issuer, endpoint);
-                    // Cache the result
-                    endSessionEndpointCache.put(issuer, endpoint);
-                    return endpoint;
-                }
-            }
-
-            log.info(
-                    "Provider {} does not advertise end_session_endpoint in OIDC discovery",
-                    issuer);
-            // Cache null result to avoid repeated failed attempts
-            endSessionEndpointCache.put(issuer, null);
-            return null;
-
-        } catch (Exception e) {
-            log.warn("Error discovering end_session_endpoint for {}: {}", issuer, e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Gets the OIDC end_session_endpoint from: 1. Configuration first 2. Fall back to discovery 3.
-     * Return null if not available
-     *
-     * @param oauth The OAuth2 configuration
-     * @param issuer The OIDC issuer URL
-     * @return The end_session_endpoint URL, or null if not available
-     */
-    private String getEndSessionEndpoint(
-            ApplicationProperties.Security.OAUTH2 oauth, String issuer) {
-        if (oauth != null && oauth.getClient() != null) {
-            String configuredEndpoint = oauth.getClient().getEndSessionEndpoint();
-
-            if (configuredEndpoint != null && !configuredEndpoint.isBlank()) {
-                log.debug("Using configured end_session_endpoint: {}", configuredEndpoint);
-                return configuredEndpoint;
-            }
-        }
-
-        if (issuer != null && !issuer.isBlank()) {
-            return discoverEndSessionEndpoint(issuer);
-        }
-
-        return null;
     }
 }
