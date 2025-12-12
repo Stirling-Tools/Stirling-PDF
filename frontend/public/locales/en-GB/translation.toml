@@ -5918,6 +5918,7 @@ endpoint = "Endpoint"
 visits = "Visits"
 percentage = "Percentage"
 noData = "No data available"
+unknownEndpoint = "Unknown endpoint"
 
 [backendHealth]
 checking = "Checking backend status..."
