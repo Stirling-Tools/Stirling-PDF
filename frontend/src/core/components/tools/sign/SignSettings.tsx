@@ -853,6 +853,12 @@ const SignSettings = ({
           textColor={parameters.textColor || '#000000'}
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
+          label={translate('text.name', 'Text')}
+          placeholder={translate('text.placeholder', 'Enter text')}
+          fontLabel={translate('text.fontLabel', 'Font')}
+          fontSizeLabel={translate('text.fontSizeLabel', 'Font size')}
+          fontSizePlaceholder={translate('text.fontSizePlaceholder', 'Type or select font size (8-200)')}
+          colorLabel={translate('text.colorLabel', 'Text colour')}
           onAnyChange={() => {
             setPlacementManuallyPaused(false);
             lastAppliedPlacementKey.current = null;
