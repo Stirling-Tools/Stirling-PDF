@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Text, Group, Stack, Badge, Button, Collapse, Alert, TextInput, Paper, Loader, Divider } from '@mantine/core';
+import React, { useState } from 'react';
+import { Card, Text, Stack, Button, Collapse, Divider, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
-import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { alert } from '@app/components/toast';
 import { LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
 import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from '@app/constants/planConstants';
 import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
-
-interface PremiumSettingsData {
-  key?: string;
-  enabled?: boolean;
-}
+import StaticCheckoutModal from '@app/components/shared/config/configSections/plan/StaticCheckoutModal';
+import LicenseKeySection from '@app/components/shared/config/configSections/plan/LicenseKeySection';
+import { STATIC_STRIPE_LINKS } from '@app/constants/staticStripeLinks';
+import { PricingBadge } from '@app/components/shared/stripeCheckout/components/PricingBadge';
+import { getBaseCardStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
+import { isCurrentTier as checkIsCurrentTier, isDowngrade as checkIsDowngrade, isEnterpriseBlockedForFree } from '@app/utils/planTierUtils';
 
 interface StaticPlanSectionProps {
   currentLicenseInfo?: LicenseInfo;
@@ -22,38 +18,45 @@ interface StaticPlanSectionProps {
 
 const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInfo }) => {
   const { t } = useTranslation();
-  const [showLicenseKey, setShowLicenseKey] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
 
-  // Premium/License key management
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
-  const {
-    settings: premiumSettings,
-    setSettings: setPremiumSettings,
-    loading: premiumLoading,
-    saving: premiumSaving,
-    fetchSettings: fetchPremiumSettings,
-    saveSettings: savePremiumSettings,
-    isFieldPending,
-  } = useAdminSettings<PremiumSettingsData>({
-    sectionName: 'premium',
-  });
+  // Static checkout modal state
+  const [checkoutModalOpened, setCheckoutModalOpened] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'server' | 'enterprise'>('server');
+  const [isUpgrade, setIsUpgrade] = useState(false);
 
-  useEffect(() => {
-    fetchPremiumSettings();
-  }, []);
-
-  const handleSaveLicense = async () => {
-    try {
-      await savePremiumSettings();
-      showRestartModal();
-    } catch (_error) {
+  const handleOpenCheckout = (plan: 'server' | 'enterprise', upgrade: boolean) => {
+    // Prevent Free → Enterprise (must have Server first)
+    const currentTier = mapLicenseToTier(currentLicenseInfo || null);
+    if (currentTier === 'free' && plan === 'enterprise') {
       alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
+        alertType: 'warning',
+        title: t('plan.enterprise.requiresServer', 'Server Plan Required'),
+        body: t(
+          'plan.enterprise.requiresServerMessage',
+          'Please upgrade to the Server plan first before upgrading to Enterprise.'
+        ),
       });
+      return;
     }
+
+    setSelectedPlan(plan);
+    setIsUpgrade(upgrade);
+    setCheckoutModalOpened(true);
+  };
+
+  const handleManageBilling = () => {
+    // Show warning about email verification
+    alert({
+      alertType: 'warning',
+      title: t('plan.static.billingPortal.title', 'Email Verification Required'),
+      body: t(
+        'plan.static.billingPortal.message',
+        'You will need to verify your email address in the Stripe billing portal. Check your email for a login link.'
+      ),
+    });
+
+    window.open(STATIC_STRIPE_LINKS.billingPortal, '_blank');
   };
 
   const staticPlans = [
@@ -122,7 +125,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '1rem',
-            paddingBottom: '1rem',
+            paddingBottom: '0.1rem',
           }}
         >
           {staticPlans.map((plan) => (
@@ -131,53 +134,27 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
               padding="lg"
               radius="md"
               withBorder
-              style={{
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                borderColor: plan.id === currentPlan.id ? 'var(--mantine-color-green-6)' : undefined,
-                borderWidth: plan.id === currentPlan.id ? '2px' : undefined,
-              }}
+              style={getBaseCardStyle(plan.id === currentPlan.id)}
+              className="plan-card"
             >
               {plan.id === currentPlan.id && (
-                <Badge
-                  color="green"
-                  variant="filled"
-                  size="sm"
-                  style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-                >
-                  {t('plan.current', 'Current Plan')}
-                </Badge>
+                <PricingBadge
+                  type="current"
+                  label={t('plan.current', 'Current Plan')}
+                />
               )}
               {plan.popular && plan.id !== currentPlan.id && (
-                <Badge
-                  variant="filled"
-                  size="xs"
-                  style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
-                >
-                  {t('plan.popular', 'Popular')}
-                </Badge>
+                <PricingBadge
+                  type="popular"
+                  label={t('plan.popular', 'Popular')}
+                />
               )}
 
               <Stack gap="md" style={{ height: '100%' }}>
                 <div>
-                  <Text size="lg" fw={600}>
+                  <Text size="xl" fw={700} style={{ fontSize: '2rem' }}>
                     {plan.name}
                   </Text>
-                  <Group gap="xs" style={{ alignItems: 'baseline' }}>
-                    <Text size="xl" fw={700} style={{ fontSize: '2rem' }}>
-                      {plan.price === 0 && plan.id !== 'free'
-                        ? t('plan.customPricing', 'Custom')
-                        : plan.price === 0
-                          ? t('plan.free.name', 'Free')
-                          : `${plan.currency}${plan.price}`}
-                    </Text>
-                    {plan.period && (
-                      <Text size="sm" c="dimmed">
-                        {plan.period}
-                      </Text>
-                    )}
-                  </Group>
                   <Text size="xs" c="dimmed" mt="xs">
                     {typeof plan.maxUsers === 'string'
                       ? plan.maxUsers
@@ -195,18 +172,123 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
 
                 <div style={{ flexGrow: 1 }} />
 
-                <Button
-                  variant={plan.id === currentPlan.id ? 'light' : 'filled'}
-                  disabled={plan.id === currentPlan.id}
-                  fullWidth
-                  onClick={() =>
-                    window.open('https://www.stirling.com/contact', '_blank')
+                {/* Tier-based button logic */}
+                {(() => {
+                  const currentTier = mapLicenseToTier(currentLicenseInfo || null);
+                  const isCurrent = checkIsCurrentTier(currentTier, plan.id);
+                  const isDowngradePlan = checkIsDowngrade(currentTier, plan.id);
+
+                  // Free Plan
+                  if (plan.id === 'free') {
+                    return (
+                      <Button
+                        variant="filled"
+                        disabled
+                        fullWidth
+                        className="plan-button"
+                      >
+                        {isCurrent
+                          ? t('plan.current', 'Current Plan')
+                          : t('plan.free.included', 'Included')}
+                      </Button>
+                    );
                   }
-                >
-                  {plan.id === currentPlan.id
-                    ? t('plan.current', 'Current Plan')
-                    : t('plan.contact', 'Contact Us')}
-                </Button>
+
+                  // Server Plan
+                  if (plan.id === 'server') {
+                    if (currentTier === 'free') {
+                      return (
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          onClick={() => handleOpenCheckout('server', false)}
+                          className="plan-button"
+                        >
+                          {t('plan.upgrade', 'Upgrade')}
+                        </Button>
+                      );
+                    }
+                    if (isCurrent) {
+                      return (
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          onClick={handleManageBilling}
+                          className="plan-button"
+                        >
+                          {t('plan.manage', 'Manage')}
+                        </Button>
+                      );
+                    }
+                    if (isDowngradePlan) {
+                      return (
+                        <Button
+                          variant="filled"
+                          disabled
+                          fullWidth
+                          className="plan-button"
+                        >
+                          {t('plan.free.included', 'Included')}
+                        </Button>
+                      );
+                    }
+                  }
+
+                  // Enterprise Plan
+                  if (plan.id === 'enterprise') {
+                    if (isEnterpriseBlockedForFree(currentTier, plan.id)) {
+                      return (
+                        <Tooltip label={t('plan.enterprise.requiresServer', 'Requires Server plan')} position="top" withArrow>
+                          <Button
+                            variant="filled"
+                            disabled
+                            fullWidth
+                            className="plan-button"
+                          >
+                            {t('plan.enterprise.requiresServer', 'Requires Server')}
+                          </Button>
+                        </Tooltip>
+                      );
+                    }
+                    if (currentTier === 'server') {
+                      // TODO: Re-enable checkout flow when account syncing is ready
+                      // return (
+                      //   <Button
+                      //     variant="filled"
+                      //     fullWidth
+                      //     onClick={() => handleOpenCheckout('enterprise', true)}
+                      //     className="plan-button"
+                      //   >
+                      //     {t('plan.selectPlan', 'Select Plan')}
+                      //   </Button>
+                      // );
+                      return (
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          disabled
+                          className="plan-button"
+                        >
+                          {t('plan.contact', 'Contact Us')}
+                        </Button>
+                      );
+                    }
+                    if (isCurrent) {
+                      return (
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          onClick={handleManageBilling}
+                          className="plan-button"
+                        >
+                          {t('plan.manage', 'Manage')}
+                        </Button>
+                      );
+                    }
+                  }
+
+                  return null;
+                })()}
               </Stack>
             </Card>
           ))}
@@ -230,66 +312,14 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
       <Divider />
 
       {/* License Key Section */}
-      <div>
-        <Button
-          variant="subtle"
-          leftSection={<LocalIcon icon={showLicenseKey ? "expand-less-rounded" : "expand-more-rounded"} width="1.25rem" height="1.25rem" />}
-          onClick={() => setShowLicenseKey(!showLicenseKey)}
-        >
-          {t('admin.settings.premium.licenseKey.toggle', 'Got a license key or certificate file?')}
-        </Button>
+      <LicenseKeySection currentLicenseInfo={currentLicenseInfo} />
 
-        <Collapse in={showLicenseKey} mt="md">
-          <Stack gap="md">
-            <Alert
-              variant="light"
-              color="blue"
-              icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
-            >
-              <Text size="sm">
-                {t('admin.settings.premium.licenseKey.info', 'If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features.')}
-              </Text>
-            </Alert>
-
-            {premiumLoading ? (
-              <Stack align="center" justify="center" h={100}>
-                <Loader size="md" />
-              </Stack>
-            ) : (
-              <Paper withBorder p="md" radius="md">
-                <Stack gap="md">
-                  <div>
-                    <TextInput
-                      label={
-                        <Group gap="xs">
-                          <span>{t('admin.settings.premium.key.label', 'License Key')}</span>
-                          <PendingBadge show={isFieldPending('key')} />
-                        </Group>
-                      }
-                      description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.')}
-                      value={premiumSettings.key || ''}
-                      onChange={(e) => setPremiumSettings({ ...premiumSettings, key: e.target.value })}
-                      placeholder="00000000-0000-0000-0000-000000000000"
-                    />
-                  </div>
-
-                  <Group justify="flex-end">
-                    <Button onClick={handleSaveLicense} loading={premiumSaving} size="sm">
-                      {t('admin.settings.save', 'Save Changes')}
-                    </Button>
-                  </Group>
-                </Stack>
-              </Paper>
-            )}
-          </Stack>
-        </Collapse>
-      </div>
-
-      {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal
-        opened={restartModalOpened}
-        onClose={closeRestartModal}
-        onRestart={restartServer}
+      {/* Static Checkout Modal */}
+      <StaticCheckoutModal
+        opened={checkoutModalOpened}
+        onClose={() => setCheckoutModalOpened(false)}
+        planName={selectedPlan}
+        isUpgrade={isUpgrade}
       />
     </div>
   );
