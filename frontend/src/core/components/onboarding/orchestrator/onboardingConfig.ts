@@ -18,7 +18,7 @@ export interface OnboardingRuntimeState {
   tourRequested: boolean;
   tourType: 'admin' | 'tools' | 'whatsnew';
   isDesktopApp: boolean;
-  desktopSlideDisabled: boolean;
+  desktopSlideEnabled: boolean;
   analyticsNotConfigured: boolean;
   analyticsEnabled: boolean;
   licenseNotice: {
@@ -60,7 +60,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   requiresPasswordChange: false,
   firstLoginUsername: '',
   usingDefaultCredentials: false,
-  desktopSlideDisabled: false,
+  desktopSlideEnabled: true,
 };
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -86,7 +86,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'desktop-install',
     type: 'modal-slide',
     slideId: 'desktop-install',
-    condition: (ctx) => !ctx.isDesktopApp && !ctx.desktopSlideDisabled,
+    condition: (ctx) => !ctx.isDesktopApp && ctx.desktopSlideEnabled,
   },
   {
     id: 'security-check',

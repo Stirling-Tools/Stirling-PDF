@@ -169,7 +169,7 @@ export function useOnboardingOrchestrator(
       ...prev,
       analyticsEnabled: config?.enableAnalytics === true,
       analyticsNotConfigured: config?.enableAnalytics == null,
-      desktopSlideDisabled: config?.disableDesktopInstallSlide === true,
+      desktopSlideEnabled: config?.enableDesktopInstallSlide ?? true,
       licenseNotice: {
         totalUsers: serverExperience.totalUsers,
         freeTierLimit: serverExperience.freeTierLimit,
