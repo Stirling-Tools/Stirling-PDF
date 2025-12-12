@@ -46,5 +46,6 @@ export function useAutomateOperation() {
     toolType: ToolType.custom,
     operationType: 'automate',
     customProcessor,
+    consumesAllInputs: true,
   });
 }

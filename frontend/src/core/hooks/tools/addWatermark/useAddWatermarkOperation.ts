@@ -19,16 +19,16 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
   }
 
   // Required parameters with correct formatting
-  formData.append("fontSize", parameters.fontSize.toString());
-  formData.append("rotation", parameters.rotation.toString());
-  formData.append("opacity", (parameters.opacity / 100).toString()); // Convert percentage to decimal
-  formData.append("widthSpacer", parameters.widthSpacer.toString());
-  formData.append("heightSpacer", parameters.heightSpacer.toString());
+  formData.append("fontSize", (parameters.fontSize ?? 0).toString());
+  formData.append("rotation", (parameters.rotation ?? 0).toString());
+  formData.append("opacity", ((parameters.opacity ?? 0) / 100).toString()); // Convert percentage to decimal
+  formData.append("widthSpacer", (parameters.widthSpacer ?? 0).toString());
+  formData.append("heightSpacer", (parameters.heightSpacer ?? 0).toString());
 
   // Backend-expected parameters from user input
-  formData.append("alphabet", parameters.alphabet);
-  formData.append("customColor", parameters.customColor);
-  formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
+  formData.append("alphabet", parameters.alphabet || "");
+  formData.append("customColor", parameters.customColor || "");
+  formData.append("convertPDFToImage", (parameters.convertPDFToImage ?? false).toString());
 
   return formData;
 };
