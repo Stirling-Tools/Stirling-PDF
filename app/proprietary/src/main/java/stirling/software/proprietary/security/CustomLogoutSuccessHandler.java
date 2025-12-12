@@ -464,7 +464,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
             log.debug("Discovery URL: {}", discoveryUrl);
 
-            // Make HTTP request with timeout using Spring's RestClient
             RestClient restClient =
                     RestClient.builder()
                             .baseUrl(discoveryUrl)
@@ -488,8 +487,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             if (discoveryDoc != null && discoveryDoc.containsKey("end_session_endpoint")) {
                 String endpoint = (String) discoveryDoc.get("end_session_endpoint");
                 if (endpoint != null && !endpoint.isBlank()) {
-                    log.info("Discovered end_session_endpoint for {}: {}", issuer, endpoint);
-                    // Cache the result
+                    log.info("Discovered end_session_endpoint : {}", endpoint);
                     endSessionEndpointCache.put(issuer, endpoint);
                     return endpoint;
                 }
