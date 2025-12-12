@@ -158,18 +158,21 @@ const AdminUsageSection: React.FC = () => {
 
   const endpoints = (data?.endpoints ?? []).map((endpoint) => ({
     endpoint: endpoint.endpoint ?? t('usage.table.unknownEndpoint', 'Unknown endpoint'),
-    visits: Number.isFinite(endpoint.visits) ? endpoint.visits : 0,
-    percentage: Number.isFinite(endpoint.percentage) ? endpoint.percentage : 0,
+    visits: Number.isFinite(endpoint.visits) ? Math.max(0, endpoint.visits) : 0,
+    percentage: Number.isFinite(endpoint.percentage) ? Math.max(0, endpoint.percentage) : 0,
   }));
 
-  const chartData = endpoints.map((e) => ({ label: e.endpoint, value: e.visits }));
+  const chartData = endpoints.map((e) => ({
+    label: e.endpoint,
+    value: Number.isFinite(e.visits) ? Math.max(0, e.visits) : 0,
+  }));
 
   const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
   const totalVisits = Number.isFinite(data?.totalVisits)
-    ? (data?.totalVisits as number)
+    ? Math.max(0, data?.totalVisits as number)
     : displayedVisits;
   const totalEndpoints = Number.isFinite(data?.totalEndpoints)
-    ? (data?.totalEndpoints as number)
+    ? Math.max(0, data?.totalEndpoints as number)
     : endpoints.length;
 
   const displayedPercentage = totalVisits > 0
