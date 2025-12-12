@@ -88,9 +88,9 @@ export interface SlideDefinition {
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   'first-login': {
     id: 'first-login',
-    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) => 
-      FirstLoginSlide({ 
-        username: firstLoginUsername || '', 
+    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) =>
+      FirstLoginSlide({
+        username: firstLoginUsername || '',
         onPasswordChanged: onPasswordChanged || (() => {}),
         usingDefaultCredentials: usingDefaultCredentials || false,
       }),
@@ -266,7 +266,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'analytics-disable',
         type: 'button',
-        label: 'Skip for now',
+        label: 'no',
         variant: 'secondary',
         group: 'left',
         action: 'disable-analytics',
@@ -274,7 +274,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       {
         key: 'analytics-enable',
         type: 'button',
-        label: 'Enable analytics',
+        label: 'yes',
         variant: 'primary',
         group: 'right',
         action: 'enable-analytics',

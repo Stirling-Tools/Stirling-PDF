@@ -71,16 +71,16 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     condition: (ctx) => ctx.requiresPasswordChange,
   },
   {
-    id: 'analytics-choice',
-    type: 'modal-slide',
-    slideId: 'analytics-choice',
-    condition: (ctx) => ctx.effectiveIsAdmin && ctx.analyticsNotConfigured,
-  },
-  {
     id: 'welcome',
     type: 'modal-slide',
     slideId: 'welcome',
     condition: () => true,
+  },
+  {
+    id: 'admin-overview',
+    type: 'modal-slide',
+    slideId: 'admin-overview',
+    condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {
     id: 'desktop-install',
@@ -93,12 +93,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: 'modal-slide',
     slideId: 'security-check',
     condition: () => false,
-  },
-  {
-    id: 'admin-overview',
-    type: 'modal-slide',
-    slideId: 'admin-overview',
-    condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {
     id: 'tool-layout',

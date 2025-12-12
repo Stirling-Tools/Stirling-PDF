@@ -40,9 +40,11 @@ export default function Onboarding() {
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
   const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
-  const { refetch: refetchConfig } = useAppConfig();
+  const { config, refetch: refetchConfig } = useAppConfig();
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [analyticsModalDismissed, setAnalyticsModalDismissed] = useState(false);
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
@@ -53,6 +55,13 @@ export default function Onboarding() {
     actions.updateRuntimeState({ requiresPasswordChange: false });
     window.location.href = '/login';
   }, [actions]);
+
+  // Check if we should show analytics modal before onboarding
+  useEffect(() => {
+    if (!isLoading && !analyticsModalDismissed && serverExperience.effectiveIsAdmin && config?.enableAnalytics == null) {
+      setShowAnalyticsModal(true);
+    }
+  }, [isLoading, analyticsModalDismissed, serverExperience.effectiveIsAdmin, config?.enableAnalytics]);
 
   const handleAnalyticsChoice = useCallback(async (enableAnalytics: boolean) => {
     if (analyticsLoading) return;
@@ -65,13 +74,14 @@ export default function Onboarding() {
 
       await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
       await refetchConfig();
-      actions.updateRuntimeState({ analyticsNotConfigured: false, analyticsEnabled: enableAnalytics });
-      actions.complete();
+      setShowAnalyticsModal(false);
+      setAnalyticsModalDismissed(true);
+      setAnalyticsLoading(false);
     } catch (error) {
       setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
       setAnalyticsLoading(false);
     }
-  }, [actions, analyticsLoading, refetchConfig]);
+  }, [analyticsLoading, refetchConfig]);
 
   const handleButtonAction = useCallback(async (action: ButtonAction) => {
     switch (action) {
@@ -281,6 +291,37 @@ export default function Onboarding() {
 
   if (onAuthRoute) {
     return null;
+  }
+
+  // Show analytics modal before onboarding if needed
+  if (showAnalyticsModal) {
+    const slideDefinition = SLIDE_DEFINITIONS['analytics-choice'];
+    const slideContent = slideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+      analyticsError,
+      analyticsLoading,
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={slideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}} // No skip allowed
+        onAction={async (action) => {
+          if (action === 'enable-analytics') {
+            await handleAnalyticsChoice(true);
+          } else if (action === 'disable-analytics') {
+            await handleAnalyticsChoice(false);
+          }
+        }}
+      />
+    );
   }
 
   if (showLicenseSlide) {

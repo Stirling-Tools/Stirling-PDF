@@ -312,8 +312,8 @@ yamlAdvert = "Stirling PDF Pro supports YAML configuration files and other SSO f
 ssoAdvert = "Looking for more user management features? Check out Stirling PDF Pro"
 
 [analytics]
-title = "Do you want make Stirling PDF better?"
-paragraph1 = "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents."
+title = "Do you want to help make Stirling PDF better?"
+paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
 learnMore = "Learn more about our analytics"
 enable = "Enable analytics"

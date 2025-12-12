@@ -14,18 +14,18 @@ interface AnalyticsChoiceSlideProps {
 export default function AnalyticsChoiceSlide({ analyticsError }: AnalyticsChoiceSlideProps): SlideConfig {
   return {
     key: 'analytics-choice',
-    title: i18n.t('analytics.title', 'Help improve Stirling PDF?'),
+    title: i18n.t('analytics.title', 'Do you want to help make Stirling PDF better?'),
     body: (
       <div className={styles.bodyCopyInner}>
         <Trans
           i18nKey="analytics.paragraph1"
-          defaults="Stirling PDF uses optional, privacy-respecting analytics to guide improvements."
+          defaults="Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
           components={{ strong: <strong /> }}
         />
         <br />
         <Trans
           i18nKey="analytics.paragraph2"
-          defaults="We never track personal information or file contents. You can change this later in settings."
+          defaults="Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
           components={{ strong: <strong /> }}
         />
         <br />
