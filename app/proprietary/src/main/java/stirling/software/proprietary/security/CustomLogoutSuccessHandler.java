@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
@@ -67,28 +69,18 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 String authType = null;
                 if (authentication instanceof JwtAuthenticationToken jwtAuth) {
                     authType =
-                            (String)
-                                    jwtAuth.getToken()
-                                            .getClaims()
-                                            .getOrDefault("authType", null);
+                            (String) jwtAuth.getToken().getClaims().getOrDefault("authType", null);
                     log.debug("JWT-based logout detected with authType: {}", authType);
                 }
 
-                if ("SAML2".equals(authType)) {
-                    // Handle SAML2 logout redirection
-                    if (authentication instanceof Saml2Authentication samlAuthentication) {
-                        getRedirect_saml2(request, response, samlAuthentication);
-                    } else {
-                        log.info("SAML2 logout via JWT - redirecting to login page");
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                    }
-                } else if ("OAUTH2".equals(authType)) {
-                    if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
-                        getRedirect_oauth2(request, response, oAuthToken);
-                    } else {
-                        log.info("OAuth2 logout via JWT - attempting OIDC logout");
-                        handleJwtOAuth2Logout(request, response);
-                    }
+                if (authentication instanceof Saml2Authentication samlAuthentication) {
+                    getRedirect_saml2(request, response, samlAuthentication);
+                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
+                    log.info("OAuth2 logout via JWT - attempting OIDC logout");
+                    getRedirect_oauth2(request, response, oAuthToken);
+                } else if (authentication
+                        instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+                    getRedirectJwt(request, response, jwtAuthenticationToken);
                 } else if (authentication instanceof UsernamePasswordAuthenticationToken
                         || authentication instanceof JwtAuthenticationToken) {
                     // Handle Username/Password logout (or JWT without OAUTH2/SAML2 authType)
@@ -192,7 +184,10 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for JWT-based OAuth2 authentication logout
-    private void handleJwtOAuth2Logout(HttpServletRequest request, HttpServletResponse response)
+    private void getRedirectJwt(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            JwtAuthenticationToken jwtAuthenticationToken)
             throws IOException {
         OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
@@ -238,7 +233,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             }
             logoutUrlBuilder
                     .append("post_logout_redirect_uri=")
-                    .append(response.encodeRedirectURL(redirectUrl));
+                    .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
 
             String logoutUrl = logoutUrlBuilder.toString();
             log.info("JWT-based OAuth2 logout URL: {}", logoutUrl);
@@ -271,6 +266,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 "keycloak".equalsIgnoreCase(oAuthToken.getAuthorizedClientRegistrationId());
         if (isKeycloak) {
             KeycloakProvider keycloak = oauth.getClient().getKeycloak();
+
             if (keycloak.getIssuer() != null && !keycloak.getIssuer().isBlank()) {
                 issuer = keycloak.getIssuer();
                 clientId = keycloak.getClientId();
@@ -304,7 +300,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 logoutUrlBuilder.append("id_token_hint=").append(idToken);
                 logoutUrlBuilder
                         .append("&post_logout_redirect_uri=")
-                        .append(response.encodeRedirectURL(redirectUrl));
+                        .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
 
                 // client_id is optional when id_token_hint is present, but included for
                 // compatibility
@@ -322,7 +318,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 }
                 logoutUrlBuilder
                         .append("post_logout_redirect_uri=")
-                        .append(response.encodeRedirectURL(redirectUrl));
+                        .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
 
                 log.warn("OIDC logout without id_token_hint - user may see confirmation screen");
             }
@@ -373,7 +369,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      */
     private String checkForErrors(HttpServletRequest request) {
         String errorMessage;
-        String path = "?logout=true";
+        String path = "logout=true";
 
         if (request.getParameter("oAuth2AuthenticationErrorWeb") != null) {
             path = "errorOAuth=userAlreadyExistsWeb";
@@ -495,6 +491,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             ApplicationProperties.Security.OAUTH2 oauth, String issuer) {
         if (oauth != null && oauth.getClient() != null) {
             String configuredEndpoint = oauth.getClient().getEndSessionEndpoint();
+
             if (configuredEndpoint != null && !configuredEndpoint.isBlank()) {
                 log.debug("Using configured end_session_endpoint: {}", configuredEndpoint);
                 return configuredEndpoint;
