@@ -15,8 +15,9 @@ const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
-  const runningEE = config?.runningEE ?? false;
-  const showDemoData = !loginEnabled || !runningEE;
+  const licenseType = config?.license ?? 'NORMAL';
+  const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
+  const showDemoData = !loginEnabled || !hasEnterpriseLicense;
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,7 @@ const AdminAuditSection: React.FC = () => {
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
-        show={!runningEE}
+        show={!hasEnterpriseLicense}
         featureName={t('settings.licensingAnalytics.audit', 'Audit')}
       />
       <AuditSystemStatus status={systemStatus} />
@@ -89,27 +90,27 @@ const AdminAuditSection: React.FC = () => {
       {systemStatus.enabled ? (
         <Tabs defaultValue="dashboard">
           <Tabs.List>
-            <Tabs.Tab value="dashboard" disabled={!loginEnabled}>
+            <Tabs.Tab value="dashboard" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.dashboard', 'Dashboard')}
             </Tabs.Tab>
-            <Tabs.Tab value="events" disabled={!loginEnabled}>
+            <Tabs.Tab value="events" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.events', 'Audit Events')}
             </Tabs.Tab>
-            <Tabs.Tab value="export" disabled={!loginEnabled}>
+            <Tabs.Tab value="export" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.export', 'Export')}
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="dashboard" pt="md">
-            <AuditChartsSection loginEnabled={loginEnabled} />
+            <AuditChartsSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
 
           <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable loginEnabled={loginEnabled} />
+            <AuditEventsTable loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
 
           <Tabs.Panel value="export" pt="md">
-            <AuditExportSection loginEnabled={loginEnabled} />
+            <AuditExportSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
         </Tabs>
       ) : (

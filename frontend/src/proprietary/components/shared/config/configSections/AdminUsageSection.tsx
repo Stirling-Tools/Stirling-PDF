@@ -23,8 +23,9 @@ const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
-  const runningEE = config?.runningEE ?? false;
-  const showDemoData = !loginEnabled || !runningEE;
+  const licenseType = config?.license ?? 'NORMAL';
+  const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
+  const showDemoData = !loginEnabled || !hasEnterpriseLicense;
   const [data, setData] = useState<EndpointStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +171,7 @@ const AdminUsageSection: React.FC = () => {
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
-        show={!runningEE}
+        show={!hasEnterpriseLicense}
         featureName={t('settings.licensingAnalytics.usageAnalytics', 'Usage Analytics')}
       />
 
