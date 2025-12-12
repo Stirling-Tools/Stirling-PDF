@@ -173,7 +173,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
     .map(([code, name]) => ({
       value: code,
-      label: `${name} (${code})`,
+      label: name,
     }));
 
   // Hide the language selector if there's only one language option
