@@ -258,7 +258,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for JWT-based OAuth2 authentication logout
-    private void getRedirectJwt(
+    private void getAuthRedirect(
             HttpServletRequest request,
             HttpServletResponse response,
             JwtAuthenticationToken jwtAuthenticationToken)
@@ -268,8 +268,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
         boolean isApi = isApiRequest(request);
 
-        // For JWT-based auth, we don't have OAuth2AuthenticationToken
-        // Attempt generic OIDC logout
         String issuer = null;
         String clientId = null;
 
@@ -285,6 +283,15 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
             issuer = oauth.getIssuer();
             clientId = oauth.getClientId();
+        }
+
+        // Fallback: extract issuer from JWT token if not found in configuration
+        if (issuer == null) {
+            var jwtIssuer = jwtAuthenticationToken.getToken().getIssuer();
+            if (jwtIssuer != null) {
+                issuer = jwtIssuer.toString();
+                log.debug("Using issuer from JWT token: {}", issuer);
+            }
         }
 
         String endSessionEndpoint = getEndSessionEndpoint(oauth, issuer);

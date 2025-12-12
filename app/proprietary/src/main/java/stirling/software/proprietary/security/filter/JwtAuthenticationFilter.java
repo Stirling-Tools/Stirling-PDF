@@ -190,11 +190,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
-                // Convert timestamp claims from Long to Instant (jjwt stores as Long,
-                // Spring Security Jwt expects Instant)
-                convertTimestampClaim(claims, "iat");
-                convertTimestampClaim(claims, "exp");
-                convertTimestampClaim(claims, "nbf");
+                convertTimestampToLong(claims, "iat");
+                convertTimestampToLong(claims, "exp");
+                convertTimestampToLong(claims, "nbf");
 
                 Jwt jwt =
                         Jwt.withTokenValue(jwtToken)
@@ -244,7 +242,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void convertTimestampClaim(Map<String, Object> claims, String claimName) {
+    private void convertTimestampToLong(Map<String, Object> claims, String claimName) {
         Long timestamp = (Long) claims.get(claimName);
         claims.put(claimName, Instant.ofEpochSecond(timestamp));
     }
