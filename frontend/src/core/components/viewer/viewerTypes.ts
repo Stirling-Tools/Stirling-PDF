@@ -14,11 +14,6 @@ export interface SignatureAPI {
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
-  activateAnnotationTool?: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
-  setAnnotationStyle?: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => void;
-  getSelectedAnnotation?: () => any | null;
-  deselectAnnotation?: () => void;
-  updateAnnotation?: (pageIndex: number, annotationId: string, patch: Partial<any>) => void;
 }
 
 export interface AnnotationAPI {
@@ -67,6 +62,7 @@ export interface AnnotationToolOptions {
   thickness?: number;
   fontSize?: number;
   fontFamily?: string;
+  textAlign?: number; // 0 = Left, 1 = Center, 2 = Right
   imageSrc?: string;
   icon?: 'Comment' | 'Key' | 'Note' | 'Help' | 'NewParagraph' | 'Paragraph' | 'Insert';
   contents?: string;

@@ -20,6 +20,7 @@ const Annotate = (_props: BaseToolProps) => {
   const { selectors } = useFileContext();
   const {
     signatureApiRef,
+    annotationApiRef,
     historyApiRef,
     undo,
     redo,
@@ -109,7 +110,8 @@ const Annotate = (_props: BaseToolProps) => {
       case 'squiggly':
         return { color: squigglyColor, opacity: squigglyOpacity / 100, ...metadata };
       case 'text':
-        return { color: textColor, fontSize: textSize, textAlign: textAlignment, ...metadata };
+        const textAlignNumber = textAlignment === 'left' ? 0 : textAlignment === 'center' ? 1 : 2;
+        return { color: textColor, fontSize: textSize, textAlign: textAlignNumber, ...metadata };
       case 'square':
       case 'circle':
       case 'polygon':
@@ -163,7 +165,7 @@ const Annotate = (_props: BaseToolProps) => {
     if (viewerContext.isAnnotationMode) return;
 
     viewerContext.setAnnotationMode(true);
-    signatureApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
+    annotationApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
   }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions]);
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
@@ -179,7 +181,7 @@ const Annotate = (_props: BaseToolProps) => {
     manualToolSwitch.current = true;
 
     // Deselect annotation in the viewer first
-    signatureApiRef?.current?.deselectAnnotation?.();
+    annotationApiRef?.current?.deselectAnnotation?.();
 
     // Clear selection state to show default controls
     setSelectedAnn(null);
@@ -191,10 +193,10 @@ const Annotate = (_props: BaseToolProps) => {
 
     // For stamp, apply the image if we have one
     if (toolId === 'stamp' && stampImageData) {
-      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
-      signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: stampImageData });
+      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
+      annotationApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: stampImageData });
     } else {
-      signatureApiRef?.current?.activateAnnotationTool?.(toolId, options);
+      annotationApiRef?.current?.activateAnnotationTool?.(toolId, options);
     }
 
     // Reset flag after a short delay
@@ -206,9 +208,9 @@ const Annotate = (_props: BaseToolProps) => {
   useEffect(() => {
     // push style updates to EmbedPDF when sliders/colors change
     if (activeTool === 'stamp' && stampImageData) {
-      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
+      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
     } else {
-      signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+      annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
     }
   }, [activeTool, buildToolOptions, signatureApiRef, stampImageData]);
 
@@ -219,7 +221,7 @@ const Annotate = (_props: BaseToolProps) => {
     // and apply the converted size to the stamp tool automatically
     if (activeTool === 'stamp' && placementPreviewSize && stampImageData) {
       // Just update the image source; size is handled by SignatureAPIBridge
-      signatureApiRef?.current?.setAnnotationStyle?.('stamp', {
+      annotationApiRef?.current?.setAnnotationStyle?.('stamp', {
         imageSrc: stampImageData,
       });
     }
@@ -230,10 +232,10 @@ const Annotate = (_props: BaseToolProps) => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (['polyline', 'polygon'].includes(activeTool)) {
-        signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
-        signatureApiRef?.current?.activateAnnotationTool?.(null as any);
+        annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+        annotationApiRef?.current?.activateAnnotationTool?.(null as any);
         setTimeout(() => {
-          signatureApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
+          annotationApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
         }, 50);
       }
     };
@@ -244,7 +246,7 @@ const Annotate = (_props: BaseToolProps) => {
   // Poll selected annotation to allow editing existing highlights/text
   useEffect(() => {
     const interval = setInterval(() => {
-      const ann = signatureApiRef?.current?.getSelectedAnnotation?.();
+      const ann = annotationApiRef?.current?.getSelectedAnnotation?.();
       const annId = ann?.object?.id ?? null;
       // Only update state when selection actually changes
       if (annId !== selectedAnnId) {
@@ -321,6 +323,7 @@ const Annotate = (_props: BaseToolProps) => {
 
   const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
+    { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
     { id: 'stamp', label: t('annotation.stamp', 'Add Image'), icon: 'add-photo-alternate' },
   ];
 
@@ -391,8 +394,8 @@ const Annotate = (_props: BaseToolProps) => {
                     setTimeout(() => {
                       viewerContext?.setAnnotationMode(true);
                       setPlacementMode(true); // This shows the preview overlay
-                      signatureApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl });
-                      signatureApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl });
+                      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl });
+                      annotationApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl });
                     }, 150);
                   } catch (err) {
                     console.error('Failed to load stamp image', err);
@@ -603,7 +606,7 @@ const Annotate = (_props: BaseToolProps) => {
                 max={100}
                 value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
                 onChange={(value) => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     { opacity: value / 100 }
@@ -638,7 +641,7 @@ const Annotate = (_props: BaseToolProps) => {
                 max={12}
                 value={selectedAnn.object?.borderWidth ?? inkWidth}
                 onChange={(value) => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     {
@@ -698,7 +701,7 @@ const Annotate = (_props: BaseToolProps) => {
                     clearTimeout(selectedUpdateTimer.current);
                   }
                   selectedUpdateTimer.current = setTimeout(() => {
-                    signatureApiRef?.current?.updateAnnotation?.(
+                    annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
                       { contents: newVal, textColor: selectedAnn.object?.textColor ?? textColor }
@@ -713,7 +716,7 @@ const Annotate = (_props: BaseToolProps) => {
                   clearTimeout(selectedUpdateTimer.current);
                 }
                 selectedUpdateTimer.current = setTimeout(() => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     { contents: val, textColor: selectedAnn.object?.textColor ?? textColor }
@@ -729,7 +732,7 @@ const Annotate = (_props: BaseToolProps) => {
                 value={selectedFontSize}
                 onChange={(size) => {
                   setSelectedFontSize(size);
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     { fontSize: size }
@@ -743,7 +746,7 @@ const Annotate = (_props: BaseToolProps) => {
                 <ActionIcon
                   variant={(selectedAnn.object?.textAlign ?? 'left') === 'left' ? 'filled' : 'default'}
                   onClick={() => {
-                    signatureApiRef?.current?.updateAnnotation?.(
+                    annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
                       { textAlign: 'left' }
@@ -756,7 +759,7 @@ const Annotate = (_props: BaseToolProps) => {
                 <ActionIcon
                   variant={(selectedAnn.object?.textAlign ?? 'left') === 'center' ? 'filled' : 'default'}
                   onClick={() => {
-                    signatureApiRef?.current?.updateAnnotation?.(
+                    annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
                       { textAlign: 'center' }
@@ -769,7 +772,7 @@ const Annotate = (_props: BaseToolProps) => {
                 <ActionIcon
                   variant={(selectedAnn.object?.textAlign ?? 'left') === 'right' ? 'filled' : 'default'}
                   onClick={() => {
-                    signatureApiRef?.current?.updateAnnotation?.(
+                    annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
                       { textAlign: 'right' }
@@ -808,7 +811,7 @@ const Annotate = (_props: BaseToolProps) => {
                 max={100}
                 value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
                 onChange={(value) => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     { opacity: value / 100 }
@@ -823,7 +826,7 @@ const Annotate = (_props: BaseToolProps) => {
                 max={12}
                 value={selectedAnn.object?.borderWidth ?? shapeThickness}
                 onChange={(value) => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     {
@@ -877,7 +880,7 @@ const Annotate = (_props: BaseToolProps) => {
                 max={100}
                 value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
                 onChange={(value) => {
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     { opacity: value / 100 }
@@ -893,7 +896,7 @@ const Annotate = (_props: BaseToolProps) => {
                   max={12}
                   value={selectedAnn.object?.borderWidth ?? shapeThickness}
                   onChange={(value) => {
-                    signatureApiRef?.current?.updateAnnotation?.(
+                    annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
                       {
@@ -911,7 +914,7 @@ const Annotate = (_props: BaseToolProps) => {
                 variant={(selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 'filled' : 'light'}
                 onClick={() => {
                   const newValue = (selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 1 : 0;
-                  signatureApiRef?.current?.updateAnnotation?.(
+                  annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     {
@@ -989,40 +992,40 @@ const Annotate = (_props: BaseToolProps) => {
             if (colorPickerTarget === 'highlight') {
               setHighlightOpacity(opacity);
               if (activeTool === 'highlight' || activeTool === 'inkHighlighter') {
-                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
               }
               if (selectedAnn?.object?.id && (selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15)) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
               }
             } else if (colorPickerTarget === 'underline') {
               setUnderlineOpacity(opacity);
-              signatureApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
+              annotationApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
               if (selectedAnn?.object?.id && selectedAnn.object?.type === 10) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
               }
             } else if (colorPickerTarget === 'strikeout') {
               setStrikeoutOpacity(opacity);
-              signatureApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
+              annotationApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
               if (selectedAnn?.object?.id && selectedAnn.object?.type === 12) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
               }
             } else if (colorPickerTarget === 'squiggly') {
               setSquigglyOpacity(opacity);
-              signatureApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
+              annotationApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
               if (selectedAnn?.object?.id && selectedAnn.object?.type === 11) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
               }
             } else if (colorPickerTarget === 'shapeStroke') {
               setShapeStrokeOpacity(opacity);
               const shapeTools = ['square', 'circle', 'polygon'] as AnnotationToolId[];
               if (shapeTools.includes(activeTool)) {
-                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
               }
             } else if (colorPickerTarget === 'shapeFill') {
               setShapeFillOpacity(opacity);
               const fillShapeTools = ['square', 'circle', 'polygon'] as AnnotationToolId[];
               if (fillShapeTools.includes(activeTool)) {
-                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
               }
             }
           }}
@@ -1030,44 +1033,44 @@ const Annotate = (_props: BaseToolProps) => {
             if (colorPickerTarget === 'ink') {
               setInkColor(color);
               if (activeTool === 'ink') {
-                signatureApiRef?.current?.setAnnotationStyle?.('ink', buildToolOptions('ink'));
+                annotationApiRef?.current?.setAnnotationStyle?.('ink', buildToolOptions('ink'));
               }
               if (selectedAnn?.object?.type === 15) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
               }
             } else if (colorPickerTarget === 'highlight') {
               setHighlightColor(color);
               if (activeTool === 'highlight' || activeTool === 'inkHighlighter') {
-                signatureApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
               }
               if (selectedAnn?.object?.type === 9 || selectedAnn?.object?.type === 15) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
               }
             } else if (colorPickerTarget === 'underline') {
               setUnderlineColor(color);
-              signatureApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
+              annotationApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
               if (selectedAnn?.object?.id) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
               }
             } else if (colorPickerTarget === 'strikeout') {
               setStrikeoutColor(color);
-              signatureApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
+              annotationApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
               if (selectedAnn?.object?.id) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
               }
             } else if (colorPickerTarget === 'squiggly') {
               setSquigglyColor(color);
-              signatureApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
+              annotationApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
               if (selectedAnn?.object?.id) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
               }
             } else {
               setTextColor(color);
               if (activeTool === 'text') {
-                signatureApiRef?.current?.setAnnotationStyle?.('text', buildToolOptions('text'));
+                annotationApiRef?.current?.setAnnotationStyle?.('text', buildToolOptions('text'));
               }
               if (selectedAnn?.object?.type === 3 || selectedAnn?.object?.type === 1) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
                   textColor: color,
                   color,
                 });
@@ -1080,10 +1083,10 @@ const Annotate = (_props: BaseToolProps) => {
               setShapeStrokeColor(color);
               const styleTool = shapeTools.includes(activeTool) ? activeTool : null;
               if (styleTool) {
-                signatureApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
               }
               if (selectedAnn?.object?.id) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
                   strokeColor: color, // border color
                   color: selectedAnn.object?.color ?? shapeFillColor, // preserve fill
                   borderWidth: shapeThickness,
@@ -1094,10 +1097,10 @@ const Annotate = (_props: BaseToolProps) => {
               setShapeFillColor(color);
               const styleTool = fillShapeTools.includes(activeTool) ? activeTool : null;
               if (styleTool) {
-                signatureApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+                annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
               }
               if (selectedAnn?.object?.id) {
-                signatureApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+                annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
                   color, // fill color
                   strokeColor: selectedAnn.object?.strokeColor ?? shapeStrokeColor, // preserve border
                   borderWidth: shapeThickness,
@@ -1126,7 +1129,7 @@ const Annotate = (_props: BaseToolProps) => {
                     size="lg"
                     onClick={() => {
                       viewerContext?.setAnnotationMode(true);
-                      signatureApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
+                      annotationApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
                       setIsAnnotationPaused(false);
                     }}
                     style={{

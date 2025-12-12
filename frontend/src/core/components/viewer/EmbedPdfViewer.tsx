@@ -11,7 +11,6 @@ import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
-import { useAnnotation } from '@app/contexts/AnnotationContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
@@ -69,8 +68,7 @@ const EmbedPdfViewerContent = ({
   }, [rotationState.rotation]);
 
   // Get signature and annotation contexts
-  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
-  const { annotationApiRef } = useAnnotation();
+  const { signatureApiRef, annotationApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();

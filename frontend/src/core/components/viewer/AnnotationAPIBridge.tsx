@@ -66,17 +66,19 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
         case 'text':
           return {
             type: PdfAnnotationSubtype.FREETEXT,
-            textColor: options?.color ?? '#111111',
+            fontColor: options?.color ?? '#111111',
             fontSize: options?.fontSize ?? 14,
             fontFamily: options?.fontFamily ?? 'Helvetica',
+            textAlign: options?.textAlign ?? 0, // 0 = Left, 1 = Center, 2 = Right
             opacity: options?.opacity ?? 1,
-            interiorColor: options?.fillColor ?? '#fffef7',
+            backgroundColor: options?.fillColor ?? '#fffef7',
             borderWidth: options?.thickness ?? 1,
           };
         case 'note':
           return {
             type: PdfAnnotationSubtype.TEXT,
             color: options?.color ?? '#ffa000',
+            backgroundColor: '#ffff00',
             opacity: options?.opacity ?? 1,
             icon: getIconEnum(options?.icon),
             contents: options?.contents ?? '',
