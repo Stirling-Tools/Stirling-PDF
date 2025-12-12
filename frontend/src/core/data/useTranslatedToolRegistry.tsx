@@ -223,7 +223,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false, //TODO make support Sign
       },
       addText: {
-        icon: <LocalIcon icon="material-symbols:text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
         name: t('home.addText.title', 'Add Text'),
         component: AddText,
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),

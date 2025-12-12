@@ -964,7 +964,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.pause', 'Pause placement')}
                 </Text>
@@ -987,7 +987,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.resume', 'Resume placement')}
                 </Text>
