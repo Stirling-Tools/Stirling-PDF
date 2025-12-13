@@ -52,7 +52,6 @@ jobs:
             core.setOutput('repository', pr.head.repo.full_name);
             core.setOutput('ref', pr.head.ref);
             core.setOutput('is_fork', String(pr.head.repo.fork));
-            core.setOutput('base_ref', pr.base.ref);
             core.setOutput('author', pr.user.login);
             core.setOutput('state', pr.state);
 
@@ -65,10 +64,6 @@ jobs:
           IS_FORK: ${{ steps.resolve.outputs.is_fork }}
           # nur bei workflow_dispatch gesetzt:
           ALLOW_FORK_INPUT: ${{ inputs.allow_fork }}
-          # für Auto-PR-Logik:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          PR_BASE: ${{ steps.resolve.outputs.base_ref }}
           PR_AUTHOR: ${{ steps.resolve.outputs.author }}
         run: |
           set -e
@@ -89,14 +84,8 @@ jobs:
           else
             auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96" "balazs-szucs")
             is_auth=false; for u in "${auth_users[@]}"; do [ "$u" = "$PR_AUTHOR" ] && is_auth=true && break; done
-            if [ "$PR_BASE" = "V2" ] && [ "$is_auth" = true ]; then
+            if [ "$is_auth" = true ]; then
               should=true
-            else
-              title_has_v2=false; echo "$PR_TITLE" | grep -qiE 'v2|version.?2|version.?two' && title_has_v2=true
-              branch_has_kw=false; echo "$PR_BRANCH" | grep -qiE 'v2|react' && branch_has_kw=true
-              if [ "$is_auth" = true ] && { [ "$title_has_v2" = true ] || [ "$branch_has_kw" = true ]; }; then
-                should=true
-              fi
             fi
           fi
 
@@ -174,7 +163,7 @@ jobs:
               owner,
               repo,
               issue_number: prNumber,
-              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
+              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment for approved V2 contributors._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
             return newComment.id;
 
@@ -394,7 +383,7 @@ jobs:
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
                               `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
-                              `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
+                              `🔄 **Auto-deployed** for approved V2 contributors.`;
 
             await github.rest.issues.createComment({
               owner,
