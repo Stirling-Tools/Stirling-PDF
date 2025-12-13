@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl, Group, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import apiClient from "@app/services/apiClient";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -14,10 +14,20 @@ interface CompressSettingsProps {
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
   const [isSliding, setIsSliding] = useState(false);
-  const { config } = useAppConfig();
+  const [imageMagickAvailable, setImageMagickAvailable] = useState<boolean | null>(null);
 
-  const hasEnterprise = config?.runningEE === true || config?.license === 'ENTERPRISE';
-  const lineArtDisabled = disabled || !hasEnterprise;
+  useEffect(() => {
+    const checkImageMagick = async () => {
+      try {
+        const response = await apiClient.get<boolean>('/api/v1/config/group-enabled?group=ImageMagick');
+        setImageMagickAvailable(response.data);
+      } catch (error) {
+        console.error('Failed to check ImageMagick availability:', error);
+        setImageMagickAvailable(true); // Optimistic fallback
+      }
+    };
+    checkImageMagick();
+  }, []);
 
   const thicknessDescriptor =
     parameters.lineArtThreshold < 40
@@ -150,28 +160,17 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         />
         <Checkbox
           checked={parameters.lineArt}
-          onChange={(event) => {
-            if (!hasEnterprise) return;
-            onParameterChange('lineArt', event.currentTarget.checked);
-          }}
-          disabled={lineArtDisabled}
-          label={
-            <Group gap="xs" align="center" wrap="nowrap">
-              <Text fw={500}>{t("compress.lineArt.label", "Convert images to line art (bilevel)")}</Text>
-              <Badge size="sm" variant="light" color={hasEnterprise ? "indigo" : "gray"}>
-                {t('compress.lineArt.enterpriseTag', 'Enterprise')}
-              </Badge>
-            </Group>
+          onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}
+          disabled={disabled || imageMagickAvailable === false}
+          label={t("compress.lineArt.label", "Convert images to line art (bilevel)")}
+          description={
+            imageMagickAvailable === false
+              ? t("compress.lineArt.unavailable", "ImageMagick is not installed or enabled on this server")
+              : t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")
           }
-          description={t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")}
         />
-        {!hasEnterprise && (
-          <Text size="xs" c="dimmed">
-            {t('compress.lineArt.enterpriseDisabled', 'Requires an Enterprise license to enable line art conversion.')}
-          </Text>
-        )}
         {parameters.lineArt && (
-          <Stack gap="xs" style={{ opacity: lineArtDisabled ? 0.6 : 1 }}>
+          <Stack gap="xs" style={{ opacity: (disabled || imageMagickAvailable === false) ? 0.6 : 1 }}>
             <Group justify="space-between" align="center">
               <Text size="sm" fw={600}>{t('compress.lineArt.thresholdLabel', 'Line thickness')}</Text>
               <Badge size="sm" variant="outline" color="blue">
@@ -184,7 +183,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
               step={1}
               value={parameters.lineArtThreshold}
               onChange={(value) => onParameterChange('lineArtThreshold', value)}
-              disabled={lineArtDisabled}
+              disabled={disabled || imageMagickAvailable === false}
               label={null}
               marks={[
                 { value: 25, label: t('compress.lineArt.thresholdHintFine', 'Finer lines') },
@@ -205,7 +204,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
             </Group>
             <SegmentedControl
               fullWidth
-              disabled={lineArtDisabled}
+              disabled={disabled || imageMagickAvailable === false}
               data={[
                 { value: '1', label: t('compress.lineArt.edgeLow', 'Gentle') },
                 { value: '2', label: t('compress.lineArt.edgeMedium', 'Balanced') },

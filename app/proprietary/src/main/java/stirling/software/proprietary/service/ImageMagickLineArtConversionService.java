@@ -1,16 +1,20 @@
 package stirling.software.proprietary.service;
 
-import jakarta.imageio.ImageIO;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
+
+import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -57,7 +61,9 @@ public class ImageMagickLineArtConversionService implements LineArtConversionSer
                             .runCommandWithOutputHandling(command);
 
             if (result.getRc() != 0) {
-                log.warn("ImageMagick line art conversion failed with return code: {}", result.getRc());
+                log.warn(
+                        "ImageMagick line art conversion failed with return code: {}",
+                        result.getRc());
                 throw new IOException("ImageMagick line art conversion failed");
             }
 

@@ -28,7 +28,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +61,6 @@ public class CompressController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final EndpointConfiguration endpointConfiguration;
-    @Qualifier("runningEE") private final boolean runningEnterprise;
 
     @Autowired(required = false)
     private LineArtConversionService lineArtConversionService;
@@ -705,15 +704,10 @@ public class CompressController {
             }
 
             if (Boolean.TRUE.equals(convertToLineArt)) {
-                if (!runningEnterprise) {
-                    throw new ResponseStatusException(
-                            HttpStatus.FORBIDDEN,
-                            "Line art conversion requires an enterprise license");
-                }
                 if (lineArtConversionService == null) {
                     throw new ResponseStatusException(
                             HttpStatus.FORBIDDEN,
-                            "Line art conversion is unavailable without the enterprise add-on");
+                            "Line art conversion is unavailable - ImageMagick service not found");
                 }
                 if (!isImageMagickEnabled()) {
                     throw new IOException(
@@ -724,9 +718,7 @@ public class CompressController {
                                 ? 55d
                                 : Math.min(100d, Math.max(0d, lineArtThreshold));
                 int edgeLevel =
-                        lineArtEdgeLevel == null
-                                ? 1
-                                : Math.min(3, Math.max(1, lineArtEdgeLevel));
+                        lineArtEdgeLevel == null ? 1 : Math.min(3, Math.max(1, lineArtEdgeLevel));
                 currentFile =
                         applyLineArtConversion(currentFile, tempFiles, thresholdValue, edgeLevel);
             }

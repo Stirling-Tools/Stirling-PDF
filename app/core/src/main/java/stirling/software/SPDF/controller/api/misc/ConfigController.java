@@ -226,4 +226,10 @@ public class ConfigController {
         }
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/group-enabled")
+    public ResponseEntity<Boolean> isGroupEnabled(@RequestParam(name = "group") String group) {
+        boolean enabled = endpointConfiguration.isGroupEnabled(group);
+        return ResponseEntity.ok(enabled);
+    }
 }
