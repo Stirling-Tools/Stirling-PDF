@@ -508,13 +508,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
         if (isCacheUnavailableError(error)) {
-          setErrorMessage(
-            t(
-              'pdfTextEditor.errors.cacheExpiredImages',
-              'Session expired. Images for page {{page}} could not be loaded. Your edits are preserved, but some images may be missing. You can continue editing text, or reload the file to restore all images.',
-              { page: pageNumber }
-            ),
-          );
+          console.log('[loadImagesForPage] Cache expired, triggering automatic recovery...');
+          // Automatically recover by reloading the file
+          void recoverCacheAndReloadRef.current();
         }
       } finally {
         loadingImagePagesRef.current.delete(pageIndex);
@@ -757,42 +753,28 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       return false;
     }
     if (cacheRecoveryAttemptsRef.current >= 2) {
-      setErrorMessage(
-        t(
-          'pdfTextEditor.errors.cacheRecoveryLimit',
-          'Cache was unavailable after multiple attempts. Please reload the file manually.',
-        ),
-      );
+      console.warn('[PdfTextEditor] Cache recovery limit reached');
       return false;
     }
     cacheRecoveryAttemptsRef.current += 1;
     const file = lastLoadedFileRef.current;
     if (!file) {
-      setErrorMessage(
-        t(
-          'pdfTextEditor.errors.cacheMissingFile',
-          'Session expired. Please reload the PDF file to continue.',
-        ),
-      );
+      console.warn('[PdfTextEditor] No file available for cache recovery');
       return false;
     }
     cacheRecoveryInProgressRef.current = true;
     try {
+      console.log('[PdfTextEditor] Automatically reloading file due to cache expiration...');
       await handleLoadFile(file);
+      console.log('[PdfTextEditor] Cache recovery successful');
       return true;
     } catch (error) {
       console.error('[PdfTextEditor] Cache recovery failed', error);
-      setErrorMessage(
-        t(
-          'pdfTextEditor.errors.cacheReloadFailed',
-          'Cache expired and reload failed. Please reselect the file.',
-        ),
-      );
       return false;
     } finally {
       cacheRecoveryInProgressRef.current = false;
     }
-  }, [handleLoadFile, t]);
+  }, [handleLoadFile]);
 
   useEffect(() => {
     recoverCacheAndReloadRef.current = recoverCacheAndReload;
