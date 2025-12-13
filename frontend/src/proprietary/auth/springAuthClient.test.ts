@@ -259,7 +259,7 @@ describe('SpringAuthClient', () => {
       const result = await springAuth.signOut();
 
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/auth/logout',
+        '/logout',
         null,
         expect.objectContaining({ withCredentials: true })
       );
