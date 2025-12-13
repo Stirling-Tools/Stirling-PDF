@@ -29,20 +29,6 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
     checkImageMagick();
   }, []);
 
-  const thicknessDescriptor =
-    parameters.lineArtThreshold < 40
-      ? t('compress.lineArt.thresholdHintFine', 'Finer lines')
-      : parameters.lineArtThreshold < 70
-        ? t('compress.lineArt.thresholdHintBalanced', 'Balanced')
-        : t('compress.lineArt.thresholdHintBold', 'Bolder lines');
-
-  const edgeDescriptor =
-    parameters.lineArtEdgeLevel === 1
-      ? t('compress.lineArt.edgeLow', 'Gentle')
-      : parameters.lineArtEdgeLevel === 2
-        ? t('compress.lineArt.edgeMedium', 'Balanced')
-        : t('compress.lineArt.edgeHigh', 'Strong');
-
   return (
     <Stack gap="md">
 
@@ -171,37 +157,36 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         />
         {parameters.lineArt && (
           <Stack gap="xs" style={{ opacity: (disabled || imageMagickAvailable === false) ? 0.6 : 1 }}>
-            <Group justify="space-between" align="center">
-              <Text size="sm" fw={600}>{t('compress.lineArt.thresholdLabel', 'Line thickness')}</Text>
-              <Badge size="sm" variant="outline" color="blue">
-                {t('compress.lineArt.thresholdBadge', { defaultValue: '{value}%', value: parameters.lineArtThreshold })}
-              </Badge>
-            </Group>
+            <Text size="sm" fw={600}>{t('compress.lineArt.detailLevel', 'Detail level')}</Text>
             <Slider
-              min={0}
-              max={100}
+              min={1}
+              max={5}
               step={1}
-              value={parameters.lineArtThreshold}
-              onChange={(value) => onParameterChange('lineArtThreshold', value)}
+              value={(() => {
+                // Map threshold to slider position
+                const thresholdMap = [20, 35, 50, 65, 80];
+                const closest = thresholdMap.reduce((prev, curr, idx) =>
+                  Math.abs(curr - parameters.lineArtThreshold) < Math.abs(thresholdMap[prev] - parameters.lineArtThreshold)
+                    ? idx : prev, 0);
+                return closest + 1;
+              })()}
+              onChange={(value) => {
+                // Map slider position to threshold: 1=20%, 2=35%, 3=50%, 4=65%, 5=80%
+                const thresholdMap = [20, 35, 50, 65, 80];
+                onParameterChange('lineArtThreshold', thresholdMap[value - 1]);
+              }}
               disabled={disabled || imageMagickAvailable === false}
               label={null}
               marks={[
-                { value: 25, label: t('compress.lineArt.thresholdHintFine', 'Finer lines') },
-                { value: 55, label: t('compress.lineArt.thresholdHintBalanced', 'Balanced') },
-                { value: 85, label: t('compress.lineArt.thresholdHintBold', 'Bolder lines') },
+                { value: 1 },
+                { value: 2 },
+                { value: 3 },
+                { value: 4 },
+                { value: 5 },
               ]}
-              styles={{ markLabel: { whiteSpace: 'nowrap' } }}
             />
-            <Text size="xs" c="dimmed">
-              {t('compress.lineArt.thresholdDescription', 'Lower percentages keep more subtle strokes; higher percentages favor stark black and white output.')}
-            </Text>
 
-            <Group justify="space-between" align="center">
-              <Text size="sm" fw={600}>{t('compress.lineArt.edgeLabel', 'Line detection strength')}</Text>
-              <Badge size="sm" variant="light" color="blue">
-                {edgeDescriptor}
-              </Badge>
-            </Group>
+            <Text size="sm" fw={600}>{t('compress.lineArt.edgeEmphasis', 'Edge emphasis')}</Text>
             <SegmentedControl
               fullWidth
               disabled={disabled || imageMagickAvailable === false}
@@ -213,23 +198,6 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
               value={parameters.lineArtEdgeLevel.toString()}
               onChange={(value) => onParameterChange('lineArtEdgeLevel', parseInt(value) as 1 | 2 | 3)}
             />
-            <Text size="xs" c="dimmed">
-              {t('compress.lineArt.edgeDescription', 'Controls how aggressively edges are detected before thresholding. Higher values emphasize outlines more.')}
-            </Text>
-            <Group gap="xs" wrap="wrap">
-              <Badge size="sm" variant="light" color="gray">
-                {thicknessDescriptor}
-              </Badge>
-              <Badge size="sm" variant="light" color="gray">
-                {edgeDescriptor}
-              </Badge>
-            </Group>
-            <Text size="xs" c="dimmed">
-              {t('compress.lineArt.previewSummary', {
-                thickness: thicknessDescriptor.toLowerCase(),
-                detection: edgeDescriptor.toLowerCase(),
-              })}
-            </Text>
           </Stack>
         )}
       </Stack>
