@@ -191,6 +191,12 @@ public class CertSignController {
 
         switch (certType) {
             case "PEM":
+                privateKeyFile =
+                        validateFilePresent(
+                                privateKeyFile, "PEM private key", "private key file is required");
+                certFile =
+                        validateFilePresent(
+                                certFile, "PEM certificate", "certificate file is required");
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
                 PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
@@ -200,10 +206,16 @@ public class CertSignController {
                 break;
             case "PKCS12":
             case "PFX":
+                p12File =
+                        validateFilePresent(
+                                p12File, "PKCS12 keystore", "PKCS12/PFX keystore file is required");
                 ks = KeyStore.getInstance("PKCS12");
                 ks.load(p12File.getInputStream(), password.toCharArray());
                 break;
             case "JKS":
+                jksfile =
+                        validateFilePresent(
+                                jksfile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
@@ -249,6 +261,17 @@ public class CertSignController {
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
                 GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+    }
+
+    private MultipartFile validateFilePresent(
+            MultipartFile file, String argumentName, String errorDescription) {
+        if (file == null || file.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    argumentName + " - " + errorDescription);
+        }
+        return file;
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
