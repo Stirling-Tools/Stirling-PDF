@@ -214,16 +214,9 @@ export default function Login() {
     return <Navigate to="/" replace />;
   }
 
-  // Show a lightweight placeholder while the redirect effect runs
+  // Redirect effect runs immediately via window.location.replace() - no UI needed
   if (session && !loading) {
-    return (
-      <AuthLayout>
-        <LoginHeader title={t('login.redirecting', 'Redirecting')} />
-        <div className="auth-section" style={{ textAlign: 'center' }}>
-          <Text size="sm">{t('login.redirectingMessage', 'Taking you back to where you left off...')}</Text>
-        </div>
-      </AuthLayout>
-    );
+    return null;
   }
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form
