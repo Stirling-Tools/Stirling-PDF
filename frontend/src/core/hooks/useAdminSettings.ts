@@ -93,15 +93,6 @@ export function useAdminSettings<T = any>(
     try {
       setSaving(true);
 
-      // Compute delta: only include fields that changed from original
-      const delta = computeDelta(originalSettings, settings);
-      console.log(`[useAdminSettings:${sectionName}] Delta (changed fields):`, JSON.stringify(delta, null, 2));
-
-      if (Object.keys(delta).length === 0) {
-        console.log(`[useAdminSettings:${sectionName}] No changes detected, skipping save`);
-        return;
-      }
-
       if (saveTransformer) {
         // Use custom save logic for complex sections
         const { sectionData, deltaSettings } = saveTransformer(settings);
@@ -111,12 +102,14 @@ export function useAdminSettings<T = any>(
 
         // Save section data (with delta applied) - compare transformed vs transformed
         const sectionDelta = computeDelta(originalSectionData, sectionData);
-        if (Object.keys(sectionDelta).length > 0) {
+        const hasSectionDelta = Object.keys(sectionDelta).length > 0;
+        if (hasSectionDelta) {
           await apiClient.put(`/api/v1/admin/settings/section/${sectionName}`, sectionDelta);
         }
 
         // Save delta settings if provided (filter to only changed values)
-        if (deltaSettings && Object.keys(deltaSettings).length > 0) {
+        const hasDeltaSettings = deltaSettings && Object.keys(deltaSettings).length > 0;
+        if (hasDeltaSettings) {
           // Build deltaSettings from original using same transformer to get correct structure
           const { deltaSettings: originalDeltaSettings } = saveTransformer(originalSettings);
 
@@ -146,8 +139,27 @@ export function useAdminSettings<T = any>(
           } else {
             console.log(`[useAdminSettings:${sectionName}] No delta settings changed, skipping`);
           }
+        } else {
+          console.log(`[useAdminSettings:${sectionName}] No delta settings provided or changed, skipping delta save`);
+        }
+
+        if (!hasSectionDelta && !hasDeltaSettings) {
+          console.log(`[useAdminSettings:${sectionName}] No changes detected after transformation, skipping save`);
+          return;
         }
       } else {
+        // Compute delta: only include fields that changed from original
+        const delta = computeDelta(originalSettings, settings);
+        console.log(
+          `[useAdminSettings:${sectionName}] Delta (changed fields):`,
+          JSON.stringify(delta, null, 2)
+        );
+
+        if (Object.keys(delta).length === 0) {
+          console.log(`[useAdminSettings:${sectionName}] No changes detected, skipping save`);
+          return;
+        }
+
         // Simple single-endpoint save with delta
         await apiClient.put(`/api/v1/admin/settings/section/${sectionName}`, delta);
       }
