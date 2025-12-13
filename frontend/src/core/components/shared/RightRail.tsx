@@ -6,6 +6,8 @@ import { useRightRail } from '@app/contexts/RightRailContext';
 import { useFileState, useFileSelection } from '@app/contexts/FileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 import LanguageSelector from '@app/components/shared/LanguageSelector';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
@@ -19,19 +21,22 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
+import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
 function renderWithTooltip(
   node: React.ReactNode,
-  tooltip: React.ReactNode | undefined
+  tooltip: React.ReactNode | undefined,
+  position: 'left' | 'right',
+  offset: number
 ) {
   if (!tooltip) return node;
 
   const portalTarget = typeof document !== 'undefined' ? document.body : undefined;
 
   return (
-    <Tooltip content={tooltip} position="left" offset={12} arrow portalTarget={portalTarget}>
+    <Tooltip content={tooltip} position={position} offset={offset} arrow portalTarget={portalTarget}>
       <div className="right-rail-tooltip-wrapper">{node}</div>
     </Tooltip>
   );
@@ -39,7 +44,10 @@ function renderWithTooltip(
 
 export default function RightRail() {
   const { sidebarRefs } = useSidebarContext();
+  const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme, themeMode } = useRainbowThemeContext();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
@@ -117,9 +125,9 @@ export default function RightRail() {
         </ActionIcon>
       );
 
-      return renderWithTooltip(buttonNode, btn.tooltip);
+      return renderWithTooltip(buttonNode, btn.tooltip, tooltipPosition, tooltipOffset);
     },
-    [actions, allButtonsDisabled, disableForFullscreen]
+    [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset]
   );
 
   const handleExportAll = useCallback(async () => {
@@ -161,9 +169,9 @@ export default function RightRail() {
       return t('rightRail.exportAll', 'Export PDF');
     }
     if (selectedCount > 0) {
-      return t('rightRail.downloadSelected', 'Download Selected Files');
+      return terminology.downloadSelected;
     }
-    return t('rightRail.downloadAll', 'Download All');
+    return terminology.downloadAll;
   }, [currentView, selectedCount, t]);
 
   return (
@@ -203,15 +211,17 @@ export default function RightRail() {
                 <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
               )}
             </ActionIcon>,
-            t('rightRail.toggleTheme', 'Toggle Theme')
+            t('rightRail.toggleTheme', 'Toggle Theme'),
+            tooltipPosition,
+            tooltipOffset
           )}
 
-          {renderWithTooltip(
-            <div style={{ display: 'inline-flex' }}>
-              <LanguageSelector position="left-start" offset={6} compact />
-            </div>,
-            t('rightRail.language', 'Language')
-          )}
+          <LanguageSelector
+            position="left-start"
+            offset={6}
+            compact
+            tooltip={t('rightRail.language', 'Language')}
+          />
 
           {renderWithTooltip(
             <ActionIcon
@@ -224,9 +234,11 @@ export default function RightRail() {
                 (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
               }
             >
-              <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
+              <LocalIcon icon={icons.downloadIconName} width="1.5rem" height="1.5rem" />
             </ActionIcon>,
-            downloadTooltip
+            downloadTooltip,
+            tooltipPosition,
+            tooltipOffset
           )}
         </div>
 

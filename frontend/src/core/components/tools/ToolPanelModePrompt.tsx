@@ -4,32 +4,58 @@ import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import '@app/components/tools/ToolPanelModePrompt.css';
-import type { ToolPanelMode } from '@app/constants/toolPanel';
+import { type ToolPanelMode } from '@app/constants/toolPanel';
 
-const ToolPanelModePrompt = () => {
+interface ToolPanelModePromptProps {
+  onComplete?: () => void;
+  /** If true, the modal will be forced open (used by orchestrator) */
+  forceOpen?: boolean;
+}
+
+/**
+ * ToolPanelModePrompt - Lets users choose between sidebar and fullscreen tool modes
+ * 
+ * The orchestrator controls this via forceOpen prop. When shown standalone (legacy),
+ * it uses internal state based on preferences.
+ */
+const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps = {}) => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const { preferences, updatePreference } = usePreferences();
-  const [opened, setOpened] = useState(false);
+  const [internalOpened, setInternalOpened] = useState(false);
 
-  const shouldShowPrompt = !preferences.toolPanelModePromptSeen;
+  // Only show after the intro onboarding has been completed (legacy standalone mode)
+  const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
 
   useEffect(() => {
-    if (shouldShowPrompt) {
-      setOpened(true);
+    if (shouldShowPrompt && forceOpen === undefined) {
+      setInternalOpened(true);
     }
-  }, [shouldShowPrompt]);
+  }, [shouldShowPrompt, forceOpen]);
+
+  // If forceOpen is provided, use it; otherwise use internal state
+  const opened = forceOpen ?? internalOpened;
+  const setOpened = forceOpen !== undefined ? () => {} : setInternalOpened;
 
   const handleSelect = (mode: ToolPanelMode) => {
     setToolPanelMode(mode);
     updatePreference('defaultToolPanelMode', mode);
     updatePreference('toolPanelModePromptSeen', true);
+    updatePreference('hasSelectedToolPanelMode', true);
     setOpened(false);
+    onComplete?.();
   };
 
   const handleDismiss = () => {
+    const defaultMode: ToolPanelMode = 'sidebar';
+    if (toolPanelMode !== defaultMode) {
+      setToolPanelMode(defaultMode);
+      updatePreference('defaultToolPanelMode', defaultMode);
+    }
+    updatePreference('hasSelectedToolPanelMode', true);
     updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
+    onComplete?.();
   };
 
   return (

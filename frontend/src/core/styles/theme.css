@@ -12,6 +12,12 @@
   /* Inline highlights in summary */
   --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
   --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+
+  /* File Manager active file colors */
+  --file-active-bg: rgba(59, 130, 246, 0.1); /* Transparent blue for active file background */
+  --file-active-badge-bg: rgba(34, 197, 94, 0.15); /* Transparent green for active badge */
+  --file-active-badge-fg: #15803d; /* Green text for active badge */
+  --file-active-badge-border: rgba(34, 197, 94, 0.3); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -158,6 +164,9 @@
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
+  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
+  --text-always-dark: #1f2937;
+  --text-always-dark-muted: #6b7280;
   --border-subtle: #e5e7eb;
   --border-default: #E2E8F0;
   --border-strong: #9ca3af;
@@ -247,6 +256,7 @@
   --header-selected-bg: #1E88E5; /* light mode selected header matches dark */
   --header-selected-fg: #FFFFFF;
   --file-card-bg: #FFFFFF;  /* file card background (light/dark paired) */
+  --accordion-item-bg: #E8EAED;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
@@ -326,6 +336,19 @@
   /* Compare page label chip (light mode): slightly lighter than surrounding rows */
   --compare-page-label-bg: var(--bg-muted);
   --compare-page-label-fg: var(--text-secondary);
+}
+
+/* Onboarding (light mode) */
+:root {
+  --onboarding-title: #0A0A0A;
+  --onboarding-body: #4A5565;
+  --onboarding-primary-button-bg: #101828;
+  --onboarding-primary-button-text: #FFFFFF;
+  --onboarding-secondary-button-bg: #FFFFFF;
+  --onboarding-secondary-button-text: #6A7282;
+  --onboarding-secondary-button-border: #E5E5E5;
+  --onboarding-step-active: #1E2939;
+  --onboarding-step-inactive: #D1D5DC;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -421,6 +444,9 @@
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
+  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
+  --text-always-dark: #1f2937;
+  --text-always-dark-muted: #6b7280;
   --border-subtle: #2A2F36;
   --border-default: #3A4047;
   --border-strong: #4b5563;
@@ -494,6 +520,7 @@
   --header-selected-fg: #FFFFFF;
   /* file card background (dark) */
   --file-card-bg: #1F2329;
+  --accordion-item-bg: #373D45;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
@@ -548,6 +575,16 @@
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
+  /* Onboarding (dark mode) */
+  --onboarding-title: #F9FAFB;
+  --onboarding-body: #D1D5DB;
+  --onboarding-primary-button-bg: #FFFFFF;
+  --onboarding-primary-button-text: #0B1220;
+  --onboarding-secondary-button-bg: transparent;
+  --onboarding-secondary-button-text: #E5E7EB;
+  --onboarding-secondary-button-border: #3A4047;
+  --onboarding-step-active: #E5E7EB;
+  --onboarding-step-inactive: #4B5563;
   /* API Keys section colors (dark mode) */
   --api-keys-card-bg: #2A2F36;
   --api-keys-card-border: #3A4047;
@@ -578,6 +615,41 @@
 [data-accept] .dropzone-inner {
   background-color: var(--landing-drop-inner-paper-bg) !important;
   border-color: var(--landing-drop-inner-paper-border) !important;
+}
+
+/* Plan section card borders - only override in dark mode */
+[data-mantine-color-scheme="dark"] .plan-card {
+  --paper-border-color: rgb(158, 158, 158) !important;
+}
+
+[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
+  color: rgb(221, 221, 221) !important;
+}
+
+/* Current plan badge - use light mode green in dark mode */
+[data-mantine-color-scheme="dark"] .current-plan-badge {
+  background-color: var(--color-green-300) !important;
+}
+
+/* Plan section button colors */
+.plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #0A8BFF !important;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #1C598E !important;
+}
+
+/* Lighter grey for disabled plan buttons */
+.plan-button:disabled,
+.plan-button[data-disabled] {
+  background-color: #7e7e7e !important;
+  color: white;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:disabled,
+[data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
+  background-color: #6b7280 !important;
 }
 
 /* Smooth transitions for theme switching */

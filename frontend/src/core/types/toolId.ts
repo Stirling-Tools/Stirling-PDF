@@ -9,6 +9,7 @@ export type ToolKind = 'regular' | 'super' | 'link';
 export const CORE_REGULAR_TOOL_IDS = [
   'certSign',
   'sign',
+  'addText',
   'addPassword',
   'removePassword',
   'removePages',
@@ -53,6 +54,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   'replaceColor',
   'showJS',
   'bookletImposition',
+  'pdfTextEditor',
 ] as const;
 
 export const CORE_SUPER_TOOL_IDS = [
@@ -113,4 +115,3 @@ type Disjoint<A, B> = [A & B] extends [never] ? true : false;
 type _Check1 = Assert<Disjoint<RegularToolId, SuperToolId>>;
 type _Check2 = Assert<Disjoint<RegularToolId, LinkToolId>>;
 type _Check3 = Assert<Disjoint<SuperToolId, LinkToolId>>;
-

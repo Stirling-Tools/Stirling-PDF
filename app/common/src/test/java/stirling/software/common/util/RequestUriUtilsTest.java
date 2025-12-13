@@ -25,6 +25,9 @@ public class RequestUriUtilsTest {
                 RequestUriUtils.isStaticResource("/pdfjs/pdf.worker.js"),
                 "PDF.js files should be static");
         assertTrue(
+                RequestUriUtils.isStaticResource("/pdfium/pdfium.wasm"),
+                "PDFium wasm should be static");
+        assertTrue(
                 RequestUriUtils.isStaticResource("/api/v1/info/status"),
                 "API status should be static");
         assertTrue(
@@ -47,6 +50,27 @@ public class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isStaticResource("/api/v1/products"),
                 "API products should not be static");
+    }
+
+    @Test
+    void testIsFrontendRoute() {
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/"), "Root path should be a frontend route");
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/app/dashboard"),
+                "React routes without extensions should be frontend routes");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/api/v1/users"),
+                "API routes should not be frontend routes");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/register"),
+                "Register should not be treated as a frontend route");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/pipeline/jobs"),
+                "Pipeline should not be treated as a frontend route");
+        assertFalse(
+                RequestUriUtils.isFrontendRoute("", "/files/download"),
+                "Files path should not be treated as a frontend route");
     }
 
     @Test
@@ -83,12 +107,14 @@ public class RequestUriUtilsTest {
                 "/favicon.ico",
                 "/icon.svg",
                 "/image.png",
+                "/locales/en/translation.toml",
                 "/site.webmanifest",
                 "/app/logo.svg",
                 "/downloads/document.png",
                 "/assets/brand.ico",
                 "/any/path/with/image.svg",
-                "/deep/nested/folder/icon.png"
+                "/deep/nested/folder/icon.png",
+                "/pdfium/pdfium.wasm"
             })
     void testIsStaticResourceWithFileExtensions(String path) {
         assertTrue(
@@ -126,6 +152,9 @@ public class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isTrackableResource("/script.js"),
                 "JS files should not be trackable");
+        assertFalse(
+                RequestUriUtils.isTrackableResource("/pdfium/pdfium.wasm"),
+                "PDFium wasm should not be trackable");
         assertFalse(
                 RequestUriUtils.isTrackableResource("/swagger/index.html"),
                 "Swagger files should not be trackable");
@@ -202,7 +231,8 @@ public class RequestUriUtilsTest {
                 "/api/v1/info/health",
                 "/site.webmanifest",
                 "/fonts/roboto.woff",
-                "/pdfjs/viewer.js"
+                "/pdfjs/viewer.js",
+                "/pdfium/pdfium.wasm"
             })
     void testNonTrackableResources(String path) {
         assertFalse(

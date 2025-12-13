@@ -8,6 +8,5 @@ import { type ProprietaryToolRegistry } from "@app/data/toolsTaxonomy";
  * and will be included in the main tool registry.
  */
 export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
-  return useMemo(() => ({
-  }), []);
+  return useMemo<ProprietaryToolRegistry>(() => ({}), []);
 }

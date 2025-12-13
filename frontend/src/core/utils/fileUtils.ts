@@ -51,3 +51,49 @@ export function detectFileExtension(filename: string): string {
 
   return extension;
 }
+
+/**
+ * Removes the file extension from a filename
+ * @param filename - The filename to process
+ * @param options - Options for processing
+ * @param options.preserveCase - If true, preserves original case. If false (default), converts to lowercase
+ * @returns Filename without extension
+ * @example
+ * getFilenameWithoutExtension('document.pdf') // 'document'
+ * getFilenameWithoutExtension('my.file.name.txt') // 'my.file.name'
+ * getFilenameWithoutExtension('REPORT.PDF', { preserveCase: true }) // 'REPORT'
+ */
+export function getFilenameWithoutExtension(
+  filename: string,
+  options: { preserveCase?: boolean } = {}
+): string {
+  if (!filename || typeof filename !== 'string') return '';
+
+  const { preserveCase = false } = options;
+  const withoutExtension = filename.replace(/\.[^.]+$/, '');
+
+  return preserveCase ? withoutExtension : withoutExtension.toLowerCase();
+}
+
+/**
+ * Checks if a file is a PDF based on extension and MIME type
+ * @param file - File or file-like object with name and type properties
+ * @returns true if the file appears to be a PDF
+ */
+export function isPdfFile(file: { name?: string; type?: string } | File | Blob | null | undefined): boolean {
+  if (!file) return false;
+
+  const name = 'name' in file ? file.name : undefined;
+  const type = file.type;
+
+  // Check MIME type first (most reliable)
+  if (type === 'application/pdf') return true;
+
+  // Check file extension as fallback
+  if (name) {
+    const ext = detectFileExtension(name);
+    if (ext === 'pdf') return true;
+  }
+
+  return false;
+}

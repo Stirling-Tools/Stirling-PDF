@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
+import { getSimulatedAppConfig } from '@app/testing/serverExperienceSimulations';
 
 /**
  * Sleep utility for delays
@@ -19,6 +20,7 @@ export interface AppConfig {
   serverPort?: number;
   appNameNavbar?: string;
   languages?: string[];
+  defaultLocale?: string;
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -42,7 +44,10 @@ export interface AppConfig {
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;
+  dependenciesReady?: boolean;
   error?: string;
+  isNewServer?: boolean;
+  isNewUser?: boolean;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
@@ -83,7 +88,8 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const isBlockingMode = bootstrapMode === 'blocking';
   const [config, setConfig] = useState<AppConfig | null>(initialConfig);
   const [error, setError] = useState<string | null>(null);
-  const [fetchCount, setFetchCount] = useState(0);
+  // Track how many times we've attempted to fetch. useRef avoids re-renders that can trigger loops.
+  const fetchCountRef = React.useRef(0);
   const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && !isBlockingMode);
   const [loading, setLoading] = useState(!hasResolvedConfig);
 
@@ -92,10 +98,13 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
   const fetchConfig = useCallback(async (force = false) => {
     // Prevent duplicate fetches unless forced
-    if (!force && fetchCount > 0) {
+    if (!force && fetchCountRef.current > 0) {
       console.debug('[AppConfig] Already fetched, skipping');
       return;
     }
+
+    // Mark that we've attempted a fetch to prevent repeated auto-fetch loops
+    fetchCountRef.current += 1;
 
     const shouldBlockUI = !hasResolvedConfig || isBlockingMode;
     if (shouldBlockUI) {
@@ -105,6 +114,14 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        const testConfig = getSimulatedAppConfig();
+        if (testConfig) {
+          setConfig(testConfig);
+          setHasResolvedConfig(true);
+          setLoading(false);
+          return;
+        }
+
         if (attempt > 0) {
           const delay = initialDelay * Math.pow(2, attempt - 1);
           console.log(`[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`);
@@ -114,12 +131,18 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         }
 
         // apiClient automatically adds JWT header if available via interceptors
-        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', !isBlockingMode ? { suppressErrorToast: true } : undefined);
+        // Always suppress error toast - we handle 401 errors locally
+        const response = await apiClient.get<AppConfig>(
+          '/api/v1/config/app-config',
+          {
+            suppressErrorToast: true,
+            skipAuthRedirect: true,
+          } as any,
+        );
         const data = response.data;
 
         console.debug('[AppConfig] Config fetched successfully:', data);
         setConfig(data);
-        setFetchCount(prev => prev + 1);
         setHasResolvedConfig(true);
         setLoading(false);
         return; // Success - exit function
@@ -156,11 +179,28 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     }
 
     setLoading(false);
-  }, [fetchCount, hasResolvedConfig, isBlockingMode, maxRetries, initialDelay]);
+  }, [hasResolvedConfig, isBlockingMode, maxRetries, initialDelay]);
 
   useEffect(() => {
-    // Always try to fetch config to check if login is disabled
-    // The endpoint should be public and return proper JSON
+    // Skip config fetch on auth pages (/login, /signup, /auth/callback, /invite/*)
+    // Config will be fetched after successful authentication via jwt-available event
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('/login') ||
+                       currentPath.includes('/signup') ||
+                       currentPath.includes('/auth/callback') ||
+                       currentPath.includes('/invite/');
+
+    // On auth pages, always skip the config fetch
+    // The config will be fetched after authentication via jwt-available event
+    if (isAuthPage) {
+      console.debug('[AppConfig] On auth page - using default config, skipping fetch');
+      setConfig({ enableLogin: true });
+      setHasResolvedConfig(true);
+      setLoading(false);
+      return;
+    }
+
+    // On non-auth pages, fetch config (will validate JWT if present)
     if (autoFetch) {
       fetchConfig();
     }
@@ -178,11 +218,13 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     return () => window.removeEventListener('jwt-available', handleJwtAvailable);
   }, [fetchConfig]);
 
+  const refetch = useCallback(() => fetchConfig(true), [fetchConfig]);
+
   const value: AppConfigContextValue = {
     config,
     loading,
     error,
-    refetch: () => fetchConfig(true),
+    refetch,
   };
 
   return (

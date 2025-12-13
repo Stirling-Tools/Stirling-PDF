@@ -2,12 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
 
 declare global {
   interface Window {
     CookieConsent?: {
       run: (config: any) => void;
       show: (show?: boolean) => void;
+      hide: () => void;
+      getCookie: (name?: string) => any;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };
@@ -16,57 +19,57 @@ declare global {
 
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
+  forceLightMode?: boolean;
 }
 
 export const useCookieConsent = ({
-  analyticsEnabled = false
+  analyticsEnabled = false,
+  forceLightMode = false
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!analyticsEnabled) {
-      console.log('Cookie consent not enabled - analyticsEnabled is false');
-      return;
-    }
+    if (!analyticsEnabled) return;
 
-    // Prevent double initialization
-    if (window.CookieConsent) {
-      setIsInitialized(true);
-      // Force show the modal if it exists but isn't visible
-      setTimeout(() => {
-        window.CookieConsent?.show();
-      }, 100);
-      return;
-    }
-
-    // Load the cookie consent CSS files first
     const mainCSS = document.createElement('link');
     mainCSS.rel = 'stylesheet';
-    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
-    document.head.appendChild(mainCSS);
+    mainCSS.href = `${BASE_PATH}css/cookieconsent.css`;
+    if (!document.querySelector(`link[href="${mainCSS.href}"]`)) {
+      document.head.appendChild(mainCSS);
+    }
 
     const customCSS = document.createElement('link');
     customCSS.rel = 'stylesheet';
-    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
-    document.head.appendChild(customCSS);
+    customCSS.href = `${BASE_PATH}css/cookieconsentCustomisation.css`;
+    if (!document.querySelector(`link[href="${customCSS.href}"]`)) {
+      document.head.appendChild(customCSS);
+    }
 
-    // Load the cookie consent library
+    if (window.CookieConsent) {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+      }
+      setIsInitialized(true);
+      return;
+    }
+
     const script = document.createElement('script');
-    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
+    script.src = `${BASE_PATH}js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
-
-        // Detect current theme and set appropriate mode
         const detectTheme = () => {
+          if (forceLightMode) {
+            document.documentElement.classList.remove('cc--darkmode');
+            return false;
+          }
+
           const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
           const hasLightClass = document.documentElement.classList.contains('light');
           const hasDarkClass = document.documentElement.classList.contains('dark');
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-          // Priority: Mantine attribute > CSS classes > system preference
           let isDarkMode = false;
 
           if (mantineScheme) {
@@ -79,41 +82,35 @@ export const useCookieConsent = ({
             isDarkMode = systemPrefersDark;
           }
 
-          // Always explicitly set or remove the class
           document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
-
           return isDarkMode;
         };
 
-        // Initial theme detection with slight delay to ensure DOM is ready
-        setTimeout(() => {
-          detectTheme();
-        }, 50);
+        setTimeout(() => detectTheme(), 50);
 
-        // Check if CookieConsent is available
         if (!window.CookieConsent) {
           console.error('CookieConsent is not available on window object');
           return;
         }
 
-        // Listen for theme changes
-        const themeObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-mantine-color-scheme' ||
-                 mutation.attributeName === 'class')) {
-              detectTheme();
-            }
+        let themeObserver: MutationObserver | null = null;
+        if (!forceLightMode) {
+          themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' &&
+                  (mutation.attributeName === 'data-mantine-color-scheme' ||
+                   mutation.attributeName === 'class')) {
+                detectTheme();
+              }
+            });
           });
-        });
 
-        themeObserver.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['data-mantine-color-scheme', 'class']
-        });
+          themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-mantine-color-scheme', 'class']
+          });
+        }
 
-
-        // Initialize cookie consent with full configuration
         try {
           window.CookieConsent.run({
             autoShow: true,
@@ -141,15 +138,11 @@ export const useCookieConsent = ({
                   ...(config?.enablePosthog !== false && {
                     posthog: {
                       label: t('cookieBanner.services.posthog', 'PostHog Analytics'),
-                      onAccept: () => console.log('PostHog service accepted'),
-                      onReject: () => console.log('PostHog service rejected')
                     }
                   }),
                   ...(config?.enableScarf !== false && {
                     scarf: {
                       label: t('cookieBanner.services.scarf', 'Scarf Pixel'),
-                      onAccept: () => console.log('Scarf service accepted'),
-                      onReject: () => console.log('Scarf service rejected')
                     }
                   })
                 }
@@ -205,16 +198,11 @@ export const useCookieConsent = ({
             }
           });
 
-          // Force show after initialization
-          setTimeout(() => {
-            window.CookieConsent?.show();
-          }, 200);
-
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
-      setIsInitialized(true);
-      }, 100); // Small delay to ensure DOM is ready
+        setIsInitialized(true);
+      }, 100);
     };
 
     script.onerror = () => {
@@ -224,7 +212,6 @@ export const useCookieConsent = ({
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup script and CSS when component unmounts
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
@@ -235,13 +222,93 @@ export const useCookieConsent = ({
         document.head.removeChild(customCSS);
       }
     };
-  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
+  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, forceLightMode]);
 
-  const showCookiePreferences = () => {
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const detectTheme = () => {
+      if (forceLightMode) {
+        document.documentElement.classList.remove('cc--darkmode');
+        return false;
+      }
+
+      const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
+      const hasLightClass = document.documentElement.classList.contains('light');
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      let isDarkMode = false;
+      if (mantineScheme) {
+        isDarkMode = mantineScheme === 'dark';
+      } else if (hasLightClass) {
+        isDarkMode = false;
+      } else if (hasDarkClass) {
+        isDarkMode = true;
+      } else {
+        isDarkMode = systemPrefersDark;
+      }
+
+      document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
+      return isDarkMode;
+    };
+
+    detectTheme();
+
+    let themeObserver: MutationObserver | null = null;
+    if (!forceLightMode) {
+      themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' &&
+              (mutation.attributeName === 'data-mantine-color-scheme' ||
+               mutation.attributeName === 'class')) {
+            detectTheme();
+          }
+        });
+      });
+
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-mantine-color-scheme', 'class']
+      });
+    }
+
+    return () => {
+      if (themeObserver) {
+        themeObserver.disconnect();
+      }
+    };
+  }, [forceLightMode, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized || !window.CookieConsent) return;
+
+    const handleTourState = (event: Event) => {
+      const { detail } = event as CustomEvent<TourStatePayload>;
+      if (detail?.isOpen) {
+        window.CookieConsent?.hide();
+      } else {
+        const consentCookie = window.CookieConsent?.getCookie?.();
+        const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
+        if (!hasConsented) window.CookieConsent?.show();
+      }
+    };
+
+    window.addEventListener(TOUR_STATE_EVENT, handleTourState);
+    return () => window.removeEventListener(TOUR_STATE_EVENT, handleTourState);
+  }, [isInitialized]);
+
+  const showCookieConsent = useCallback(() => {
+    if (isInitialized && window.CookieConsent) {
+      window.CookieConsent?.show();
+    }
+  }, [isInitialized]);
+
+  const showCookiePreferences = useCallback(() => {
     if (isInitialized && window.CookieConsent) {
       window.CookieConsent?.show(true);
     }
-  };
+  }, [isInitialized]);
 
   const isServiceAccepted = useCallback((service: string, category: string): boolean => {
     if (typeof window === 'undefined' || !window.CookieConsent) {
@@ -251,7 +318,9 @@ export const useCookieConsent = ({
   }, []);
 
   return {
+    showCookieConsent,
     showCookiePreferences,
-    isServiceAccepted
+    isServiceAccepted,
+    isInitialized,
   };
 };

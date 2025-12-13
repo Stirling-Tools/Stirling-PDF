@@ -68,8 +68,8 @@ public class LicenseKeyChecker {
                 premiumEnabledResult = licenseService.verifyLicense(licenseKey);
                 if (License.ENTERPRISE == premiumEnabledResult) {
                     log.info("License key is Enterprise.");
-                } else if (License.PRO == premiumEnabledResult) {
-                    log.info("License key is Pro.");
+                } else if (License.SERVER == premiumEnabledResult) {
+                    log.info("License key is Server.");
                 } else {
                     log.info("License key is invalid, defaulting to non pro license.");
                 }
@@ -113,7 +113,12 @@ public class LicenseKeyChecker {
 
     public void updateLicenseKey(String newKey) throws IOException {
         applicationProperties.getPremium().setKey(newKey);
-        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
+        GeneralUtils.saveKeyToSettings("premium.key", newKey);
+        evaluateLicense();
+        synchronizeLicenseSettings();
+    }
+
+    public void resyncLicense() {
         evaluateLicense();
         synchronizeLicenseSettings();
     }

@@ -27,19 +27,28 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import InviteMembersModal from '@app/components/shared/InviteMembersModal';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useNavigate } from 'react-router-dom';
+import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
+import { useLicense } from '@app/contexts/LicenseContext';
+import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
 
 export default function PeopleSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
+  const navigate = useNavigate();
+  const { licenseInfo: globalLicenseInfo } = useLicense();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteModalOpened, setInviteModalOpened] = useState(false);
   const [editUserModalOpened, setEditUserModalOpened] = useState(false);
+  const [changePasswordModalOpened, setChangePasswordModalOpened] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [mailEnabled, setMailEnabled] = useState(false);
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -50,6 +59,24 @@ export default function PeopleSection() {
     premiumEnabled: boolean;
     totalUsers: number;
   } | null>(null);
+  const hasNoSlots = licenseInfo ? licenseInfo.availableSlots === 0 : false;
+  const handleAddMembersClick = () => {
+    if (!loginEnabled) {
+      return;
+    }
+    if (hasNoSlots) {
+      navigate('/settings/adminPlan');
+      return;
+    }
+    setInviteModalOpened(true);
+  };
+
+  const addMemberTooltip = !loginEnabled
+    ? t('workspace.people.loginRequired', 'Enable login mode first')
+    : hasNoSlots
+      ? t('workspace.people.license.noSlotsAvailable', 'No user slots available')
+      : null;
+
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -96,6 +123,7 @@ export default function PeopleSection() {
           premiumEnabled: adminData.premiumEnabled,
           totalUsers: adminData.totalUsers,
         });
+        setMailEnabled(adminData.mailEnabled);
       } else {
         // Provide example data when login is disabled
         const exampleUsers: User[] = [
@@ -156,6 +184,7 @@ export default function PeopleSection() {
 
         setUsers(exampleUsers);
         setTeams(exampleTeams);
+        setMailEnabled(false);
 
         // Example license information
         setLicenseInfo({
@@ -244,6 +273,16 @@ export default function PeopleSection() {
     setEditUserModalOpened(true);
   };
 
+  const openChangePasswordModal = (user: User) => {
+    setPasswordUser(user);
+    setChangePasswordModalOpened(true);
+  };
+
+  const closeChangePasswordModal = () => {
+    setChangePasswordModalOpened(false);
+    setPasswordUser(null);
+  };
+
   const closeEditModal = () => {
     setEditUserModalOpened(false);
     setSelectedUser(null);
@@ -323,9 +362,18 @@ export default function PeopleSection() {
           </Text>
 
           {licenseInfo.availableSlots === 0 && (
-            <Badge color="red" variant="light" size="sm">
-              {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
-            </Badge>
+            <Group gap="xs" wrap="nowrap" align="center">
+              <Badge color="red" variant="light" size="sm">
+                {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
+              </Badge>
+              <Button
+                size="compact-sm"
+                variant="outline"
+                onClick={() => navigate('/settings/adminPlan')}
+              >
+                {t('workspace.people.actions.upgrade', 'Upgrade')}
+              </Button>
+            </Group>
           )}
 
           {licenseInfo.grandfatheredUserCount > 0 && (
@@ -342,6 +390,17 @@ export default function PeopleSection() {
               +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
             </Badge>
           )}
+
+          {/* Enterprise Seat Management Button */}
+          {globalLicenseInfo?.licenseType === 'ENTERPRISE' && (
+            <>
+              <Text size="sm" c="dimmed" span>•</Text>
+              <UpdateSeatsButton
+                size="xs"
+                onSuccess={fetchData}
+              />
+            </>
+          )}
         </Group>
       )}
 
@@ -355,14 +414,14 @@ export default function PeopleSection() {
           style={{ maxWidth: 300 }}
         />
         <Tooltip
-          label={!loginEnabled ? 'Enable login mode first' : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          label={addMemberTooltip || undefined}
           disabled={loginEnabled && (!licenseInfo || licenseInfo.availableSlots > 0)}
           position="bottom"
           withArrow
         >
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
-            onClick={() => setInviteModalOpened(true)}
+            onClick={handleAddMembersClick}
             disabled={!loginEnabled || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
           >
             {t('workspace.people.addMembers')}
@@ -471,7 +530,6 @@ export default function PeopleSection() {
                     <Tooltip label={user.team.name} disabled={user.team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
                       <Text
                         size="sm"
-                        c="dimmed"
                         maw={150}
                         style={{
                           overflow: 'hidden',
@@ -483,7 +541,7 @@ export default function PeopleSection() {
                       </Text>
                     </Tooltip>
                   ) : (
-                    <Text size="sm" c="dimmed">—</Text>
+                    <Text size="sm">—</Text>
                   )}
                 </Table.Td>
                   <Table.Td>
@@ -494,9 +552,9 @@ export default function PeopleSection() {
                           <div>
                             <Text size="xs" fw={500}>Authentication: {user.authenticationType || 'Unknown'}</Text>
                             <Text size="xs">
-                              Last Activity: {user.lastRequest
+                              Last Activity: {user.lastRequest && new Date(user.lastRequest).getFullYear() >= 1980
                                 ? new Date(user.lastRequest).toLocaleString()
-                                : 'Never'}
+                                :t('never', 'Never')}
                             </Text>
                           </div>
                         }
@@ -506,7 +564,7 @@ export default function PeopleSection() {
                         withArrow
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
-                        <ActionIcon variant="subtle" color="gray" size="sm">
+                        <ActionIcon variant="subtle"size="sm">
                           <LocalIcon icon="info" width="1rem" height="1rem" />
                         </ActionIcon>
                       </Tooltip>
@@ -514,12 +572,25 @@ export default function PeopleSection() {
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray" disabled={!loginEnabled}>
+                          <ActionIcon variant="subtle"  disabled={!loginEnabled}>
                             <LocalIcon icon="more-vert" width="1rem" height="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
-                          <Menu.Item onClick={() => openEditModal(user)} disabled={!loginEnabled}>{t('workspace.people.editRole')}</Menu.Item>
+                          <Menu.Item
+                            leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
+                            onClick={() => openEditModal(user)}
+                            disabled={!loginEnabled}
+                          >
+                            {t('workspace.people.editRole')}
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
+                            onClick={() => openChangePasswordModal(user)}
+                            disabled={!loginEnabled}
+                          >
+                            {t('workspace.people.changePassword.action', 'Change password')}
+                          </Menu.Item>
                           <Menu.Item
                             leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
                             onClick={() => handleToggleEnabled(user)}
@@ -545,6 +616,15 @@ export default function PeopleSection() {
       <InviteMembersModal
         opened={inviteModalOpened}
         onClose={() => setInviteModalOpened(false)}
+        onSuccess={fetchData}
+      />
+
+      <ChangeUserPasswordModal
+        opened={changePasswordModalOpened}
+        onClose={closeChangePasswordModal}
+        user={passwordUser}
+        onSuccess={fetchData}
+        mailEnabled={mailEnabled}
       />
 
       {/* Edit User Modal */}

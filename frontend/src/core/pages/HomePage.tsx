@@ -4,11 +4,14 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { BASE_PATH } from "@app/constants/app";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -19,8 +22,6 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
-import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
-import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
 
 import "@app/pages/HomePage.css";
 
@@ -51,20 +52,33 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
-  // Show admin analytics choice modal if analytics settings not configured
+  const { activeFiles } = useFileContext();
+  const { actions } = useNavigationActions();
+  const { setActiveFileIndex } = useViewer();
+  const prevFileCountRef = useRef(activeFiles.length);
+
+  // Auto-switch to viewer when going from 0 to 1 file
+  // Skip this if PDF Text Editor is active - it handles its own empty state
   useEffect(() => {
-    if (config && config.enableAnalytics === null) {
-      setShowAnalyticsModal(true);
+    const prevCount = prevFileCountRef.current;
+    const currentCount = activeFiles.length;
+
+    if (prevCount === 0 && currentCount === 1) {
+      // PDF Text Editor handles its own empty state with a dropzone
+      if (selectedToolKey !== 'pdfTextEditor') {
+        actions.setWorkbench('viewer');
+        setActiveFileIndex(0);
+      }
     }
-  }, [config]);
+
+    prevFileCountRef.current = currentCount;
+  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
-  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
-    colorScheme === "dark" ? "White" : "Black"
-  }Text.svg`;
+  const { wordmark } = useLogoAssets();
+  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -162,11 +176,6 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
-      <AdminAnalyticsChoiceModal
-        opened={showAnalyticsModal}
-        onClose={() => setShowAnalyticsModal(false)}
-      />
-      <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">

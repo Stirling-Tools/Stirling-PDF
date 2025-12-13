@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
+import { useBackendProbe } from '@app/hooks/useBackendProbe';
+import apiClient from '@app/services/apiClient';
+import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { updateSupportedLanguages } from '@app/i18n';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -13,53 +20,111 @@ import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import OAuthButtons, { DEBUG_SHOW_ALL_PROVIDERS, oauthProviderConfig } from '@app/routes/login/OAuthButtons';
 import DividerWithText from '@app/components/shared/DividerWithText';
 import LoggedInState from '@app/routes/login/LoggedInState';
-import { BASE_PATH } from '@app/constants/app';
 
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
+  const { refetch } = useAppConfig();
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
-  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const backendProbe = useBackendProbe();
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
+  const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+
+  // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
+  useEffect(() => {
+    if (backendProbe.status === 'up' || backendProbe.loginDisabled) {
+      return;
+    }
+    const tick = async () => {
+      const result = await backendProbe.probe();
+      if (result.status === 'up') {
+        await refetch();
+        if (loginDisabled) {
+          navigate('/', { replace: true });
+        }
+      }
+    };
+    const intervalId = window.setInterval(() => {
+      void tick();
+    }, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, refetch, navigate, loginDisabled]);
+
+  // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
+  useEffect(() => {
+    if (!loading && session) {
+      console.debug('[Login] User already authenticated, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [session, loading, navigate]);
+
+  // If backend reports login is disabled, redirect to home (anonymous mode)
+  useEffect(() => {
+    if (backendProbe.loginDisabled) {
+      // Slight delay to allow state updates before redirecting
+      const id = setTimeout(() => navigate('/', { replace: true }), 0);
+      return () => clearTimeout(id);
+    }
+  }, [backendProbe.loginDisabled, navigate]);
+
+  useEffect(() => {
+    if (backendProbe.status === 'up') {
+      void refetch();
+    }
+  }, [backendProbe.status, refetch]);
 
   // Fetch enabled SSO providers and login config from backend
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response = await fetch(`${BASE_PATH}/api/v1/proprietary/ui-data/login`);
-        if (response.ok) {
-          const data = await response.json();
+        const response = await apiClient.get('/api/v1/proprietary/ui-data/login');
+        const data = response.data;
 
-          // Check if login is disabled - if so, redirect to home
-          if (data.enableLogin === false) {
-            console.debug('[Login] Login disabled, redirecting to home');
-            navigate('/');
-            return;
-          }
-
-          setEnableLogin(data.enableLogin ?? true);
-
-          // Extract provider IDs from the providerList map
-          // The keys are like "/oauth2/authorization/google" - extract the last part
-          const providerIds = Object.keys(data.providerList || {})
-            .map(key => key.split('/').pop())
-            .filter((id): id is string => id !== undefined);
-          setEnabledProviders(providerIds);
+        // Check if login is disabled - if so, redirect to home
+        if (data.enableLogin === false) {
+          console.debug('[Login] Login disabled, redirecting to home');
+          navigate('/');
+          return;
         }
+
+        setEnableLogin(data.enableLogin ?? true);
+
+        // Set first-time setup flags
+        setIsFirstTimeSetup(data.firstTimeSetup ?? false);
+        setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+
+        // Apply language configuration from server
+        if (data.languages || data.defaultLocale) {
+          updateSupportedLanguages(data.languages, data.defaultLocale);
+        }
+
+        // Extract provider IDs from the providerList map
+        // The keys are like "/oauth2/authorization/google" - extract the last part
+        const providerIds = Object.keys(data.providerList || {})
+          .map(key => key.split('/').pop())
+          .filter((id): id is string => id !== undefined);
+
+        setEnabledProviders(providerIds);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
     };
-    fetchProviders();
-  }, [navigate]);
+
+    if (backendProbe.status === 'up' || backendProbe.loginDisabled) {
+      fetchProviders();
+    }
+  }, [navigate, backendProbe.status, backendProbe.loginDisabled]);
 
   // Update hasSSOProviders and showEmailForm when enabledProviders changes
   useEffect(() => {
@@ -119,21 +184,66 @@ export default function Login() {
     ogUrl: `${window.location.origin}${window.location.pathname}`
   });
 
+  // If login is disabled, short-circuit to home (avoids rendering the form after retry)
+  if (loginDisabled) {
+    return <Navigate to="/" replace />;
+  }
+
   // Show logged in state if authenticated
   if (session && !loading) {
     return <LoggedInState />;
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
+  // If backend isn't ready yet, show a lightweight status screen instead of the form
+  if (backendProbe.status !== 'up' && !loginDisabled) {
+    const backendTitle = t('backendStartup.notFoundTitle', 'Backend not found');
+    const handleRetry = async () => {
+      const result = await backendProbe.probe();
+      if (result.status === 'up') {
+        await refetch();
+        navigate('/', { replace: true });
+      }
+    };
+    return (
+      <AuthLayout>
+        <LoginHeader title={backendTitle} />
+        <div
+          className="auth-section"
+          style={{
+            padding: '1.5rem',
+            marginTop: '1rem',
+            borderRadius: '0.75rem',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.2)',
+          }}
+        >
+          <p style={{ margin: '0 0 0.75rem 0', color: 'rgba(15, 23, 42, 0.8)' }}>
+            {t('backendStartup.unreachable')}
+          </p>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
+            style={{ width: 'fit-content' }}
+          >
+            {t('backendStartup.retry', 'Retry')}
+          </button>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  const signInWithProvider = async (provider: OAuthProvider) => {
     try {
       setIsSigningIn(true);
       setError(null);
 
-      console.log(`[Login] Signing in with ${provider}`);
+      console.log(`[Login] Signing in with provider: ${provider}`);
 
-      // Redirect to Spring OAuth2 endpoint
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
-        provider,
+        provider: provider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 
@@ -249,6 +359,31 @@ export default function Login() {
             submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
           />
         </div>
+      )}
+
+      {/* Help section - only show on first-time setup with default credentials */}
+      {isFirstTimeSetup && showDefaultCredentials && (
+        <Alert
+          color="blue"
+          variant="light"
+          radius="md"
+          mt="xl"
+        >
+          <Stack gap="xs" align="center">
+            <Text size="sm" fw={600} ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              {t('login.defaultCredentials', 'Default Login Credentials')}
+            </Text>
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.username', 'Username')}:</Text> admin
+            </Text>
+            <Text size="sm" ta="center" style={{ color: 'var(--text-always-dark)' }}>
+              <Text component="span" fw={600} style={{ color: 'var(--text-always-dark)' }}>{t('login.password', 'Password')}:</Text> stirling
+            </Text>
+            <Text size="xs" ta="center" mt="xs" style={{ color: 'var(--text-always-dark-muted)' }}>
+              {t('login.changePasswordWarning', 'Please change your password after logging in for the first time')}
+            </Text>
+          </Stack>
+        </Alert>
       )}
 
     </AuthLayout>

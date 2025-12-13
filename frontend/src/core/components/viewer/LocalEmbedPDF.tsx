@@ -19,6 +19,8 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -39,6 +41,12 @@ import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
+import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
+import { isPdfFile } from '@app/utils/fileUtils';
+import { useTranslation } from 'react-i18next';
+import { LinkLayer } from '@app/components/viewer/LinkLayer';
+import { absoluteWithBasePath } from '@app/constants/app';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -50,6 +58,7 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+  const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
@@ -89,7 +98,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         strategy: ScrollStrategy.Vertical,
         initialPage: 0,
       }),
-      createPluginRegistration(RenderPluginPackage),
+      createPluginRegistration(RenderPluginPackage, {
+        withForms: true,
+        withAnnotations: true,
+      }),
 
       // Register interaction manager (required for zoom and selection features)
       createPluginRegistration(InteractionManagerPluginPackage),
@@ -98,15 +110,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       createPluginRegistration(SelectionPluginPackage),
 
       // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
+      // Always register for reading existing annotations
+      createPluginRegistration(HistoryPluginPackage),
 
       // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
+      // Always register for reading existing annotations like links
+      createPluginRegistration(AnnotationPluginPackage, {
         annotationAuthor: 'Digital Signature',
         autoCommit: true,
         deactivateToolAfterCreate: false,
         selectAfterCreate: true,
-      })] : []),
+      }),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
@@ -138,6 +152,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register thumbnail plugin for page thumbnails
       createPluginRegistration(ThumbnailPluginPackage),
 
+      // Register bookmark plugin for PDF outline support
+      createPluginRegistration(BookmarkPluginPackage),
+
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage),
 
@@ -145,11 +162,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       createPluginRegistration(ExportPluginPackage, {
         defaultFileName: 'document.pdf',
       }),
+
+      // Register print plugin for printing PDFs
+      createPluginRegistration(PrintPluginPackage),
     ];
   }, [pdfUrl]);
 
-  // Initialize the engine with the React hook
-  const { engine, isLoading, error } = usePdfiumEngine();
+  // Initialize the engine with the React hook - use local WASM for offline support
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: absoluteWithBasePath('/pdfium/pdfium.wasm'),
+  });
 
 
   // Early return if no file or URL provided
@@ -161,6 +183,29 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           <Text c="dimmed" size="sm">
             No PDF provided
           </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  // Check if the file is actually a PDF
+  if (file && !isPdfFile(file)) {
+    const fileName = 'name' in file ? file.name : t('viewer.unknownFile');
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '48px' }}>📄</div>
+          <Text size="lg" fw={600} c="dimmed">
+            {t('viewer.cannotPreviewFile')}
+          </Text>
+          <Text c="dimmed" size="sm" style={{ textAlign: 'center', maxWidth: '400px' }}>
+            {t('viewer.onlyPdfSupported')}
+          </Text>
+          <PrivateContent>
+            <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
+              {fileName}
+            </Text>
+          </PrivateContent>
         </Stack>
       </Center>
     );
@@ -198,68 +243,62 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={enableAnnotations ? async (registry) => {
+        onInitialized={async (registry) => {
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
           const annotationApi = annotationPlugin.provides();
           if (!annotationApi) return;
 
-          // Add custom signature stamp tool for image signatures
-          annotationApi.addTool({
-            id: 'signatureStamp',
-            name: 'Digital Signature',
-            interaction: { exclusive: false, cursor: 'copy' },
-            matchScore: () => 0,
-            defaults: {
-              type: PdfAnnotationSubtype.STAMP,
-              // Image will be set dynamically when signature is created
-            },
-          });
+          if (enableAnnotations) {
+            annotationApi.addTool({
+              id: 'signatureStamp',
+              name: 'Digital Signature',
+              interaction: { exclusive: false, cursor: 'copy' },
+              matchScore: () => 0,
+              defaults: {
+                type: PdfAnnotationSubtype.STAMP,
+              },
+            });
 
-          // Add custom ink signature tool for drawn signatures
-          annotationApi.addTool({
-            id: 'signatureInk',
-            name: 'Signature Draw',
-            interaction: { exclusive: true, cursor: 'crosshair' },
-            matchScore: () => 0,
-            defaults: {
-              type: PdfAnnotationSubtype.INK,
-              color: '#000000',
-              opacity: 1.0,
-              borderWidth: 2,
-            },
-          });
+            annotationApi.addTool({
+              id: 'signatureInk',
+              name: 'Signature Draw',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: () => 0,
+              defaults: {
+                type: PdfAnnotationSubtype.INK,
+                color: '#000000',
+                opacity: 1.0,
+                borderWidth: 2,
+              },
+            });
 
-          // Listen for annotation events to track annotations and notify parent
-          annotationApi.onAnnotationEvent((event: any) => {
-            if (event.type === 'create' && event.committed) {
-              // Add to annotations list
-              setAnnotations(prev => [...prev, {
-                id: event.annotation.id,
-                pageIndex: event.pageIndex,
-                rect: event.annotation.rect
-              }]);
+            annotationApi.onAnnotationEvent((event: any) => {
+              if (event.type === 'create' && event.committed) {
+                setAnnotations(prev => [...prev, {
+                  id: event.annotation.id,
+                  pageIndex: event.pageIndex,
+                  rect: event.annotation.rect
+                }]);
 
 
-              // Notify parent if callback provided
-              if (onSignatureAdded) {
-                onSignatureAdded(event.annotation);
+                if (onSignatureAdded) {
+                  onSignatureAdded(event.annotation);
+                }
+              } else if (event.type === 'delete' && event.committed) {
+                setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
+              } else if (event.type === 'loaded') {
+                const loadedAnnotations = event.annotations || [];
+                setAnnotations(loadedAnnotations.map((ann: any) => ({
+                  id: ann.id,
+                  pageIndex: ann.pageIndex || 0,
+                  rect: ann.rect
+                })));
               }
-            } else if (event.type === 'delete' && event.committed) {
-              // Remove from annotations list
-              setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
-            } else if (event.type === 'loaded') {
-              // Handle initial load of annotations
-              const loadedAnnotations = event.annotations || [];
-              setAnnotations(loadedAnnotations.map((ann: any) => ({
-                id: ann.id,
-                pageIndex: ann.pageIndex || 0,
-                rect: ann.rect
-              })));
-            }
-          });
-        } : undefined}
+            });
+          }
+        }}
       >
         <ZoomAPIBridge />
         <ScrollAPIBridge />
@@ -272,6 +311,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
+        <BookmarkAPIBridge />
+        <PrintAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -320,6 +361,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
                       {/* Selection layer for text interaction */}
                       <SelectionLayer pageIndex={pageIndex} scale={scale} />
+
+                      {/* Link layer for clickable PDF links */}
+                      <LinkLayer pageIndex={pageIndex} scale={scale} document={document} pdfFile={file} />
+
                       {/* Annotation layer for signatures (only when enabled) */}
                       {enableAnnotations && (
                         <AnnotationLayer

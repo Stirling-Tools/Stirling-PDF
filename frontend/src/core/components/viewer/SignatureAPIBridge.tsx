@@ -1,4 +1,4 @@
-import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef } from 'react';
+import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -122,10 +122,20 @@ const createTextStampImage = (
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
-  const { getZoomState } = useViewer();
-  const currentZoom = getZoomState()?.currentZoom ?? 1;
+  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate(percent => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => {
+      unregister?.();
+    };
+  }, [getZoomState, registerImmediateZoomUpdate]);
 
   const cssToPdfSize = useCallback(
     (size: { width: number; height: number }) => {
@@ -188,7 +198,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       console.error('Error preparing signature defaults:', error);
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
-
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -328,7 +337,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (pageAnnotationsTask) {
         pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
           const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+          if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
             // Store image data before deletion
             storeImageData(annotationId, annotation.imageSrc);
           }
@@ -380,6 +389,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return;
       }
 
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
       const directData =
         extractDataUrl(annotation.imageSrc) ||
         extractDataUrl(annotation.imageData) ||
@@ -399,7 +413,66 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
+
+  useEffect(() => {
+    if (!isPlacementMode) {
+      return;
+    }
+
+    let cancelled = false;
+    configureStampDefaults().catch((error) => {
+      if (!cancelled) {
+        console.error('Error updating signature defaults:', error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
+
+  useEffect(() => {
+    if (!annotationApi?.onAnnotationEvent) {
+      return;
+    }
+
+    const unsubscribe = annotationApi.onAnnotationEvent(event => {
+      if (event.type !== 'create' && event.type !== 'update') {
+        return;
+      }
+
+      const annotation: any = event.annotation;
+      const annotationId: string | undefined = annotation?.id;
+      if (!annotationId) {
+        return;
+      }
+
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
+      const directData =
+        extractDataUrl(annotation.imageSrc) ||
+        extractDataUrl(annotation.imageData) ||
+        extractDataUrl(annotation.appearance) ||
+        extractDataUrl(annotation.stampData) ||
+        extractDataUrl(annotation.contents) ||
+        extractDataUrl(annotation.data) ||
+        extractDataUrl(annotation.customData) ||
+        extractDataUrl(annotation.asset);
+
+      const dataToStore = directData || lastStampImageRef.current;
+      if (dataToStore) {
+        storeImageData(annotationId, dataToStore);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
 
   useEffect(() => {
     if (!isPlacementMode) {

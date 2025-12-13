@@ -50,7 +50,7 @@ export const useCompareRightRailButtons = ({
   baseScrollRef,
   comparisonScrollRef,
 }: UseCompareRightRailButtonsOptions): RightRailButtonWithAction[] => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isMobile = useIsMobile();
 
   return useMemo<RightRailButtonWithAction[]>(() => [
@@ -184,6 +184,7 @@ export const useCompareRightRailButtons = ({
     setIsScrollLinked,
     zoomLimits,
     t,
+    i18n.language,
     isMobile,
   ]);
 };

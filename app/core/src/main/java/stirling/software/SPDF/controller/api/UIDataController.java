@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
-import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -40,14 +40,14 @@ import stirling.software.common.util.GeneralUtils;
 public class UIDataController {
 
     private final ApplicationProperties applicationProperties;
-    private final SignatureService signatureService;
+    private final SharedSignatureService signatureService;
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
 
     public UIDataController(
             ApplicationProperties applicationProperties,
-            SignatureService signatureService,
+            SharedSignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader,
             RuntimePathConfig runtimePathConfig) {
@@ -56,6 +56,21 @@ public class UIDataController {
         this.userService = userService;
         this.resourceLoader = resourceLoader;
         this.runtimePathConfig = runtimePathConfig;
+    }
+
+    @GetMapping("/footer-info")
+    @Operation(summary = "Get public footer configuration data")
+    public ResponseEntity<FooterData> getFooterData() {
+        FooterData data = new FooterData();
+        data.setAnalyticsEnabled(applicationProperties.getSystem().getEnableAnalytics());
+        data.setTermsAndConditions(applicationProperties.getLegal().getTermsAndConditions());
+        data.setPrivacyPolicy(applicationProperties.getLegal().getPrivacyPolicy());
+        data.setAccessibilityStatement(
+                applicationProperties.getLegal().getAccessibilityStatement());
+        data.setCookiePolicy(applicationProperties.getLegal().getCookiePolicy());
+        data.setImpressum(applicationProperties.getLegal().getImpressum());
+
+        return ResponseEntity.ok(data);
     }
 
     @GetMapping("/home")
@@ -237,6 +252,16 @@ public class UIDataController {
     }
 
     // Data classes
+    @Data
+    public static class FooterData {
+        private Boolean analyticsEnabled;
+        private String termsAndConditions;
+        private String privacyPolicy;
+        private String accessibilityStatement;
+        private String cookiePolicy;
+        private String impressum;
+    }
+
     @Data
     public static class HomeData {
         private boolean showSurveyFromDocker;

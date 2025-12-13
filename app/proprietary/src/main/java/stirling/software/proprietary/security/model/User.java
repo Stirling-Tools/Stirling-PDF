@@ -59,6 +59,9 @@ public class User implements UserDetails, Serializable {
     @Column(name = "hasCompletedInitialSetup")
     private Boolean hasCompletedInitialSetup = false;
 
+    @Column(name = "forcePasswordChange")
+    private Boolean forcePasswordChange = false;
+
     @Column(name = "roleName")
     private String roleName;
 
@@ -70,6 +73,9 @@ public class User implements UserDetails, Serializable {
 
     @Column(name = "sso_provider")
     private String ssoProvider;
+
+    @Column(name = "oauth_grandfathered")
+    private Boolean oauthGrandfathered = false;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
@@ -114,6 +120,14 @@ public class User implements UserDetails, Serializable {
         this.hasCompletedInitialSetup = hasCompletedInitialSetup;
     }
 
+    public boolean isForcePasswordChange() {
+        return forcePasswordChange != null && forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
+    }
+
     public void setAuthenticationType(AuthenticationType authenticationType) {
         this.authenticationType = authenticationType.toString().toLowerCase();
     }
@@ -134,5 +148,13 @@ public class User implements UserDetails, Serializable {
 
     public boolean hasPassword() {
         return this.password != null && !this.password.isEmpty();
+    }
+
+    public boolean isOauthGrandfathered() {
+        return oauthGrandfathered != null && oauthGrandfathered;
+    }
+
+    public void setOauthGrandfathered(boolean oauthGrandfathered) {
+        this.oauthGrandfathered = oauthGrandfathered;
     }
 }

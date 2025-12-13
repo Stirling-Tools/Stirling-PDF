@@ -14,6 +14,7 @@ import { BookmarkNode } from '@app/utils/editTableOfContents';
 import ErrorNotification from '@app/components/tools/shared/ErrorNotification';
 import ResultsPreview from '@app/components/tools/shared/ResultsPreview';
 import BookmarkEditor from '@app/components/tools/editTableOfContents/BookmarkEditor';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -40,6 +41,7 @@ interface EditTableOfContentsWorkbenchViewProps {
 
 const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbenchViewProps) => {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
 
   if (!data) {
     return (
@@ -180,7 +182,7 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
                     download={downloadFilename ?? undefined}
                     leftSection={<LocalIcon icon='download-rounded' />}
                   >
-                    {t('download', 'Download')}
+                    {terminology.download}
                   </Button>
                 )}
                 <Button

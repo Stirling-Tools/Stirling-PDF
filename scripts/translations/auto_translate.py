@@ -2,6 +2,7 @@
 """
 Automated Translation Pipeline
 Extracts, translates, merges, and beautifies translations for a language.
+TOML format only.
 """
 
 import json
@@ -11,6 +12,8 @@ import os
 import subprocess
 from pathlib import Path
 import time
+
+import tomllib
 
 
 def run_command(cmd, description=""):
@@ -30,25 +33,34 @@ def run_command(cmd, description=""):
     return result.returncode == 0
 
 
-def extract_untranslated(language_code, batch_size=500):
+def find_translation_file(lang_dir):
+    """Find translation file in language directory."""
+    toml_file = lang_dir / "translation.toml"
+    if toml_file.exists():
+        return toml_file
+    return None
+
+def load_translation_file(file_path):
+    """Load TOML translation file."""
+    with open(file_path, 'rb') as f:
+        return tomllib.load(f)
+
+def extract_untranslated(language_code, batch_size=500, include_existing=False):
     """Extract untranslated entries and split into batches."""
-    print(f"\n🔍 Extracting untranslated entries for {language_code}...")
+    mode = "all untranslated (including existing)" if include_existing else "new (missing)"
+    print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
-    golden_path = Path(f'frontend/public/locales/en-GB/translation.json')
-    lang_path = Path(f'frontend/public/locales/{language_code}/translation.json')
+    golden_path = find_translation_file(Path('frontend/public/locales/en-GB'))
+    lang_path = find_translation_file(Path(f'frontend/public/locales/{language_code}'))
 
-    if not golden_path.exists():
-        print(f"Error: Golden truth file not found: {golden_path}")
+    if not golden_path:
+        print(f"Error: Golden truth file not found in frontend/public/locales/en-GB")
         return None
 
-    if not lang_path.exists():
-        print(f"Error: Language file not found: {lang_path}")
+    if not lang_path:
+        print(f"Error: Language file not found in frontend/public/locales/{language_code}")
         return None
-
-    def load_json(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
 
     def flatten_dict(d, parent_key='', separator='.'):
         items = []
@@ -60,8 +72,12 @@ def extract_untranslated(language_code, batch_size=500):
                 items.append((new_key, str(v)))
         return dict(items)
 
-    golden = load_json(golden_path)
-    lang_data = load_json(lang_path)
+    golden = load_translation_file(golden_path)
+    lang_data = load_translation_file(lang_path)
+
+    if not golden or not lang_data:
+        print(f"Error: Failed to load translation files")
+        return None
 
     golden_flat = flatten_dict(golden)
     lang_flat = flatten_dict(lang_data)
@@ -69,13 +85,19 @@ def extract_untranslated(language_code, batch_size=500):
     # Find untranslated
     untranslated = {}
     for key, value in golden_flat.items():
-        if (key not in lang_flat or
-            lang_flat.get(key) == value or
-            (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))):
-            untranslated[key] = value
+        if include_existing:
+            # Include missing keys, keys with English values, and [UNTRANSLATED] keys
+            if (key not in lang_flat or
+                lang_flat.get(key) == value or
+                (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))):
+                untranslated[key] = value
+        else:
+            # Only include missing keys (not in target file at all)
+            if key not in lang_flat:
+                untranslated[key] = value
 
     total = len(untranslated)
-    print(f"Found {total} untranslated entries")
+    print(f"Found {total} {mode} entries")
 
     if total == 0:
         print("✓ Language is already complete!")
@@ -186,7 +208,7 @@ def beautify_translations(language_code):
     """Beautify translation file to match en-GB structure."""
     print(f"\n✨ Beautifying {language_code} translation file...")
 
-    cmd = f'python3 scripts/translations/json_beautifier.py --language {language_code}'
+    cmd = f'python3 scripts/translations/toml_beautifier.py --language {language_code}'
 
     if not run_command(cmd):
         print(f"✗ Failed to beautify translations")
@@ -229,6 +251,8 @@ def main():
         description='Automated translation pipeline for Stirling PDF',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Note: This script works with TOML translation files.
+
 Examples:
   # Translate Spanish with API key in environment
   export OPENAI_API_KEY=your_key_here
@@ -251,6 +275,7 @@ Examples:
     parser.add_argument('--no-cleanup', action='store_true', help='Keep temporary batch files')
     parser.add_argument('--skip-verification', action='store_true', help='Skip final completion check')
     parser.add_argument('--timeout', type=int, default=600, help='Timeout per batch in seconds (default: 600 = 10 minutes)')
+    parser.add_argument('--include-existing', action='store_true', help='Also retranslate existing keys that match English (default: only translate missing keys)')
 
     args = parser.parse_args()
 
@@ -270,7 +295,7 @@ Examples:
 
     try:
         # Step 1: Extract and split
-        batch_files = extract_untranslated(args.language, args.batch_size)
+        batch_files = extract_untranslated(args.language, args.batch_size, args.include_existing)
         if batch_files is None:
             sys.exit(1)
 

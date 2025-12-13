@@ -1,4 +1,5 @@
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
+import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollAPIWrapper {
   scrollToPage: (params: { pageNumber: number }) => void;
@@ -48,6 +49,10 @@ export interface SearchAPIWrapper {
   goToResult: (index: number) => void;
 }
 
+export interface PrintAPIWrapper {
+  print: () => void;
+}
+
 export interface ThumbnailAPIWrapper {
   renderThumb: (pageIndex: number, scale: number) => {
     toPromise: () => Promise<Blob>;
@@ -57,6 +62,12 @@ export interface ThumbnailAPIWrapper {
 export interface ExportAPIWrapper {
   download: () => void;
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
+}
+
+export interface BookmarkAPIWrapper {
+  fetchBookmarks: () => Promise<PdfBookmarkObject[]>;
+  clearBookmarks: () => void;
+  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
 }
 
 export interface ScrollState {
@@ -103,6 +114,12 @@ export interface ExportState {
   canExport: boolean;
 }
 
+export interface BookmarkState {
+  bookmarks: PdfBookmarkObject[] | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
 export interface BridgeRef<TState = unknown, TApi = unknown> {
   state: TState;
   api: TApi;
@@ -118,6 +135,8 @@ export interface BridgeStateMap {
   search: SearchState;
   thumbnail: unknown;
   export: ExportState;
+  bookmark: BookmarkState;
+  print: unknown;
 }
 
 export interface BridgeApiMap {
@@ -130,6 +149,8 @@ export interface BridgeApiMap {
   search: SearchAPIWrapper;
   thumbnail: ThumbnailAPIWrapper;
   export: ExportAPIWrapper;
+  bookmark: BookmarkAPIWrapper;
+  print: PrintAPIWrapper;
 }
 
 export type BridgeKey = keyof BridgeStateMap;
@@ -148,6 +169,8 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
   search: null,
   thumbnail: null,
   export: null,
+  bookmark: null,
+  print: null,
 });
 
 export function registerBridge<K extends BridgeKey>(

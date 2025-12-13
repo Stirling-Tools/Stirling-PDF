@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
@@ -10,9 +11,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
@@ -30,6 +35,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
     public ConfigController(
             ApplicationProperties applicationProperties,
@@ -38,12 +44,14 @@ public class ConfigController {
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     ServerCertificateServiceInterface serverCertificateService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    UserServiceInterface userService) {
+                    UserServiceInterface userService,
+            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.externalAppDepConfig = externalAppDepConfig;
     }
 
     @GetMapping("/app-config")
@@ -51,6 +59,9 @@ public class ConfigController {
         Map<String, Object> configData = new HashMap<>();
 
         try {
+            // Add dependency check status
+            configData.put("dependenciesReady", externalAppDepConfig.isDependenciesChecked());
+
             // Get AppConfig bean
             AppConfig appConfig = applicationContext.getBean(AppConfig.class);
 
@@ -63,6 +74,7 @@ public class ConfigController {
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
             configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
+            configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded
@@ -197,6 +209,21 @@ public class ConfigController {
         for (String endpoint : endpointArray) {
             String trimmedEndpoint = endpoint.trim();
             result.put(trimmedEndpoint, endpointConfiguration.isEndpointEnabled(trimmedEndpoint));
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/endpoints-availability")
+    public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
+            @RequestParam(name = "endpoints")
+                    @Size(min = 1, max = 100, message = "Must provide between 1 and 100 endpoints")
+                    List<@NotBlank String> endpoints) {
+        Map<String, EndpointAvailability> result = new HashMap<>();
+        for (String endpoint : endpoints) {
+            String trimmedEndpoint = endpoint.trim();
+            result.put(
+                    trimmedEndpoint,
+                    endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
     }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { WorkbenchType, getDefaultWorkbench } from '@app/types/workbench';
 import { ToolId, isValidToolId } from '@app/types/toolId';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
@@ -110,8 +110,8 @@ export const NavigationProvider: React.FC<{
   const { allTools: toolRegistry } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
 
-  const actions: NavigationContextActions = {
-    setWorkbench: useCallback((workbench: WorkbenchType) => {
+  // Memoize individual callbacks
+  const setWorkbench = useCallback((workbench: WorkbenchType) => {
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
       console.log('[NavigationContext] setWorkbench:', {
@@ -121,10 +121,11 @@ export const NavigationProvider: React.FC<{
         hasUnsavedChanges
       });
 
-      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
         (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
-        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges) ||
+        (state.workbench.startsWith('custom:') && workbench !== state.workbench && hasUnsavedChanges);
 
       if (leavingWorkbenchWithChanges) {
         // Update state to reflect unsaved changes so modal knows
@@ -132,27 +133,40 @@ export const NavigationProvider: React.FC<{
           dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges: true } });
         }
         const performWorkbenchChange = () => {
-          dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+          // When leaving a custom workbench, clear the selected tool
+          console.log('[NavigationContext] performWorkbenchChange executing', {
+            from: state.workbench,
+            to: workbench,
+            isCustom: state.workbench.startsWith('custom:')
+          });
+          if (state.workbench.startsWith('custom:')) {
+            console.log('[NavigationContext] Clearing tool and changing workbench to:', workbench);
+            dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench } });
+          } else {
+            console.log('[NavigationContext] Just changing workbench to:', workbench);
+            dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+          }
         };
         dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performWorkbenchChange } });
         dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
       } else {
         dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
       }
-    }, [state.workbench, state.hasUnsavedChanges]),
+    }, [state.workbench, state.hasUnsavedChanges]);
 
-    setSelectedTool: useCallback((toolId: ToolId | null) => {
+    const setSelectedTool = useCallback((toolId: ToolId | null) => {
       dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolId } });
-    }, []),
+    }, []);
 
-    setToolAndWorkbench: useCallback((toolId: ToolId | null, workbench: WorkbenchType) => {
+    const setToolAndWorkbench = useCallback((toolId: ToolId | null, workbench: WorkbenchType) => {
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
 
-      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
         (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
-        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges) ||
+        (state.workbench.startsWith('custom:') && workbench !== state.workbench && hasUnsavedChanges);
 
       if (leavingWorkbenchWithChanges) {
         const performWorkbenchChange = () => {
@@ -163,25 +177,25 @@ export const NavigationProvider: React.FC<{
       } else {
         dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
       }
-    }, [state.workbench, state.hasUnsavedChanges]),
+    }, [state.workbench, state.hasUnsavedChanges]);
 
-    setHasUnsavedChanges: useCallback((hasChanges: boolean) => {
+    const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
-    }, []),
+    }, []);
 
-    registerUnsavedChangesChecker: useCallback((checker: () => boolean) => {
+    const registerUnsavedChangesChecker = useCallback((checker: () => boolean) => {
       unsavedChangesCheckerRef.current = checker;
-    }, []),
+    }, []);
 
-    unregisterUnsavedChangesChecker: useCallback(() => {
+    const unregisterUnsavedChangesChecker = useCallback(() => {
       unsavedChangesCheckerRef.current = null;
-    }, []),
+    }, []);
 
-    showNavigationWarning: useCallback((show: boolean) => {
+    const showNavigationWarning = useCallback((show: boolean) => {
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show } });
-    }, []),
+    }, []);
 
-    requestNavigation: useCallback((navigationFn: () => void) => {
+    const requestNavigation = useCallback((navigationFn: () => void) => {
       if (!state.hasUnsavedChanges) {
         navigationFn();
         return;
@@ -189,27 +203,33 @@ export const NavigationProvider: React.FC<{
 
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
-    }, [state.hasUnsavedChanges]),
+    }, [state.hasUnsavedChanges]);
 
-    confirmNavigation: useCallback(() => {
+    const confirmNavigation = useCallback(() => {
+      console.log('[NavigationContext] confirmNavigation called', {
+        hasPendingNav: !!state.pendingNavigation,
+        currentWorkbench: state.workbench,
+        currentTool: state.selectedTool
+      });
       if (state.pendingNavigation) {
         state.pendingNavigation();
       }
 
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
-    }, [state.pendingNavigation]),
+      console.log('[NavigationContext] confirmNavigation completed');
+    }, [state.pendingNavigation, state.workbench, state.selectedTool]);
 
-    cancelNavigation: useCallback(() => {
+    const cancelNavigation = useCallback(() => {
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
-    }, []),
+    }, []);
 
-    clearToolSelection: useCallback(() => {
+    const clearToolSelection = useCallback(() => {
       dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
-    }, []),
+    }, []);
 
-    handleToolSelect: useCallback((toolId: string) => {
+    const handleToolSelect = useCallback((toolId: string) => {
       if (toolId === 'allTools') {
         dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
         return;
@@ -225,11 +245,40 @@ export const NavigationProvider: React.FC<{
       const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
       const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
 
-      // Validate toolId and convert to ToolId type
-      const validToolId = isValidToolId(toolId) ? toolId : null;
-      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
-    }, [toolRegistry])
-  };
+    // Validate toolId and convert to ToolId type
+    const validToolId = isValidToolId(toolId) ? toolId : null;
+    dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
+  }, [toolRegistry]);
+
+  // Memoize the actions object to prevent unnecessary context updates
+  // This is critical to avoid infinite loops when effects depend on actions
+  const actions: NavigationContextActions = useMemo(() => ({
+    setWorkbench,
+    setSelectedTool,
+    setToolAndWorkbench,
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    showNavigationWarning,
+    requestNavigation,
+    confirmNavigation,
+    cancelNavigation,
+    clearToolSelection,
+    handleToolSelect,
+  }), [
+    setWorkbench,
+    setSelectedTool,
+    setToolAndWorkbench,
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    showNavigationWarning,
+    requestNavigation,
+    confirmNavigation,
+    cancelNavigation,
+    clearToolSelection,
+    handleToolSelect,
+  ]);
 
   const stateValue: NavigationContextStateValue = {
     workbench: state.workbench,
@@ -239,9 +288,10 @@ export const NavigationProvider: React.FC<{
     showNavigationWarning: state.showNavigationWarning
   };
 
-  const actionsValue: NavigationContextActionsValue = {
+  // Also memoize the context value to prevent unnecessary re-renders
+  const actionsValue: NavigationContextActionsValue = useMemo(() => ({
     actions
-  };
+  }), [actions]);
 
   return (
     <NavigationStateContext.Provider value={stateValue}>

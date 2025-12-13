@@ -120,6 +120,37 @@ public class ProprietaryUIDataController {
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.getEnableLogin());
 
+        // Check if this is first-time setup with default credentials
+        // The isFirstLogin flag captures: default username/password usage and unchanged state
+        boolean isFirstTimeSetup = false;
+        boolean showDefaultCredentials = false;
+
+        List<User> allUsers = userRepository.findAll();
+        List<User> realUsers =
+                allUsers.stream()
+                        .filter(
+                                user ->
+                                        !Role.INTERNAL_API_USER
+                                                .getRoleId()
+                                                .equals(user.getUsername()))
+                        .toList();
+        long userCount = realUsers.size();
+
+        if (userCount == 0) {
+            isFirstTimeSetup = true;
+            showDefaultCredentials = true;
+        } else if (userCount == 1) {
+            Optional<User> adminUser = userRepository.findByUsernameIgnoreCase("admin");
+
+            if (adminUser.isPresent() && Boolean.TRUE.equals(adminUser.get().getIsFirstLogin())) {
+                isFirstTimeSetup = true;
+                showDefaultCredentials = true;
+            }
+        }
+
+        data.setFirstTimeSetup(isFirstTimeSetup);
+        data.setShowDefaultCredentials(showDefaultCredentials);
+
         OAUTH2 oauth = securityProps.getOauth2();
 
         if (oauth != null && oauth.getEnabled()) {
@@ -173,6 +204,10 @@ public class ProprietaryUIDataController {
         data.setProviderList(providerList);
         data.setLoginMethod(securityProps.getLoginMethod());
         data.setAltLogin(!providerList.isEmpty() && securityProps.isAltLogin());
+
+        // Add language configuration for login page
+        data.setLanguages(applicationProperties.getUi().getLanguages());
+        data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
 
         return ResponseEntity.ok(data);
     }
@@ -297,6 +332,7 @@ public class ProprietaryUIDataController {
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
+        data.setMailEnabled(applicationProperties.getMail().isEnabled());
 
         return ResponseEntity.ok(data);
     }
@@ -345,7 +381,7 @@ public class ProprietaryUIDataController {
         data.setUsername(username);
         data.setRole(user.get().getRolesAsString());
         data.setSettings(settingsJson);
-        data.setChangeCredsFlag(user.get().isFirstLogin());
+        data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
 
@@ -366,7 +402,8 @@ public class ProprietaryUIDataController {
         Map<Long, Date> teamLastRequest = new HashMap<>();
         for (Object[] result : teamActivities) {
             Long teamId = (Long) result[0];
-            Date lastActivity = (Date) result[1];
+            Instant instant = (Instant) result[1];
+            Date lastActivity = instant != null ? Date.from(instant) : null;
             teamLastRequest.put(teamId, lastActivity);
         }
 
@@ -410,7 +447,8 @@ public class ProprietaryUIDataController {
         Map<String, Date> userLastRequest = new HashMap<>();
         for (Object[] result : userSessions) {
             String username = (String) result[0];
-            Date lastRequest = (Date) result[1];
+            Instant instant = (Instant) result[1];
+            Date lastRequest = instant != null ? Date.from(instant) : null;
             userLastRequest.put(username, lastRequest);
         }
 
@@ -456,6 +494,10 @@ public class ProprietaryUIDataController {
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;
+        private boolean firstTimeSetup;
+        private boolean showDefaultCredentials;
+        private List<String> languages;
+        private String defaultLocale;
     }
 
     @Data
@@ -475,6 +517,7 @@ public class ProprietaryUIDataController {
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
         private boolean premiumEnabled;
+        private boolean mailEnabled;
     }
 
     @Data

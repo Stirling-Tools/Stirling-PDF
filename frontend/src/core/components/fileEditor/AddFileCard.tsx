@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { BASE_PATH } from '@app/constants/app';
+import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import styles from '@app/components/fileEditor/FileEditor.module.css';
+import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 interface AddFileCardProps {
   onFileSelect: (files: File[]) => void;
@@ -23,6 +25,9 @@ const AddFileCard = ({
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const [isUploadHover, setIsUploadHover] = useState(false);
+  const { wordmark } = useLogoAssets();
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
 
   const handleCardClick = () => {
     openFilesModal();
@@ -87,7 +92,7 @@ const AddFileCard = ({
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
             <img
-              src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
+              src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
               alt="Stirling PDF"
               style={{ height: '2.2rem', width: 'auto' }}
             />
@@ -152,10 +157,10 @@ const AddFileCard = ({
               onClick={handleNativeUploadClick}
               onMouseEnter={() => setIsUploadHover(true)}
             >
-              <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+              <LocalIcon icon={icons.uploadIconName} width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
               {isUploadHover && (
                 <span style={{ marginLeft: '.5rem' }}>
-                  {t('landing.uploadFromComputer', 'Upload from computer')}
+                  {terminology.uploadFromComputer}
                 </span>
               )}
             </Button>
@@ -166,7 +171,7 @@ const AddFileCard = ({
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem', textAlign: 'center', marginTop: '0.5rem' }}
           >
-            {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
+            {terminology.dropFilesHere}
           </span>
         </div>
       </div>

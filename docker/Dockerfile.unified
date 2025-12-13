@@ -10,9 +10,11 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend .
-RUN DISABLE_ADDITIONAL_FEATURES=false npm run build
+# Override VITE_API_BASE_URL to use relative paths for production
+# This ensures frontend works with nginx proxy setup
+RUN DISABLE_ADDITIONAL_FEATURES=false VITE_API_BASE_URL=/ npm run build
 
-# Stage 2: Build Backend
+# Stage 2: Build Backend (server-only JAR - no UI)
 FROM gradle:8.14-jdk21 AS backend-build
 
 COPY build.gradle .
@@ -27,6 +29,7 @@ RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || re
 WORKDIR /app
 COPY . .
 
+# Build server-only JAR (no frontend, includes security features controlled by DOCKER_ENABLE_SECURITY at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -62,8 +65,7 @@ COPY docker/unified/nginx.conf /etc/nginx/nginx.conf
 COPY docker/unified/entrypoint.sh /entrypoint.sh
 
 # Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=false \
-    VERSION_TAG=$VERSION_TAG \
+ENV VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \

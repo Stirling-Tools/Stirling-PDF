@@ -5,6 +5,7 @@ import {
   ScrollState,
   ZoomState,
 } from '@app/contexts/viewer/viewerBridges';
+import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollActions {
   scrollToPage: (page: number) => void;
@@ -51,11 +52,22 @@ export interface SearchActions {
   next: () => void;
   previous: () => void;
   clear: () => void;
+  goToResult: (index: number) => void;
 }
 
 export interface ExportActions {
   download: () => void;
   saveAsCopy: () => Promise<ArrayBuffer | null>;
+}
+
+export interface BookmarkActions {
+  fetchBookmarks: () => Promise<PdfBookmarkObject[] | null>;
+  clearBookmarks: () => void;
+  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+}
+
+export interface PrintActions {
+  print: () => void;
 }
 
 export interface ViewerActionsBundle {
@@ -67,6 +79,8 @@ export interface ViewerActionsBundle {
   rotationActions: RotationActions;
   searchActions: SearchActions;
   exportActions: ExportActions;
+  bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 }
 
 interface ViewerActionDependencies {
@@ -274,6 +288,12 @@ export function createViewerActions({
         api.clear();
       }
     },
+    goToResult: (index: number) => {
+      const api = registry.current.search?.api;
+      if (api?.goToResult) {
+        api.goToResult(index);
+      }
+    },
   };
 
   const exportActions: ExportActions = {
@@ -307,5 +327,30 @@ export function createViewerActions({
     rotationActions,
     searchActions,
     exportActions,
+    bookmarkActions: {
+      fetchBookmarks: async () => {
+        const api = registry.current.bookmark?.api;
+        if (!api?.fetchBookmarks) {
+          return null;
+        }
+        return api.fetchBookmarks();
+      },
+      clearBookmarks: () => {
+        const api = registry.current.bookmark?.api;
+        api?.clearBookmarks?.();
+      },
+      setLocalBookmarks: (bookmarks, error = null) => {
+        const api = registry.current.bookmark?.api;
+        api?.setLocalBookmarks?.(bookmarks ?? null, error);
+      },
+    },
+    printActions: {
+      print: () => {
+        const api = registry.current.print?.api;
+        if (api?.print) {
+          api.print();
+        }
+      },
+    },
   };
 }

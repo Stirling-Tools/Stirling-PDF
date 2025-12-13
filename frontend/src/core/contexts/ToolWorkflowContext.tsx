@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
-import { useToolManagement } from '@app/hooks/useToolManagement';
+import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
@@ -44,6 +44,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: Partial<ToolRegistry>;
   getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  toolAvailability: ToolAvailabilityMap;
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
@@ -112,7 +113,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const navigationState = useNavigationState();
 
   // Tool management hook
-  const { toolRegistry, getSelectedTool } = useToolManagement();
+  const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
   const { allTools } = useToolRegistry();
 
   // Tool history hook
@@ -145,6 +146,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setToolPanelMode = useCallback((mode: ToolPanelMode) => {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
     updatePreference('defaultToolPanelMode', mode);
+    updatePreference('hasSelectedToolPanelMode', true);
   }, [updatePreference]);
 
 
@@ -222,11 +224,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return;
     }
 
+    if (navigationState.pendingNavigation || navigationState.showNavigationWarning) {
+      return;
+    }
+
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench]);
+  }, [actions, customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 
@@ -258,6 +264,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: ToolId) => {
+    const availabilityInfo = toolAvailability[toolId];
+    const isExplicitlyDisabled = availabilityInfo ? availabilityInfo.available === false : false;
+    if (toolId !== 'read' && toolId !== 'multiTool' && isExplicitlyDisabled) {
+      return;
+    }
     // If we're currently on a custom workbench (e.g., Validate Signature report),
     // selecting any tool should take the user back to the default file manager view.
     const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -299,7 +310,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery]);
+  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery, toolAvailability]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -354,6 +365,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     toolResetFunctions,
     registerToolReset,
     resetTool,
+    toolAvailability,
 
     // Workflow Actions
     handleToolSelect,
@@ -381,6 +393,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     selectedTool,
     toolRegistry,
     getSelectedTool,
+    toolAvailability,
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,

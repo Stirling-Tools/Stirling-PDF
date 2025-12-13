@@ -33,11 +33,11 @@ export const useDefaultApp = () => {
           body: t('defaultApp.success.message', 'Stirling PDF is now your default PDF editor'),
         });
         setIsDefault(true);
-      } else if (result === 'opened_settings') {
+      } else if (result === 'opened_dialog') {
         alert({
           alertType: 'neutral',
           title: t('defaultApp.settingsOpened.title', 'Settings Opened'),
-          body: t('defaultApp.settingsOpened.message', 'Please select Stirling PDF in your system settings'),
+          body: t('defaultApp.settingsOpened.message', 'Please select Stirling PDF in the file association dialogue'),
         });
       }
     } catch (error) {

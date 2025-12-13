@@ -17,6 +17,8 @@ import {
   RotationActions,
   SearchActions,
   ExportActions,
+  BookmarkActions,
+  PrintActions,
 } from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
@@ -35,18 +37,28 @@ import {
   SearchState,
   ExportState,
   ThumbnailAPIWrapper,
+  BookmarkState,
 } from '@app/contexts/viewer/viewerBridges';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 function useImmediateNotifier<Args extends unknown[]>() {
-  const callbackRef = useRef<((...args: Args) => void) | null>(null);
+  const callbacksRef = useRef(new Set<(...args: Args) => void>());
 
   const register = useCallback((callback: (...args: Args) => void) => {
-    callbackRef.current = callback;
+    callbacksRef.current.add(callback);
+    return () => {
+      callbacksRef.current.delete(callback);
+    };
   }, []);
 
   const trigger = useCallback((...args: Args) => {
-    callbackRef.current?.(...args);
+    callbacksRef.current.forEach(cb => {
+      try {
+        cb(...args);
+      } catch (error) {
+        console.error('Immediate callback error:', error);
+      }
+    });
   }, []);
 
   return { register, trigger };
@@ -65,6 +77,16 @@ interface ViewerContextType {
   // UI state managed by this context
   isThumbnailSidebarVisible: boolean;
   toggleThumbnailSidebar: () => void;
+  isBookmarkSidebarVisible: boolean;
+  toggleBookmarkSidebar: () => void;
+
+  // Search interface visibility
+  isSearchInterfaceVisible: boolean;
+  searchInterfaceActions: {
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+  };
 
   // Annotation visibility toggle
   isAnnotationsVisible: boolean;
@@ -89,11 +111,13 @@ interface ViewerContextType {
   getSearchState: () => SearchState;
   getThumbnailAPI: () => ThumbnailAPIWrapper | null;
   getExportState: () => ExportState;
+  getBookmarkState: () => BookmarkState;
+  hasBookmarkSupport: () => boolean;
 
   // Immediate update callbacks
-  registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
-  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => void;
-  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => void;
+  registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
+  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => () => void;
+  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => () => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
@@ -109,6 +133,8 @@ interface ViewerContextType {
   rotationActions: RotationActions;
   searchActions: SearchActions;
   exportActions: ExportActions;
+  bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 
   // Bridge registration - internal use by bridges  
   registerBridge: <K extends BridgeKey>(
@@ -126,6 +152,8 @@ interface ViewerProviderProps {
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
+  const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
+  const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -184,6 +212,16 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setIsThumbnailSidebarVisible(prev => !prev);
   };
 
+  const toggleBookmarkSidebar = () => {
+    setIsBookmarkSidebarVisible(prev => !prev);
+  };
+
+  const searchInterfaceActions = {
+    open: () => setSearchInterfaceVisible(true),
+    close: () => setSearchInterfaceVisible(false),
+    toggle: () => setSearchInterfaceVisible(prev => !prev),
+  };
+
   const toggleAnnotationsVisibility = () => {
     setIsAnnotationsVisible(prev => !prev);
   };
@@ -233,6 +271,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     return bridgeRefs.current.export?.state || { canExport: false };
   };
 
+  const getBookmarkState = (): BookmarkState => {
+    return (
+      bridgeRefs.current.bookmark?.state || {
+        bookmarks: null,
+        isLoading: false,
+        error: null,
+      }
+    );
+  };
+
+  const hasBookmarkSupport = () => Boolean(bridgeRefs.current.bookmark);
+
   // Action handlers - call APIs directly
   const {
     scrollActions,
@@ -243,6 +293,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotationActions,
     searchActions,
     exportActions,
+    bookmarkActions,
+    printActions,
   } = createViewerActions({
     registry: bridgeRefs,
     getScrollState,
@@ -254,6 +306,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // UI state
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
+    isBookmarkSidebarVisible,
+    toggleBookmarkSidebar,
+
+    // Search interface
+    isSearchInterfaceVisible,
+    searchInterfaceActions,
 
     // Annotation controls
     isAnnotationsVisible,
@@ -276,6 +334,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getSearchState,
     getThumbnailAPI,
     getExportState,
+    getBookmarkState,
+    hasBookmarkSupport,
 
     // Immediate updates
     registerImmediateZoomUpdate,
@@ -294,6 +354,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotationActions,
     searchActions,
     exportActions,
+    bookmarkActions,
+    printActions,
 
     // Bridge registration
     registerBridge,

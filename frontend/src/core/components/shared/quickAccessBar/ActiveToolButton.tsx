@@ -13,9 +13,10 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon } from '@mantine/core';
+import { ActionIcon, Divider } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import FitText from '@app/components/shared/FitText';
@@ -24,12 +25,15 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 interface ActiveToolButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
+  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
 }
 
 const NAV_IDS = ['read', 'sign', 'automate'];
 
-const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) => {
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = 'right' }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+  const { hasUnsavedChanges } = useNavigationState();
+  const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
@@ -139,15 +143,26 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
         {indicatorTool && (
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
-              <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
+              <Tooltip
+                content={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                position={tooltipPosition}
+                arrow
+                maxWidth={140}
+              >
                 <ActionIcon
                   component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
-                    handleUnlessSpecialClick(e, () => {
+                    const performNavigation = () => {
                       setActiveButton('tools');
                       handleBackToTools();
-                    });
+                    };
+                    if (hasUnsavedChanges) {
+                      e.preventDefault();
+                      navigationActions.requestNavigation(performNavigation);
+                      return;
+                    }
+                    handleUnlessSpecialClick(e, performNavigation);
                   }}
                   size={'lg'}
                   variant="subtle"
@@ -180,6 +195,10 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
                 className="button-text active current-tool-label"
               />
             </div>
+            <Divider
+              size="xs"
+              className="current-tool-divider"
+            />
           </div>
         )}
       </div>
@@ -188,5 +207,4 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
 };
 
 export default ActiveToolButton;
-
 

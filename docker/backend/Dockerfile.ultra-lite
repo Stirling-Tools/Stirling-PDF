@@ -28,8 +28,7 @@ FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8
 ARG VERSION_TAG
 
 # Set Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=true \
-    HOME=/home/stirlingpdfuser \
+ENV HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
@@ -60,7 +59,9 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         curl \
         shadow \
         su-exec \
-        openjdk21-jre && \
+        openjdk21-jre \
+        ghostscript \
+        fontforge && \
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \

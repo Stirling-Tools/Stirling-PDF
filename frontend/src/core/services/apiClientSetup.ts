@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
 import { getBrowserId } from '@app/utils/browserIdentifier';
 
 export function setupApiInterceptors(client: AxiosInstance): void {
