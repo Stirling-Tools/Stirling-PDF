@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useLocation, useNavigate, useSearchParams, type Location } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
@@ -19,7 +19,6 @@ import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import OAuthButtons, { DEBUG_SHOW_ALL_PROVIDERS, oauthProviderConfig } from '@app/routes/login/OAuthButtons';
 import DividerWithText from '@app/components/shared/DividerWithText';
-import LoggedInState from '@app/routes/login/LoggedInState';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,7 +38,31 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const location = useLocation();
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+
+  const redirectTarget = useMemo(() => {
+    const fromParam = searchParams.get('from');
+    const stateFrom =
+      location.state && typeof location.state === 'object'
+        ? (location.state as { from?: Location })?.from
+        : undefined;
+
+    const requestedPath = fromParam || (stateFrom ? `${stateFrom.pathname}${stateFrom.search || ''}` : null);
+    if (!requestedPath) return null;
+
+    // Strip BASE_PATH if it was captured in the URL (e.g., when running under a subpath)
+    const basePath = BASE_PATH || '';
+    const normalizedPath = requestedPath.startsWith(basePath) ? requestedPath.slice(basePath.length) || '/' : requestedPath;
+
+    // Only allow same-site relative navigations to non-auth routes
+    const blockedPrefixes = ['/login', '/signup', '/auth/', '/invite/'];
+    if (!normalizedPath.startsWith('/') || blockedPrefixes.some(prefix => normalizedPath.startsWith(prefix))) {
+      return null;
+    }
+
+    return normalizedPath;
+  }, [location.state, searchParams]);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -64,10 +87,12 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      console.debug('[Login] User already authenticated, redirecting to home');
-      navigate('/', { replace: true });
+      const target = redirectTarget || '/';
+      console.debug('[Login] User already authenticated, redirecting to', target);
+      // Use a full replace to ensure the destination route fully mounts (avoids stale login view)
+      window.location.replace(`${BASE_PATH}${target}`);
     }
-  }, [session, loading, navigate]);
+  }, [session, loading, redirectTarget]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
@@ -189,9 +214,16 @@ export default function Login() {
     return <Navigate to="/" replace />;
   }
 
-  // Show logged in state if authenticated
+  // Show a lightweight placeholder while the redirect effect runs
   if (session && !loading) {
-    return <LoggedInState />;
+    return (
+      <AuthLayout>
+        <LoginHeader title={t('login.redirecting', 'Redirecting')} />
+        <div className="auth-section" style={{ textAlign: 'center' }}>
+          <Text size="sm">{t('login.redirectingMessage', 'Taking you back to where you left off...')}</Text>
+        </div>
+      </AuthLayout>
+    );
   }
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form
