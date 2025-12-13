@@ -435,6 +435,24 @@ latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Keyboard Shortcuts"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
@@ -493,6 +511,10 @@ oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -919,7 +941,7 @@ title = "Overlay PDFs"
 
 [home.pdfTextEditor]
 title = "PDF Text Editor"
-desc = "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
+desc = "Edit existing text and images inside PDFs"
 
 [home.addText]
 tags = "text,annotation,label"
@@ -2267,8 +2289,16 @@ defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Uploaded signature"
 defaultTextLabel = "Typed signature"
 saveButton = "Save signature"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
 saveUnavailable = "Create a signature first to save it."
 noChanges = "Current signature is already saved."
+tempStorageTitle = "Temporary browser storage"
+tempStorageDescription = "Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers."
+personalHeading = "Personal Signatures"
+sharedHeading = "Shared Signatures"
+personalDescription = "Only you can see these signatures."
+sharedDescription = "All users can see and use these signatures."
 
 [sign.saved.type]
 canvas = "Drawing"
@@ -3028,6 +3058,91 @@ title = "Get Info on PDF"
 header = "Get Info on PDF"
 submit = "Get Info"
 downloadJson = "Download JSON"
+processing = "Extracting information..."
+results = "Results"
+noResults = "Run the tool to generate a report."
+downloads = "Downloads"
+noneDetected = "None detected"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Full information summary"
+shortTitle = "PDF Information"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Form Fields"
+basicInfo = "Basic Info"
+documentInfo = "Document Info"
+compliance = "Compliance"
+encryption = "Encryption"
+permissions = "Permissions"
+other = "Other"
+perPageInfo = "Per Page Info"
+tableOfContents = "Table of Contents"
+
+[getPdfInfo.other]
+attachments = "Attachments"
+embeddedFiles = "Embedded Files"
+javaScript = "JavaScript"
+layers = "Layers"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Size"
+annotations = "Annotations"
+images = "Images"
+links = "Links"
+fonts = "Fonts"
+xobjects = "XObject Counts"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Pages"
+fileSize = "File Size"
+pdfVersion = "PDF Version"
+language = "Language"
+title = "PDF Summary"
+author = "Author"
+created = "Created"
+modified = "Modified"
+permsAll = "All Permissions Allowed"
+permsRestricted = "{{count}} restrictions"
+permsMixed = "Some permissions restricted"
+hasCompliance = "Has compliance standards"
+noCompliance = "No Compliance Standards"
+basic = "Basic Information"
+documentInfo = "Document Information"
+securityTitle = "Security Status"
+technical = "Technical"
+overviewTitle = "PDF Overview"
+
+[getPdfInfo.summary.security]
+encrypted = "Encrypted PDF - Password protection present"
+unencrypted = "Unencrypted PDF - No password protection"
+
+[getPdfInfo.summary.tech]
+images = "Images"
+fonts = "Fonts"
+formFields = "Form Fields"
+embeddedFiles = "Embedded Files"
+javaScript = "JavaScript"
+layers = "Layers"
+bookmarks = "Bookmarks"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "an untitled document"
+unknown = "Unknown Author"
+text = "This is a {{pages}}-page PDF titled {{title}} created by {{author}} (PDF version {{version}})."
+
+[getPdfInfo.error]
+partial = "Some files could not be processed."
+unexpected = "Unexpected error during extraction."
+
+[getPdfInfo.status]
+complete = "Extraction complete"
 
 [extractPage]
 tags = "extract"
@@ -3446,8 +3561,8 @@ signinTitle = "Please sign in"
 ssoSignIn = "Login via Single Sign-on"
 oAuth2AutoCreateDisabled = "OAUTH2 Auto-Create User Disabled"
 oAuth2AdminBlockedUser = "Registration or logging in of non-registered users is currently blocked. Please contact the administrator."
-oAuth2RequiresLicense = "OAuth/SSO login requires a paid license (Server or Enterprise). Please contact the administrator to upgrade your plan."
-saml2RequiresLicense = "SAML login requires a paid license (Server or Enterprise). Please contact the administrator to upgrade your plan."
+oAuth2RequiresLicense = "OAuth/SSO login requires a Server or Enterprise license. Please contact the administrator to upgrade your plan."
+saml2RequiresLicense = "SAML login requires an Enterprise license. Please contact the administrator to upgrade your plan."
 maxUsersReached = "Maximum number of users reached for your current license. Please contact the administrator to upgrade your plan or add more seats."
 oauth2RequestNotFound = "Authorization request not found"
 oauth2InvalidUserInfoResponse = "Invalid User Info Response"
@@ -3913,6 +4028,7 @@ toggleSidebar = "Toggle Sidebar"
 exportSelected = "Export Selected Pages"
 toggleAnnotations = "Toggle Annotations Visibility"
 annotationMode = "Toggle Annotation Mode"
+print = "Print PDF"
 draw = "Draw"
 save = "Save"
 saveChanges = "Save Changes"
@@ -4530,6 +4646,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 title = "Premium & Enterprise"
 description = "Configure your premium or enterprise license key."
 license = "License Configuration"
+noInput = "Please provide a license key or file"
 
 [admin.settings.premium.licenseKey]
 toggle = "Got a license key or certificate file?"
@@ -4546,6 +4663,26 @@ title = "⚠️ Warning: Existing License Detected"
 line1 = "Overwriting your current license key cannot be undone."
 line2 = "Your previous license will be permanently lost unless you have backed it up elsewhere."
 line3 = "Important: Keep license keys private and secure. Never share them publicly."
+
+[admin.settings.premium.inputMethod]
+text = "License Key"
+file = "Certificate File"
+
+[admin.settings.premium.file]
+label = "License Certificate File"
+description = "Upload your .lic or .cert license file from offline purchases"
+choose = "Choose License File"
+selected = "Selected: {{filename}} ({{size}})"
+successMessage = "License file uploaded and activated successfully. No restart required."
+
+[admin.settings.premium.currentLicense]
+title = "Active License"
+file = "Source: License file ({{path}})"
+key = "Source: License key"
+type = "Type: {{type}}"
+
+noInput = "Please provide a license key or upload a certificate file"
+success = "Success"
 
 [admin.settings.premium.enabled]
 label = "Enable Premium Features"
@@ -4977,6 +5114,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
@@ -5170,7 +5308,7 @@ upgrade = "Upgrade now →"
 freeTitle = "Server License"
 overLimitTitle = "Server License Needed"
 overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
-freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted and get early access to our new <strong>PDF text editing tool</strong>, we recommend the Stirling Server plan - full editing and <strong>unlimited seats</strong> for $99/server/mo."
+freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5275,6 +5413,31 @@ error = "Failed to update user status"
 success = "User deleted successfully"
 error = "Failed to delete user"
 
+[workspace.people.changePassword]
+action = "Change password"
+title = "Change password"
+subtitle = "Update the password for"
+newPassword = "New password"
+confirmPassword = "Confirm password"
+placeholder = "Enter a new password"
+confirmPlaceholder = "Re-enter the new password"
+passwordRequired = "Please enter a new password"
+passwordMismatch = "Passwords do not match"
+generateRandom = "Generate secure password"
+generatedPreview = "Generated password:"
+copyTooltip = "Copy to clipboard"
+copiedToClipboard = "Password copied to clipboard"
+copyFailed = "Failed to copy password"
+sendEmail = "Email the user about this change"
+includePassword = "Include the new password in the email"
+forcePasswordChange = "Force user to change password on next login"
+emailUnavailable = "This user's email is not a valid email address. Notifications are disabled."
+smtpDisabled = "Email notifications require SMTP to be enabled in settings."
+notifyOnly = "An email will be sent without the password, letting the user know an admin changed it."
+submit = "Update password"
+success = "Password updated successfully"
+error = "Failed to update password"
+
 [workspace.people.emailInvite]
 tab = "Email Invite"
 description = "Type or paste in emails below, separated by commas. Users will receive login credentials via email."
@@ -5283,7 +5446,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "At least one email address is required"
 submit = "Send Invites"
 success = "user(s) invited successfully"
-partialSuccess = "Some invites failed"
+partialFailure = "Some invites failed"
 allFailed = "Failed to invite users"
 error = "Failed to send invites"
 
@@ -5451,6 +5614,28 @@ contactSales = "Contact Sales"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
 maxUsers = "Max Users"
 upTo = "Up to"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "month"
@@ -5799,7 +5984,7 @@ description = "Sign in with your Stirling account"
 
 [setup.mode.selfhosted]
 title = "Self-Hosted Server"
-description = "Connect to your own Stirling PDF server"
+description = "Connect to your own Stirling PDF server with your personal account"
 
 [setup.saas]
 title = "Sign in to Stirling"
@@ -5808,6 +5993,7 @@ subtitle = "Sign in with your Stirling account"
 [setup.selfhosted]
 title = "Sign in to Server"
 subtitle = "Enter your server credentials"
+link = "or connect to a self-hosted account"
 
 [setup.server]
 title = "Connect to Server"
@@ -5826,6 +6012,14 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 emptyUrl = "Please enter a server URL"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
+configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+
+[setup.server.error.securityDisabled]
+title = "Login Not Enabled"
+body = "This server does not have login enabled. To connect to this server, you must enable authentication:"
+step1 = "Set DOCKER_ENABLE_SECURITY=true in your environment"
+step2 = "Or set security.enableLogin=true in settings.yml"
+step3 = "Restart the server"
 
 [setup.login]
 title = "Sign In"
@@ -5835,6 +6029,13 @@ submit = "Login"
 signInWith = "Sign in with"
 oauthPending = "Opening browser for authentication..."
 orContinueWith = "Or continue with email"
+serverRequirement = "Note: The server must have login enabled."
+showInstructions = "How to enable?"
+hideInstructions = "Hide instructions"
+instructions = "To enable login on your Stirling PDF server:"
+instructionsEnvVar = "Set the environment variable:"
+instructionsOrYml = "Or in settings.yml:"
+instructionsRestart = "Then restart your server for the changes to take effect."
 
 [setup.login.username]
 label = "Username"
@@ -5891,6 +6092,7 @@ earlyAccess = "Early Access"
 reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
+saveChanges = "Save Changes"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -5928,6 +6130,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
+dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"

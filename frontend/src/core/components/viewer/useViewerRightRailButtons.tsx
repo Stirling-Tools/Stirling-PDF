@@ -24,6 +24,7 @@ export function useViewerRightRailButtons() {
   const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
+  const printLabel = t('rightRail.print', 'Print PDF');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
@@ -35,7 +36,14 @@ export function useViewerRightRailButtons() {
         order: 10,
         render: ({ disabled }) => (
           <Tooltip content={searchLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
-            <Popover position={tooltipPosition} withArrow shadow="md" offset={8}>
+            <Popover
+              position={tooltipPosition}
+              withArrow
+              shadow="md"
+              offset={8}
+              opened={viewer.isSearchInterfaceVisible}
+              onClose={viewer.searchInterfaceActions.close}
+            >
               <Popover.Target>
                 <div style={{ display: 'inline-flex' }}>
                   <ActionIcon
@@ -44,6 +52,7 @@ export function useViewerRightRailButtons() {
                     className="right-rail-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
+                    onClick={viewer.searchInterfaceActions.toggle}
                   >
                     <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
                   </ActionIcon>
@@ -51,7 +60,7 @@ export function useViewerRightRailButtons() {
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: '20rem' }}>
-                  <SearchInterface visible={true} onClose={() => {}} />
+                  <SearchInterface visible={viewer.isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
                 </div>
               </Popover.Dropdown>
             </Popover>
@@ -128,6 +137,17 @@ export function useViewerRightRailButtons() {
         }
       },
       {
+        id: 'viewer-print',
+        icon: <LocalIcon icon="print" width="1.5rem" height="1.5rem" />,
+        tooltip: printLabel,
+        ariaLabel: printLabel,
+        section: 'top' as const,
+        order: 56,
+        onClick: () => {
+          viewer.printActions.print();
+        }
+      },
+      {
         id: 'viewer-annotation-controls',
         section: 'top' as const,
         order: 60,
@@ -136,7 +156,7 @@ export function useViewerRightRailButtons() {
         )
       }
     ];
-  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, tooltipPosition]);
+  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, printLabel, tooltipPosition]);
 
   useRightRailButtons(viewerButtons);
 }

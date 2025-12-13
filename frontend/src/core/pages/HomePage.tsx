@@ -22,7 +22,6 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
-import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
 
 import "@app/pages/HomePage.css";
 
@@ -53,32 +52,28 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
   const { activeFiles } = useFileContext();
   const { actions } = useNavigationActions();
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
 
-  // Show admin analytics choice modal if analytics settings not configured
-  useEffect(() => {
-    if (config && config.enableAnalytics === null) {
-      setShowAnalyticsModal(true);
-    }
-  }, [config]);
-
   // Auto-switch to viewer when going from 0 to 1 file
+  // Skip this if PDF Text Editor is active - it handles its own empty state
   useEffect(() => {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
     if (prevCount === 0 && currentCount === 1) {
-      actions.setWorkbench('viewer');
-      setActiveFileIndex(0);
+      // PDF Text Editor handles its own empty state with a dropzone
+      if (selectedToolKey !== 'pdfTextEditor') {
+        actions.setWorkbench('viewer');
+        setActiveFileIndex(0);
+      }
     }
 
     prevFileCountRef.current = currentCount;
-  }, [activeFiles.length, actions, setActiveFileIndex]);
+  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
@@ -181,10 +176,6 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
-      <AdminAnalyticsChoiceModal
-        opened={showAnalyticsModal}
-        onClose={() => setShowAnalyticsModal(false)}
-      />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">

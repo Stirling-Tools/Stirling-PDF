@@ -7,7 +7,7 @@ import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
 import { useIsMobile } from '@app/hooks/useIsMobile';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 
@@ -69,7 +69,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   }), []);
 
   // Get isAdmin and runningEE from app config
-  const isAdmin = true // config?.isAdmin ?? false;
+  const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
@@ -122,7 +122,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       centered
       radius="lg"
       withCloseButton={false}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+      zIndex={Z_INDEX_CONFIG_MODAL}
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
       fullScreen={isMobile}

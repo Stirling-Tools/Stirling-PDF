@@ -163,6 +163,11 @@ unfavorite = "إزالة من المفضلة"
 fullscreen = "التبديل إلى وضع ملء الشاشة"
 sidebar = "التبديل إلى وضع الشريط الجانبي"
 
+[backendStartup]
+notFoundTitle = "لم يتم العثور على الخادم الخلفي"
+retry = "إعادة المحاولة"
+unreachable = "لا يمكن للتطبيق حالياً الاتصال بالخادم الخلفي. تحقق من حالة الخادم والاتصال بالشبكة، ثم حاول مرة أخرى."
+
 [zipWarning]
 title = "ملف ZIP كبير"
 message = "هذا الملف ZIP يحتوي على {{count}} ملفات. هل تريد الاستخراج على أي حال؟"
@@ -913,8 +918,8 @@ desc = "تراكب ملف PDF فوق آخر"
 title = "تراكب ملفات PDF"
 
 [home.pdfTextEditor]
-title = "محرر نصوص PDF"
-desc = "مراجعة وتحرير صادرات Stirling PDF بصيغة JSON مع تحرير نصوص مجمّعة وإعادة إنشاء PDF"
+title = "محرر نص PDF"
+desc = "حرّر النصوص والصور الموجودة داخل ملفات PDF"
 
 [home.addText]
 tags = "نص,تعليق,تسمية"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "توقيع مرسوم"
 defaultImageLabel = "توقيع مرفوع"
 defaultTextLabel = "توقيع مكتوب"
 saveButton = "حفظ التوقيع"
+savePersonal = "حفظ شخصي"
+saveShared = "حفظ مشترك"
 saveUnavailable = "أنشئ توقيعاً أولاً لحفظه."
 noChanges = "التوقيع الحالي محفوظ بالفعل."
+tempStorageTitle = "تخزين مؤقت في المتصفح"
+tempStorageDescription = "يتم تخزين التواقيع في متصفحك فقط. ستُفقد إذا حذفت بيانات المتصفح أو بدّلت المتصفح."
+personalHeading = "تواقيع شخصية"
+sharedHeading = "تواقيع مشتركة"
+personalDescription = "أنت فقط من يمكنه رؤية هذه التواقيع."
+sharedDescription = "يمكن لجميع المستخدمين رؤية هذه التواقيع واستخدامها."
 
 [sign.saved.type]
 canvas = "رسم"
@@ -3023,6 +3036,91 @@ title = "الحصول على معلومات عن PDF"
 header = "الحصول على معلومات عن PDF"
 submit = "الحصول على المعلومات"
 downloadJson = "تحميل JSON"
+processing = "جارٍ استخراج المعلومات..."
+results = "النتائج"
+noResults = "شغّل الأداة لإنشاء تقرير."
+downloads = "التنزيلات"
+noneDetected = "لم يتم اكتشاف أي شيء"
+indexTitle = "الفهرس"
+
+[getPdfInfo.report]
+entryLabel = "ملخص المعلومات الكامل"
+shortTitle = "معلومات PDF"
+
+[getPdfInfo.sections]
+metadata = "البيانات الوصفية"
+formFields = "حقول النماذج"
+basicInfo = "معلومات أساسية"
+documentInfo = "معلومات المستند"
+compliance = "الامتثال"
+encryption = "التشفير"
+permissions = "الأذونات"
+other = "أخرى"
+perPageInfo = "معلومات لكل صفحة"
+tableOfContents = "جدول المحتويات"
+
+[getPdfInfo.other]
+attachments = "المرفقات"
+embeddedFiles = "ملفات مضمنة"
+javaScript = "JavaScript"
+layers = "الطبقات"
+structureTree = "شجرة البنية"
+xmp = "بيانات XMP الوصفية"
+
+[getPdfInfo.perPage]
+size = "الحجم"
+annotations = "التعليقات التوضيحية"
+images = "الصور"
+links = "الروابط"
+fonts = "الخطوط"
+xobjects = "عدد كائنات XObject"
+multimedia = "وسائط متعددة"
+
+[getPdfInfo.summary]
+pages = "الصفحات"
+fileSize = "حجم الملف"
+pdfVersion = "إصدار PDF"
+language = "اللغة"
+title = "ملخص PDF"
+author = "المؤلف"
+created = "تم الإنشاء"
+modified = "تم التعديل"
+permsAll = "جميع الأذونات مسموح بها"
+permsRestricted = "{{count}} قيود"
+permsMixed = "بعض الأذونات مقيّدة"
+hasCompliance = "يتضمن معايير امتثال"
+noCompliance = "لا توجد معايير امتثال"
+basic = "معلومات أساسية"
+documentInfo = "معلومات المستند"
+securityTitle = "حالة الأمان"
+technical = "تقني"
+overviewTitle = "نظرة عامة على PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF مشفّر - توجد حماية بكلمة مرور"
+unencrypted = "PDF غير مُشفّر - لا توجد حماية بكلمة مرور"
+
+[getPdfInfo.summary.tech]
+images = "الصور"
+fonts = "الخطوط"
+formFields = "حقول النماذج"
+embeddedFiles = "ملفات مضمنة"
+javaScript = "JavaScript"
+layers = "الطبقات"
+bookmarks = "الإشارات المرجعية"
+multimedia = "وسائط متعددة"
+
+[getPdfInfo.summary.overview]
+untitled = "مستند بلا عنوان"
+unknown = "مؤلف غير معروف"
+text = "هذا ملف PDF يحتوي على {{pages}} صفحة بعنوان {{title}} وتم إنشاؤه بواسطة {{author}} (إصدار PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "تعذّر معالجة بعض الملفات."
+unexpected = "حدث خطأ غير متوقع أثناء الاستخراج."
+
+[getPdfInfo.status]
+complete = "اكتمل الاستخراج"
 
 [extractPage]
 tags = "استخراج"
@@ -3441,6 +3539,9 @@ signinTitle = "الرجاء تسجيل الدخول"
 ssoSignIn = "تسجيل الدخول عبر تسجيل الدخول الأحادي"
 oAuth2AutoCreateDisabled = "تم تعطيل الإنشاء التلقائي لمستخدم OAuth2"
 oAuth2AdminBlockedUser = "تم حظر تسجيل أو تسجيل دخول المستخدمين غير المسجلين حاليًا. يرجى الاتصال بالمسؤول."
+oAuth2RequiresLicense = "يتطلب تسجيل الدخول عبر OAuth/SSO ترخيصاً مدفوعاً (Server أو Enterprise). يرجى الاتصال بالمسؤول لترقية باقتك."
+saml2RequiresLicense = "يتطلب تسجيل الدخول عبر SAML ترخيصاً مدفوعاً (Server أو Enterprise). يرجى الاتصال بالمسؤول لترقية باقتك."
+maxUsersReached = "تم الوصول إلى الحد الأقصى لعدد المستخدمين ضمن ترخيصك الحالي. يرجى الاتصال بالمسؤول لترقية باقتك أو إضافة مقاعد إضافية."
 oauth2RequestNotFound = "لم يتم العثور على طلب التفويض"
 oauth2InvalidUserInfoResponse = "استجابة معلومات المستخدم غير صالحة"
 oauth2invalidRequest = "طلب غير صالح"
@@ -3774,7 +3875,7 @@ version = "الإصدار الحالي"
 title = "توثيق API"
 header = "توثيق API"
 desc = "عرض واختبار نقاط نهاية Stirling PDF API"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,توثيق,swagger,نقاط النهاية,تطوير"
 
 [cookieBanner.popUp]
 title = "كيف نستخدم ملفات تعريف الارتباط"
@@ -3812,8 +3913,8 @@ title = "التحليلات"
 description = "تساعدنا هذه الملفات على فهم كيفية استخدام أدواتنا، كي نركّز على بناء الميزات الأكثر قيمة لمجتمعنا. كن مطمئنًا—‏Stirling PDF لا يمكنه ولن يتتبع محتوى المستندات التي تعمل عليها."
 
 [cookieBanner.services]
-posthog = "PostHog Analytics"
-scarf = "Scarf Pixel"
+posthog = "تحليلات PostHog"
+scarf = "Scarf بكسل"
 
 [removeMetadata]
 submit = "إزالة البيانات الوصفية"
@@ -3849,14 +3950,17 @@ fitToWidth = "ملاءمة للعرض"
 actualSize = "الحجم الفعلي"
 
 [viewer]
+cannotPreviewFile = "لا يمكن معاينة الملف"
+dualPageView = "عرض صفحتين"
 firstPage = "الصفحة الأولى"
 lastPage = "الصفحة الأخيرة"
-previousPage = "الصفحة السابقة"
 nextPage = "الصفحة التالية"
+onlyPdfSupported = "عارض الملفات يدعم ملفات PDF فقط. يبدو أن هذا الملف بتنسيق مختلف."
+previousPage = "الصفحة السابقة"
+singlePageView = "عرض صفحة واحدة"
+unknownFile = "ملف غير معروف"
 zoomIn = "تكبير"
 zoomOut = "تصغير"
-singlePageView = "عرض صفحة واحدة"
-dualPageView = "عرض صفحتين"
 
 [rightRail]
 closeSelected = "إغلاق الصفحات المحددة"
@@ -3880,6 +3984,7 @@ toggleSidebar = "تبديل الشريط الجانبي"
 exportSelected = "تصدير الصفحات المحددة"
 toggleAnnotations = "تبديل ظهور التعليقات التوضيحية"
 annotationMode = "تبديل وضع التعليقات"
+print = "طباعة PDF"
 draw = "رسم"
 save = "حفظ"
 saveChanges = "حفظ التغييرات"
@@ -4497,6 +4602,7 @@ description = "عنوان URL أو اسم الملف الخاص بـ Impressum (
 title = "الممتاز والمؤسسي"
 description = "تهيئة مفتاح الترخيص للمزايا الممتازة أو المؤسسية."
 license = "تهيئة الترخيص"
+noInput = "يرجى تقديم مفتاح ترخيص أو ملف"
 
 [admin.settings.premium.licenseKey]
 toggle = "هل لديك مفتاح ترخيص أو ملف شهادة؟"
@@ -4513,6 +4619,25 @@ title = "⚠️ تحذير: تم اكتشاف ترخيص قائم"
 line1 = "لا يمكن التراجع عن استبدال مفتاح الترخيص الحالي."
 line2 = "سيُفقد ترخيصك السابق نهائياً ما لم تكن قد احتفظت بنسخة احتياطية منه في مكان آخر."
 line3 = "مهم: احتفظ بمفاتيح الترخيص خاصة وآمنة. لا تشاركها علناً أبداً."
+
+[admin.settings.premium.inputMethod]
+text = "مفتاح الترخيص"
+file = "ملف الشهادة"
+
+[admin.settings.premium.file]
+label = "ملف شهادة الترخيص"
+description = "قم بتحميل ملف الترخيص .lic أو .cert من عمليات الشراء دون اتصال"
+choose = "اختر ملف الترخيص"
+selected = "المحدد: {{filename}} ({{size}})"
+successMessage = "تم تحميل ملف الترخيص وتفعيله بنجاح. لا يلزم إعادة التشغيل."
+
+[admin.settings.premium.currentLicense]
+title = "الترخيص النشط"
+file = "المصدر: ملف الترخيص ({{path}})"
+key = "المصدر: مفتاح الترخيص"
+type = "النوع: {{type}}"
+noInput = "يرجى تقديم مفتاح ترخيص أو تحميل ملف شهادة"
+success = "نجاح"
 
 [admin.settings.premium.enabled]
 label = "تمكين الميزات الممتازة"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} محدد"
 download = "تنزيل"
 delete = "حذف"
 unsupported = "غير مدعوم"
+active = "نشط"
 addToUpload = "إضافة إلى الرفع"
+closeFile = "إغلاق الملف"
 deleteAll = "حذف الكل"
 loadingFiles = "جارٍ تحميل الملفات..."
 noFiles = "لا توجد ملفات متاحة"
@@ -5135,7 +5262,7 @@ upgrade = "الترقية الآن →"
 freeTitle = "ترخيص الخادم"
 overLimitTitle = "مطلوب ترخيص خادم"
 overLimitBody = "ترخيصنا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. لديك <strong>{{overLimitUserCopy}}</strong> مستخدمي Stirling. للمتابعة دون انقطاع، ارقَ إلى خطة خادم Stirling - <strong>مقاعد غير محدودة</strong>، تحرير نصوص PDF، وتحكم إداري كامل مقابل $99/خادم/شهرياً."
-freeBody = "ترخيص <strong>Open-Core</strong> لدينا يسمح حتى <strong>{{freeTierLimit}}</strong> مستخدمين مجاناً لكل خادم. للتوسع بسلاسة والحصول على وصول مبكر إلى <strong>أداة تحرير نصوص PDF</strong> الجديدة، نوصي بخطة خادم Stirling - تحرير كامل و<strong>مقاعد غير محدودة</strong> مقابل $99/خادم/شهرياً."
+freeBody = "يتيح ترخيصنا <strong>Open-Core</strong> ما يصل إلى <strong>{{freeTierLimit}}</strong> مستخدمًا مجانًا لكل خادم. للتوسع دون انقطاع، نوصي بخطة Stirling Server - <strong>مقاعد غير محدودة</strong> و<strong>دعم SSO</strong> مقابل $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "تنزيل"
@@ -5240,6 +5367,31 @@ error = "فشل تحديث حالة المستخدم"
 success = "تم حذف المستخدم بنجاح"
 error = "فشل حذف المستخدم"
 
+[workspace.people.changePassword]
+action = "تغيير كلمة المرور"
+title = "تغيير كلمة المرور"
+subtitle = "تحديث كلمة المرور لـ"
+newPassword = "كلمة مرور جديدة"
+confirmPassword = "تأكيد كلمة المرور"
+placeholder = "أدخل كلمة مرور جديدة"
+confirmPlaceholder = "أعد إدخال كلمة المرور الجديدة"
+passwordRequired = "يرجى إدخال كلمة مرور جديدة"
+passwordMismatch = "كلمتا المرور غير متطابقتين"
+generateRandom = "إنشاء كلمة مرور آمنة"
+generatedPreview = "كلمة المرور المُنشأة:"
+copyTooltip = "نسخ إلى الحافظة"
+copiedToClipboard = "تم نسخ كلمة المرور إلى الحافظة"
+copyFailed = "فشل نسخ كلمة المرور"
+sendEmail = "إرسال بريد إلكتروني للمستخدم حول هذا التغيير"
+includePassword = "تضمين كلمة المرور الجديدة في البريد الإلكتروني"
+forcePasswordChange = "إلزام المستخدم بتغيير كلمة المرور عند تسجيل الدخول التالي"
+emailUnavailable = "بريد هذا المستخدم الإلكتروني غير صالح. تم تعطيل الإشعارات."
+smtpDisabled = "تتطلب إشعارات البريد الإلكتروني تفعيل SMTP في الإعدادات."
+notifyOnly = "سيتم إرسال بريد إلكتروني بدون كلمة المرور لإبلاغ المستخدم بأن المشرف قد غيّرها."
+submit = "تحديث كلمة المرور"
+success = "تم تحديث كلمة المرور بنجاح"
+error = "فشل تحديث كلمة المرور"
+
 [workspace.people.emailInvite]
 tab = "دعوة عبر البريد الإلكتروني"
 description = "اكتب أو الصق عناوين البريد الإلكتروني أدناه مفصولة بفواصل. سيتلقى المستخدمون بيانات اعتماد تسجيل الدخول عبر البريد الإلكتروني."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "مطلوب عنوان بريد إلكتروني واحد على الأقل"
 submit = "إرسال الدعوات"
 success = "تمت دعوة المستخدم/المستخدمين بنجاح"
-partialSuccess = "فشلت بعض الدعوات"
+partialFailure = "فشل بعض الدعوات"
 allFailed = "فشلت دعوة المستخدمين"
 error = "فشل إرسال الدعوات"
 
@@ -5773,6 +5925,7 @@ subtitle = "سجّل الدخول بحساب Stirling الخاص بك"
 [setup.selfhosted]
 title = "سجّل الدخول إلى الخادم"
 subtitle = "أدخل بيانات اعتماد الخادم"
+link = "أو الاتصال بحساب مُستضاف ذاتيًا"
 
 [setup.server]
 title = "الاتصال بالخادم"
@@ -5791,6 +5944,14 @@ description = "أدخل عنوان URL الكامل لخادم Stirling PDF ال
 emptyUrl = "يرجى إدخال عنوان URL للخادم"
 unreachable = "تعذّر الاتصال بالخادم"
 testFailed = "فشل اختبار الاتصال"
+configFetch = "فشل في جلب إعدادات الخادم. يرجى التحقق من عنوان URL والمحاولة مرة أخرى."
+
+[setup.server.error.securityDisabled]
+title = "تسجيل الدخول غير مفعّل"
+body = "لا يحتوي هذا الخادم على تسجيل دخول مفعّل. للاتصال بهذا الخادم، يجب تمكين المصادقة:"
+step1 = "عيّن DOCKER_ENABLE_SECURITY=true في بيئتك"
+step2 = "أو عيّن security.enableLogin=true في settings.yml"
+step3 = "أعد تشغيل الخادم"
 
 [setup.login]
 title = "تسجيل الدخول"
@@ -5800,6 +5961,13 @@ submit = "تسجيل الدخول"
 signInWith = "تسجيل الدخول باستخدام"
 oauthPending = "جارٍ فتح المتصفح للمصادقة..."
 orContinueWith = "أو المتابعة بالبريد الإلكتروني"
+serverRequirement = "ملاحظة: يجب أن يكون تسجيل الدخول مفعّلاً على الخادم."
+showInstructions = "كيفية التمكين؟"
+hideInstructions = "إخفاء الإرشادات"
+instructions = "لتمكين تسجيل الدخول على خادم Stirling PDF الخاص بك:"
+instructionsEnvVar = "عيّن متغيّر البيئة:"
+instructionsOrYml = "أو في settings.yml:"
+instructionsRestart = "ثم أعد تشغيل الخادم لتصبح التغييرات نافذة."
 
 [setup.login.username]
 label = "اسم المستخدم"
@@ -5856,6 +6024,7 @@ earlyAccess = "وصول مبكر"
 reset = "إعادة تعيين التغييرات"
 downloadJson = "تنزيل JSON"
 generatePdf = "توليد PDF"
+saveChanges = "حفظ التغييرات"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ضبط النص تلقائياً ليتناسب مع الصناديق"
@@ -5893,6 +6062,8 @@ alpha = "هذا العارض بنسخة ألفا ولا يزال يتطور—ق
 [pdfTextEditor.empty]
 title = "لم يتم تحميل مستند"
 subtitle = "حمّل ملف PDF أو JSON لبدء تحرير محتوى النص."
+dropzone = "اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
+dropzoneWithFiles = "حدد ملفًا من علامة تبويب الملفات، أو اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
 
 [pdfTextEditor.welcomeBanner]
 title = "مرحباً بك في محرر نصوص PDF (وصول مبكر)"

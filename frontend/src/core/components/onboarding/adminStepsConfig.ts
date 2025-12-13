@@ -1,7 +1,18 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
-import { AdminTourStep } from '@app/components/onboarding/tourSteps';
 import { addGlowToElements, removeAllGlows } from '@app/components/onboarding/tourGlow';
+
+export enum AdminTourStep {
+  WELCOME,
+  CONFIG_BUTTON,
+  SETTINGS_OVERVIEW,
+  TEAMS_AND_USERS,
+  SYSTEM_CUSTOMIZATION,
+  DATABASE_SECTION,
+  CONNECTIONS_SECTION,
+  ADMIN_TOOLS,
+  WRAP_UP,
+}
 
 interface AdminStepActions {  
   saveAdminState: () => void;

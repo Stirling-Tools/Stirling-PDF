@@ -163,6 +163,11 @@ unfavorite = "Odebrat z oblíbených"
 fullscreen = "Přepnout na režim na celou obrazovku"
 sidebar = "Přepnout na režim postranního panelu"
 
+[backendStartup]
+notFoundTitle = "Backend nebyl nalezen"
+retry = "Zkusit znovu"
+unreachable = "Aplikace se nyní nemůže připojit k backendu. Ověřte stav backendu a síťové připojení a poté to zkuste znovu."
+
 [zipWarning]
 title = "Velký soubor ZIP"
 message = "Tento ZIP obsahuje {{count}} souborů. Přesto rozbalit?"
@@ -347,7 +352,7 @@ teams = "Týmy"
 title = "Konfigurace"
 systemSettings = "Systémová nastavení"
 features = "Funkce"
-endpoints = "Endpoints"
+endpoints = "Koncové body"
 database = "Databáze"
 advanced = "Pokročilé"
 
@@ -914,7 +919,7 @@ title = "Překrýt PDF"
 
 [home.pdfTextEditor]
 title = "Editor textu PDF"
-desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
+desc = "Upravujte existující text a obrázky v PDF"
 
 [home.addText]
 tags = "text,anotace,štítek"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Nakreslený podpis"
 defaultImageLabel = "Nahraný podpis"
 defaultTextLabel = "Napsaný podpis"
 saveButton = "Uložit podpis"
+savePersonal = "Uložit osobní"
+saveShared = "Uložit sdílené"
 saveUnavailable = "Nejprve vytvořte podpis, abyste jej mohli uložit."
 noChanges = "Aktuální podpis je již uložen."
+tempStorageTitle = "Dočasné úložiště prohlížeče"
+tempStorageDescription = "Podpisy jsou uloženy pouze ve vašem prohlížeči. Při vymazání dat prohlížeče nebo při přepnutí na jiný prohlížeč budou ztraceny."
+personalHeading = "Osobní podpisy"
+sharedHeading = "Sdílené podpisy"
+personalDescription = "Tyto podpisy vidíte pouze vy."
+sharedDescription = "Všichni uživatelé mohou tyto podpisy vidět a používat."
 
 [sign.saved.type]
 canvas = "Kresba"
@@ -3023,6 +3036,91 @@ title = "Získat informace o PDF"
 header = "Získat informace o PDF"
 submit = "Získat informace"
 downloadJson = "Stáhnout JSON"
+processing = "Probíhá extrahování informací..."
+results = "Výsledky"
+noResults = "Spusťte nástroj pro vygenerování zprávy."
+downloads = "Stažení"
+noneDetected = "Nic nebylo zjištěno"
+indexTitle = "Rejstřík"
+
+[getPdfInfo.report]
+entryLabel = "Úplné shrnutí informací"
+shortTitle = "Informace o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formulářová pole"
+basicInfo = "Základní informace"
+documentInfo = "Informace o dokumentu"
+compliance = "Shoda"
+encryption = "Šifrování"
+permissions = "Oprávnění"
+other = "Ostatní"
+perPageInfo = "Informace po stránkách"
+tableOfContents = "Obsah"
+
+[getPdfInfo.other]
+attachments = "Přílohy"
+embeddedFiles = "Vložené soubory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Velikost"
+annotations = "Anotace"
+images = "Obrázky"
+links = "Odkazy"
+fonts = "Písma"
+xobjects = "Počty XObjectů"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Stránky"
+fileSize = "Velikost souboru"
+pdfVersion = "Verze PDF"
+language = "Jazyk"
+title = "Souhrn PDF"
+author = "Autor"
+created = "Vytvořeno"
+modified = "Upraveno"
+permsAll = "Všechna oprávnění povolena"
+permsRestricted = "{{count}} omezení"
+permsMixed = "Některá oprávnění jsou omezena"
+hasCompliance = "Obsahuje standardy shody"
+noCompliance = "Žádné standardy shody"
+basic = "Základní informace"
+documentInfo = "Informace o dokumentu"
+securityTitle = "Stav zabezpečení"
+technical = "Technické"
+overviewTitle = "Přehled PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrované PDF – chráněno heslem"
+unencrypted = "Nešifrované PDF – bez ochrany heslem"
+
+[getPdfInfo.summary.tech]
+images = "Obrázky"
+fonts = "Písma"
+formFields = "Formulářová pole"
+embeddedFiles = "Vložené soubory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+bookmarks = "Záložky"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "nepojmenovaný dokument"
+unknown = "Neznámý autor"
+text = "Toto je PDF o {{pages}} stránkách s názvem {{title}} od autora {{author}} (verze PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Některé soubory se nepodařilo zpracovat."
+unexpected = "Během extrahování došlo k neočekávané chybě."
+
+[getPdfInfo.status]
+complete = "Extrahování dokončeno"
 
 [extractPage]
 tags = "extrahovat"
@@ -3441,6 +3539,9 @@ signinTitle = "Prosím přihlaste se"
 ssoSignIn = "Přihlásit se přes Single Sign-on"
 oAuth2AutoCreateDisabled = "Automatické vytváření OAUTH2 uživatelů je zakázáno"
 oAuth2AdminBlockedUser = "Registrace nebo přihlášení neregistrovaných uživatelů je momentálně blokováno. Kontaktujte prosím správce."
+oAuth2RequiresLicense = "Přihlášení pomocí OAuth/SSO vyžaduje placenou licenci (Server nebo Enterprise). Kontaktujte prosím administrátora kvůli upgradu vašeho plánu."
+saml2RequiresLicense = "Přihlášení pomocí SAML vyžaduje placenou licenci (Server nebo Enterprise). Kontaktujte prosím administrátora kvůli upgradu vašeho plánu."
+maxUsersReached = "Byl dosažen maximální počet uživatelů pro vaši aktuální licenci. Kontaktujte prosím administrátora kvůli upgradu vašeho plánu nebo přidání dalších míst."
 oauth2RequestNotFound = "Požadavek na autorizaci nebyl nalezen"
 oauth2InvalidUserInfoResponse = "Neplatná odpověď s informacemi o uživateli"
 oauth2invalidRequest = "Neplatný požadavek"
@@ -3849,14 +3950,17 @@ fitToWidth = "Přizpůsobit šířce"
 actualSize = "Skutečná velikost"
 
 [viewer]
+cannotPreviewFile = "Nelze zobrazit náhled souboru"
+dualPageView = "Zobrazení dvou stránek"
 firstPage = "První stránka"
 lastPage = "Poslední stránka"
-previousPage = "Předchozí stránka"
 nextPage = "Další stránka"
+onlyPdfSupported = "Prohlížeč podporuje pouze soubory PDF. Tento soubor má zřejmě jiný formát."
+previousPage = "Předchozí stránka"
+singlePageView = "Zobrazení jedné stránky"
+unknownFile = "Neznámý soubor"
 zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
-singlePageView = "Zobrazení jedné stránky"
-dualPageView = "Zobrazení dvou stránek"
 
 [rightRail]
 closeSelected = "Zavřít vybrané soubory"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Přepnout postranní panel"
 exportSelected = "Exportovat vybrané stránky"
 toggleAnnotations = "Přepnout viditelnost anotací"
 annotationMode = "Přepnout režim anotací"
+print = "Tisk PDF"
 draw = "Kreslit"
 save = "Uložit"
 saveChanges = "Uložit změny"
@@ -4156,7 +4261,7 @@ description = "Sledovat akce uživatelů a systémové události pro compliance 
 
 [admin.settings.security.audit.level]
 label = "Úroveň auditu"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=VYPNUTO, 1=ZÁKLADNÍ, 2=STANDARDNÍ, 3=PODROBNÝ"
 
 [admin.settings.security.audit.retentionDays]
 label = "Doba uchování auditů (dny)"
@@ -4497,6 +4602,7 @@ description = "URL nebo název souboru k Impressu (vyžadováno v některých ju
 title = "Premium a Enterprise"
 description = "Nakonfigurujte svůj prémiový nebo enterprise licenční klíč."
 license = "Konfigurace licence"
+noInput = "Zadejte licenční klíč nebo soubor"
 
 [admin.settings.premium.licenseKey]
 toggle = "Máte licenční klíč nebo certifikační soubor?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Varování: Zjištěna stávající licence"
 line1 = "Přepsání aktuálního licenčního klíče nelze vrátit zpět."
 line2 = "Předchozí licence bude trvale ztracena, pokud ji nemáte zálohovanou jinde."
 line3 = "Důležité: Uchovávejte licenční klíče v soukromí a v bezpečí. Nikdy je nesdílejte veřejně."
+
+[admin.settings.premium.inputMethod]
+text = "Licenční klíč"
+file = "Soubor certifikátu"
+
+[admin.settings.premium.file]
+label = "Soubor licenčního certifikátu"
+description = "Nahrajte svůj licenční soubor .lic nebo .cert z offline nákupu"
+choose = "Vybrat licenční soubor"
+selected = "Vybráno: {{filename}} ({{size}})"
+successMessage = "Licenční soubor byl úspěšně nahrán a aktivován. Restart není vyžadován."
+
+[admin.settings.premium.currentLicense]
+title = "Aktivní licence"
+file = "Zdroj: Licenční soubor ({{path}})"
+key = "Zdroj: Licenční klíč"
+type = "Typ: {{type}}"
+noInput = "Zadejte licenční klíč nebo nahrajte soubor certifikátu"
+success = "Úspěch"
 
 [admin.settings.premium.enabled]
 label = "Povolit prémiové funkce"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} vybráno"
 download = "Stáhnout"
 delete = "Smazat"
 unsupported = "Nepodporováno"
+active = "Aktivní"
 addToUpload = "Přidat k nahrání"
+closeFile = "Zavřít soubor"
 deleteAll = "Smazat vše"
 loadingFiles = "Načítání souborů..."
 noFiles = "Nejsou k dispozici žádné soubory"
@@ -5135,7 +5262,7 @@ upgrade = "Upgradovat nyní →"
 freeTitle = "Serverová licence"
 overLimitTitle = "Vyžadována serverová licence"
 overLimitBody = "Naše licencování umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> uživatelů Stirling. Pro nepřerušené používání přejděte na plán Stirling Server – <strong>neomezený počet míst</strong>, úpravy textu PDF a plná správa za 99 $/server/měsíc."
-freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušený růst a přednostní přístup k našemu novému <strong>nástroji pro úpravu textu PDF</strong> doporučujeme plán Stirling Server – plné úpravy a <strong>neomezený počet míst</strong> za 99 $/server/měsíc."
+freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušované škálování doporučujeme plán Stirling Server - <strong>neomezený počet míst</strong> a <strong>podpora SSO</strong> za $99/server/měs."
 
 [onboarding.desktopInstall]
 title = "Stáhnout"
@@ -5240,6 +5367,31 @@ error = "Nepodařilo se aktualizovat stav uživatele"
 success = "Uživatel úspěšně smazán"
 error = "Nepodařilo se smazat uživatele"
 
+[workspace.people.changePassword]
+action = "Změnit heslo"
+title = "Změna hesla"
+subtitle = "Aktualizovat heslo pro"
+newPassword = "Nové heslo"
+confirmPassword = "Potvrzení hesla"
+placeholder = "Zadejte nové heslo"
+confirmPlaceholder = "Zadejte nové heslo znovu"
+passwordRequired = "Zadejte prosím nové heslo"
+passwordMismatch = "Hesla se neshodují"
+generateRandom = "Vygenerovat bezpečné heslo"
+generatedPreview = "Vygenerované heslo:"
+copyTooltip = "Zkopírovat do schránky"
+copiedToClipboard = "Heslo zkopírováno do schránky"
+copyFailed = "Heslo se nepodařilo zkopírovat"
+sendEmail = "Odeslat uživateli e-mail o této změně"
+includePassword = "Zahrnout nové heslo do e-mailu"
+forcePasswordChange = "Vynutit změnu hesla při příštím přihlášení"
+emailUnavailable = "E-mailová adresa tohoto uživatele není platná. Oznámení jsou deaktivována."
+smtpDisabled = "E-mailová oznámení vyžadují, aby bylo v nastavení povoleno SMTP."
+notifyOnly = "Bude odeslán e-mail bez hesla, který uživateli oznámí, že ho změnil administrátor."
+submit = "Aktualizovat heslo"
+success = "Heslo bylo úspěšně aktualizováno"
+error = "Heslo se nepodařilo aktualizovat"
+
 [workspace.people.emailInvite]
 tab = "Pozvánka e‑mailem"
 description = "Níže napište nebo vložte e‑maily oddělené čárkami. Uživatelé obdrží přihlašovací údaje e‑mailem."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "uzivatel1@priklad.cz, uzivatel2@priklad.cz"
 emailsRequired = "Je vyžadována alespoň jedna e‑mailová adresa"
 submit = "Odeslat pozvánky"
 success = "uživatel(é) úspěšně pozváni"
-partialSuccess = "Některé pozvánky se nepodařilo odeslat"
+partialFailure = "Některá pozvání selhala"
 allFailed = "Nepodařilo se pozvat uživatele"
 error = "Nepodařilo se odeslat pozvánky"
 
@@ -5712,7 +5864,7 @@ title = "Graf využití endpointů"
 
 [usage.table]
 title = "Podrobné statistiky"
-endpoint = "Endpoint"
+endpoint = "Koncový bod"
 visits = "Návštěvy"
 percentage = "Procenta"
 noData = "Žádná data nejsou k dispozici"
@@ -5773,6 +5925,7 @@ subtitle = "Přihlaste se svým účtem Stirling"
 [setup.selfhosted]
 title = "Přihlásit se k serveru"
 subtitle = "Zadejte přihlašovací údaje k vašemu serveru"
+link = "nebo se připojte k účtu s vlastním hostováním"
 
 [setup.server]
 title = "Připojit k serveru"
@@ -5791,6 +5944,14 @@ description = "Zadejte úplnou URL vašeho samohostovaného serveru Stirling PDF
 emptyUrl = "Zadejte URL serveru"
 unreachable = "Nelze se připojit k serveru"
 testFailed = "Test připojení selhal"
+configFetch = "Nepodařilo se načíst konfiguraci serveru. Zkontrolujte prosím URL a zkuste to znovu."
+
+[setup.server.error.securityDisabled]
+title = "Přihlášení není povoleno"
+body = "Na tomto serveru není povoleno přihlašování. Pokud se chcete připojit, musíte povolit ověřování:"
+step1 = "Nastavte DOCKER_ENABLE_SECURITY=true ve svém prostředí"
+step2 = "Nebo nastavte security.enableLogin=true v souboru settings.yml"
+step3 = "Restartujte server"
 
 [setup.login]
 title = "Přihlášení"
@@ -5800,6 +5961,13 @@ submit = "Přihlásit se"
 signInWith = "Přihlásit se pomocí"
 oauthPending = "Otevírám prohlížeč pro ověření..."
 orContinueWith = "Nebo pokračovat e-mailem"
+serverRequirement = "Poznámka: Na serveru musí být povoleno přihlášení."
+showInstructions = "Jak povolit?"
+hideInstructions = "Skrýt pokyny"
+instructions = "Chcete-li povolit přihlášení na vašem serveru Stirling PDF:"
+instructionsEnvVar = "Nastavte proměnnou prostředí:"
+instructionsOrYml = "Nebo v settings.yml:"
+instructionsRestart = "Poté restartujte server, aby se změny projevily."
 
 [setup.login.username]
 label = "Uživatelské jméno"
@@ -5843,7 +6011,7 @@ paragraph = "Odstavcová stránka"
 sparse = "Řídký text"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automaticky"
 paragraph = "Odstavec"
 singleLine = "Jeden řádek"
 
@@ -5856,6 +6024,7 @@ earlyAccess = "Předběžný přístup"
 reset = "Obnovit změny"
 downloadJson = "Stáhnout JSON"
 generatePdf = "Vytvořit PDF"
+saveChanges = "Uložit změny"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky přizpůsobit text rámečkům"
@@ -5893,6 +6062,8 @@ alpha = "Tento alfa prohlížeč se stále vyvíjí — některé fonty, barvy, 
 [pdfTextEditor.empty]
 title = "Není načten žádný dokument"
 subtitle = "Načtěte soubor PDF nebo JSON a začněte upravovat text."
+dropzone = "Sem přetáhněte soubor PDF nebo JSON, případně kliknutím vyberte"
+dropzoneWithFiles = "Vyberte soubor na kartě Soubory, nebo sem přetáhněte soubor PDF či JSON, případně kliknutím vyberte"
 
 [pdfTextEditor.welcomeBanner]
 title = "Vítejte v editoru textu PDF (předběžný přístup)"
@@ -5935,13 +6106,13 @@ warnings = "Varování"
 suggestions = "Poznámky"
 currentPageFonts = "Fonty na této stránce"
 allFonts = "Všechny fonty"
-fallback = "fallback"
+fallback = "náhradní"
 missing = "chybí"
 perfectMessage = "Všechny fonty lze reprodukovat dokonale."
 warningMessage = "Některé fonty se nemusí vykreslit správně."
 infoMessage = "K dispozici jsou informace o reprodukci fontů."
-perfect = "perfect"
-subset = "subset"
+perfect = "dokonalé"
+subset = "podmnožina"
 
 [pdfTextEditor.errors]
 invalidJson = "Nelze přečíst soubor JSON. Ujistěte se, že byl vytvořen nástrojem PDF to JSON."

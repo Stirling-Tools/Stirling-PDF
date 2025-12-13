@@ -3,7 +3,7 @@ import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import HomePage from "@app/pages/HomePage";
-import OnboardingTour from "@app/components/onboarding/OnboardingTour";
+import Onboarding from "@app/components/onboarding/Onboarding";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -19,7 +19,7 @@ export default function App() {
       <AppProviders>
         <AppLayout>
           <HomePage />
-          <OnboardingTour />
+          <Onboarding />
         </AppLayout>
       </AppProviders>
     </Suspense>

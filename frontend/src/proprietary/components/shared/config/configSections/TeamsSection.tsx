@@ -80,9 +80,9 @@ export default function TeamsSection() {
       setProcessing(true);
       await teamService.createTeam(newTeamName);
       alert({ alertType: 'success', title: t('workspace.teams.createTeam.success') });
-      setCreateModalOpened(false);
       setNewTeamName('');
-      fetchTeams();
+      setCreateModalOpened(false);
+      await fetchTeams();
     } catch (error: any) {
       console.error('Failed to create team:', error);
       const errorMessage = error.response?.data?.message ||
@@ -105,10 +105,10 @@ export default function TeamsSection() {
       setProcessing(true);
       await teamService.renameTeam(selectedTeam.id, renameTeamName);
       alert({ alertType: 'success', title: t('workspace.teams.renameTeam.success') });
-      setRenameModalOpened(false);
-      setSelectedTeam(null);
       setRenameTeamName('');
-      fetchTeams();
+      setSelectedTeam(null);
+      setRenameModalOpened(false);
+      await fetchTeams();
     } catch (error: any) {
       console.error('Failed to rename team:', error);
       const errorMessage = error.response?.data?.message ||
@@ -134,7 +134,7 @@ export default function TeamsSection() {
     try {
       await teamService.deleteTeam(team.id);
       alert({ alertType: 'success', title: t('workspace.teams.deleteTeam.success') });
-      fetchTeams();
+      await fetchTeams();
     } catch (error: any) {
       console.error('Failed to delete team:', error);
       const errorMessage = error.response?.data?.message ||
@@ -182,10 +182,10 @@ export default function TeamsSection() {
       setProcessing(true);
       await teamService.addUserToTeam(selectedTeam.id, parseInt(selectedUserId));
       alert({ alertType: 'success', title: t('workspace.teams.addMemberToTeam.success') });
-      setAddMemberModalOpened(false);
-      setSelectedTeam(null);
       setSelectedUserId('');
-      fetchTeams();
+      setSelectedTeam(null);
+      setAddMemberModalOpened(false);
+      await fetchTeams();
     } catch (error) {
       console.error('Failed to add member to team:', error);
       alert({ alertType: 'error', title: t('workspace.teams.addMemberToTeam.error') });
