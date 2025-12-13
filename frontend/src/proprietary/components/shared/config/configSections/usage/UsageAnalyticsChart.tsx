@@ -73,13 +73,19 @@ interface UsageAnalyticsChartProps {
 const UsageAnalyticsChart: React.FC<UsageAnalyticsChartProps> = ({ data }) => {
   const { t } = useTranslation();
 
+  const safeMaxValue = Math.max(...data.map((d) => d.value).filter((value) => Number.isFinite(value)), 1);
+  const safeData = data.map((item) => ({
+    label: item.label,
+    value: Number.isFinite(item.value) ? Math.max(0, item.value) : 0,
+  }));
+
   return (
     <Card padding="lg" radius="md" withBorder>
       <Stack gap="md">
         <Text size="lg" fw={600}>
           {t('usage.chart.title', 'Endpoint Usage Chart')}
         </Text>
-        <SimpleBarChart data={data} maxValue={Math.max(...data.map((d) => d.value), 1)} />
+        <SimpleBarChart data={safeData} maxValue={safeMaxValue} />
       </Stack>
     </Card>
   );
