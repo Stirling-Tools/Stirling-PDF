@@ -5,7 +5,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { isAuthRoute } from '@app/constants/routes';
 import { dispatchTourState } from '@app/constants/events';
 import { useOnboardingOrchestrator } from '@app/components/onboarding/orchestrator/useOnboardingOrchestrator';
-import { markStepSeen } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
 import OnboardingTour, { type AdvanceArgs, type CloseArgs } from '@app/components/onboarding/OnboardingTour';
 import OnboardingModalSlide from '@app/components/onboarding/OnboardingModalSlide';
@@ -20,10 +19,12 @@ import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import { useAdminTourOrchestration } from '@app/contexts/AdminTourOrchestrationContext';
 import { createUserStepsConfig } from '@app/components/onboarding/userStepsConfig';
 import { createAdminStepsConfig } from '@app/components/onboarding/adminStepsConfig';
+import { createWhatsNewStepsConfig } from '@app/components/onboarding/whatsNewStepsConfig';
 import { removeAllGlows } from '@app/components/onboarding/tourGlow';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-import AdminAnalyticsChoiceModal from '@app/components/shared/AdminAnalyticsChoiceModal';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
 
 export default function Onboarding() {
@@ -39,6 +40,11 @@ export default function Onboarding() {
   const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
   const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
   const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
+  const { config, refetch: refetchConfig } = useAppConfig();
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [analyticsModalDismissed, setAnalyticsModalDismissed] = useState(false);
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
@@ -50,7 +56,34 @@ export default function Onboarding() {
     window.location.href = '/login';
   }, [actions]);
 
-  const handleButtonAction = useCallback((action: ButtonAction) => {
+  // Check if we should show analytics modal before onboarding
+  useEffect(() => {
+    if (!isLoading && !analyticsModalDismissed && serverExperience.effectiveIsAdmin && config?.enableAnalytics == null) {
+      setShowAnalyticsModal(true);
+    }
+  }, [isLoading, analyticsModalDismissed, serverExperience.effectiveIsAdmin, config?.enableAnalytics]);
+
+  const handleAnalyticsChoice = useCallback(async (enableAnalytics: boolean) => {
+    if (analyticsLoading) return;
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('enabled', enableAnalytics.toString());
+
+      await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
+      await refetchConfig();
+      setShowAnalyticsModal(false);
+      setAnalyticsModalDismissed(true);
+      setAnalyticsLoading(false);
+    } catch (error) {
+      setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
+      setAnalyticsLoading(false);
+    }
+  }, [analyticsLoading, refetchConfig]);
+
+  const handleButtonAction = useCallback(async (action: ButtonAction) => {
     switch (action) {
       case 'next':
       case 'complete-close':
@@ -69,35 +102,43 @@ export default function Onboarding() {
       case 'security-next':
         if (!runtimeState.selectedRole) return;
         if (runtimeState.selectedRole !== 'admin') {
-          actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
+          actions.updateRuntimeState({ tourType: 'whatsnew' });
+          setIsTourOpen(true);
         }
         actions.complete();
         break;
       case 'launch-admin':
-        actions.updateRuntimeState({ tourRequested: true, tourType: 'admin' });
-        actions.complete();
+        actions.updateRuntimeState({ tourType: 'admin' });
+        setIsTourOpen(true);
         break;
       case 'launch-tools':
-        actions.updateRuntimeState({ tourRequested: true, tourType: 'tools' });
-        actions.complete();
+        actions.updateRuntimeState({ tourType: 'whatsnew' });
+        setIsTourOpen(true);
         break;
       case 'launch-auto': {
-        const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'tools';
-        actions.updateRuntimeState({ tourRequested: true, tourType });
-        actions.complete();
+        const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === 'admin' ? 'admin' : 'whatsnew';
+        actions.updateRuntimeState({ tourType });
+        setIsTourOpen(true);
         break;
       }
       case 'skip-to-license':
-        markStepSeen('tour');
-        actions.updateRuntimeState({ tourRequested: false });
+        actions.complete();
+        break;
+      case 'skip-tour':
         actions.complete();
         break;
       case 'see-plans':
         actions.complete();
         navigate('/settings/adminPlan');
         break;
+      case 'enable-analytics':
+        await handleAnalyticsChoice(true);
+        break;
+      case 'disable-analytics':
+        await handleAnalyticsChoice(false);
+        break;
     }
-  }, [actions, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
+  }, [actions, handleAnalyticsChoice, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
 
   const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -117,14 +158,29 @@ export default function Onboarding() {
         backToAllTools: tourOrch.backToAllTools,
         selectCropTool: tourOrch.selectCropTool,
         loadSampleFile: tourOrch.loadSampleFile,
-        switchToViewer: tourOrch.switchToViewer,
-        switchToPageEditor: tourOrch.switchToPageEditor,
         switchToActiveFiles: tourOrch.switchToActiveFiles,
-        selectFirstFile: tourOrch.selectFirstFile,
         pinFile: tourOrch.pinFile,
         modifyCropSettings: tourOrch.modifyCropSettings,
         executeTool: tourOrch.executeTool,
         openFilesModal,
+      },
+    }),
+    [t, tourOrch, closeFilesModal, openFilesModal]
+  );
+
+  const whatsNewStepsConfig = useMemo(
+    () => createWhatsNewStepsConfig({
+      t,
+      actions: {
+        saveWorkbenchState: tourOrch.saveWorkbenchState,
+        closeFilesModal,
+        backToAllTools: tourOrch.backToAllTools,
+        openFilesModal,
+        loadSampleFile: tourOrch.loadSampleFile,
+        switchToViewer: tourOrch.switchToViewer,
+        switchToPageEditor: tourOrch.switchToPageEditor,
+        switchToActiveFiles: tourOrch.switchToActiveFiles,
+        selectFirstFile: tourOrch.selectFirstFile,
       },
     }),
     [t, tourOrch, closeFilesModal, openFilesModal]
@@ -144,21 +200,19 @@ export default function Onboarding() {
   );
 
   const tourSteps = useMemo<StepType[]>(() => {
-    const config = runtimeState.tourType === 'admin' ? adminStepsConfig : userStepsConfig;
-    return Object.values(config);
-  }, [adminStepsConfig, runtimeState.tourType, userStepsConfig]);
-
-  useEffect(() => {
-    if (currentStep?.id === 'tour' && !isTourOpen) {
-      markStepSeen('tour');
-      setIsTourOpen(true);
+    switch (runtimeState.tourType) {
+      case 'admin':
+        return Object.values(adminStepsConfig);
+      case 'whatsnew':
+        return Object.values(whatsNewStepsConfig);
+      default:
+        return Object.values(userStepsConfig);
     }
-  }, [currentStep, isTourOpen, activeFlow]);
+  }, [adminStepsConfig, runtimeState.tourType, userStepsConfig, whatsNewStepsConfig]);
 
   useEffect(() => {
     if (externalTourRequested) {
-      actions.updateRuntimeState({ tourRequested: true, tourType: requestedTourType });
-      markStepSeen('tour');
+      actions.updateRuntimeState({ tourType: requestedTourType });
       setIsTourOpen(true);
       clearTourRequest();
     }
@@ -176,9 +230,9 @@ export default function Onboarding() {
     } else {
       tourOrch.restoreWorkbenchState();
     }
-    markStepSeen('tour');
-    if (currentStep?.id === 'tour') actions.complete();
-  }, [actions, adminTourOrch, currentStep?.id, runtimeState.tourType, tourOrch]);
+    // Advance to next onboarding step after tour completes
+    actions.complete();
+  }, [actions, adminTourOrch, runtimeState.tourType, tourOrch]);
 
   const handleAdvanceTour = useCallback((args: AdvanceArgs) => {
     const { setCurrentStep, currentStep: tourCurrentStep, steps, setIsOpen } = args;
@@ -216,8 +270,10 @@ export default function Onboarding() {
       firstLoginUsername: runtimeState.firstLoginUsername,
       onPasswordChanged: handlePasswordChanged,
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
+      analyticsError,
+      analyticsLoading,
     });
-  }, [currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
+  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;
@@ -237,8 +293,45 @@ export default function Onboarding() {
     return null;
   }
 
+  // Show analytics modal before onboarding if needed
+  if (showAnalyticsModal) {
+    const slideDefinition = SLIDE_DEFINITIONS['analytics-choice'];
+    const slideContent = slideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+      analyticsError,
+      analyticsLoading,
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={slideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}} // No skip allowed
+        onAction={async (action) => {
+          if (action === 'enable-analytics') {
+            await handleAnalyticsChoice(true);
+          } else if (action === 'disable-analytics') {
+            await handleAnalyticsChoice(false);
+          }
+        }}
+        allowDismiss={false}
+      />
+    );
+  }
+
   if (showLicenseSlide) {
-    const slideDefinition = SLIDE_DEFINITIONS['server-license'];
+    const baseSlideDefinition = SLIDE_DEFINITIONS['server-license'];
+    // Remove back button for external license notice
+    const slideDefinition = {
+      ...baseSlideDefinition,
+      buttons: baseSlideDefinition.buttons.filter(btn => btn.key !== 'license-back')
+    };
     const effectiveLicenseNotice = externalLicenseNotice || runtimeState.licenseNotice;
     const slideContent = slideDefinition.createSlide({
       osLabel: '',
@@ -250,7 +343,7 @@ export default function Onboarding() {
       licenseNotice: effectiveLicenseNotice,
       loginEnabled: serverExperience.loginEnabled,
     });
-    
+
     return (
       <OnboardingModalSlide
         slideDefinition={slideDefinition}
@@ -271,39 +364,33 @@ export default function Onboarding() {
     );
   }
 
+  // Always render the tour component (it controls its own visibility with isOpen)
+  const tourComponent = (
+    <OnboardingTour
+      isOpen={isTourOpen}
+      tourSteps={tourSteps}
+      tourType={runtimeState.tourType}
+      isRTL={isRTL}
+      t={t}
+      onAdvance={handleAdvanceTour}
+      onClose={handleCloseTour}
+    />
+  );
+
+  // If no active onboarding, just show the tour (which may or may not be open)
   if (isLoading || !isActive || !currentStep) {
-    return (
-      <OnboardingTour
-        isOpen={isTourOpen}
-        tourSteps={tourSteps}
-        tourType={runtimeState.tourType}
-        isRTL={isRTL}
-        t={t}
-        onAdvance={handleAdvanceTour}
-        onClose={handleCloseTour}
-      />
-    );
+    return tourComponent;
   }
 
+  // If tour is open, hide the onboarding modal and just show the tour
+  if (isTourOpen) {
+    return tourComponent;
+  }
+
+  // Render the current onboarding step
   switch (currentStep.type) {
     case 'tool-prompt':
       return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;
-
-    case 'tour':
-      return (
-        <OnboardingTour
-          isOpen={true}
-          tourSteps={tourSteps}
-          tourType={runtimeState.tourType}
-          isRTL={isRTL}
-          t={t}
-          onAdvance={handleAdvanceTour}
-          onClose={handleCloseTour}
-        />
-      );
-
-    case 'analytics-modal':
-      return <AdminAnalyticsChoiceModal opened={true} onClose={actions.complete} />;
 
     case 'modal-slide':
       if (!currentSlideDefinition || !currentSlideContent) return null;

@@ -357,6 +357,7 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
+        private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
         private Boolean disableSanitize;
         private int maxDPI;

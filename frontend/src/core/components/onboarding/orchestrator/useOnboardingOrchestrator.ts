@@ -12,8 +12,8 @@ import {
   DEFAULT_RUNTIME_STATE,
 } from '@app/components/onboarding/orchestrator/onboardingConfig';
 import {
-  hasSeenStep,
-  markStepSeen,
+  isOnboardingCompleted,
+  markOnboardingCompleted,
   migrateFromLegacyPreferences,
 } from '@app/components/onboarding/orchestrator/onboardingStorage';
 import { accountService } from '@app/services/accountService';
@@ -35,12 +35,15 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
   if (typeof window === 'undefined') {
     return baseState;
   }
-  
+
   try {
     const tourRequested = sessionStorage.getItem(SESSION_TOUR_REQUESTED) === 'true';
-    const tourType = (sessionStorage.getItem(SESSION_TOUR_TYPE) as 'admin' | 'tools') || 'tools';
+    const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
+    const tourType = (sessionTourType === 'admin' || sessionTourType === 'tools' || sessionTourType === 'whatsnew')
+      ? sessionTourType
+      : 'whatsnew';
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as 'admin' | 'user' | null;
-    
+
     return {
       ...baseState,
       tourRequested,
@@ -54,7 +57,7 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
 
 function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     if (state.tourRequested !== undefined) {
       sessionStorage.setItem(SESSION_TOUR_REQUESTED, state.tourRequested ? 'true' : 'false');
@@ -76,7 +79,7 @@ function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
 
 function clearRuntimeStateSession(): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     sessionStorage.removeItem(SESSION_TOUR_REQUESTED);
     sessionStorage.removeItem(SESSION_TOUR_TYPE);
@@ -145,7 +148,7 @@ export function useOnboardingOrchestrator(
   const location = useLocation();
   const bypassOnboarding = useBypassOnboarding();
 
-  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() => 
+  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() =>
     getInitialRuntimeState(defaultState)
   );
   const [isPaused, setIsPaused] = useState(false);
@@ -166,6 +169,7 @@ export function useOnboardingOrchestrator(
       ...prev,
       analyticsEnabled: config?.enableAnalytics === true,
       analyticsNotConfigured: config?.enableAnalytics == null,
+      desktopSlideEnabled: config?.enableDesktopInstallSlide ?? true,
       licenseNotice: {
         totalUsers: serverExperience.totalUsers,
         freeTierLimit: serverExperience.freeTierLimit,
@@ -221,7 +225,7 @@ export function useOnboardingOrchestrator(
   const conditionContext = useMemo<OnboardingConditionContext>(() => ({
     ...serverExperience,
     ...runtimeState,
-    effectiveIsAdmin: serverExperience.effectiveIsAdmin || 
+    effectiveIsAdmin: serverExperience.effectiveIsAdmin ||
       (!serverExperience.loginEnabled && runtimeState.selectedRole === 'admin'),
   }), [serverExperience, runtimeState]);
 
@@ -235,53 +239,44 @@ export function useOnboardingOrchestrator(
 
   // Wait for config AND admin status before calculating initial step
   const adminStatusResolved = !configLoading && (
-    config?.enableLogin === false || 
-    config?.enableLogin === undefined || 
+    config?.enableLogin === false ||
+    config?.enableLogin === undefined ||
     config?.isAdmin !== undefined
   );
-  
+
   useEffect(() => {
-    if (configLoading || !adminStatusResolved || activeFlow.length === 0) return;
+    if (configLoading || !adminStatusResolved) return;
 
-    let firstUnseenIndex = -1;
-    for (let i = 0; i < activeFlow.length; i++) {
-      // Special case: first-login step should always be considered "unseen" if requiresPasswordChange is true
-      const isFirstLoginStep = activeFlow[i].id === 'first-login';
-      const shouldTreatAsUnseen = isFirstLoginStep ? runtimeState.requiresPasswordChange : !hasSeenStep(activeFlow[i].id);
-
-      if (shouldTreatAsUnseen) {
-        firstUnseenIndex = i;
-        break;
-      }
-    }
-
-    // Force reset index when password change is required (overrides initialIndexSet)
-    if (runtimeState.requiresPasswordChange && firstUnseenIndex === 0) {
+    // If there are no steps to show, mark initialized/completed baseline
+    if (activeFlow.length === 0) {
       setCurrentStepIndex(0);
       initialIndexSet.current = true;
-    } else if (firstUnseenIndex === -1) {
+      return;
+    }
+
+    // If onboarding has been completed, don't show it
+    if (isOnboardingCompleted() && !runtimeState.requiresPasswordChange) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
-    } else if (!initialIndexSet.current) {
-      setCurrentStepIndex(firstUnseenIndex);
+      return;
+    }
+
+    // Start from the beginning
+    if (!initialIndexSet.current) {
+      setCurrentStepIndex(0);
       initialIndexSet.current = true;
     }
   }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
 
   const totalSteps = activeFlow.length;
-  
-  const allStepsAlreadySeen = useMemo(() => {
-    if (activeFlow.length === 0) return false;
-    return activeFlow.every(step => hasSeenStep(step.id));
-  }, [activeFlow]);
-  
-  const isComplete = isInitialized && initialIndexSet.current && 
-    (currentStepIndex >= totalSteps || allStepsAlreadySeen);
-  const currentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps && !allStepsAlreadySeen) 
-    ? activeFlow[currentStepIndex] 
+
+  const isComplete = isInitialized &&
+    (totalSteps === 0 || currentStepIndex >= totalSteps || isOnboardingCompleted());
+  const currentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps)
+    ? activeFlow[currentStepIndex]
     : null;
   const isActive = !shouldBlockOnboarding && !isPaused && !isComplete && isInitialized && currentStep !== null;
-  const isLoading = configLoading || !adminStatusResolved || !isInitialized || 
+  const isLoading = configLoading || !adminStatusResolved || !isInitialized ||
     !initialIndexSet.current || (currentStepIndex === -1 && activeFlow.length > 0);
 
   useEffect(() => {
@@ -293,35 +288,33 @@ export function useOnboardingOrchestrator(
   }, [isComplete]);
 
   const next = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex >= totalSteps) {
+      // Reached the end, mark onboarding as completed
+      markOnboardingCompleted();
+    }
+    setCurrentStepIndex(nextIndex);
+  }, [currentStepIndex, totalSteps]);
 
   const prev = useCallback(() => {
     setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
   }, []);
 
   const skip = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
+    // Skip marks the entire onboarding as completed
+    markOnboardingCompleted();
+    setCurrentStepIndex(totalSteps);
+  }, [totalSteps]);
 
   const complete = useCallback(() => {
-    if (currentStep) markStepSeen(currentStep.id);
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps));
-  }, [currentStep, totalSteps]);
-
-  useEffect(() => {
-    if (!currentStep || isLoading) {
-      return;
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex >= totalSteps) {
+      // Reached the end, mark onboarding as completed
+      markOnboardingCompleted();
     }
-    // Special case: never auto-complete first-login step if requiresPasswordChange is true
-    const isFirstLoginStep = currentStep.id === 'first-login';
+    setCurrentStepIndex(nextIndex);
+  }, [currentStepIndex, totalSteps]);
 
-    if (!isFirstLoginStep && hasSeenStep(currentStep.id)) {
-      complete();
-    }
-  }, [currentStep, isLoading, complete, runtimeState.requiresPasswordChange]);
 
   const updateRuntimeState = useCallback((updates: Partial<OnboardingRuntimeState>) => {
     persistRuntimeState(updates);

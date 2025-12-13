@@ -29,6 +29,7 @@ export interface AppConfig {
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
+  enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   termsAndConditions?: string;

@@ -51,14 +51,14 @@ export function useTourRequest(): {
   clearTourRequest: () => void;
 } {
   const [tourRequested, setTourRequested] = useState(false);
-  const [requestedTourType, setRequestedTourType] = useState<TourType>('tools');
+  const [requestedTourType, setRequestedTourType] = useState<TourType>('whatsnew');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleTourRequest = (event: Event) => {
       const { detail } = event as CustomEvent<StartTourPayload>;
-      setRequestedTourType(detail?.tourType ?? 'tools');
+      setRequestedTourType(detail?.tourType ?? 'whatsnew');
       setTourRequested(true);
     };
 

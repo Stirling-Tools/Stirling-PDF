@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ONBOARDING_STEPS } from '@app/components/onboarding/orchestrator/onboardingConfig';
-import { markStepSeen } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { markOnboardingCompleted } from '@app/components/onboarding/orchestrator/onboardingStorage';
 
 const SESSION_KEY = 'onboarding::bypass-all';
 const PARAM_KEY = 'bypassOnboarding';
@@ -34,13 +33,12 @@ function setStoredBypass(enabled: boolean): void {
 
 /**
  * Detects the `bypassOnboarding` query parameter and stores it in session storage
- * so that onboarding remains disabled while the app is open. Also marks all steps
- * as seen to ensure any dependent UI elements remain hidden.
+ * so that onboarding remains disabled while the app is open. Also marks onboarding
+ * as completed to ensure any dependent UI elements remain hidden.
  */
 export function useBypassOnboarding(): boolean {
   const location = useLocation();
   const [bypassOnboarding, setBypassOnboarding] = useState<boolean>(() => readStoredBypass());
-  const stepsMarkedRef = useRef(false);
 
   const shouldBypassFromSearch = useMemo(() => {
     try {
@@ -57,14 +55,9 @@ export function useBypassOnboarding(): boolean {
     setBypassOnboarding(nextBypass);
     if (nextBypass) {
       setStoredBypass(true);
+      markOnboardingCompleted();
     }
   }, [shouldBypassFromSearch]);
-
-  useEffect(() => {
-    if (!bypassOnboarding || stepsMarkedRef.current) return;
-    stepsMarkedRef.current = true;
-    ONBOARDING_STEPS.forEach((step) => markStepSeen(step.id));
-  }, [bypassOnboarding]);
 
   return bypassOnboarding;
 }
