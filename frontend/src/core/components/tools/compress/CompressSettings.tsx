@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl, Group, Badge } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
