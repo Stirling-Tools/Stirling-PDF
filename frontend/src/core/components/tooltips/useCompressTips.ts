@@ -24,6 +24,13 @@ export const useCompressTips = (): TooltipContent => {
       {
         title: t("compress.tooltip.grayscale.title", "Grayscale"),
         description: t("compress.tooltip.grayscale.text", "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents.")
+      },
+      {
+        title: t("compress.tooltip.lineArt.title", "Line Art"),
+        description: t(
+          "compress.tooltip.lineArt.text",
+          "Convert pages to high-contrast black and white using ImageMagick. Use line thickness to control the threshold percentage and detection strength to choose how aggressively edges are outlined."
+        )
       }
     ]
   };
