@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useLocation, useNavigate, useSearchParams, type Location } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
@@ -39,7 +39,31 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const location = useLocation();
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+
+  const redirectTarget = useMemo(() => {
+    const fromParam = searchParams.get('from');
+    const stateFrom =
+      location.state && typeof location.state === 'object'
+        ? (location.state as { from?: Location })?.from
+        : undefined;
+
+    const requestedPath = fromParam || (stateFrom ? `${stateFrom.pathname}${stateFrom.search || ''}` : null);
+    if (!requestedPath) return null;
+
+    // Strip BASE_PATH if it was captured in the URL (e.g., when running under a subpath)
+    const basePath = BASE_PATH || '';
+    const normalizedPath = requestedPath.startsWith(basePath) ? requestedPath.slice(basePath.length) || '/' : requestedPath;
+
+    // Only allow same-site relative navigations to non-auth routes
+    const blockedPrefixes = ['/login', '/signup', '/auth/', '/invite/'];
+    if (!normalizedPath.startsWith('/') || blockedPrefixes.some(prefix => normalizedPath.startsWith(prefix))) {
+      return null;
+    }
+
+    return normalizedPath;
+  }, [location.state, searchParams]);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -64,10 +88,11 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      console.debug('[Login] User already authenticated, redirecting to home');
-      navigate('/', { replace: true });
+      const target = redirectTarget || '/';
+      console.debug('[Login] User already authenticated, redirecting to', target);
+      navigate(target, { replace: true });
     }
-  }, [session, loading, navigate]);
+  }, [session, loading, navigate, redirectTarget]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
