@@ -24,6 +24,17 @@ const AccountSection: React.FC = () => {
   const [usernameError, setUsernameError] = useState('');
   const [usernameSubmitting, setUsernameSubmitting] = useState(false);
 
+  const authTypeFromMetadata = useMemo(() => {
+    const metadata = user?.app_metadata as { authType?: string; authenticationType?: string } | undefined;
+    return metadata?.authenticationType ?? metadata?.authType;
+  }, [user?.app_metadata]);
+
+  const normalizedAuthType = useMemo(
+    () => (user?.authenticationType ?? authTypeFromMetadata ?? '').toLowerCase(),
+    [authTypeFromMetadata, user?.authenticationType]
+  );
+  const isSsoUser = useMemo(() => ['sso', 'oauth2', 'saml2'].includes(normalizedAuthType), [normalizedAuthType]);
+
   const userIdentifier = useMemo(() => user?.email || user?.username || '', [user?.email, user?.username]);
 
   const redirectToLogin = useCallback(() => {
@@ -40,6 +51,11 @@ const AccountSection: React.FC = () => {
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (isSsoUser) {
+      setPasswordError(t('settings.security.password.ssoDisabled', 'Password changes are managed by your identity provider.'));
+      return;
+    }
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError(t('settings.security.password.required', 'All fields are required.'));
@@ -80,6 +96,11 @@ const AccountSection: React.FC = () => {
 
   const handleUsernameSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (isSsoUser) {
+      setUsernameError(t('changeCreds.ssoManaged', 'Your account is managed by your identity provider.'));
+      return;
+    }
 
     if (!currentPasswordForUsername || !newUsername) {
       setUsernameError(t('settings.security.password.required', 'All fields are required.'));
@@ -132,23 +153,35 @@ const AccountSection: React.FC = () => {
               : t('account.accountSettings', 'Account Settings')}
           </Text>
 
-          <Group gap="sm" wrap="wrap">
-            <Button leftSection={<LocalIcon icon="key-rounded" />} onClick={() => setPasswordModalOpen(true)}>
-              {t('settings.security.password.update', 'Update password')}
-            </Button>
+          <Stack gap="xs">
+            {isSsoUser && (
+              <Alert icon={<LocalIcon icon="info" width="1rem" height="1rem" />} color="blue" variant="light">
+                {t('changeCreds.ssoManaged', 'Your account is managed by your identity provider.')}
+              </Alert>
+            )}
 
-            <Button
-              variant="light"
-              leftSection={<LocalIcon icon="edit-rounded" />}
-              onClick={() => setUsernameModalOpen(true)}
-            >
-              {t('account.changeUsername', 'Change username')}
-            </Button>
+            <Group gap="sm" wrap="wrap">
+              {!isSsoUser && (
+                <Button leftSection={<LocalIcon icon="key-rounded" />} onClick={() => setPasswordModalOpen(true)}>
+                  {t('settings.security.password.update', 'Update password')}
+                </Button>
+              )}
 
-            <Button variant="outline" color="red" leftSection={<LocalIcon icon="logout-rounded" />} onClick={handleLogout}>
-              {t('settings.general.logout', 'Log out')}
-            </Button>
-          </Group>
+              {!isSsoUser && (
+                <Button
+                  variant="light"
+                  leftSection={<LocalIcon icon="edit-rounded" />}
+                  onClick={() => setUsernameModalOpen(true)}
+                >
+                  {t('account.changeUsername', 'Change username')}
+                </Button>
+              )}
+
+              <Button variant="outline" color="red" leftSection={<LocalIcon icon="logout-rounded" />} onClick={handleLogout}>
+                {t('settings.general.logout', 'Log out')}
+              </Button>
+            </Group>
+          </Stack>
         </Stack>
       </Paper>
 

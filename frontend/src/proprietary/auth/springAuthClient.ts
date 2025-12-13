@@ -60,6 +60,7 @@ export interface User {
   enabled?: boolean;
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
+  authenticationType?: string;
   app_metadata?: Record<string, any>;
 }
 
