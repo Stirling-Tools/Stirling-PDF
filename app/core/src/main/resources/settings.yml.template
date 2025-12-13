@@ -110,6 +110,19 @@ mail:
   sslTrust: '' # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
   sslCheckServerIdentity: false # enable hostname verification when using SSL/TLS
 
+telegram:
+  enabled: false # set to 'true' to enable Telegram bot integration
+  botToken: '' # Telegram bot token obtained from BotFather
+  botUsername: '' # Telegram bot username (without @)
+  pipelineInboxFolder: telegram # Name of the pipeline inbox folder for Telegram uploads
+  customFolderSuffix: true # set to 'true' to allow users to specify custom target folders via UserID
+  enableAllowUserIDs: true # set to 'true' to restrict access to specific Telegram user IDs
+  allowUserIDs: [] # List of allowed Telegram user IDs (e.g. [123456789, 987654321]). Leave empty to allow all users.
+  enableAllowChannelIDs: true # set to 'true' to restrict access to specific Telegram channel IDs
+  allowChannelIDs: [] # List of allowed Telegram channel IDs (e.g. [-1001234567890, -1009876543210]). Leave empty to allow all channels.
+  processingTimeoutSeconds: 180 # Maximum time in seconds to wait for processing a Telegram request
+  pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
+
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirling.com/legal/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
