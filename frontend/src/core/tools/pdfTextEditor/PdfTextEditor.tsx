@@ -34,6 +34,7 @@ import {
   valueOr,
 } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
 import PdfTextEditorView from '@app/components/tools/pdfTextEditor/PdfTextEditorView';
+import PdfTextEditorSidebar from '@app/components/tools/pdfTextEditor/PdfTextEditorSidebar';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 const WORKBENCH_VIEW_ID = 'pdfTextEditorWorkbench';
@@ -206,7 +207,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
-    setLeftPanelView,
   } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
@@ -228,6 +228,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [groupingMode, setGroupingMode] = useState<'auto' | 'paragraph' | 'singleLine'>('auto');
   const [hasVectorPreview, setHasVectorPreview] = useState(false);
   const [pagePreviews, setPagePreviews] = useState<Map<number, string>>(new Map());
+  const [autoScaleText, setAutoScaleText] = useState(true);
 
   // Lazy loading state
   const [isLazyMode, setIsLazyMode] = useState(false);
@@ -1527,6 +1528,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     hasChanges,
     forceSingleTextElement,
     groupingMode,
+    autoScaleText,
+    onAutoScaleTextChange: setAutoScaleText,
     requestPagePreview,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
@@ -1575,6 +1578,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     selectedPage,
     forceSingleTextElement,
     groupingMode,
+    autoScaleText,
     requestPagePreview,
     setForceSingleTextElement,
     handleLoadFileFromDropzone,
@@ -1644,7 +1648,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       icon: <DescriptionIcon fontSize="small" />,
       component: PdfTextEditorView,
     });
-    setLeftPanelView('hidden');
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
 
     return () => {
@@ -1652,14 +1655,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       clearCachedJob(cachedJobIdRef.current);
       clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
       unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-      setLeftPanelView('toolPicker');
     };
   }, [
     clearCachedJob,
     clearCustomWorkbenchViewData,
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,
-    setLeftPanelView,
     viewLabel,
     unregisterCustomWorkbenchView,
   ]);
@@ -1678,12 +1679,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, viewData);
   }, [setCustomWorkbenchViewData, viewData]);
 
-  // All editing happens in the custom workbench view.
-  return null;
+  // Render the sidebar with settings while editing happens in the custom workbench view.
+  return <PdfTextEditorSidebar data={viewData} />;
 };
 
 (PdfTextEditor as ToolComponent).tool = () => {
-  throw new Error('PDF JSON Editor does not support automation operations.');
+  throw new Error('PDF Text Editor does not support automation operations.');
 };
 
 (PdfTextEditor as ToolComponent).getDefaultParameters = () => ({
