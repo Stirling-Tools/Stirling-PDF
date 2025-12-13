@@ -3,6 +3,7 @@
 Translation Merger for Stirling PDF Frontend
 Merges missing translations from en-GB into target language files.
 Useful for AI-assisted translation workflows.
+TOML format only.
 """
 
 import json
@@ -14,46 +15,39 @@ import argparse
 import shutil
 from datetime import datetime
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    try:
-        import toml as tomllib_fallback
-        tomllib = None
-    except ImportError:
-        tomllib = None
-        tomllib_fallback = None
+import tomllib
+import tomli_w
 
 
 class TranslationMerger:
     def __init__(self, locales_dir: str = "frontend/public/locales", ignore_file: str = "scripts/ignore_translation.toml"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.json"
-        self.golden_truth = self._load_json(self.golden_truth_file)
+        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_json(self, file_path: Path) -> Dict:
-        """Load JSON file with error handling."""
+    def _load_translation_file(self, file_path: Path) -> Dict:
+        """Load TOML translation file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            with open(file_path, 'rb') as f:
+                return tomllib.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON in {file_path}: {e}")
+        except Exception as e:
+            print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
-    def _save_json(self, data: Dict, file_path: Path, backup: bool = True) -> None:
-        """Save JSON file with backup option."""
+    def _save_translation_file(self, data: Dict, file_path: Path, backup: bool = False) -> None:
+        """Save TOML translation file with backup option."""
         if backup and file_path.exists():
-            backup_path = file_path.with_suffix(f'.backup.{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
+            backup_path = file_path.with_suffix(f'.backup.{datetime.now().strftime("%Y%m%d_%H%M%S")}.toml')
             shutil.copy2(file_path, backup_path)
             print(f"Backup created: {backup_path}")
 
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(data, f)
 
     def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
         """Load ignore patterns from TOML file."""
@@ -61,26 +55,11 @@ class TranslationMerger:
             return {}
 
         try:
-            # Simple parser for ignore patterns
-            ignore_data = {}
-            current_section = None
+            with open(self.ignore_file, 'rb') as f:
+                ignore_data = tomllib.load(f)
 
-            with open(self.ignore_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-
-                    if line.startswith('[') and line.endswith(']'):
-                        current_section = line[1:-1]
-                        ignore_data[current_section] = set()
-                    elif line.strip().startswith("'") and current_section:
-                        # Extract quoted items
-                        item = line.strip().strip("',")
-                        if item:
-                            ignore_data[current_section].add(item)
-
-            return ignore_data
+            # Convert to sets for faster lookup
+            return {lang: set(data.get('ignore', [])) for lang, data in ignore_data.items()}
         except Exception as e:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
@@ -131,20 +110,19 @@ class TranslationMerger:
             golden_keys = set(self._flatten_dict(self.golden_truth).keys())
             return sorted(golden_keys - ignore_set)
 
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
 
         missing = set(golden_flat.keys()) - set(target_flat.keys())
         return sorted(missing - ignore_set)
 
-    def add_missing_translations(self, target_file: Path, keys_to_add: List[str] = None,
-                               mark_untranslated: bool = True) -> Dict:
+    def add_missing_translations(self, target_file: Path, keys_to_add: List[str] = None) -> Dict:
         """Add missing translations from en-GB to target file."""
         if not target_file.exists():
             target_data = {}
         else:
-            target_data = self._load_json(target_file)
+            target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
         missing_keys = keys_to_add or self.get_missing_keys(target_file)
@@ -153,10 +131,7 @@ class TranslationMerger:
         for key in missing_keys:
             if key in golden_flat:
                 value = golden_flat[key]
-                if mark_untranslated and isinstance(value, str):
-                    # Mark as untranslated for AI to translate later
-                    value = f"[UNTRANSLATED] {value}"
-
+                # Add the English value directly without [UNTRANSLATED] marker
                 self._set_nested_value(target_data, key, value)
                 added_count += 1
 
@@ -172,7 +147,7 @@ class TranslationMerger:
             print(f"Error: Target file does not exist: {target_file}")
             return {}
 
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
 
@@ -219,13 +194,13 @@ class TranslationMerger:
         return False
 
     def apply_translations(self, target_file: Path, translations: Dict[str, str],
-                          backup: bool = True) -> Dict:
+                          backup: bool = False) -> Dict:
         """Apply provided translations to target file."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
             return {'success': False, 'error': 'File not found'}
 
-        target_data = self._load_json(target_file)
+        target_data = self._load_translation_file(target_file)
         applied_count = 0
         errors = []
 
@@ -241,7 +216,7 @@ class TranslationMerger:
                 errors.append(f"Error setting {key}: {e}")
 
         if applied_count > 0:
-            self._save_json(target_data, target_file, backup)
+            self._save_translation_file(target_data, target_file, backup)
 
         return {
             'success': True,
@@ -288,7 +263,10 @@ class TranslationMerger:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Merge and manage translation files')
+    parser = argparse.ArgumentParser(
+        description='Merge and manage translation files',
+        epilog='Works with TOML translation files.'
+    )
     parser.add_argument('--locales-dir', default='frontend/public/locales',
                         help='Path to locales directory')
     parser.add_argument('--ignore-file', default='scripts/ignore_translation.toml',
@@ -299,9 +277,7 @@ def main():
 
     # Add missing command
     add_parser = subparsers.add_parser('add-missing', help='Add missing translations from en-GB')
-    add_parser.add_argument('--no-backup', action='store_true', help='Skip backup creation')
-    add_parser.add_argument('--mark-untranslated', action='store_true', default=True,
-                           help='Mark added translations as [UNTRANSLATED]')
+    add_parser.add_argument('--backup', action='store_true', help='Create backup before modifying files')
 
     # Extract untranslated command
     extract_parser = subparsers.add_parser('extract-untranslated', help='Extract untranslated entries')
@@ -314,7 +290,7 @@ def main():
     # Apply translations command
     apply_parser = subparsers.add_parser('apply-translations', help='Apply translations from JSON file')
     apply_parser.add_argument('--translations-file', required=True, help='JSON file with translations')
-    apply_parser.add_argument('--no-backup', action='store_true', help='Skip backup creation')
+    apply_parser.add_argument('--backup', action='store_true', help='Create backup before modifying files')
 
     args = parser.parse_args()
 
@@ -323,16 +299,16 @@ def main():
         return
 
     merger = TranslationMerger(args.locales_dir, args.ignore_file)
-    target_file = Path(args.locales_dir) / args.language / "translation.json"
+
+    # Find translation file
+    lang_dir = Path(args.locales_dir) / args.language
+    target_file = lang_dir / "translation.toml"
 
     if args.command == 'add-missing':
         print(f"Adding missing translations to {args.language}...")
-        result = merger.add_missing_translations(
-            target_file,
-            mark_untranslated=args.mark_untranslated
-        )
+        result = merger.add_missing_translations(target_file)
 
-        merger._save_json(result['data'], target_file, backup=not args.no_backup)
+        merger._save_translation_file(result['data'], target_file, backup=args.backup)
         print(f"Added {result['added_count']} missing translations")
 
     elif args.command == 'extract-untranslated':
@@ -355,7 +331,7 @@ def main():
         else:
             translations = translations_data
 
-        result = merger.apply_translations(target_file, translations, backup=not args.no_backup)
+        result = merger.apply_translations(target_file, translations, backup=args.backup)
 
         if result['success']:
             print(f"Applied {result['applied_count']} translations")

@@ -163,6 +163,11 @@ unfavorite = "Favorilerden kaldır"
 fullscreen = "Tam ekran moduna geç"
 sidebar = "Kenar çubuğu moduna geç"
 
+[backendStartup]
+notFoundTitle = "Arka uç bulunamadı"
+retry = "Yeniden dene"
+unreachable = "Uygulama şu anda arka uca bağlanamıyor. Lütfen arka uç durumunu ve ağ bağlantısını doğrulayın, ardından tekrar deneyin."
+
 [zipWarning]
 title = "Büyük ZIP Dosyası"
 message = "Bu ZIP {{count}} dosya içeriyor. Yine de çıkartılsın mı?"
@@ -914,7 +919,7 @@ title = "PDF'leri Bindirme"
 
 [home.pdfTextEditor]
 title = "PDF Metin Düzenleyici"
-desc = "Gruplu metin düzenleme ve PDF yeniden oluşturma ile Stirling PDF JSON dışa aktarımlarını gözden geçirin ve düzenleyin"
+desc = "PDF'lerin içindeki mevcut metinleri ve görselleri düzenleyin"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Çizim imzası"
 defaultImageLabel = "Yüklenen imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzayı kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 saveUnavailable = "Kaydetmek için önce bir imza oluşturun."
 noChanges = "Geçerli imza zaten kaydedildi."
+tempStorageTitle = "Geçici tarayıcı depolaması"
+tempStorageDescription = "İmzalar yalnızca tarayıcınızda saklanır. Tarayıcı verilerini temizlerseniz veya tarayıcı değiştirirseniz kaybolurlar."
+personalHeading = "Kişisel İmzalar"
+sharedHeading = "Paylaşılan İmzalar"
+personalDescription = "Bu imzaları yalnızca siz görebilirsiniz."
+sharedDescription = "Tüm kullanıcılar bu imzaları görebilir ve kullanabilir."
 
 [sign.saved.type]
 canvas = "Çizim"
@@ -3023,6 +3036,91 @@ title = "PDF Hakkında Bilgi Al"
 header = "PDF Hakkında Bilgi Al"
 submit = "Bilgi Al"
 downloadJson = "JSON İndir"
+processing = "Bilgi çıkarılıyor..."
+results = "Sonuçlar"
+noResults = "Bir rapor oluşturmak için aracı çalıştırın."
+downloads = "İndirmeler"
+noneDetected = "Hiçbiri tespit edilmedi"
+indexTitle = "Dizin"
+
+[getPdfInfo.report]
+entryLabel = "Tam bilgi özeti"
+shortTitle = "PDF Bilgileri"
+
+[getPdfInfo.sections]
+metadata = "Meta veriler"
+formFields = "Form Alanları"
+basicInfo = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+compliance = "Uyumluluk"
+encryption = "Şifreleme"
+permissions = "İzinler"
+other = "Diğer"
+perPageInfo = "Sayfa Başına Bilgi"
+tableOfContents = "İçindekiler"
+
+[getPdfInfo.other]
+attachments = "Ekler"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+structureTree = "Yapı Ağacı"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Boyut"
+annotations = "Açıklamalar"
+images = "Görüntüler"
+links = "Bağlantılar"
+fonts = "Yazı Tipleri"
+xobjects = "XObject Sayıları"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary]
+pages = "Sayfalar"
+fileSize = "Dosya Boyutu"
+pdfVersion = "PDF Sürümü"
+language = "Dil"
+title = "PDF Özeti"
+author = "Yazar"
+created = "Oluşturulma"
+modified = "Değiştirilme"
+permsAll = "Tüm izinlere izin verildi"
+permsRestricted = "{{count}} kısıtlama"
+permsMixed = "Bazı izinler kısıtlandı"
+hasCompliance = "Uyumluluk standartlarına sahip"
+noCompliance = "Uyumluluk standardı yok"
+basic = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+securityTitle = "Güvenlik Durumu"
+technical = "Teknik"
+overviewTitle = "PDF Genel Bakış"
+
+[getPdfInfo.summary.security]
+encrypted = "Şifrelenmiş PDF - Parola koruması var"
+unencrypted = "Şifrelenmemiş PDF - Parola koruması yok"
+
+[getPdfInfo.summary.tech]
+images = "Görüntüler"
+fonts = "Yazı Tipleri"
+formFields = "Form Alanları"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+bookmarks = "Yer İmleri"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary.overview]
+untitled = "başlıksız bir belge"
+unknown = "Bilinmeyen Yazar"
+text = "Bu, {{author}} tarafından oluşturulan, {{title}} başlıklı {{pages}} sayfalık bir PDF'dir (PDF sürümü {{version}})."
+
+[getPdfInfo.error]
+partial = "Bazı dosyalar işlenemedi."
+unexpected = "Çıkarma sırasında beklenmeyen bir hata oluştu."
+
+[getPdfInfo.status]
+complete = "Çıkarma tamamlandı"
 
 [extractPage]
 tags = "çıkar"
@@ -3441,6 +3539,9 @@ signinTitle = "Lütfen giriş yapınız."
 ssoSignIn = "Tek Oturum Açma ile Giriş Yap"
 oAuth2AutoCreateDisabled = "OAUTH2 Otomatik Oluşturma Kullanıcı Devre Dışı Bırakıldı"
 oAuth2AdminBlockedUser = "Kayıtlı olmayan kullanıcıların kayıt veya giriş yapması şu anda engellenmiştir. Lütfen yöneticiyle iletişime geçin."
+oAuth2RequiresLicense = "OAuth/SSO ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+saml2RequiresLicense = "SAML ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+maxUsersReached = "Mevcut lisansınız için azami kullanıcı sayısına ulaşıldı. Planınızı yükseltmek veya daha fazla koltuk eklemek için lütfen yöneticiyle iletişime geçin."
 oauth2RequestNotFound = "Yetkilendirme isteği bulunamadı"
 oauth2InvalidUserInfoResponse = "Geçersiz Kullanıcı Bilgisi Yanıtı"
 oauth2invalidRequest = "Geçersiz İstek"
@@ -3849,14 +3950,17 @@ fitToWidth = "Genişliğe Sığdır"
 actualSize = "Gerçek Boyut"
 
 [viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+dualPageView = "Çift Sayfa Görünümü"
 firstPage = "İlk Sayfa"
 lastPage = "Son Sayfa"
-previousPage = "Önceki Sayfa"
 nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
-singlePageView = "Tek Sayfa Görünümü"
-dualPageView = "Çift Sayfa Görünümü"
 
 [rightRail]
 closeSelected = "Seçilen Dosyaları Kapat"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
 exportSelected = "Seçilen Sayfaları Dışa Aktar"
 toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
 annotationMode = "Açıklama Modunu Değiştir"
+print = "PDF'yi Yazdır"
 draw = "Çiz"
 save = "Kaydet"
 saveChanges = "Değişiklikleri Kaydet"
@@ -4497,6 +4602,7 @@ description = "Impressum için URL veya dosya adı (bazı yargı bölgelerinde g
 title = "Premium ve Kurumsal"
 description = "Premium veya kurumsal lisans anahtarınızı yapılandırın."
 license = "Lisans Yapılandırması"
+noInput = "Lütfen bir lisans anahtarı veya dosyası sağlayın"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisans anahtarınız veya sertifika dosyanız mı var?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Uyarı: Mevcut Lisans Tespit Edildi"
 line1 = "Mevcut lisans anahtarınızın üzerine yazma işlemi geri alınamaz."
 line2 = "Başka yerde yedeğiniz yoksa önceki lisansınız kalıcı olarak kaybolacaktır."
 line3 = "Önemli: Lisans anahtarlarını gizli ve güvenli tutun. Asla herkese açık şekilde paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisans Anahtarı"
+file = "Sertifika Dosyası"
+
+[admin.settings.premium.file]
+label = "Lisans Sertifika Dosyası"
+description = "Çevrimdışı satın alımlardan aldığınız .lic veya .cert lisans dosyanızı yükleyin"
+choose = "Lisans Dosyası Seç"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisans dosyası başarıyla yüklendi ve etkinleştirildi. Yeniden başlatma gerekmez."
+
+[admin.settings.premium.currentLicense]
+title = "Etkin Lisans"
+file = "Kaynak: Lisans dosyası ({{path}})"
+key = "Kaynak: Lisans anahtarı"
+type = "Tür: {{type}}"
+noInput = "Lütfen bir lisans anahtarı girin veya bir sertifika dosyası yükleyin"
+success = "Başarılı"
 
 [admin.settings.premium.enabled]
 label = "Premium Özellikleri Etkinleştir"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} seçildi"
 download = "İndir"
 delete = "Sil"
 unsupported = "Desteklenmiyor"
+active = "Aktif"
 addToUpload = "Yüklemeye Ekle"
+closeFile = "Dosyayı Kapat"
 deleteAll = "Tümünü Sil"
 loadingFiles = "Dosyalar yükleniyor..."
 noFiles = "Kullanılabilir dosya yok"
@@ -5135,7 +5262,7 @@ upgrade = "Şimdi yükselt →"
 freeTitle = "Sunucu Lisansı"
 overLimitTitle = "Sunucu Lisansı Gerekli"
 overLimitBody = "Lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. <strong>{{overLimitUserCopy}}</strong> Stirling kullanıcınız var. Kesintisiz devam etmek için Stirling Server planına yükseltin - <strong>sınırsız koltuk</strong>, PDF metin düzenleme ve tam yönetici kontrolü $99/server/ay."
-freeBody = "<strong>Open-Core</strong> lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. Kesintisiz ölçeklemek ve yeni <strong>PDF metin düzenleme aracımıza</strong> erken erişim almak için Stirling Server planını öneririz - tam düzenleme ve <strong>sınırsız koltuk</strong> $99/server/ay."
+freeBody = "<strong>Open-Core</strong> lisanslamamız, sunucu başına en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya ücretsiz izin verir. Kesintisiz ölçeklendirme için Stirling Server planını öneririz - <strong>sınırsız kullanıcı</strong> ve <strong>SSO desteği</strong> için $99/sunucu/ay."
 
 [onboarding.desktopInstall]
 title = "İndir"
@@ -5240,6 +5367,31 @@ error = "Kullanıcı durumu güncellenemedi"
 success = "Kullanıcı başarıyla silindi"
 error = "Kullanıcı silinemedi"
 
+[workspace.people.changePassword]
+action = "Parolayı değiştir"
+title = "Parolayı değiştir"
+subtitle = "Şunun için parolayı güncelle"
+newPassword = "Yeni parola"
+confirmPassword = "Parolayı onayla"
+placeholder = "Yeni bir parola girin"
+confirmPlaceholder = "Yeni parolayı tekrar girin"
+passwordRequired = "Lütfen yeni bir parola girin"
+passwordMismatch = "Parolalar eşleşmiyor"
+generateRandom = "Güvenli parola oluştur"
+generatedPreview = "Oluşturulan parola:"
+copyTooltip = "Panoya kopyala"
+copiedToClipboard = "Parola panoya kopyalandı"
+copyFailed = "Parola kopyalanamadı"
+sendEmail = "Kullanıcıya bu değişiklik hakkında e-posta gönder"
+includePassword = "E-postaya yeni parolayı dahil et"
+forcePasswordChange = "Kullanıcının bir sonraki girişte parolasını değiştirmesini zorunlu kıl"
+emailUnavailable = "Bu kullanıcının e-posta adresi geçerli değil. Bildirimler devre dışı."
+smtpDisabled = "E-posta bildirimleri için ayarlarda SMTP'nin etkinleştirilmesi gerekir."
+notifyOnly = "Parola olmadan bir e-posta gönderilecek ve kullanıcıya bir yöneticinin parolayı değiştirdiği bildirilecek."
+submit = "Parolayı güncelle"
+success = "Parola başarıyla güncellendi"
+error = "Parola güncellenemedi"
+
 [workspace.people.emailInvite]
 tab = "E-posta Daveti"
 description = "Aşağıya e-postaları virgülle ayırarak yazın veya yapıştırın. Kullanıcılar giriş bilgilerini e-posta ile alacaktır."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "En az bir e-posta adresi gereklidir"
 submit = "Davetleri Gönder"
 success = "kullanıcı(lar) başarıyla davet edildi"
-partialSuccess = "Bazı davetler başarısız oldu"
+partialFailure = "Bazı davetler başarısız oldu"
 allFailed = "Kullanıcılar davet edilemedi"
 error = "Davetler gönderilemedi"
 
@@ -5773,6 +5925,7 @@ subtitle = "Stirling hesabınızla oturum açın"
 [setup.selfhosted]
 title = "Sunucuda Oturum Açın"
 subtitle = "Sunucu kimlik bilgilerinizi girin"
+link = "veya kendi barındırdığınız bir hesaba bağlanın"
 
 [setup.server]
 title = "Sunucuya Bağlan"
@@ -5791,6 +5944,14 @@ description = "Öz barındırılan Stirling PDF sunucunuzun tam URL'sini girin"
 emptyUrl = "Lütfen bir sunucu URL'si girin"
 unreachable = "Sunucuya bağlanılamadı"
 testFailed = "Bağlantı testi başarısız"
+configFetch = "Sunucu yapılandırması alınamadı. Lütfen URL'yi kontrol edip tekrar deneyin."
+
+[setup.server.error.securityDisabled]
+title = "Giriş Etkin Değil"
+body = "Bu sunucuda giriş etkin değil. Bu sunucuya bağlanmak için kimlik doğrulamayı etkinleştirmelisiniz:"
+step1 = "Ortamınızda DOCKER_ENABLE_SECURITY=true olarak ayarlayın"
+step2 = "Ya da settings.yml içinde security.enableLogin=true olarak ayarlayın"
+step3 = "Sunucuyu yeniden başlatın"
 
 [setup.login]
 title = "Oturum Aç"
@@ -5800,6 +5961,13 @@ submit = "Oturum Aç"
 signInWith = "Şununla oturum aç"
 oauthPending = "Kimlik doğrulama için tarayıcı açılıyor..."
 orContinueWith = "Veya e-postayla devam edin"
+serverRequirement = "Not: Sunucuda oturum açma etkin olmalıdır."
+showInstructions = "Nasıl etkinleştirilir?"
+hideInstructions = "Yönergeleri gizle"
+instructions = "Stirling PDF sunucunuzda oturum açmayı etkinleştirmek için:"
+instructionsEnvVar = "Ortam değişkenini ayarlayın:"
+instructionsOrYml = "Veya settings.yml içinde:"
+instructionsRestart = "Ardından değişikliklerin etkili olması için sunucunuzu yeniden başlatın."
 
 [setup.login.username]
 label = "Kullanıcı adı"
@@ -5856,6 +6024,7 @@ earlyAccess = "Erken Erişim"
 reset = "Değişiklikleri Sıfırla"
 downloadJson = "JSON'u İndir"
 generatePdf = "PDF Oluştur"
+saveChanges = "Değişiklikleri Kaydet"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Metni kutulara otomatik sığdır"
@@ -5893,6 +6062,8 @@ alpha = "Bu alfa görüntüleyici hâlâ gelişiyor—bazı yazı tipleri, renkl
 [pdfTextEditor.empty]
 title = "Belge yüklenmedi"
 subtitle = "Metin içeriğini düzenlemeye başlamak için bir PDF veya JSON dosyası yükleyin."
+dropzone = "Buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
+dropzoneWithFiles = "Dosyalar sekmesinden bir dosya seçin veya buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Metin Düzenleyiciye Hoş Geldiniz (Erken Erişim)"

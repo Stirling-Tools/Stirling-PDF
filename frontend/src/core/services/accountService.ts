@@ -9,11 +9,26 @@ export interface AccountData {
   saml2Login: boolean;
 }
 
+export interface LoginPageData {
+  showDefaultCredentials: boolean;
+  firstTimeSetup: boolean;
+  enableLogin: boolean;
+}
+
 /**
  * Account Service
  * Provides functions to interact with account-related backend APIs
  */
 export const accountService = {
+  /**
+   * Get login page data (includes showDefaultCredentials flag)
+   * This is a public endpoint - doesn't require authentication
+   */
+  async getLoginPageData(): Promise<LoginPageData> {
+    const response = await apiClient.get<LoginPageData>('/api/v1/proprietary/ui-data/login');
+    return response.data;
+  },
+
   /**
    * Get current user account data
    */
@@ -40,5 +55,15 @@ export const accountService = {
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);
     await apiClient.post('/api/v1/user/change-password-on-login', formData);
+  },
+
+  /**
+   * Change username
+   */
+  async changeUsername(newUsername: string, currentPassword: string): Promise<void> {
+    const formData = new FormData();
+    formData.append('currentPasswordChangeUsername', currentPassword);
+    formData.append('newUsername', newUsername);
+    await apiClient.post('/api/v1/user/change-username', formData);
   },
 };

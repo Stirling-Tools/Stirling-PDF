@@ -5,6 +5,8 @@ Automatically translates JSON batch files to target language while preserving:
 - Placeholders: {n}, {total}, {filename}, {{variable}}
 - HTML tags: <strong>, </strong>, etc.
 - Technical terms: PDF, API, OAuth2, SAML2, JWT, etc.
+
+Note: Works with JSON batch files. Translation files can be TOML or JSON format.
 """
 
 import json
@@ -206,9 +208,11 @@ def get_language_info(language_code: str) -> tuple:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Translate JSON batch files using OpenAI API',
+        description='Translate JSON batch files using OpenAI API (output supports TOML and JSON)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Note: This script works with JSON batch files. The translation files it updates can be TOML or JSON.
+
 Examples:
   # Translate single batch file
   python batch_translator.py zh_CN_batch_1_of_4.json --api-key YOUR_KEY --language zh-CN

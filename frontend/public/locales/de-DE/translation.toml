@@ -163,6 +163,11 @@ unfavorite = "Aus Favoriten entfernen"
 fullscreen = "In den Vollbildmodus wechseln"
 sidebar = "In den Seitenleistenmodus wechseln"
 
+[backendStartup]
+notFoundTitle = "Backend nicht gefunden"
+retry = "Erneut versuchen"
+unreachable = "Die Anwendung kann derzeit keine Verbindung zum Backend herstellen. Überprüfen Sie den Backend-Status und die Netzwerkverbindung und versuchen Sie es dann erneut."
+
 [zipWarning]
 title = "Große ZIP-Datei"
 message = "Dieses ZIP enthält {{count}} Dateien. Trotzdem extrahieren?"
@@ -347,7 +352,7 @@ teams = "Teams"
 title = "Konfiguration"
 systemSettings = "Systemeinstellungen"
 features = "Funktionen"
-endpoints = "Endpoints"
+endpoints = "Endpunkte"
 database = "Datenbank"
 advanced = "Erweitert"
 
@@ -383,7 +388,7 @@ logout = "Abmelden"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Selbst gehostet"
 
 [settings.general]
 title = "Allgemein"
@@ -612,7 +617,7 @@ desc = "Anzeigen, Kommentieren, Text oder Bilder hinzufügen"
 brandAlt = "Stirling PDF-Logo"
 openFiles = "Dateien öffnen"
 swipeHint = "Zum Wechseln der Ansicht nach links oder rechts wischen"
-tools = "Tools"
+tools = "Werkzeuge"
 toolsSlide = "Bereich für Toolauswahl"
 viewSwitcher = "Ansicht des Arbeitsbereichs wechseln"
 workbenchSlide = "Arbeitsbereichs-Panel"
@@ -914,10 +919,10 @@ title = "PDFs überlagern"
 
 [home.pdfTextEditor]
 title = "PDF-Texteditor"
-desc = "Stirling PDF JSON-Exporte prüfen und bearbeiten – mit gruppierter Textbearbeitung und PDF-Neuerzeugung"
+desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
 
 [home.addText]
-tags = "text,annotation,label"
+tags = "text,anmerkung,beschriftung"
 title = "Text hinzufügen"
 desc = "Beliebigen Text überall in Ihrem PDF hinzufügen"
 
@@ -1216,7 +1221,7 @@ pdfaDigitalSignatureWarning = "Das PDF enthält eine digitale Signatur. Sie wird
 fileFormat = "Dateiformat"
 wordDoc = "Word-Dokument"
 wordDocExt = "Word-Dokument (.docx)"
-odtExt = "OpenDocument Text (.odt)"
+odtExt = "OpenDocument-Text (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "OpenDocument Präsentation (.odp)"
 txtExt = "Einfacher Text (.txt)"
@@ -2262,12 +2267,20 @@ defaultCanvasLabel = "Gezeichnete Unterschrift"
 defaultImageLabel = "Hochgeladene Unterschrift"
 defaultTextLabel = "Getippte Unterschrift"
 saveButton = "Unterschrift speichern"
+savePersonal = "Persönlich speichern"
+saveShared = "Geteilt speichern"
 saveUnavailable = "Erstellen Sie zuerst eine Unterschrift, um sie zu speichern."
 noChanges = "Die aktuelle Unterschrift ist bereits gespeichert."
+tempStorageTitle = "Temporärer Browser-Speicher"
+tempStorageDescription = "Signaturen werden nur in Ihrem Browser gespeichert. Sie gehen verloren, wenn Sie Browserdaten löschen oder den Browser wechseln."
+personalHeading = "Persönliche Signaturen"
+sharedHeading = "Geteilte Signaturen"
+personalDescription = "Nur Sie können diese Signaturen sehen."
+sharedDescription = "Alle Benutzer können diese Signaturen sehen und verwenden."
 
 [sign.saved.type]
 canvas = "Zeichnung"
-image = "Upload"
+image = "Hochladen"
 text = "Text"
 
 [sign.saved.status]
@@ -3023,6 +3036,91 @@ title = "Alle Informationen anzeigen"
 header = "Alle Informationen anzeigen"
 submit = "Informationen anzeigen"
 downloadJson = "Als JSON herunterladen"
+processing = "Informationen werden extrahiert..."
+results = "Ergebnisse"
+noResults = "Führen Sie das Tool aus, um einen Bericht zu erstellen."
+downloads = "Downloads"
+noneDetected = "Keine erkannt"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Vollständige Informationsübersicht"
+shortTitle = "PDF-Informationen"
+
+[getPdfInfo.sections]
+metadata = "Metadaten"
+formFields = "Formularfelder"
+basicInfo = "Grundlegende Informationen"
+documentInfo = "Dokumentinformationen"
+compliance = "Compliance"
+encryption = "Verschlüsselung"
+permissions = "Berechtigungen"
+other = "Sonstiges"
+perPageInfo = "Informationen pro Seite"
+tableOfContents = "Inhaltsverzeichnis"
+
+[getPdfInfo.other]
+attachments = "Anhänge"
+embeddedFiles = "Eingebettete Dateien"
+javaScript = "JavaScript"
+layers = "Ebenen"
+structureTree = "Strukturbaum"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Größe"
+annotations = "Anmerkungen"
+images = "Bilder"
+links = "Links"
+fonts = "Schriftarten"
+xobjects = "XObject-Anzahl"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Seiten"
+fileSize = "Dateigröße"
+pdfVersion = "PDF-Version"
+language = "Sprache"
+title = "PDF-Zusammenfassung"
+author = "Autor"
+created = "Erstellt"
+modified = "Geändert"
+permsAll = "Alle Berechtigungen erlaubt"
+permsRestricted = "{{count}} Einschränkungen"
+permsMixed = "Einige Berechtigungen eingeschränkt"
+hasCompliance = "Entspricht Compliance-Standards"
+noCompliance = "Keine Compliance-Standards"
+basic = "Grundlegende Informationen"
+documentInfo = "Dokumentinformationen"
+securityTitle = "Sicherheitsstatus"
+technical = "Technisch"
+overviewTitle = "PDF-Übersicht"
+
+[getPdfInfo.summary.security]
+encrypted = "Verschlüsseltes PDF - Passwortschutz vorhanden"
+unencrypted = "Unverschlüsseltes PDF - Kein Passwortschutz"
+
+[getPdfInfo.summary.tech]
+images = "Bilder"
+fonts = "Schriftarten"
+formFields = "Formularfelder"
+embeddedFiles = "Eingebettete Dateien"
+javaScript = "JavaScript"
+layers = "Ebenen"
+bookmarks = "Lesezeichen"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "ein unbenanntes Dokument"
+unknown = "Unbekannter Autor"
+text = "Dies ist ein {{pages}}-seitiges PDF mit dem Titel {{title}}, erstellt von {{author}} (PDF-Version {{version}})."
+
+[getPdfInfo.error]
+partial = "Einige Dateien konnten nicht verarbeitet werden."
+unexpected = "Unerwarteter Fehler während der Extraktion."
+
+[getPdfInfo.status]
+complete = "Extraktion abgeschlossen"
 
 [extractPage]
 tags = "extrahieren,seite"
@@ -3441,6 +3539,9 @@ signinTitle = "Bitte melden Sie sich an."
 ssoSignIn = "Anmeldung per Single Sign-On"
 oAuth2AutoCreateDisabled = "OAUTH2 Benutzer automatisch erstellen deaktiviert"
 oAuth2AdminBlockedUser = "Die Registrierung bzw. das anmelden von nicht registrierten Benutzern ist derzeit gesperrt. Bitte wenden Sie sich an den Administrator."
+oAuth2RequiresLicense = "OAuth/SSO-Anmeldung erfordert eine kostenpflichtige Lizenz (Server oder Enterprise). Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren."
+saml2RequiresLicense = "SAML-Anmeldung erfordert eine kostenpflichtige Lizenz (Server oder Enterprise). Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren."
+maxUsersReached = "Die maximale Benutzeranzahl für Ihre aktuelle Lizenz wurde erreicht. Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren oder weitere Benutzerplätze hinzuzufügen."
 oauth2RequestNotFound = "Autorisierungsanfrage nicht gefunden"
 oauth2InvalidUserInfoResponse = "Ungültige Benutzerinformationsantwort"
 oauth2invalidRequest = "ungültige Anfrage"
@@ -3849,14 +3950,17 @@ fitToWidth = "An Breite anpassen"
 actualSize = "Originalgröße"
 
 [viewer]
+cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
+dualPageView = "Doppelseitenansicht"
 firstPage = "Erste Seite"
 lastPage = "Letzte Seite"
-previousPage = "Vorherige Seite"
 nextPage = "Nächste Seite"
+onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
+previousPage = "Vorherige Seite"
+singlePageView = "Einzelseitenansicht"
+unknownFile = "Unbekannte Datei"
 zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
-singlePageView = "Einzelseitenansicht"
-dualPageView = "Doppelseitenansicht"
 
 [rightRail]
 closeSelected = "Ausgewählte Dateien schließen"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Seitenleiste umschalten"
 exportSelected = "Ausgewählte Seiten exportieren"
 toggleAnnotations = "Anmerkungen ein-/ausblenden"
 annotationMode = "Anmerkungsmodus umschalten"
+print = "PDF drucken"
 draw = "Zeichnen"
 save = "Speichern"
 saveChanges = "Änderungen speichern"
@@ -3931,7 +4036,7 @@ account = "Konto"
 config = "Konfig"
 settings = "Optionen"
 adminSettings = "Admin Optionen"
-allTools = "Tools"
+allTools = "Werkzeuge"
 reader = "Reader"
 
 [quickAccess.helpMenu]
@@ -4497,6 +4602,7 @@ description = "URL oder Dateiname zum Impressum (in einigen Rechtsordnungen erfo
 title = "Premium & Enterprise"
 description = "Ihren Premium- oder Enterprise-Lizenzschlüssel konfigurieren."
 license = "Lizenzkonfiguration"
+noInput = "Bitte geben Sie einen Lizenzschlüssel oder eine Datei an"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lizenzschlüssel oder Zertifikatsdatei vorhanden?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Warnung: Vorhandene Lizenz erkannt"
 line1 = "Das Überschreiben Ihres aktuellen Lizenzschlüssels kann nicht rückgängig gemacht werden."
 line2 = "Ihre vorherige Lizenz geht dauerhaft verloren, sofern Sie sie nicht anderweitig gesichert haben."
 line3 = "Wichtig: Halten Sie Lizenzschlüssel privat und sicher. Geben Sie sie niemals öffentlich weiter."
+
+[admin.settings.premium.inputMethod]
+text = "Lizenzschlüssel"
+file = "Zertifikatsdatei"
+
+[admin.settings.premium.file]
+label = "Lizenz-Zertifikatsdatei"
+description = "Laden Sie Ihre .lic- oder .cert-Lizenzdatei aus Offline-Käufen hoch"
+choose = "Lizenzdatei auswählen"
+selected = "Ausgewählt: {{filename}} ({{size}})"
+successMessage = "Lizenzdatei erfolgreich hochgeladen und aktiviert. Kein Neustart erforderlich."
+
+[admin.settings.premium.currentLicense]
+title = "Aktive Lizenz"
+file = "Quelle: Lizenzdatei ({{path}})"
+key = "Quelle: Lizenzschlüssel"
+type = "Typ: {{type}}"
+noInput = "Bitte geben Sie einen Lizenzschlüssel an oder laden Sie eine Zertifikatdatei hoch"
+success = "Erfolg"
 
 [admin.settings.premium.enabled]
 label = "Premium-Funktionen aktivieren"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} ausgewählt"
 download = "Herunterladen"
 delete = "Löschen"
 unsupported = "Nicht unterstützt"
+active = "Aktiv"
 addToUpload = "Zum Upload hinzufügen"
+closeFile = "Datei schließen"
 deleteAll = "Alle löschen"
 loadingFiles = "Dateien werden geladen..."
 noFiles = "Keine Dateien verfügbar"
@@ -5135,7 +5262,7 @@ upgrade = "Jetzt upgraden →"
 freeTitle = "Server-Lizenz"
 overLimitTitle = "Server-Lizenz erforderlich"
 overLimitBody = "Unsere Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzer pro Server kostenlos. Sie haben <strong>{{overLimitUserCopy}}</strong> Stirling-Nutzer. Um ohne Unterbrechung fortzufahren, upgraden Sie auf den Stirling-Server-Plan – <strong>unbegrenzte Plätze</strong>, PDF-Textbearbeitung und volle Admin-Kontrolle für $99/Server/Monat."
-freeBody = "Unsere <strong>Open-Core</strong>-Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzer pro Server kostenlos. Für unterbrechungsfreies Skalieren und frühen Zugriff auf unser neues <strong>PDF-Textbearbeitungs-Tool</strong> empfehlen wir den Stirling-Server-Plan – volle Bearbeitung und <strong>unbegrenzte Plätze</strong> für $99/Server/Monat."
+freeBody = "Unsere <strong>Open-Core</strong>-Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzern pro Server kostenlos. Um unterbrechungsfrei zu skalieren, empfehlen wir den Stirling Server-Plan - <strong>unbegrenzte Plätze</strong> und <strong>SSO-Unterstützung</strong> für $99/Server/Monat."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5240,6 +5367,31 @@ error = "Benutzerstatus konnte nicht aktualisiert werden"
 success = "Benutzer erfolgreich gelöscht"
 error = "Benutzer konnte nicht gelöscht werden"
 
+[workspace.people.changePassword]
+action = "Passwort ändern"
+title = "Passwort ändern"
+subtitle = "Passwort aktualisieren für"
+newPassword = "Neues Passwort"
+confirmPassword = "Passwort bestätigen"
+placeholder = "Neues Passwort eingeben"
+confirmPlaceholder = "Neues Passwort erneut eingeben"
+passwordRequired = "Bitte geben Sie ein neues Passwort ein"
+passwordMismatch = "Passwörter stimmen nicht überein"
+generateRandom = "Sicheres Passwort generieren"
+generatedPreview = "Generiertes Passwort:"
+copyTooltip = "In Zwischenablage kopieren"
+copiedToClipboard = "Passwort in die Zwischenablage kopiert"
+copyFailed = "Kopieren des Passworts fehlgeschlagen"
+sendEmail = "Den Benutzer per E-Mail über diese Änderung informieren"
+includePassword = "Neues Passwort in die E-Mail aufnehmen"
+forcePasswordChange = "Benutzer zwingen, das Passwort bei der nächsten Anmeldung zu ändern"
+emailUnavailable = "Die E-Mail-Adresse dieses Benutzers ist keine gültige E-Mail-Adresse. Benachrichtigungen sind deaktiviert."
+smtpDisabled = "E-Mail-Benachrichtigungen erfordern, dass SMTP in den Einstellungen aktiviert ist."
+notifyOnly = "Es wird eine E-Mail ohne das Passwort gesendet, die den Benutzer darüber informiert, dass ein Admin es geändert hat."
+submit = "Passwort aktualisieren"
+success = "Passwort erfolgreich aktualisiert"
+error = "Aktualisieren des Passworts fehlgeschlagen"
+
 [workspace.people.emailInvite]
 tab = "E-Mail-Einladung"
 description = "Geben Sie unten E-Mails ein oder fügen Sie sie ein, getrennt durch Kommas. Benutzer erhalten Anmeldedaten per E-Mail."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Mindestens eine E-Mail-Adresse ist erforderlich"
 submit = "Einladungen senden"
 success = "Benutzer erfolgreich eingeladen"
-partialSuccess = "Einige Einladungen sind fehlgeschlagen"
+partialFailure = "Einige Einladungen sind fehlgeschlagen"
 allFailed = "Benutzer konnten nicht eingeladen werden"
 error = "Einladungen konnten nicht gesendet werden"
 
@@ -5755,7 +5907,7 @@ label = "Server auswählen"
 description = "Self-Hosted-Server"
 
 [setup.step3]
-label = "Login"
+label = "Anmeldung"
 description = "Anmeldedaten eingeben"
 
 [setup.mode.saas]
@@ -5773,6 +5925,7 @@ subtitle = "Mit Ihrem Stirling-Konto anmelden"
 [setup.selfhosted]
 title = "Am Server anmelden"
 subtitle = "Geben Sie Ihre Server-Anmeldedaten ein"
+link = "oder mit einem selbstgehosteten Konto verbinden"
 
 [setup.server]
 title = "Mit Server verbinden"
@@ -5791,15 +5944,30 @@ description = "Geben Sie die vollständige URL Ihres selbst gehosteten Stirling 
 emptyUrl = "Bitte eine Server-URL eingeben"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
+configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+
+[setup.server.error.securityDisabled]
+title = "Anmeldung nicht aktiviert"
+body = "Auf diesem Server ist die Anmeldung nicht aktiviert. Um eine Verbindung zu diesem Server herzustellen, müssen Sie die Authentifizierung aktivieren:"
+step1 = "Setzen Sie DOCKER_ENABLE_SECURITY=true in Ihrer Umgebung"
+step2 = "Oder setzen Sie security.enableLogin=true in der settings.yml"
+step3 = "Starten Sie den Server neu"
 
 [setup.login]
 title = "Anmelden"
 subtitle = "Geben Sie Ihre Anmeldedaten ein, um fortzufahren"
 connectingTo = "Verbinden mit:"
-submit = "Login"
+submit = "Anmelden"
 signInWith = "Anmelden mit"
 oauthPending = "Browser zur Authentifizierung wird geöffnet..."
 orContinueWith = "Oder mit E-Mail fortfahren"
+serverRequirement = "Hinweis: Auf dem Server muss die Anmeldung aktiviert sein."
+showInstructions = "Wie aktivieren?"
+hideInstructions = "Anleitung ausblenden"
+instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
+instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
+instructionsOrYml = "Oder in der settings.yml:"
+instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
 
 [setup.login.username]
 label = "Benutzername"
@@ -5850,12 +6018,13 @@ singleLine = "Einzeilig"
 [pdfTextEditor.badges]
 unsaved = "Bearbeitet"
 modified = "Bearbeitet"
-earlyAccess = "Early Access"
+earlyAccess = "Früher Zugriff"
 
 [pdfTextEditor.actions]
 reset = "Änderungen zurücksetzen"
 downloadJson = "JSON herunterladen"
 generatePdf = "PDF generieren"
+saveChanges = "Änderungen speichern"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Text automatisch in Rahmen einpassen"
@@ -5893,6 +6062,8 @@ alpha = "Dieser Alpha-Viewer entwickelt sich noch weiter – bestimmte Schriften
 [pdfTextEditor.empty]
 title = "Kein Dokument geladen"
 subtitle = "Laden Sie eine PDF- oder JSON-Datei, um mit der Textbearbeitung zu beginnen."
+dropzone = "Ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
+dropzoneWithFiles = "Wählen Sie eine Datei auf der Registerkarte Dateien aus oder ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
 
 [pdfTextEditor.welcomeBanner]
 title = "Willkommen beim PDF-Texteditor (Early Access)"
@@ -5960,8 +6131,8 @@ tags = "text,anmerkung,beschriftung"
 applySignatures = "Text anwenden"
 
 [addText.text]
-name = "Textinhalt"
-placeholder = "Geben Sie den hinzuzufügenden Text ein"
+name = "Text"
+placeholder = "Text eingeben"
 fontLabel = "Schriftart"
 fontSizeLabel = "Schriftgröße"
 fontSizePlaceholder = "Schriftgröße eingeben oder wählen (8-200)"
