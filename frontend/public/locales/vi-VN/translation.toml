@@ -3036,6 +3036,91 @@ title = "Lấy thông tin PDF"
 header = "Lấy thông tin PDF"
 submit = "Lấy thông tin"
 downloadJson = "Tải xuống JSON"
+processing = "Đang trích xuất thông tin..."
+results = "Kết quả"
+noResults = "Chạy công cụ để tạo báo cáo."
+downloads = "Tải xuống"
+noneDetected = "Không phát hiện"
+indexTitle = "Chỉ mục"
+
+[getPdfInfo.report]
+entryLabel = "Tóm tắt thông tin đầy đủ"
+shortTitle = "Thông tin PDF"
+
+[getPdfInfo.sections]
+metadata = "Siêu dữ liệu"
+formFields = "Trường biểu mẫu"
+basicInfo = "Thông tin cơ bản"
+documentInfo = "Thông tin tài liệu"
+compliance = "Tuân thủ"
+encryption = "Mã hóa"
+permissions = "Quyền"
+other = "Khác"
+perPageInfo = "Thông tin theo trang"
+tableOfContents = "Mục lục"
+
+[getPdfInfo.other]
+attachments = "Tệp đính kèm"
+embeddedFiles = "Tệp nhúng"
+javaScript = "JavaScript"
+layers = "Lớp"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Kích thước"
+annotations = "Chú thích"
+images = "Hình ảnh"
+links = "Liên kết"
+fonts = "Phông chữ"
+xobjects = "Số lượng XObject"
+multimedia = "Đa phương tiện"
+
+[getPdfInfo.summary]
+pages = "Trang"
+fileSize = "Kích thước tệp"
+pdfVersion = "Phiên bản PDF"
+language = "Ngôn ngữ"
+title = "Tóm tắt PDF"
+author = "Tác giả"
+created = "Đã tạo"
+modified = "Đã sửa đổi"
+permsAll = "Tất cả quyền được cho phép"
+permsRestricted = "{{count}} giới hạn"
+permsMixed = "Một số quyền bị hạn chế"
+hasCompliance = "Có tiêu chuẩn tuân thủ"
+noCompliance = "Không có tiêu chuẩn tuân thủ"
+basic = "Thông tin cơ bản"
+documentInfo = "Thông tin tài liệu"
+securityTitle = "Trạng thái bảo mật"
+technical = "Kỹ thuật"
+overviewTitle = "Tổng quan PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF đã mã hóa - Có bảo vệ bằng mật khẩu"
+unencrypted = "PDF không mã hóa - Không có bảo vệ bằng mật khẩu"
+
+[getPdfInfo.summary.tech]
+images = "Hình ảnh"
+fonts = "Phông chữ"
+formFields = "Trường biểu mẫu"
+embeddedFiles = "Tệp nhúng"
+javaScript = "JavaScript"
+layers = "Lớp"
+bookmarks = "Dấu trang"
+multimedia = "Đa phương tiện"
+
+[getPdfInfo.summary.overview]
+untitled = "một tài liệu không tiêu đề"
+unknown = "Tác giả không xác định"
+text = "Đây là PDF {{pages}} trang có tiêu đề {{title}} do {{author}} tạo (phiên bản PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Một số tệp không thể xử lý."
+unexpected = "Lỗi không mong muốn trong quá trình trích xuất."
+
+[getPdfInfo.status]
+complete = "Hoàn tất trích xuất"
 
 [extractPage]
 tags = "trích xuất"
@@ -5282,6 +5367,31 @@ error = "Cập nhật trạng thái người dùng thất bại"
 success = "Xóa người dùng thành công"
 error = "Xóa người dùng thất bại"
 
+[workspace.people.changePassword]
+action = "Đổi mật khẩu"
+title = "Đổi mật khẩu"
+subtitle = "Cập nhật mật khẩu cho"
+newPassword = "Mật khẩu mới"
+confirmPassword = "Xác nhận mật khẩu"
+placeholder = "Nhập mật khẩu mới"
+confirmPlaceholder = "Nhập lại mật khẩu mới"
+passwordRequired = "Vui lòng nhập mật khẩu mới"
+passwordMismatch = "Mật khẩu không khớp"
+generateRandom = "Tạo mật khẩu an toàn"
+generatedPreview = "Mật khẩu đã tạo:"
+copyTooltip = "Sao chép vào bộ nhớ tạm"
+copiedToClipboard = "Đã sao chép mật khẩu vào bộ nhớ tạm"
+copyFailed = "Không thể sao chép mật khẩu"
+sendEmail = "Gửi email cho người dùng về thay đổi này"
+includePassword = "Bao gồm mật khẩu mới trong email"
+forcePasswordChange = "Buộc người dùng đổi mật khẩu ở lần đăng nhập tiếp theo"
+emailUnavailable = "Email của người dùng này không phải là địa chỉ email hợp lệ. Đã tắt thông báo."
+smtpDisabled = "Thông báo email yêu cầu bật SMTP trong cài đặt."
+notifyOnly = "Sẽ gửi một email không kèm mật khẩu, cho người dùng biết quản trị viên đã thay đổi mật khẩu."
+submit = "Cập nhật mật khẩu"
+success = "Cập nhật mật khẩu thành công"
+error = "Không thể cập nhật mật khẩu"
+
 [workspace.people.emailInvite]
 tab = "Mời qua Email"
 description = "Nhập hoặc dán email bên dưới, phân tách bằng dấu phẩy. Người dùng sẽ nhận thông tin đăng nhập qua email."
@@ -5815,6 +5925,7 @@ subtitle = "Đăng nhập bằng tài khoản Stirling"
 [setup.selfhosted]
 title = "Đăng nhập vào server"
 subtitle = "Nhập thông tin đăng nhập server"
+link = "hoặc kết nối tới tài khoản tự lưu trữ"
 
 [setup.server]
 title = "Kết nối đến server"
@@ -5833,6 +5944,14 @@ description = "Nhập URL đầy đủ của server Stirling PDF tự lưu trữ
 emptyUrl = "Vui lòng nhập URL server"
 unreachable = "Không thể kết nối đến server"
 testFailed = "Kiểm tra kết nối thất bại"
+configFetch = "Không thể lấy cấu hình máy chủ. Vui lòng kiểm tra URL và thử lại."
+
+[setup.server.error.securityDisabled]
+title = "Chưa bật đăng nhập"
+body = "Máy chủ này chưa bật chức năng đăng nhập. Để kết nối tới máy chủ này, bạn phải bật xác thực:"
+step1 = "Đặt DOCKER_ENABLE_SECURITY=true trong môi trường của bạn"
+step2 = "Hoặc đặt security.enableLogin=true trong settings.yml"
+step3 = "Khởi động lại máy chủ"
 
 [setup.login]
 title = "Đăng nhập"
@@ -5905,6 +6024,7 @@ earlyAccess = "Truy cập sớm"
 reset = "Đặt lại thay đổi"
 downloadJson = "Tải JSON"
 generatePdf = "Tạo PDF"
+saveChanges = "Lưu thay đổi"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tự căn chỉnh văn bản cho vừa hộp"
@@ -5942,6 +6062,8 @@ alpha = "Trình xem alpha này vẫn đang phát triển—một số font, màu
 [pdfTextEditor.empty]
 title = "Chưa tải tài liệu"
 subtitle = "Tải tệp PDF hoặc JSON để bắt đầu chỉnh sửa nội dung văn bản."
+dropzone = "Kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
+dropzoneWithFiles = "Chọn một tệp từ tab Tệp, hoặc kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
 
 [pdfTextEditor.welcomeBanner]
 title = "Chào mừng đến với PDF Text Editor (Truy cập sớm)"

@@ -3036,6 +3036,91 @@ title = "Pridobite informacije o PDF-ju"
 header = "Pridobite informacije o PDF-ju"
 submit = "Pridobi informacije"
 downloadJson = "Prenesite JSON"
+processing = "Pridobivanje informacij..."
+results = "Rezultati"
+noResults = "Za ustvarjanje poročila zaženite orodje."
+downloads = "Prenosi"
+noneDetected = "Ni zaznanih"
+indexTitle = "Kazalo"
+
+[getPdfInfo.report]
+entryLabel = "Celoviti povzetek informacij"
+shortTitle = "Informacije o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metapodatki"
+formFields = "Polja obrazca"
+basicInfo = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+compliance = "Skladnost"
+encryption = "Šifriranje"
+permissions = "Dovoljenja"
+other = "Drugo"
+perPageInfo = "Informacije po strani"
+tableOfContents = "Kazalo vsebine"
+
+[getPdfInfo.other]
+attachments = "Priloge"
+embeddedFiles = "Vdelane datoteke"
+javaScript = "JavaScript"
+layers = "Plasti"
+structureTree = "Drevo strukture"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Velikost"
+annotations = "Opombe"
+images = "Slike"
+links = "Povezave"
+fonts = "Pisave"
+xobjects = "Število XObject"
+multimedia = "Večpredstavnost"
+
+[getPdfInfo.summary]
+pages = "Strani"
+fileSize = "Velikost datoteke"
+pdfVersion = "Različica PDF"
+language = "Jezik"
+title = "Povzetek PDF"
+author = "Avtor"
+created = "Ustvarjeno"
+modified = "Spremenjeno"
+permsAll = "Vsa dovoljenja so dovoljena"
+permsRestricted = "{{count}} omejitev"
+permsMixed = "Nekatera dovoljenja omejena"
+hasCompliance = "Ima standarde skladnosti"
+noCompliance = "Brez standardov skladnosti"
+basic = "Osnovne informacije"
+documentInfo = "Informacije o dokumentu"
+securityTitle = "Varnostno stanje"
+technical = "Tehnično"
+overviewTitle = "Pregled PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifriran PDF - prisotna zaščita z geslom"
+unencrypted = "Nešifriran PDF - brez zaščite z geslom"
+
+[getPdfInfo.summary.tech]
+images = "Slike"
+fonts = "Pisave"
+formFields = "Polja obrazca"
+embeddedFiles = "Vdelane datoteke"
+javaScript = "JavaScript"
+layers = "Plasti"
+bookmarks = "Zaznamki"
+multimedia = "Večpredstavnost"
+
+[getPdfInfo.summary.overview]
+untitled = "neimenovan dokument"
+unknown = "Neznani avtor"
+text = "To je {{pages}}-stranski PDF z naslovom {{title}}, ki ga je ustvaril {{author}} (različica PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Nekaterih datotek ni bilo mogoče obdelati."
+unexpected = "Nepričakovana napaka med pridobivanjem."
+
+[getPdfInfo.status]
+complete = "Pridobivanje zaključeno"
 
 [extractPage]
 tags = "izvleček"
@@ -5282,6 +5367,31 @@ error = "Stanja uporabnika ni bilo mogoče posodobiti"
 success = "Uporabnik uspešno izbrisan"
 error = "Uporabnika ni bilo mogoče izbrisati"
 
+[workspace.people.changePassword]
+action = "Spremeni geslo"
+title = "Spremeni geslo"
+subtitle = "Posodobite geslo za"
+newPassword = "Novo geslo"
+confirmPassword = "Potrdi geslo"
+placeholder = "Vnesite novo geslo"
+confirmPlaceholder = "Znova vnesite novo geslo"
+passwordRequired = "Prosimo, vnesite novo geslo"
+passwordMismatch = "Gesli se ne ujemata"
+generateRandom = "Ustvari varno geslo"
+generatedPreview = "Ustvarjeno geslo:"
+copyTooltip = "Kopiraj v odložišče"
+copiedToClipboard = "Geslo je kopirano v odložišče"
+copyFailed = "Kopiranje gesla ni uspelo"
+sendEmail = "Uporabniku pošlji e-pošto o tej spremembi"
+includePassword = "V e-pošto vključi novo geslo"
+forcePasswordChange = "Prisili uporabnika, da ob naslednji prijavi spremeni geslo"
+emailUnavailable = "E-poštni naslov tega uporabnika ni veljaven. Obvestila so onemogočena."
+smtpDisabled = "Za e-poštna obvestila mora biti v nastavitvah omogočen SMTP."
+notifyOnly = "Poslano bo e-poštno sporočilo brez gesla, ki bo uporabnika obvestilo, da ga je skrbnik spremenil."
+submit = "Posodobi geslo"
+success = "Geslo je bilo uspešno posodobljeno"
+error = "Posodobitev gesla ni uspela"
+
 [workspace.people.emailInvite]
 tab = "E-poštno povabilo"
 description = "Spodaj vnesite ali prilepite e-poštne naslove, ločene z vejicami. Uporabniki bodo prejeli prijavne podatke po e-pošti."
@@ -5815,6 +5925,7 @@ subtitle = "Prijavite se s svojim računom Stirling"
 [setup.selfhosted]
 title = "Prijavite se v strežnik"
 subtitle = "Vnesite poverilnice strežnika"
+link = "ali se povežite z računom na lastnem strežniku"
 
 [setup.server]
 title = "Poveži se s strežnikom"
@@ -5833,6 +5944,14 @@ description = "Vnesite celoten URL svojega samogostovanega strežnika Stirling P
 emptyUrl = "Vnesite URL strežnika"
 unreachable = "Povezava s strežnikom ni uspela"
 testFailed = "Preizkus povezave ni uspel"
+configFetch = "Pridobitev konfiguracije strežnika ni uspela. Preverite URL in poskusite znova."
+
+[setup.server.error.securityDisabled]
+title = "Prijava ni omogočena"
+body = "Na tem strežniku prijava ni omogočena. Za povezavo s tem strežnikom morate omogočiti overjanje:"
+step1 = "V svojem okolju nastavite DOCKER_ENABLE_SECURITY=true"
+step2 = "Ali nastavite security.enableLogin=true v settings.yml"
+step3 = "Znova zaženite strežnik"
 
 [setup.login]
 title = "Prijava"
@@ -5905,6 +6024,7 @@ earlyAccess = "Zgodnji dostop"
 reset = "Ponastavi spremembe"
 downloadJson = "Prenesi JSON"
 generatePdf = "Ustvari PDF"
+saveChanges = "Shrani spremembe"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Samodejno prilagodi besedilo okvirjem"
@@ -5942,6 +6062,8 @@ alpha = "Ta alfa pregledovalnik se še razvija — nekatere pisave, barve, učin
 [pdfTextEditor.empty]
 title = "Ni naloženega dokumenta"
 subtitle = "Naložite datoteko PDF ali JSON, da začnete urejati besedilo."
+dropzone = "Sem povlecite in spustite datoteko PDF ali JSON ali kliknite za brskanje"
+dropzoneWithFiles = "Izberite datoteko na zavihku Datoteke ali sem povlecite in spustite datoteko PDF ali JSON oziroma kliknite za brskanje"
 
 [pdfTextEditor.welcomeBanner]
 title = "Dobrodošli v PDF Text Editor (zgodnji dostop)"

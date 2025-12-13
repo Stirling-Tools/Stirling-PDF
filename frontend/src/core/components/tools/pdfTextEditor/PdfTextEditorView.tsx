@@ -334,6 +334,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
+  const composingGroupsRef = useRef<Set<string>>(new Set());
   const lastSelectedGroupIdRef = useRef<string | null>(null);
   const widthOverridesRef = useRef<Map<string, number>>(widthOverrides);
   const resizingRef = useRef<{
@@ -612,6 +613,18 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       });
     },
     [editingGroupId, onGroupEdit],
+  );
+
+  const handleCompositionStart = useCallback((groupId: string) => {
+    composingGroupsRef.current.add(groupId);
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (element: HTMLElement, pageIndex: number, groupId: string) => {
+      composingGroupsRef.current.delete(groupId);
+      syncEditorValue(element, pageIndex, groupId);
+    },
+    [syncEditorValue],
   );
 
   const handleMergeSelection = useCallback(() => {
@@ -2279,6 +2292,10 @@ const selectionToolbarPosition = useMemo(() => {
                                 contentEditable
                                 suppressContentEditableWarning
                                 data-editor-group={group.id}
+                                onCompositionStart={() => handleCompositionStart(group.id)}
+                                onCompositionEnd={(event) =>
+                                  handleCompositionEnd(event.currentTarget, group.pageIndex, group.id)
+                                }
                                 onFocus={(event) => {
                                   const primaryFont = fontFamily.split(',')[0]?.replace(/['"]/g, '').trim();
                                   if (primaryFont && typeof document !== 'undefined') {
@@ -2300,6 +2317,7 @@ const selectionToolbarPosition = useMemo(() => {
                                   event.stopPropagation();
                                 }}
                                 onBlur={(event) => {
+                                  composingGroupsRef.current.delete(group.id);
                                   syncEditorValue(event.currentTarget, group.pageIndex, group.id, {
                                     skipCaretRestore: true,
                                   });
@@ -2309,6 +2327,9 @@ const selectionToolbarPosition = useMemo(() => {
                                   setEditingGroupId(null);
                                 }}
                                 onInput={(event) => {
+                                  if (composingGroupsRef.current.has(group.id)) {
+                                    return;
+                                  }
                                   syncEditorValue(event.currentTarget, group.pageIndex, group.id);
                                 }}
                                 style={{

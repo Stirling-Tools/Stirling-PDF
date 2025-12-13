@@ -3036,6 +3036,91 @@ title = "Alle Informationen anzeigen"
 header = "Alle Informationen anzeigen"
 submit = "Informationen anzeigen"
 downloadJson = "Als JSON herunterladen"
+processing = "Informationen werden extrahiert..."
+results = "Ergebnisse"
+noResults = "Führen Sie das Tool aus, um einen Bericht zu erstellen."
+downloads = "Downloads"
+noneDetected = "Keine erkannt"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Vollständige Informationsübersicht"
+shortTitle = "PDF-Informationen"
+
+[getPdfInfo.sections]
+metadata = "Metadaten"
+formFields = "Formularfelder"
+basicInfo = "Grundlegende Informationen"
+documentInfo = "Dokumentinformationen"
+compliance = "Compliance"
+encryption = "Verschlüsselung"
+permissions = "Berechtigungen"
+other = "Sonstiges"
+perPageInfo = "Informationen pro Seite"
+tableOfContents = "Inhaltsverzeichnis"
+
+[getPdfInfo.other]
+attachments = "Anhänge"
+embeddedFiles = "Eingebettete Dateien"
+javaScript = "JavaScript"
+layers = "Ebenen"
+structureTree = "Strukturbaum"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Größe"
+annotations = "Anmerkungen"
+images = "Bilder"
+links = "Links"
+fonts = "Schriftarten"
+xobjects = "XObject-Anzahl"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Seiten"
+fileSize = "Dateigröße"
+pdfVersion = "PDF-Version"
+language = "Sprache"
+title = "PDF-Zusammenfassung"
+author = "Autor"
+created = "Erstellt"
+modified = "Geändert"
+permsAll = "Alle Berechtigungen erlaubt"
+permsRestricted = "{{count}} Einschränkungen"
+permsMixed = "Einige Berechtigungen eingeschränkt"
+hasCompliance = "Entspricht Compliance-Standards"
+noCompliance = "Keine Compliance-Standards"
+basic = "Grundlegende Informationen"
+documentInfo = "Dokumentinformationen"
+securityTitle = "Sicherheitsstatus"
+technical = "Technisch"
+overviewTitle = "PDF-Übersicht"
+
+[getPdfInfo.summary.security]
+encrypted = "Verschlüsseltes PDF - Passwortschutz vorhanden"
+unencrypted = "Unverschlüsseltes PDF - Kein Passwortschutz"
+
+[getPdfInfo.summary.tech]
+images = "Bilder"
+fonts = "Schriftarten"
+formFields = "Formularfelder"
+embeddedFiles = "Eingebettete Dateien"
+javaScript = "JavaScript"
+layers = "Ebenen"
+bookmarks = "Lesezeichen"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "ein unbenanntes Dokument"
+unknown = "Unbekannter Autor"
+text = "Dies ist ein {{pages}}-seitiges PDF mit dem Titel {{title}}, erstellt von {{author}} (PDF-Version {{version}})."
+
+[getPdfInfo.error]
+partial = "Einige Dateien konnten nicht verarbeitet werden."
+unexpected = "Unerwarteter Fehler während der Extraktion."
+
+[getPdfInfo.status]
+complete = "Extraktion abgeschlossen"
 
 [extractPage]
 tags = "extrahieren,seite"
@@ -5282,6 +5367,31 @@ error = "Benutzerstatus konnte nicht aktualisiert werden"
 success = "Benutzer erfolgreich gelöscht"
 error = "Benutzer konnte nicht gelöscht werden"
 
+[workspace.people.changePassword]
+action = "Passwort ändern"
+title = "Passwort ändern"
+subtitle = "Passwort aktualisieren für"
+newPassword = "Neues Passwort"
+confirmPassword = "Passwort bestätigen"
+placeholder = "Neues Passwort eingeben"
+confirmPlaceholder = "Neues Passwort erneut eingeben"
+passwordRequired = "Bitte geben Sie ein neues Passwort ein"
+passwordMismatch = "Passwörter stimmen nicht überein"
+generateRandom = "Sicheres Passwort generieren"
+generatedPreview = "Generiertes Passwort:"
+copyTooltip = "In Zwischenablage kopieren"
+copiedToClipboard = "Passwort in die Zwischenablage kopiert"
+copyFailed = "Kopieren des Passworts fehlgeschlagen"
+sendEmail = "Den Benutzer per E-Mail über diese Änderung informieren"
+includePassword = "Neues Passwort in die E-Mail aufnehmen"
+forcePasswordChange = "Benutzer zwingen, das Passwort bei der nächsten Anmeldung zu ändern"
+emailUnavailable = "Die E-Mail-Adresse dieses Benutzers ist keine gültige E-Mail-Adresse. Benachrichtigungen sind deaktiviert."
+smtpDisabled = "E-Mail-Benachrichtigungen erfordern, dass SMTP in den Einstellungen aktiviert ist."
+notifyOnly = "Es wird eine E-Mail ohne das Passwort gesendet, die den Benutzer darüber informiert, dass ein Admin es geändert hat."
+submit = "Passwort aktualisieren"
+success = "Passwort erfolgreich aktualisiert"
+error = "Aktualisieren des Passworts fehlgeschlagen"
+
 [workspace.people.emailInvite]
 tab = "E-Mail-Einladung"
 description = "Geben Sie unten E-Mails ein oder fügen Sie sie ein, getrennt durch Kommas. Benutzer erhalten Anmeldedaten per E-Mail."
@@ -5815,6 +5925,7 @@ subtitle = "Mit Ihrem Stirling-Konto anmelden"
 [setup.selfhosted]
 title = "Am Server anmelden"
 subtitle = "Geben Sie Ihre Server-Anmeldedaten ein"
+link = "oder mit einem selbstgehosteten Konto verbinden"
 
 [setup.server]
 title = "Mit Server verbinden"
@@ -5833,6 +5944,14 @@ description = "Geben Sie die vollständige URL Ihres selbst gehosteten Stirling 
 emptyUrl = "Bitte eine Server-URL eingeben"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
+configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+
+[setup.server.error.securityDisabled]
+title = "Anmeldung nicht aktiviert"
+body = "Auf diesem Server ist die Anmeldung nicht aktiviert. Um eine Verbindung zu diesem Server herzustellen, müssen Sie die Authentifizierung aktivieren:"
+step1 = "Setzen Sie DOCKER_ENABLE_SECURITY=true in Ihrer Umgebung"
+step2 = "Oder setzen Sie security.enableLogin=true in der settings.yml"
+step3 = "Starten Sie den Server neu"
 
 [setup.login]
 title = "Anmelden"
@@ -5905,6 +6024,7 @@ earlyAccess = "Früher Zugriff"
 reset = "Änderungen zurücksetzen"
 downloadJson = "JSON herunterladen"
 generatePdf = "PDF generieren"
+saveChanges = "Änderungen speichern"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Text automatisch in Rahmen einpassen"
@@ -5942,6 +6062,8 @@ alpha = "Dieser Alpha-Viewer entwickelt sich noch weiter – bestimmte Schriften
 [pdfTextEditor.empty]
 title = "Kein Dokument geladen"
 subtitle = "Laden Sie eine PDF- oder JSON-Datei, um mit der Textbearbeitung zu beginnen."
+dropzone = "Ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
+dropzoneWithFiles = "Wählen Sie eine Datei auf der Registerkarte Dateien aus oder ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
 
 [pdfTextEditor.welcomeBanner]
 title = "Willkommen beim PDF-Texteditor (Early Access)"
@@ -6009,8 +6131,8 @@ tags = "text,anmerkung,beschriftung"
 applySignatures = "Text anwenden"
 
 [addText.text]
-name = "Textinhalt"
-placeholder = "Geben Sie den hinzuzufügenden Text ein"
+name = "Text"
+placeholder = "Text eingeben"
 fontLabel = "Schriftart"
 fontSizeLabel = "Schriftgröße"
 fontSizePlaceholder = "Schriftgröße eingeben oder wählen (8-200)"
