@@ -163,6 +163,11 @@ unfavorite = "Fjern fra favoritter"
 fullscreen = "Skift til fuldskærmstilstand"
 sidebar = "Skift til sidepanel-tilstand"
 
+[backendStartup]
+notFoundTitle = "Backend ikke fundet"
+retry = "Prøv igen"
+unreachable = "Programmet kan i øjeblikket ikke forbinde til backend. Kontroller backend-status og netværksforbindelse, og prøv igen."
+
 [zipWarning]
 title = "Stor ZIP-fil"
 message = "Denne ZIP indeholder {{count}} filer. Udpak alligevel?"
@@ -347,7 +352,7 @@ teams = "Teams"
 title = "Konfiguration"
 systemSettings = "Systemindstillinger"
 features = "Funktioner"
-endpoints = "Endpoints"
+endpoints = "Slutpunkter"
 database = "Database"
 advanced = "Avanceret"
 
@@ -359,7 +364,7 @@ connections = "Forbindelser"
 [settings.licensingAnalytics]
 title = "Licensering & Analytics"
 plan = "Plan"
-audit = "Audit"
+audit = "Revision"
 usageAnalytics = "Brugsanalyse"
 
 [settings.policiesPrivacy]
@@ -556,13 +561,13 @@ totalEndpoints = "Endpoints i alt"
 totalVisits = "Besøg i alt"
 showing = "Viser"
 selectedVisits = "Valgte besøg"
-endpoint = "Endpoint"
+endpoint = "Slutpunkt"
 visits = "Besøg"
 percentage = "Procent"
 loading = "Laster..."
 failedToLoad = "Kunne ikke indlæse endpoint-data. Prøv at opdatere."
 home = "Hjem"
-login = "Login"
+login = "Log ind"
 top = "Top"
 numberOfVisits = "Antal besøg"
 visitsTooltip = "Besøg: {0} ({1}% af totalen)"
@@ -914,7 +919,7 @@ title = "Overlejr PDF'er"
 
 [home.pdfTextEditor]
 title = "PDF-teksteditor"
-desc = "Gennemse og rediger Stirling PDF JSON-eksporter med grupperet tekstredigering og regenerering af PDF"
+desc = "Rediger eksisterende tekst og billeder i PDF'er"
 
 [home.addText]
 tags = "tekst,annotering,etiket"
@@ -1176,7 +1181,7 @@ selectFilesPlaceholder = "Vælg filer i hovedvisningen for at komme i gang"
 settings = "Indstillinger"
 conversionCompleted = "Konvertering fuldført"
 results = "Resultater"
-defaultFilename = "converted_file"
+defaultFilename = "konverteret_fil"
 conversionResults = "Konverteringsresultater"
 convertFrom = "Konvertér fra"
 convertTo = "Konvertér til"
@@ -1216,9 +1221,9 @@ pdfaDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Dette vil 
 fileFormat = "Filformat"
 wordDoc = "Word-dokument"
 wordDocExt = "Word-dokument (.docx)"
-odtExt = "OpenDocument Text (.odt)"
+odtExt = "OpenDocument-tekst (.odt)"
 pptExt = "PowerPoint (.pptx)"
-odpExt = "OpenDocument Presentation (.odp)"
+odpExt = "OpenDocument-præsentation (.odp)"
 txtExt = "Almindelig tekst (.txt)"
 rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Valgte filer"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Tegnet signatur"
 defaultImageLabel = "Uploadet signatur"
 defaultTextLabel = "Indtastet signatur"
 saveButton = "Gem signatur"
+savePersonal = "Gem personlig"
+saveShared = "Gem delt"
 saveUnavailable = "Opret først en signatur for at gemme den."
 noChanges = "Nuværende signatur er allerede gemt."
+tempStorageTitle = "Midlertidig browserlagring"
+tempStorageDescription = "Signaturer gemmes kun i din browser. De går tabt, hvis du rydder browserdata eller skifter browser."
+personalHeading = "Personlige signaturer"
+sharedHeading = "Delte signaturer"
+personalDescription = "Kun du kan se disse signaturer."
+sharedDescription = "Alle brugere kan se og bruge disse signaturer."
 
 [sign.saved.type]
 canvas = "Tegning"
@@ -3023,6 +3036,91 @@ title = "Få Info om PDF"
 header = "Få Info om PDF"
 submit = "Få Info"
 downloadJson = "Download JSON"
+processing = "Udtrækker oplysninger..."
+results = "Resultater"
+noResults = "Kør værktøjet for at generere en rapport."
+downloads = "Downloads"
+noneDetected = "Ingen registreret"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Fuldt informationsresumé"
+shortTitle = "PDF-oplysninger"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formularfelter"
+basicInfo = "Grundlæggende info"
+documentInfo = "Dokumentinfo"
+compliance = "Overensstemmelse"
+encryption = "Kryptering"
+permissions = "Tilladelser"
+other = "Andet"
+perPageInfo = "Info pr. side"
+tableOfContents = "Indholdsfortegnelse"
+
+[getPdfInfo.other]
+attachments = "Vedhæftninger"
+embeddedFiles = "Indlejrede filer"
+javaScript = "JavaScript"
+layers = "Lag"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Størrelse"
+annotations = "Anmærkninger"
+images = "Billeder"
+links = "Links"
+fonts = "Skrifttyper"
+xobjects = "Antal XObjects"
+multimedia = "Multimedie"
+
+[getPdfInfo.summary]
+pages = "Sider"
+fileSize = "Filstørrelse"
+pdfVersion = "PDF-version"
+language = "Sprog"
+title = "PDF-resumé"
+author = "Forfatter"
+created = "Oprettet"
+modified = "Ændret"
+permsAll = "Alle tilladelser tilladt"
+permsRestricted = "{{count}} begrænsninger"
+permsMixed = "Nogle tilladelser er begrænsede"
+hasCompliance = "Har overensstemmelsesstandarder"
+noCompliance = "Ingen overensstemmelsesstandarder"
+basic = "Grundlæggende oplysninger"
+documentInfo = "Dokumentoplysninger"
+securityTitle = "Sikkerhedsstatus"
+technical = "Teknisk"
+overviewTitle = "PDF-oversigt"
+
+[getPdfInfo.summary.security]
+encrypted = "Krypteret PDF - med adgangskodebeskyttelse"
+unencrypted = "Ukrypteret PDF - ingen adgangskodebeskyttelse"
+
+[getPdfInfo.summary.tech]
+images = "Billeder"
+fonts = "Skrifttyper"
+formFields = "Formularfelter"
+embeddedFiles = "Indlejrede filer"
+javaScript = "JavaScript"
+layers = "Lag"
+bookmarks = "Bogmærker"
+multimedia = "Multimedie"
+
+[getPdfInfo.summary.overview]
+untitled = "et dokument uden titel"
+unknown = "Ukendt forfatter"
+text = "Dette er en PDF på {{pages}} sider med titlen {{title}}, oprettet af {{author}} (PDF-version {{version}})."
+
+[getPdfInfo.error]
+partial = "Nogle filer kunne ikke behandles."
+unexpected = "Uventet fejl under udtrækning."
+
+[getPdfInfo.status]
+complete = "Udtrækning fuldført"
 
 [extractPage]
 tags = "udtræk"
@@ -3441,6 +3539,9 @@ signinTitle = "Log venligst ind"
 ssoSignIn = "Log ind via Single Sign-on"
 oAuth2AutoCreateDisabled = "OAUTH2 Auto-Opret Bruger Deaktiveret"
 oAuth2AdminBlockedUser = "Registrering eller login af ikke-registrerede brugere er i øjeblikket blokeret. Kontakt venligst administratoren."
+oAuth2RequiresLicense = "OAuth/SSO-login kræver en betalt licens (Server eller Enterprise). Kontakt administratoren for at opgradere din plan."
+saml2RequiresLicense = "SAML-login kræver en betalt licens (Server eller Enterprise). Kontakt administratoren for at opgradere din plan."
+maxUsersReached = "Maksimalt antal brugere er nået for din nuværende licens. Kontakt administratoren for at opgradere din plan eller tilføje flere pladser."
 oauth2RequestNotFound = "Autorisationsanmodning ikke fundet"
 oauth2InvalidUserInfoResponse = "Ugyldigt Brugerinfo Svar"
 oauth2invalidRequest = "Ugyldig Anmodning"
@@ -3774,7 +3875,7 @@ version = "Nuværende udgivelse"
 title = "API-dokumentation"
 header = "API-dokumentation"
 desc = "Se og test Stirling PDF API-endpoints"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,dokumentation,swagger,endepunkter,udvikling"
 
 [cookieBanner.popUp]
 title = "Sådan bruger vi cookies"
@@ -3849,14 +3950,17 @@ fitToWidth = "Tilpas til bredde"
 actualSize = "Faktisk størrelse"
 
 [viewer]
+cannotPreviewFile = "Kan ikke forhåndsvise fil"
+dualPageView = "To-siders visning"
 firstPage = "Første side"
 lastPage = "Sidste side"
-previousPage = "Forrige side"
 nextPage = "Næste side"
+onlyPdfSupported = "Visningen understøtter kun PDF-filer. Denne fil ser ud til at være et andet format."
+previousPage = "Forrige side"
+singlePageView = "Enkelt-sides visning"
+unknownFile = "Ukendt fil"
 zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
-singlePageView = "Enkelt-sides visning"
-dualPageView = "To-siders visning"
 
 [rightRail]
 closeSelected = "Luk valgte filer"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Skift sidepanel"
 exportSelected = "Eksporter valgte sider"
 toggleAnnotations = "Skift visning af annoteringer"
 annotationMode = "Skift annoteringstilstand"
+print = "Udskriv PDF"
 draw = "Tegn"
 save = "Gem"
 saveChanges = "Gem ændringer"
@@ -4238,11 +4343,11 @@ label = "Issuer-URL"
 description = "OAuth2-udbyderens issuer-URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "Klient-ID"
 description = "OAuth2 Client ID fra din udbyder"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "Klienthemmelighed"
 description = "OAuth2 Client Secret fra din udbyder"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4346,7 +4451,7 @@ features = "Funktionsflag"
 processing = "Behandling"
 
 [admin.settings.advanced.endpoints]
-label = "Endpoints"
+label = "Slutpunkter"
 manage = "Administrer API-endpoints"
 description = "Endpointstyring konfigureres via YAML. Se dokumentationen for detaljer om aktivering/deaktivering af specifikke endpoints."
 
@@ -4497,6 +4602,7 @@ description = "URL eller filnavn til impressum (påkrævet i nogle jurisdiktione
 title = "Premium og Enterprise"
 description = "Konfigurer din premium- eller enterprise-licensnøgle."
 license = "Licenskonfiguration"
+noInput = "Angiv en licensnøgle eller fil"
 
 [admin.settings.premium.licenseKey]
 toggle = "Har du en licensnøgle eller en certifikatfil?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Advarsel: Eksisterende licens fundet"
 line1 = "Overskrivning af din nuværende licensnøgle kan ikke fortrydes."
 line2 = "Din tidligere licens går permanent tabt, medmindre du har sikkerhedskopieret den andetsteds."
 line3 = "Vigtigt: Hold licensnøgler private og sikre. Del dem aldrig offentligt."
+
+[admin.settings.premium.inputMethod]
+text = "Licensnøgle"
+file = "Certifikatfil"
+
+[admin.settings.premium.file]
+label = "Licenscertifikatfil"
+description = "Upload din .lic- eller .cert-licensfil fra offlinekøb"
+choose = "Vælg licensfil"
+selected = "Valgt: {{filename}} ({{size}})"
+successMessage = "Licensfil uploadet og aktiveret. Genstart er ikke påkrævet."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv licens"
+file = "Kilde: Licensfil ({{path}})"
+key = "Kilde: Licensnøgle"
+type = "Type: {{type}}"
+noInput = "Angiv en licensnøgle eller upload en certifikatfil"
+success = "Succes"
 
 [admin.settings.premium.enabled]
 label = "Aktivér premium-funktioner"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} valgt"
 download = "Download"
 delete = "Slet"
 unsupported = "Ikke understøttet"
+active = "Aktiv"
 addToUpload = "Føj til upload"
+closeFile = "Luk fil"
 deleteAll = "Slet alle"
 loadingFiles = "Indlæser filer..."
 noFiles = "Ingen filer tilgængelige"
@@ -5135,7 +5262,7 @@ upgrade = "Opgrader nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens påkrævet"
 overLimitBody = "Vores licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brugere. For at fortsætte uden afbrydelser skal du opgradere til Stirling Server-abonnementet – <strong>ubegrænsede pladser</strong>, PDF-tekstredigering og fuld admin-kontrol for $99/server/md."
-freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
+freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser anbefaler vi Stirling Server-planen – <strong>ubegrænsede pladser</strong> og <strong>SSO-understøttelse</strong> for $99/server/md."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5240,6 +5367,31 @@ error = "Kunne ikke opdatere brugerstatus"
 success = "Bruger slettet"
 error = "Kunne ikke slette bruger"
 
+[workspace.people.changePassword]
+action = "Skift adgangskode"
+title = "Skift adgangskode"
+subtitle = "Opdater adgangskoden for"
+newPassword = "Ny adgangskode"
+confirmPassword = "Bekræft adgangskode"
+placeholder = "Indtast en ny adgangskode"
+confirmPlaceholder = "Indtast den nye adgangskode igen"
+passwordRequired = "Angiv en ny adgangskode"
+passwordMismatch = "Adgangskoderne matcher ikke"
+generateRandom = "Generér sikker adgangskode"
+generatedPreview = "Genereret adgangskode:"
+copyTooltip = "Kopiér til udklipsholder"
+copiedToClipboard = "Adgangskode kopieret til udklipsholderen"
+copyFailed = "Kunne ikke kopiere adgangskoden"
+sendEmail = "Send en e-mail til brugeren om denne ændring"
+includePassword = "Medtag den nye adgangskode i e-mailen"
+forcePasswordChange = "Tving brugeren til at ændre adgangskode ved næste login"
+emailUnavailable = "Denne brugers e-mail er ikke en gyldig e-mailadresse. Meddelelser er deaktiveret."
+smtpDisabled = "E-mailmeddelelser kræver, at SMTP er aktiveret i indstillingerne."
+notifyOnly = "Der sendes en e-mail uden adgangskoden, som informerer brugeren om, at en administrator har ændret den."
+submit = "Opdater adgangskode"
+success = "Adgangskoden blev opdateret"
+error = "Kunne ikke opdatere adgangskoden"
+
 [workspace.people.emailInvite]
 tab = "E-mailinvitation"
 description = "Skriv eller indsæt e-mails nedenfor, adskilt af kommaer. Brugere modtager loginoplysninger via e-mail."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Mindst én e-mailadresse er påkrævet"
 submit = "Send invitationer"
 success = "Bruger(e) inviteret"
-partialSuccess = "Nogle invitationer mislykkedes"
+partialFailure = "Nogle invitationer mislykkedes"
 allFailed = "Kunne ikke invitere brugere"
 error = "Kunne ikke sende invitationer"
 
@@ -5291,8 +5443,8 @@ emailDisabled = "E-mailinvitationer kræver SMTP-konfiguration og mail.enableInv
 [workspace.people.license]
 users = "brugere"
 availableSlots = "Tilgængelige pladser"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
+grandfathered = "På gamle vilkår"
+grandfatheredShort = "{{count}} på gamle vilkår"
 fromLicense = "fra licens"
 slotsAvailable = "{{count}} ledig(e) brugerplads(er)"
 noSlotsAvailable = "Ingen pladser tilgængelige"
@@ -5712,7 +5864,7 @@ title = "Diagram over endpoint-brug"
 
 [usage.table]
 title = "Detaljeret statistik"
-endpoint = "Endpoint"
+endpoint = "Slutpunkt"
 visits = "Besøg"
 percentage = "Procent"
 noData = "Ingen data tilgængelige"
@@ -5755,7 +5907,7 @@ label = "Vælg server"
 description = "Selvhostet server"
 
 [setup.step3]
-label = "Login"
+label = "Log ind"
 description = "Indtast loginoplysninger"
 
 [setup.mode.saas]
@@ -5773,6 +5925,7 @@ subtitle = "Log ind med din Stirling-konto"
 [setup.selfhosted]
 title = "Log ind på server"
 subtitle = "Indtast dine server-loginoplysninger"
+link = "eller opret forbindelse til en selvhostet konto"
 
 [setup.server]
 title = "Forbind til server"
@@ -5791,6 +5944,14 @@ description = "Indtast den fulde URL til din selvhostede Stirling PDF-server"
 emptyUrl = "Indtast en server-URL"
 unreachable = "Kunne ikke forbinde til server"
 testFailed = "Forbindelsestest mislykkedes"
+configFetch = "Kunne ikke hente serverkonfiguration. Kontrollér URL'en, og prøv igen."
+
+[setup.server.error.securityDisabled]
+title = "Login ikke aktiveret"
+body = "Denne server har ikke login aktiveret. For at oprette forbindelse til denne server skal du aktivere godkendelse:"
+step1 = "Sæt DOCKER_ENABLE_SECURITY=true i dit miljø"
+step2 = "Eller sæt security.enableLogin=true i settings.yml"
+step3 = "Genstart serveren"
 
 [setup.login]
 title = "Log ind"
@@ -5800,6 +5961,13 @@ submit = "Log ind"
 signInWith = "Log ind med"
 oauthPending = "Åbner browser for godkendelse..."
 orContinueWith = "Eller fortsæt med email"
+serverRequirement = "Bemærk: Serveren skal have login aktiveret."
+showInstructions = "Hvordan aktiveres det?"
+hideInstructions = "Skjul instruktioner"
+instructions = "Sådan aktiverer du login på din Stirling PDF-server:"
+instructionsEnvVar = "Sæt miljøvariablen:"
+instructionsOrYml = "Eller i settings.yml:"
+instructionsRestart = "Genstart derefter serveren, så ændringerne træder i kraft."
 
 [setup.login.username]
 label = "Brugernavn"
@@ -5856,6 +6024,7 @@ earlyAccess = "Tidlig adgang"
 reset = "Nulstil ændringer"
 downloadJson = "Download JSON"
 generatePdf = "Generer PDF"
+saveChanges = "Gem ændringer"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoskalér tekst, så den passer i bokse"
@@ -5893,6 +6062,8 @@ alpha = "Denne alpha-fremviser er stadig under udvikling—visse skrifttyper, fa
 [pdfTextEditor.empty]
 title = "Intet dokument indlæst"
 subtitle = "Indlæs en PDF- eller JSON-fil for at begynde at redigere tekstindhold."
+dropzone = "Træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
+dropzoneWithFiles = "Vælg en fil fra fanen Filer, eller træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Velkommen til PDF-teksteditor (Early Access)"

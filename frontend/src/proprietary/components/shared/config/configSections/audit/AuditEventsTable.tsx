@@ -35,7 +35,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({
     page: 0,
     pageSize: 20,
-  });
+  }, loginEnabled);
 
   useEffect(() => {
     const fetchEvents = async () => {

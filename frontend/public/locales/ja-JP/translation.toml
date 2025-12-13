@@ -163,6 +163,11 @@ unfavorite = "お気に入りから削除"
 fullscreen = "フルスクリーンモードに切り替え"
 sidebar = "サイドバーモードに切り替え"
 
+[backendStartup]
+notFoundTitle = "バックエンドが見つかりません"
+retry = "再試行"
+unreachable = "現在、アプリケーションはバックエンドに接続できません。バックエンドの稼働状況とネットワーク接続を確認し、再度お試しください。"
+
 [zipWarning]
 title = "大きな ZIP ファイル"
 message = "このZIPには{{count}}個のファイルが含まれています。展開しますか？"
@@ -913,8 +918,8 @@ desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
 [home.pdfTextEditor]
-title = "PDFテキストエディター"
-desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
+title = "PDFテキストエディタ"
+desc = "PDF内の既存のテキストと画像を編集"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"
@@ -1176,7 +1181,7 @@ selectFilesPlaceholder = "開始するにはメインビューでファイルを
 settings = "設定"
 conversionCompleted = "変換が完了しました"
 results = "結果"
-defaultFilename = "converted_file"
+defaultFilename = "変換済みファイル"
 conversionResults = "変換結果"
 convertFrom = "変換元"
 convertTo = "変換先"
@@ -1363,7 +1368,7 @@ title = "透かしの追加"
 desc = "PDF ファイルにテキストまたは画像の透かしを追加"
 completed = "透かしを追加しました"
 submit = "透かしを追加"
-filenamePrefix = "watermarked"
+filenamePrefix = "透かし入り"
 
 [watermark.error]
 failed = "PDF への透かし追加中にエラーが発生しました。"
@@ -1638,7 +1643,7 @@ subtitle = "処理済みファイルをダウンロードするか、下で操�
 [removePages]
 tags = "ページを削除,ページ削除"
 title = "削除"
-filenamePrefix = "pages_removed"
+filenamePrefix = "ページ削除済み"
 submit = "削除"
 
 [removePages.pageNumbers]
@@ -1840,7 +1845,7 @@ title = "フォームフィールドから読み取り専用を削除"
 header = "PDFフォームのロックを解除"
 submit = "Remove"
 description = "このツールは PDF フォームフィールドの読み取り専用制限を解除し、編集・入力可能にします。"
-filenamePrefix = "unlocked_forms"
+filenamePrefix = "フォームのロック解除済み"
 
 [unlockPDFForms.files]
 placeholder = "メインビューで PDF ファイルを選択して開始してください"
@@ -1854,7 +1859,7 @@ title = "フォームのロック解除結果"
 [changeMetadata]
 header = "メタデータの変更"
 submit = "変更"
-filenamePrefix = "metadata"
+filenamePrefix = "メタデータ"
 
 [changeMetadata.settings]
 title = "メタデータ設定"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "手書き署名"
 defaultImageLabel = "アップロードした署名"
 defaultTextLabel = "入力した署名"
 saveButton = "署名を保存"
+savePersonal = "個人用として保存"
+saveShared = "共有用として保存"
 saveUnavailable = "まず署名を作成してから保存してください。"
 noChanges = "現在の署名はすでに保存済みです。"
+tempStorageTitle = "ブラウザーの一時ストレージ"
+tempStorageDescription = "署名はブラウザー内のみに保存されます。ブラウザーのデータを消去するか、別のブラウザーに切り替えると失われます。"
+personalHeading = "個人用署名"
+sharedHeading = "共有署名"
+personalDescription = "これらの署名はあなただけが表示できます。"
+sharedDescription = "すべてのユーザーがこれらの署名を表示して使用できます。"
 
 [sign.saved.type]
 canvas = "描画"
@@ -2321,7 +2334,7 @@ title = "平坦化"
 header = "PDFを平坦化する"
 flattenOnlyForms = "フォームのみを平坦にする"
 submit = "平坦化"
-filenamePrefix = "flattened"
+filenamePrefix = "フラット化済み"
 
 [flatten.files]
 placeholder = "開始するにはメインビューで PDF ファイルを選択してください"
@@ -2369,7 +2382,7 @@ title = "修復"
 header = "PDFを修復"
 submit = "修復"
 description = "このツールは破損または損傷した PDF ファイルの修復を試みます。追加の設定は不要です。"
-filenamePrefix = "repaired"
+filenamePrefix = "修復済み"
 
 [repair.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -2570,7 +2583,7 @@ stopButton = "比較を停止"
 [certSign]
 tags = "authenticate,PEM,P12,official,encrypt"
 title = "証明書による署名"
-filenamePrefix = "signed"
+filenamePrefix = "署名済み"
 chooseCertificate = "証明書ファイルを選択"
 chooseJksFile = "JKS ファイルを選択"
 chooseP12File = "PKCS12 ファイルを選択"
@@ -2704,7 +2717,7 @@ header = "PDFから電子証明書を削除する"
 selectPDF = "PDFファイルの選択:"
 submit = "署名の削除"
 description = "このツールは PDF 文書からデジタル証明書署名を削除します。"
-filenamePrefix = "unsigned"
+filenamePrefix = "署名なし"
 
 [removeCertSign.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -3023,6 +3036,91 @@ title = "PDFの情報を入手"
 header = "PDFの情報を入手"
 submit = "情報を入手"
 downloadJson = "JSONでダウンロード"
+processing = "情報を抽出しています..."
+results = "結果"
+noResults = "レポートを生成するにはツールを実行してください。"
+downloads = "ダウンロード"
+noneDetected = "検出なし"
+indexTitle = "インデックス"
+
+[getPdfInfo.report]
+entryLabel = "全情報の概要"
+shortTitle = "PDF情報"
+
+[getPdfInfo.sections]
+metadata = "メタデータ"
+formFields = "フォームフィールド"
+basicInfo = "基本情報"
+documentInfo = "ドキュメント情報"
+compliance = "準拠"
+encryption = "暗号化"
+permissions = "権限"
+other = "その他"
+perPageInfo = "ページごとの情報"
+tableOfContents = "目次"
+
+[getPdfInfo.other]
+attachments = "添付ファイル"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+structureTree = "構造ツリー"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "サイズ"
+annotations = "注釈"
+images = "画像"
+links = "リンク"
+fonts = "フォント"
+xobjects = "XObject の数"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary]
+pages = "ページ数"
+fileSize = "ファイルサイズ"
+pdfVersion = "PDF バージョン"
+language = "言語"
+title = "PDF 概要"
+author = "作成者"
+created = "作成日"
+modified = "更新日"
+permsAll = "すべての権限が許可されています"
+permsRestricted = "{{count}} 件の制限"
+permsMixed = "一部の権限が制限されています"
+hasCompliance = "準拠規格あり"
+noCompliance = "準拠規格なし"
+basic = "基本情報"
+documentInfo = "ドキュメント情報"
+securityTitle = "セキュリティ状態"
+technical = "技術情報"
+overviewTitle = "PDF 概要"
+
+[getPdfInfo.summary.security]
+encrypted = "暗号化された PDF - パスワード保護あり"
+unencrypted = "暗号化されていない PDF - パスワード保護なし"
+
+[getPdfInfo.summary.tech]
+images = "画像"
+fonts = "フォント"
+formFields = "フォームフィールド"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+bookmarks = "ブックマーク"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary.overview]
+untitled = "無題のドキュメント"
+unknown = "不明な作成者"
+text = "これは {{author}} によって作成された、タイトル {{title}} の {{pages}} ページの PDF です（PDF バージョン {{version}}）。"
+
+[getPdfInfo.error]
+partial = "一部のファイルを処理できませんでした。"
+unexpected = "抽出中に予期しないエラーが発生しました。"
+
+[getPdfInfo.status]
+complete = "抽出が完了しました"
 
 [extractPage]
 tags = "抽出"
@@ -3441,6 +3539,9 @@ signinTitle = "サインインしてください"
 ssoSignIn = "シングルサインオンでログイン"
 oAuth2AutoCreateDisabled = "OAuth 2自動作成ユーザーが無効"
 oAuth2AdminBlockedUser = "現在、未登録ユーザーの登録またはログインはブロックされています。管理者にお問い合わせください。"
+oAuth2RequiresLicense = "OAuth/SSO ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+saml2RequiresLicense = "SAML ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+maxUsersReached = "現在のライセンスのユーザー数上限に達しました。プランのアップグレードまたはシート数の追加について、管理者にお問い合わせください。"
 oauth2RequestNotFound = "認証リクエストが見つかりません"
 oauth2InvalidUserInfoResponse = "無効なユーザー情報の応答"
 oauth2invalidRequest = "無効なリクエスト"
@@ -3536,7 +3637,7 @@ title = "PDFを単一ページに変換"
 header = "PDFを単一ページに変換"
 submit = "単一ページに変換"
 description = "このツールは PDF の全ページを 1 つの大きな単一ページに結合します。幅は元のページと同じで、高さは全ページの高さの合計になります。"
-filenamePrefix = "single_page"
+filenamePrefix = "単一ページ"
 
 [pdfToSinglePage.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -3849,14 +3950,17 @@ fitToWidth = "幅に合わせる"
 actualSize = "原寸"
 
 [viewer]
+cannotPreviewFile = "ファイルをプレビューできません"
+dualPageView = "見開き表示"
 firstPage = "最初のページ"
 lastPage = "最後のページ"
-previousPage = "前のページ"
 nextPage = "次のページ"
+onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
+previousPage = "前のページ"
+singlePageView = "単一ページ表示"
+unknownFile = "不明なファイル"
 zoomIn = "拡大"
 zoomOut = "縮小"
-singlePageView = "単一ページ表示"
-dualPageView = "見開き表示"
 
 [rightRail]
 closeSelected = "選択したファイルを閉じる"
@@ -3880,6 +3984,7 @@ toggleSidebar = "サイドバーを切り替え"
 exportSelected = "選択したページを書き出し"
 toggleAnnotations = "注釈の表示を切り替え"
 annotationMode = "注釈モードを切り替え"
+print = "PDFを印刷"
 draw = "描画"
 save = "保存"
 saveChanges = "変更を保存"
@@ -4234,15 +4339,15 @@ label = "プロバイダ"
 description = "認証に使用する OAuth2 プロバイダ"
 
 [admin.settings.connections.oauth2.issuer]
-label = "Issuer URL"
+label = "発行者 URL"
 description = "OAuth2 プロバイダの Issuer URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Client ID"
+label = "クライアント ID"
 description = "プロバイダから発行された OAuth2 の Client ID"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Client Secret"
+label = "クライアント シークレット"
 description = "プロバイダから発行された OAuth2 の Client Secret"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4273,7 +4378,7 @@ label = "プロバイダ"
 description = "SAML2 プロバイダ名"
 
 [admin.settings.connections.saml2.registrationId]
-label = "Registration ID"
+label = "登録 ID"
 description = "SAML2 の登録識別子"
 
 [admin.settings.connections.saml2.autoCreateUser]
@@ -4410,7 +4515,7 @@ description = "より広範なシステム一時ディレクトリをクリー�
 label = "プロセス実行制限"
 description = "各プロセス実行器のセッション上限とタイムアウトを設定"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF to HTML"
+pdfToHtml = "PDF を HTML に"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4497,6 +4602,7 @@ description = "インプリントへの URL またはファイル名（地域に
 title = "プレミアムとエンタープライズ"
 description = "プレミアムまたはエンタープライズのライセンスキーを構成します。"
 license = "ライセンス設定"
+noInput = "ライセンスキーまたはファイルを入力してください"
 
 [admin.settings.premium.licenseKey]
 toggle = "ライセンスキーまたは証明書ファイルをお持ちですか？"
@@ -4513,6 +4619,25 @@ title = "⚠️ 警告: 既存のライセンスを検出"
 line1 = "現在のライセンスキーを上書きすると元に戻せません。"
 line2 = "別途バックアップしていない限り、以前のライセンスは永久に失われます。"
 line3 = "重要: ライセンスキーは秘密に安全に保管してください。公開で共有しないでください。"
+
+[admin.settings.premium.inputMethod]
+text = "ライセンスキー"
+file = "証明書ファイル"
+
+[admin.settings.premium.file]
+label = "ライセンス証明書ファイル"
+description = "オフライン購入の .lic または .cert ライセンスファイルをアップロードしてください"
+choose = "ライセンスファイルを選択"
+selected = "選択済み: {{filename}} ({{size}})"
+successMessage = "ライセンスファイルをアップロードして有効化しました。再起動は不要です。"
+
+[admin.settings.premium.currentLicense]
+title = "有効なライセンス"
+file = "ソース: ライセンスファイル ({{path}})"
+key = "ソース: ライセンスキー"
+type = "種類: {{type}}"
+noInput = "ライセンスキーを入力するか、証明書ファイルをアップロードしてください"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "プレミアム機能を有効化"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} 件選択"
 download = "ダウンロード"
 delete = "削除"
 unsupported = "未対応"
+active = "アクティブ"
 addToUpload = "アップロードに追加"
+closeFile = "ファイルを閉じる"
 deleteAll = "すべて削除"
 loadingFiles = "ファイルを読み込み中..."
 noFiles = "ファイルはありません"
@@ -4672,7 +4799,7 @@ title = "サニタイズ"
 desc = "PDF ファイルから潜在的に有害な要素を削除します。"
 submit = "PDFをサニタイズ"
 completed = "サニタイズが正常に完了しました"
-filenamePrefix = "sanitised"
+filenamePrefix = "サニタイズ済み"
 sanitizationResults = "サニタイズ結果"
 
 [sanitize.error]
@@ -4720,7 +4847,7 @@ title = "パスワードの追加"
 desc = "パスワードで PDF 文書を暗号化します。"
 completed = "パスワード保護を適用しました"
 submit = "暗号化"
-filenamePrefix = "encrypted"
+filenamePrefix = "暗号化済み"
 
 [addPassword.error]
 failed = "PDF の暗号化中にエラーが発生しました。"
@@ -4815,7 +4942,7 @@ text = "これらの権限を変更不可にするには、パスワード追加
 title = "パスワードの削除"
 desc = "PDFからパスワードの削除します。"
 tags = "セキュア,復号,セキュリティ,パスワード解除,パスワード削除"
-filenamePrefix = "decrypted"
+filenamePrefix = "復号済み"
 submit = "削除"
 
 [removePassword.password]
@@ -5135,7 +5262,7 @@ upgrade = "今すぐアップグレード →"
 freeTitle = "サーバーライセンス"
 overLimitTitle = "サーバーライセンスが必要です"
 overLimitBody = "当社のライセンスでは、サーバーごとに <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。現在 <strong>{{overLimitUserCopy}}</strong> の Stirling ユーザーがいます。中断なく利用を続けるには、Stirling Server プランにアップグレードしてください - <strong>無制限席数</strong>、PDF テキスト編集、完全な管理機能が $99/サーバー/月 です。"
-freeBody = "当社の <strong>オープンコア</strong> ライセンスでは、サーバーごとに最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。中断なく拡張し、新しい <strong>PDF テキスト編集ツール</strong> に早期アクセスするには、Stirling Server プランをお勧めします。完全編集と <strong>無制限席数</strong> が $99/サーバー/月 です。"
+freeBody = "当社の<strong>Open-Core</strong>ライセンスでは、サーバーごとに最大<strong>{{freeTierLimit}}</strong>ユーザーまで無料でご利用いただけます。中断なくスケールするには、Stirling Server プランをおすすめします - <strong>無制限の席数</strong>と<strong>SSO サポート</strong>で $99/サーバー/月。"
 
 [onboarding.desktopInstall]
 title = "ダウンロード"
@@ -5240,6 +5367,31 @@ error = "ユーザーのステータスの更新に失敗しました"
 success = "ユーザーを削除しました"
 error = "ユーザーの削除に失敗しました"
 
+[workspace.people.changePassword]
+action = "パスワードを変更"
+title = "パスワードを変更"
+subtitle = "のパスワードを更新"
+newPassword = "新しいパスワード"
+confirmPassword = "パスワードの確認"
+placeholder = "新しいパスワードを入力"
+confirmPlaceholder = "新しいパスワードを再入力"
+passwordRequired = "新しいパスワードを入力してください"
+passwordMismatch = "パスワードが一致しません"
+generateRandom = "安全なパスワードを生成"
+generatedPreview = "生成されたパスワード:"
+copyTooltip = "クリップボードにコピー"
+copiedToClipboard = "パスワードをクリップボードにコピーしました"
+copyFailed = "パスワードのコピーに失敗しました"
+sendEmail = "この変更についてユーザーにメールする"
+includePassword = "メールに新しいパスワードを含める"
+forcePasswordChange = "次回ログイン時にユーザーにパスワード変更を強制する"
+emailUnavailable = "このユーザーのメールは有効なメールアドレスではありません。通知は無効です。"
+smtpDisabled = "メール通知には設定で SMTP を有効にする必要があります。"
+notifyOnly = "パスワードを含めずにメールを送信し、管理者が変更したことをユーザーに知らせます。"
+submit = "パスワードを更新"
+success = "パスワードを更新しました"
+error = "パスワードの更新に失敗しました"
+
 [workspace.people.emailInvite]
 tab = "メール招待"
 description = "下にメールアドレスをカンマ区切りで入力または貼り付けてください。ユーザーにはメールでログイン情報が届きます。"
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "少なくとも1件のメールアドレスが必要です"
 submit = "招待を送信"
 success = "ユーザーを招待しました"
-partialSuccess = "一部の招待に失敗しました"
+partialFailure = "一部の招待に失敗しました"
 allFailed = "ユーザーの招待に失敗しました"
 error = "招待の送信に失敗しました"
 
@@ -5773,6 +5925,7 @@ subtitle = "Stirling アカウントでサインイン"
 [setup.selfhosted]
 title = "サーバーにサインイン"
 subtitle = "サーバーの認証情報を入力"
+link = "またはセルフホスト型アカウントに接続"
 
 [setup.server]
 title = "サーバーに接続"
@@ -5791,6 +5944,14 @@ description = "セルフホストの Stirling PDF サーバーの完全な URL �
 emptyUrl = "サーバー URL を入力してください"
 unreachable = "サーバーに接続できませんでした"
 testFailed = "接続テストに失敗しました"
+configFetch = "サーバー構成の取得に失敗しました。URL を確認して、もう一度お試しください。"
+
+[setup.server.error.securityDisabled]
+title = "ログインが有効になっていません"
+body = "このサーバーではログインが有効になっていません。このサーバーに接続するには、認証を有効にする必要があります:"
+step1 = "環境で DOCKER_ENABLE_SECURITY=true を設定する"
+step2 = "または settings.yml で security.enableLogin=true を設定する"
+step3 = "サーバーを再起動する"
 
 [setup.login]
 title = "サインイン"
@@ -5800,13 +5961,20 @@ submit = "ログイン"
 signInWith = "でサインイン"
 oauthPending = "認証のためブラウザーを開いています..."
 orContinueWith = "またはメールで続行"
+serverRequirement = "注: サーバーでログインを有効にする必要があります。"
+showInstructions = "有効化するには？"
+hideInstructions = "手順を非表示"
+instructions = "Stirling PDF サーバーでログインを有効にするには:"
+instructionsEnvVar = "環境変数を設定:"
+instructionsOrYml = "または settings.yml で:"
+instructionsRestart = "その後、サーバーを再起動して変更を反映させてください。"
 
 [setup.login.username]
 label = "ユーザー名"
 placeholder = "ユーザー名を入力"
 
 [setup.login.email]
-label = "Email"
+label = "メールアドレス"
 placeholder = "メールアドレスを入力"
 
 [setup.login.password]
@@ -5856,6 +6024,7 @@ earlyAccess = "早期アクセス"
 reset = "変更をリセット"
 downloadJson = "JSON をダウンロード"
 generatePdf = "PDF を生成"
+saveChanges = "変更を保存"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ボックスに収まるようテキストを自動スケール"
@@ -5893,6 +6062,8 @@ alpha = "このアルファ版ビューアは開発途上です。一部のフ�
 [pdfTextEditor.empty]
 title = "ドキュメントが読み込まれていません"
 subtitle = "テキスト編集を開始するにはPDFまたはJSONファイルを読み込んでください。"
+dropzone = "ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
+dropzoneWithFiles = "ファイルタブからファイルを選択するか、ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Text Editor（早期アクセス）へようこそ"

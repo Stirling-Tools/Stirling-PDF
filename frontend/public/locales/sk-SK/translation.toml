@@ -99,7 +99,7 @@ visitGithub = "Navštíviť GitHub repozitár"
 donate = "Darovať"
 color = "Farba"
 sponsor = "Sponzorovať"
-info = "Info"
+info = "Informácie"
 pro = "Pro"
 page = "Strana"
 pages = "Strany"
@@ -162,6 +162,11 @@ unfavorite = "Odstrániť z obľúbených"
 [toolPanel.toggle]
 fullscreen = "Prepnúť na režim celej obrazovky"
 sidebar = "Prepnúť na režim bočného panela"
+
+[backendStartup]
+notFoundTitle = "Backend sa nenašiel"
+retry = "Skúsiť znova"
+unreachable = "Aplikácia sa momentálne nedokáže pripojiť k backendu. Overte stav backendu a sieťové pripojenie, potom to skúste znova."
 
 [zipWarning]
 title = "Veľký ZIP súbor"
@@ -274,7 +279,7 @@ iAgreeToThe = "Súhlasím so všetkými"
 terms = "Podmienkami používania"
 accessibility = "Prístupnosť"
 cookie = "Zásady používania súborov cookie"
-impressum = "Impressum"
+impressum = "Impresum"
 showCookieBanner = "Predvoľby súborov cookie"
 
 [pipeline]
@@ -513,7 +518,7 @@ syncToAccount = "Synchronizovať účet <- Prehliadač"
 [adminUserSettings]
 title = "Nastavenia kontroly používateľov"
 header = "Admin nastavenia kontroly používateľov"
-admin = "Admin"
+admin = "Administrátor"
 user = "Používateľ"
 addUser = "Pridať nového používateľa"
 deleteUser = "Odstrániť používateľa"
@@ -914,7 +919,7 @@ title = "Prekrývanie PDF"
 
 [home.pdfTextEditor]
 title = "Editor textu PDF"
-desc = "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
+desc = "Upravujte existujúci text a obrázky v PDF"
 
 [home.addText]
 tags = "text,anotácia,štítok"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Kreslený podpis"
 defaultImageLabel = "Nahraný podpis"
 defaultTextLabel = "Napísaný podpis"
 saveButton = "Uložiť podpis"
+savePersonal = "Uložiť osobné"
+saveShared = "Uložiť zdieľané"
 saveUnavailable = "Najprv vytvorte podpis, aby ste ho mohli uložiť."
 noChanges = "Aktuálny podpis je už uložený."
+tempStorageTitle = "Dočasné úložisko prehliadača"
+tempStorageDescription = "Podpisy sú uložené iba vo vašom prehliadači. Pri vymazaní údajov prehliadača alebo pri zmene prehliadača sa stratia."
+personalHeading = "Osobné podpisy"
+sharedHeading = "Zdieľané podpisy"
+personalDescription = "Tieto podpisy vidíte iba vy."
+sharedDescription = "Všetci používatelia môžu tieto podpisy vidieť a používať."
 
 [sign.saved.type]
 canvas = "Kresba"
@@ -3023,6 +3036,91 @@ title = "Získať informácie o PDF"
 header = "Získať informácie o PDF"
 submit = "Získať info"
 downloadJson = "Stiahnuť JSON"
+processing = "Extrahujú sa informácie..."
+results = "Výsledky"
+noResults = "Spustite nástroj na vygenerovanie prehľadu."
+downloads = "Sťahovania"
+noneDetected = "Nič nebolo zistené"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Úplné zhrnutie informácií"
+shortTitle = "Informácie o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadáta"
+formFields = "Polia formulára"
+basicInfo = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+compliance = "Súlad"
+encryption = "Šifrovanie"
+permissions = "Oprávnenia"
+other = "Iné"
+perPageInfo = "Informácie pre strany"
+tableOfContents = "Obsah"
+
+[getPdfInfo.other]
+attachments = "Prílohy"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Veľkosť"
+annotations = "Anotácie"
+images = "Obrázky"
+links = "Odkazy"
+fonts = "Písma"
+xobjects = "Počty XObjectov"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary]
+pages = "Strany"
+fileSize = "Veľkosť súboru"
+pdfVersion = "Verzia PDF"
+language = "Jazyk"
+title = "Súhrn PDF"
+author = "Autor"
+created = "Vytvorené"
+modified = "Upravené"
+permsAll = "Všetky oprávnenia povolené"
+permsRestricted = "{{count}} obmedzení"
+permsMixed = "Niektoré oprávnenia obmedzené"
+hasCompliance = "Spĺňa štandardy súladu"
+noCompliance = "Žiadne štandardy súladu"
+basic = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+securityTitle = "Stav zabezpečenia"
+technical = "Technické"
+overviewTitle = "Prehľad PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrované PDF - prítomná ochrana heslom"
+unencrypted = "Nešifrované PDF - Bez ochrany heslom"
+
+[getPdfInfo.summary.tech]
+images = "Obrázky"
+fonts = "Písma"
+formFields = "Polia formulára"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+bookmarks = "Záložky"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary.overview]
+untitled = "nepomenovaný dokument"
+unknown = "Neznámy autor"
+text = "Toto je {{pages}}-stranové PDF s názvom {{title}} od autora {{author}} (verzia PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Niektoré súbory sa nepodarilo spracovať."
+unexpected = "Počas extrahovania došlo k neočakávanej chybe."
+
+[getPdfInfo.status]
+complete = "Extrahovanie dokončené"
 
 [extractPage]
 tags = "extrahovať"
@@ -3441,6 +3539,9 @@ signinTitle = "Prosím, prihláste sa"
 ssoSignIn = "Prihlásiť sa cez Single Sign-on"
 oAuth2AutoCreateDisabled = "Vytváranie používateľa cez OAUTH2 je zakázané"
 oAuth2AdminBlockedUser = "Registrácia alebo prihlasovanie neregistrovaných používateľov je momentálne blokované. Kontaktujte administrátora."
+oAuth2RequiresLicense = "Prihlásenie cez OAuth/SSO vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+saml2RequiresLicense = "Prihlásenie cez SAML vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+maxUsersReached = "Bol dosiahnutý maximálny počet používateľov pre vašu aktuálnu licenciu. Obráťte sa na administrátora, aby aktualizoval váš plán alebo pridal ďalšie miesta."
 oauth2RequestNotFound = "Požiadavka na autorizáciu sa nenašla"
 oauth2InvalidUserInfoResponse = "Neplatná odpoveď User Info"
 oauth2invalidRequest = "Neplatná požiadavka"
@@ -3536,7 +3637,7 @@ title = "PDF na jednu stránku"
 header = "PDF na jednu stránku"
 submit = "Konvertovať na jednu stránku"
 description = "Tento nástroj zlúči všetky strany vášho PDF do jednej veľkej stránky. Šírka zostane rovnaká ako pri pôvodných stranách, výška bude súčtom výšok všetkých strán."
-filenamePrefix = "single_page"
+filenamePrefix = "jedna_strana"
 
 [pdfToSinglePage.files]
 placeholder = "Vyberte súbor PDF v hlavnom zobrazení, aby ste začali"
@@ -3774,7 +3875,7 @@ version = "Aktuálne vydanie"
 title = "Dokumentácia API"
 header = "Dokumentácia API"
 desc = "Zobraziť a testovať API endpointy Stirling PDF"
-tags = "api,documentation,swagger,endpoints,development"
+tags = "api,dokumentácia,swagger,endpointy,vývoj"
 
 [cookieBanner.popUp]
 title = "Ako používame súbory cookie"
@@ -3849,14 +3950,17 @@ fitToWidth = "Prispôsobiť šírke"
 actualSize = "Skutočná veľkosť"
 
 [viewer]
+cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
+dualPageView = "Dvojstranové zobrazenie"
 firstPage = "Prvá strana"
 lastPage = "Posledná strana"
-previousPage = "Predchádzajúca strana"
 nextPage = "Nasledujúca strana"
+onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+previousPage = "Predchádzajúca strana"
+singlePageView = "Zobrazenie jednej strany"
+unknownFile = "Neznámy súbor"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
-singlePageView = "Zobrazenie jednej strany"
-dualPageView = "Dvojstranové zobrazenie"
 
 [rightRail]
 closeSelected = "Zavrieť vybrané súbory"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Prepnúť bočný panel"
 exportSelected = "Exportovať vybrané strany"
 toggleAnnotations = "Prepnúť zobrazenie anotácií"
 annotationMode = "Prepnúť režim anotácií"
+print = "Vytlačiť PDF"
 draw = "Kresliť"
 save = "Uložiť"
 saveChanges = "Uložiť zmeny"
@@ -4490,13 +4595,14 @@ label = "Zásady používania súborov cookie"
 description = "URL alebo názov súboru so zásadami používania súborov cookie"
 
 [admin.settings.legal.impressum]
-label = "Impressum"
+label = "Impresum"
 description = "URL alebo názov súboru k Impressu (požadované v niektorých jurisdikciách)"
 
 [admin.settings.premium]
 title = "Premium a Enterprise"
 description = "Nakonfigurujte svoj Premium alebo Enterprise licenčný kľúč."
 license = "Konfigurácia licencie"
+noInput = "Zadajte licenčný kľúč alebo súbor"
 
 [admin.settings.premium.licenseKey]
 toggle = "Máte licenčný kľúč alebo súbor certifikátu?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Upozornenie: Zistená existujúca licencia"
 line1 = "Prepísanie aktuálneho licenčného kľúča nemožno vrátiť späť."
 line2 = "Vaša predchádzajúca licencia bude natrvalo stratená, pokiaľ ju nemáte zálohovanú inde."
 line3 = "Dôležité: Licenčné kľúče uchovávajte súkromné a v bezpečí. Nikdy ich nezdieľajte verejne."
+
+[admin.settings.premium.inputMethod]
+text = "Licenčný kľúč"
+file = "Súbor certifikátu"
+
+[admin.settings.premium.file]
+label = "Súbor licenčného certifikátu"
+description = "Nahrajte svoj licenčný súbor .lic alebo .cert z offline nákupu"
+choose = "Vybrať licenčný súbor"
+selected = "Vybrané: {{filename}} ({{size}})"
+successMessage = "Licenčný súbor bol úspešne nahraný a aktivovaný. Reštart nie je potrebný."
+
+[admin.settings.premium.currentLicense]
+title = "Aktívna licencia"
+file = "Zdroj: Licenčný súbor ({{path}})"
+key = "Zdroj: Licenčný kľúč"
+type = "Typ: {{type}}"
+noInput = "Zadajte licenčný kľúč alebo nahrajte súbor certifikátu"
+success = "Úspech"
 
 [admin.settings.premium.enabled]
 label = "Povoliť Premium funkcie"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} vybraných"
 download = "Stiahnuť"
 delete = "Vymazať"
 unsupported = "Nepodporované"
+active = "Aktívne"
 addToUpload = "Pridať na nahratie"
+closeFile = "Zatvoriť súbor"
 deleteAll = "Odstrániť všetko"
 loadingFiles = "Načítavajú sa súbory..."
 noFiles = "Nie sú dostupné žiadne súbory"
@@ -5135,7 +5262,7 @@ upgrade = "Upgradovať teraz →"
 freeTitle = "Serverová licencia"
 overLimitTitle = "Potrebná serverová licencia"
 overLimitBody = "Naše licencovanie povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> používateľov Stirling. Ak chcete pokračovať bez prerušenia, prejdite na plán Stirling Server - <strong>neobmedzené miesta</strong>, úpravy textu PDF a plná správa pre $99/server/mo."
-freeBody = "Naše licencovanie <strong>Open-Core</strong> povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Ak chcete škálovať bez prerušenia a získať skorý prístup k nášmu novému <strong>nástroju na úpravu textu PDF</strong>, odporúčame plán Stirling Server - plné úpravy a <strong>neobmedzené miesta</strong> za $99/server/mo."
+freeBody = "Naše licencovanie <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> používateľov zadarmo na server. Na plynulé škálovanie odporúčame plán Stirling Server - <strong>neobmedzený počet používateľov</strong> a <strong>podporu SSO</strong> za $99/server/mes."
 
 [onboarding.desktopInstall]
 title = "Stiahnuť"
@@ -5181,7 +5308,7 @@ active = "Aktívny"
 disabled = "Zakázaný"
 activeSession = "Aktívna relácia"
 member = "Člen"
-admin = "Admin"
+admin = "Administrátor"
 editRole = "Upraviť rolu"
 enable = "Povoliť"
 disable = "Zakázať"
@@ -5240,6 +5367,31 @@ error = "Nepodarilo sa aktualizovať stav používateľa"
 success = "Používateľ bol úspešne odstránený"
 error = "Nepodarilo sa odstrániť používateľa"
 
+[workspace.people.changePassword]
+action = "Zmeniť heslo"
+title = "Zmeniť heslo"
+subtitle = "Aktualizovať heslo pre"
+newPassword = "Nové heslo"
+confirmPassword = "Potvrdiť heslo"
+placeholder = "Zadajte nové heslo"
+confirmPlaceholder = "Zadajte nové heslo ešte raz"
+passwordRequired = "Zadajte nové heslo"
+passwordMismatch = "Heslá sa nezhodujú"
+generateRandom = "Vygenerovať bezpečné heslo"
+generatedPreview = "Vygenerované heslo:"
+copyTooltip = "Kopírovať do schránky"
+copiedToClipboard = "Heslo skopírované do schránky"
+copyFailed = "Heslo sa nepodarilo skopírovať"
+sendEmail = "Odoslať používateľovi e-mail o tejto zmene"
+includePassword = "Zahrnúť nové heslo do e-mailu"
+forcePasswordChange = "Vynútiť zmenu hesla pri najbližšom prihlásení"
+emailUnavailable = "E-mailová adresa tohto používateľa nie je platná. Upozornenia sú vypnuté."
+smtpDisabled = "E-mailové upozornenia vyžadujú, aby bolo v nastaveniach povolené SMTP."
+notifyOnly = "Odošle sa e-mail bez hesla, ktorý používateľa informuje, že ho zmenil administrátor."
+submit = "Aktualizovať heslo"
+success = "Heslo bolo úspešne aktualizované"
+error = "Heslo sa nepodarilo aktualizovať"
+
 [workspace.people.emailInvite]
 tab = "Pozvánka e-mailom"
 description = "Nižšie napíšte alebo vložte e-mailové adresy oddelené čiarkami. Používatelia dostanú prihlasovacie údaje e-mailom."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Vyžaduje sa aspoň jedna e-mailová adresa"
 submit = "Odoslať pozvánky"
 success = "Používatelia boli úspešne pozvaní"
-partialSuccess = "Niektoré pozvánky zlyhali"
+partialFailure = "Niektoré pozvánky zlyhali"
 allFailed = "Nepodarilo sa pozvať používateľov"
 error = "Nepodarilo sa odoslať pozvánky"
 
@@ -5773,6 +5925,7 @@ subtitle = "Prihláste sa pomocou svojho účtu Stirling"
 [setup.selfhosted]
 title = "Prihlásiť sa na server"
 subtitle = "Zadajte prihlasovacie údaje k serveru"
+link = "alebo sa pripojte k self-hosted účtu"
 
 [setup.server]
 title = "Pripojiť sa na server"
@@ -5791,6 +5944,14 @@ description = "Zadajte úplnú URL svojho self-hostovaného servera Stirling PDF
 emptyUrl = "Zadajte URL servera"
 unreachable = "Nedá sa pripojiť k serveru"
 testFailed = "Test pripojenia zlyhal"
+configFetch = "Nepodarilo sa načítať konfiguráciu servera. Skontrolujte URL a skúste to znova."
+
+[setup.server.error.securityDisabled]
+title = "Prihlásenie nie je povolené"
+body = "Na tomto serveri nie je povolené prihlásenie. Ak sa chcete pripojiť k tomuto serveru, musíte povoliť overenie:"
+step1 = "Nastavte DOCKER_ENABLE_SECURITY=true vo svojom prostredí"
+step2 = "Alebo nastavte security.enableLogin=true v súbore settings.yml"
+step3 = "Reštartujte server"
 
 [setup.login]
 title = "Prihlásiť sa"
@@ -5800,13 +5961,20 @@ submit = "Prihlásiť sa"
 signInWith = "Prihlásiť sa cez"
 oauthPending = "Otvára sa prehliadač na overenie..."
 orContinueWith = "Alebo pokračujte emailom"
+serverRequirement = "Poznámka: Na serveri musí byť povolené prihlásenie."
+showInstructions = "Ako povoliť?"
+hideInstructions = "Skryť pokyny"
+instructions = "Na povolenie prihlásenia na vašom serveri Stirling PDF:"
+instructionsEnvVar = "Nastavte premennú prostredia:"
+instructionsOrYml = "Alebo v súbore settings.yml:"
+instructionsRestart = "Potom reštartujte server, aby sa zmeny prejavili."
 
 [setup.login.username]
 label = "Používateľské meno"
 placeholder = "Zadajte používateľské meno"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Zadajte svoj email"
 
 [setup.login.password]
@@ -5843,7 +6011,7 @@ paragraph = "Strana s odsekmi"
 sparse = "Riedky text"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automaticky"
 paragraph = "Odsek"
 singleLine = "Jeden riadok"
 
@@ -5856,6 +6024,7 @@ earlyAccess = "Skorý prístup"
 reset = "Resetovať zmeny"
 downloadJson = "Stiahnuť JSON"
 generatePdf = "Vygenerovať PDF"
+saveChanges = "Uložiť zmeny"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky prispôsobiť text do boxov"
@@ -5893,6 +6062,8 @@ alpha = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efe
 [pdfTextEditor.empty]
 title = "Žiadny dokument nie je načítaný"
 subtitle = "Načítajte súbor PDF alebo JSON a začnite upravovať textový obsah."
+dropzone = "Pretiahnite sem súbor PDF alebo JSON, alebo kliknite pre prehľadanie"
+dropzoneWithFiles = "Vyberte súbor na karte Súbory, alebo sem presuňte súbor PDF alebo JSON, prípadne kliknite pre prehľadanie"
 
 [pdfTextEditor.welcomeBanner]
 title = "Vitajte v PDF Text Editore (Early Access)"

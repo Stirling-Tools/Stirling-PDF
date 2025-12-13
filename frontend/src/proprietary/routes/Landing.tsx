@@ -1,11 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@app/auth/UseSession'
 import { useAppConfig } from '@app/contexts/AppConfigContext'
 import HomePage from '@app/pages/HomePage'
-// Login component is used via routing, not directly imported
-import FirstLoginModal from '@app/components/shared/FirstLoginModal'
-import { accountService } from '@app/services/accountService'
 import { useBackendProbe } from '@app/hooks/useBackendProbe'
 import AuthLayout from '@app/routes/authShared/AuthLayout'
 import LoginHeader from '@app/routes/login/LoginHeader'
@@ -19,15 +16,12 @@ import { useTranslation } from 'react-i18next'
  * If user is not authenticated: Show Login or redirect to /login
  */
 export default function Landing() {
-  const { session, loading: authLoading, refreshSession } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { config, loading: configLoading, refetch } = useAppConfig();
   const backendProbe = useBackendProbe();
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [checkingFirstLogin, setCheckingFirstLogin] = useState(false);
-  const [username, setUsername] = useState('');
 
   const loading = authLoading || configLoading || backendProbe.loading;
 
@@ -51,41 +45,11 @@ export default function Landing() {
     return () => window.clearInterval(intervalId);
   }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch]);
 
-  // Check if user needs to change password on first login
-  useEffect(() => {
-    const checkFirstLogin = async () => {
-      if (session && config?.enableLogin !== false) {
-        try {
-          setCheckingFirstLogin(true)
-          const accountData = await accountService.getAccountData()
-          setUsername(accountData.username)
-          setIsFirstLogin(accountData.changeCredsFlag)
-        } catch (err) {
-          console.error('Failed to check first login status:', err)
-          // If account endpoint fails (404), user probably doesn't have security enabled
-          setIsFirstLogin(false)
-        } finally {
-          setCheckingFirstLogin(false)
-        }
-      }
-    }
-
-    checkFirstLogin()
-  }, [session, config])
-
   useEffect(() => {
     if (backendProbe.status === 'up') {
       void refetch();
     }
   }, [backendProbe.status, refetch]);
-
-  const handlePasswordChanged = async () => {
-    // After password change, backend logs out the user
-    // Refresh session to detect logout and redirect to login
-    setIsFirstLogin(false) // Close modal first
-    await refreshSession()
-    // The auth system will automatically redirect to login when session is null
-  }
 
   console.log('[Landing] State:', {
     pathname: location.pathname,
@@ -95,7 +59,7 @@ export default function Landing() {
   });
 
   // Show loading while checking auth and config
-  if (loading || checkingFirstLogin) {
+  if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="text-center">
@@ -154,17 +118,9 @@ export default function Landing() {
   }
 
   // If we have a session, show the main app
+  // Note: First login password change is now handled by the onboarding flow
   if (session) {
-    return (
-      <>
-        <FirstLoginModal
-          opened={isFirstLogin}
-          onPasswordChanged={handlePasswordChanged}
-          username={username}
-        />
-        <HomePage />
-      </>
-    );
+    return <HomePage />;
   }
 
   // No session - redirect to login page

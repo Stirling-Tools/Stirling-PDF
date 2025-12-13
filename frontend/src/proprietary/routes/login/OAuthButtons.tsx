@@ -1,27 +1,32 @@
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
 
 // OAuth provider configuration - maps provider ID to display info
-export const oauthProviderConfig = {
+// Known providers get custom icons; unknown providers use generic SSO icon
+export const oauthProviderConfig: Record<string, { label: string; file: string }> = {
   google: { label: 'Google', file: 'google.svg' },
   github: { label: 'GitHub', file: 'github.svg' },
   apple: { label: 'Apple', file: 'apple.svg' },
   azure: { label: 'Microsoft', file: 'microsoft.svg' },
-  // microsoft and azure are the same, keycloak and oidc need their own icons
-  // These are commented out from debug view since they need proper icons or backend doesn't use them
-  // keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
-  // oidc: { label: 'OIDC', file: 'oidc.svg' }
+  keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
+  cloudron: { label: 'Cloudron', file: 'cloudron.svg' },
+  authentik: { label: 'Authentik', file: 'authentik.svg' },
+  oidc: { label: 'OIDC', file: 'oidc.svg' }
 };
 
+// Generic fallback for unknown providers
+const GENERIC_PROVIDER_ICON = 'oidc.svg';
+
 interface OAuthButtonsProps {
-  onProviderClick: (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => void
+  onProviderClick: (provider: OAuthProvider) => void
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
-  enabledProviders?: string[]  // List of enabled provider IDs from backend
+  enabledProviders?: OAuthProvider[]  // List of enabled provider IDs from backend
 }
 
 export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {
@@ -32,13 +37,22 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
     ? Object.keys(oauthProviderConfig)
     : enabledProviders;
 
-  // Filter to only show enabled providers from backend
-  const providers = providersToShow
-    .filter(id => id in oauthProviderConfig)
-    .map(id => ({
+  // Build provider list - use provider ID to determine icon and label
+  const providers = providersToShow.map(id => {
+    if (id in oauthProviderConfig) {
+      // Known provider - use predefined icon and label
+      return {
+        id,
+        ...oauthProviderConfig[id]
+      };
+    }
+    // Unknown provider - use generic icon and capitalize ID for label
+    return {
       id,
-      ...oauthProviderConfig[id as keyof typeof oauthProviderConfig]
-    }));
+      label: id.charAt(0).toUpperCase() + id.slice(1),
+      file: GENERIC_PROVIDER_ICON
+    };
+  });
 
   // If no providers are enabled, don't render anything
   if (providers.length === 0) {
@@ -51,7 +65,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         {providers.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -70,7 +84,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         {providers.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -88,7 +102,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       {providers.map((p) => (
         <button
           key={p.id}
-          onClick={() => onProviderClick(p.id as any)}
+          onClick={() => onProviderClick(p.id)}
           disabled={isSubmitting}
           className="oauth-button-vertical"
           title={p.label}

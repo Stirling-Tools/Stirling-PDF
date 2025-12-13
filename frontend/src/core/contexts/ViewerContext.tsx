@@ -18,6 +18,7 @@ import {
   SearchActions,
   ExportActions,
   BookmarkActions,
+  PrintActions,
 } from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
@@ -79,6 +80,14 @@ interface ViewerContextType {
   isBookmarkSidebarVisible: boolean;
   toggleBookmarkSidebar: () => void;
 
+  // Search interface visibility
+  isSearchInterfaceVisible: boolean;
+  searchInterfaceActions: {
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+  };
+
   // Annotation visibility toggle
   isAnnotationsVisible: boolean;
   toggleAnnotationsVisibility: () => void;
@@ -125,6 +134,7 @@ interface ViewerContextType {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 
   // Bridge registration - internal use by bridges  
   registerBridge: <K extends BridgeKey>(
@@ -143,6 +153,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
+  const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -203,6 +214,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleBookmarkSidebar = () => {
     setIsBookmarkSidebarVisible(prev => !prev);
+  };
+
+  const searchInterfaceActions = {
+    open: () => setSearchInterfaceVisible(true),
+    close: () => setSearchInterfaceVisible(false),
+    toggle: () => setSearchInterfaceVisible(prev => !prev),
   };
 
   const toggleAnnotationsVisibility = () => {
@@ -277,6 +294,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
   } = createViewerActions({
     registry: bridgeRefs,
     getScrollState,
@@ -290,6 +308,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
     toggleBookmarkSidebar,
+
+    // Search interface
+    isSearchInterfaceVisible,
+    searchInterfaceActions,
 
     // Annotation controls
     isAnnotationsVisible,
@@ -333,6 +355,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
 
     // Bridge registration
     registerBridge,

@@ -12,7 +12,6 @@ import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions } from
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
-import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
@@ -21,6 +20,7 @@ import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -77,12 +77,12 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
       <RainbowThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
-            <OnboardingProvider>
               <AppConfigProvider
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
                 <ScarfTrackingInitializer />
+                <AppConfigLoader />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                   <AppInitializer />
                   <BrandingAssetManager />
@@ -113,7 +113,6 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                     </ToolRegistryProvider>
                   </FileContextProvider>
               </AppConfigProvider>
-            </OnboardingProvider>
           </BannerProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>

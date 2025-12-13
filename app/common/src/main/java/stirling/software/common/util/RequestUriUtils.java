@@ -26,6 +26,7 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/public/")
                 || normalizedUri.startsWith("/pdfjs/")
                 || normalizedUri.startsWith("/pdfjs-legacy/")
+                || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
                 || normalizedUri.startsWith("/Login/")
@@ -39,6 +40,7 @@ public class RequestUriUtils {
         // Specific static files bundled with the frontend
         if (normalizedUri.equals("/robots.txt")
                 || normalizedUri.equals("/favicon.ico")
+                || normalizedUri.equals("/manifest.json")
                 || normalizedUri.equals("/site.webmanifest")
                 || normalizedUri.equals("/manifest-classic.json")
                 || normalizedUri.equals("/index.html")) {
@@ -60,7 +62,8 @@ public class RequestUriUtils {
                 || normalizedUri.endsWith(".css")
                 || normalizedUri.endsWith(".mjs")
                 || normalizedUri.endsWith(".html")
-                || normalizedUri.endsWith(".toml");
+                || normalizedUri.endsWith(".toml")
+                || normalizedUri.endsWith(".wasm");
     }
 
     public static boolean isFrontendRoute(String contextPath, String requestURI) {
@@ -124,11 +127,13 @@ public class RequestUriUtils {
                 || requestURI.endsWith("popularity.txt")
                 || requestURI.endsWith(".js")
                 || requestURI.endsWith(".toml")
+                || requestURI.endsWith(".wasm")
                 || requestURI.contains("swagger")
                 || requestURI.startsWith("/api/v1/info")
                 || requestURI.startsWith("/site.webmanifest")
                 || requestURI.startsWith("/fonts")
-                || requestURI.startsWith("/pdfjs"));
+                || requestURI.startsWith("/pdfjs")
+                || requestURI.startsWith("/pdfium"));
     }
 
     /**
@@ -159,10 +164,11 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith(
                         "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
                 // enableLogin)
-                || trimmedUri.startsWith("/v1/api-docs")
+                || trimmedUri.startsWith(
+                        "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
-                || trimmedUri.contains("/v1/api-docs");
+                || trimmedUri.startsWith("/v1/api-docs");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

@@ -131,7 +131,7 @@ unsupported = "Nieobsługiwane"
 
 [toolPanel]
 placeholder = "Wybierz narzędzie, aby zacząć"
-alpha = "Alpha"
+alpha = "Alfa"
 premiumFeature = "Funkcja premium:"
 comingSoon = "Wkrótce:"
 
@@ -162,6 +162,11 @@ unfavorite = "Usuń z ulubionych"
 [toolPanel.toggle]
 fullscreen = "Przełącz na tryb pełnoekranowy"
 sidebar = "Przełącz na tryb paska bocznego"
+
+[backendStartup]
+notFoundTitle = "Nie znaleziono backendu"
+retry = "Spróbuj ponownie"
+unreachable = "Aplikacja nie może obecnie połączyć się z backendem. Sprawdź stan backendu i łączność sieciową, a następnie spróbuj ponownie."
 
 [zipWarning]
 title = "Duży plik ZIP"
@@ -563,7 +568,7 @@ loading = "Ładowanie..."
 failedToLoad = "Nie udało się załadować danych punktów końcowych. Spróbuj odświeżyć."
 home = "Strona główna"
 login = "Logowanie"
-top = "Top"
+top = "Najlepsze"
 numberOfVisits = "Liczba wizyt"
 visitsTooltip = "Wizyty: {0} ({1}% całości)"
 retry = "Spróbuj ponownie"
@@ -914,7 +919,7 @@ title = "Nałóż PDFa"
 
 [home.pdfTextEditor]
 title = "Edytor tekstu PDF"
-desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
+desc = "Edytuj istniejący tekst i obrazy w plikach PDF"
 
 [home.addText]
 tags = "tekst,adnotacja,etykieta"
@@ -1220,7 +1225,7 @@ odtExt = "Tekst OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Prezentacja OpenDocument (.odp)"
 txtExt = "Tekst niesformatowany (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Format RTF (.rtf)"
 selectedFiles = "Wybrane pliki"
 noFileSelected = "Nie wybrano pliku. Użyj panelu plików, aby dodać pliki."
 convertFiles = "Konwertuj pliki"
@@ -2262,8 +2267,16 @@ defaultCanvasLabel = "Podpis rysowany"
 defaultImageLabel = "Przesłany podpis"
 defaultTextLabel = "Podpis wpisany"
 saveButton = "Zapisz podpis"
+savePersonal = "Zapisz osobiste"
+saveShared = "Zapisz udostępnione"
 saveUnavailable = "Najpierw utwórz podpis, aby go zapisać."
 noChanges = "Bieżący podpis jest już zapisany."
+tempStorageTitle = "Tymczasowe przechowywanie w przeglądarce"
+tempStorageDescription = "Podpisy są przechowywane tylko w Twojej przeglądarce. Zostaną utracone po wyczyszczeniu danych przeglądarki lub zmianie przeglądarki."
+personalHeading = "Osobiste podpisy"
+sharedHeading = "Udostępnione podpisy"
+personalDescription = "Tylko Ty widzisz te podpisy."
+sharedDescription = "Wszyscy użytkownicy mogą widzieć i używać tych podpisów."
 
 [sign.saved.type]
 canvas = "Rysunek"
@@ -3023,6 +3036,91 @@ title = "Pobierz informacje o pliku PDF"
 header = "Pobierz informacje o pliku PDF"
 submit = "Pobierz informacje"
 downloadJson = "Pobierz JSON z zawartością"
+processing = "Wyodrębnianie informacji..."
+results = "Wyniki"
+noResults = "Uruchom narzędzie, aby wygenerować raport."
+downloads = "Pobrania"
+noneDetected = "Nic nie wykryto"
+indexTitle = "Indeks"
+
+[getPdfInfo.report]
+entryLabel = "Pełne podsumowanie informacji"
+shortTitle = "Informacje o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadane"
+formFields = "Pola formularza"
+basicInfo = "Informacje podstawowe"
+documentInfo = "Informacje o dokumencie"
+compliance = "Zgodność"
+encryption = "Szyfrowanie"
+permissions = "Uprawnienia"
+other = "Inne"
+perPageInfo = "Informacje dla każdej strony"
+tableOfContents = "Spis treści"
+
+[getPdfInfo.other]
+attachments = "Załączniki"
+embeddedFiles = "Osadzone pliki"
+javaScript = "JavaScript"
+layers = "Warstwy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Rozmiar"
+annotations = "Adnotacje"
+images = "Obrazy"
+links = "Linki"
+fonts = "Czcionki"
+xobjects = "Liczba XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Strony"
+fileSize = "Rozmiar pliku"
+pdfVersion = "Wersja PDF"
+language = "Język"
+title = "Podsumowanie PDF"
+author = "Autor"
+created = "Utworzono"
+modified = "Zmodyfikowano"
+permsAll = "Wszystkie uprawnienia dozwolone"
+permsRestricted = "{{count}} ograniczeń"
+permsMixed = "Niektóre uprawnienia ograniczone"
+hasCompliance = "Spełnia standardy zgodności"
+noCompliance = "Brak standardów zgodności"
+basic = "Informacje podstawowe"
+documentInfo = "Informacje o dokumencie"
+securityTitle = "Stan zabezpieczeń"
+technical = "Techniczne"
+overviewTitle = "Przegląd PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Zaszyfrowany PDF - obecne zabezpieczenie hasłem"
+unencrypted = "Niezaszyfrowany PDF - brak zabezpieczenia hasłem"
+
+[getPdfInfo.summary.tech]
+images = "Obrazy"
+fonts = "Czcionki"
+formFields = "Pola formularza"
+embeddedFiles = "Osadzone pliki"
+javaScript = "JavaScript"
+layers = "Warstwy"
+bookmarks = "Zakładki"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "niezatytułowany dokument"
+unknown = "Nieznany autor"
+text = "To jest {{pages}}-stronicowy plik PDF zatytułowany {{title}}, utworzony przez {{author}} (wersja PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Niektórych plików nie udało się przetworzyć."
+unexpected = "Nieoczekiwany błąd podczas wyodrębniania."
+
+[getPdfInfo.status]
+complete = "Zakończono wyodrębnianie"
 
 [extractPage]
 tags = "wydobycie,separacja,wyciaganie"
@@ -3441,6 +3539,9 @@ signinTitle = "Zaloguj się"
 ssoSignIn = "Zaloguj się za pomocą logowania jednokrotnego"
 oAuth2AutoCreateDisabled = "Wyłączono automatyczne tworzenie użytkownika OAUTH2"
 oAuth2AdminBlockedUser = "Rejestracja lub logowanie niezarejestrowanych użytkowników jest obecnie zablokowane. Prosimy o kontakt z administratorem."
+oAuth2RequiresLicense = "Logowanie OAuth/SSO wymaga płatnej licencji (Server lub Enterprise). Skontaktuj się z administratorem, aby uaktualnić swój plan."
+saml2RequiresLicense = "Logowanie SAML wymaga płatnej licencji (Server lub Enterprise). Skontaktuj się z administratorem, aby uaktualnić swój plan."
+maxUsersReached = "Osiągnięto maksymalną liczbę użytkowników dla Twojej obecnej licencji. Skontaktuj się z administratorem, aby uaktualnić plan lub dodać więcej miejsc."
 oauth2RequestNotFound = "Błąd logowania OAuth2"
 oauth2InvalidUserInfoResponse = "Niewłaściwe dane logowania"
 oauth2invalidRequest = "Nieprawidłowe żądanie"
@@ -3536,7 +3637,7 @@ title = "PDF do pojedyńczej strony"
 header = "PDF do pojedyńczej strony"
 submit = "Zapisz dokument jako PDF z jedną stroną"
 description = "To narzędzie scali wszystkie strony Twojego PDF w jedną dużą stronę. Szerokość pozostanie taka jak w oryginalnych stronach, a wysokość będzie sumą wysokości wszystkich stron."
-filenamePrefix = "single_page"
+filenamePrefix = "pojedyncza_strona"
 
 [pdfToSinglePage.files]
 placeholder = "Wybierz plik PDF w widoku głównym, aby rozpocząć"
@@ -3849,14 +3950,17 @@ fitToWidth = "Dopasuj do szerokości"
 actualSize = "Rzeczywisty rozmiar"
 
 [viewer]
+cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
+dualPageView = "Widok dwóch stron"
 firstPage = "Pierwsza strona"
 lastPage = "Ostatnia strona"
-previousPage = "Poprzednia strona"
 nextPage = "Następna strona"
+onlyPdfSupported = "Przeglądarka obsługuje tylko pliki PDF. Ten plik wydaje się mieć inny format."
+previousPage = "Poprzednia strona"
+singlePageView = "Widok pojedynczej strony"
+unknownFile = "Nieznany plik"
 zoomIn = "Powiększ"
 zoomOut = "Pomniejsz"
-singlePageView = "Widok pojedynczej strony"
-dualPageView = "Widok dwóch stron"
 
 [rightRail]
 closeSelected = "Zamknij wybrane pliki"
@@ -3880,6 +3984,7 @@ toggleSidebar = "Przełącz panel boczny"
 exportSelected = "Eksportuj wybrane strony"
 toggleAnnotations = "Przełącz widoczność adnotacji"
 annotationMode = "Przełącz tryb adnotacji"
+print = "Drukuj PDF"
 draw = "Rysuj"
 save = "Zapisz"
 saveChanges = "Zapisz zmiany"
@@ -4156,7 +4261,7 @@ description = "Śledź działania użytkowników i zdarzenia systemowe na potrze
 
 [admin.settings.security.audit.level]
 label = "Poziom audytu"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=WYŁ., 1=PODSTAWOWY, 2=STANDARDOWY, 3=SZCZEGÓŁOWY"
 
 [admin.settings.security.audit.retentionDays]
 label = "Przechowywanie audytu (dni)"
@@ -4497,6 +4602,7 @@ description = "URL lub nazwa pliku do impressum (wymagane w niektórych jurysdyk
 title = "Premium i Enterprise"
 description = "Skonfiguruj swój klucz licencyjny premium lub enterprise."
 license = "Konfiguracja licencji"
+noInput = "Podaj klucz licencyjny lub plik"
 
 [admin.settings.premium.licenseKey]
 toggle = "Masz klucz licencyjny lub plik certyfikatu?"
@@ -4513,6 +4619,25 @@ title = "⚠️ Ostrzeżenie: wykryto istniejącą licencję"
 line1 = "Nadpisania bieżącego klucza licencyjnego nie można cofnąć."
 line2 = "Poprzednia licencja zostanie trwale utracona, jeśli nie masz jej kopii zapasowej."
 line3 = "Ważne: przechowuj klucze licencyjne prywatnie i bezpiecznie. Nigdy nie udostępniaj ich publicznie."
+
+[admin.settings.premium.inputMethod]
+text = "Klucz licencyjny"
+file = "Plik certyfikatu"
+
+[admin.settings.premium.file]
+label = "Plik certyfikatu licencji"
+description = "Prześlij swój plik licencji .lic lub .cert z zakupów offline"
+choose = "Wybierz plik licencji"
+selected = "Wybrano: {{filename}} ({{size}})"
+successMessage = "Plik licencji przesłano i pomyślnie aktywowano. Ponowne uruchomienie nie jest wymagane."
+
+[admin.settings.premium.currentLicense]
+title = "Aktywna licencja"
+file = "Źródło: plik licencji ({{path}})"
+key = "Źródło: klucz licencyjny"
+type = "Typ: {{type}}"
+noInput = "Podaj klucz licencyjny lub prześlij plik certyfikatu"
+success = "Sukces"
 
 [admin.settings.premium.enabled]
 label = "Włącz funkcje premium"
@@ -4647,7 +4772,9 @@ selectedCount = "{{count}} wybrane"
 download = "Pobierz"
 delete = "usuń"
 unsupported = "Nieobsługiwane"
+active = "Aktywny"
 addToUpload = "Dodaj do przesyłania"
+closeFile = "Zamknij plik"
 deleteAll = "Usuń wszystko"
 loadingFiles = "Ładowanie plików..."
 noFiles = "Brak dostępnych plików"
@@ -5135,7 +5262,7 @@ upgrade = "Ulepsz teraz →"
 freeTitle = "Licencja serwera"
 overLimitTitle = "Wymagana licencja serwera"
 overLimitBody = "Nasza licencja pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Masz <strong>{{overLimitUserCopy}}</strong> użytkowników Stirling. Aby kontynuować bez przerw, przejdź na plan Stirling Server – <strong>nielimitowane miejsca</strong>, edycja tekstu PDF i pełna kontrola administracyjna za 99 USD/serwer/mies."
-freeBody = "Nasza licencja <strong>Open-Core</strong> pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Aby skalować bez przerw i uzyskać wczesny dostęp do nowego <strong>narzędzia edycji tekstu PDF</strong>, polecamy plan Stirling Server – pełna edycja i <strong>nielimitowane miejsca</strong> za 99 USD/serwer/mies."
+freeBody = "Nasza licencja <strong>Open-Core</strong> pozwala na maksymalnie <strong>{{freeTierLimit}}</strong> użytkowników bezpłatnie na serwer. Aby skalować bez zakłóceń, zalecamy plan Stirling Server - <strong>nielimitowana liczba miejsc</strong> i <strong>obsługa SSO</strong> za $99/serwer/mies."
 
 [onboarding.desktopInstall]
 title = "Pobierz"
@@ -5240,6 +5367,31 @@ error = "Nie udało się zaktualizować statusu użytkownika"
 success = "Użytkownik usunięty pomyślnie"
 error = "Nie udało się usunąć użytkownika"
 
+[workspace.people.changePassword]
+action = "Zmień hasło"
+title = "Zmień hasło"
+subtitle = "Zaktualizuj hasło dla"
+newPassword = "Nowe hasło"
+confirmPassword = "Potwierdź hasło"
+placeholder = "Wprowadź nowe hasło"
+confirmPlaceholder = "Wprowadź ponownie nowe hasło"
+passwordRequired = "Wprowadź nowe hasło"
+passwordMismatch = "Hasła nie są zgodne"
+generateRandom = "Wygeneruj bezpieczne hasło"
+generatedPreview = "Wygenerowane hasło:"
+copyTooltip = "Kopiuj do schowka"
+copiedToClipboard = "Hasło skopiowano do schowka"
+copyFailed = "Nie udało się skopiować hasła"
+sendEmail = "Wyślij użytkownikowi e-mail o tej zmianie"
+includePassword = "Dołącz nowe hasło do e-maila"
+forcePasswordChange = "Wymuś zmianę hasła przy następnym logowaniu"
+emailUnavailable = "E-mail tego użytkownika nie jest prawidłowym adresem. Powiadomienia są wyłączone."
+smtpDisabled = "Powiadomienia e-mail wymagają włączenia SMTP w ustawieniach."
+notifyOnly = "Zostanie wysłany e-mail bez hasła, informujący użytkownika, że administrator je zmienił."
+submit = "Zaktualizuj hasło"
+success = "Hasło zaktualizowano pomyślnie"
+error = "Nie udało się zaktualizować hasła"
+
 [workspace.people.emailInvite]
 tab = "Zaproszenie e‑mail"
 description = "Wpisz lub wklej e‑maile poniżej, rozdzielone przecinkami. Użytkownicy otrzymają dane logowania e‑mailem."
@@ -5248,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Wymagany jest co najmniej jeden adres e‑mail"
 submit = "Wyślij zaproszenia"
 success = "Pomyślnie zaproszono użytkowników"
-partialSuccess = "Niektóre zaproszenia nie powiodły się"
+partialFailure = "Niektóre zaproszenia nie powiodły się"
 allFailed = "Nie udało się zaprosić użytkowników"
 error = "Nie udało się wysłać zaproszeń"
 
@@ -5544,7 +5696,7 @@ emailInvalid = "Wpisz poprawny adres e‑mail"
 title = "Podaj e‑mail"
 description = "Użyjemy go do wysłania klucza licencyjnego i rachunków."
 emailLabel = "Adres e‑mail"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "twoj@email.com"
 continue = "Kontynuuj"
 modalTitle = "Zaczynamy – {{planName}}"
 
@@ -5773,6 +5925,7 @@ subtitle = "Zaloguj się na konto Stirling"
 [setup.selfhosted]
 title = "Zaloguj się do serwera"
 subtitle = "Wprowadź dane logowania do serwera"
+link = "lub połącz się z kontem hostowanym samodzielnie"
 
 [setup.server]
 title = "Połącz z serwerem"
@@ -5791,6 +5944,14 @@ description = "Wpisz pełny URL własnego serwera Stirling PDF"
 emptyUrl = "Wpisz URL serwera"
 unreachable = "Nie można połączyć z serwerem"
 testFailed = "Test połączenia nie powiódł się"
+configFetch = "Nie udało się pobrać konfiguracji serwera. Sprawdź URL i spróbuj ponownie."
+
+[setup.server.error.securityDisabled]
+title = "Logowanie nie jest włączone"
+body = "Na tym serwerze logowanie nie jest włączone. Aby się połączyć, musisz włączyć uwierzytelnianie:"
+step1 = "Ustaw w środowisku DOCKER_ENABLE_SECURITY=true"
+step2 = "Lub ustaw security.enableLogin=true w pliku settings.yml"
+step3 = "Uruchom ponownie serwer"
 
 [setup.login]
 title = "Zaloguj się"
@@ -5800,6 +5961,13 @@ submit = "Zaloguj"
 signInWith = "Zaloguj przez"
 oauthPending = "Otwieranie przeglądarki do uwierzytelnienia..."
 orContinueWith = "Lub kontynuuj e‑mailem"
+serverRequirement = "Uwaga: Na serwerze musi być włączone logowanie."
+showInstructions = "Jak włączyć?"
+hideInstructions = "Ukryj instrukcje"
+instructions = "Aby włączyć logowanie na swoim serwerze Stirling PDF:"
+instructionsEnvVar = "Ustaw zmienną środowiskową:"
+instructionsOrYml = "Lub w settings.yml:"
+instructionsRestart = "Następnie uruchom ponownie serwer, aby zmiany zaczęły obowiązywać."
 
 [setup.login.username]
 label = "Nazwa użytkownika"
@@ -5843,7 +6011,7 @@ paragraph = "Strona akapitowa"
 sparse = "Rzadki tekst"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatycznie"
 paragraph = "Akapit"
 singleLine = "Pojedyncza linia"
 
@@ -5856,6 +6024,7 @@ earlyAccess = "Wczesny dostęp"
 reset = "Resetuj zmiany"
 downloadJson = "Pobierz JSON"
 generatePdf = "Generuj PDF"
+saveChanges = "Zapisz zmiany"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automatycznie skaluj tekst do pól"
@@ -5893,6 +6062,8 @@ alpha = "Ten podgląd alfa jest wciąż rozwijany — niektóre czcionki, kolory
 [pdfTextEditor.empty]
 title = "Nie wczytano dokumentu"
 subtitle = "Wczytaj plik PDF lub JSON, aby rozpocząć edycję treści tekstowych."
+dropzone = "Przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
+dropzoneWithFiles = "Wybierz plik z karty Pliki, przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
 
 [pdfTextEditor.welcomeBanner]
 title = "Witamy w edytorze tekstu PDF (wczesny dostęp)"
