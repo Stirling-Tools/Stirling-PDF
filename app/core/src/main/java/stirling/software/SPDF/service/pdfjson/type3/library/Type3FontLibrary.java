@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -34,8 +33,8 @@ public class Type3FontLibrary {
 
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Value("${stirling.pdf.json.type3.library.index:classpath:/type3/library/index.json}")
     private String indexLocation;
 
     private final Map<String, Type3FontLibraryEntry> signatureIndex = new ConcurrentHashMap<>();
@@ -44,6 +43,8 @@ public class Type3FontLibrary {
 
     @jakarta.annotation.PostConstruct
     void initialise() {
+        this.indexLocation =
+                applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
         Resource resource = resourceLoader.getResource(indexLocation);
         if (!resource.exists()) {
             log.info("[TYPE3] Library index {} not found; Type3 library disabled", indexLocation);
