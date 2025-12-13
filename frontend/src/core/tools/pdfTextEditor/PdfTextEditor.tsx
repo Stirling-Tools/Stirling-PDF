@@ -422,7 +422,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   // Load images for a page in lazy mode
   const loadImagesForPage = useCallback(
-    async (pageIndex: number, fromRecovery = false) => {
+    async (pageIndex: number) => {
       if (!isLazyMode) {
         return;
       }
@@ -1725,7 +1725,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
       setLeftPanelView('toolPicker');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps = cleanup only on unmount
 
   // Note: Compare tool doesn't auto-force workbench, and neither should we
