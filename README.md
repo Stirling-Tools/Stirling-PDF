@@ -50,6 +50,7 @@ For full installation options (including desktop and Kubernetes), see our [Docum
 - [**Homepage**](https://stirling.com)
 - [**API Docs**](https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/)
 - [**Server Plan & Enterprise**](https://docs.stirlingpdf.com/Paid-Offerings)
+- [**Docker Guide**](https://docs.stirlingpdf.com/Installation/Docker%20Guide/)
 
 ## Support
 
