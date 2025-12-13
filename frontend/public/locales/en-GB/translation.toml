@@ -435,6 +435,24 @@ latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Keyboard Shortcuts"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
@@ -493,6 +511,10 @@ oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -5072,6 +5094,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
@@ -5571,6 +5594,28 @@ contactSales = "Contact Sales"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
 maxUsers = "Max Users"
 upTo = "Up to"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "month"
