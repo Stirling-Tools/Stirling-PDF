@@ -252,7 +252,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
   const previewScaleRef = useRef<Map<number, number>>(new Map());
   const cachedJobIdRef = useRef<string | null>(null);
+  const previousCachedJobIdRef = useRef<string | null>(null);
   const cacheRecoveryInProgressRef = useRef(false);
+  const cacheRecoveryAttemptsRef = useRef(0);
   const recoverCacheAndReloadRef = useRef<() => Promise<boolean>>(async () => false);
 
   // Keep ref in sync with state for access in async callbacks
@@ -284,9 +286,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   const isCacheUnavailableError = useCallback((error: any): boolean => {
     const status = error?.response?.status;
-    const data = error?.response?.data;
-    const code = (data && (data.error || data.code)) ?? undefined;
-    return status === 410 && code === 'cache_unavailable';
+    // Treat any 410 as cache unavailable, since responseType: 'blob' makes
+    // it impossible to reliably check the JSON body
+    return status === 410;
   }, []);
 
   const dirtyPages = useMemo(
@@ -328,6 +330,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       setSelectedPage(0);
       setIsLazyMode(false);
       setCachedJobId(null);
+      cachedJobIdRef.current = null;
       return;
     }
     const cloned = deepCloneDocument(document);
@@ -377,11 +380,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   useEffect(() => {
-    const previousJobId = cachedJobIdRef.current;
+    // Clear old cached job when job ID changes
+    const previousJobId = previousCachedJobIdRef.current;
     if (previousJobId && previousJobId !== cachedJobId) {
+      console.log(`[PdfTextEditor] Clearing old cache for jobId: ${previousJobId}, new jobId: ${cachedJobId}`);
       clearCachedJob(previousJobId);
     }
-    cachedJobIdRef.current = cachedJobId;
+    // Update the previous jobId ref for next time
+    previousCachedJobIdRef.current = cachedJobId;
   }, [cachedJobId, clearCachedJob]);
 
   const initializePdfPreview = useCallback(
@@ -501,11 +507,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         );
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
-        if (!fromRecovery && isCacheUnavailableError(error)) {
-          const recovered = await recoverCacheAndReloadRef.current();
-          if (recovered) {
-            return loadImagesForPage(pageIndex, true);
-          }
+        if (isCacheUnavailableError(error)) {
+          setErrorMessage(
+            t(
+              'pdfTextEditor.errors.cacheExpiredImages',
+              'Session expired. Images for page {{page}} could not be loaded. Your edits are preserved, but some images may be missing. You can continue editing text, or reload the file to restore all images.',
+              { page: pageNumber }
+            ),
+          );
         }
       } finally {
         loadingImagePagesRef.current.delete(pageIndex);
@@ -696,7 +705,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(parsed);
         resetToDocument(parsed, groupingMode);
         setIsLazyMode(shouldUseLazyMode);
-        setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
+        const newJobId = shouldUseLazyMode ? pendingJobId : null;
+        setCachedJobId(newJobId);
+        cachedJobIdRef.current = newJobId;
         setFileName(file.name);
         setErrorMessage(null);
       } catch (error: any) {
@@ -716,6 +727,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         clearPdfPreview();
         setIsLazyMode(false);
         setCachedJobId(null);
+        cachedJobIdRef.current = null;
 
         if (isPdf) {
           const errorMsg =
@@ -744,10 +756,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     if (cacheRecoveryInProgressRef.current) {
       return false;
     }
-    if ((recoverCacheAndReloadRef as any).attempts === undefined) {
-      (recoverCacheAndReloadRef as any).attempts = 0;
-    }
-    if ((recoverCacheAndReloadRef as any).attempts >= 2) {
+    if (cacheRecoveryAttemptsRef.current >= 2) {
       setErrorMessage(
         t(
           'pdfTextEditor.errors.cacheRecoveryLimit',
@@ -756,7 +765,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       );
       return false;
     }
-    (recoverCacheAndReloadRef as any).attempts += 1;
+    cacheRecoveryAttemptsRef.current += 1;
     const file = lastLoadedFileRef.current;
     if (!file) {
       setErrorMessage(
@@ -1100,11 +1109,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
 
-        let incrementalRetried = false;
-        const attemptIncrementalExport = async () => {
+        try {
           const payload = buildPayload();
           if (!payload) {
-            return false;
+            throw new Error('Failed to build payload');
           }
 
           const { document, filename } = payload;
@@ -1141,30 +1149,13 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             onComplete([pdfFile]);
           }
           setErrorMessage(null);
-          return true;
-        };
-
-        try {
-          const success = await attemptIncrementalExport();
-          if (success) {
-            return;
-          }
+          return;
         } catch (incrementalError) {
-          if (!incrementalRetried && isCacheUnavailableError(incrementalError)) {
-            const recovered = await recoverCacheAndReloadRef.current();
-            incrementalRetried = true;
-            if (recovered) {
-              await ensureImagesForPages(dirtyPageIndices);
-              const success = await attemptIncrementalExport();
-              if (success) {
-                return;
-              }
-            }
-          }
           console.warn(
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
           );
+          // Fall through to full export below
         }
       }
 
@@ -1701,6 +1692,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }, 0);
   }, [navigationActions, navigationState.selectedTool]);
 
+  // Register workbench view (re-runs when dependencies change)
   useEffect(() => {
     registerCustomWorkbenchView({
       id: WORKBENCH_VIEW_ID,
@@ -1711,23 +1703,30 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     });
     setLeftPanelView('hidden');
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
-
-    return () => {
-      // Clear backend cache if we were using lazy loading
-      clearCachedJob(cachedJobIdRef.current);
-      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
-      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-      setLeftPanelView('toolPicker');
-    };
   }, [
-    clearCachedJob,
-    clearCustomWorkbenchViewData,
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,
     setLeftPanelView,
     viewLabel,
-    unregisterCustomWorkbenchView,
   ]);
+
+  // Cleanup ONLY on component unmount (not on re-renders)
+  useEffect(() => {
+    return () => {
+      // Clear backend cache when leaving the tool
+      const jobId = cachedJobIdRef.current;
+      if (jobId) {
+        console.log(`[PdfTextEditor] Cleaning up cached document on unmount: ${jobId}`);
+        apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
+          console.warn('[PdfTextEditor] Failed to clear cache on unmount:', error);
+        });
+      }
+      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
+      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
+      setLeftPanelView('toolPicker');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps = cleanup only on unmount
 
   // Note: Compare tool doesn't auto-force workbench, and neither should we
   // The workbench should be set when the tool is selected via proper channels

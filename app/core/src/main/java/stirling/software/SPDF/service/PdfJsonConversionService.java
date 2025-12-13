@@ -278,7 +278,10 @@ public class PdfJsonConversionService {
             log.debug("Generated synthetic jobId for synchronous conversion: {}", jobId);
         } else {
             jobId = contextJobId;
-            log.debug("Starting PDF to JSON conversion, jobId from context: {}", jobId);
+            log.info(
+                    "Starting PDF to JSON conversion, jobId from context: {} (lightweight={})",
+                    jobId,
+                    lightweight);
         }
 
         Consumer<PdfJsonConversionProgress> progress =
@@ -445,6 +448,11 @@ public class PdfJsonConversionService {
 
                 // Only cache for real async jobIds, not synthetic synchronous ones
                 if (useLazyImages && isRealJobId) {
+                    log.info(
+                            "Creating cache for jobId: {} (useLazyImages={}, isRealJobId={})",
+                            jobId,
+                            useLazyImages,
+                            isRealJobId);
                     PdfJsonDocumentMetadata docMetadata = new PdfJsonDocumentMetadata();
                     docMetadata.setMetadata(pdfJson.getMetadata());
                     docMetadata.setXmpMetadata(pdfJson.getXmpMetadata());
@@ -480,14 +488,20 @@ public class PdfJsonConversionService {
                             buildCachedDocument(
                                     jobId, cachedPdfBytes, docMetadata, fonts, pageFontResources);
                     putCachedDocument(jobId, cached);
-                    log.debug(
-                            "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy images, jobId: {} (diskBacked={})",
+                    log.info(
+                            "Successfully cached PDF ({} bytes, {} pages, {} fonts) for jobId: {} (diskBacked={})",
                             cached.getPdfSize(),
                             totalPages,
                             fonts.size(),
                             jobId,
                             cached.isDiskBacked());
                     scheduleDocumentCleanup(jobId);
+                } else {
+                    log.warn(
+                            "Skipping cache creation: useLazyImages={}, isRealJobId={}, jobId={}",
+                            useLazyImages,
+                            isRealJobId,
+                            jobId);
                 }
 
                 if (lightweight) {
@@ -3050,7 +3064,7 @@ public class PdfJsonConversionService {
             if (existing != null) {
                 lruCache.remove(jobId);
                 currentCacheBytes = Math.max(0L, currentCacheBytes - existing.getInMemorySize());
-                closeQuietly(existing.pdfTempFile);
+                existing.close();
             }
             lruCache.put(jobId, cached);
             currentCacheBytes += cached.getInMemorySize();
@@ -3073,52 +3087,52 @@ public class PdfJsonConversionService {
         if (cacheBudgetBytes <= 0) {
             return;
         }
-        synchronized (cacheLock) {
-            java.util.Iterator<java.util.Map.Entry<String, CachedPdfDocument>> it =
-                    lruCache.entrySet().iterator();
-            while (currentCacheBytes > cacheBudgetBytes && it.hasNext()) {
-                java.util.Map.Entry<String, CachedPdfDocument> entry = it.next();
-                it.remove();
-                CachedPdfDocument removed = entry.getValue();
-                documentCache.remove(entry.getKey(), removed);
-                currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
-                removed.close();
-                log.debug(
-                        "Evicted cached PDF for jobId {} to enforce cache budget", entry.getKey());
-            }
-            if (currentCacheBytes > cacheBudgetBytes && !lruCache.isEmpty()) {
-                // Spill the most recently used large entry to disk
-                String key =
-                        lruCache.entrySet().stream()
-                                .reduce((first, second) -> second)
-                                .map(java.util.Map.Entry::getKey)
-                                .orElse(null);
-                if (key != null) {
-                    CachedPdfDocument doc = lruCache.get(key);
-                    if (doc != null && doc.getInMemorySize() > 0) {
-                        try {
-                            CachedPdfDocument diskDoc =
-                                    buildCachedDocument(
-                                            key,
-                                            doc.getPdfBytes(),
-                                            doc.getMetadata(),
-                                            doc.getFonts(),
-                                            doc.getPageFontResources());
-                            lruCache.put(key, diskDoc);
-                            documentCache.put(key, diskDoc);
-                            currentCacheBytes =
-                                    Math.max(0L, currentCacheBytes - doc.getInMemorySize())
-                                            + diskDoc.getInMemorySize();
-                            doc.close();
-                            log.debug(
-                                    "Spilled cached PDF for jobId {} to disk to satisfy budget",
-                                    key);
-                        } catch (IOException ex) {
-                            log.warn(
-                                    "Failed to spill cached PDF for jobId {} to disk: {}",
-                                    key,
-                                    ex.getMessage());
-                        }
+        // Must be called under cacheLock
+        java.util.Iterator<java.util.Map.Entry<String, CachedPdfDocument>> it =
+                lruCache.entrySet().iterator();
+        while (currentCacheBytes > cacheBudgetBytes && it.hasNext()) {
+            java.util.Map.Entry<String, CachedPdfDocument> entry = it.next();
+            it.remove();
+            CachedPdfDocument removed = entry.getValue();
+            documentCache.remove(entry.getKey(), removed);
+            currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
+            removed.close();
+            log.warn(
+                    "Evicted cached PDF for jobId {} to enforce cache budget (budget={} bytes, current={} bytes)",
+                    entry.getKey(),
+                    cacheBudgetBytes,
+                    currentCacheBytes);
+        }
+        if (currentCacheBytes > cacheBudgetBytes && !lruCache.isEmpty()) {
+            // Spill the most recently used large entry to disk
+            String key =
+                    lruCache.entrySet().stream()
+                            .reduce((first, second) -> second)
+                            .map(java.util.Map.Entry::getKey)
+                            .orElse(null);
+            if (key != null) {
+                CachedPdfDocument doc = lruCache.get(key);
+                if (doc != null && doc.getInMemorySize() > 0) {
+                    try {
+                        CachedPdfDocument diskDoc =
+                                buildCachedDocument(
+                                        key,
+                                        doc.getPdfBytes(),
+                                        doc.getMetadata(),
+                                        doc.getFonts(),
+                                        doc.getPageFontResources());
+                        lruCache.put(key, diskDoc);
+                        documentCache.put(key, diskDoc);
+                        currentCacheBytes =
+                                Math.max(0L, currentCacheBytes - doc.getInMemorySize())
+                                        + diskDoc.getInMemorySize();
+                        doc.close();
+                        log.debug("Spilled cached PDF for jobId {} to disk to satisfy budget", key);
+                    } catch (IOException ex) {
+                        log.warn(
+                                "Failed to spill cached PDF for jobId {} to disk: {}",
+                                key,
+                                ex.getMessage());
                     }
                 }
             }
@@ -3126,12 +3140,22 @@ public class PdfJsonConversionService {
     }
 
     private void removeCachedDocument(String jobId) {
+        log.warn(
+                "removeCachedDocument called for jobId: {} [CALLER: {}]",
+                jobId,
+                Thread.currentThread().getStackTrace()[2].toString());
         CachedPdfDocument removed = null;
         synchronized (cacheLock) {
             removed = documentCache.remove(jobId);
             if (removed != null) {
                 lruCache.remove(jobId);
                 currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
+                log.warn(
+                        "Removed cached document for jobId: {} (size={} bytes)",
+                        jobId,
+                        removed.getInMemorySize());
+            } else {
+                log.warn("Attempted to remove jobId: {} but it was not in cache", jobId);
             }
         }
         if (removed != null) {
@@ -5831,11 +5855,21 @@ public class PdfJsonConversionService {
         if (jobId == null || jobId.isBlank()) {
             throw new IllegalArgumentException("jobId is required for incremental export");
         }
+        log.info("Looking up cache for jobId: {}", jobId);
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
+            log.error(
+                    "Cache not found for jobId: {}. Available cache keys: {}",
+                    jobId,
+                    documentCache.keySet());
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
                     "No cached document available for jobId: " + jobId);
         }
+        log.info(
+                "Found cached document for jobId: {} (size={}, diskBacked={})",
+                jobId,
+                cached.getPdfSize(),
+                cached.isDiskBacked());
         if (updates == null || updates.getPages() == null || updates.getPages().isEmpty()) {
             log.debug(
                     "Incremental export requested with no page updates; returning cached PDF for jobId {}",
