@@ -37,6 +37,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   const [signupMode, setSignupMode] = useState(false);
   const [signupFieldErrors, setSignupFieldErrors] = useState<SignupFieldErrors>({});
   const [signupSuccessMessage, setSignupSuccessMessage] = useState<string | null>(null);
+  const [isSignupSubmitting, setIsSignupSubmitting] = useState(false);
   const { validateSignupForm } = useSignupFormValidation();
 
   const handleEmailPasswordSubmit = async () => {
@@ -74,6 +75,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
     }
 
     try {
+      setIsSignupSubmitting(true);
       await authService.signUpSaas(email.trim(), password);
       setSignupSuccessMessage(t('signup.checkEmailConfirmation', 'Check your email for a confirmation link to complete your registration.'));
       setSignupFieldErrors({});
@@ -82,6 +84,8 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
       setSignupSuccessMessage(null);
       const message = err instanceof Error ? err.message : t('signup.unexpectedError', { message: 'Unknown error' });
       setValidationError(message);
+    } finally {
+      setIsSignupSubmitting(false);
     }
   };
 
@@ -178,7 +182,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
               setSignupFieldErrors({});
             }}
             onSubmit={handleSignupSubmit}
-            isSubmitting={loading}
+            isSubmitting={loading || isSignupSubmitting}
             fieldErrors={signupFieldErrors}
             showName={false}
             showTerms={false}
@@ -192,7 +196,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
               setSignupFieldErrors({});
             }}
             className="navigation-link-button"
-            disabled={loading}
+            disabled={loading || isSignupSubmitting}
             style={{ marginTop: '0.5rem' }}
           >
             {t('login.logIn', 'Log In')}
