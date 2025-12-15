@@ -250,11 +250,11 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign in with OAuth provider (GitHub, Google, Authentik, etc.)
-   * This redirects to the Spring OAuth2 authorization endpoint
+   * Sign in with OAuth/SAML provider (GitHub, Google, Authentik, etc.)
+   * This redirects to the Spring OAuth2/SAML2 authorization endpoint
    *
-   * @param params.provider - OAuth provider ID (e.g., 'github', 'google', 'authentik', 'mycompany')
-   *                          Can be any known provider or custom string - the backend determines available providers
+   * @param params.provider - Full auth path from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
+   *                          The backend provides the complete path including the auth type and provider ID
    */
   async signInWithOAuth(params: {
     provider: OAuthProvider;
@@ -264,15 +264,16 @@ class SpringAuthClient {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
       persistRedirectPath(redirectPath);
 
-      // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
-      const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      // console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // Use the full path provided by the backend
+      // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
+      const redirectUrl = params.provider;
+      // console.log('[SpringAuth] Redirecting to SSO:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
       return { error: null };
     } catch (error) {
       return {
-        error: { message: error instanceof Error ? error.message : 'OAuth redirect failed' },
+        error: { message: error instanceof Error ? error.message : 'SSO redirect failed' },
       };
     }
   }

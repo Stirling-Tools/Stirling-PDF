@@ -2,7 +2,6 @@ package stirling.software.SPDF.service.pdfjson.type3;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +22,8 @@ import stirling.software.SPDF.service.pdfjson.type3.library.Type3FontLibraryPayl
 public class Type3LibraryStrategy implements Type3ConversionStrategy {
 
     private final Type3FontLibrary fontLibrary;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Value("${stirling.pdf.json.type3.library.enabled:true}")
     private boolean enabled;
 
     @Override
@@ -40,6 +39,19 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
     @Override
     public boolean isAvailable() {
         return enabled && fontLibrary != null && fontLibrary.isLoaded();
+    }
+
+    @jakarta.annotation.PostConstruct
+    private void loadConfiguration() {
+        if (applicationProperties.getPdfEditor() != null
+                && applicationProperties.getPdfEditor().getType3() != null
+                && applicationProperties.getPdfEditor().getType3().getLibrary() != null) {
+            var cfg = applicationProperties.getPdfEditor().getType3().getLibrary();
+            this.enabled = cfg.isEnabled();
+        } else {
+            this.enabled = false;
+            log.warn("PdfEditor Type3 library configuration not available, disabled");
+        }
     }
 
     @Override

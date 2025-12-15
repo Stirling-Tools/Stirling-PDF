@@ -51,6 +51,7 @@ public class CustomSaml2AuthenticationSuccessHandler
     private final JwtServiceInterface jwtService;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -77,8 +78,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                     log.warn(
                             "SAML2 login blocked for existing user '{}' - not eligible (not grandfathered and no ENTERPRISE license)",
                             username);
-                    response.sendRedirect(
-                            request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                    String origin = resolveOrigin(request);
+                    response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
                     return;
                 }
             } else if (!licenseSettingsService.isSamlEligible(null)) {
@@ -86,8 +87,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                 log.warn(
                         "SAML2 login blocked for new user '{}' - not eligible (no ENTERPRISE license for auto-creation)",
                         username);
-                response.sendRedirect(
-                        request.getContextPath() + "/logout?saml2RequiresLicense=true");
+                String origin = resolveOrigin(request);
+                response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
                 return;
             }
 
@@ -144,20 +145,28 @@ public class CustomSaml2AuthenticationSuccessHandler
                     log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
-                    response.sendRedirect(
-                            contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
+                    String origin = resolveOrigin(request);
+                    response.sendRedirect(origin + "/logout?oAuth2AuthenticationErrorWeb=true");
                     return;
                 }
 
                 try {
-                    if (!userExists || saml2Properties.getBlockRegistration()) {
-                        log.debug("Registration blocked for new user: {}", username);
-                        response.sendRedirect(
-                                contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
+                    // Block new users only if: blockRegistration is true OR autoCreateUser is false
+                    if (!userExists
+                            && (saml2Properties.getBlockRegistration()
+                                    || !saml2Properties.getAutoCreateUser())) {
+                        log.debug(
+                                "Registration blocked for new user '{}' (blockRegistration: {}, autoCreateUser: {})",
+                                username,
+                                saml2Properties.getBlockRegistration(),
+                                saml2Properties.getAutoCreateUser());
+                        String origin = resolveOrigin(request);
+                        response.sendRedirect(origin + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
                     if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
-                        response.sendRedirect(contextPath + "/logout?maxUsersReached=true");
+                        String origin = resolveOrigin(request);
+                        response.sendRedirect(origin + "/logout?maxUsersReached=true");
                         return;
                     }
 
@@ -222,14 +231,28 @@ public class CustomSaml2AuthenticationSuccessHandler
             String contextPath,
             String jwt) {
         String redirectPath = resolveRedirectPath(request, contextPath);
-        String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        String origin = resolveOrigin(request);
         clearRedirectCookie(response);
         return origin + redirectPath + "#access_token=" + jwt;
+    }
+
+    /**
+     * Resolve the origin (frontend URL) for redirects. First checks system.frontendUrl from config,
+     * then falls back to detecting from request headers.
+     */
+    private String resolveOrigin(HttpServletRequest request) {
+        // First check if frontendUrl is configured
+        String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
+        if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
+            return configuredFrontendUrl.trim();
+        }
+
+        // Fall back to auto-detection from request headers
+        return resolveForwardedOrigin(request)
+                .orElseGet(
+                        () ->
+                                resolveOriginFromReferer(request)
+                                        .orElseGet(() -> buildOriginFromRequest(request)));
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {

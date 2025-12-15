@@ -334,7 +334,8 @@ public class SecurityConfiguration {
                                                                 securityProperties.getSaml2(),
                                                                 userService,
                                                                 jwtService,
-                                                                licenseSettingsService))
+                                                                licenseSettingsService,
+                                                                applicationProperties))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(

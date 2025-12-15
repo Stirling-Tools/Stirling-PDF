@@ -343,7 +343,7 @@ describe('SpringAuthClient', () => {
       });
 
       const result = await springAuth.signInWithOAuth({
-        provider: 'github',
+        provider: '/oauth2/authorization/github',
         options: { redirectTo: '/auth/callback' },
       });
 

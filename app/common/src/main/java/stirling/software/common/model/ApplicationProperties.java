@@ -68,6 +68,7 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
+    private PdfEditor pdfEditor = new PdfEditor();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -98,6 +99,46 @@ public class ApplicationProperties {
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+    }
+
+    @Data
+    public static class PdfEditor {
+        private Cache cache = new Cache();
+        private FontNormalization fontNormalization = new FontNormalization();
+        private CffConverter cffConverter = new CffConverter();
+        private Type3 type3 = new Type3();
+        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
+
+        @Data
+        public static class Cache {
+            private long maxBytes = -1;
+            private int maxPercent = 20;
+        }
+
+        @Data
+        public static class FontNormalization {
+            private boolean enabled = false;
+        }
+
+        @Data
+        public static class CffConverter {
+            private boolean enabled = true;
+            private String method = "python";
+            private String pythonCommand = "/opt/venv/bin/python3";
+            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
+            private String fontforgeCommand = "fontforge";
+        }
+
+        @Data
+        public static class Type3 {
+            private Library library = new Library();
+
+            @Data
+            public static class Library {
+                private boolean enabled = true;
+                private String index = "classpath:/type3/library/index.json";
+            }
+        }
     }
 
     @Data
@@ -368,10 +409,12 @@ public class ApplicationProperties {
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String
-                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
+        // 'http://localhost:8080', 'https://api.example.com'). Required for
+        // SSO.
+        private String frontendUrl; // Frontend URL for invite email links (e.g.
 
-        // falls back to backend URL.
+        // 'https://app.example.com'). If not set, falls back to backendUrl.
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -536,6 +579,7 @@ public class ApplicationProperties {
         @ToString.Exclude private String key;
         private String UUID;
         private String appVersion;
+        private Boolean isNewServer;
     }
 
     // TODO: Remove post migration

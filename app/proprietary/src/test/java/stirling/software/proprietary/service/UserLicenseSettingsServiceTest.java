@@ -33,6 +33,7 @@ class UserLicenseSettingsServiceTest {
     @Mock private UserService userService;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.Premium premium;
+    @Mock private ApplicationProperties.AutomaticallyGenerated automaticallyGenerated;
     @Mock private LicenseKeyChecker licenseKeyChecker;
     @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
 
@@ -49,6 +50,8 @@ class UserLicenseSettingsServiceTest {
         mockSettings.setGrandfatheredUserSignature("80:test-signature");
 
         when(applicationProperties.getPremium()).thenReturn(premium);
+        when(applicationProperties.getAutomaticallyGenerated()).thenReturn(automaticallyGenerated);
+        when(automaticallyGenerated.getIsNewServer()).thenReturn(false); // Default: not a new server
         when(settingsRepository.findSettings()).thenReturn(Optional.of(mockSettings));
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))

@@ -238,6 +238,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
   const originalGroupsRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
+  const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
   const sourceFileIdRef = useRef<string | null>(null);
   const loadRequestIdRef = useRef(0);
@@ -251,6 +252,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
   const previewScaleRef = useRef<Map<number, number>>(new Map());
   const cachedJobIdRef = useRef<string | null>(null);
+  const previousCachedJobIdRef = useRef<string | null>(null);
+  const cacheRecoveryInProgressRef = useRef(false);
+  const cacheRecoveryAttemptsRef = useRef(0);
+  const recoverCacheAndReloadRef = useRef<() => Promise<boolean>>(async () => false);
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
@@ -277,6 +282,13 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         pdfDocumentRef.current = null;
       }
     };
+  }, []);
+
+  const isCacheUnavailableError = useCallback((error: any): boolean => {
+    const status = error?.response?.status;
+    // Treat any 410 as cache unavailable, since responseType: 'blob' makes
+    // it impossible to reliably check the JSON body
+    return status === 410;
   }, []);
 
   const dirtyPages = useMemo(
@@ -316,6 +328,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       loadedImagePagesRef.current = new Set();
       loadingImagePagesRef.current = new Set();
       setSelectedPage(0);
+      setIsLazyMode(false);
+      setCachedJobId(null);
+      cachedJobIdRef.current = null;
       return;
     }
     const cloned = deepCloneDocument(document);
@@ -365,11 +380,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   useEffect(() => {
-    const previousJobId = cachedJobIdRef.current;
+    // Clear old cached job when job ID changes
+    const previousJobId = previousCachedJobIdRef.current;
     if (previousJobId && previousJobId !== cachedJobId) {
+      console.log(`[PdfTextEditor] Clearing old cache for jobId: ${previousJobId}, new jobId: ${cachedJobId}`);
       clearCachedJob(previousJobId);
     }
-    cachedJobIdRef.current = cachedJobId;
+    // Update the previous jobId ref for next time
+    previousCachedJobIdRef.current = cachedJobId;
   }, [cachedJobId, clearCachedJob]);
 
   const initializePdfPreview = useCallback(
@@ -489,6 +507,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         );
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
+        if (isCacheUnavailableError(error)) {
+          console.log('[loadImagesForPage] Cache expired, triggering automatic recovery...');
+          // Automatically recover by reloading the file
+          void recoverCacheAndReloadRef.current();
+        }
       } finally {
         loadingImagePagesRef.current.delete(pageIndex);
         setLoadingImagePages((prev) => {
@@ -498,7 +521,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         });
       }
     },
-    [isLazyMode, cachedJobId],
+    [isLazyMode, cachedJobId, isCacheUnavailableError],
   );
 
   const handleLoadFile = useCallback(
@@ -507,6 +530,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
 
+      lastLoadedFileRef.current = file;
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
 
@@ -555,59 +579,35 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             message: 'Starting conversion...',
           });
 
-          let jobComplete = false;
-          let attempts = 0;
-          const maxAttempts = 600;
+        let jobComplete = false;
+        let attempts = 0;
+        const maxAttempts = 600;
+        let pollDelay = 500;
 
-          while (!jobComplete && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts += 1;
+        while (!jobComplete && attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, pollDelay));
+          attempts += 1;
+          if (pollDelay < 10000) {
+            pollDelay = Math.min(10000, Math.floor(pollDelay * 1.5));
+          }
 
             try {
               const statusResponse = await apiClient.get(`/api/v1/general/job/${jobId}`);
               const jobStatus = statusResponse.data;
               console.log(`Job status (attempt ${attempts}):`, jobStatus);
 
-              if (jobStatus.notes && jobStatus.notes.length > 0) {
-                const lastNote = jobStatus.notes[jobStatus.notes.length - 1];
-                console.log('Latest note:', lastNote);
-                const matchWithCount = lastNote.match(
-                  /\[(\d+)%\]\s+(\w+):\s+(.+?)\s+\((\d+)\/(\d+)\)/,
-                );
-                if (matchWithCount) {
-                  const percent = parseInt(matchWithCount[1], 10);
-                  const stage = matchWithCount[2];
-                  const message = matchWithCount[3];
-                  const current = parseInt(matchWithCount[4], 10);
-                  const total = parseInt(matchWithCount[5], 10);
-                  setConversionProgress({
-                    percent,
-                    stage,
-                    message,
-                    current,
-                    total,
-                  });
-                } else {
-                  const match = lastNote.match(/\[(\d+)%\]\s+(\w+):\s+(.+)/);
-                  if (match) {
-                    const percent = parseInt(match[1], 10);
-                    const stage = match[2];
-                    const message = match[3];
-                    setConversionProgress({
-                      percent,
-                      stage,
-                      message,
-                    });
-                  }
-                }
-              } else if (jobStatus.progress !== undefined) {
-                const percent = Math.min(Math.max(jobStatus.progress, 0), 100);
-                setConversionProgress({
-                  percent,
-                  stage: jobStatus.stage || 'processing',
-                  message: jobStatus.note || 'Converting PDF to JSON...',
-                });
-              }
+              const percent = Math.min(Math.max(jobStatus.progress ?? 0, 0), 100);
+              const stage = jobStatus.stage || 'processing';
+              const message = jobStatus.note || 'Converting PDF to JSON...';
+              const current = jobStatus.current ?? undefined;
+              const total = jobStatus.total ?? undefined;
+              setConversionProgress({
+                percent,
+                stage,
+                message,
+                current,
+                total,
+              });
 
               if (jobStatus.complete) {
                 if (jobStatus.error) {
@@ -701,7 +701,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(parsed);
         resetToDocument(parsed, groupingMode);
         setIsLazyMode(shouldUseLazyMode);
-        setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
+        const newJobId = shouldUseLazyMode ? pendingJobId : null;
+        setCachedJobId(newJobId);
+        cachedJobIdRef.current = newJobId;
         setFileName(file.name);
         setErrorMessage(null);
       } catch (error: any) {
@@ -719,6 +721,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(null);
         resetToDocument(null, groupingMode);
         clearPdfPreview();
+        setIsLazyMode(false);
+        setCachedJobId(null);
+        cachedJobIdRef.current = null;
 
         if (isPdf) {
           const errorMsg =
@@ -742,6 +747,38 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     },
     [groupingMode, resetToDocument, t],
   );
+
+  const recoverCacheAndReload = useCallback(async () => {
+    if (cacheRecoveryInProgressRef.current) {
+      return false;
+    }
+    if (cacheRecoveryAttemptsRef.current >= 2) {
+      console.warn('[PdfTextEditor] Cache recovery limit reached');
+      return false;
+    }
+    cacheRecoveryAttemptsRef.current += 1;
+    const file = lastLoadedFileRef.current;
+    if (!file) {
+      console.warn('[PdfTextEditor] No file available for cache recovery');
+      return false;
+    }
+    cacheRecoveryInProgressRef.current = true;
+    try {
+      console.log('[PdfTextEditor] Automatically reloading file due to cache expiration...');
+      await handleLoadFile(file);
+      console.log('[PdfTextEditor] Cache recovery successful');
+      return true;
+    } catch (error) {
+      console.error('[PdfTextEditor] Cache recovery failed', error);
+      return false;
+    } finally {
+      cacheRecoveryInProgressRef.current = false;
+    }
+  }, [handleLoadFile]);
+
+  useEffect(() => {
+    recoverCacheAndReloadRef.current = recoverCacheAndReload;
+  }, [recoverCacheAndReload]);
 
   // Wrapper for loading files from the dropzone - adds to workbench first
   const handleLoadFileFromDropzone = useCallback(
@@ -1057,7 +1094,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         try {
           const payload = buildPayload();
           if (!payload) {
-            return;
+            throw new Error('Failed to build payload');
           }
 
           const { document, filename } = payload;
@@ -1076,7 +1113,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
           const expectedName = `${baseName || 'document'}.pdf`;
           const response = await apiClient.post(
-            `/api/v1/convert/pdf/text-editor/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
+            `/api/v1/convert/pdf/text-editor/partial/${cachedJobIdRef.current}?filename=${encodeURIComponent(expectedName)}`,
             partialDocument,
             {
               responseType: 'blob',
@@ -1100,6 +1137,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
           );
+          // Fall through to full export below
         }
       }
 
@@ -1636,6 +1674,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }, 0);
   }, [navigationActions, navigationState.selectedTool]);
 
+  // Register workbench view (re-runs when dependencies change)
   useEffect(() => {
     registerCustomWorkbenchView({
       id: WORKBENCH_VIEW_ID,
@@ -1646,23 +1685,29 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     });
     setLeftPanelView('hidden');
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
-
-    return () => {
-      // Clear backend cache if we were using lazy loading
-      clearCachedJob(cachedJobIdRef.current);
-      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
-      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-      setLeftPanelView('toolPicker');
-    };
   }, [
-    clearCachedJob,
-    clearCustomWorkbenchViewData,
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,
     setLeftPanelView,
     viewLabel,
-    unregisterCustomWorkbenchView,
   ]);
+
+  // Cleanup ONLY on component unmount (not on re-renders)
+  useEffect(() => {
+    return () => {
+      // Clear backend cache when leaving the tool
+      const jobId = cachedJobIdRef.current;
+      if (jobId) {
+        console.log(`[PdfTextEditor] Cleaning up cached document on unmount: ${jobId}`);
+        apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
+          console.warn('[PdfTextEditor] Failed to clear cache on unmount:', error);
+        });
+      }
+      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
+      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
+      setLeftPanelView('toolPicker');
+    };
+  }, []); // Empty deps = cleanup only on unmount
 
   // Note: Compare tool doesn't auto-force workbench, and neither should we
   // The workbench should be set when the tool is selected via proper channels

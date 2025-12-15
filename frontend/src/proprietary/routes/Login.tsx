@@ -109,13 +109,12 @@ export default function Login() {
           updateSupportedLanguages(data.languages, data.defaultLocale);
         }
 
-        // Extract provider IDs from the providerList map
-        // The keys are like "/oauth2/authorization/google" - extract the last part
-        const providerIds = Object.keys(data.providerList || {})
-          .map(key => key.split('/').pop())
-          .filter((id): id is string => id !== undefined);
+        // Use the full paths from providerList as provider identifiers
+        // The backend provides paths like "/oauth2/authorization/google" or "/saml2/authenticate/stirling"
+        // We'll use these full paths so the auth client knows where to redirect
+        const providerPaths = Object.keys(data.providerList || {});
 
-        setEnabledProviders(providerIds);
+        setEnabledProviders(providerPaths);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }

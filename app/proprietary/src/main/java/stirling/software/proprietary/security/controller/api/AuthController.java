@@ -244,10 +244,13 @@ public class AuthController {
         userMap.put("username", user.getUsername());
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
+        userMap.put(
+                "authenticationType",
+                user.getAuthenticationType()); // Expose authentication type for SSO detection
 
         // Add metadata for OAuth compatibility
         Map<String, Object> appMetadata = new HashMap<>();
-        appMetadata.put("provider", user.getAuthenticationType()); // Default to email provider
+        appMetadata.put("provider", user.getAuthenticationType());
         userMap.put("app_metadata", appMetadata);
 
         return userMap;
