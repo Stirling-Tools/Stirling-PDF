@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DesktopAuthLayout } from '@app/components/SetupWizard/DesktopAuthLayout';
 import { SaaSLoginScreen } from '@app/components/SetupWizard/SaaSLoginScreen';
+import { SaaSSignupScreen } from '@app/components/SetupWizard/SaaSSignupScreen';
 import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
 import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
 import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
@@ -14,6 +15,7 @@ import '@app/routes/authShared/auth.css';
 
 enum SetupStep {
   SaaSLogin,
+  SaaSSignup,
   ServerSelection,
   SelfHostedLogin,
 }
@@ -80,6 +82,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleSelfHostedClick = () => {
     setError(null);
     setActiveStep(SetupStep.ServerSelection);
+  };
+
+  const handleSwitchToSignup = () => {
+    setError(null);
+    setActiveStep(SetupStep.SaaSSignup);
+  };
+
+  const handleSwitchToLogin = () => {
+    setError(null);
+    setActiveStep(SetupStep.SaaSLogin);
   };
 
   const handleServerSelection = (config: ServerConfig) => {
@@ -179,6 +191,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.SaaSLogin);
       setServerConfig({ url: STIRLING_SAAS_URL });
+    } else if (activeStep === SetupStep.SaaSSignup) {
+      setActiveStep(SetupStep.SaaSLogin);
     }
   };
 
@@ -191,8 +205,18 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           onLogin={handleSaaSLogin}
           onOAuthSuccess={handleSaaSLoginOAuth}
           onSelfHostedClick={handleSelfHostedClick}
+          onSwitchToSignup={handleSwitchToSignup}
           loading={loading}
           error={error}
+        />
+      )}
+
+      {activeStep === SetupStep.SaaSSignup && (
+        <SaaSSignupScreen
+          loading={loading}
+          error={error}
+          onLogin={handleSaaSLogin}
+          onSwitchToLogin={handleSwitchToLogin}
         />
       )}
 
