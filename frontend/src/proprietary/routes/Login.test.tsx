@@ -382,9 +382,9 @@ describe('Login', () => {
     await user.click(oauthButton);
 
     await waitFor(() => {
-      // Should use 'oidc' when explicitly configured
+      // Should use full path when explicitly configured
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'oidc',
+        provider: '/oauth2/authorization/oidc',
         options: { redirectTo: '/auth/callback' }
       });
     });
