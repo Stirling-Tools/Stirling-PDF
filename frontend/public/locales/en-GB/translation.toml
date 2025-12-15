@@ -3729,6 +3729,16 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Compress Settings Overview"
 
@@ -3745,6 +3755,10 @@ bullet2 = "Higher values reduce file size"
 [compress.tooltip.grayscale]
 title = "Grayscale"
 text = "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
+
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 
 [compress.error]
 failed = "An error occurred while compressing the PDF."

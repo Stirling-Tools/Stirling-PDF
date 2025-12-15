@@ -105,6 +105,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     gcompat \
     libc6-compat \
     libreoffice \
+    imagemagick \
     # pdftohtml
     poppler-utils \
     # OCR MY PDF
