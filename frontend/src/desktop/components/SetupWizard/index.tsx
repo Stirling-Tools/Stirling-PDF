@@ -8,6 +8,8 @@ import { ServerConfig, connectionModeService } from '@app/services/connectionMod
 import { authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { listen } from '@tauri-apps/api/event';
+import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
 
 enum SetupStep {
@@ -127,6 +129,48 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const unsubscribePromise = listen<string>('deep-link', async (event) => {
+      const url = event.payload;
+      if (!url) return;
+
+      try {
+        const parsed = new URL(url);
+
+        // Supabase sends tokens in the URL hash
+        const hash = parsed.hash.replace(/^#/, '');
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const type = params.get('type') || parsed.searchParams.get('type');
+
+        if (!type || (type !== 'signup' && type !== 'recovery' && type !== 'magiclink')) {
+          return;
+        }
+
+        if (!accessToken) {
+          console.error('[SetupWizard] Deep link missing access_token');
+          return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        await authService.completeSupabaseSession(accessToken, serverConfig?.url || STIRLING_SAAS_URL);
+        await connectionModeService.switchToSaaS(serverConfig?.url || STIRLING_SAAS_URL);
+        tauriBackendService.startBackend().catch(console.error);
+        onComplete();
+      } catch (err) {
+        console.error('[SetupWizard] Failed to handle deep link', err);
+        setError(err instanceof Error ? err.message : 'Failed to complete signup');
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      void unsubscribePromise.then((unsub) => unsub());
+    };
+  }, [onComplete, serverConfig?.url]);
 
   const handleBack = () => {
     setError(null);

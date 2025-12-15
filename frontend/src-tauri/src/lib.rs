@@ -1,4 +1,5 @@
 use tauri::{Manager, RunEvent, WindowEvent, Emitter};
+use url::Url;
 
 mod utils;
 mod commands;
@@ -72,6 +73,14 @@ pub fn run() {
       // Process command line arguments on first launch
       let args: Vec<String> = std::env::args().collect();
       for arg in args.iter().skip(1) {
+        if let Ok(parsed) = Url::parse(arg) {
+          if parsed.scheme() == "stirlingpdf" {
+            add_log(format!("🔗 Deep link received from args: {}", arg));
+            let _ = app.emit("deep-link", arg.clone());
+            continue;
+          }
+        }
+
         if std::path::Path::new(arg).exists() {
           add_log(format!("📂 Initial file from command line: {}", arg));
           add_opened_file(arg.clone());
@@ -159,6 +168,13 @@ pub fn run() {
 
           for url in urls {
             let url_str = url.as_str();
+            if let Ok(parsed) = Url::parse(url_str) {
+              if parsed.scheme() == "stirlingpdf" {
+                add_log(format!("🔗 Deep link opened: {}", url_str));
+                let _ = app_handle.emit("deep-link", url_str.to_string());
+                continue;
+              }
+            }
             if url_str.starts_with("file://") {
               let encoded_path = url_str.strip_prefix("file://").unwrap_or(url_str);
 
