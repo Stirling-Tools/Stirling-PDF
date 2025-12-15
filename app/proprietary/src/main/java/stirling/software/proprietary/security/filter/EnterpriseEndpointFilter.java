@@ -26,8 +26,18 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         if (!runningProOrHigher && isPrometheusEndpointRequest(request)) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return;
+            // Allow only health checks to pass through for non-pro users
+            String uri = request.getRequestURI();
+            boolean isHealthCheck =
+                    uri.contains("/actuator/health")
+                            || uri.contains("/healthz")
+                            || uri.contains("/liveness")
+                            || uri.contains("/readiness");
+
+            if (!isHealthCheck) {
+                response.setStatus(HttpStatus.NOT_FOUND.value());
+                return;
+            }
         }
         filterChain.doFilter(request, response);
     }
