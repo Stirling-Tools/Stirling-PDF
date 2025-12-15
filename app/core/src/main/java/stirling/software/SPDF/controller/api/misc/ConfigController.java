@@ -124,6 +124,9 @@ public class ConfigController {
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
             configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
+            configData.put(
+                    "enableDesktopInstallSlide",
+                    applicationProperties.getSystem().getEnableDesktopInstallSlide());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());

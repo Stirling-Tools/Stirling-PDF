@@ -29,8 +29,14 @@ const AdminAuditSection: React.FC = () => {
         setError(null);
         const status = await auditService.getSystemStatus();
         setSystemStatus(status);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load audit system status');
+      } catch (err: any) {
+        // Check if this is a permission/license error (403/404)
+        const status = err?.response?.status;
+        if (status === 403 || status === 404) {
+          setError('enterprise-license-required');
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to load audit system status');
+        }
       } finally {
         setLoading(false);
       }
@@ -63,6 +69,16 @@ const AdminAuditSection: React.FC = () => {
   }
 
   if (error) {
+    if (error === 'enterprise-license-required') {
+      return (
+        <Alert color="blue" title={t('audit.enterpriseRequired', 'Enterprise License Required')}>
+          {t(
+            'audit.enterpriseRequiredMessage',
+            'The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics.'
+          )}
+        </Alert>
+      );
+    }
     return (
       <Alert color="red" title={t('audit.error.title', 'Error loading audit system')}>
         {error}

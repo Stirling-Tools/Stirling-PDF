@@ -5,21 +5,20 @@ export type OnboardingStepId =
   | 'security-check'
   | 'admin-overview'
   | 'tool-layout'
-  | 'tour'
+  | 'tour-overview'
   | 'server-license'
   | 'analytics-choice';
 
 export type OnboardingStepType =
   | 'modal-slide'
-  | 'tool-prompt'
-  | 'tour'
-  | 'analytics-modal';
+  | 'tool-prompt';
 
 export interface OnboardingRuntimeState {
   selectedRole: 'admin' | 'user' | null;
   tourRequested: boolean;
-  tourType: 'admin' | 'tools';
+  tourType: 'admin' | 'tools' | 'whatsnew';
   isDesktopApp: boolean;
+  desktopSlideEnabled: boolean;
   analyticsNotConfigured: boolean;
   analyticsEnabled: boolean;
   licenseNotice: {
@@ -42,13 +41,13 @@ export interface OnboardingStep {
   id: OnboardingStepId;
   type: OnboardingStepType;
   condition: (ctx: OnboardingConditionContext) => boolean;
-  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license';
+  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license' | 'tour-overview' | 'analytics-choice';
 }
 
 export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   selectedRole: null,
   tourRequested: false,
-  tourType: 'tools',
+  tourType: 'whatsnew',
   isDesktopApp: false,
   analyticsNotConfigured: false,
   analyticsEnabled: false,
@@ -61,6 +60,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   requiresPasswordChange: false,
   firstLoginUsername: '',
   usingDefaultCredentials: false,
+  desktopSlideEnabled: true,
 };
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -77,43 +77,39 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     condition: () => true,
   },
   {
-    id: 'desktop-install',
-    type: 'modal-slide',
-    slideId: 'desktop-install',
-    condition: (ctx) => !ctx.isDesktopApp,
-  },
-  {
-    id: 'security-check',
-    type: 'modal-slide',
-    slideId: 'security-check',
-    condition: (ctx) => !ctx.loginEnabled && !ctx.isDesktopApp,
-  },
-  {
     id: 'admin-overview',
     type: 'modal-slide',
     slideId: 'admin-overview',
     condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {
-    id: 'tool-layout',
-    type: 'tool-prompt',
-    condition: () => true,
+    id: 'desktop-install',
+    type: 'modal-slide',
+    slideId: 'desktop-install',
+    condition: (ctx) => !ctx.isDesktopApp && ctx.desktopSlideEnabled,
   },
   {
-    id: 'tour',
-    type: 'tour',
-    condition: (ctx) => ctx.tourRequested || !ctx.effectiveIsAdmin,
+    id: 'security-check',
+    type: 'modal-slide',
+    slideId: 'security-check',
+    condition: () => false,
+  },
+  {
+    id: 'tool-layout',
+    type: 'tool-prompt',
+    condition: () => false,
+  },
+  {
+    id: 'tour-overview',
+    type: 'modal-slide',
+    slideId: 'tour-overview',
+    condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== 'admin',
   },
   {
     id: 'server-license',
     type: 'modal-slide',
     slideId: 'server-license',
     condition: (ctx) => ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
-  },
-  {
-    id: 'analytics-choice',
-    type: 'analytics-modal',
-    condition: (ctx) => ctx.effectiveIsAdmin && ctx.analyticsNotConfigured,
   },
 ];
 
