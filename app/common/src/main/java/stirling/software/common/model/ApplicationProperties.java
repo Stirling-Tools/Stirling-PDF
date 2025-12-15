@@ -409,10 +409,12 @@ public class ApplicationProperties {
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String
-                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
+        // 'http://localhost:8080', 'https://api.example.com'). Required for
+        // SSO.
+        private String frontendUrl; // Frontend URL for invite email links (e.g.
 
-        // falls back to backend URL.
+        // 'https://app.example.com'). If not set, falls back to backendUrl.
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
