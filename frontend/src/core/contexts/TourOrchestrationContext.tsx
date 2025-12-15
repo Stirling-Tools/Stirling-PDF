@@ -111,6 +111,8 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const loadSampleFile = useCallback(async () => {
     try {
+      // Hide the modal immediately so the tour targets are visible while we load
+      closeFilesModal();
       const response = await fetch(`${BASE_PATH}/samples/Sample.pdf`);
       const blob = await response.blob();
       const file = new File([blob], 'Sample.pdf', { type: 'application/pdf' });

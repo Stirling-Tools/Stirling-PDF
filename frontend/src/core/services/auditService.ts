@@ -49,7 +49,9 @@ const auditService = {
    * Get audit system status
    */
   async getSystemStatus(): Promise<AuditSystemStatus> {
-    const response = await apiClient.get<any>('/api/v1/proprietary/ui-data/audit-dashboard');
+    const response = await apiClient.get('/api/v1/proprietary/ui-data/audit-dashboard', {
+      suppressErrorToast: true,
+    });
     const data = response.data;
 
     // Map V1 response to expected format

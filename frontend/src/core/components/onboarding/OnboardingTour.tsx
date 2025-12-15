@@ -49,7 +49,7 @@ interface CloseArgs {
 
 interface OnboardingTourProps {
   tourSteps: StepType[];
-  tourType: 'admin' | 'tools';
+  tourType: 'admin' | 'tools' | 'whatsnew';
   isRTL: boolean;
   t: TFunction;
   isOpen: boolean;

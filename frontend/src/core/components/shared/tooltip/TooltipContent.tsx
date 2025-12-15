@@ -5,18 +5,20 @@ import { TooltipTip } from '@app/types/tips';
 interface TooltipContentProps {
   content?: React.ReactNode;
   tips?: TooltipTip[];
+  extraRightPadding?: number;
 }
 
 export const TooltipContent: React.FC<TooltipContentProps> = ({
   content,
   tips,
+  extraRightPadding = 0,
 }) => {
   return (
     <div
       className={`${styles['tooltip-body']}`}
       style={{
         color: 'var(--text-primary)',
-        padding: '16px',
+        padding: `16px ${16 + extraRightPadding}px 16px 16px`,
         fontSize: '14px',
         lineHeight: '1.6'
       }}

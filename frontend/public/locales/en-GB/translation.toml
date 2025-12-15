@@ -312,10 +312,10 @@ yamlAdvert = "Stirling PDF Pro supports YAML configuration files and other SSO f
 ssoAdvert = "Looking for more user management features? Check out Stirling PDF Pro"
 
 [analytics]
-title = "Do you want make Stirling PDF better?"
-paragraph1 = "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents."
+title = "Do you want to help make Stirling PDF better?"
+paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
-learnMore = "Learn more"
+learnMore = "Learn more about our analytics"
 enable = "Enable analytics"
 disable = "Disable analytics"
 settings = "You can change the settings for analytics in the config/settings.yml file"
@@ -339,6 +339,10 @@ security = "Sign & Security"
 advance = "Advanced"
 edit = "View & Edit"
 popular = "Popular"
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
 
 [settings.preferences]
 title = "Preferences"
@@ -4060,12 +4064,20 @@ settings = "Settings"
 adminSettings = "Admin Settings"
 allTools = "Tools"
 reader = "Reader"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tools Tour"
 toolsTourDesc = "Learn what the tools can do"
 adminTour = "Admin Tour"
 adminTourDesc = "Explore admin settings & features"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Error"
@@ -5259,6 +5271,16 @@ finish = "Finish"
 startTour = "Start Tour"
 startTourDescription = "Take a guided tour of Stirling PDF's key features"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Welcome to Stirling PDF!"
 description = "Would you like to take a quick 1-minute tour to learn the key features and how to get started?"
@@ -5278,6 +5300,10 @@ skipForNow = "Skip for now"
 download = "Download →"
 showMeAround = "Show me around"
 skipTheTour = "Skip the tour"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Skip for now"
@@ -5817,6 +5843,8 @@ notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Error loading audit system"

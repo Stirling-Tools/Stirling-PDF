@@ -47,11 +47,11 @@ export function SlideButtons({ slideDefinition, licenseNotice, flowState, onActi
     ) {
       return t('onboarding.serverLicense.upgrade', 'Upgrade now →');
     }
-    
+
     // Translate the label (it's a translation key)
     const label = button.label ?? '';
     if (!label) return '';
-    
+
     // Extract fallback text from translation key (e.g., 'onboarding.buttons.next' -> 'Next')
     const fallback = label.split('.').pop() || label;
     return t(label, fallback);

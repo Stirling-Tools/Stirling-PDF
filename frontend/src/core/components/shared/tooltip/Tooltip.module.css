@@ -39,7 +39,7 @@
   background: var(--bg-raised);
   padding: 0.25rem;
   border-radius: 0.25rem;
-  border: 0.0625rem solid var(--primary-color, #3b82f6);
+  border: 0.0625rem solid var(--border-default);
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   z-index: 1;
@@ -58,6 +58,13 @@
 .tooltip-pin-button:hover {
   background-color: #ef4444 !important;
   border-color: #ef4444 !important;
+}
+
+.tooltip-pin-button:focus,
+.tooltip-pin-button:focus-visible {
+  outline: none;
+  border-color: var(--border-default) !important;
+  background-color: var(--bg-raised) !important;
 }
 
 /* Tooltip Header */
@@ -91,7 +98,7 @@
 
 /* Tooltip Body */
 .tooltip-body {
-  padding: 1rem !important;
+  padding: 1rem;
   color: var(--text-primary) !important;
   font-size: 0.875rem !important;
   line-height: 1.6 !important;
