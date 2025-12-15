@@ -44,11 +44,13 @@ export const buildOCRFormData = (parameters: OCRParameters, file: File): FormDat
   parameters.languages.forEach((lang) => formData.append('languages', lang));
   formData.append('ocrType', parameters.ocrType);
   formData.append('ocrRenderType', parameters.ocrRenderType);
-  formData.append('sidecar', parameters.additionalOptions.includes('sidecar').toString());
-  formData.append('deskew', parameters.additionalOptions.includes('deskew').toString());
-  formData.append('clean', parameters.additionalOptions.includes('clean').toString());
-  formData.append('cleanFinal', parameters.additionalOptions.includes('cleanFinal').toString());
-  formData.append('removeImagesAfter', parameters.additionalOptions.includes('removeImagesAfter').toString());
+  
+  const options = parameters.additionalOptions || [];
+  formData.append('sidecar', options.includes('sidecar').toString());
+  formData.append('deskew', options.includes('deskew').toString());
+  formData.append('clean', options.includes('clean').toString());
+  formData.append('cleanFinal', options.includes('cleanFinal').toString());
+  formData.append('removeImagesAfter', options.includes('removeImagesAfter').toString());
   return formData;
 };
 
