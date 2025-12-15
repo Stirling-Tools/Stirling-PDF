@@ -28,10 +28,13 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -44,6 +47,7 @@ import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -58,12 +62,19 @@ public class CompressController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final EndpointConfiguration endpointConfiguration;
 
+    @Autowired(required = false)
+    private LineArtConversionService lineArtConversionService;
+
     private boolean isQpdfEnabled() {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+
+    private boolean isImageMagickEnabled() {
+        return endpointConfiguration.isGroupEnabled("ImageMagick");
     }
 
     @Data
@@ -660,6 +671,9 @@ public class CompressController {
         Integer optimizeLevel = request.getOptimizeLevel();
         String expectedOutputSizeString = request.getExpectedOutputSize();
         Boolean convertToGrayscale = request.getGrayscale();
+        Boolean convertToLineArt = request.getLineArt();
+        Double lineArtThreshold = request.getLineArtThreshold();
+        Integer lineArtEdgeLevel = request.getLineArtEdgeLevel();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
             throw new Exception("Both expected output size and optimize level are not specified");
         }
@@ -687,6 +701,26 @@ public class CompressController {
             if (autoMode) {
                 double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
                 optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
+            }
+
+            if (Boolean.TRUE.equals(convertToLineArt)) {
+                if (lineArtConversionService == null) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN,
+                            "Line art conversion is unavailable - ImageMagick service not found");
+                }
+                if (!isImageMagickEnabled()) {
+                    throw new IOException(
+                            "ImageMagick is not enabled but line art conversion was requested");
+                }
+                double thresholdValue =
+                        lineArtThreshold == null
+                                ? 55d
+                                : Math.min(100d, Math.max(0d, lineArtThreshold));
+                int edgeLevel =
+                        lineArtEdgeLevel == null ? 1 : Math.min(3, Math.max(1, lineArtEdgeLevel));
+                currentFile =
+                        applyLineArtConversion(currentFile, tempFiles, thresholdValue, edgeLevel);
             }
 
             boolean sizeMet = false;
@@ -808,6 +842,75 @@ public class CompressController {
                 }
             }
         }
+    }
+
+    private Path applyLineArtConversion(
+            Path currentFile, List<Path> tempFiles, double threshold, int edgeLevel)
+            throws IOException {
+
+        Path lineArtFile = Files.createTempFile("lineart_output_", ".pdf");
+        tempFiles.add(lineArtFile);
+
+        try (PDDocument doc = pdfDocumentFactory.load(currentFile.toFile())) {
+            Map<String, List<ImageReference>> uniqueImages = findImages(doc);
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
+
+            Map<String, PDImageXObject> convertedImages =
+                    createLineArtImages(doc, uniqueImages, stats, threshold, edgeLevel);
+
+            replaceImages(doc, uniqueImages, convertedImages, stats);
+
+            log.info(
+                    "Applied line art conversion to {} unique images ({} total references)",
+                    stats.uniqueImagesCount,
+                    stats.totalImages);
+
+            doc.save(lineArtFile.toString());
+            return lineArtFile;
+        }
+    }
+
+    private Map<String, PDImageXObject> createLineArtImages(
+            PDDocument doc,
+            Map<String, List<ImageReference>> uniqueImages,
+            CompressionStats stats,
+            double threshold,
+            int edgeLevel)
+            throws IOException {
+
+        Map<String, PDImageXObject> convertedImages = new HashMap<>();
+
+        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            String imageHash = entry.getKey();
+            List<ImageReference> references = entry.getValue();
+            if (references.isEmpty()) continue;
+
+            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+
+            int originalSize = (int) originalImage.getCOSObject().getLength();
+            stats.totalOriginalBytes += originalSize;
+
+            PDImageXObject converted =
+                    lineArtConversionService.convertImageToLineArt(
+                            doc, originalImage, threshold, edgeLevel);
+            convertedImages.put(imageHash, converted);
+            stats.compressedImages++;
+
+            int convertedSize = (int) converted.getCOSObject().getLength();
+            stats.totalCompressedBytes += convertedSize * references.size();
+
+            double reductionPercentage = 100.0 - ((convertedSize * 100.0) / originalSize);
+            log.info(
+                    "Image hash {}: Line art conversion {} → {} (reduced by {}%)",
+                    imageHash,
+                    GeneralUtils.formatBytes(originalSize),
+                    GeneralUtils.formatBytes(convertedSize),
+                    String.format("%.1f", reductionPercentage));
+        }
+
+        return convertedImages;
     }
 
     // Run Ghostscript compression

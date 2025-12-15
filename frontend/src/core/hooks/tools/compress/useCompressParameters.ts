@@ -4,6 +4,9 @@ import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/u
 export interface CompressParameters extends BaseParameters {
   compressionLevel: number;
   grayscale: boolean;
+  lineArt: boolean;
+  lineArtThreshold: number;
+  lineArtEdgeLevel: 1 | 2 | 3;
   expectedSize: string;
   compressionMethod: 'quality' | 'filesize';
   fileSizeValue: string;
@@ -13,6 +16,9 @@ export interface CompressParameters extends BaseParameters {
 export const defaultParameters: CompressParameters = {
   compressionLevel: 5,
   grayscale: false,
+  lineArt: false,
+  lineArtThreshold: 50,
+  lineArtEdgeLevel: 3,
   expectedSize: '',
   compressionMethod: 'quality',
   fileSizeValue: '',

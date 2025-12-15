@@ -86,6 +86,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getCalibreSessionLimit();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getImageMagickSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -141,6 +146,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getCalibreTimeoutMinutes();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getImageMagickTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -301,6 +311,7 @@ public class ProcessExecutor {
         WEASYPRINT,
         INSTALL_APP,
         CALIBRE,
+        IMAGEMAGICK,
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,

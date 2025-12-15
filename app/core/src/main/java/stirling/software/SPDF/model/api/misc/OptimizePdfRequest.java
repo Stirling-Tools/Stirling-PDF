@@ -45,4 +45,26 @@ public class OptimizePdfRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean grayscale = false;
+
+    @Schema(
+            description =
+                    "Whether to convert images to high-contrast line art using ImageMagick. Default is false.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private Boolean lineArt = false;
+
+    @Schema(
+            description = "Threshold to use for line art conversion (0-100).",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "55")
+    private Double lineArtThreshold = 55d;
+
+    @Schema(
+            description =
+                    "Edge detection strength to use for line art conversion (1-3). This maps to"
+                            + " ImageMagick's -edge radius.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "1",
+            allowableValues = {"1", "2", "3"})
+    private Integer lineArtEdgeLevel = 1;
 }
