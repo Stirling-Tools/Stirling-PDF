@@ -368,8 +368,8 @@ public class ApplicationProperties {
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String
-                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private String frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private ServerCertificate serverCertificate = new ServerCertificate();
 
         // falls back to backend URL.
 
@@ -387,6 +387,14 @@ public class ApplicationProperties {
             // Treat null as enabled when analytics is enabled
             return this.isAnalyticsEnabled()
                     && (this.getEnableScarf() == null || this.getEnableScarf());
+        }
+
+        @Data
+        public static class ServerCertificate {
+            private boolean enabled = true;
+            private String organizationName = "Stirling-PDF";
+            private int validity = 365; // days
+            private boolean regenerateOnStartup = false;
         }
     }
 
