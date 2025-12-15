@@ -10,13 +10,11 @@ import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccess
 interface AllToolsNavButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
-  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
 }
 
 const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   activeButton,
   setActiveButton,
-  tooltipPosition = 'right'
 }) => {
   const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
