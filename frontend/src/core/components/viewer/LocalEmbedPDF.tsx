@@ -52,12 +52,13 @@ interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   enableAnnotations?: boolean;
+  showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -100,7 +101,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: true,
-        withAnnotations: !enableAnnotations, // Bake annotations only when not in edit mode
+        withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -166,7 +167,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl]);
+  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
