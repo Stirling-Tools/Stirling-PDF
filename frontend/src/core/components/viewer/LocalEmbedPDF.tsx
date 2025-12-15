@@ -100,7 +100,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: true,
-        withAnnotations: true,
+        withAnnotations: !enableAnnotations, // Bake annotations only when not in edit mode
       }),
 
       // Register interaction manager (required for zoom and selection features)
