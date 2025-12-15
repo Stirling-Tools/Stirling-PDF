@@ -131,6 +131,45 @@ export class AuthService {
     this.notifyListeners();
   }
 
+  async signUpSaas(email: string, password: string): Promise<void> {
+    if (!STIRLING_SAAS_URL) {
+      throw new Error('VITE_SAAS_SERVER_URL is not configured');
+    }
+    if (!SUPABASE_KEY) {
+      throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+    }
+
+    const signupUrl = `${STIRLING_SAAS_URL.replace(/\/$/, '')}/auth/v1/signup`;
+
+    try {
+      const response = await axios.post(
+        signupUrl,
+        { email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      );
+
+      if (response.status >= 400) {
+        throw new Error('Sign up failed');
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message =
+          error.response?.data?.error_description ||
+          error.response?.data?.msg ||
+          error.response?.data?.message ||
+          error.message;
+        throw new Error(message || 'Sign up failed');
+      }
+      throw error instanceof Error ? error : new Error('Sign up failed');
+    }
+  }
+
   async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
     try {
       console.log('Logging in to:', serverUrl);

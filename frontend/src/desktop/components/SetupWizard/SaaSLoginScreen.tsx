@@ -7,6 +7,9 @@ import DividerWithText from '@app/components/shared/DividerWithText';
 import { DesktopOAuthButtons } from '@app/components/SetupWizard/DesktopOAuthButtons';
 import { SelfHostedLink } from '@app/components/SetupWizard/SelfHostedLink';
 import { UserInfo } from '@app/services/authService';
+import SignupForm from '@app/routes/signup/SignupForm';
+import { useSignupFormValidation, SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
+import { authService } from '@app/services/authService';
 import '@app/routes/authShared/auth.css';
 
 interface SaaSLoginScreenProps {
@@ -29,7 +32,12 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [signupMode, setSignupMode] = useState(false);
+  const [signupFieldErrors, setSignupFieldErrors] = useState<SignupFieldErrors>({});
+  const [signupSuccessMessage, setSignupSuccessMessage] = useState<string | null>(null);
+  const { validateSignupForm } = useSignupFormValidation();
 
   const handleEmailPasswordSubmit = async () => {
     // Validation
@@ -53,41 +61,144 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
   const displayError = error || validationError;
 
+  const handleSignupSubmit = async () => {
+    setValidationError(null);
+    setSignupSuccessMessage(null);
+    setSignupFieldErrors({});
+
+    const validation = validateSignupForm(email, password, confirmPassword);
+    if (!validation.isValid) {
+      setValidationError(validation.error);
+      setSignupFieldErrors(validation.fieldErrors || {});
+      return;
+    }
+
+    try {
+      await authService.signUpSaas(email.trim(), password);
+      setSignupSuccessMessage(t('signup.checkEmailConfirmation', 'Check your email for a confirmation link to complete your registration.'));
+      setSignupFieldErrors({});
+      setValidationError(null);
+    } catch (err) {
+      setSignupSuccessMessage(null);
+      const message = err instanceof Error ? err.message : t('signup.unexpectedError', { message: 'Unknown error' });
+      setValidationError(message);
+    }
+  };
+
   return (
     <>
       <LoginHeader title={t('setup.saas.title', 'Sign in to Stirling Cloud')} />
 
       <ErrorMessage error={displayError} />
+      {signupSuccessMessage && (
+        <div className="success-message">
+          <p className="success-message-text">{signupSuccessMessage}</p>
+        </div>
+      )}
 
-      <DesktopOAuthButtons
-        onOAuthSuccess={onOAuthSuccess}
-        onError={handleOAuthError}
-        isDisabled={loading}
-        serverUrl={serverUrl}
-        providers={['google', 'github']}
-      />
+      {!signupMode && (
+        <>
+          <DesktopOAuthButtons
+            onOAuthSuccess={onOAuthSuccess}
+            onError={handleOAuthError}
+            isDisabled={loading}
+            serverUrl={serverUrl}
+            providers={['google', 'github']}
+          />
 
-      <DividerWithText
-        text={t('setup.login.orContinueWith', 'Or continue with email')}
-        respondsToDarkMode={false}
-        opacity={0.4}
-      />
+          <DividerWithText
+            text={t('setup.login.orContinueWith', 'Or continue with email')}
+            respondsToDarkMode={false}
+            opacity={0.4}
+          />
 
-      <EmailPasswordForm
-        email={email}
-        password={password}
-        setEmail={(value) => {
-          setEmail(value);
-          setValidationError(null);
-        }}
-        setPassword={(value) => {
-          setPassword(value);
-          setValidationError(null);
-        }}
-        onSubmit={handleEmailPasswordSubmit}
-        isSubmitting={loading}
-        submitButtonText={t('setup.login.submit', 'Login')}
-      />
+          <EmailPasswordForm
+            email={email}
+            password={password}
+            setEmail={(value) => {
+              setEmail(value);
+              setValidationError(null);
+              setSignupSuccessMessage(null);
+            }}
+            setPassword={(value) => {
+              setPassword(value);
+              setValidationError(null);
+              setSignupSuccessMessage(null);
+            }}
+            onSubmit={handleEmailPasswordSubmit}
+            isSubmitting={loading}
+            submitButtonText={t('setup.login.submit', 'Login')}
+          />
+
+          <div className="navigation-link-container" style={{ marginTop: '0.5rem', textAlign: 'right' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setSignupMode(true);
+                setValidationError(null);
+                setSignupSuccessMessage(null);
+                setSignupFieldErrors({});
+              }}
+              className="navigation-link-button"
+              disabled={loading}
+            >
+              {t('signup.signUp', 'Sign Up')}
+            </button>
+          </div>
+        </>
+      )}
+
+      {signupMode && (
+        <>
+          <DividerWithText
+            text={t('signup.title', 'Create an account')}
+            respondsToDarkMode={false}
+            opacity={0.4}
+          />
+          <SignupForm
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            setEmail={(value) => {
+              setEmail(value);
+              setValidationError(null);
+              // keep success message in case user wants to re-login later
+              setSignupFieldErrors({});
+            }}
+            setPassword={(value) => {
+              setPassword(value);
+              setValidationError(null);
+              // keep success message in case user wants to re-login later
+              setSignupFieldErrors({});
+            }}
+            setConfirmPassword={(value) => {
+              setConfirmPassword(value);
+              setValidationError(null);
+              // keep success message in case user wants to re-login later
+              setSignupFieldErrors({});
+            }}
+            onSubmit={handleSignupSubmit}
+            isSubmitting={loading}
+            fieldErrors={signupFieldErrors}
+            showName={false}
+            showTerms={false}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setSignupMode(false);
+              setValidationError(null);
+              setSignupSuccessMessage(null);
+              setSignupFieldErrors({});
+            }}
+            className="navigation-link-button"
+            disabled={loading}
+            style={{ marginTop: '0.5rem' }}
+          >
+            {t('login.logIn', 'Log In')}
+          </button>
+        </>
+      )}
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
     </>
