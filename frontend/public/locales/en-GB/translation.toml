@@ -3726,7 +3726,7 @@ filesize = "File Size"
 label = "Apply Grayscale for Compression"
 
 [compress.lineArt]
-label = "Convert images to line art (bilevel)"
+label = "Convert images to line art"
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
 unavailable = "ImageMagick is not installed or enabled on this server"
 detailLevel = "Detail level"
