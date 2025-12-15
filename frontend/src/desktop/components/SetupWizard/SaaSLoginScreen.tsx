@@ -91,7 +91,18 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
   return (
     <>
-      <LoginHeader title={t('setup.saas.title', 'Sign in to Stirling Cloud')} />
+      <LoginHeader
+        title={
+          signupMode
+            ? t('signup.title', 'Create an account')
+            : t('setup.saas.title', 'Sign in to Stirling Cloud')
+        }
+        subtitle={
+          signupMode
+            ? t('signup.subtitle', 'Join Stirling PDF')
+            : undefined
+        }
+      />
 
       <ErrorMessage error={displayError} />
       {signupSuccessMessage && (
@@ -154,11 +165,6 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
       {signupMode && (
         <>
-          <DividerWithText
-            text={t('signup.title', 'Create an account')}
-            respondsToDarkMode={false}
-            opacity={0.4}
-          />
           <SignupForm
             email={email}
             password={password}
@@ -187,20 +193,21 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
             showName={false}
             showTerms={false}
           />
-          <button
-            type="button"
-            onClick={() => {
-              setSignupMode(false);
-              setValidationError(null);
-              setSignupSuccessMessage(null);
-              setSignupFieldErrors({});
-            }}
-            className="navigation-link-button"
-            disabled={loading || isSignupSubmitting}
-            style={{ marginTop: '0.5rem' }}
-          >
-            {t('login.logIn', 'Log In')}
-          </button>
+          <div className="navigation-link-container" style={{ marginTop: '0.5rem', textAlign: 'right' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setSignupMode(false);
+                setValidationError(null);
+                setSignupSuccessMessage(null);
+                setSignupFieldErrors({});
+              }}
+              className="navigation-link-button"
+              disabled={loading || isSignupSubmitting}
+            >
+              {t('login.logIn', 'Log In')}
+            </button>
+          </div>
         </>
       )}
 
