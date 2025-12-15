@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
 import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
@@ -34,7 +33,6 @@ import stirling.software.proprietary.service.SignatureService;
  * authentication and enforces per-user storage limits. All endpoints require authentication
  * via @PreAuthorize("isAuthenticated()").
  */
-@UserApi
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
