@@ -49,7 +49,8 @@ public class Type3FontLibrary {
             this.indexLocation =
                     applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
         } else {
-            log.warn("[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
+            log.warn(
+                    "[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
             entries = List.of();
             return;
         }

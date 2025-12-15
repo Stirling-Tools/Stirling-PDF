@@ -579,6 +579,7 @@ public class ApplicationProperties {
         @ToString.Exclude private String key;
         private String UUID;
         private String appVersion;
+        private Boolean isNewServer;
     }
 
     // TODO: Remove post migration
