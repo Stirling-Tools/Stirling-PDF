@@ -124,6 +124,9 @@ public class ConfigController {
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
             configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
+            configData.put(
+                    "enableDesktopInstallSlide",
+                    applicationProperties.getSystem().getEnableDesktopInstallSlide());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
@@ -226,5 +229,11 @@ public class ConfigController {
                     endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/group-enabled")
+    public ResponseEntity<Boolean> isGroupEnabled(@RequestParam(name = "group") String group) {
+        boolean enabled = endpointConfiguration.isGroupEnabled(group);
+        return ResponseEntity.ok(enabled);
     }
 }

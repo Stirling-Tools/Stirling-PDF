@@ -12,6 +12,8 @@ plugins {
 }
 
 import com.github.jk1.license.render.*
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 ext {
     springBootVersion = "3.5.6"
@@ -57,11 +59,56 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.1.2'
+    version = '2.1.3'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+    }
+}
+
+def writeIfChanged(File targetFile, String newContent) {
+    if (targetFile.getText('UTF-8') != newContent) {
+        targetFile.write(newContent, 'UTF-8')
+    }
+}
+
+def updateTauriConfigVersion(String version) {
+    File tauriConfig = file('frontend/src-tauri/tauri.conf.json')
+    def parsed = new JsonSlurper().parse(tauriConfig)
+    parsed.version = version
+
+    def formatted = JsonOutput.prettyPrint(JsonOutput.toJson(parsed)) + System.lineSeparator()
+    writeIfChanged(tauriConfig, formatted)
+}
+
+def updateSimulationVersion(File fileToUpdate, String version) {
+    def content = fileToUpdate.getText('UTF-8')
+    def matcher = content =~ /(appVersion:\s*')([^']*)(')/
+
+    if (!matcher.find()) {
+        throw new GradleException("Could not locate appVersion in ${fileToUpdate} for synchronization")
+    }
+
+    def updatedContent = matcher.replaceFirst("${matcher.group(1)}${version}${matcher.group(3)}")
+    writeIfChanged(fileToUpdate, updatedContent)
+}
+
+tasks.register('syncAppVersion') {
+    group = 'versioning'
+    description = 'Synchronizes app version across desktop and simulation configs.'
+
+    doLast {
+        def appVersion = project.version.toString()
+        println "Synchronizing application version to ${appVersion}"
+        updateTauriConfigVersion(appVersion)
+
+        [
+            'frontend/src/core/testing/serverExperienceSimulations.ts',
+            'frontend/src/proprietary/testing/serverExperienceSimulations.ts'
+        ].each { path ->
+            updateSimulationVersion(file(path), appVersion)
+        }
     }
 }
 
@@ -314,7 +361,7 @@ tasks.named('bootRun') {
 tasks.named('build') {
     group = 'build'
     description = 'Delegates to :stirling-pdf:bootJar'
-    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper'
+    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper', 'syncAppVersion'
 
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
