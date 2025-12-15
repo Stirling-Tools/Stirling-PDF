@@ -72,12 +72,19 @@ public class PdfJsonFontService {
     }
 
     private void loadConfiguration() {
-        var cfg = applicationProperties.getPdfEditor().getCffConverter();
-        this.cffConversionEnabled = cfg.isEnabled();
-        this.cffConverterMethod = cfg.getMethod();
-        this.pythonCommand = cfg.getPythonCommand();
-        this.pythonScript = cfg.getPythonScript();
-        this.fontforgeCommand = cfg.getFontforgeCommand();
+        if (applicationProperties.getPdfEditor() != null
+                && applicationProperties.getPdfEditor().getCffConverter() != null) {
+            var cfg = applicationProperties.getPdfEditor().getCffConverter();
+            this.cffConversionEnabled = cfg.isEnabled();
+            this.cffConverterMethod = cfg.getMethod();
+            this.pythonCommand = cfg.getPythonCommand();
+            this.pythonScript = cfg.getPythonScript();
+            this.fontforgeCommand = cfg.getFontforgeCommand();
+        } else {
+            // Use defaults when config is not available
+            this.cffConversionEnabled = false;
+            log.warn("[FONT-DEBUG] PdfEditor configuration not available, CFF conversion disabled");
+        }
     }
 
     public byte[] convertCffProgramToTrueType(byte[] fontBytes, String toUnicode) {

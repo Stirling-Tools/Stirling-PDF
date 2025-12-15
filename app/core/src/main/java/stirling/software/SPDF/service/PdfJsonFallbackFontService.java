@@ -323,7 +323,10 @@ public class PdfJsonFallbackFontService {
 
     @jakarta.annotation.PostConstruct
     private void loadConfig() {
-        String configured = applicationProperties.getPdfEditor().getFallbackFont();
+        String configured = null;
+        if (applicationProperties.getPdfEditor() != null) {
+            configured = applicationProperties.getPdfEditor().getFallbackFont();
+        }
         if (configured != null && !configured.isBlank()) {
             fallbackFontLocation = configured;
         } else {

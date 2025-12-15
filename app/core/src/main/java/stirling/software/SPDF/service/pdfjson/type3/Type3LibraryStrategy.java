@@ -43,8 +43,15 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
 
     @jakarta.annotation.PostConstruct
     private void loadConfiguration() {
-        var cfg = applicationProperties.getPdfEditor().getType3().getLibrary();
-        this.enabled = cfg.isEnabled();
+        if (applicationProperties.getPdfEditor() != null
+                && applicationProperties.getPdfEditor().getType3() != null
+                && applicationProperties.getPdfEditor().getType3().getLibrary() != null) {
+            var cfg = applicationProperties.getPdfEditor().getType3().getLibrary();
+            this.enabled = cfg.isEnabled();
+        } else {
+            this.enabled = false;
+            log.warn("PdfEditor Type3 library configuration not available, disabled");
+        }
     }
 
     @Override

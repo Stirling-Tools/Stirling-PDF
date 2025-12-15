@@ -43,8 +43,16 @@ public class Type3FontLibrary {
 
     @jakarta.annotation.PostConstruct
     void initialise() {
-        this.indexLocation =
-                applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
+        if (applicationProperties.getPdfEditor() != null
+                && applicationProperties.getPdfEditor().getType3() != null
+                && applicationProperties.getPdfEditor().getType3().getLibrary() != null) {
+            this.indexLocation =
+                    applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
+        } else {
+            log.warn("[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
+            entries = List.of();
+            return;
+        }
         Resource resource = resourceLoader.getResource(indexLocation);
         if (!resource.exists()) {
             log.info("[TYPE3] Library index {} not found; Type3 library disabled", indexLocation);
