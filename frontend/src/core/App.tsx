@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import { MantineProvider } from "@mantine/core";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";

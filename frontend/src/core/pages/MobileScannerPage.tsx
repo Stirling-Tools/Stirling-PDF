@@ -10,7 +10,7 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-// @ts-ignore - jscanify doesn't have TypeScript definitions
+// @ts-expect-error - jscanify doesn't have TypeScript definitions
 import jscanify from 'jscanify/src/jscanify.js';
 
 /**
@@ -47,7 +47,6 @@ export default function MobileScannerPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const highlightCanvasRef = useRef<HTMLCanvasElement>(null);
-  const detectionCanvasRef = useRef<HTMLCanvasElement>(null); // Low-res canvas for detection only
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<any>(null);
@@ -158,7 +157,7 @@ export default function MobileScannerPage() {
 
             // Configure camera capabilities for document scanning
             try {
-              const capabilities = videoTrack.getCapabilities();
+              const capabilities = videoTrack.getCapabilities() as any; // Cast to any for experimental camera APIs
               const constraints: any = { advanced: [] };
 
               // 1. Enable continuous autofocus
@@ -625,8 +624,8 @@ export default function MobileScannerPage() {
     try {
       const videoTrack = streamRef.current.getVideoTracks()[0];
       await videoTrack.applyConstraints({
-        advanced: [{ torch: !torchEnabled }],
-      });
+        advanced: [{ torch: !torchEnabled } as any], // Cast to any for experimental torch API
+      } as any);
       setTorchEnabled(!torchEnabled);
       console.log('Torch:', !torchEnabled ? 'ON' : 'OFF');
     } catch (err) {
