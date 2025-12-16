@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
-import { useRedaction, RedactionAPI } from '@app/contexts/RedactionContext';
+import { useRedaction } from '@app/contexts/RedactionContext';
 
 /**
  * RedactionAPIBridge connects the EmbedPDF redaction plugin to our RedactionContext.

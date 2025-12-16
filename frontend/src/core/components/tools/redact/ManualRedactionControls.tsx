@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
-import { Button, Stack, Text, Badge, Group, Divider } from '@mantine/core';
+import { Button, Stack, Text, Badge, Group, Divider, Tooltip } from '@mantine/core';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import CropFreeIcon from '@mui/icons-material/CropFree';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -125,14 +125,16 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
         <Group gap="sm" grow wrap="nowrap">
           {/* Mark Text Selection Tool */}
           <Button
-            variant={isSelectionActive && !isAnnotationMode ? 'filled' : 'light'}
-            color={isSelectionActive && !isAnnotationMode ? 'red' : 'gray'}
+            variant={isSelectionActive && !isAnnotationMode ? 'filled' : 'outline'}
+            color={isSelectionActive && !isAnnotationMode ? 'blue' : 'gray'}
             leftSection={<HighlightAltIcon style={{ fontSize: 18, flexShrink: 0 }} />}
             onClick={handleSelectionClick}
             disabled={disabled || !isApiReady}
             size="sm"
             styles={{
-              root: { minWidth: 0 },
+              root: { 
+                minWidth: 0,
+              },
               label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
             }}
           >
@@ -141,14 +143,16 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
 
           {/* Mark Area (Marquee) Tool */}
           <Button
-            variant={isMarqueeActive && !isAnnotationMode ? 'filled' : 'light'}
-            color={isMarqueeActive && !isAnnotationMode ? 'red' : 'gray'}
+            variant={isMarqueeActive && !isAnnotationMode ? 'filled' : 'outline'}
+            color={isMarqueeActive && !isAnnotationMode ? 'blue' : 'gray'}
             leftSection={<CropFreeIcon style={{ fontSize: 18, flexShrink: 0 }} />}
             onClick={handleMarqueeClick}
             disabled={disabled || !isApiReady}
             size="sm"
             styles={{
-              root: { minWidth: 0 },
+              root: { 
+                minWidth: 0,
+              },
               label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
             }}
           >
@@ -173,20 +177,27 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
             </Badge>
           </Group>
           
-          <Button
-            variant="filled"
-            color="red"
-            leftSection={<CheckCircleIcon style={{ fontSize: 18, flexShrink: 0 }} />}
-            onClick={handleApplyAll}
+          <Tooltip
+            label={t('redact.manual.applyWarning', '⚠️ Permanent application, cannot be undone and the data underneath will be deleted')}
+            withArrow
+            position="top"
             disabled={disabled || pendingCount === 0 || !isApiReady}
-            size="sm"
-            styles={{
-              root: { flexShrink: 0 },
-              label: { whiteSpace: 'nowrap' },
-            }}
           >
-            {t('redact.manual.apply', 'Apply')}
-          </Button>
+            <Button
+              variant="filled"
+              color="red"
+              leftSection={<CheckCircleIcon style={{ fontSize: 18, flexShrink: 0 }} />}
+              onClick={handleApplyAll}
+              disabled={disabled || pendingCount === 0 || !isApiReady}
+              size="sm"
+              styles={{
+                root: { flexShrink: 0 },
+                label: { whiteSpace: 'nowrap' },
+              }}
+            >
+              {t('redact.manual.apply', 'Apply')}
+            </Button>
+          </Tooltip>
         </Group>
 
         {pendingCount === 0 && (

@@ -6,11 +6,11 @@ import { useRedactParameters, RedactMode } from "@app/hooks/tools/redact/useReda
 import { useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "@app/components/tooltips/useRedactTips";
+import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips, useRedactManualTips } from "@app/components/tooltips/useRedactTips";
 import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
 import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
 import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 
 const Redact = (props: BaseToolProps) => {
@@ -23,7 +23,8 @@ const Redact = (props: BaseToolProps) => {
 
   // Navigation and redaction context
   const { actions: navActions } = useNavigationActions();
-  const { setRedactionConfig, setRedactionMode } = useRedaction();
+  const { setRedactionConfig, setRedactionMode, redactionConfig } = useRedaction();
+  const { workbench } = useNavigationState();
   const hasOpenedViewer = useRef(false);
 
   const base = useBaseTool(
@@ -37,6 +38,16 @@ const Redact = (props: BaseToolProps) => {
   const modeTips = useRedactModeTips();
   const wordsTips = useRedactWordsTips();
   const advancedTips = useRedactAdvancedTips();
+  const manualTips = useRedactManualTips();
+
+  // Auto-set manual mode if we're in the viewer and redaction config is set to manual
+  // This ensures when opening redact from viewer, it automatically selects manual mode
+  useEffect(() => {
+    if (workbench === 'viewer' && redactionConfig?.mode === 'manual' && base.params.parameters.mode !== 'manual') {
+      // Set immediately when conditions are met
+      base.params.updateParameter('mode', 'manual');
+    }
+  }, [workbench, redactionConfig, base.params.parameters.mode, base.params.updateParameter]);
 
   // Handle mode change - navigate to viewer when manual mode is selected
   const handleModeChange = (mode: RedactMode) => {
@@ -133,7 +144,7 @@ const Redact = (props: BaseToolProps) => {
         title: t("redact.manual.controlsTitle", "Manual Redaction Controls"),
         isCollapsed: false,
         onCollapsedClick: () => {},
-        tooltip: [],
+        tooltip: manualTips,
         content: <ManualRedactionControls disabled={!base.hasFiles} />,
       });
     }

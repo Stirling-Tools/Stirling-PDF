@@ -34,16 +34,15 @@ export const useRedactParameters = (): RedactParametersHook => {
       if (params.mode === 'automatic') {
         return '/api/v1/security/auto-redact';
       }
-      // Manual redaction is handled client-side via EmbedPDF
-      // Return null or a placeholder since we don't call an endpoint
+      // Manual redaction is handled in the viewer; no endpoint
       return null;
     },
     validateFn: (params) => {
       if (params.mode === 'automatic') {
         return params.wordsToRedact.length > 0 && params.wordsToRedact.some(word => word.trim().length > 0);
       }
-      // Manual mode is always valid since redaction is done in the viewer
-      return true;
+      // Manual mode is not yet supported via this flow
+      return false;
     }
   });
 };

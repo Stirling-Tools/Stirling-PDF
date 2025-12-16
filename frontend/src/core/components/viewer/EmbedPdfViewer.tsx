@@ -73,7 +73,7 @@ const EmbedPdfViewerContent = ({
   const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
 
   // Get redaction context
-  const { isRedactionMode } = useRedaction();
+  const { isRedactionMode, redactionsApplied, setRedactionsApplied } = useRedaction();
   
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -224,23 +224,39 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered]);
 
-  // Register checker for unsaved changes (annotations only for now)
+  // Register checker for unsaved changes
+  // In redact mode: check for pending (unapplied) OR applied but not saved redactions
+  // In other modes: check annotation history
   useEffect(() => {
     if (previewFile) {
       return;
     }
 
     const checkForChanges = () => {
-      // Check for annotation changes via history
-      const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
       // Check for pending redactions
       const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      // Check for annotation history changes
+      const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
 
-      console.log('[Viewer] Checking for unsaved changes:', {
-        hasAnnotationChanges,
-        hasPendingRedactions
-      });
-      return hasAnnotationChanges || hasPendingRedactions;
+      // Always consider applied redactions as unsaved until export
+      const hasAppliedRedactions = redactionsApplied;
+
+      // When in redact mode, still include annotation changes (users may draw)
+      if (isManualRedactMode) {
+        console.log('[Viewer] Checking for unsaved changes (redact mode):', {
+          hasPendingRedactions,
+          hasAppliedRedactions,
+          hasAnnotationChanges,
+        });
+      } else {
+        console.log('[Viewer] Checking for unsaved changes:', {
+          hasAnnotationChanges,
+          hasPendingRedactions,
+          hasAppliedRedactions,
+        });
+      }
+
+      return hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions;
     };
 
     console.log('[Viewer] Registering unsaved changes checker');
@@ -250,7 +266,7 @@ const EmbedPdfViewerContent = ({
       console.log('[Viewer] Unregistering unsaved changes checker');
       unregisterUnsavedChangesChecker();
     };
-  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
 
   // Apply changes - save annotations and redactions to new file version
   const applyChanges = useCallback(async () => {
@@ -289,11 +305,13 @@ const EmbedPdfViewerContent = ({
       // Step 4: Consume files (replace in context)
       await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
 
+      // Clear unsaved changes flags
       setHasUnsavedChanges(false);
+      setRedactionsApplied(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
-  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
+  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
 
   const sidebarWidthRem = 15;
   const totalRightMargin =

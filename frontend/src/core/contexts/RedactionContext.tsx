@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import { useNavigationGuard } from '@app/contexts/NavigationContext';
 
 /**
  * API interface that the EmbedPDF bridge will implement
@@ -73,6 +74,7 @@ const initialState: RedactionState = {
 export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<RedactionState>(initialState);
   const redactionApiRef = useRef<RedactionAPI | null>(null);
+  const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Actions for tool configuration
   const setRedactionConfig = useCallback((config: RedactParameters | null) => {
@@ -117,6 +119,13 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
       isRedacting,
     }));
   }, []);
+
+  // Keep navigation guard aware of pending or applied redactions so we block navigation
+  useEffect(() => {
+    if (state.pendingCount > 0 || state.redactionsApplied) {
+      setHasUnsavedChanges(true);
+    }
+  }, [state.pendingCount, state.redactionsApplied, setHasUnsavedChanges]);
 
   // Actions that call through to EmbedPDF API
   const activateTextSelection = useCallback(() => {

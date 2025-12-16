@@ -1,8 +1,11 @@
 unsavedChanges = "You have unsaved changes to your PDF."
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Are you sure you want to leave?"
 unsavedChangesTitle = "Unsaved Changes"
 keepWorking = "Keep Working"
 discardChanges = "Discard & Leave"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Save & Leave"
 exportAndContinue = "Export & Continue"
 cancel = "Cancel"
@@ -3140,8 +3143,35 @@ text = "Only match complete words, not partial matches. 'John' won't match 'John
 title = "Convert to PDF-Image"
 text = "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Manual Redaction"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Text-based Redaction"
 pageBasedRedaction = "Page-based Redaction"
 convertPDFToImageLabel = "Convert PDF to PDF-Image (Used to remove text behind the box)"
@@ -3901,6 +3931,8 @@ toggleAnnotations = "Toggle Annotations Visibility"
 annotationMode = "Toggle Annotation Mode"
 print = "Print PDF"
 draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
 save = "Save"
 saveChanges = "Save Changes"
 

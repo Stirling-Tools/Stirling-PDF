@@ -6,9 +6,10 @@ import { RedactParameters, defaultParameters } from '@app/hooks/tools/redact/use
 // Static configuration that can be used by both the hook and automation executor
 export const buildRedactFormData = (parameters: RedactParameters, file: File): FormData => {
   const formData = new FormData();
-  formData.append("fileInput", file);
 
+  // For automatic mode we hit the backend and need full payload
   if (parameters.mode === 'automatic') {
+    formData.append("fileInput", file);
     // Convert array to newline-separated string as expected by backend
     formData.append("listOfText", parameters.wordsToRedact.join('\n'));
     formData.append("useRegex", parameters.useRegex.toString());
@@ -16,8 +17,10 @@ export const buildRedactFormData = (parameters: RedactParameters, file: File): F
     formData.append("redactColor", parameters.redactColor.replace('#', ''));
     formData.append("customPadding", parameters.customPadding.toString());
     formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
+  } else {
+    // Manual redaction uses EmbedPDF in-viewer; we don't call the API.
+    // Return an empty formData to satisfy shared interfaces without throwing.
   }
-  // Note: Manual mode is handled client-side via EmbedPDF, no formData needed
 
   return formData;
 };
@@ -31,8 +34,7 @@ export const redactOperationConfig = {
     if (parameters.mode === 'automatic') {
       return '/api/v1/security/auto-redact';
     }
-    // Manual redaction is handled client-side via EmbedPDF
-    // Return null to indicate no server endpoint is needed
+    // Manual redaction is handled by EmbedPDF in the viewer; no endpoint call.
     return null;
   },
   defaultParameters,

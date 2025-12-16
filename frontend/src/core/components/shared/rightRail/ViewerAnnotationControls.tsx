@@ -12,8 +12,10 @@ import { createProcessedFile } from '@app/contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
 import { useNavigationState, useNavigationGuard, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useRedactionMode, useRedaction } from '@app/contexts/RedactionContext';
+import { defaultParameters, RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -23,6 +25,7 @@ interface ViewerAnnotationControlsProps {
 export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
+  const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
   const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -32,7 +35,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const viewerContext = React.useContext(ViewerContext);
 
   // Signature context for accessing drawing API
-  const { signatureApiRef, isPlacementMode } = useSignature();
+  const { signatureApiRef, historyApiRef, isPlacementMode } = useSignature();
 
   // File state for save functionality
   const { state, selectors } = useFileState();
@@ -40,15 +43,15 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const activeFiles = selectors.getFiles();
 
   // Check if we're in sign mode or redaction mode
-  const { selectedTool } = useNavigationState();
+  const { selectedTool, workbench } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const isSignMode = selectedTool === 'sign';
   const isRedactMode = selectedTool === 'redact';
   
   // Get redaction pending state and navigation guard
-  const { pendingCount: redactionPendingCount, isRedacting } = useRedactionMode();
+  const { pendingCount: redactionPendingCount, isRedacting: _isRedacting } = useRedactionMode();
   const { requestNavigation } = useNavigationGuard();
-  const { setRedactionMode, activateTextSelection } = useRedaction();
+  const { setRedactionMode, activateTextSelection, setRedactionConfig } = useRedaction();
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -62,11 +65,51 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     return null;
   }
 
+  // Persist annotations to file if there are unsaved changes
+  const saveAnnotationsIfNeeded = async () => {
+    if (!viewerContext?.exportActions?.saveAsCopy || currentView !== 'viewer') return;
+    const hasUnsavedAnnotations = historyApiRef?.current?.canUndo() || false;
+    if (!hasUnsavedAnnotations) return;
+
+    try {
+      const pdfArrayBuffer = await viewerContext.exportActions.saveAsCopy();
+      if (!pdfArrayBuffer) return;
+
+      const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
+      const originalFileName = activeFiles.length > 0 ? activeFiles[0].name : 'document.pdf';
+      const newFile = new File([blob], originalFileName, { type: 'application/pdf' });
+
+      if (activeFiles.length > 0) {
+        const thumbnailResult = await generateThumbnailWithMetadata(newFile);
+        const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
+
+        const currentFileIds = state.files.ids;
+        if (currentFileIds.length > 0) {
+          const currentFileId = currentFileIds[0];
+          const currentRecord = selectors.getStirlingFileStub(currentFileId);
+          if (!currentRecord) {
+            console.error('No file record found for:', currentFileId);
+            return;
+          }
+
+          const outputStub = createNewStirlingFileStub(newFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
+          const outputStirlingFile = createStirlingFile(newFile, outputStub.id);
+
+          await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
+        }
+      }
+    } catch (error) {
+      console.error('Error auto-saving annotations before redaction:', error);
+    }
+  };
+
   // Handle redaction mode toggle
-  const handleRedactionToggle = () => {
+  const handleRedactionToggle = async () => {
     if (isRedactMode) {
       // If already in redact mode, toggle annotation mode off and show redaction layer
       if (viewerContext?.isAnnotationMode) {
+        await saveAnnotationsIfNeeded();
+
         viewerContext.setAnnotationMode(false);
         // Deactivate any active annotation tools
         if (signatureApiRef?.current) {
@@ -81,13 +124,33 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           activateTextSelection();
         }, 100);
       } else {
-        // Exit redaction mode - go back to default view
-        navActions.handleToolSelect('allTools');
+        // Exit redaction mode - keep viewer workbench and show all tools in sidebar
+        navActions.setToolAndWorkbench(null, 'viewer');
+        setLeftPanelView('toolPicker');
         setRedactionMode(false);
       }
     } else {
+      await saveAnnotationsIfNeeded();
+
       // Enter redaction mode - select redact tool with manual mode
-      navActions.handleToolSelect('redact');
+      // If we're already in the viewer, keep the viewer workbench and open the tool sidebar
+      if (workbench === 'viewer') {
+        // Set redaction config to manual mode when opening from viewer
+        const manualConfig: RedactParameters = {
+          ...defaultParameters,
+          mode: 'manual',
+        };
+        setRedactionConfig(manualConfig);
+        
+        // Set tool and keep viewer workbench
+        navActions.setToolAndWorkbench('redact', 'viewer');
+        
+        // Ensure sidebars are visible and open tool content
+        setSidebarsVisible(true);
+        setLeftPanelView('toolContent');
+      } else {
+        navActions.handleToolSelect('redact');
+      }
       setRedactionMode(true);
       // Activate text selection mode after a short delay
       setTimeout(() => {
@@ -99,7 +162,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   return (
     <>
       {/* Redaction Mode Toggle */}
-      <Tooltip content={isRedactMode ? t('rightRail.exitRedaction', 'Exit Redaction Mode') : t('rightRail.redact', 'Redact')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
+      <Tooltip content={isRedactMode && !viewerContext?.isAnnotationMode ? t('rightRail.exitRedaction', 'Exit Redaction Mode') : t('rightRail.redact', 'Redact')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
           variant={isRedactMode && !viewerContext?.isAnnotationMode ? 'filled' : 'subtle'}
           color={isRedactMode && !viewerContext?.isAnnotationMode ? 'red' : undefined}

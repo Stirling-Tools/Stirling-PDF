@@ -1,6 +1,5 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
-import { useNavigationGuard } from '@app/contexts/NavigationContext';
 
 export interface RedactionPendingTrackerAPI {
   commitAllPending: () => void;
@@ -8,14 +7,16 @@ export interface RedactionPendingTrackerAPI {
 }
 
 /**
- * RedactionPendingTracker monitors pending redactions and integrates with
- * the navigation guard to warn users about unsaved changes.
+ * RedactionPendingTracker monitors pending redactions and exposes an API
+ * for committing and checking pending redactions.
  * Must be rendered inside the EmbedPDF context.
+ * 
+ * Note: The unsaved changes checker is registered by EmbedPdfViewer, not here,
+ * to avoid conflicts and allow the viewer to check both annotations and redactions.
  */
 export const RedactionPendingTracker = forwardRef<RedactionPendingTrackerAPI>(
   function RedactionPendingTracker(_, ref) {
     const { state, provides } = useEmbedPdfRedaction();
-    const { registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, setHasUnsavedChanges } = useNavigationGuard();
     
     const pendingCountRef = useRef(0);
     
@@ -32,26 +33,7 @@ export const RedactionPendingTracker = forwardRef<RedactionPendingTrackerAPI>(
     // Update ref when pending count changes
     useEffect(() => {
       pendingCountRef.current = state?.pendingCount ?? 0;
-      
-      // Also update the hasUnsavedChanges state
-      if (pendingCountRef.current > 0) {
-        setHasUnsavedChanges(true);
-      }
-    }, [state?.pendingCount, setHasUnsavedChanges]);
-
-    // Register checker for pending redactions
-    useEffect(() => {
-      const checkForPendingRedactions = () => {
-        const hasPending = pendingCountRef.current > 0;
-        return hasPending;
-      };
-
-      registerUnsavedChangesChecker(checkForPendingRedactions);
-
-      return () => {
-        unregisterUnsavedChangesChecker();
-      };
-    }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+    }, [state?.pendingCount]);
 
     return null;
   }
