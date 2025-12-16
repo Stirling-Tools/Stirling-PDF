@@ -51,6 +51,7 @@ const EmbedPdfViewerContent = ({
     getScrollState,
     getRotationState,
     isAnnotationMode,
+    setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
   } = useViewer();
@@ -82,15 +83,18 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in signature mode OR viewer annotation mode
+  // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that use the stamp/signature placement system with hover preview
-  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+  // Tools that require the annotation layer (Sign, Add Text, Add Image)
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
 
-  // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
-  const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
+  // Sync isAnnotationMode in ViewerContext with current tool
+  useEffect(() => {
+    setAnnotationMode(isInAnnotationTool);
+  }, [isInAnnotationTool, setAnnotationMode]);
+
   const isPlacementOverlayActive = Boolean(
-    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+    isInAnnotationTool && isPlacementMode && signatureConfig
   );
 
   // Track which file tab is active
@@ -333,7 +337,8 @@ const EmbedPdfViewerContent = ({
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
-              enableAnnotations={shouldEnableAnnotations}
+              enableAnnotations={isAnnotationMode}
+              showBakedAnnotations={isAnnotationsVisible}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={() => {

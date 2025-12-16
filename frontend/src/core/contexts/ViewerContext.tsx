@@ -95,7 +95,6 @@ interface ViewerContextType {
   // Annotation/drawing mode for viewer
   isAnnotationMode: boolean;
   setAnnotationMode: (enabled: boolean) => void;
-  toggleAnnotationMode: () => void;
 
   // Active file index for multi-file viewing
   activeFileIndex: number;
@@ -230,10 +229,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setIsAnnotationModeState(enabled);
   };
 
-  const toggleAnnotationMode = () => {
-    setIsAnnotationModeState(prev => !prev);
-  };
-
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
     return bridgeRefs.current.scroll?.state || { currentPage: 1, totalPages: 0 };
@@ -318,7 +313,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleAnnotationsVisibility,
     isAnnotationMode,
     setAnnotationMode,
-    toggleAnnotationMode,
 
     // Active file index
     activeFileIndex,
