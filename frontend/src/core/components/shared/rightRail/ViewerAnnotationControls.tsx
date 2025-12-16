@@ -58,6 +58,18 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     }
   }, [currentView, viewerContext]);
 
+  // Activate draw mode when annotation mode becomes active
+  useEffect(() => {
+    if (viewerContext?.isAnnotationMode && signatureApiRef?.current && currentView === 'viewer') {
+      try {
+        signatureApiRef.current.activateDrawMode();
+        signatureApiRef.current.updateDrawSettings(selectedColor, 2);
+      } catch (error) {
+        console.log('Signature API not ready:', error);
+      }
+    }
+  }, [viewerContext?.isAnnotationMode, currentView, selectedColor, signatureApiRef]);
+
   // Don't show any annotation controls in sign mode
   if (isSignMode) {
     return null;
@@ -247,36 +259,14 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
             radius="md"
             className="right-rail-icon"
             onClick={() => {
-              const activateDrawMode = () => {
-                // Use setTimeout to ensure this runs after any state updates from applyChanges
-                setTimeout(() => {
-                  viewerContext?.setAnnotationMode(true);
-                  // Activate ink drawing tool when entering annotation mode
-                  if (signatureApiRef?.current && currentView === 'viewer') {
-                    try {
-                      signatureApiRef.current.activateDrawMode();
-                      signatureApiRef.current.updateDrawSettings(selectedColor, 2);
-                    } catch (error) {
-                      console.log('Signature API not ready:', error);
-                    }
-                  }
-                }, 150);
-              };
-              
               // If in redaction mode with pending redactions, show warning modal
               if (isRedactMode && redactionPendingCount > 0) {
-                requestNavigation(activateDrawMode);
+                requestNavigation(() => {
+                  viewerContext?.setAnnotationMode(true);
+                });
               } else {
-                // Direct activation - no need for delay
+                // Direct activation - useEffect will handle draw mode activation
                 viewerContext?.toggleAnnotationMode();
-                if (signatureApiRef?.current && currentView === 'viewer') {
-                  try {
-                    signatureApiRef.current.activateDrawMode();
-                    signatureApiRef.current.updateDrawSettings(selectedColor, 2);
-                  } catch (error) {
-                    console.log('Signature API not ready:', error);
-                  }
-                }
               }
             }}
             disabled={disabled}
