@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box } from '@mantine/core';
 import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 
 interface TextInputWithFontProps {
@@ -15,8 +14,12 @@ interface TextInputWithFontProps {
   textAlign?: 'left' | 'center' | 'right';
   onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
   disabled?: boolean;
-  label?: string;
-  placeholder?: string;
+  label: string;
+  placeholder: string;
+  fontLabel: string;
+  fontSizeLabel: string;
+  fontSizePlaceholder: string;
+  colorLabel?: string;
   onAnyChange?: () => void;
 }
 
@@ -34,9 +37,12 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   disabled = false,
   label,
   placeholder,
+  fontLabel,
+  fontSizeLabel,
+  fontSizePlaceholder,
+  colorLabel,
   onAnyChange
 }) => {
-  const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -70,8 +76,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   return (
     <Stack gap="sm">
       <TextInput
-        label={label || t('sign.text.name', 'Signer name')}
-        placeholder={placeholder || t('sign.text.placeholder', 'Enter your full name')}
+        label={label}
+        placeholder={placeholder}
         value={text}
         onChange={(e) => {
           onTextChange(e.target.value);
@@ -83,7 +89,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
 
       {/* Font Selection */}
       <Select
-        label={t('sign.text.fontLabel', 'Font')}
+        label={fontLabel}
         value={fontFamily}
         onChange={(value) => {
           onFontFamilyChange(value || 'Helvetica');
@@ -111,8 +117,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         >
           <Combobox.Target>
             <TextInput
-              label={t('sign.text.fontSizeLabel', 'Font size')}
-              placeholder={t('sign.text.fontSizePlaceholder', 'Type or select font size (8-200)')}
+              label={fontSizeLabel}
+              placeholder={fontSizePlaceholder}
               value={fontSizeInput}
               onChange={(event) => {
                 const value = event.currentTarget.value;
@@ -159,7 +165,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         {onTextColorChange && (
           <Box>
             <TextInput
-              label={t('sign.text.colorLabel', 'Text colour')}
+              label={colorLabel}
               value={colorInput}
               placeholder="#000000"
               disabled={disabled}

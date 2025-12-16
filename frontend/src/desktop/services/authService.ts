@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
-import { STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
+import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
   username: string;
@@ -25,6 +25,7 @@ export class AuthService {
   private static instance: AuthService;
   private authStatus: AuthStatus = 'unauthenticated';
   private userInfo: UserInfo | null = null;
+  private cachedToken: string | null = null;
   private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
 
   static getInstance(): AuthService {
@@ -38,13 +39,32 @@ export class AuthService {
    * Save token to all storage locations and notify listeners
    */
   private async saveTokenEverywhere(token: string): Promise<void> {
-    // Save to Tauri store
-    await invoke('save_auth_token', { token });
-    console.log('[Desktop AuthService] Token saved to Tauri store');
+    // Validate token before caching
+    if (!token || token.trim().length === 0) {
+      console.warn('[Desktop AuthService] Attempted to save invalid/empty token');
+      throw new Error('Invalid token');
+    }
 
-    // Sync to localStorage for web layer
-    localStorage.setItem('stirling_jwt', token);
-    console.log('[Desktop AuthService] Token saved to localStorage');
+    try {
+      // Save to Tauri store
+      await invoke('save_auth_token', { token });
+      console.log('[Desktop AuthService] ✅ Token saved to Tauri store');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to save token to Tauri store:', error);
+      // Don't throw - we can still use localStorage
+    }
+
+    try {
+      // Sync to localStorage for web layer
+      localStorage.setItem('stirling_jwt', token);
+      console.log('[Desktop AuthService] ✅ Token saved to localStorage');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to save token to localStorage:', error);
+    }
+
+    // Cache the valid token in memory
+    this.cachedToken = token;
+    console.log('[Desktop AuthService] ✅ Token cached in memory');
 
     // Notify other parts of the system
     window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -56,20 +76,25 @@ export class AuthService {
    */
   private async getTokenFromAnySource(): Promise<string | null> {
     // Try Tauri store first
-    console.log('[Desktop AuthService] Retrieving token from Tauri store...');
-    const token = await invoke<string | null>('get_auth_token');
+    try {
+      const token = await invoke<string | null>('get_auth_token');
 
-    if (token) {
-      console.log(`[Desktop AuthService] Token found in Tauri store (length: ${token.length})`);
-      return token;
+      if (token) {
+        console.log(`[Desktop AuthService] ✅ Token found in Tauri store (length: ${token.length})`);
+        return token;
+      }
+
+      console.log('[Desktop AuthService] ℹ️ No token in Tauri store, checking localStorage...');
+    } catch (error) {
+      console.error('[Desktop AuthService] ❌ Failed to read from Tauri store:', error);
     }
-
-    console.log('[Desktop AuthService] No token in Tauri store');
 
     // Fallback to localStorage
     const localStorageToken = localStorage.getItem('stirling_jwt');
     if (localStorageToken) {
-      console.log('[Desktop AuthService] Token found in localStorage (length:', localStorageToken.length, ')');
+      console.log(`[Desktop AuthService] ✅ Token found in localStorage (length: ${localStorageToken.length})`);
+    } else {
+      console.log('[Desktop AuthService] ❌ No token found in any storage');
     }
 
     return localStorageToken;
@@ -79,6 +104,10 @@ export class AuthService {
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
+    // Invalidate cache
+    this.cachedToken = null;
+    console.log('[Desktop AuthService] Cache invalidated');
+
     await invoke('clear_auth_token');
     localStorage.removeItem('stirling_jwt');
   }
@@ -100,6 +129,67 @@ export class AuthService {
     this.authStatus = status;
     this.userInfo = userInfo;
     this.notifyListeners();
+  }
+
+  async completeSupabaseSession(accessToken: string, serverUrl: string): Promise<UserInfo> {
+    if (!accessToken || !accessToken.trim()) {
+      throw new Error('Invalid access token');
+    }
+    if (!SUPABASE_KEY) {
+      throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+    }
+
+    await this.saveTokenEverywhere(accessToken);
+
+    const userInfo = await this.fetchSupabaseUserInfo(serverUrl, accessToken);
+
+    await invoke('save_user_info', {
+      username: userInfo.username,
+      email: userInfo.email || null,
+    });
+
+    this.setAuthStatus('authenticated', userInfo);
+    return userInfo;
+  }
+
+  async signUpSaas(email: string, password: string): Promise<void> {
+    if (!STIRLING_SAAS_URL) {
+      throw new Error('VITE_SAAS_SERVER_URL is not configured');
+    }
+    if (!SUPABASE_KEY) {
+      throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+    }
+
+    const redirectParam = encodeURIComponent(DESKTOP_DEEP_LINK_CALLBACK);
+    const signupUrl = `${STIRLING_SAAS_URL.replace(/\/$/, '')}/auth/v1/signup?redirect_to=${redirectParam}`;
+
+    try {
+      const response = await axios.post(
+        signupUrl,
+        { email, password, email_redirect_to: DESKTOP_DEEP_LINK_CALLBACK },
+        {
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      );
+
+      if (response.status >= 400) {
+        throw new Error('Sign up failed');
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message =
+          error.response?.data?.error_description ||
+          error.response?.data?.msg ||
+          error.response?.data?.message ||
+          error.message;
+        throw new Error(message || 'Sign up failed');
+      }
+      throw error instanceof Error ? error : new Error('Sign up failed');
+    }
   }
 
   async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
@@ -183,7 +273,22 @@ export class AuthService {
 
   async getAuthToken(): Promise<string | null> {
     try {
-      return await this.getTokenFromAnySource();
+      // Return cached token if available
+      if (this.cachedToken) {
+        console.debug('[Desktop AuthService] ✅ Returning cached token');
+        return this.cachedToken;
+      }
+
+      console.debug('[Desktop AuthService] Cache miss, fetching from storage...');
+      const token = await this.getTokenFromAnySource();
+
+      // Cache the token if valid
+      if (token && token.trim().length > 0) {
+        this.cachedToken = token;
+        console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
+      }
+
+      return token;
     } catch (error) {
       console.error('[Desktop AuthService] Failed to get auth token:', error);
       return null;

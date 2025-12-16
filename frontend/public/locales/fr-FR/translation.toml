@@ -163,6 +163,11 @@ unfavorite = "Retirer des favoris"
 fullscreen = "Passer en mode plein écran"
 sidebar = "Passer en mode barre latérale"
 
+[backendStartup]
+notFoundTitle = "Backend introuvable"
+retry = "Réessayer"
+unreachable = "L’application ne peut actuellement pas se connecter au backend. Vérifiez l’état du backend et la connectivité réseau, puis réessayez."
+
 [zipWarning]
 title = "Fichier ZIP volumineux"
 message = "Ce ZIP contient {{count}} fichiers. Extraire quand même ?"
@@ -347,7 +352,7 @@ teams = "Équipes"
 title = "Configuration"
 systemSettings = "Paramètres système"
 features = "Fonctionnalités"
-endpoints = "Endpoints"
+endpoints = "Points de terminaison"
 database = "Base de données"
 advanced = "Avancé"
 
@@ -358,7 +363,7 @@ connections = "Connexions"
 
 [settings.licensingAnalytics]
 title = "Licences et analyses"
-plan = "Plan"
+plan = "Forfait"
 audit = "Audit"
 usageAnalytics = "Analyses d'utilisation"
 
@@ -912,6 +917,9 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 desc = "Superposer un PDF sur un autre"
 title = "Superposer des PDF"
 
+[home.pdfTextEditor]
+title = "Éditeur de texte PDF"
+desc = "Modifier le texte et les images existants dans les PDF"
 
 [home.addText]
 tags = "texte,annotation,étiquette"
@@ -1217,7 +1225,7 @@ odtExt = "Texte OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Présentation OpenDocument (.odp)"
 txtExt = "Texte brut (.txt)"
-rtfExt = "Rich Text Format (.rtf)"
+rtfExt = "Format de texte enrichi (.rtf)"
 selectedFiles = "Fichiers sélectionnés"
 noFileSelected = "Aucun fichier sélectionné. Utilisez le panneau de fichiers pour ajouter des fichiers."
 convertFiles = "Convertir les fichiers"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Signature dessinée"
 defaultImageLabel = "Signature téléversée"
 defaultTextLabel = "Signature saisie"
 saveButton = "Enregistrer la signature"
+savePersonal = "Enregistrer en personnel"
+saveShared = "Enregistrer en partagé"
 saveUnavailable = "Créez d’abord une signature pour l’enregistrer."
 noChanges = "La signature actuelle est déjà enregistrée."
+tempStorageTitle = "Stockage temporaire du navigateur"
+tempStorageDescription = "Les signatures sont stockées uniquement dans votre navigateur. Elles seront perdues si vous effacez les données du navigateur ou si vous changez de navigateur."
+personalHeading = "Signatures personnelles"
+sharedHeading = "Signatures partagées"
+personalDescription = "Vous seul pouvez voir ces signatures."
+sharedDescription = "Tous les utilisateurs peuvent voir et utiliser ces signatures."
 
 [sign.saved.type]
 canvas = "Dessin"
@@ -3020,6 +3036,91 @@ title = "Récupérer les informations"
 header = "Récupérer les informations"
 submit = "Récupérer les informations"
 downloadJson = "Télécharger le JSON"
+processing = "Extraction des informations..."
+results = "Résultats"
+noResults = "Exécutez l'outil pour générer un rapport."
+downloads = "Téléchargements"
+noneDetected = "Aucun détecté"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Résumé complet des informations"
+shortTitle = "Informations PDF"
+
+[getPdfInfo.sections]
+metadata = "Métadonnées"
+formFields = "Champs de formulaire"
+basicInfo = "Informations de base"
+documentInfo = "Informations sur le document"
+compliance = "Conformité"
+encryption = "Chiffrement"
+permissions = "Autorisations"
+other = "Autre"
+perPageInfo = "Informations par page"
+tableOfContents = "Table des matières"
+
+[getPdfInfo.other]
+attachments = "Pièces jointes"
+embeddedFiles = "Fichiers intégrés"
+javaScript = "JavaScript"
+layers = "Calques"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Taille"
+annotations = "Annotations"
+images = "Images"
+links = "Liens"
+fonts = "Polices"
+xobjects = "Nombre d'objets XObject"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary]
+pages = "Pages"
+fileSize = "Taille du fichier"
+pdfVersion = "Version PDF"
+language = "Langue"
+title = "Résumé PDF"
+author = "Auteur"
+created = "Créé"
+modified = "Modifié"
+permsAll = "Toutes les autorisations accordées"
+permsRestricted = "{{count}} restrictions"
+permsMixed = "Certaines autorisations sont restreintes"
+hasCompliance = "Respecte des normes de conformité"
+noCompliance = "Aucune norme de conformité"
+basic = "Informations de base"
+documentInfo = "Informations sur le document"
+securityTitle = "État de sécurité"
+technical = "Technique"
+overviewTitle = "Aperçu du PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF chiffré - Protection par mot de passe présente"
+unencrypted = "PDF non chiffré - Aucune protection par mot de passe"
+
+[getPdfInfo.summary.tech]
+images = "Images"
+fonts = "Polices"
+formFields = "Champs de formulaire"
+embeddedFiles = "Fichiers intégrés"
+javaScript = "JavaScript"
+layers = "Calques"
+bookmarks = "Signets"
+multimedia = "Multimédia"
+
+[getPdfInfo.summary.overview]
+untitled = "un document sans titre"
+unknown = "Auteur inconnu"
+text = "Ceci est un PDF de {{pages}} pages intitulé {{title}} créé par {{author}} (version PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Certains fichiers n'ont pas pu être traités."
+unexpected = "Erreur inattendue lors de l'extraction."
+
+[getPdfInfo.status]
+complete = "Extraction terminée"
 
 [extractPage]
 tags = "extraire,extract"
@@ -3438,6 +3539,9 @@ signinTitle = "Veuillez vous connecter"
 ssoSignIn = "Se connecter via l'authentification unique"
 oAuth2AutoCreateDisabled = "OAUTH2 Création automatique d'utilisateur désactivée"
 oAuth2AdminBlockedUser = "La création ou l'authentification d'utilisateurs non enregistrés est actuellement bloquée. Veuillez contacter l'administrateur."
+oAuth2RequiresLicense = "La connexion OAuth/SSO nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
+saml2RequiresLicense = "La connexion SAML nécessite une licence payante (Server ou Enterprise). Veuillez contacter l’administrateur pour mettre à niveau votre plan."
+maxUsersReached = "Nombre maximal d’utilisateurs atteint pour votre licence actuelle. Veuillez contacter l’administrateur pour mettre à niveau votre plan ou ajouter des places."
 oauth2RequestNotFound = "Demande d'autorisation introuvable"
 oauth2InvalidUserInfoResponse = "Réponse contenant les informations de l'utilisateur est invalide"
 oauth2invalidRequest = "Requête invalide"
@@ -3846,14 +3950,17 @@ fitToWidth = "Ajuster à la largeur"
 actualSize = "Taille réelle"
 
 [viewer]
+cannotPreviewFile = "Impossible d’afficher un aperçu du fichier"
+dualPageView = "Vue double page"
 firstPage = "Première page"
 lastPage = "Dernière page"
-previousPage = "Page précédente"
 nextPage = "Page suivante"
+onlyPdfSupported = "Le visualiseur prend uniquement en charge les fichiers PDF. Ce fichier semble être d’un autre format."
+previousPage = "Page précédente"
+singlePageView = "Vue page unique"
+unknownFile = "Fichier inconnu"
 zoomIn = "Zoom avant"
 zoomOut = "Zoom arrière"
-singlePageView = "Vue page unique"
-dualPageView = "Vue double page"
 
 [rightRail]
 closeSelected = "Fermer les fichiers sélectionnés"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Afficher/masquer la barre latérale"
 exportSelected = "Exporter les pages sélectionnées"
 toggleAnnotations = "Afficher/masquer les annotations"
 annotationMode = "Basculer en mode annotation"
+print = "Imprimer le PDF"
 draw = "Dessiner"
 save = "Enregistrer"
 saveChanges = "Enregistrer les modifications"
@@ -4153,7 +4261,7 @@ description = "Suivre les actions des utilisateurs et les événements système 
 
 [admin.settings.security.audit.level]
 label = "Niveau d’audit"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=DÉSACTIVÉ, 1=BASIQUE, 2=STANDARD, 3=VERBEUX"
 
 [admin.settings.security.audit.retentionDays]
 label = "Rétention des journaux (jours)"
@@ -4491,9 +4599,10 @@ label = "Mentions légales"
 description = "URL ou nom de fichier de l’impressum (obligatoire dans certaines juridictions)"
 
 [admin.settings.premium]
-title = "Premium & Enterprise"
+title = "Premium et Entreprise"
 description = "Configurer votre clé de licence Premium ou Enterprise."
 license = "Configuration de la licence"
+noInput = "Veuillez fournir une clé de licence ou un fichier"
 
 [admin.settings.premium.licenseKey]
 toggle = "Vous avez une clé de licence ou un fichier de certificat ?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Avertissement : licence existante détectée"
 line1 = "Écraser votre clé de licence actuelle est irréversible."
 line2 = "Votre licence précédente sera définitivement perdue, sauf si vous l’avez sauvegardée ailleurs."
 line3 = "Important : gardez vos clés de licence privées et sécurisées. Ne les partagez jamais publiquement."
+
+[admin.settings.premium.inputMethod]
+text = "Clé de licence"
+file = "Fichier de certificat"
+
+[admin.settings.premium.file]
+label = "Fichier de certificat de licence"
+description = "Téléversez votre fichier de licence .lic ou .cert issu d’achats hors ligne"
+choose = "Choisir le fichier de licence"
+selected = "Sélectionné: {{filename}} ({{size}})"
+successMessage = "Fichier de licence téléversé et activé avec succès. Aucun redémarrage requis."
+
+[admin.settings.premium.currentLicense]
+title = "Licence active"
+file = "Source: Fichier de licence ({{path}})"
+key = "Source: Clé de licence"
+type = "Type : {{type}}"
+noInput = "Veuillez fournir une clé de licence ou téléverser un fichier de certificat"
+success = "Succès"
 
 [admin.settings.premium.enabled]
 label = "Activer les fonctionnalités Premium"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} sélectionné(s)"
 download = "Télécharger"
 delete = "Supprimer"
 unsupported = "Non pris en charge"
+active = "Actif"
 addToUpload = "Ajouter au téléversement"
+closeFile = "Fermer le fichier"
 deleteAll = "Tout supprimer"
 loadingFiles = "Chargement des fichiers..."
 noFiles = "Aucun fichier disponible"
@@ -5132,7 +5262,7 @@ upgrade = "Mettre à niveau maintenant →"
 freeTitle = "Licence serveur"
 overLimitTitle = "Licence serveur requise"
 overLimitBody = "Notre licence autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Vous avez <strong>{{overLimitUserCopy}}</strong> utilisateurs Stirling. Pour continuer sans interruption, passez au plan Stirling Server — <strong>places illimitées</strong>, édition de texte PDF et contrôle d’administration complet pour 99 $/serveur/mois."
-freeBody = "Notre licence <strong>Open-Core</strong> autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Pour évoluer sans interruption et accéder en avant-première à notre nouvel <strong>outil d’édition de texte PDF</strong>, nous recommandons le plan Stirling Server — édition complète et <strong>places illimitées</strong> pour 99 $/serveur/mois."
+freeBody = "Notre régime de licence <strong>Open-Core</strong> autorise jusqu'à <strong>{{freeTierLimit}}</strong> utilisateurs gratuitement par serveur. Pour évoluer sans interruption, nous recommandons le forfait Stirling Server - <strong>places illimitées</strong> et <strong>prise en charge du SSO</strong> pour 99 $/serveur/mois."
 
 [onboarding.desktopInstall]
 title = "Télécharger"
@@ -5178,7 +5308,7 @@ active = "Actif"
 disabled = "Désactivé"
 activeSession = "Session active"
 member = "Membre"
-admin = "Admin"
+admin = "Administrateur"
 editRole = "Modifier le rôle"
 enable = "Activer"
 disable = "Désactiver"
@@ -5237,6 +5367,31 @@ error = "Échec de la mise à jour du statut de l’utilisateur"
 success = "Utilisateur supprimé avec succès"
 error = "Échec de la suppression de l’utilisateur"
 
+[workspace.people.changePassword]
+action = "Changer le mot de passe"
+title = "Changer le mot de passe"
+subtitle = "Mettre à jour le mot de passe de"
+newPassword = "Nouveau mot de passe"
+confirmPassword = "Confirmer le mot de passe"
+placeholder = "Saisissez un nouveau mot de passe"
+confirmPlaceholder = "Saisissez à nouveau le nouveau mot de passe"
+passwordRequired = "Veuillez saisir un nouveau mot de passe"
+passwordMismatch = "Les mots de passe ne correspondent pas"
+generateRandom = "Générer un mot de passe sécurisé"
+generatedPreview = "Mot de passe généré :"
+copyTooltip = "Copier dans le presse-papiers"
+copiedToClipboard = "Mot de passe copié dans le presse-papiers"
+copyFailed = "Échec de la copie du mot de passe"
+sendEmail = "Envoyer un e-mail à l'utilisateur à propos de ce changement"
+includePassword = "Inclure le nouveau mot de passe dans l'e-mail"
+forcePasswordChange = "Forcer l'utilisateur à changer son mot de passe à la prochaine connexion"
+emailUnavailable = "L'e-mail de cet utilisateur n'est pas une adresse valide. Les notifications sont désactivées."
+smtpDisabled = "Les notifications par e-mail nécessitent l'activation de SMTP dans les paramètres."
+notifyOnly = "Un e-mail sera envoyé sans le mot de passe, informant l'utilisateur qu'un administrateur l'a modifié."
+submit = "Mettre à jour le mot de passe"
+success = "Mot de passe mis à jour avec succès"
+error = "Échec de la mise à jour du mot de passe"
+
 [workspace.people.emailInvite]
 tab = "Invitation par e-mail"
 description = "Saisissez ou collez des adresses e-mail ci-dessous, séparées par des virgules. Les utilisateurs recevront leurs identifiants de connexion par e-mail."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Au moins une adresse e-mail est requise"
 submit = "Envoyer les invitations"
 success = "Utilisateur(s) invité(s) avec succès"
-partialSuccess = "Certaines invitations ont échoué"
+partialFailure = "Certaines invitations ont échoué"
 allFailed = "Échec de l’invitation des utilisateurs"
 error = "Échec de l’envoi des invitations"
 
@@ -5709,7 +5864,7 @@ title = "Graphique d’utilisation des endpoints"
 
 [usage.table]
 title = "Statistiques détaillées"
-endpoint = "Endpoint"
+endpoint = "Point de terminaison"
 visits = "Visites"
 percentage = "Pourcentage"
 noData = "Aucune donnée disponible"
@@ -5770,6 +5925,7 @@ subtitle = "Connectez-vous avec votre compte Stirling"
 [setup.selfhosted]
 title = "Se connecter au serveur"
 subtitle = "Saisissez les identifiants du serveur"
+link = "ou connectez-vous à un compte auto-hébergé"
 
 [setup.server]
 title = "Connexion au serveur"
@@ -5788,6 +5944,14 @@ description = "Saisissez l’URL complète de votre serveur Stirling PDF auto‑
 emptyUrl = "Veuillez saisir une URL de serveur"
 unreachable = "Connexion au serveur impossible"
 testFailed = "Échec du test de connexion"
+configFetch = "Échec de la récupération de la configuration du serveur. Veuillez vérifier l'URL et réessayer."
+
+[setup.server.error.securityDisabled]
+title = "Connexion non activée"
+body = "La connexion n'est pas activée sur ce serveur. Pour vous y connecter, vous devez activer l'authentification :"
+step1 = "Définissez DOCKER_ENABLE_SECURITY=true dans votre environnement"
+step2 = "Ou définissez security.enableLogin=true dans settings.yml"
+step3 = "Redémarrez le serveur"
 
 [setup.login]
 title = "Se connecter"
@@ -5797,13 +5961,20 @@ submit = "Se connecter"
 signInWith = "Se connecter avec"
 oauthPending = "Ouverture du navigateur pour l'authentification..."
 orContinueWith = "Ou continuer avec l’email"
+serverRequirement = "Remarque : le serveur doit avoir la connexion activée."
+showInstructions = "Comment l’activer ?"
+hideInstructions = "Masquer les instructions"
+instructions = "Pour activer la connexion sur votre serveur Stirling PDF :"
+instructionsEnvVar = "Définissez la variable d’environnement :"
+instructionsOrYml = "Ou dans settings.yml :"
+instructionsRestart = "Redémarrez ensuite votre serveur pour que les modifications prennent effet."
 
 [setup.login.username]
 label = "Nom d’utilisateur"
 placeholder = "Entrez votre nom d’utilisateur"
 
 [setup.login.email]
-label = "Email"
+label = "E-mail"
 placeholder = "Saisissez votre email"
 
 [setup.login.password]
@@ -5840,7 +6011,7 @@ paragraph = "Page de paragraphe"
 sparse = "Texte clairsemé"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatique"
 paragraph = "Paragraphe"
 singleLine = "Ligne unique"
 
@@ -5853,6 +6024,7 @@ earlyAccess = "Accès anticipé"
 reset = "Réinitialiser les modifications"
 downloadJson = "Télécharger le JSON"
 generatePdf = "Générer le PDF"
+saveChanges = "Enregistrer les modifications"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Ajuster automatiquement le texte aux cadres"
@@ -5890,6 +6062,8 @@ alpha = "Ce visualiseur alpha évolue encore — certaines polices, couleurs, ef
 [pdfTextEditor.empty]
 title = "Aucun document chargé"
 subtitle = "Chargez un fichier PDF ou JSON pour commencer à modifier le texte."
+dropzone = "Glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
+dropzoneWithFiles = "Sélectionnez un fichier depuis l'onglet Fichiers, ou glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bienvenue dans l'éditeur de texte PDF (accès anticipé)"

@@ -10,6 +10,7 @@
 import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -59,6 +60,7 @@ export interface User {
   enabled?: boolean;
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
+  authenticationType?: string;
   app_metadata?: Record<string, any>;
 }
 
@@ -248,26 +250,30 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign in with OAuth provider (GitHub, Google, etc.)
-   * This redirects to the Spring OAuth2 authorization endpoint
+   * Sign in with OAuth/SAML provider (GitHub, Google, Authentik, etc.)
+   * This redirects to the Spring OAuth2/SAML2 authorization endpoint
+   *
+   * @param params.provider - Full auth path from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
+   *                          The backend provides the complete path including the auth type and provider ID
    */
   async signInWithOAuth(params: {
-    provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc';
+    provider: OAuthProvider;
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
       persistRedirectPath(redirectPath);
 
-      // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
-      const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      // console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // Use the full path provided by the backend
+      // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
+      const redirectUrl = params.provider;
+      // console.log('[SpringAuth] Redirecting to SSO:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
       return { error: null };
     } catch (error) {
       return {
-        error: { message: error instanceof Error ? error.message : 'OAuth redirect failed' },
+        error: { message: error instanceof Error ? error.message : 'SSO redirect failed' },
       };
     }
   }

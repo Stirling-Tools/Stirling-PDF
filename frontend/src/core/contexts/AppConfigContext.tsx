@@ -20,6 +20,7 @@ export interface AppConfig {
   serverPort?: number;
   appNameNavbar?: string;
   languages?: string[];
+  defaultLocale?: string;
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -28,6 +29,7 @@ export interface AppConfig {
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
+  enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   termsAndConditions?: string;

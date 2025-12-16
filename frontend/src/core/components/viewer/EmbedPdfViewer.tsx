@@ -43,12 +43,15 @@ const EmbedPdfViewerContent = ({
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
+    isSearchInterfaceVisible,
+    searchInterfaceActions,
     zoomActions,
     panActions: _panActions,
     rotationActions: _rotationActions,
     getScrollState,
     getRotationState,
     isAnnotationMode,
+    setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
   } = useViewer();
@@ -80,19 +83,18 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in signature mode OR viewer annotation mode
+  // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that use the stamp/signature placement system with hover preview
-  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
-  const isAnnotateTool = selectedTool === 'annotate';
+  // Tools that require the annotation layer (Sign, Add Text, Add Image)
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
 
-  // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
-  const shouldEnableAnnotations = isSignatureMode || isAnnotateTool || isAnnotationMode || isAnnotationsVisible;
+  // Sync isAnnotationMode in ViewerContext with current tool
+  useEffect(() => {
+    setAnnotationMode(isInAnnotationTool);
+  }, [isInAnnotationTool, setAnnotationMode]);
+
   const isPlacementOverlayActive = Boolean(
-    (isSignatureMode || (isAnnotateTool && signatureConfig?.signatureType === 'image')) &&
-    shouldEnableAnnotations &&
-    isPlacementMode &&
-    signatureConfig
+    isInAnnotationTool && isPlacementMode && signatureConfig
   );
 
   // Track which file tab is active
@@ -188,7 +190,7 @@ const EmbedPdfViewerContent = ({
     onZoomOut: zoomActions.zoomOut,
   });
 
-  // Handle keyboard zoom shortcuts
+  // Handle keyboard shortcuts (zoom and search)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isViewerHovered) return;
@@ -203,6 +205,16 @@ const EmbedPdfViewerContent = ({
           // Ctrl+- for zoom out
           event.preventDefault();
           zoomActions.zoomOut();
+        } else if (event.key === 'f' || event.key === 'F') {
+          // Ctrl+F for search
+          event.preventDefault();
+          if (isSearchInterfaceVisible) {
+            // If already open, trigger refocus event
+            window.dispatchEvent(new CustomEvent('refocus-search-input'));
+          } else {
+            // Open search interface
+            searchInterfaceActions.open();
+          }
         }
       }
     };
@@ -211,7 +223,7 @@ const EmbedPdfViewerContent = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isViewerHovered]);
+  }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
@@ -325,7 +337,8 @@ const EmbedPdfViewerContent = ({
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
-              enableAnnotations={shouldEnableAnnotations}
+              enableAnnotations={isAnnotationMode}
+              showBakedAnnotations={isAnnotationsVisible}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}

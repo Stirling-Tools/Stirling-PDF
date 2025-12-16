@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
@@ -19,10 +20,25 @@ public class ReactRoutingController {
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
 
-    @GetMapping(
-            value = {"/", "/index.html"},
-            produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) throws IOException {
+    private String cachedIndexHtml;
+    private boolean indexHtmlExists = false;
+
+    @PostConstruct
+    public void init() {
+        // Only cache if index.html exists (production builds)
+        ClassPathResource resource = new ClassPathResource("static/index.html");
+        if (resource.exists()) {
+            try {
+                this.cachedIndexHtml = processIndexHtml();
+                this.indexHtmlExists = true;
+            } catch (IOException e) {
+                // Failed to cache, will process on each request
+                this.indexHtmlExists = false;
+            }
+        }
+    }
+
+    private String processIndexHtml() throws IOException {
         ClassPathResource resource = new ClassPathResource("static/index.html");
 
         try (InputStream inputStream = resource.getInputStream()) {
@@ -42,18 +58,29 @@ public class ReactRoutingController {
                     "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
             html = html.replace("</head>", contextPathScript + "</head>");
 
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(html);
+            return html;
         }
     }
 
     @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
+            value = {"/", "/index.html"},
+            produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) throws IOException {
+        if (indexHtmlExists && cachedIndexHtml != null) {
+            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
+        }
+        // Fallback: process on each request (dev mode or cache failed)
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(processIndexHtml());
+    }
+
+    @GetMapping(
+            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
     @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
         return serveIndexHtml(request);

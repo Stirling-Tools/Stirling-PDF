@@ -163,6 +163,11 @@ unfavorite = "Ta bort från favoriter"
 fullscreen = "Byt till helskärmsläge"
 sidebar = "Byt till sidopanelläge"
 
+[backendStartup]
+notFoundTitle = "Backend hittades inte"
+retry = "Försök igen"
+unreachable = "Applikationen kan för närvarande inte ansluta till backend. Kontrollera backendens status och nätverksanslutningen och försök sedan igen."
+
 [zipWarning]
 title = "Stor ZIP-fil"
 message = "Denna ZIP innehåller {{count}} filer. Extrahera ändå?"
@@ -912,6 +917,9 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
 
+[home.pdfTextEditor]
+title = "PDF-textredigerare"
+desc = "Redigera befintlig text och bilder i PDF-filer"
 
 [home.addText]
 tags = "text,kommentar,etikett"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "Ritad signatur"
 defaultImageLabel = "Uppladdad signatur"
 defaultTextLabel = "Skriven signatur"
 saveButton = "Spara signatur"
+savePersonal = "Spara som personlig"
+saveShared = "Spara som delad"
 saveUnavailable = "Skapa en signatur först för att kunna spara."
 noChanges = "Aktuell signatur är redan sparad."
+tempStorageTitle = "Tillfällig lagring i webbläsaren"
+tempStorageDescription = "Signaturer lagras endast i din webbläsare. De går förlorade om du rensar webbläsardata eller byter webbläsare."
+personalHeading = "Personliga signaturer"
+sharedHeading = "Delade signaturer"
+personalDescription = "Endast du kan se dessa signaturer."
+sharedDescription = "Alla användare kan se och använda dessa signaturer."
 
 [sign.saved.type]
 canvas = "Ritning"
@@ -2281,7 +2297,7 @@ placeDesc = "Placera signaturen på din PDF"
 [sign.type]
 title = "Signaturtyp"
 draw = "Rita"
-canvas = "Canvas"
+canvas = "Rityta"
 image = "Bild"
 text = "Text"
 saved = "Sparad"
@@ -3020,6 +3036,91 @@ title = "Hämta information om PDF"
 header = "Hämta information om PDF"
 submit = "Hämta information"
 downloadJson = "Ladda ner JSON"
+processing = "Extraherar information..."
+results = "Resultat"
+noResults = "Kör verktyget för att skapa en rapport."
+downloads = "Nedladdningar"
+noneDetected = "Inget upptäckt"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Fullständig informationssammanfattning"
+shortTitle = "PDF-information"
+
+[getPdfInfo.sections]
+metadata = "Metadata"
+formFields = "Formulärfält"
+basicInfo = "Grundläggande info"
+documentInfo = "Dokumentinformation"
+compliance = "Efterlevnad"
+encryption = "Kryptering"
+permissions = "Behörigheter"
+other = "Övrigt"
+perPageInfo = "Information per sida"
+tableOfContents = "Innehållsförteckning"
+
+[getPdfInfo.other]
+attachments = "Bilagor"
+embeddedFiles = "Inbäddade filer"
+javaScript = "JavaScript"
+layers = "Lager"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Storlek"
+annotations = "Anteckningar"
+images = "Bilder"
+links = "Länkar"
+fonts = "Typsnitt"
+xobjects = "Antal XObject"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Sidor"
+fileSize = "Filstorlek"
+pdfVersion = "PDF-version"
+language = "Språk"
+title = "PDF-sammanfattning"
+author = "Författare"
+created = "Skapad"
+modified = "Ändrad"
+permsAll = "Alla behörigheter tillåtna"
+permsRestricted = "{{count}} begränsningar"
+permsMixed = "Vissa behörigheter begränsade"
+hasCompliance = "Har efterlevnadsstandarder"
+noCompliance = "Inga efterlevnadsstandarder"
+basic = "Grundläggande information"
+documentInfo = "Dokumentinformation"
+securityTitle = "Säkerhetsstatus"
+technical = "Tekniskt"
+overviewTitle = "PDF-översikt"
+
+[getPdfInfo.summary.security]
+encrypted = "Krypterad PDF - Lösenordsskydd finns"
+unencrypted = "Okrypterad PDF - Inget lösenordsskydd"
+
+[getPdfInfo.summary.tech]
+images = "Bilder"
+fonts = "Typsnitt"
+formFields = "Formulärfält"
+embeddedFiles = "Inbäddade filer"
+javaScript = "JavaScript"
+layers = "Lager"
+bookmarks = "Bokmärken"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "ett namnlöst dokument"
+unknown = "Okänd författare"
+text = "Detta är en PDF på {{pages}} sidor med titeln {{title}}, skapad av {{author}} (PDF-version {{version}})."
+
+[getPdfInfo.error]
+partial = "Vissa filer kunde inte bearbetas."
+unexpected = "Oväntat fel under extrahering."
+
+[getPdfInfo.status]
+complete = "Extrahering klar"
 
 [extractPage]
 tags = "extrahera"
@@ -3438,6 +3539,9 @@ signinTitle = "Vänligen logga in"
 ssoSignIn = "Logga in via enkel inloggning"
 oAuth2AutoCreateDisabled = "OAUTH2 Auto-skapa användare inaktiverad"
 oAuth2AdminBlockedUser = "Registrering eller inloggning av icke-registrerade användare är för närvarande blockerad. Kontakta administratören."
+oAuth2RequiresLicense = "OAuth/SSO-inloggning kräver en betald licens (Server eller Enterprise). Kontakta administratören för att uppgradera din plan."
+saml2RequiresLicense = "SAML-inloggning kräver en betald licens (Server eller Enterprise). Kontakta administratören för att uppgradera din plan."
+maxUsersReached = "Maximalt antal användare har uppnåtts för din nuvarande licens. Kontakta administratören för att uppgradera din plan eller lägga till fler användarplatser."
 oauth2RequestNotFound = "Auktoriseringsbegäran hittades inte"
 oauth2InvalidUserInfoResponse = "Ogiltigt svar på användarinformation"
 oauth2invalidRequest = "Ogiltig begäran"
@@ -3846,14 +3950,17 @@ fitToWidth = "Anpassa till bredd"
 actualSize = "Faktisk storlek"
 
 [viewer]
+cannotPreviewFile = "Kan inte förhandsgranska filen"
+dualPageView = "Dubbelsidig vy"
 firstPage = "Första sidan"
 lastPage = "Sista sidan"
-previousPage = "Föregående sida"
 nextPage = "Nästa sida"
+onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
+previousPage = "Föregående sida"
+singlePageView = "Ensidig vy"
+unknownFile = "Okänd fil"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
-singlePageView = "Ensidig vy"
-dualPageView = "Dubbelsidig vy"
 
 [rightRail]
 closeSelected = "Stäng markerade filer"
@@ -3877,6 +3984,7 @@ toggleSidebar = "Växla sidofält"
 exportSelected = "Exportera markerade sidor"
 toggleAnnotations = "Växla synlighet för anteckningar"
 annotationMode = "Växla anteckningsläge"
+print = "Skriv ut PDF"
 draw = "Rita"
 save = "Spara"
 saveChanges = "Spara ändringar"
@@ -4494,6 +4602,7 @@ description = "URL eller filnamn till impressum (krävs i vissa jurisdiktioner)"
 title = "Premium och Enterprise"
 description = "Konfigurera din premium- eller enterprise-licensnyckel."
 license = "Licenskonfiguration"
+noInput = "Ange en licensnyckel eller fil"
 
 [admin.settings.premium.licenseKey]
 toggle = "Har du en licensnyckel eller certifikatfil?"
@@ -4510,6 +4619,25 @@ title = "⚠️ Varning: Befintlig licens upptäckt"
 line1 = "Att skriva över din nuvarande licensnyckel kan inte ångras."
 line2 = "Din tidigare licens går förlorad permanent om du inte har säkerhetskopierat den någon annanstans."
 line3 = "Viktigt: Håll licensnycklar privata och säkra. Dela dem aldrig offentligt."
+
+[admin.settings.premium.inputMethod]
+text = "Licensnyckel"
+file = "Certifikatfil"
+
+[admin.settings.premium.file]
+label = "Licenscertifikatfil"
+description = "Ladda upp din .lic- eller .cert-licensfil från offlineköp"
+choose = "Välj licensfil"
+selected = "Vald: {{filename}} ({{size}})"
+successMessage = "Licensfilen har laddats upp och aktiverats. Ingen omstart krävs."
+
+[admin.settings.premium.currentLicense]
+title = "Aktiv licens"
+file = "Källa: Licensfil ({{path}})"
+key = "Källa: Licensnyckel"
+type = "Typ: {{type}}"
+noInput = "Ange en licensnyckel eller ladda upp en certifikatfil"
+success = "Lyckat"
 
 [admin.settings.premium.enabled]
 label = "Aktivera premiumfunktioner"
@@ -4644,7 +4772,9 @@ selectedCount = "{{count}} markerade"
 download = "Ladda ner"
 delete = "Radera"
 unsupported = "Stöds inte"
+active = "Aktiv"
 addToUpload = "Lägg till i uppladdning"
+closeFile = "Stäng fil"
 deleteAll = "Ta bort alla"
 loadingFiles = "Läser in filer..."
 noFiles = "Inga filer tillgängliga"
@@ -5132,7 +5262,7 @@ upgrade = "Uppgradera nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens krävs"
 overLimitBody = "Vår licensiering tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-användare. För att fortsätta utan avbrott, uppgradera till Stirling Server-planen - <strong>obegränsade platser</strong>, PDF-textredigering och full adminkontroll för $99/server/mån."
-freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
+freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott rekommenderar vi Stirling Server plan - <strong>obegränsat antal platser</strong> och <strong>SSO-stöd</strong> för $99/server/månad."
 
 [onboarding.desktopInstall]
 title = "Ladda ner"
@@ -5237,6 +5367,31 @@ error = "Misslyckades med att uppdatera användarstatus"
 success = "Användare borttagen"
 error = "Misslyckades med att ta bort användare"
 
+[workspace.people.changePassword]
+action = "Byt lösenord"
+title = "Byt lösenord"
+subtitle = "Uppdatera lösenordet för"
+newPassword = "Nytt lösenord"
+confirmPassword = "Bekräfta lösenord"
+placeholder = "Ange ett nytt lösenord"
+confirmPlaceholder = "Ange det nya lösenordet igen"
+passwordRequired = "Ange ett nytt lösenord"
+passwordMismatch = "Lösenorden matchar inte"
+generateRandom = "Generera säkert lösenord"
+generatedPreview = "Genererat lösenord:"
+copyTooltip = "Kopiera till urklipp"
+copiedToClipboard = "Lösenord kopierat till urklipp"
+copyFailed = "Det gick inte att kopiera lösenordet"
+sendEmail = "Skicka e-post till användaren om denna ändring"
+includePassword = "Inkludera det nya lösenordet i e-postmeddelandet"
+forcePasswordChange = "Tvinga användaren att byta lösenord vid nästa inloggning"
+emailUnavailable = "Den här användarens e-postadress är inte giltig. Aviseringar är inaktiverade."
+smtpDisabled = "E-postaviseringar kräver att SMTP är aktiverat i inställningarna."
+notifyOnly = "Ett e-postmeddelande skickas utan lösenordet och informerar användaren om att en admin har ändrat det."
+submit = "Uppdatera lösenord"
+success = "Lösenordet har uppdaterats"
+error = "Det gick inte att uppdatera lösenordet"
+
 [workspace.people.emailInvite]
 tab = "E-postinbjudan"
 description = "Skriv eller klistra in e-postadresser nedan, separerade med kommatecken. Användare får inloggningsuppgifter via e-post."
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Minst en e-postadress krävs"
 submit = "Skicka inbjudningar"
 success = "Användare inbjudna"
-partialSuccess = "Vissa inbjudningar misslyckades"
+partialFailure = "Vissa inbjudningar misslyckades"
 allFailed = "Misslyckades med att bjuda in användare"
 error = "Misslyckades med att skicka inbjudningar"
 
@@ -5770,6 +5925,7 @@ subtitle = "Logga in med ditt Stirling-konto"
 [setup.selfhosted]
 title = "Logga in på server"
 subtitle = "Ange dina serveruppgifter"
+link = "eller anslut till ett självhostat konto"
 
 [setup.server]
 title = "Anslut till server"
@@ -5788,6 +5944,14 @@ description = "Ange den fullständiga URL:en till din självhostade Stirling PDF
 emptyUrl = "Ange en server-URL"
 unreachable = "Kunde inte ansluta till servern"
 testFailed = "Anslutningstest misslyckades"
+configFetch = "Det gick inte att hämta serverkonfigurationen. Kontrollera URL:en och försök igen."
+
+[setup.server.error.securityDisabled]
+title = "Inloggning inte aktiverad"
+body = "Den här servern har inte inloggning aktiverad. För att ansluta till den här servern måste du aktivera autentisering:"
+step1 = "Ställ in DOCKER_ENABLE_SECURITY=true i din miljö"
+step2 = "Eller ställ in security.enableLogin=true i settings.yml"
+step3 = "Starta om servern"
 
 [setup.login]
 title = "Logga in"
@@ -5797,6 +5961,13 @@ submit = "Logga in"
 signInWith = "Logga in med"
 oauthPending = "Öppnar webbläsaren för autentisering..."
 orContinueWith = "Eller fortsätt med e-post"
+serverRequirement = "Observera: Servern måste ha inloggning aktiverad."
+showInstructions = "Hur aktiverar man?"
+hideInstructions = "Dölj instruktioner"
+instructions = "För att aktivera inloggning på din Stirling PDF-server:"
+instructionsEnvVar = "Ställ in miljövariabeln:"
+instructionsOrYml = "Eller i settings.yml:"
+instructionsRestart = "Starta sedan om servern för att ändringarna ska börja gälla."
 
 [setup.login.username]
 label = "Användarnamn"
@@ -5853,6 +6024,7 @@ earlyAccess = "Tidig åtkomst"
 reset = "Återställ ändringar"
 downloadJson = "Ladda ner JSON"
 generatePdf = "Skapa PDF"
+saveChanges = "Spara ändringar"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Skala text automatiskt för att passa rutor"
@@ -5890,6 +6062,8 @@ alpha = "Denna alfa-visare utvecklas fortfarande—vissa typsnitt, färger, tran
 [pdfTextEditor.empty]
 title = "Inget dokument inläst"
 subtitle = "Ladda en PDF- eller JSON-fil för att börja redigera textinnehåll."
+dropzone = "Dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
+dropzoneWithFiles = "Välj en fil från fliken Filer, eller dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
 
 [pdfTextEditor.welcomeBanner]
 title = "Välkommen till PDF Text Editor (Tidig åtkomst)"

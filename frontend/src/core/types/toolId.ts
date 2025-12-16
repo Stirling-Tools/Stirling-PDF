@@ -55,6 +55,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   'replaceColor',
   'showJS',
   'bookletImposition',
+  'pdfTextEditor',
 ] as const;
 
 export const CORE_SUPER_TOOL_IDS = [

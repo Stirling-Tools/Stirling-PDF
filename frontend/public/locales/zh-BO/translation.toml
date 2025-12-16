@@ -163,6 +163,11 @@ unfavorite = "从收藏中移除"
 fullscreen = "切换到全屏模式"
 sidebar = "切换到侧边栏模式"
 
+[backendStartup]
+notFoundTitle = "未找到后端"
+retry = "重试"
+unreachable = "应用目前无法连接到后端。请检查后端状态和网络连接，然后重试。"
+
 [zipWarning]
 title = "大型 ZIP 文件"
 message = "此 ZIP 包含 {{count}} 个文件。仍要解压吗？"
@@ -912,6 +917,9 @@ desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
 
+[home.pdfTextEditor]
+title = "PDF 文本编辑器"
+desc = "编辑 PDF 中的现有文本和图像"
 
 [home.addText]
 tags = "文本,注释,标签"
@@ -1173,7 +1181,7 @@ selectFilesPlaceholder = "在主视图中选择文件以开始"
 settings = "设置"
 conversionCompleted = "转换完成"
 results = "结果"
-defaultFilename = "converted_file"
+defaultFilename = "已转换_文件"
 conversionResults = "转换结果"
 convertFrom = "从以下格式转换"
 convertTo = "转换为"
@@ -2259,8 +2267,16 @@ defaultCanvasLabel = "手写签名"
 defaultImageLabel = "已上传的签名"
 defaultTextLabel = "键入的签名"
 saveButton = "保存签名"
+savePersonal = "保存为个人"
+saveShared = "保存为共享"
 saveUnavailable = "请先创建签名再保存。"
 noChanges = "当前签名已保存。"
+tempStorageTitle = "浏览器临时存储"
+tempStorageDescription = "签名仅存储在您的浏览器中。若清除浏览器数据或更换浏览器，这些签名将会丢失。"
+personalHeading = "个人签名"
+sharedHeading = "共享签名"
+personalDescription = "只有您可以看到这些签名。"
+sharedDescription = "所有用户都可以查看并使用这些签名。"
 
 [sign.saved.type]
 canvas = "绘制"
@@ -3020,6 +3036,91 @@ title = "PDF ཡི་གནས་ཚུལ་ལེན་པ།"
 header = "PDF ཡི་གནས་ཚུལ་ལེན་པ།"
 submit = "གནས་ཚུལ་ལེན་པ།"
 downloadJson = "JSON ཕབ་ལེན།"
+processing = "正在提取信息..."
+results = "结果"
+noResults = "运行此工具以生成报告。"
+downloads = "下载"
+noneDetected = "未检测到"
+indexTitle = "索引"
+
+[getPdfInfo.report]
+entryLabel = "完整信息摘要"
+shortTitle = "PDF 信息"
+
+[getPdfInfo.sections]
+metadata = "元数据"
+formFields = "表单字段"
+basicInfo = "基本信息"
+documentInfo = "文档信息"
+compliance = "合规性"
+encryption = "加密"
+permissions = "权限"
+other = "其他"
+perPageInfo = "每页信息"
+tableOfContents = "目录"
+
+[getPdfInfo.other]
+attachments = "附件"
+embeddedFiles = "嵌入文件"
+javaScript = "JavaScript"
+layers = "图层"
+structureTree = "结构树"
+xmp = "XMP 元数据"
+
+[getPdfInfo.perPage]
+size = "尺寸"
+annotations = "注释"
+images = "图像"
+links = "链接"
+fonts = "字体"
+xobjects = "XObject 数量"
+multimedia = "多媒体"
+
+[getPdfInfo.summary]
+pages = "页数"
+fileSize = "文件大小"
+pdfVersion = "PDF 版本"
+language = "语言"
+title = "PDF 摘要"
+author = "作者"
+created = "创建时间"
+modified = "修改时间"
+permsAll = "允许所有权限"
+permsRestricted = "{{count}} 项限制"
+permsMixed = "部分权限受限"
+hasCompliance = "符合合规标准"
+noCompliance = "无合规标准"
+basic = "基本信息"
+documentInfo = "文档信息"
+securityTitle = "安全状态"
+technical = "技术"
+overviewTitle = "PDF 概览"
+
+[getPdfInfo.summary.security]
+encrypted = "已加密的 PDF - 受密码保护"
+unencrypted = "未加密的 PDF - 无密码保护"
+
+[getPdfInfo.summary.tech]
+images = "图像"
+fonts = "字体"
+formFields = "表单字段"
+embeddedFiles = "嵌入文件"
+javaScript = "JavaScript"
+layers = "图层"
+bookmarks = "书签"
+multimedia = "多媒体"
+
+[getPdfInfo.summary.overview]
+untitled = "未命名文档"
+unknown = "作者未知"
+text = "这是一个 {{pages}} 页的 PDF，标题为 {{title}}，由 {{author}} 创建（PDF 版本 {{version}}）。"
+
+[getPdfInfo.error]
+partial = "部分文件无法处理。"
+unexpected = "提取过程中发生意外错误。"
+
+[getPdfInfo.status]
+complete = "提取完成"
 
 [extractPage]
 tags = "ཕྱིར་འདོན།"
@@ -3438,6 +3539,9 @@ signinTitle = "ནང་འཛུལ་གནང་རོགས།"
 ssoSignIn = "གཅིག་གྱུར་ནང་འཛུལ་བརྒྱུད་ནས་ནང་འཛུལ།"
 oAuth2AutoCreateDisabled = "OAUTH2 རང་འགུལ་སྤྱོད་མཁན་གསར་བཟོ་བཀག་སྡོམ་བྱས་ཟིན།"
 oAuth2AdminBlockedUser = "ད་ལྟ་ཐོ་འགོད་མ་བྱས་པའི་སྤྱོད་མཁན་གྱི་ཐོ་འགོད་དང་ནང་འཛུལ་བཀག་སྡོམ་བྱས་ཡོད། དོ་དམ་པར་འབྲེལ་བ་གནང་རོགས།"
+oAuth2RequiresLicense = "使用 OAuth/SSO 登录需要付费许可（Server 或 Enterprise）。请联系管理员升级您的方案。"
+saml2RequiresLicense = "使用 SAML 登录需要付费许可（Server 或 Enterprise）。请联系管理员升级您的方案。"
+maxUsersReached = "您当前的许可已达到最大用户数。请联系管理员升级您的方案或增加席位。"
 oauth2RequestNotFound = "དབང་སྤྲོད་རེ་ཞུ་རྙེད་མ་བྱུང་།"
 oauth2InvalidUserInfoResponse = "སྤྱོད་མཁན་གྱི་གནས་ཚུལ་ལན་འདེབས་ནོར་འཁྲུལ།"
 oauth2invalidRequest = "རེ་ཞུ་ནོར་འཁྲུལ།"
@@ -3846,14 +3950,17 @@ fitToWidth = "适应宽度"
 actualSize = "实际大小"
 
 [viewer]
+cannotPreviewFile = "无法预览文件"
+dualPageView = "双页视图"
 firstPage = "第一页"
 lastPage = "最后一页"
-previousPage = "上一页"
 nextPage = "下一页"
+onlyPdfSupported = "此查看器仅支持 PDF 文件。该文件似乎为其他格式。"
+previousPage = "上一页"
+singlePageView = "单页视图"
+unknownFile = "未知文件"
 zoomIn = "放大"
 zoomOut = "缩小"
-singlePageView = "单页视图"
-dualPageView = "双页视图"
 
 [rightRail]
 closeSelected = "关闭所选文件"
@@ -3877,6 +3984,7 @@ toggleSidebar = "切换侧边栏"
 exportSelected = "导出所选页面"
 toggleAnnotations = "切换注释可见性"
 annotationMode = "切换注释模式"
+print = "打印 PDF"
 draw = "绘制"
 save = "保存"
 saveChanges = "保存更改"
@@ -4494,6 +4602,7 @@ description = "Impressum 的 URL 或文件名（某些司法管辖区要求）"
 title = "高级与企业版"
 description = "配置你的高级或企业许可证密钥。"
 license = "许可证配置"
+noInput = "请提供许可证密钥或文件"
 
 [admin.settings.premium.licenseKey]
 toggle = "有许可证密钥或证书文件？"
@@ -4510,6 +4619,25 @@ title = "⚠️ 警告：检测到现有许可证"
 line1 = "覆盖当前许可证密钥后将无法撤销。"
 line2 = "除非另有备份，否则之前的许可证将被永久丢失。"
 line3 = "重要：请妥善保管许可证密钥，切勿公开分享。"
+
+[admin.settings.premium.inputMethod]
+text = "许可证密钥"
+file = "证书文件"
+
+[admin.settings.premium.file]
+label = "许可证证书文件"
+description = "上传您线下购买的 .lic 或 .cert 许可证文件"
+choose = "选择许可证文件"
+selected = "已选择：{{filename}}（{{size}}）"
+successMessage = "许可证文件上传并激活成功。无需重启。"
+
+[admin.settings.premium.currentLicense]
+title = "已激活的许可证"
+file = "来源：许可证文件（{{path}}）"
+key = "来源：许可证密钥"
+type = "类型：{{type}}"
+noInput = "请提供许可证密钥或上传证书文件"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "启用高级功能"
@@ -4644,7 +4772,9 @@ selectedCount = "已选 {{count}} 个"
 download = "下载"
 delete = "删除"
 unsupported = "不支持"
+active = "已启用"
 addToUpload = "添加到上传"
+closeFile = "关闭文件"
 deleteAll = "全部删除"
 loadingFiles = "正在加载文件..."
 noFiles = "暂无文件"
@@ -5132,7 +5262,7 @@ upgrade = "立即升级 →"
 freeTitle = "服务器许可证"
 overLimitTitle = "需要服务器许可证"
 overLimitBody = "我们的许可每台服务器最多允许 <strong>{{freeTierLimit}}</strong> 名用户免费使用。您共有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为避免中断，请升级到 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及每台服务器 $99/月 的完整管理员控制。"
-freeBody = "我们的 <strong>开源内核（Open-Core）</strong> 许可允许每台服务器最多 <strong>{{freeTierLimit}}</strong> 名用户免费使用。为顺畅扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，我们推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/服务器/月。"
+freeBody = "我们的<strong>Open-Core</strong>许可允许每台服务器最多<strong>{{freeTierLimit}}</strong>名用户免费使用。为实现不中断的扩展，我们推荐 Stirling Server 方案 - <strong>不限席位</strong>并提供<strong>SSO 支持</strong>，$99/服务器/月。"
 
 [onboarding.desktopInstall]
 title = "下载"
@@ -5237,6 +5367,31 @@ error = "用户状态更新失败"
 success = "用户删除成功"
 error = "删除用户失败"
 
+[workspace.people.changePassword]
+action = "更改密码"
+title = "更改密码"
+subtitle = "为其更新密码"
+newPassword = "新密码"
+confirmPassword = "确认密码"
+placeholder = "输入新密码"
+confirmPlaceholder = "再次输入新密码"
+passwordRequired = "请输入新密码"
+passwordMismatch = "两次输入的密码不一致"
+generateRandom = "生成安全密码"
+generatedPreview = "已生成的密码："
+copyTooltip = "复制到剪贴板"
+copiedToClipboard = "密码已复制到剪贴板"
+copyFailed = "复制密码失败"
+sendEmail = "通过电子邮件通知用户此更改"
+includePassword = "在邮件中包含新密码"
+forcePasswordChange = "强制用户下次登录时更改密码"
+emailUnavailable = "该用户的邮箱地址无效，已禁用通知。"
+smtpDisabled = "邮件通知需要在设置中启用 SMTP。"
+notifyOnly = "将发送不包含密码的邮件，告知用户管理员已更改其密码。"
+submit = "更新密码"
+success = "密码更新成功"
+error = "密码更新失败"
+
 [workspace.people.emailInvite]
 tab = "邮件邀请"
 description = "在下方输入或粘贴邮箱，使用逗号分隔。用户将通过邮件收到登录凭据。"
@@ -5245,7 +5400,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "至少需要一个邮箱地址"
 submit = "发送邀请"
 success = "已成功邀请用户"
-partialSuccess = "部分邀请失败"
+partialFailure = "部分邀请发送失败"
 allFailed = "邀请用户失败"
 error = "发送邀请失败"
 
@@ -5770,6 +5925,7 @@ subtitle = "使用您的 Stirling 账户登录"
 [setup.selfhosted]
 title = "登录服务器"
 subtitle = "输入您的服务器凭据"
+link = "或连接到自托管账户"
 
 [setup.server]
 title = "连接到服务器"
@@ -5788,6 +5944,14 @@ description = "输入自托管 Stirling PDF 服务器的完整 URL"
 emptyUrl = "请输入服务器 URL"
 unreachable = "无法连接到服务器"
 testFailed = "连接测试失败"
+configFetch = "获取服务器配置失败。请检查 URL 后重试。"
+
+[setup.server.error.securityDisabled]
+title = "未启用登录"
+body = "此服务器未启用登录。要连接到该服务器，必须启用身份验证："
+step1 = "在环境中设置 DOCKER_ENABLE_SECURITY=true"
+step2 = "或在 settings.yml 中设置 security.enableLogin=true"
+step3 = "重启服务器"
 
 [setup.login]
 title = "登录"
@@ -5797,6 +5961,13 @@ submit = "登录"
 signInWith = "登录方式"
 oauthPending = "正在打开浏览器进行认证..."
 orContinueWith = "或使用邮箱继续"
+serverRequirement = "注意：服务器必须启用登录功能。"
+showInstructions = "如何启用？"
+hideInstructions = "隐藏说明"
+instructions = "在您的 Stirling PDF 服务器上启用登录功能："
+instructionsEnvVar = "设置环境变量："
+instructionsOrYml = "或在 settings.yml 中："
+instructionsRestart = "然后重启服务器以使更改生效。"
 
 [setup.login.username]
 label = "用户名"
@@ -5853,6 +6024,7 @@ earlyAccess = "抢先体验"
 reset = "重置更改"
 downloadJson = "下载 JSON"
 generatePdf = "生成 PDF"
+saveChanges = "保存更改"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自动缩放文本以适配框"
@@ -5890,6 +6062,8 @@ alpha = "此 Alpha 预览器仍在演进中——某些字体、颜色、透明�
 [pdfTextEditor.empty]
 title = "未加载文档"
 subtitle = "加载 PDF 或 JSON 文件以开始编辑文本内容。"
+dropzone = "将 PDF 或 JSON 文件拖放到此处，或点击浏览"
+dropzoneWithFiles = "从“文件”选项卡选择文件，或将 PDF 或 JSON 文件拖放到此处，或点击浏览"
 
 [pdfTextEditor.welcomeBanner]
 title = "欢迎使用 PDF 文本编辑器（抢先体验）"
