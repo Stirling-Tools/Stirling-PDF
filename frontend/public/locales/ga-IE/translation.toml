@@ -453,6 +453,25 @@ noShortcut = "Níl aicearra socraithe"
 mac = "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile i do aicearra."
 windows = "Cuir Ctrl, Alt, nó modhnóir eile i do aicearra."
 
+[settings.security]
+description = "Nuashonraigh do phasfhocal chun do chuntas a choinneáil slán."
+title = "Slándáil"
+
+[settings.security.password]
+confirm = "Deimhnigh an focal faire nua"
+confirmPlaceholder = "Ath-iontráil do phasfhocal nua"
+current = "Focal faire reatha"
+currentPlaceholder = "Cuir isteach do phasfhocal reatha"
+error = "Ní féidir an focal faire a nuashonrú. Fíoraigh do phasfhocal reatha agus déan iarracht arís.."
+mismatch = "Ní hionann na pasfhocail nua."
+new = "Pasfhocal nua"
+newPlaceholder = "Cuir isteach focal faire nua"
+required = "Tá gach réimse riachtanach."
+ssoDisabled = "Déanann do sholáthraí aitheantais athruithe ar phasfhocail a bhainistiú."
+subtitle = "Athraigh do phasfhocal. Logálfar amach thú tar éis an nuashonraithe."
+success = "Nuashonraíodh an focal faire go rathúil. Sínigh isteach arís le do thoil."
+update = "Nuashonraigh an focal faire"
+
 [update]
 modalTitle = "Nuashonrú ar Fáil"
 current = "Leagan Reatha"
@@ -493,6 +512,11 @@ oldPassword = "Pasfhocal reatha"
 newPassword = "Focal Faire Nua"
 confirmNewPassword = "Deimhnigh Pasfhocal Nua"
 submit = "Cuir Athruithe isteach"
+changeUsername = "Nuashonraigh d'ainm úsáideora. Logálfar amach thú tar éis an nuashonraithe."
+credsUpdated = "Cuntas nuashonraithe"
+description = "Athruithe sábháilte. Logáil isteach arís le do thoil."
+error = "Ní féidir an t-ainm úsáideora a nuashonrú. Fíoraigh do phasfhocal agus déan iarracht arís."
+ssoManaged = "Déanann do sholáthraí aitheantais bainistíocht ar do chuntas."
 
 [account]
 title = "Socruithe cuntas"
@@ -3720,6 +3744,10 @@ bullet2 = "Laghdaíonn luachanna níos airde an méid comhaid"
 title = "Liathscála"
 text = "Roghnaigh an rogha seo chun gach íomhá a thiontú go dubh agus bán, rud a d'fhéadfadh méid an chomhaid a laghdú go mór, go háirithe do PDFanna scanta nó do dhoiciméid lán d’íomhánna."
 
+[compress.tooltip.lineArt]
+text = "Tiontaigh leathanaigh go dubh agus bán ardchodarsnachta ag baint úsáide as ImageMagick. Bain úsáid as leibhéal mionsonraí chun rialú a dhéanamh ar cé mhéad ábhair a thagann chun bheith dubh, agus béim imeall chun rialú a dhéanamh ar cé chomh ionsaitheach agus a bhraitear imill."
+title = "Ealaín Líne"
+
 [compress.error]
 failed = "Tharla earráid agus an PDF á chomhbhrú."
 
@@ -3731,6 +3759,16 @@ failed = "Tharla earráid agus an PDF á chomhbhrú."
 [compress.selectText.1]
 _value = "Socruithe Comhbhrúite"
 1 = "1-3 comhbhrú PDF,</br> 4-6 comhbhrú éadrom íomhá,</br> 7-9 comhbhrú dian íomhá Laghdóidh sé cáilíocht na n-íomhánna go mór"
+
+[compress.lineArt]
+description = "Úsáideann sé ImageMagick chun leathanaigh a laghdú go dubh agus bán ardchodarsnachta chun an laghdú méide is mó is féidir a bhaint amach."
+detailLevel = "Leibhéal mionsonraí"
+edgeEmphasis = "Béim imeall"
+edgeHigh = "Láidir"
+edgeLow = "Séimh"
+edgeMedium = "Cothromaithe"
+label = "Íomhánna a thiontú go healaín líne"
+unavailable = "Níl ImageMagick suiteáilte ná cumasaithe ar an bhfreastalaí seo"
 
 [decrypt]
 passwordPrompt = "Tá an comhad seo cosanta ag pasfhocal. Cuir isteach an pasfhocal le do thoil:"
@@ -4038,12 +4076,20 @@ settings = "Socruí"
 adminSettings = "Socruí riar."
 allTools = "All Tools"
 reader = "Léamh"
+showMeAround = "Taispeáin dom timpeall"
+tours = "Turais"
 
 [quickAccess.helpMenu]
 toolsTour = "Turas na nUirlisí"
 toolsTourDesc = "Faigh amach cad is féidir leis na huirlisí a dhéanamh"
 adminTour = "Turas an Riarthóra"
 adminTourDesc = "Déan iniúchadh ar shocruithe agus gnéithe an riarthóra"
+whatsNewTour = "Féach cad atá nua i V2"
+whatsNewTourDesc = "Tabhair cuairt ar an leagan amach nuashonraithe"
+
+[quickAccess.toursTooltip]
+admin = "Féach ar na treoracha anseo: Turas uirlisí, turas leagan amach nua V2, agus turas an Riarthóra."
+user = "Féach ar na treoracha anseo: Turas uirlisí agus turas leagan amach an V2 nua."
 
 [admin]
 error = "Earráid"
@@ -5069,6 +5115,7 @@ loading = "Á lódáil..."
 back = "Siar"
 continue = "Lean ar aghaidh"
 error = "Earráid"
+save = "Sábháil"
 
 [config.overview]
 title = "Cumraíocht an Fheidhmchláir"
@@ -5278,6 +5325,20 @@ userBody = "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoi
 
 [onboarding.securityCheck]
 message = "Rinneadh athruithe suntasacha ar an bhfeidhmchlár le déanaí. D’fhéadfadh aird do riarthóra freastalaí a bheith de dhíth. Deimhnigh do ról le do thoil chun leanúint ar aghaidh."
+
+[onboarding.tourOverview]
+body = "Tagann Stirling PDF V2 le mórán uirlisí agus leagan amach athnuaite. Tabhair cuairt ghearr chun a fheiceáil cad a d'athraigh agus cá háit le fáil na gnéithe atá uait."
+title = "Forbhreathnú ar an Turas"
+
+[onboarding.whatsNew]
+activeFilesView = "Bain úsáid as Comhaid Ghníomhacha chun gach rud atá oscailte agat a fheiceáil agus chun a roghnú cad atá le hoibriú air."
+fileUpload = "Úsáid an cnaipe <strong>Comhaid</strong> chun PDF le déanaí a uaslódáil nó a roghnú. Lódálfaimid sampla ionas gur féidir leat an spás oibre a fheiceáil."
+leftPanel = "Liostaítear gach rud is féidir leat a dhéanamh sa phainéal <strong>Uirlisí</strong> ar chlé. Brabhsáil catagóirí nó déan cuardach chun uirlis a aimsiú go tapa."
+pageEditorView = "Téigh go dtí an tEagarthóir Leathanach chun leathanaigh a athordú, a rothlú nó a scriosadh."
+quickAccess = "Tosaigh ag an ráille <strong>Rochtain Thapa</strong> chun léim idir Reader, Automate, do chuid comhad, agus na turais go léir."
+rightRail = "Tá gníomhartha tapa ar an <strong>Ráille Deas</strong> chun comhaid a roghnú, téama nó teanga a athrú, agus torthaí a íoslódáil."
+topBar = "Ligeann an barra uachtarach duit malartú idir <strong>Amharcóir</strong>, <strong>Eagarthóir Leathanaigh</strong>, agus <strong>Comhaid Ghníomhacha</strong>."
+wrapUp = "Sin atá nua i V2. Oscail an roghchlár <strong>Turais</strong> am ar bith chun é seo, an turas Uirlisí, nó an turas Riarthóra a athsheinm."
 
 [adminOnboarding]
 welcome = "Fáilte go dtí an <strong>Admin Tour</strong>! Déanaimis iniúchadh ar na gnéithe agus na socruithe fiontraíochta cumhachtacha atá ar fáil do riarthóirí córais."
@@ -5568,6 +5629,28 @@ contactSales = "Déan Teagmháil le Díolacháin"
 contactToUpgrade = "Déan teagmháil linn chun do phlean a uasghrádú nó a shaincheapadh"
 maxUsers = "Uaslíon Úsáideoirí"
 upTo = "Suas le"
+activateLicense = "Gníomhachtaigh Do Cheadúnas"
+checkoutInstructions = "Críochnaigh do cheannachán sa chluaisín Stripe. Tar éis íocaíochta, fill ar ais anseo agus athnuachan an leathanach chun do cheadúnas a ghníomhachtú. Gheobhaidh tú ríomhphost le d’eochair cheadúnais freisin."
+checkoutOpened = "Seiceáil Oscailte"
+getLicense = "Faigh Ceadúnas Freastalaí"
+monthlyBilling = "Billeáil Mhíosúil"
+selectPeriod = "Roghnaigh Tréimhse Billeála"
+upgradeToEnterprise = "Uasghrádú go Fiontar"
+yearlyBilling = "Billeáil Bhliantúil"
+
+[plan.static.billingPortal]
+message = "Beidh ort do sheoladh ríomhphoist a fhíorú i dtairseach billeála Stripe. Seiceáil do ríomhphost le haghaidh nasc logála isteach."
+title = "Fíorú Ríomhphoist Riachtanach"
+
+[plan.static.licenseActivation]
+activate = "Gníomhachtaigh an Ceadúnas"
+checkoutOpened = "Seiceáil Oscailte i gCluaisín Nua"
+doLater = "Déanfaidh mé é seo níos déanaí"
+enterKey = "Cuir isteach d’eochair cheadúnais thíos chun do phlean a ghníomhachtú:"
+instructions = "Comhlánaigh do cheannachán sa chluaisín Stripe. Nuair a bheidh d’íocaíocht críochnaithe, gheobhaidh tú ríomhphost le d’eochair cheadúnais."
+keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
+success = "Ceadúnas Gníomhachtaithe!"
+successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
 
 [plan.period]
 month = "mí"
@@ -5771,6 +5854,8 @@ notAvailable = "Níl an córas iniúchta ar fáil"
 notAvailableMessage = "Níl an córas iniúchta cumraithe nó níl sé ar fáil."
 disabled = "Tá logáil iniúchta díchumasaithe"
 disabledMessage = "Cumasaigh logáil iniúchta i gcumraíocht d’fheidhmchláir chun imeachtaí an chórais a rianú."
+enterpriseRequired = "Ceadúnas Fiontraíochta Riachtanach"
+enterpriseRequiredMessage = "Is gné fiontraíochta é an córas logála iniúchóireachta. Uasghrádaigh go ceadúnas fiontraíochta le rochtain a fháil ar logaí iniúchóireachta agus anailísíocht."
 
 [audit.error]
 title = "Earráid agus an córas iniúchta á lódáil"
@@ -6164,3 +6249,7 @@ title = "Torthaí Cur Téacs"
 
 [addText.error]
 failed = "Tharla earráid agus téacs á chur leis an PDF."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"

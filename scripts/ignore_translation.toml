@@ -409,6 +409,8 @@ ignore = [
     'validateSignature.downloadType.csv',
     'validateSignature.downloadType.json',
     'validateSignature.downloadType.pdf',
+    'footer.discord',
+    'footer.issues',
 ]
 
 [hi_IN]
