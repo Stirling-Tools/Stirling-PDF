@@ -43,6 +43,7 @@ app/core/src/main/resources/static/og_images/
 app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/robots.txt
+app/core/src/main/resources/static/pdfium/
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
