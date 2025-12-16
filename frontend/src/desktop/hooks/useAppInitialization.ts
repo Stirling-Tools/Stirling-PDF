@@ -70,7 +70,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles, setReaderMode, actions, setActiveFileIndex]);
+  }, [openedFilePaths, openedFileLoading, addFiles]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {
