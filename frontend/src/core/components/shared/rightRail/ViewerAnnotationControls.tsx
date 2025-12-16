@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -28,6 +28,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHoverColorPickerOpen, setIsHoverColorPickerOpen] = useState(false);
+  const [pendingAnnotationAfterRedaction, setPendingAnnotationAfterRedaction] = useState(false);
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
@@ -47,9 +48,19 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const isRedactMode = selectedTool === 'redact';
   
   // Get redaction pending state and navigation guard
-  const { pendingCount: redactionPendingCount, isRedacting: _isRedacting } = useRedactionMode();
+  const { pendingCount: redactionPendingCount, isRedacting: _isRedacting, activeType } = useRedactionMode();
   const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
-  const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied } = useRedaction();
+  const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
+
+  const activateDrawingTools = useCallback(() => {
+    if (!signatureApiRef?.current) return;
+    try {
+      signatureApiRef.current.activateDrawMode();
+      signatureApiRef.current.updateDrawSettings(selectedColor, 2);
+    } catch (error) {
+      console.log('Signature API not ready:', error);
+    }
+  }, [selectedColor, signatureApiRef]);
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -60,15 +71,10 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
   // Activate draw mode when annotation mode becomes active
   useEffect(() => {
-    if (viewerContext?.isAnnotationMode && signatureApiRef?.current && currentView === 'viewer') {
-      try {
-        signatureApiRef.current.activateDrawMode();
-        signatureApiRef.current.updateDrawSettings(selectedColor, 2);
-      } catch (error) {
-        console.log('Signature API not ready:', error);
-      }
+    if (viewerContext?.isAnnotationMode && currentView === 'viewer') {
+      activateDrawingTools();
     }
-  }, [viewerContext?.isAnnotationMode, currentView, selectedColor, signatureApiRef]);
+  }, [viewerContext?.isAnnotationMode, currentView, activateDrawingTools]);
 
   // Don't show any annotation controls in sign mode
   if (isSignMode) {
@@ -99,6 +105,13 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     }
   };
 
+  const exitRedactionMode = useCallback(() => {
+    navActions.setToolAndWorkbench(null, 'viewer');
+    setLeftPanelView('toolPicker');
+    setRedactionMode(false);
+    setActiveType(null);
+  }, [navActions, setLeftPanelView, setRedactionMode, setActiveType]);
+
   // Handle redaction mode toggle
   const handleRedactionToggle = async () => {
     if (isRedactMode) {
@@ -121,12 +134,21 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         }, 100);
       } else {
         // Exit redaction mode - keep viewer workbench and show all tools in sidebar
-        navActions.setToolAndWorkbench(null, 'viewer');
-        setLeftPanelView('toolPicker');
-        setRedactionMode(false);
+        exitRedactionMode();
       }
     } else {
       await saveAnnotationsIfNeeded();
+
+      if (viewerContext?.isAnnotationMode) {
+        viewerContext.setAnnotationMode(false);
+        if (signatureApiRef?.current) {
+          try {
+            signatureApiRef.current.deactivateTools();
+          } catch (error) {
+            console.log('Unable to deactivate annotation tools:', error);
+          }
+        }
+      }
 
       // Enter redaction mode - select redact tool with manual mode
       // If we're already in the viewer, keep the viewer workbench and open the tool sidebar
@@ -150,10 +172,31 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       setRedactionMode(true);
       // Activate text selection mode after a short delay
       setTimeout(() => {
-        activateTextSelection();
+        const currentType = redactionApiRef.current?.getActiveType?.();
+        if (currentType !== 'redactSelection') {
+          activateTextSelection();
+        }
       }, 200);
     }
   };
+
+  const startAnnotationMode = useCallback(() => {
+    viewerContext?.setAnnotationMode(true);
+    activateDrawingTools();
+  }, [viewerContext, activateDrawingTools]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (!isRedactMode && pendingAnnotationAfterRedaction) {
+      timer = setTimeout(() => {
+        setPendingAnnotationAfterRedaction(false);
+        startAnnotationMode();
+      }, 200);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isRedactMode, pendingAnnotationAfterRedaction, startAnnotationMode]);
 
   return (
     <>
@@ -217,7 +260,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => {
-                  viewerContext?.toggleAnnotationMode();
+                  viewerContext?.setAnnotationMode(false);
                   setIsHoverColorPickerOpen(false); // Close hover color picker when toggling off
                   // Deactivate drawing tool when exiting annotation mode
                   if (signatureApiRef?.current) {
@@ -228,7 +271,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
                     }
                   }
                 }}
-              disabled={disabled}
+                disabled={disabled}
                 aria-label="Drawing mode active"
               >
                 <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -259,14 +302,24 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
             radius="md"
             className="right-rail-icon"
             onClick={() => {
+              const scheduleAnnotationAfterRedaction = () => {
+                setPendingAnnotationAfterRedaction(true);
+                exitRedactionMode();
+              };
+
+              const beginAnnotation = () => {
+                if (isRedactMode) {
+                  scheduleAnnotationAfterRedaction();
+                } else {
+                  startAnnotationMode();
+                }
+              };
+
               // If in redaction mode with pending redactions, show warning modal
               if (isRedactMode && redactionPendingCount > 0) {
-                requestNavigation(() => {
-                  viewerContext?.setAnnotationMode(true);
-                });
+                requestNavigation(beginAnnotation);
               } else {
-                // Direct activation - useEffect will handle draw mode activation
-                viewerContext?.toggleAnnotationMode();
+                beginAnnotation();
               }
             }}
             disabled={disabled}

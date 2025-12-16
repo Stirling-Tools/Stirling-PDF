@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from '@app/components/shared/Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
@@ -11,13 +10,11 @@ import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccess
 interface AllToolsNavButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
-  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
 }
 
 const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   activeButton,
   setActiveButton,
-  tooltipPosition = 'right'
 }) => {
   const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
@@ -55,26 +52,18 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   };
 
   return (
-    <Tooltip
-      content={t("quickAccess.allTools", "Tools")}
-      position={tooltipPosition}
-      arrow
-      containerStyle={{ marginTop: "-1rem" }}
-      maxWidth={200}
-    >
-      <div className="mt-4 mb-2">
-        <QuickAccessButton
-          icon={<AppsIcon sx={{ fontSize: isActive ? '1.875rem' : '1.5rem' }} />}
-          label={t("quickAccess.allTools", "Tools")}
-          isActive={isActive}
-          onClick={handleNavClick}
-          href={navProps.href}
-          ariaLabel={t("quickAccess.allTools", "Tools")}
-          textClassName="all-tools-text"
-          component="a"
-        />
-      </div>
-    </Tooltip>
+    <div className="mt-4 mb-2">
+      <QuickAccessButton
+        icon={<AppsIcon sx={{ fontSize: isActive ? '1.875rem' : '1.5rem' }} />}
+        label={t("quickAccess.allTools", "Tools")}
+        isActive={isActive}
+        onClick={handleNavClick}
+        href={navProps.href}
+        ariaLabel={t("quickAccess.allTools", "Tools")}
+        textClassName="all-tools-text"
+        component="a"
+      />
+    </div>
   );
 };
 

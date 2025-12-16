@@ -53,6 +53,7 @@ const EmbedPdfViewerContent = ({
     getScrollState,
     getRotationState,
     isAnnotationMode,
+    setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
   } = useViewer();
@@ -90,11 +91,9 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in signature mode OR viewer annotation mode OR redaction mode
   const { selectedTool } = useNavigationState();
-  // Tools that use the stamp/signature placement system with hover preview
-  const isSignatureMode = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
-  // Check if we're in manual redaction mode
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+  const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
@@ -104,8 +103,15 @@ const EmbedPdfViewerContent = ({
   // Enable redaction when the redact tool is selected and annotation mode is NOT active
   // This allows switching between redaction and annotation tools while redact is the selected tool
   const shouldEnableRedaction = (isManualRedactMode || isRedactionMode) && !isAnnotationMode;
+
+  // Keep annotation mode enabled when entering placement tools without overriding manual toggles
+  useEffect(() => {
+    if (isInAnnotationTool) {
+      setAnnotationMode(true);
+    }
+  }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(
-    isSignatureMode && shouldEnableAnnotations && isPlacementMode && signatureConfig
+    isInAnnotationTool && isPlacementMode && signatureConfig
   );
 
   // Track which file tab is active
@@ -378,6 +384,7 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}
+              showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}

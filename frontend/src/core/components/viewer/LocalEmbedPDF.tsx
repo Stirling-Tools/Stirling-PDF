@@ -56,13 +56,25 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   isManualRedactionMode?: boolean;
+  showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, onSignatureAdded, signatureApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({
+  file,
+  url,
+  enableAnnotations = false,
+  enableRedaction = false,
+  isManualRedactionMode = false,
+  showBakedAnnotations = true,
+  onSignatureAdded,
+  signatureApiRef,
+  historyApiRef,
+  redactionTrackerRef,
+}: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -105,7 +117,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: true,
-        withAnnotations: true,
+        withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -176,7 +188,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl]);
+  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({

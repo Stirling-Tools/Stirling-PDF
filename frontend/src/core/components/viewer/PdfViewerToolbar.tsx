@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Paper, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { Tooltip } from '@app/components/shared/Tooltip';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -209,21 +210,27 @@ export function PdfViewerToolbar({
         </Button>
 
         {/* Dual Page Toggle */}
-        <Button
-          variant={isDualPageActive ? "filled" : "light"}
-          color="blue"
-          size="md"
-          radius="xl"
-          onClick={handleDualPageToggle}
-          style={{ minWidth: '2.5rem' }}
-          title={
+        <Tooltip
+          content={
             isDualPageActive
               ? t("viewer.singlePageView", "Single Page View")
               : t("viewer.dualPageView", "Dual Page View")
           }
+          position="top"
+          arrow
         >
-          {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
-        </Button>
+          <Button
+            variant={isDualPageActive ? "filled" : "light"}
+            color="blue"
+            size="md"
+            radius="xl"
+            onClick={handleDualPageToggle}
+            disabled={scrollState.totalPages <= 1}
+            style={{ minWidth: '2.5rem' }}
+          >
+            {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
+          </Button>
+        </Tooltip>
 
         {/* Zoom Controls */}
         <Group gap={4} align="center" style={{ marginLeft: 16 }}>
