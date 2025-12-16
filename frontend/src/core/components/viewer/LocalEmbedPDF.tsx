@@ -55,7 +55,6 @@ interface LocalEmbedPDFProps {
   url?: string | null;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
-  /** When true, RedactionAPIBridge is rendered even if enableRedaction is false (for switching between annotation/redaction) */
   isManualRedactionMode?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
