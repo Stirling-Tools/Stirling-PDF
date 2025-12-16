@@ -33,8 +33,12 @@ public class PdfJsonFallbackFontService {
     public static final String FALLBACK_FONT_CJK_ID = "fallback-noto-cjk";
     public static final String FALLBACK_FONT_JP_ID = "fallback-noto-jp";
     public static final String FALLBACK_FONT_KR_ID = "fallback-noto-korean";
+    public static final String FALLBACK_FONT_TC_ID = "fallback-noto-tc";
     public static final String FALLBACK_FONT_AR_ID = "fallback-noto-arabic";
     public static final String FALLBACK_FONT_TH_ID = "fallback-noto-thai";
+    public static final String FALLBACK_FONT_DEVANAGARI_ID = "fallback-noto-devanagari";
+    public static final String FALLBACK_FONT_MALAYALAM_ID = "fallback-noto-malayalam";
+    public static final String FALLBACK_FONT_TIBETAN_ID = "fallback-noto-tibetan";
 
     // Font name aliases map PDF font names to available fallback fonts
     // This provides better visual consistency when editing PDFs
@@ -59,6 +63,22 @@ public class PdfJsonFallbackFontService {
                     Map.entry("dejavuserif", "fallback-dejavu-serif"),
                     Map.entry("dejavumono", "fallback-dejavu-mono"),
                     Map.entry("dejavusansmono", "fallback-dejavu-mono"),
+                    // Traditional Chinese fonts (Taiwan, Hong Kong, Macau)
+                    Map.entry("mingliu", "fallback-noto-tc"),
+                    Map.entry("pmingliu", "fallback-noto-tc"),
+                    Map.entry("microsoftjhenghei", "fallback-noto-tc"),
+                    Map.entry("jhenghei", "fallback-noto-tc"),
+                    Map.entry("kaiti", "fallback-noto-tc"),
+                    Map.entry("kaiu", "fallback-noto-tc"),
+                    Map.entry("dfkaib5", "fallback-noto-tc"),
+                    Map.entry("dfkai", "fallback-noto-tc"),
+                    // Simplified Chinese fonts (Mainland China) - more common
+                    Map.entry("simsun", "fallback-noto-cjk"),
+                    Map.entry("simhei", "fallback-noto-cjk"),
+                    Map.entry("microsoftyahei", "fallback-noto-cjk"),
+                    Map.entry("yahei", "fallback-noto-cjk"),
+                    Map.entry("songti", "fallback-noto-cjk"),
+                    Map.entry("heiti", "fallback-noto-cjk"),
                     // Noto Sans - Google's universal font (use as last resort generic fallback)
                     Map.entry("noto", "fallback-noto-sans"),
                     Map.entry("notosans", "fallback-noto-sans"));
@@ -84,6 +104,12 @@ public class PdfJsonFallbackFontService {
                                     "NotoSansKR-Regular",
                                     "ttf")),
                     Map.entry(
+                            FALLBACK_FONT_TC_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansTC-Regular.ttf",
+                                    "NotoSansTC-Regular",
+                                    "ttf")),
+                    Map.entry(
                             FALLBACK_FONT_AR_ID,
                             new FallbackFontSpec(
                                     "classpath:/static/fonts/NotoSansArabic-Regular.ttf",
@@ -94,6 +120,24 @@ public class PdfJsonFallbackFontService {
                             new FallbackFontSpec(
                                     "classpath:/static/fonts/NotoSansThai-Regular.ttf",
                                     "NotoSansThai-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_DEVANAGARI_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansDevanagari-Regular.ttf",
+                                    "NotoSansDevanagari-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_MALAYALAM_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansMalayalam-Regular.ttf",
+                                    "NotoSansMalayalam-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_TIBETAN_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSerifTibetan-Regular.ttf",
+                                    "NotoSerifTibetan-Regular",
                                     "ttf")),
                     // Liberation Sans family
                     Map.entry(
@@ -268,11 +312,28 @@ public class PdfJsonFallbackFontService {
                                     "ttf")));
 
     private final ResourceLoader resourceLoader;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
     @Value("${stirling.pdf.fallback-font:" + DEFAULT_FALLBACK_FONT_LOCATION + "}")
+    private String legacyFallbackFontLocation;
+
     private String fallbackFontLocation;
 
     private final Map<String, byte[]> fallbackFontCache = new ConcurrentHashMap<>();
+
+    @jakarta.annotation.PostConstruct
+    private void loadConfig() {
+        String configured = null;
+        if (applicationProperties.getPdfEditor() != null) {
+            configured = applicationProperties.getPdfEditor().getFallbackFont();
+        }
+        if (configured != null && !configured.isBlank()) {
+            fallbackFontLocation = configured;
+        } else {
+            fallbackFontLocation = legacyFallbackFontLocation;
+        }
+        log.info("Using fallback font location: {}", fallbackFontLocation);
+    }
 
     public PdfJsonFont buildFallbackFontModel() throws IOException {
         return buildFallbackFontModel(FALLBACK_FONT_ID);
@@ -484,6 +545,20 @@ public class PdfJsonFallbackFontService {
      */
     public String resolveFallbackFontId(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+
+        // Bopomofo is primarily used in Taiwan for Traditional Chinese phonetic annotation
+        if (block == Character.UnicodeBlock.BOPOMOFO
+                || block == Character.UnicodeBlock.BOPOMOFO_EXTENDED) {
+            return FALLBACK_FONT_TC_ID;
+        }
+
+        // Compatibility ideographs are primarily used by Traditional Chinese encodings (e.g., Big5,
+        // HKSCS) so prefer the Traditional Chinese fallback here.
+        if (block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT) {
+            return FALLBACK_FONT_TC_ID;
+        }
+
         if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
                 || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
                 || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
@@ -492,19 +567,23 @@ public class PdfJsonFallbackFontService {
                 || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E
                 || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F
                 || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
-                || block == Character.UnicodeBlock.BOPOMOFO
-                || block == Character.UnicodeBlock.BOPOMOFO_EXTENDED
                 || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
             return FALLBACK_FONT_CJK_ID;
         }
 
         Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
         return switch (script) {
+            // HAN script is used by both Simplified and Traditional Chinese
+            // Default to Simplified (mainland China, 1.4B speakers) as it's more common
+            // Traditional Chinese PDFs are detected via font name aliases (MingLiU, PMingLiU, etc.)
             case HAN -> FALLBACK_FONT_CJK_ID;
             case HIRAGANA, KATAKANA -> FALLBACK_FONT_JP_ID;
             case HANGUL -> FALLBACK_FONT_KR_ID;
             case ARABIC -> FALLBACK_FONT_AR_ID;
             case THAI -> FALLBACK_FONT_TH_ID;
+            case DEVANAGARI -> FALLBACK_FONT_DEVANAGARI_ID;
+            case MALAYALAM -> FALLBACK_FONT_MALAYALAM_ID;
+            case TIBETAN -> FALLBACK_FONT_TIBETAN_ID;
             default -> FALLBACK_FONT_ID;
         };
     }

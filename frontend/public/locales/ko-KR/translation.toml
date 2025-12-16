@@ -3036,6 +3036,91 @@ title = "PDF 정보 가져오기"
 header = "PDF 정보 가져오기"
 submit = "정보 가져오기"
 downloadJson = "JSON 다운로드"
+processing = "정보를 추출하는 중..."
+results = "결과"
+noResults = "보고서를 생성하려면 도구를 실행하세요."
+downloads = "다운로드"
+noneDetected = "감지되지 않음"
+indexTitle = "색인"
+
+[getPdfInfo.report]
+entryLabel = "전체 정보 요약"
+shortTitle = "PDF 정보"
+
+[getPdfInfo.sections]
+metadata = "메타데이터"
+formFields = "양식 필드"
+basicInfo = "기본 정보"
+documentInfo = "문서 정보"
+compliance = "규격 준수"
+encryption = "암호화"
+permissions = "권한"
+other = "기타"
+perPageInfo = "페이지별 정보"
+tableOfContents = "목차"
+
+[getPdfInfo.other]
+attachments = "첨부 파일"
+embeddedFiles = "내장 파일"
+javaScript = "JavaScript"
+layers = "레이어"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "크기"
+annotations = "주석"
+images = "이미지"
+links = "링크"
+fonts = "글꼴"
+xobjects = "XObject 개수"
+multimedia = "멀티미디어"
+
+[getPdfInfo.summary]
+pages = "페이지 수"
+fileSize = "파일 크기"
+pdfVersion = "PDF 버전"
+language = "언어"
+title = "PDF 요약"
+author = "작성자"
+created = "생성됨"
+modified = "수정됨"
+permsAll = "모든 권한 허용"
+permsRestricted = "{{count}}개의 제한"
+permsMixed = "일부 권한이 제한됨"
+hasCompliance = "규격 준수 기준 있음"
+noCompliance = "규격 준수 기준 없음"
+basic = "기본 정보"
+documentInfo = "문서 정보"
+securityTitle = "보안 상태"
+technical = "기술 정보"
+overviewTitle = "PDF 개요"
+
+[getPdfInfo.summary.security]
+encrypted = "암호화된 PDF - 암호 보호 적용"
+unencrypted = "암호화되지 않은 PDF - 암호 보호 없음"
+
+[getPdfInfo.summary.tech]
+images = "이미지"
+fonts = "글꼴"
+formFields = "양식 필드"
+embeddedFiles = "내장 파일"
+javaScript = "JavaScript"
+layers = "레이어"
+bookmarks = "북마크"
+multimedia = "멀티미디어"
+
+[getPdfInfo.summary.overview]
+untitled = "제목 없는 문서"
+unknown = "알 수 없는 작성자"
+text = "이 문서는 {{pages}}페이지 분량의 PDF로, 제목은 {{title}}이며 작성자는 {{author}}입니다(PDF 버전 {{version}})."
+
+[getPdfInfo.error]
+partial = "일부 파일을 처리하지 못했습니다."
+unexpected = "추출 중 예기치 않은 오류가 발생했습니다."
+
+[getPdfInfo.status]
+complete = "추출 완료"
 
 [extractPage]
 tags = "추출"
@@ -5177,7 +5262,7 @@ upgrade = "지금 업그레이드 →"
 freeTitle = "서버 라이선스"
 overLimitTitle = "서버 라이선스 필요"
 overLimitBody = "당사의 라이선스는 서버당 무료로 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속 사용하려면 Stirling Server 플랜으로 업그레이드하세요 - <strong>무제한 좌석</strong>, PDF 텍스트 편집, 전체 관리자 제어 제공, $99/서버/월."
-freeBody = "당사의 <strong>Open-Core</strong> 라이선스는 서버당 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 중단 없이 확장하고 새로운 <strong>PDF 텍스트 편집 도구</strong>에 조기 액세스하려면 Stirling Server 플랜을 권장합니다 - 전체 편집과 <strong>무제한 좌석</strong>을 $99/서버/월에 제공합니다."
+freeBody = "당사의 <strong>Open-Core</strong> 라이선스는 서버당 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 중단 없이 확장하려면 Stirling Server 플랜을 권장합니다 - <strong>무제한 좌석</strong> 및 <strong>SSO 지원</strong>, $99/서버/월."
 
 [onboarding.desktopInstall]
 title = "다운로드"
@@ -5281,6 +5366,31 @@ error = "사용자 상태 업데이트에 실패했습니다"
 [workspace.people.delete]
 success = "사용자를 성공적으로 삭제했습니다"
 error = "사용자 삭제에 실패했습니다"
+
+[workspace.people.changePassword]
+action = "비밀번호 변경"
+title = "비밀번호 변경"
+subtitle = "다음 사용자의 비밀번호 업데이트"
+newPassword = "새 비밀번호"
+confirmPassword = "비밀번호 확인"
+placeholder = "새 비밀번호를 입력하세요"
+confirmPlaceholder = "새 비밀번호를 다시 입력하세요"
+passwordRequired = "새 비밀번호를 입력해 주세요"
+passwordMismatch = "비밀번호가 일치하지 않습니다"
+generateRandom = "안전한 비밀번호 생성"
+generatedPreview = "생성된 비밀번호:"
+copyTooltip = "클립보드에 복사"
+copiedToClipboard = "비밀번호를 클립보드에 복사했습니다"
+copyFailed = "비밀번호 복사 실패"
+sendEmail = "이 변경 사항을 사용자에게 이메일로 알리기"
+includePassword = "이메일에 새 비밀번호 포함"
+forcePasswordChange = "다음 로그인 시 비밀번호 변경 강제"
+emailUnavailable = "이 사용자의 이메일이 올바른 주소가 아니므로 알림이 비활성화되었습니다."
+smtpDisabled = "이메일 알림을 사용하려면 설정에서 SMTP를 활성화해야 합니다."
+notifyOnly = "비밀번호 없이 이메일이 발송되며, 관리자가 변경했음을 사용자에게 알려 줍니다."
+submit = "비밀번호 업데이트"
+success = "비밀번호가 성공적으로 업데이트되었습니다"
+error = "비밀번호 업데이트에 실패했습니다"
 
 [workspace.people.emailInvite]
 tab = "이메일 초대"
@@ -5815,6 +5925,7 @@ subtitle = "Stirling 계정으로 로그인"
 [setup.selfhosted]
 title = "서버에 로그인"
 subtitle = "서버 자격 증명을 입력하세요"
+link = "또는 셀프 호스팅 계정에 연결"
 
 [setup.server]
 title = "서버에 연결"
@@ -5833,6 +5944,14 @@ description = "자가 호스팅 Stirling PDF 서버의 전체 URL을 입력하�
 emptyUrl = "서버 URL을 입력하세요"
 unreachable = "서버에 연결할 수 없습니다"
 testFailed = "연결 테스트에 실패했습니다"
+configFetch = "서버 구성을 가져오지 못했습니다. URL을 확인하고 다시 시도하세요."
+
+[setup.server.error.securityDisabled]
+title = "로그인이 활성화되어 있지 않음"
+body = "이 서버에는 로그인이 활성화되어 있지 않습니다. 이 서버에 연결하려면 인증을 활성화해야 합니다:"
+step1 = "환경에서 DOCKER_ENABLE_SECURITY=true를 설정하세요"
+step2 = "또는 settings.yml에서 security.enableLogin=true를 설정하세요"
+step3 = "서버를 재시작하세요"
 
 [setup.login]
 title = "로그인"
@@ -5905,6 +6024,7 @@ earlyAccess = "얼리 액세스"
 reset = "변경 사항 초기화"
 downloadJson = "JSON 다운로드"
 generatePdf = "PDF 생성"
+saveChanges = "변경 사항 저장"
 
 [pdfTextEditor.options.autoScaleText]
 title = "텍스트 자동 크기 조정"
@@ -5942,6 +6062,8 @@ alpha = "이 알파 뷰어는 아직 발전 중입니다—일부 글꼴, 색상
 [pdfTextEditor.empty]
 title = "로드된 문서 없음"
 subtitle = "텍스트 편집을 시작하려면 PDF 또는 JSON 파일을 로드하세요."
+dropzone = "여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
+dropzoneWithFiles = "파일 탭에서 파일을 선택하거나, 여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF 텍스트 편집기(얼리 액세스)에 오신 것을 환영합니다"

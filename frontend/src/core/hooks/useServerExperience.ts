@@ -64,8 +64,11 @@ export function useServerExperience(): ServerExperienceValue {
 
   const loginEnabled = config?.enableLogin !== false;
   const configIsAdmin = Boolean(config?.isAdmin);
-  const effectiveIsAdmin = configIsAdmin || (!loginEnabled && selfReportedAdmin);
-  const hasPaidLicense = config?.license === 'PRO' || config?.license === 'ENTERPRISE';
+  // For no-login servers, treat everyone as a regular user (no effective admin)
+  // Commented out the previous self-reported admin path to avoid elevating users.
+  // const effectiveIsAdmin = configIsAdmin || (!loginEnabled && selfReportedAdmin);
+  const effectiveIsAdmin = loginEnabled ? configIsAdmin : false;
+  const hasPaidLicense = config?.license === 'SERVER' || config?.license === 'PRO' || config?.license === 'ENTERPRISE';
 
   const setSelfReportedAdmin = useCallback((value: boolean) => {
     setSelfReportedAdminState(value);

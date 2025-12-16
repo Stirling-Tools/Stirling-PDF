@@ -256,6 +256,7 @@
   --header-selected-bg: #1E88E5; /* light mode selected header matches dark */
   --header-selected-fg: #FFFFFF;
   --file-card-bg: #FFFFFF;  /* file card background (light/dark paired) */
+  --accordion-item-bg: #E8EAED;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
@@ -519,6 +520,7 @@
   --header-selected-fg: #FFFFFF;
   /* file card background (dark) */
   --file-card-bg: #1F2329;
+  --accordion-item-bg: #373D45;  /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
@@ -613,6 +615,41 @@
 [data-accept] .dropzone-inner {
   background-color: var(--landing-drop-inner-paper-bg) !important;
   border-color: var(--landing-drop-inner-paper-border) !important;
+}
+
+/* Plan section card borders - only override in dark mode */
+[data-mantine-color-scheme="dark"] .plan-card {
+  --paper-border-color: rgb(158, 158, 158) !important;
+}
+
+[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
+  color: rgb(221, 221, 221) !important;
+}
+
+/* Current plan badge - use light mode green in dark mode */
+[data-mantine-color-scheme="dark"] .current-plan-badge {
+  background-color: var(--color-green-300) !important;
+}
+
+/* Plan section button colors */
+.plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #0A8BFF !important;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #1C598E !important;
+}
+
+/* Lighter grey for disabled plan buttons */
+.plan-button:disabled,
+.plan-button[data-disabled] {
+  background-color: #7e7e7e !important;
+  color: white;
+}
+
+[data-mantine-color-scheme="dark"] .plan-button:disabled,
+[data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
+  background-color: #6b7280 !important;
 }
 
 /* Smooth transitions for theme switching */

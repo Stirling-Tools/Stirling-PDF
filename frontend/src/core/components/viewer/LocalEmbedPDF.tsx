@@ -48,6 +48,7 @@ import { LinkLayer } from '@app/components/viewer/LinkLayer';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
+import { absoluteWithBasePath } from '@app/constants/app';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -178,8 +179,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
     ];
   }, [pdfUrl]);
 
-  // Initialize the engine with the React hook
-  const { engine, isLoading, error } = usePdfiumEngine();
+  // Initialize the engine with the React hook - use local WASM for offline support
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: absoluteWithBasePath('/pdfium/pdfium.wasm'),
+  });
 
 
   // Early return if no file or URL provided

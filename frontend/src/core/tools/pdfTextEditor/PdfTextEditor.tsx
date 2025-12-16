@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
 
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useFileSelection } from '@app/contexts/FileContext';
+import { useFileSelection, useFileManagement, useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import { getDefaultWorkbench } from '@app/types/workbench';
 import { CONVERSION_ENDPOINTS } from '@app/constants/convertConstants';
 import apiClient from '@app/services/apiClient';
 import { downloadBlob, downloadTextAsFile } from '@app/utils/downloadUtils';
@@ -208,7 +210,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
-  const { registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = navigationActions;
+  const { addFiles } = useFileManagement();
+  const { consumeFiles, selectors } = useFileContext();
 
   const [loadedDocument, setLoadedDocument] = useState<PdfJsonDocument | null>(null);
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
@@ -217,6 +220,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [fileName, setFileName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isSavingToWorkbench, setIsSavingToWorkbench] = useState(false);
+  const [shouldNavigateAfterSave, setShouldNavigateAfterSave] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState<ConversionProgress | null>(null);
   const [forceSingleTextElement, setForceSingleTextElement] = useState(true);
@@ -233,7 +238,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
   const originalGroupsRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
+  const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
+  const sourceFileIdRef = useRef<string | null>(null);
   const loadRequestIdRef = useRef(0);
   const latestPdfRequestIdRef = useRef<number | null>(null);
   const loadedDocumentRef = useRef<PdfJsonDocument | null>(null);
@@ -245,6 +252,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
   const previewScaleRef = useRef<Map<number, number>>(new Map());
   const cachedJobIdRef = useRef<string | null>(null);
+  const previousCachedJobIdRef = useRef<string | null>(null);
+  const cacheRecoveryInProgressRef = useRef(false);
+  const cacheRecoveryAttemptsRef = useRef(0);
+  const recoverCacheAndReloadRef = useRef<() => Promise<boolean>>(async () => false);
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
@@ -273,12 +284,36 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     };
   }, []);
 
+  const isCacheUnavailableError = useCallback((error: any): boolean => {
+    const status = error?.response?.status;
+    // Treat any 410 as cache unavailable, since responseType: 'blob' makes
+    // it impossible to reliably check the JSON body
+    return status === 410;
+  }, []);
+
   const dirtyPages = useMemo(
     () => getDirtyPages(groupsByPage, imagesByPage, originalGroupsRef.current, originalImagesRef.current),
     [groupsByPage, imagesByPage],
   );
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
   const hasDocument = loadedDocument !== null;
+
+  // Sync hasChanges to navigation context so navigation guards can block
+  useEffect(() => {
+    navigationActions.setHasUnsavedChanges(hasChanges);
+    return () => {
+      navigationActions.setHasUnsavedChanges(false);
+    };
+  }, [hasChanges, navigationActions]);
+
+  // Navigate to files view AFTER the unsaved changes state is properly cleared
+  useEffect(() => {
+    if (shouldNavigateAfterSave && !navigationState.hasUnsavedChanges) {
+      setShouldNavigateAfterSave(false);
+      navigationActions.setToolAndWorkbench(null, getDefaultWorkbench());
+    }
+  }, [shouldNavigateAfterSave, navigationState.hasUnsavedChanges, navigationActions]);
+
   const viewLabel = useMemo(() => t('pdfTextEditor.viewLabel', 'PDF Editor'), [t]);
   const { selectedFiles } = useFileSelection();
 
@@ -293,6 +328,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       loadedImagePagesRef.current = new Set();
       loadingImagePagesRef.current = new Set();
       setSelectedPage(0);
+      setIsLazyMode(false);
+      setCachedJobId(null);
+      cachedJobIdRef.current = null;
       return;
     }
     const cloned = deepCloneDocument(document);
@@ -342,11 +380,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   useEffect(() => {
-    const previousJobId = cachedJobIdRef.current;
+    // Clear old cached job when job ID changes
+    const previousJobId = previousCachedJobIdRef.current;
     if (previousJobId && previousJobId !== cachedJobId) {
+      console.log(`[PdfTextEditor] Clearing old cache for jobId: ${previousJobId}, new jobId: ${cachedJobId}`);
       clearCachedJob(previousJobId);
     }
-    cachedJobIdRef.current = cachedJobId;
+    // Update the previous jobId ref for next time
+    previousCachedJobIdRef.current = cachedJobId;
   }, [cachedJobId, clearCachedJob]);
 
   const initializePdfPreview = useCallback(
@@ -466,6 +507,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         );
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
+        if (isCacheUnavailableError(error)) {
+          console.log('[loadImagesForPage] Cache expired, triggering automatic recovery...');
+          // Automatically recover by reloading the file
+          void recoverCacheAndReloadRef.current();
+        }
       } finally {
         loadingImagePagesRef.current.delete(pageIndex);
         setLoadingImagePages((prev) => {
@@ -475,7 +521,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         });
       }
     },
-    [isLazyMode, cachedJobId],
+    [isLazyMode, cachedJobId, isCacheUnavailableError],
   );
 
   const handleLoadFile = useCallback(
@@ -484,6 +530,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
 
+      lastLoadedFileRef.current = file;
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
 
@@ -532,59 +579,35 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             message: 'Starting conversion...',
           });
 
-          let jobComplete = false;
-          let attempts = 0;
-          const maxAttempts = 600;
+        let jobComplete = false;
+        let attempts = 0;
+        const maxAttempts = 600;
+        let pollDelay = 500;
 
-          while (!jobComplete && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts += 1;
+        while (!jobComplete && attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, pollDelay));
+          attempts += 1;
+          if (pollDelay < 10000) {
+            pollDelay = Math.min(10000, Math.floor(pollDelay * 1.5));
+          }
 
             try {
               const statusResponse = await apiClient.get(`/api/v1/general/job/${jobId}`);
               const jobStatus = statusResponse.data;
               console.log(`Job status (attempt ${attempts}):`, jobStatus);
 
-              if (jobStatus.notes && jobStatus.notes.length > 0) {
-                const lastNote = jobStatus.notes[jobStatus.notes.length - 1];
-                console.log('Latest note:', lastNote);
-                const matchWithCount = lastNote.match(
-                  /\[(\d+)%\]\s+(\w+):\s+(.+?)\s+\((\d+)\/(\d+)\)/,
-                );
-                if (matchWithCount) {
-                  const percent = parseInt(matchWithCount[1], 10);
-                  const stage = matchWithCount[2];
-                  const message = matchWithCount[3];
-                  const current = parseInt(matchWithCount[4], 10);
-                  const total = parseInt(matchWithCount[5], 10);
-                  setConversionProgress({
-                    percent,
-                    stage,
-                    message,
-                    current,
-                    total,
-                  });
-                } else {
-                  const match = lastNote.match(/\[(\d+)%\]\s+(\w+):\s+(.+)/);
-                  if (match) {
-                    const percent = parseInt(match[1], 10);
-                    const stage = match[2];
-                    const message = match[3];
-                    setConversionProgress({
-                      percent,
-                      stage,
-                      message,
-                    });
-                  }
-                }
-              } else if (jobStatus.progress !== undefined) {
-                const percent = Math.min(Math.max(jobStatus.progress, 0), 100);
-                setConversionProgress({
-                  percent,
-                  stage: jobStatus.stage || 'processing',
-                  message: jobStatus.note || 'Converting PDF to JSON...',
-                });
-              }
+              const percent = Math.min(Math.max(jobStatus.progress ?? 0, 0), 100);
+              const stage = jobStatus.stage || 'processing';
+              const message = jobStatus.note || 'Converting PDF to JSON...';
+              const current = jobStatus.current ?? undefined;
+              const total = jobStatus.total ?? undefined;
+              setConversionProgress({
+                percent,
+                stage,
+                message,
+                current,
+                total,
+              });
 
               if (jobStatus.complete) {
                 if (jobStatus.error) {
@@ -678,7 +701,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(parsed);
         resetToDocument(parsed, groupingMode);
         setIsLazyMode(shouldUseLazyMode);
-        setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
+        const newJobId = shouldUseLazyMode ? pendingJobId : null;
+        setCachedJobId(newJobId);
+        cachedJobIdRef.current = newJobId;
         setFileName(file.name);
         setErrorMessage(null);
       } catch (error: any) {
@@ -696,6 +721,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setLoadedDocument(null);
         resetToDocument(null, groupingMode);
         clearPdfPreview();
+        setIsLazyMode(false);
+        setCachedJobId(null);
+        cachedJobIdRef.current = null;
 
         if (isPdf) {
           const errorMsg =
@@ -718,6 +746,53 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       }
     },
     [groupingMode, resetToDocument, t],
+  );
+
+  const recoverCacheAndReload = useCallback(async () => {
+    if (cacheRecoveryInProgressRef.current) {
+      return false;
+    }
+    if (cacheRecoveryAttemptsRef.current >= 2) {
+      console.warn('[PdfTextEditor] Cache recovery limit reached');
+      return false;
+    }
+    cacheRecoveryAttemptsRef.current += 1;
+    const file = lastLoadedFileRef.current;
+    if (!file) {
+      console.warn('[PdfTextEditor] No file available for cache recovery');
+      return false;
+    }
+    cacheRecoveryInProgressRef.current = true;
+    try {
+      console.log('[PdfTextEditor] Automatically reloading file due to cache expiration...');
+      await handleLoadFile(file);
+      console.log('[PdfTextEditor] Cache recovery successful');
+      return true;
+    } catch (error) {
+      console.error('[PdfTextEditor] Cache recovery failed', error);
+      return false;
+    } finally {
+      cacheRecoveryInProgressRef.current = false;
+    }
+  }, [handleLoadFile]);
+
+  useEffect(() => {
+    recoverCacheAndReloadRef.current = recoverCacheAndReload;
+  }, [recoverCacheAndReload]);
+
+  // Wrapper for loading files from the dropzone - adds to workbench first
+  const handleLoadFileFromDropzone = useCallback(
+    async (file: File) => {
+      // Add the file to the workbench so it appears in the file list
+      const addedFiles = await addFiles([file]);
+      // Capture the file ID for save-to-workbench functionality
+      if (addedFiles.length > 0 && addedFiles[0].fileId) {
+        sourceFileIdRef.current = addedFiles[0].fileId;
+      }
+      // Then load it into the editor
+      void handleLoadFile(file);
+    },
+    [addFiles, handleLoadFile],
   );
 
   const handleSelectPage = useCallback((pageIndex: number) => {
@@ -1019,7 +1094,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         try {
           const payload = buildPayload();
           if (!payload) {
-            return;
+            throw new Error('Failed to build payload');
           }
 
           const { document, filename } = payload;
@@ -1038,7 +1113,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
           const expectedName = `${baseName || 'document'}.pdf`;
           const response = await apiClient.post(
-            `/api/v1/convert/pdf/text-editor/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
+            `/api/v1/convert/pdf/text-editor/partial/${cachedJobIdRef.current}?filename=${encodeURIComponent(expectedName)}`,
             partialDocument,
             {
               responseType: 'blob',
@@ -1062,6 +1137,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
           );
+          // Fall through to full export below
         }
       }
 
@@ -1119,6 +1195,229 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     loadImagesForPage,
     onComplete,
     onError,
+    t,
+  ]);
+
+  // Save changes to workbench (replaces the original file with edited version)
+  const handleSaveToWorkbench = useCallback(async () => {
+    setIsSavingToWorkbench(true);
+    
+    try {
+      if (!sourceFileIdRef.current) {
+        console.warn('[PdfTextEditor] No source file ID available for save to workbench');
+        // Fall back to generating PDF download if no source file
+        await handleGeneratePdf(true);
+        return;
+      }
+
+      const parentStub = selectors.getStirlingFileStub(sourceFileIdRef.current as any);
+      if (!parentStub) {
+        console.warn('[PdfTextEditor] Could not find parent stub for save to workbench');
+        await handleGeneratePdf(true);
+        return;
+      }
+
+      const ensureImagesForPages = async (pageIndices: number[]) => {
+        const uniqueIndices = Array.from(new Set(pageIndices)).filter((index) => index >= 0);
+        if (uniqueIndices.length === 0) {
+          return;
+        }
+
+        for (const index of uniqueIndices) {
+          if (!loadedImagePagesRef.current.has(index)) {
+            await loadImagesForPage(index);
+          }
+        }
+
+        const maxWaitTime = 15000;
+        const pollInterval = 150;
+        const startWait = Date.now();
+        while (Date.now() - startWait < maxWaitTime) {
+          const allLoaded = uniqueIndices.every(
+            (index) =>
+              loadedImagePagesRef.current.has(index) &&
+              imagesByPageRef.current[index] !== undefined,
+          );
+          const anyLoading = uniqueIndices.some((index) =>
+            loadingImagePagesRef.current.has(index),
+          );
+          if (allLoaded && !anyLoading) {
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        }
+
+        const missing = uniqueIndices.filter(
+          (index) => !loadedImagePagesRef.current.has(index),
+        );
+        if (missing.length > 0) {
+          throw new Error(
+            `Failed to load images for pages ${missing.map((i) => i + 1).join(', ')}`,
+          );
+        }
+      };
+
+      const currentDoc = loadedDocumentRef.current;
+      const totalPages = currentDoc?.pages?.length ?? 0;
+      const currentDirtyPages = getDirtyPages(groupsByPage, imagesByPage, originalGroupsRef.current, originalImagesRef.current);
+      const dirtyPageIndices = currentDirtyPages
+        .map((isDirty, index) => (isDirty ? index : -1))
+        .filter((index) => index >= 0);
+
+      let pdfBlob: Blob;
+      let downloadName: string;
+
+      const canUseIncremental =
+        isLazyMode &&
+        cachedJobId &&
+        dirtyPageIndices.length > 0 &&
+        dirtyPageIndices.length < totalPages;
+
+      if (canUseIncremental) {
+        await ensureImagesForPages(dirtyPageIndices);
+
+        try {
+          const payload = buildPayload();
+          if (!payload) {
+            throw new Error('Failed to build payload');
+          }
+
+          const { document, filename } = payload;
+          const dirtyPageSet = new Set(dirtyPageIndices);
+          const partialPages =
+            document.pages?.filter((_, index) => dirtyPageSet.has(index)) ?? [];
+
+          const partialDocument: PdfJsonDocument = {
+            metadata: document.metadata,
+            xmpMetadata: document.xmpMetadata,
+            fonts: document.fonts,
+            lazyImages: true,
+            pages: partialPages,
+          };
+
+          const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
+          const expectedName = `${baseName || 'document'}.pdf`;
+          const response = await apiClient.post(
+            `/api/v1/convert/pdf/text-editor/partial/${cachedJobId}?filename=${encodeURIComponent(expectedName)}`,
+            partialDocument,
+            {
+              responseType: 'blob',
+            },
+          );
+
+          const contentDisposition = response.headers?.['content-disposition'] ?? '';
+          const detectedName = getFilenameFromHeaders(contentDisposition);
+          downloadName = detectedName || expectedName;
+          pdfBlob = response.data;
+        } catch (incrementalError) {
+          console.warn(
+            '[handleSaveToWorkbench] Incremental export failed, falling back to full export',
+            incrementalError,
+          );
+          // Fall through to full export
+          if (isLazyMode && totalPages > 0) {
+            const allPageIndices = Array.from({ length: totalPages }, (_, index) => index);
+            await ensureImagesForPages(allPageIndices);
+          }
+
+          const payload = buildPayload();
+          if (!payload) {
+            throw new Error('Failed to build payload');
+          }
+
+          const { document, filename } = payload;
+          const serialized = JSON.stringify(document);
+          const jsonFile = new File([serialized], filename, { type: 'application/json' });
+
+          const formData = new FormData();
+          formData.append('fileInput', jsonFile);
+          const response = await apiClient.post(CONVERSION_ENDPOINTS['text-editor-pdf'], formData, {
+            responseType: 'blob',
+          });
+
+          const contentDisposition = response.headers?.['content-disposition'] ?? '';
+          const detectedName = getFilenameFromHeaders(contentDisposition);
+          const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
+          downloadName = detectedName || `${baseName || 'document'}.pdf`;
+          pdfBlob = response.data;
+        }
+      } else {
+        if (isLazyMode && totalPages > 0) {
+          const allPageIndices = Array.from({ length: totalPages }, (_, index) => index);
+          await ensureImagesForPages(allPageIndices);
+        }
+
+        const payload = buildPayload();
+        if (!payload) {
+          throw new Error('Failed to build payload');
+        }
+
+        const { document, filename } = payload;
+        const serialized = JSON.stringify(document);
+        const jsonFile = new File([serialized], filename, { type: 'application/json' });
+
+        const formData = new FormData();
+        formData.append('fileInput', jsonFile);
+        const response = await apiClient.post(CONVERSION_ENDPOINTS['text-editor-pdf'], formData, {
+          responseType: 'blob',
+        });
+
+        const contentDisposition = response.headers?.['content-disposition'] ?? '';
+        const detectedName = getFilenameFromHeaders(contentDisposition);
+        const baseName = sanitizeBaseName(filename).replace(/-edited$/u, '');
+        downloadName = detectedName || `${baseName || 'document'}.pdf`;
+        pdfBlob = response.data;
+      }
+
+      // Create the new PDF file
+      const pdfFile = new File([pdfBlob], downloadName, { type: 'application/pdf' });
+
+      // Create StirlingFile and stub for the output
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [pdfFile],
+        parentStub,
+        'pdfTextEditor',
+      );
+
+      // Replace the original file with the edited version
+      await consumeFiles([sourceFileIdRef.current as any], stirlingFiles, stubs);
+
+      // Update the source file ID to point to the new file
+      sourceFileIdRef.current = stubs[0].id;
+
+      // Clear the unsaved changes flag - this will trigger the useEffect to navigate
+      // once React has processed the state update
+      navigationActions.setHasUnsavedChanges(false);
+      setErrorMessage(null);
+      
+      // Set flag to trigger navigation after state update is processed
+      setShouldNavigateAfterSave(true);
+    } catch (error: any) {
+      console.error('Failed to save to workbench', error);
+      const message =
+        error?.response?.data ||
+        error?.message ||
+        t('pdfTextEditor.errors.pdfConversion', 'Unable to save changes to workbench.');
+      const msgString = typeof message === 'string' ? message : String(message);
+      setErrorMessage(msgString);
+      if (onError) {
+        onError(msgString);
+      }
+    } finally {
+      setIsSavingToWorkbench(false);
+    }
+  }, [
+    buildPayload,
+    cachedJobId,
+    consumeFiles,
+    groupsByPage,
+    handleGeneratePdf,
+    imagesByPage,
+    isLazyMode,
+    loadImagesForPage,
+    navigationActions,
+    onError,
+    selectors,
     t,
   ]);
 
@@ -1260,6 +1559,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     fileName,
     errorMessage,
     isGeneratingPdf,
+    isSavingToWorkbench,
     isConverting,
     conversionProgress,
     hasChanges,
@@ -1278,15 +1578,19 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       // Generate PDF without triggering tool completion
       await handleGeneratePdf(true);
     },
+    onSaveToWorkbench: handleSaveToWorkbench,
     onForceSingleTextElementChange: setForceSingleTextElement,
     onGroupingModeChange: setGroupingMode,
     onMergeGroups: handleMergeGroups,
     onUngroupGroup: handleUngroupGroup,
+    onLoadFile: handleLoadFileFromDropzone,
   }), [
     handleMergeGroups,
     handleUngroupGroup,
     handleImageTransform,
+    handleSaveToWorkbench,
     imagesByPage,
+    isSavingToWorkbench,
     pagePreviews,
     dirtyPages,
     errorMessage,
@@ -1311,6 +1615,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     groupingMode,
     requestPagePreview,
     setForceSingleTextElement,
+    handleLoadFileFromDropzone,
   ]);
 
   const latestViewDataRef = useRef<PdfTextEditorViewData>(viewData);
@@ -1326,6 +1631,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     if (selectedFiles.length === 0) {
       autoLoadKeyRef.current = null;
+      sourceFileIdRef.current = null;
       return;
     }
 
@@ -1344,6 +1650,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
 
     autoLoadKeyRef.current = fileKey;
+    // Capture the source file ID for save-to-workbench functionality
+    sourceFileIdRef.current = (file as any).fileId ?? null;
     void handleLoadFile(file);
   }, [selectedFiles, navigationState.selectedTool, handleLoadFile]);
 
@@ -1366,6 +1674,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }, 0);
   }, [navigationActions, navigationState.selectedTool]);
 
+  // Register workbench view (re-runs when dependencies change)
   useEffect(() => {
     registerCustomWorkbenchView({
       id: WORKBENCH_VIEW_ID,
@@ -1376,48 +1685,33 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     });
     setLeftPanelView('hidden');
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
-
-    return () => {
-      // Clear backend cache if we were using lazy loading
-      clearCachedJob(cachedJobIdRef.current);
-      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
-      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-      setLeftPanelView('toolPicker');
-    };
   }, [
-    clearCachedJob,
-    clearCustomWorkbenchViewData,
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,
     setLeftPanelView,
     viewLabel,
-    unregisterCustomWorkbenchView,
   ]);
+
+  // Cleanup ONLY on component unmount (not on re-renders)
+  useEffect(() => {
+    return () => {
+      // Clear backend cache when leaving the tool
+      const jobId = cachedJobIdRef.current;
+      if (jobId) {
+        console.log(`[PdfTextEditor] Cleaning up cached document on unmount: ${jobId}`);
+        apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
+          console.warn('[PdfTextEditor] Failed to clear cache on unmount:', error);
+        });
+      }
+      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
+      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
+      setLeftPanelView('toolPicker');
+    };
+  }, []); // Empty deps = cleanup only on unmount
 
   // Note: Compare tool doesn't auto-force workbench, and neither should we
   // The workbench should be set when the tool is selected via proper channels
   // (tool registry, tool picker, etc.) - not forced here
-
-  // Keep hasChanges in a ref for the checker to access
-  const hasChangesRef = useRef(hasChanges);
-  useEffect(() => {
-    hasChangesRef.current = hasChanges;
-    console.log('[PdfTextEditor] hasChanges updated to:', hasChanges);
-  }, [hasChanges]);
-
-  // Register unsaved changes checker for navigation guard
-  useEffect(() => {
-    const checker = () => {
-      console.log('[PdfTextEditor] Checking unsaved changes:', hasChangesRef.current);
-      return hasChangesRef.current;
-    };
-    registerUnsavedChangesChecker(checker);
-    console.log('[PdfTextEditor] Registered unsaved changes checker');
-    return () => {
-      console.log('[PdfTextEditor] Unregistered unsaved changes checker');
-      unregisterUnsavedChangesChecker();
-    };
-  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   const lastSentViewDataRef = useRef<PdfTextEditorViewData | null>(null);
 
