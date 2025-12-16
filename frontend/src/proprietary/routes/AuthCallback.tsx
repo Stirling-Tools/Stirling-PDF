@@ -21,9 +21,20 @@ export default function AuthCallback() {
         const hash = window.location.hash.substring(1); // Remove '#'
         const params = new URLSearchParams(hash);
         const token = params.get('access_token');
+        const desktopSsoState = localStorage.getItem('desktop_sso_in_progress');
+        const isDesktopSso = Boolean(desktopSsoState);
 
         if (!token) {
           console.error('[AuthCallback] No access_token in URL fragment');
+          if (isDesktopSso && window.opener) {
+            localStorage.removeItem('desktop_sso_in_progress');
+            window.opener.postMessage(
+              { type: 'stirling-sso-error', error: 'OAuth login failed - no token received.' },
+              window.location.origin
+            );
+            window.close();
+            return;
+          }
           navigate('/login', {
             replace: true,
             state: { error: 'OAuth login failed - no token received.' }
@@ -38,26 +49,53 @@ export default function AuthCallback() {
         // Dispatch custom event for other components to react to JWT availability
         window.dispatchEvent(new CustomEvent('jwt-available'));
 
-        // Validate the token and load user info
-        // This calls /api/v1/auth/me with the JWT to get user details
-        const { data, error } = await springAuth.getSession();
+        // Desktop SSO flow relies on the opener to finalize setup, so skip server validation here
+        if (!isDesktopSso) {
+          // Validate the token and load user info
+          // This calls /api/v1/auth/me with the JWT to get user details
+          const { data, error } = await springAuth.getSession();
 
-        if (error || !data.session) {
-          console.error('[AuthCallback] Failed to validate token:', error);
-          localStorage.removeItem('stirling_jwt');
-          navigate('/login', {
-            replace: true,
-            state: { error: 'OAuth login failed - invalid token.' }
-          });
-          return;
+          if (error || !data.session) {
+            console.error('[AuthCallback] Failed to validate token:', error);
+            localStorage.removeItem('stirling_jwt');
+            navigate('/login', {
+              replace: true,
+              state: { error: 'OAuth login failed - invalid token.' }
+            });
+            return;
+          }
+        }
+
+        // Cleanup flag for desktop flow
+        if (isDesktopSso) {
+          localStorage.removeItem('desktop_sso_in_progress');
         }
 
         console.log('[AuthCallback] Token validated, redirecting to home');
+
+        if (isDesktopSso && window.opener) {
+          window.opener.postMessage(
+            { type: 'stirling-sso-success', token },
+            window.location.origin
+          );
+          window.close();
+          return;
+        }
 
         // Clear the hash from URL and redirect to home page
         navigate('/', { replace: true });
       } catch (error) {
         console.error('[AuthCallback] Error:', error);
+        const desktopSsoState = localStorage.getItem('desktop_sso_in_progress');
+        if (desktopSsoState && window.opener) {
+          localStorage.removeItem('desktop_sso_in_progress');
+          window.opener.postMessage(
+            { type: 'stirling-sso-error', error: 'OAuth login failed. Please try again.' },
+            window.location.origin
+          );
+          window.close();
+          return;
+        }
         navigate('/login', {
           replace: true,
           state: { error: 'OAuth login failed. Please try again.' }

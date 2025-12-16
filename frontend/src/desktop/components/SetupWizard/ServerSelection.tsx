@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ServerConfig } from '@app/services/connectionModeService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { DesktopOAuthProvider } from '@app/components/SetupWizard/DesktopOAuthButtons';
 
 interface ServerSelectionProps {
   onSelect: (config: ServerConfig) => void;
@@ -43,7 +44,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       }
 
       // Fetch OAuth providers and check if login is enabled
-      let enabledProviders: string[] = [];
+      let enabledProviders: DesktopOAuthProvider[] = [];
       try {
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
 
@@ -74,11 +75,19 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           return;
         }
 
-        // Extract provider IDs from authorization URLs
-        // Example: "/oauth2/authorization/google" → "google"
-        enabledProviders = Object.keys(data.providerList || {})
-          .map(key => key.split('/').pop())
-          .filter((id): id is string => id !== undefined);
+        // Extract provider metadata from authorization URLs
+        // Example: "/oauth2/authorization/google" → { id: "google", url: "https://server/oauth2/authorization/google" }
+        enabledProviders = Object.entries(data.providerList || {})
+          .map(([path, label]) => {
+            const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+            const id = normalizedPath.split('/').pop() || normalizedPath;
+            const trimmedUrl = url.replace(/\/$/, '');
+            return {
+              id,
+              label: typeof label === 'string' ? label : undefined,
+              url: `${trimmedUrl}${normalizedPath}`,
+            } satisfies DesktopOAuthProvider;
+          });
 
         console.log('[ServerSelection] Detected OAuth providers:', enabledProviders);
       } catch (err) {

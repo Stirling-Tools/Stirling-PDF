@@ -69,6 +69,11 @@ export class AuthService {
     // Notify other parts of the system
     window.dispatchEvent(new CustomEvent('jwt-available'));
     console.log('[Desktop AuthService] Dispatched jwt-available event');
+
+    // Keep auth status in sync if we already have user info
+    if (this.userInfo) {
+      this.setAuthStatus('authenticated', this.userInfo);
+    }
   }
 
   /**
@@ -98,6 +103,19 @@ export class AuthService {
     }
 
     return localStorageToken;
+  }
+
+  /**
+   * Apply a JWT obtained from an external flow (e.g., browser SSO).
+   */
+  async applyExternalToken(token: string, userInfo?: UserInfo | null): Promise<void> {
+    await this.saveTokenEverywhere(token);
+
+    if (userInfo) {
+      this.userInfo = userInfo;
+    }
+
+    this.setAuthStatus('authenticated', userInfo ?? this.userInfo);
   }
 
   /**

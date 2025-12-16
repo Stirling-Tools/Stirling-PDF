@@ -5,13 +5,13 @@ import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import DividerWithText from '@app/components/shared/DividerWithText';
-import { DesktopOAuthButtons, OAuthProvider } from '@app/components/SetupWizard/DesktopOAuthButtons';
-import { UserInfo } from '@app/services/authService';
+import { DesktopOAuthButtons, DesktopOAuthProvider } from '@app/components/SetupWizard/DesktopOAuthButtons';
+import { authService, UserInfo } from '@app/services/authService';
 import '@app/routes/authShared/auth.css';
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
-  enabledOAuthProviders?: string[];
+  enabledOAuthProviders?: DesktopOAuthProvider[];
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   loading: boolean;
@@ -51,6 +51,76 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     setValidationError(errorMessage);
   };
 
+  const waitForSsoCompletion = (popup: Window): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const messageHandler = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin || typeof event.data !== 'object' || event.data === null) {
+          return;
+        }
+
+        const { type, token, error } = event.data as { type?: string; token?: string; error?: string };
+        if (type === 'stirling-sso-success' && token) {
+          cleanup();
+          resolve(token);
+        } else if (type === 'stirling-sso-error') {
+          cleanup();
+          reject(new Error(error || 'SSO login failed'));
+        }
+      };
+
+      const interval = window.setInterval(() => {
+        if (popup.closed) {
+          cleanup();
+          reject(new Error('Login window was closed before authentication completed'));
+        }
+      }, 500);
+
+      const cleanup = () => {
+        window.clearInterval(interval);
+        window.removeEventListener('message', messageHandler);
+      };
+
+      window.addEventListener('message', messageHandler);
+    });
+  };
+
+  const handleSelfHostedOAuthLogin = async (provider: DesktopOAuthProvider) => {
+    setValidationError(null);
+
+    if (!provider.url) {
+      handleOAuthError(t('setup.login.error.configFetch', 'Failed to fetch server configuration. Please check the URL and try again.'));
+      return;
+    }
+
+    // Mark SSO flow so the callback can short-circuit verification
+    localStorage.setItem('desktop_sso_in_progress', JSON.stringify({ mode: 'selfhosted' }));
+
+    const popup = window.open(provider.url, '_blank', 'width=480,height=720');
+    if (!popup) {
+      localStorage.removeItem('desktop_sso_in_progress');
+      handleOAuthError(t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.'));
+      return;
+    }
+
+    try {
+      const token = await waitForSsoCompletion(popup);
+      localStorage.removeItem('desktop_sso_in_progress');
+
+      await authService.applyExternalToken(token);
+      await onOAuthSuccess({ username: provider.label || provider.id });
+    } catch (err) {
+      localStorage.removeItem('desktop_sso_in_progress');
+      const message = err instanceof Error ? err.message : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
+      handleOAuthError(message);
+    } finally {
+      try {
+        popup.close();
+      } catch (_) {
+        // ignore
+      }
+    }
+  };
+
   const displayError = error || validationError;
 
   return (
@@ -74,7 +144,8 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
             onError={handleOAuthError}
             isDisabled={loading}
             serverUrl={serverUrl}
-            providers={enabledOAuthProviders as OAuthProvider[]}
+            providers={enabledOAuthProviders}
+            onProviderClick={handleSelfHostedOAuthLogin}
           />
 
           <DividerWithText
