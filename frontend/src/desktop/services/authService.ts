@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
-import { STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
+import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
   username: string;
@@ -129,6 +129,67 @@ export class AuthService {
     this.authStatus = status;
     this.userInfo = userInfo;
     this.notifyListeners();
+  }
+
+  async completeSupabaseSession(accessToken: string, serverUrl: string): Promise<UserInfo> {
+    if (!accessToken || !accessToken.trim()) {
+      throw new Error('Invalid access token');
+    }
+    if (!SUPABASE_KEY) {
+      throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+    }
+
+    await this.saveTokenEverywhere(accessToken);
+
+    const userInfo = await this.fetchSupabaseUserInfo(serverUrl, accessToken);
+
+    await invoke('save_user_info', {
+      username: userInfo.username,
+      email: userInfo.email || null,
+    });
+
+    this.setAuthStatus('authenticated', userInfo);
+    return userInfo;
+  }
+
+  async signUpSaas(email: string, password: string): Promise<void> {
+    if (!STIRLING_SAAS_URL) {
+      throw new Error('VITE_SAAS_SERVER_URL is not configured');
+    }
+    if (!SUPABASE_KEY) {
+      throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
+    }
+
+    const redirectParam = encodeURIComponent(DESKTOP_DEEP_LINK_CALLBACK);
+    const signupUrl = `${STIRLING_SAAS_URL.replace(/\/$/, '')}/auth/v1/signup?redirect_to=${redirectParam}`;
+
+    try {
+      const response = await axios.post(
+        signupUrl,
+        { email, password, email_redirect_to: DESKTOP_DEEP_LINK_CALLBACK },
+        {
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      );
+
+      if (response.status >= 400) {
+        throw new Error('Sign up failed');
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message =
+          error.response?.data?.error_description ||
+          error.response?.data?.msg ||
+          error.response?.data?.message ||
+          error.message;
+        throw new Error(message || 'Sign up failed');
+      }
+      throw error instanceof Error ? error : new Error('Sign up failed');
+    }
   }
 
   async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
