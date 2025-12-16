@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, Textarea, NumberInput, Tooltip } from '@mantine/core';
+import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, Textarea, NumberInput, Tooltip, Paper } from '@mantine/core';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -12,6 +12,7 @@ import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/share
 import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
+import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
 
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -366,10 +367,11 @@ const Annotate = (_props: BaseToolProps) => {
     );
 
     const defaultStyleControls = (
-      <Stack gap="sm">
-        {activeTool === 'stamp' ? (
-          <>
-            <Text size="sm" fw={600}>{t('annotation.stampSettings', 'Stamp Settings')}</Text>
+      <Paper withBorder p="sm" radius="md">
+        <Stack gap="sm">
+          {activeTool === 'stamp' ? (
+            <>
+              <Text size="sm" fw={600}>{t('annotation.stampSettings', 'Stamp Settings')}</Text>
             <ImageUploader
               onImageChange={async (file) => {
                 if (file) {
@@ -575,9 +577,8 @@ const Annotate = (_props: BaseToolProps) => {
             </Box>
           </>
         )}
-          </>
-        )}
-      </Stack>
+        </Stack>
+      </Paper>
     );
 
     const selectedAnnotationControls = selectedAnn && (() => {
@@ -586,7 +587,8 @@ const Annotate = (_props: BaseToolProps) => {
       // Type 9: Highlight, Type 10: Underline, Type 11: Squiggly, Type 12: Strikeout
       if ([9, 10, 11, 12].includes(type)) {
         return (
-          <Stack gap="sm">
+          <Paper withBorder p="sm" radius="md">
+            <Stack gap="sm">
             <Text size="sm" fw={600}>{t('annotation.editTextMarkup', 'Edit Text Markup')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
@@ -614,15 +616,17 @@ const Annotate = (_props: BaseToolProps) => {
                 }}
               />
             </Box>
-          </Stack>
+            </Stack>
+          </Paper>
         );
       }
 
       // Type 15: Ink (pen)
       if (type === 15) {
         return (
-          <Stack gap="sm">
-            <Text size="sm" fw={600}>{t('annotation.editInk', 'Edit Pen')}</Text>
+          <Paper withBorder p="sm" radius="md">
+            <Stack gap="sm">
+              <Text size="sm" fw={600}>{t('annotation.editInk', 'Edit Pen')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
@@ -654,15 +658,17 @@ const Annotate = (_props: BaseToolProps) => {
                 }}
               />
             </Box>
-          </Stack>
+            </Stack>
+          </Paper>
         );
       }
 
       // Type 3: Text box
       if (type === 3) {
         return (
-          <Stack gap="sm">
-            <Text size="sm" fw={600}>{t('annotation.editText', 'Edit Text Box')}</Text>
+          <Paper withBorder p="sm" radius="md">
+            <Stack gap="sm">
+              <Text size="sm" fw={600}>{t('annotation.editText', 'Edit Text Box')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
@@ -784,15 +790,17 @@ const Annotate = (_props: BaseToolProps) => {
                 </ActionIcon>
               </Group>
             </Box>
-          </Stack>
+            </Stack>
+          </Paper>
         );
       }
 
       // Type 4: Line
       if (type === 4) {
         return (
-          <Stack gap="sm">
-            <Text size="sm" fw={600}>{t('annotation.editLine', 'Edit Line')}</Text>
+          <Paper withBorder p="sm" radius="md">
+            <Stack gap="sm">
+              <Text size="sm" fw={600}>{t('annotation.editLine', 'Edit Line')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
@@ -839,7 +847,8 @@ const Annotate = (_props: BaseToolProps) => {
                 }}
               />
             </Box>
-          </Stack>
+            </Stack>
+          </Paper>
         );
       }
 
@@ -847,8 +856,9 @@ const Annotate = (_props: BaseToolProps) => {
       if ([5, 6, 7].includes(type)) {
         const shapeName = type === 5 ? 'Square' : type === 6 ? 'Circle' : 'Polygon';
         return (
-          <Stack gap="sm">
-            <Text size="sm" fw={600}>{t(`annotation.edit${shapeName}`, `Edit ${shapeName}`)}</Text>
+          <Paper withBorder p="sm" radius="md">
+            <Stack gap="sm">
+              <Text size="sm" fw={600}>{t(`annotation.edit${shapeName}`, `Edit ${shapeName}`)}</Text>
             <Group gap="md">
               <Stack gap={4} align="center">
                 <Text size="xs" c="dimmed">{t('annotation.strokeColor', 'Stroke Color')}</Text>
@@ -932,43 +942,24 @@ const Annotate = (_props: BaseToolProps) => {
                 }
               </Button>
             </Group>
-          </Stack>
+            </Stack>
+          </Paper>
         );
       }
 
       // Default fallback
       return (
-        <Stack gap="sm">
-          <Text size="sm" fw={600}>{t('annotation.editSelected', 'Edit Annotation')}</Text>
-          <Text size="xs" c="dimmed">{t('annotation.unsupportedType', 'This annotation type is not fully supported for editing.')}</Text>
-        </Stack>
+        <Paper withBorder p="sm" radius="md">
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('annotation.editSelected', 'Edit Annotation')}</Text>
+            <Text size="xs" c="dimmed">{t('annotation.unsupportedType', 'This annotation type is not fully supported for editing.')}</Text>
+          </Stack>
+        </Paper>
       );
     })();
 
-    const saveAndColorPicker = (
+    const colorPickerComponent = (
       <>
-        <Button
-          fullWidth
-          variant="light"
-          leftSection={<LocalIcon icon="save" width="1rem" height="1rem" />}
-          onClick={async () => {
-            try {
-              const pdfArrayBuffer = await viewerContext?.exportActions?.saveAsCopy?.();
-              if (!pdfArrayBuffer) return;
-              const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
-              const fileName = selectors.getFiles()[0]?.name || 'annotated.pdf';
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = fileName;
-              link.click();
-              URL.revokeObjectURL(link.href);
-            } catch (error) {
-              console.error('Failed to save annotated PDF', error);
-            }
-          }}
-        >
-          {t('rightRail.save', 'Save')}
-        </Button>
         <ColorPicker
           isOpen={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
@@ -1224,8 +1215,11 @@ const Annotate = (_props: BaseToolProps) => {
             {/* Edit Selected */}
             {selectedAnn && selectedAnnotationControls}
 
-            {/* Save Button */}
-            {saveAndColorPicker}
+            {/* Color Picker */}
+            {colorPickerComponent}
+
+            {/* Suggested Tools */}
+            <SuggestedToolsSection currentTool="annotate" />
           </Stack>
         ),
       },

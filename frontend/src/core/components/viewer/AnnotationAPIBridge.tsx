@@ -4,7 +4,8 @@ import { PdfAnnotationSubtype, PdfAnnotationIcon } from '@embedpdf/models';
 import type { AnnotationToolId, AnnotationToolOptions, AnnotationAPI } from '@app/components/viewer/viewerTypes';
 
 export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function AnnotationAPIBridge(_props, ref) {
-  const annotationApi = useAnnotationCapability();
+  // Use the provided annotation API just like SignatureAPIBridge/HistoryAPIBridge
+  const { provides: annotationApi } = useAnnotationCapability();
 
   const getIconEnum = (icon?: string): PdfAnnotationIcon => {
     switch (icon) {
@@ -164,13 +165,16 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       if (!annotationApi) return;
 
       const defaults = buildAnnotationDefaults(toolId, options);
-      const api = annotationApi as any;
 
-      if (defaults) {
-        api.setToolDefaults?.(toolId, defaults);
+      // Reset tool first, then activate (like SignatureAPIBridge does)
+      annotationApi.setActiveTool(null);
+      annotationApi.setActiveTool(toolId === 'select' ? null : toolId);
+
+      // Verify tool was activated before setting defaults (like SignatureAPIBridge does)
+      const activeTool = annotationApi.getActiveTool();
+      if (activeTool && activeTool.id === toolId && defaults) {
+        annotationApi.setToolDefaults(toolId, defaults);
       }
-
-      api.setActiveTool?.(toolId === 'select' ? null : toolId);
     },
     [annotationApi, buildAnnotationDefaults]
   );

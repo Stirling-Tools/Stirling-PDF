@@ -85,8 +85,8 @@ const EmbedPdfViewerContent = ({
 
   // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that require the annotation layer (Sign, Add Text, Add Image)
-  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+  // Tools that require the annotation layer (Sign, Add Text, Add Image, Annotate)
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
 
   // Sync isAnnotationMode in ViewerContext with current tool
   useEffect(() => {

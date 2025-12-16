@@ -60,7 +60,7 @@ interface LocalEmbedPDFProps {
   historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
