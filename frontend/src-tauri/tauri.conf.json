@@ -10,17 +10,17 @@
         "beforeBuildCommand": "npm run build -- --mode desktop"
     },
     "app": {
-    "windows": [
-      {
-        "title": "Stirling-PDF",
-        "width": 1280,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ]
-  },
-  "bundle": {
+        "windows": [
+            {
+                "title": "Stirling-PDF",
+                "width": 1280,
+                "height": 800,
+                "resizable": true,
+                "fullscreen": false
+            }
+        ]
+    },
+    "bundle": {
         "active": true,
         "targets": [
             "deb",
@@ -63,20 +63,20 @@
             "certificateThumbprint": null,
             "digestAlgorithm": "sha256",
             "timestampUrl": "http://timestamp.digicert.com"
+        },
+        "macOS": {
+            "minimumSystemVersion": "10.15",
+            "signingIdentity": null,
+            "entitlements": null,
+            "providerShortName": null,
+            "infoPlist": "Info.plist"
+        }
     },
-    "macOS": {
-      "minimumSystemVersion": "10.15",
-      "signingIdentity": null,
-      "entitlements": null,
-      "providerShortName": null,
-      "infoPlist": "Info.plist"
-    }
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    },
-    "fs": {
+    "plugins": {
+        "shell": {
+            "open": true
+        },
+        "fs": {
             "requireLiteralLeadingDot": false
         }
     }
