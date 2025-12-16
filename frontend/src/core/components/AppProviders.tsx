@@ -84,7 +84,6 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 <ScarfTrackingInitializer />
                 <AppConfigLoader />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                  <AppInitializer />
                   <BrandingAssetManager />
                   <ToolRegistryProvider>
                       <NavigationProvider>
@@ -93,6 +92,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                             <HotkeyProvider>
                               <SidebarProvider>
                                 <ViewerProvider>
+                                  <AppInitializer />
                                   <PageEditorProvider>
                                     <SignatureProvider>
                                       <RightRailProvider>
