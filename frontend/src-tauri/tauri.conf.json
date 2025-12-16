@@ -68,8 +68,7 @@
             "minimumSystemVersion": "10.15",
             "signingIdentity": null,
             "entitlements": null,
-            "providerShortName": null,
-            "infoPlist": "Info.plist"
+            "providerShortName": null
         }
     },
     "plugins": {
@@ -78,6 +77,13 @@
         },
         "fs": {
             "requireLiteralLeadingDot": false
+        },
+        "deep-link": {
+            "desktop": {
+                "schemes": [
+                    "stirlingpdf"
+                ]
+            }
         }
     }
 }
