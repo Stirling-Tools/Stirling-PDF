@@ -51,7 +51,8 @@ class UserLicenseSettingsServiceTest {
 
         when(applicationProperties.getPremium()).thenReturn(premium);
         when(applicationProperties.getAutomaticallyGenerated()).thenReturn(automaticallyGenerated);
-        when(automaticallyGenerated.getIsNewServer()).thenReturn(false); // Default: not a new server
+        when(automaticallyGenerated.getIsNewServer())
+                .thenReturn(false); // Default: not a new server
         when(settingsRepository.findSettings()).thenReturn(Optional.of(mockSettings));
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@mantine/core';
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -51,10 +51,54 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     setValidationError(errorMessage);
   };
 
-  const waitForSsoCompletion = (popup: Window): Promise<string> => {
+  const pollForSession = (timeoutMs = 60000): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = window.setInterval(async () => {
+        if (Date.now() - start > timeoutMs) {
+          window.clearInterval(interval);
+          reject(new Error('Timed out waiting for authentication'));
+          return;
+        }
+
+        try {
+          const hasToken = localStorage.getItem('stirling_jwt');
+          if (hasToken) {
+            window.clearInterval(interval);
+            resolve();
+            return;
+          }
+
+          const isAuthed = await authService.isAuthenticated();
+          if (isAuthed) {
+            window.clearInterval(interval);
+            resolve();
+          }
+        } catch (e) {
+          // Ignore transient errors and keep polling
+        }
+      }, 1000);
+    });
+  };
+
+  const waitForSsoCompletion = (popup: Window, expectedOrigin?: string): Promise<string> => {
+    // Accept messages from the backend origin (e.g., http://localhost:8080) since the wizard runs under the Tauri origin.
+    const allowedOrigin = (() => {
+      try {
+        return expectedOrigin ? new URL(expectedOrigin).origin : null;
+      } catch (_) {
+        return null;
+      }
+    })();
+
     return new Promise((resolve, reject) => {
       const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin || typeof event.data !== 'object' || event.data === null) {
+        if (typeof event.data !== 'object' || event.data === null) {
+          return;
+        }
+
+        // If we can compute the backend origin, ensure the message comes from there.
+        if (allowedOrigin && event.origin !== allowedOrigin) {
           return;
         }
 
@@ -95,30 +139,9 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     // Mark SSO flow so the callback can short-circuit verification
     localStorage.setItem('desktop_sso_in_progress', JSON.stringify({ mode: 'selfhosted' }));
 
-    const popup = window.open(provider.url, '_blank', 'width=480,height=720');
-    if (!popup) {
-      localStorage.removeItem('desktop_sso_in_progress');
-      handleOAuthError(t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.'));
-      return;
-    }
-
-    try {
-      const token = await waitForSsoCompletion(popup);
-      localStorage.removeItem('desktop_sso_in_progress');
-
-      await authService.applyExternalToken(token);
-      await onOAuthSuccess({ username: provider.label || provider.id });
-    } catch (err) {
-      localStorage.removeItem('desktop_sso_in_progress');
-      const message = err instanceof Error ? err.message : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
-      handleOAuthError(message);
-    } finally {
-      try {
-        popup.close();
-      } catch (_) {
-        // ignore
-      }
-    }
+    console.debug('[Desktop SSO] Launching provider (same-window)', provider);
+    // Navigate the current webview to the provider URL; the callback page will store the token and reload the app.
+    window.location.assign(provider.url);
   };
 
   const displayError = error || validationError;

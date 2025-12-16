@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stirling PDF - Authentication</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; color: #111; }
+    .status { padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; }
+    .error { border-color: #fca5a5; background: #fef2f2; color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <div id="message" class="status">Completing authentication...</div>
+  <script>
+    (function () {
+      const msgEl = document.getElementById('message');
+
+      function setStatus(text, isError) {
+        msgEl.textContent = text;
+        if (isError) {
+          msgEl.classList.add('error');
+        }
+      }
+
+      try {
+        const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+        const params = new URLSearchParams(hash);
+        const token = params.get('access_token');
+        const error = params.get('error_description') || params.get('error');
+
+        // Handle license errors that come via query instead of hash
+        const urlParams = new URLSearchParams(window.location.search);
+        const licenseError = urlParams.get('errorOAuth') || urlParams.get('oAuth2RequiresLicense');
+
+        if (token) {
+          try {
+            localStorage.setItem('stirling_jwt', token);
+            window.dispatchEvent(new CustomEvent('jwt-available'));
+          } catch (e) {
+            console.warn('Failed to persist token in localStorage', e);
+          }
+
+          if (window.opener) {
+            window.opener.postMessage({ type: 'stirling-sso-success', token }, '*');
+          }
+
+          setStatus('Authentication complete. Returning to app...', false);
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 300);
+          return;
+        }
+
+        if (error || licenseError) {
+          const message = error || 'OAuth/SSO requires a paid license. Please contact your administrator.';
+          if (window.opener) {
+            window.opener.postMessage({ type: 'stirling-sso-error', error: message }, '*');
+          }
+          setStatus(message, true);
+          return;
+        }
+
+        setStatus('No authentication token received.', true);
+      } catch (e) {
+        console.error('Auth callback handling error:', e);
+        setStatus('Authentication failed. Please try again.', true);
+      }
+    })();
+  </script>
+</body>
+</html>

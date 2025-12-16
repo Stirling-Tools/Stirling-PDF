@@ -1,0 +1,19 @@
+{
+  "identifier": "main",
+  "description": "Main window capability with remote access for self-hosted SSO.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "http:default",
+    "http:allow-fetch",
+    "http:allow-fetch-send",
+    "http:allow-fetch-read-body",
+    "opener:default",
+    "opener:allow-open-url",
+    "core:webview:allow-internal-toggle-devtools",
+    "core:webview:allow-create-webview-window"
+  ],
+  "remote": {
+    "urls": ["http://localhost:8080/*"]
+  }
+}
