@@ -35,7 +35,7 @@ export const redactOperationConfig = {
       return '/api/v1/security/auto-redact';
     }
     // Manual redaction is handled by EmbedPDF in the viewer; no endpoint call.
-    return null;
+    return "";  
   },
   defaultParameters,
 } as const;
