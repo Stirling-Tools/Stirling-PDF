@@ -7,9 +7,7 @@ import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { ColorSwatchButton, ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 import { useFileState, useFileContext } from '@app/contexts/FileContext';
-import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
-import { createProcessedFile } from '@app/contexts/file/fileActions';
-import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
+import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import { useNavigationState, useNavigationGuard, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -50,8 +48,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   
   // Get redaction pending state and navigation guard
   const { pendingCount: redactionPendingCount, isRedacting: _isRedacting } = useRedactionMode();
-  const { requestNavigation } = useNavigationGuard();
-  const { setRedactionMode, activateTextSelection, setRedactionConfig } = useRedaction();
+  const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
+  const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied } = useRedaction();
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -67,37 +65,23 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
   // Persist annotations to file if there are unsaved changes
   const saveAnnotationsIfNeeded = async () => {
-    if (!viewerContext?.exportActions?.saveAsCopy || currentView !== 'viewer') return;
-    const hasUnsavedAnnotations = historyApiRef?.current?.canUndo() || false;
-    if (!hasUnsavedAnnotations) return;
+    if (!viewerContext?.exportActions?.saveAsCopy || currentView !== 'viewer' || !historyApiRef?.current?.canUndo()) return;
+    if (activeFiles.length === 0 || state.files.ids.length === 0) return;
 
     try {
-      const pdfArrayBuffer = await viewerContext.exportActions.saveAsCopy();
-      if (!pdfArrayBuffer) return;
+      const arrayBuffer = await viewerContext.exportActions.saveAsCopy();
+      if (!arrayBuffer) return;
 
-      const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
-      const originalFileName = activeFiles.length > 0 ? activeFiles[0].name : 'document.pdf';
-      const newFile = new File([blob], originalFileName, { type: 'application/pdf' });
+      const file = new File([new Blob([arrayBuffer])], activeFiles[0].name, { type: 'application/pdf' });
+      const parentStub = selectors.getStirlingFileStub(state.files.ids[0]);
+      if (!parentStub) return;
 
-      if (activeFiles.length > 0) {
-        const thumbnailResult = await generateThumbnailWithMetadata(newFile);
-        const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
-
-        const currentFileIds = state.files.ids;
-        if (currentFileIds.length > 0) {
-          const currentFileId = currentFileIds[0];
-          const currentRecord = selectors.getStirlingFileStub(currentFileId);
-          if (!currentRecord) {
-            console.error('No file record found for:', currentFileId);
-            return;
-          }
-
-          const outputStub = createNewStirlingFileStub(newFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
-          const outputStirlingFile = createStirlingFile(newFile, outputStub.id);
-
-          await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
-        }
-      }
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'redact');
+      await fileActions.consumeFiles([state.files.ids[0]], stirlingFiles, stubs);
+      
+      // Clear unsaved changes flags after successful save
+      setHasUnsavedChanges(false);
+      setRedactionsApplied(false);
     } catch (error) {
       console.error('Error auto-saving annotations before redaction:', error);
     }
@@ -321,30 +305,20 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
                   const originalFileName = activeFiles.length > 0 ? activeFiles[0].name : 'document.pdf';
                   const newFile = new File([blob], originalFileName, { type: 'application/pdf' });
 
-                  // Replace the current file in context with the saved version (exact same logic as Sign tool)
-                  if (activeFiles.length > 0) {
-                    // Generate thumbnail and metadata for the saved file
-                    const thumbnailResult = await generateThumbnailWithMetadata(newFile);
-                    const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
-
-                    // Get current file info
-                    const currentFileIds = state.files.ids;
-                    if (currentFileIds.length > 0) {
-                      const currentFileId = currentFileIds[0];
-                      const currentRecord = selectors.getStirlingFileStub(currentFileId);
-
-                      if (!currentRecord) {
-                        console.error('No file record found for:', currentFileId);
-                        return;
-                      }
-
-                      // Create output stub and file (exact same as Sign tool)
-                      const outputStub = createNewStirlingFileStub(newFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
-                      const outputStirlingFile = createStirlingFile(newFile, outputStub.id);
-
-                      // Replace the original file with the saved version
-                      await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
+                  // Replace the current file in context with the saved version
+                  if (activeFiles.length > 0 && state.files.ids.length > 0) {
+                    const parentStub = selectors.getStirlingFileStub(state.files.ids[0]);
+                    if (!parentStub) {
+                      console.error('No file record found for:', state.files.ids[0]);
+                      return;
                     }
+
+                    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([newFile], parentStub, 'multiTool');
+                    await fileActions.consumeFiles([state.files.ids[0]], stirlingFiles, stubs);
+                    
+                    // Clear unsaved changes flags after successful save
+                    setHasUnsavedChanges(false);
+                    setRedactionsApplied(false);
                   }
                 }
               } catch (error) {
