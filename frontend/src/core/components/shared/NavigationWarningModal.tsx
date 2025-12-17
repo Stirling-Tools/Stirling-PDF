@@ -7,9 +7,10 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
+  onExportAndContinue?: () => Promise<void>;
 }
 
-const NavigationWarningModal = ({ onApplyAndContinue }: NavigationWarningModalProps) => {
+const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: NavigationWarningModalProps) => {
   const { t } = useTranslation();
   const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
@@ -26,6 +27,14 @@ const NavigationWarningModal = ({ onApplyAndContinue }: NavigationWarningModalPr
   const handleApplyAndContinue = async () => {
     if (onApplyAndContinue) {
       await onApplyAndContinue();
+    }
+    setHasUnsavedChanges(false);
+    confirmNavigation();
+  };
+
+  const handleExportAndContinue = async () => {
+    if (onExportAndContinue) {
+      await onExportAndContinue();
     }
     setHasUnsavedChanges(false);
     confirmNavigation();
@@ -75,6 +84,11 @@ const NavigationWarningModal = ({ onApplyAndContinue }: NavigationWarningModalPr
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
             )}
+            {onExportAndContinue && (
+              <Button variant="filled"  onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+                {t("exportAndContinue", "Export & Leave")}
+              </Button>
+            )}
           </Group>
         </Group>
 
@@ -89,6 +103,11 @@ const NavigationWarningModal = ({ onApplyAndContinue }: NavigationWarningModalPr
           {onApplyAndContinue && (
             <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
               {t("applyAndContinue", "Apply & Leave")}
+            </Button>
+          )}
+          {onExportAndContinue && (
+            <Button variant="filled" onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+              {t("exportAndContinue", "Export & Leave")}
             </Button>
           )}
         </Stack>
