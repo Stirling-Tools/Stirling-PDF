@@ -344,7 +344,8 @@ public class SecurityConfiguration {
                                         log.error("Error configuring SAML 2 login", e);
                                         throw new RuntimeException(e);
                                     }
-                                });
+                                })
+                        .saml2Metadata(metadata -> {});
             }
         } else {
             log.debug("Login is not enabled.");
