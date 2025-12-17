@@ -108,13 +108,22 @@ export class ConnectionModeService {
     try {
       // Test connection by hitting the health/status endpoint
       const healthUrl = `${url.replace(/\/$/, '')}/api/v1/info/status`;
+
+      // Prefer the browser fetch to avoid Tauri HTTP permission blockers
+      if (typeof window !== 'undefined' && window.fetch) {
+        const response = await window.fetch(healthUrl, { method: 'GET' });
+        const isOk = response.ok;
+        console.log(`[ConnectionModeService] Server connection test result (browser fetch): ${isOk}`);
+        return isOk;
+      }
+
+      // Fallback to Tauri HTTP plugin
       const response = await fetch(healthUrl, {
         method: 'GET',
         connectTimeout: 10000,
       });
-
       const isOk = response.ok;
-      console.log(`[ConnectionModeService] Server connection test result: ${isOk}`);
+      console.log(`[ConnectionModeService] Server connection test result (tauri fetch): ${isOk}`);
       return isOk;
     } catch (error) {
       console.warn('[ConnectionModeService] Server connection test failed:', error);

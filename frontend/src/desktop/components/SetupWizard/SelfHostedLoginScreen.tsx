@@ -139,9 +139,34 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     // Mark SSO flow so the callback can short-circuit verification
     localStorage.setItem('desktop_sso_in_progress', JSON.stringify({ mode: 'selfhosted' }));
 
-    console.debug('[Desktop SSO] Launching provider (same-window)', provider);
-    // Navigate the current webview to the provider URL; the callback page will store the token and reload the app.
-    window.location.assign(provider.url);
+    console.debug('[Desktop SSO] Launching provider (popup)', provider);
+    const popup = window.open(provider.url, '_blank', 'width=520,height=720');
+
+    if (!popup) {
+      localStorage.removeItem('desktop_sso_in_progress');
+      console.error('[Desktop SSO] Failed to open popup window for provider', provider);
+      handleOAuthError(t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.'));
+      return;
+    }
+
+    try {
+      const token = await waitForSsoCompletion(popup, serverUrl);
+      localStorage.removeItem('desktop_sso_in_progress');
+
+      await authService.applyExternalToken(token);
+      await onOAuthSuccess({ username: provider.label || provider.id });
+    } catch (err) {
+      console.error('[Desktop SSO] OAuth flow failed for provider', provider, err);
+      localStorage.removeItem('desktop_sso_in_progress');
+      const message = err instanceof Error ? err.message : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
+      handleOAuthError(message);
+    } finally {
+      try {
+        popup.close();
+      } catch (_) {
+        // ignore
+      }
+    }
   };
 
   const displayError = error || validationError;
