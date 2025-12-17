@@ -7,7 +7,58 @@ import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/share
 import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
 import type { AnnotationToolId, AnnotationAPI } from '@app/components/viewer/viewerTypes';
-import type { BuildToolOptionsFn, AnnotationStyleStateReturn } from './useAnnotationStyleState';
+
+interface StyleState {
+  inkColor: string;
+  inkWidth: number;
+  highlightColor: string;
+  highlightOpacity: number;
+  freehandHighlighterWidth: number;
+  underlineColor: string;
+  underlineOpacity: number;
+  strikeoutColor: string;
+  strikeoutOpacity: number;
+  squigglyColor: string;
+  squigglyOpacity: number;
+  textColor: string;
+  textSize: number;
+  textAlignment: 'left' | 'center' | 'right';
+  textBackgroundColor: string;
+  noteBackgroundColor: string;
+  shapeStrokeColor: string;
+  shapeFillColor: string;
+  shapeOpacity: number;
+  shapeStrokeOpacity: number;
+  shapeFillOpacity: number;
+  shapeThickness: number;
+}
+
+interface StyleActions {
+  setInkColor: (value: string) => void;
+  setInkWidth: (value: number) => void;
+  setHighlightColor: (value: string) => void;
+  setHighlightOpacity: (value: number) => void;
+  setFreehandHighlighterWidth: (value: number) => void;
+  setUnderlineColor: (value: string) => void;
+  setUnderlineOpacity: (value: number) => void;
+  setStrikeoutColor: (value: string) => void;
+  setStrikeoutOpacity: (value: number) => void;
+  setSquigglyColor: (value: string) => void;
+  setSquigglyOpacity: (value: number) => void;
+  setTextColor: (value: string) => void;
+  setTextSize: (value: number) => void;
+  setTextAlignment: (value: 'left' | 'center' | 'right') => void;
+  setTextBackgroundColor: (value: string) => void;
+  setNoteBackgroundColor: (value: string) => void;
+  setShapeStrokeColor: (value: string) => void;
+  setShapeFillColor: (value: string) => void;
+  setShapeOpacity: (value: number) => void;
+  setShapeStrokeOpacity: (value: number) => void;
+  setShapeFillOpacity: (value: number) => void;
+  setShapeThickness: (value: number) => void;
+}
+
+type BuildToolOptionsFn = (toolId: AnnotationToolId, extras?: any) => Record<string, unknown>;
 
 type ColorTarget =
   | 'ink'
@@ -26,9 +77,9 @@ type ColorTarget =
 interface AnnotationPanelProps {
   activeTool: AnnotationToolId;
   activateAnnotationTool: (toolId: AnnotationToolId) => void;
-  styleState: AnnotationStyleStateReturn['styleState'];
-  styleActions: AnnotationStyleStateReturn['styleActions'];
-  getActiveColor: AnnotationStyleStateReturn['getActiveColor'];
+  styleState: StyleState;
+  styleActions: StyleActions;
+  getActiveColor: (tool: AnnotationToolId) => string;
   buildToolOptions: BuildToolOptionsFn;
   deriveToolFromAnnotation: (annotation: any) => AnnotationToolId | undefined;
   selectedAnn: any | null;
@@ -73,14 +124,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     selectedFontSize,
     setSelectedFontSize,
     annotationApiRef,
-    signatureApiRef,
     viewerContext,
     setPlacementMode,
     setSignatureConfig,
     computeStampDisplaySize,
     stampImageData,
     setStampImageData,
-    stampImageSize,
     setStampImageSize,
     setPlacementPreviewSize,
     undo,
@@ -163,7 +212,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     { id: 'stamp', label: t('annotation.stamp', 'Add Image'), icon: 'add-photo-alternate' },
   ];
 
-  const activeColor = useMemo(() => getActiveColor(colorPickerTarget), [colorPickerTarget, getActiveColor]);
+  const activeColor = useMemo(() => colorPickerTarget ? getActiveColor(colorPickerTarget as AnnotationToolId) : '#000000', [colorPickerTarget, getActiveColor]);
 
   const renderToolButtons = (tools: { id: AnnotationToolId; label: string; icon: string }[]) => (
     <Group gap="xs">
@@ -1131,7 +1180,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
 
       {colorPickerComponent}
 
-      <SuggestedToolsSection currentTool="annotate" />
+      <SuggestedToolsSection />
     </Stack>
   );
 }

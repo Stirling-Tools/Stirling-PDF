@@ -1,6 +1,5 @@
 import { useEffect, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { alert as showToast, updateToast } from '@app/components/toast';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -63,7 +62,6 @@ const Annotate = (_props: BaseToolProps) => {
   const [stampImageData, setStampImageData] = useState<string | undefined>();
   const [stampImageSize, setStampImageSize] = useState<{ width: number; height: number } | null>(null);
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
-  const [isSavingCopy, setIsSavingCopy] = useState(false);
   const manualToolSwitch = useRef<boolean>(false);
 
   // Zoom tracking for stamp size conversion
@@ -122,53 +120,11 @@ const Annotate = (_props: BaseToolProps) => {
   } = useAnnotationStyleState(cssToPdfSize);
 
   const {
-    inkColor,
-    inkWidth,
-    highlightColor,
-    highlightOpacity,
-    freehandHighlighterWidth,
-    underlineColor,
-    underlineOpacity,
-    strikeoutColor,
-    strikeoutOpacity,
-    squigglyColor,
-    squigglyOpacity,
-    textColor,
-    textSize,
-    textAlignment,
-    textBackgroundColor,
-    noteBackgroundColor,
-    shapeStrokeColor,
-    shapeFillColor,
-    shapeOpacity,
-    shapeStrokeOpacity,
-    shapeFillOpacity,
-    shapeThickness,
-  } = styleState;
-
-  const {
-    setInkColor,
     setInkWidth,
-    setHighlightColor,
-    setHighlightOpacity,
-    setFreehandHighlighterWidth,
-    setUnderlineColor,
-    setUnderlineOpacity,
-    setStrikeoutColor,
-    setStrikeoutOpacity,
-    setSquigglyColor,
-    setSquigglyOpacity,
+    setShapeThickness,
     setTextColor,
-    setTextSize,
-    setTextAlignment,
     setTextBackgroundColor,
     setNoteBackgroundColor,
-    setShapeStrokeColor,
-    setShapeFillColor,
-    setShapeOpacity,
-    setShapeStrokeOpacity,
-    setShapeFillOpacity,
-    setShapeThickness,
   } = styleActions;
 
   useEffect(() => {
@@ -222,64 +178,6 @@ const Annotate = (_props: BaseToolProps) => {
         : buildToolOptions(activeTool);
     annotationApiRef?.current?.activateAnnotationTool?.(activeTool, toolOptions);
   }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions, stampImageData, stampImageSize]);
-
-  const handleSaveCopy = useCallback(async () => {
-    if (!viewerContext?.exportActions?.saveAsCopy) {
-      return;
-    }
-
-    setIsSavingCopy(true);
-    const toastId = showToast({
-      alertType: 'neutral',
-      title: t('annotation.savingCopy', 'Preparing download...'),
-      progressBarPercentage: 15,
-      isPersistentPopup: true,
-    });
-
-    try {
-      const buffer = await viewerContext.exportActions.saveAsCopy();
-      if (!buffer) {
-        updateToast(toastId, {
-          alertType: 'error',
-          title: t('annotation.saveFailed', 'Unable to save copy'),
-          durationMs: 4000,
-          isPersistentPopup: false,
-        });
-        return;
-      }
-
-      const blob = new Blob([buffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const baseName = selectedFiles[0]?.name;
-      const filename = baseName
-        ? `${baseName.replace(/\.pdf$/i, '')}-annotated.pdf`
-        : 'annotated.pdf';
-
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = filename;
-      anchor.click();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-
-      updateToast(toastId, {
-        alertType: 'success',
-        title: t('annotation.saveReady', 'Download ready'),
-        progressBarPercentage: 100,
-        durationMs: 2500,
-        isPersistentPopup: false,
-      });
-    } catch (error: any) {
-      updateToast(toastId, {
-        alertType: 'error',
-        title: t('annotation.saveFailed', 'Unable to save copy'),
-        body: error?.message,
-        durationMs: 4500,
-        isPersistentPopup: false,
-      });
-    } finally {
-      setIsSavingCopy(false);
-    }
-  }, [viewerContext?.exportActions, selectedFiles, t]);
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
     // If leaving stamp tool, clean up placement mode
@@ -460,6 +358,8 @@ const Annotate = (_props: BaseToolProps) => {
         executeOperation: async () => {},
         resetResults: () => {},
         clearError: () => {},
+        cancelOperation: () => {},
+        undoOperation: async () => {},
       },
       title: '',
       onFileClick: () => {},
