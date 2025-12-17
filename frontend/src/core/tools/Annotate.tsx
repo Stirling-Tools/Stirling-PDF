@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, Textarea, NumberInput, Tooltip, Paper } from '@mantine/core';
+import { alert as showToast, updateToast } from '@app/components/toast';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -14,9 +15,33 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
 import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
 
+const KNOWN_ANNOTATION_TOOLS: AnnotationToolId[] = [
+  'select',
+  'highlight',
+  'underline',
+  'strikeout',
+  'squiggly',
+  'ink',
+  'inkHighlighter',
+  'text',
+  'note',
+  'square',
+  'circle',
+  'line',
+  'lineArrow',
+  'polyline',
+  'polygon',
+  'stamp',
+  'signatureStamp',
+  'signatureInk',
+];
+
+const isKnownAnnotationTool = (toolId: string | undefined | null): toolId is AnnotationToolId =>
+  !!toolId && (KNOWN_ANNOTATION_TOOLS as string[]).includes(toolId);
+
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setToolAndWorkbench } = useNavigation();
+  const { setToolAndWorkbench, selectedTool, workbench } = useNavigation();
   const { selectedFiles } = useFileSelection();
   const { selectors } = useFileContext();
   const {
@@ -29,6 +54,7 @@ const Annotate = (_props: BaseToolProps) => {
     setPlacementMode,
     placementPreviewSize,
     activateSignaturePlacementMode,
+    setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
@@ -58,22 +84,42 @@ const Annotate = (_props: BaseToolProps) => {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [selectedAnn, setSelectedAnn] = useState<any | null>(null);
   const [selectedAnnId, setSelectedAnnId] = useState<string | null>(null);
+  const selectedAnnIdRef = useRef<string | null>(null);
+  const activeToolRef = useRef<AnnotationToolId>('highlight');
+  const wasAnnotateActiveRef = useRef<boolean>(false);
   const [selectedTextDraft, setSelectedTextDraft] = useState<string>('');
   const [selectedFontSize, setSelectedFontSize] = useState<number>(14);
   const selectedUpdateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stampImageData, setStampImageData] = useState<string | undefined>();
+  const [stampImageSize, setStampImageSize] = useState<{ width: number; height: number } | null>(null);
   const [isAnnotationPaused, setIsAnnotationPaused] = useState(false);
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
+  const [isSavingCopy, setIsSavingCopy] = useState(false);
   const manualToolSwitch = useRef<boolean>(false);
 
   // Zoom tracking for stamp size conversion
-  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
+  const [currentZoom, setCurrentZoom] = useState(() => {
+    const zoomState = getZoomState();
+    if (!zoomState) return 1;
+    if (typeof zoomState.zoomPercent === 'number') {
+      return Math.max(zoomState.zoomPercent / 100, 0.01);
+    }
+    return Math.max(zoomState.currentZoom ?? 1, 0.01);
+  });
 
   useEffect(() => {
-    return registerImmediateZoomUpdate((newZoom) => {
-      setCurrentZoom(newZoom);
+    return registerImmediateZoomUpdate((newZoomPercent) => {
+      setCurrentZoom(Math.max(newZoomPercent / 100, 0.01));
     });
   }, [registerImmediateZoomUpdate]);
+
+  useEffect(() => {
+    activeToolRef.current = activeTool;
+  }, [activeTool]);
+
+  useEffect(() => {
+    selectedAnnIdRef.current = selectedAnnId;
+  }, [selectedAnnId]);
 
   // CSS to PDF size conversion accounting for zoom
   const cssToPdfSize = useCallback(
@@ -88,9 +134,27 @@ const Annotate = (_props: BaseToolProps) => {
     [currentZoom]
   );
 
+  const computeStampDisplaySize = useCallback((natural: { width: number; height: number } | null) => {
+    if (!natural) {
+      return { width: 180, height: 120 };
+    }
+    const maxSide = 260;
+    const minSide = 24;
+    const { width, height } = natural;
+    const largest = Math.max(width || maxSide, height || maxSide, 1);
+    const scale = Math.min(1, maxSide / largest);
+    return {
+      width: Math.max(minSide, Math.round(width * scale)),
+      height: Math.max(minSide, Math.round(height * scale)),
+    };
+  }, []);
+
   const buildToolOptions = useCallback((toolId: AnnotationToolId, includeMetadata: boolean = true) => {
     const metadata = includeMetadata ? {
       customData: {
+        toolId,
+        annotationToolId: toolId,
+        source: 'annotate',
         author: 'User', // Could be replaced with actual user name from auth context
         createdAt: new Date().toISOString(),
         modifiedAt: new Date().toISOString(),
@@ -113,6 +177,13 @@ const Annotate = (_props: BaseToolProps) => {
       case 'text':
         const textAlignNumber = textAlignment === 'left' ? 0 : textAlignment === 'center' ? 1 : 2;
         return { color: textColor, fontSize: textSize, textAlign: textAlignNumber, ...metadata };
+      case 'note':
+        return {
+          color: textColor, // text color
+          fillColor: highlightColor, // background color, shares highlight picker defaults
+          opacity: 1,
+          ...metadata,
+        };
       case 'square':
       case 'circle':
       case 'polygon':
@@ -135,30 +206,54 @@ const Annotate = (_props: BaseToolProps) => {
           borderWidth: shapeThickness,
           ...metadata,
         };
+      case 'stamp': {
+        const pdfSize = stampImageSize ? cssToPdfSize(stampImageSize) : undefined;
+        return {
+          imageSrc: stampImageData,
+          ...(pdfSize ? { imageSize: pdfSize } : {}),
+          ...metadata,
+        };
+      }
       default:
         return {};
     }
-  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, textAlignment, shapeStrokeColor, shapeFillColor, shapeOpacity, shapeStrokeOpacity, shapeFillOpacity, shapeThickness]);
+  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, textAlignment, shapeStrokeColor, shapeFillColor, shapeOpacity, shapeStrokeOpacity, shapeFillOpacity, shapeThickness, stampImageData, stampImageSize, cssToPdfSize]);
 
   useEffect(() => {
     setToolAndWorkbench('annotate', 'viewer');
   }, [setToolAndWorkbench]);
+
+  useEffect(() => {
+    const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';
+    if (wasAnnotateActiveRef.current && !isAnnotateActive) {
+      annotationApiRef?.current?.deactivateTools?.();
+      signatureApiRef?.current?.deactivateTools?.();
+      setPlacementMode(false);
+      setIsAnnotationPaused(true);
+    }
+    wasAnnotateActiveRef.current = isAnnotateActive;
+  }, [workbench, selectedTool, annotationApiRef, signatureApiRef, setPlacementMode]);
 
   // Monitor history state for undo/redo availability
   useEffect(() => {
     const historyApi = historyApiRef?.current;
     if (!historyApi) return;
 
-    const checkHistory = () => {
+    const updateAvailability = () => {
       setHistoryAvailability({
         canUndo: historyApi.canUndo?.() ?? false,
         canRedo: historyApi.canRedo?.() ?? false,
       });
     };
 
-    checkHistory();
-    const interval = setInterval(checkHistory, 200);
-    return () => clearInterval(interval);
+    updateAvailability();
+
+    if (historyApi.subscribe) {
+      const unsubscribe = historyApi.subscribe(updateAvailability);
+      if (typeof unsubscribe === 'function') {
+        return () => unsubscribe();
+      }
+    }
   }, [historyApiRef]);
 
   useEffect(() => {
@@ -168,6 +263,64 @@ const Annotate = (_props: BaseToolProps) => {
     viewerContext.setAnnotationMode(true);
     annotationApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
   }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions]);
+
+  const handleSaveCopy = useCallback(async () => {
+    if (!viewerContext?.exportActions?.saveAsCopy) {
+      return;
+    }
+
+    setIsSavingCopy(true);
+    const toastId = showToast({
+      alertType: 'neutral',
+      title: t('annotation.savingCopy', 'Preparing download...'),
+      progressBarPercentage: 15,
+      isPersistentPopup: true,
+    });
+
+    try {
+      const buffer = await viewerContext.exportActions.saveAsCopy();
+      if (!buffer) {
+        updateToast(toastId, {
+          alertType: 'error',
+          title: t('annotation.saveFailed', 'Unable to save copy'),
+          durationMs: 4000,
+          isPersistentPopup: false,
+        });
+        return;
+      }
+
+      const blob = new Blob([buffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const baseName = selectedFiles[0]?.name;
+      const filename = baseName
+        ? `${baseName.replace(/\.pdf$/i, '')}-annotated.pdf`
+        : 'annotated.pdf';
+
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+      updateToast(toastId, {
+        alertType: 'success',
+        title: t('annotation.saveReady', 'Download ready'),
+        progressBarPercentage: 100,
+        durationMs: 2500,
+        isPersistentPopup: false,
+      });
+    } catch (error: any) {
+      updateToast(toastId, {
+        alertType: 'error',
+        title: t('annotation.saveFailed', 'Unable to save copy'),
+        body: error?.message,
+        durationMs: 4500,
+        isPersistentPopup: false,
+      });
+    } finally {
+      setIsSavingCopy(false);
+    }
+  }, [viewerContext?.exportActions, selectedFiles, t]);
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
     // If leaving stamp tool, clean up placement mode
@@ -194,8 +347,12 @@ const Annotate = (_props: BaseToolProps) => {
 
     // For stamp, apply the image if we have one
     if (toolId === 'stamp' && stampImageData) {
-      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
-      annotationApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: stampImageData });
+      const stampOptions = {
+        ...options,
+        imageSrc: stampImageData,
+      };
+      annotationApiRef?.current?.setAnnotationStyle?.('stamp', stampOptions);
+      annotationApiRef?.current?.activateAnnotationTool?.('stamp', stampOptions);
     } else {
       annotationApiRef?.current?.activateAnnotationTool?.(toolId, options);
     }
@@ -209,7 +366,11 @@ const Annotate = (_props: BaseToolProps) => {
   useEffect(() => {
     // push style updates to EmbedPDF when sliders/colors change
     if (activeTool === 'stamp' && stampImageData) {
-      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: stampImageData });
+      const options = buildToolOptions('stamp');
+      annotationApiRef?.current?.setAnnotationStyle?.('stamp', {
+        ...options,
+        imageSrc: stampImageData,
+      });
     } else {
       annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
     }
@@ -220,13 +381,14 @@ const Annotate = (_props: BaseToolProps) => {
     // When preview size changes, update stamp annotation sizing
     // The SignatureAPIBridge will use placementPreviewSize from SignatureContext
     // and apply the converted size to the stamp tool automatically
-    if (activeTool === 'stamp' && placementPreviewSize && stampImageData) {
-      // Just update the image source; size is handled by SignatureAPIBridge
+    if (activeTool === 'stamp' && stampImageData) {
+      const size = placementPreviewSize ?? stampImageSize;
       annotationApiRef?.current?.setAnnotationStyle?.('stamp', {
         imageSrc: stampImageData,
+        ...(size ? { imageSize: cssToPdfSize(size) } : {}),
       });
     }
-  }, [placementPreviewSize, activeTool, stampImageData, signatureApiRef]);
+  }, [placementPreviewSize, activeTool, stampImageData, signatureApiRef, stampImageSize, cssToPdfSize]);
 
   // Allow exiting multi-point tools with Escape (e.g., polyline)
   useEffect(() => {
@@ -244,64 +406,114 @@ const Annotate = (_props: BaseToolProps) => {
     return () => window.removeEventListener('keydown', handler);
   }, [activeTool, buildToolOptions, signatureApiRef]);
 
-  // Poll selected annotation to allow editing existing highlights/text
+  const deriveToolFromAnnotation = useCallback((annotation: any): AnnotationToolId | undefined => {
+    if (!annotation) return undefined;
+    const customToolId = annotation.customData?.toolId || annotation.customData?.annotationToolId;
+    if (isKnownAnnotationTool(customToolId)) {
+      return customToolId;
+    }
+
+    const type = annotation.type ?? annotation.object?.type;
+    switch (type) {
+      case 3: return 'text';        // FREETEXT
+      case 4: return 'line';        // LINE
+      case 5: return 'square';      // SQUARE
+      case 6: return 'circle';      // CIRCLE
+      case 7: return 'polygon';     // POLYGON
+      case 8: return 'polyline';    // POLYLINE
+      case 9: return 'highlight';   // HIGHLIGHT
+      case 10: return 'underline';  // UNDERLINE
+      case 11: return 'squiggly';   // SQUIGGLY
+      case 12: return 'strikeout';  // STRIKEOUT
+      case 13: return 'stamp';      // STAMP
+      case 15: return 'ink';        // INK
+      default: return undefined;
+    }
+  }, []);
+
+  const applySelectionFromAnnotation = useCallback((ann: any | null) => {
+    const annObject = ann?.object ?? ann ?? null;
+    const annId = annObject?.id ?? null;
+    selectedAnnIdRef.current = annId;
+    setSelectedAnnId(annId);
+    setSelectedAnn(ann || null);
+
+    if (annObject?.contents !== undefined) {
+      setSelectedTextDraft(annObject.contents ?? '');
+    }
+    if (annObject?.fontSize !== undefined) {
+      setSelectedFontSize(annObject.fontSize ?? 14);
+    }
+    // Sync width properties based on annotation type
+    const type = annObject?.type;
+    if (type === 15 && annObject?.strokeWidth !== undefined) {
+      // Type 15 = INK, uses strokeWidth
+      setInkWidth(annObject.strokeWidth ?? 2);
+    } else if (type >= 4 && type <= 8 && annObject?.strokeWidth !== undefined) {
+      // Types 4-8 = Shapes (line, square, circle, polygon, polyline), use strokeWidth
+      setShapeThickness(annObject.strokeWidth ?? 1);
+    }
+
+    const matchingTool = deriveToolFromAnnotation(annObject);
+    if (matchingTool && matchingTool !== activeToolRef.current && !manualToolSwitch.current) {
+      setActiveTool(matchingTool);
+    }
+  }, [deriveToolFromAnnotation]);
+
+  // Track selection changes via events (fall back to light polling if events unavailable)
   useEffect(() => {
-    const interval = setInterval(() => {
-      const ann = annotationApiRef?.current?.getSelectedAnnotation?.();
-      const annId = ann?.object?.id ?? null;
-      // Only update state when selection actually changes
-      if (annId !== selectedAnnId) {
-        setSelectedAnn(ann || null);
-        setSelectedAnnId(annId);
-        if (ann?.object?.contents !== undefined) {
-          setSelectedTextDraft(ann.object.contents ?? '');
-        }
-        if (ann?.object?.fontSize !== undefined) {
-          setSelectedFontSize(ann.object.fontSize ?? 14);
-        }
+    const api = annotationApiRef?.current as any;
+    if (!api) return;
 
-        // Switch active tool to match annotation type (unless user manually switched tools)
-        if (ann?.object?.type !== undefined && !manualToolSwitch.current) {
-          let matchingTool: AnnotationToolId | undefined;
-
-          // Special handling for INK type (15) - distinguish between pen and freehand highlighter
-          if (ann.object.type === 15) {
-            // Freehand highlighter typically has:
-            // - Higher opacity (> 0.8) OR
-            // - Larger width (> 4)
-            const opacity = ann.object.opacity ?? 1;
-            const width = ann.object.borderWidth ?? ann.object.strokeWidth ?? ann.object.lineWidth ?? 2;
-
-            if (opacity < 0.8 || width >= 5) {
-              matchingTool = 'inkHighlighter';
-            } else {
-              matchingTool = 'ink';
+    if (typeof api.onAnnotationEvent === 'function') {
+      const handler = (event: any) => {
+        const ann = event?.annotation ?? event?.selectedAnnotation ?? null;
+        switch (event?.type) {
+          case 'select':
+          case 'selected':
+            applySelectionFromAnnotation(ann ?? api.getSelectedAnnotation?.());
+            break;
+          case 'deselect':
+          case 'clearSelection':
+            applySelectionFromAnnotation(null);
+            break;
+          case 'delete':
+          case 'remove':
+            if (ann?.id && ann.id === selectedAnnIdRef.current) {
+              applySelectionFromAnnotation(null);
             }
-          } else {
-            const typeToToolMap: Record<number, AnnotationToolId> = {
-              3: 'text',        // FREETEXT
-              4: 'line',        // LINE
-              5: 'square',      // SQUARE
-              6: 'circle',      // CIRCLE
-              7: 'polygon',     // POLYGON
-              8: 'polyline',    // POLYLINE
-              9: 'highlight',   // HIGHLIGHT
-              10: 'underline',  // UNDERLINE
-              11: 'squiggly',   // SQUIGGLY
-              12: 'strikeout',  // STRIKEOUT
-              13: 'stamp',      // STAMP
-            };
-            matchingTool = typeToToolMap[ann.object.type];
-          }
-
-          if (matchingTool && matchingTool !== activeTool) {
-            setActiveTool(matchingTool);
-          }
+            break;
+          case 'update':
+          case 'change':
+            if (selectedAnnIdRef.current) {
+              const current = api.getSelectedAnnotation?.();
+              if (current) {
+                applySelectionFromAnnotation(current);
+              }
+            }
+            break;
+          default:
+            break;
         }
+      };
+
+      const unsubscribe = api.onAnnotationEvent(handler);
+      return () => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      };
+    }
+
+    // Fallback: slower polling to avoid heavy CPU churn
+    const interval = setInterval(() => {
+      const ann = api.getSelectedAnnotation?.();
+      if ((ann?.object?.id ?? null) !== selectedAnnIdRef.current) {
+        applySelectionFromAnnotation(ann ?? null);
       }
-    }, 150);
+    }, 350);
     return () => clearInterval(interval);
-  }, [signatureApiRef, selectedAnnId, activeTool]);
+  }, [annotationApiRef, applySelectionFromAnnotation]);
 
   const textMarkupTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'highlight', label: t('annotation.highlight', 'Highlight'), icon: 'highlight' },
@@ -382,7 +594,18 @@ const Annotate = (_props: BaseToolProps) => {
                       reader.onerror = reject;
                       reader.readAsDataURL(file);
                     });
+
+                    const naturalSize = await new Promise<{ width: number; height: number } | null>((resolve) => {
+                      const img = new Image();
+                      img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+                      img.onerror = () => resolve(null);
+                      img.src = dataUrl;
+                    });
+
+                    const displaySize = computeStampDisplaySize(naturalSize);
                     setStampImageData(dataUrl);
+                    setStampImageSize(displaySize);
+                    setPlacementPreviewSize(displaySize);
 
                     // Configure SignatureContext for placement preview
                     setSignatureConfig({
@@ -396,16 +619,23 @@ const Annotate = (_props: BaseToolProps) => {
                     setTimeout(() => {
                       viewerContext?.setAnnotationMode(true);
                       setPlacementMode(true); // This shows the preview overlay
-                      annotationApiRef?.current?.setAnnotationStyle?.('stamp', { imageSrc: dataUrl });
-                      annotationApiRef?.current?.activateAnnotationTool?.('stamp', { imageSrc: dataUrl });
+                      const stampOptions = {
+                        ...buildToolOptions('stamp'),
+                        imageSrc: dataUrl,
+                        ...(displaySize ? { imageSize: cssToPdfSize(displaySize) } : {}),
+                      };
+                      annotationApiRef?.current?.setAnnotationStyle?.('stamp', stampOptions);
+                      annotationApiRef?.current?.activateAnnotationTool?.('stamp', stampOptions);
                     }, 150);
                   } catch (err) {
                     console.error('Failed to load stamp image', err);
                   }
                 } else {
                   setStampImageData(undefined);
+                  setStampImageSize(null);
                   setPlacementMode(false);
                   setSignatureConfig(null);
+                  setPlacementPreviewSize(null);
                 }
               }}
               disabled={false}
@@ -425,156 +655,158 @@ const Annotate = (_props: BaseToolProps) => {
           <>
             <Text size="sm" fw={600}>{t('annotation.settings', 'Settings')}</Text>
             <Group gap="md">
-          <Stack gap={4} align="center">
-            <Text size="xs" c="dimmed">
-              {['square', 'circle', 'polygon'].includes(activeTool)
-                ? t('annotation.strokeColor', 'Stroke Color')
-                : t('annotation.color', 'Color')
-              }
-            </Text>
-            <ColorSwatchButton
-              color={
-                activeTool === 'ink'
-                  ? inkColor
-                  : activeTool === 'highlight' || activeTool === 'inkHighlighter'
-                    ? highlightColor
-                    : activeTool === 'underline'
-                      ? underlineColor
-                      : activeTool === 'strikeout'
-                        ? strikeoutColor
-                        : activeTool === 'squiggly'
-                          ? squigglyColor
-                          : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
-                            ? shapeStrokeColor
-                            : textColor
-              }
-              size={30}
-              onClick={() => {
-                const target =
-                  activeTool === 'ink'
-                    ? 'ink'
-                    : activeTool === 'highlight' || activeTool === 'inkHighlighter'
-                      ? 'highlight'
-                      : activeTool === 'underline'
-                        ? 'underline'
-                        : activeTool === 'strikeout'
-                          ? 'strikeout'
-                          : activeTool === 'squiggly'
-                            ? 'squiggly'
-                            : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
-                              ? 'shapeStroke'
-                              : 'text';
-                setColorPickerTarget(target);
-                setIsColorPickerOpen(true);
-              }}
-            />
-          </Stack>
-          {['square', 'circle', 'polygon'].includes(activeTool) && (
-            <Stack gap={4} align="center">
-              <Text size="xs" c="dimmed">{t('annotation.fillColor', 'Fill Color')}</Text>
-              <ColorSwatchButton
-                color={shapeFillColor}
-                size={30}
-                onClick={() => {
-                  setColorPickerTarget('shapeFill');
-                  setIsColorPickerOpen(true);
-                }}
-              />
-            </Stack>
-          )}
-        </Group>
-
-        {activeTool === 'ink' && (
-          <Box>
-            <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
-            <Slider min={1} max={12} value={inkWidth} onChange={setInkWidth} />
-          </Box>
-        )}
-
-        {(activeTool === 'highlight' || activeTool === 'inkHighlighter') && (
-          <Box>
-            <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
-            <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} />
-          </Box>
-        )}
-
-        {activeTool === 'inkHighlighter' && (
-          <Box>
-            <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
-            <Slider min={1} max={20} value={freehandHighlighterWidth} onChange={setFreehandHighlighterWidth} />
-          </Box>
-        )}
-
-        {activeTool === 'text' && (
-          <>
-            <Box>
-              <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
-              <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
-            </Box>
-            <Box>
-              <Text size="xs" c="dimmed" mb={4}>{t('annotation.textAlignment', 'Text Alignment')}</Text>
-              <Group gap="xs">
-                <ActionIcon
-                  variant={textAlignment === 'left' ? 'filled' : 'default'}
-                  onClick={() => setTextAlignment('left')}
-                  size="md"
-                >
-                  <LocalIcon icon="format-align-left" width={18} height={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant={textAlignment === 'center' ? 'filled' : 'default'}
-                  onClick={() => setTextAlignment('center')}
-                  size="md"
-                >
-                  <LocalIcon icon="format-align-center" width={18} height={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant={textAlignment === 'right' ? 'filled' : 'default'}
-                  onClick={() => setTextAlignment('right')}
-                  size="md"
-                >
-                  <LocalIcon icon="format-align-right" width={18} height={18} />
-                </ActionIcon>
-              </Group>
-            </Box>
-          </>
-        )}
-
-        {['square', 'circle', 'line', 'polygon'].includes(activeTool) && (
-          <>
-            <Box>
-              <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
-              <Slider min={10} max={100} value={shapeOpacity} onChange={(value) => {
-                setShapeOpacity(value);
-                setShapeStrokeOpacity(value);
-                setShapeFillOpacity(value);
-              }} />
-            </Box>
-            <Box>
-              {activeTool === 'line' ? (
-                <>
-                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
-                  <Slider min={1} max={12} value={shapeThickness} onChange={setShapeThickness} />
-                </>
-              ) : (
-                <Group gap="xs" align="flex-end">
-                  <Box style={{ flex: 1 }}>
-                    <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Stroke')}</Text>
-                    <Slider min={0} max={12} value={shapeThickness} onChange={setShapeThickness} />
-                  </Box>
-                  <Button
-                    size="xs"
-                    variant={shapeThickness === 0 ? 'filled' : 'light'}
-                    onClick={() => setShapeThickness(shapeThickness === 0 ? 1 : 0)}
-                  >
-                    {shapeThickness === 0
-                      ? t('annotation.borderOff', 'Border: Off')
-                      : t('annotation.borderOn', 'Border: On')
-                    }
-                  </Button>
-                </Group>
+              <Stack gap={4} align="center">
+                <Text size="xs" c="dimmed">
+                  {['square', 'circle', 'polygon'].includes(activeTool)
+                    ? t('annotation.strokeColor', 'Stroke Color')
+                    : t('annotation.color', 'Color')
+                  }
+                </Text>
+                <ColorSwatchButton
+                  color={
+                    activeTool === 'ink'
+                      ? inkColor
+                      : activeTool === 'highlight' || activeTool === 'inkHighlighter'
+                        ? highlightColor
+                        : activeTool === 'underline'
+                          ? underlineColor
+                          : activeTool === 'strikeout'
+                            ? strikeoutColor
+                            : activeTool === 'squiggly'
+                              ? squigglyColor
+                              : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
+                                ? shapeStrokeColor
+                                : textColor
+                  }
+                  size={30}
+                  onClick={() => {
+                    const target =
+                      activeTool === 'ink'
+                        ? 'ink'
+                        : activeTool === 'highlight' || activeTool === 'inkHighlighter'
+                          ? 'highlight'
+                          : activeTool === 'underline'
+                            ? 'underline'
+                            : activeTool === 'strikeout'
+                              ? 'strikeout'
+                              : activeTool === 'squiggly'
+                                ? 'squiggly'
+                                : ['square', 'circle', 'line', 'polygon'].includes(activeTool)
+                                  ? 'shapeStroke'
+                                  : 'text';
+                    setColorPickerTarget(target);
+                    setIsColorPickerOpen(true);
+                  }}
+                />
+              </Stack>
+              {['square', 'circle', 'polygon'].includes(activeTool) && (
+                <Stack gap={4} align="center">
+                  <Text size="xs" c="dimmed">{t('annotation.fillColor', 'Fill Color')}</Text>
+                  <ColorSwatchButton
+                    color={shapeFillColor}
+                    size={30}
+                    onClick={() => {
+                      setColorPickerTarget('shapeFill');
+                      setIsColorPickerOpen(true);
+                    }}
+                  />
+                </Stack>
               )}
-            </Box>
+            </Group>
+
+            {activeTool === 'ink' && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+                <Slider min={1} max={12} value={inkWidth} onChange={setInkWidth} />
+              </Box>
+            )}
+
+            {(activeTool === 'highlight' || activeTool === 'inkHighlighter') && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+                <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} />
+              </Box>
+            )}
+
+            {activeTool === 'inkHighlighter' && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+                <Slider min={1} max={20} value={freehandHighlighterWidth} onChange={setFreehandHighlighterWidth} />
+              </Box>
+            )}
+
+            {activeTool === 'text' && (
+              <>
+                <Box>
+                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.fontSize', 'Font size')}</Text>
+                  <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
+                </Box>
+                <Box>
+                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.textAlignment', 'Text Alignment')}</Text>
+                  <Group gap="xs">
+                    <ActionIcon
+                      variant={textAlignment === 'left' ? 'filled' : 'default'}
+                      onClick={() => setTextAlignment('left')}
+                      size="md"
+                    >
+                      <LocalIcon icon="format-align-left" width={18} height={18} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant={textAlignment === 'center' ? 'filled' : 'default'}
+                      onClick={() => setTextAlignment('center')}
+                      size="md"
+                    >
+                      <LocalIcon icon="format-align-center" width={18} height={18} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant={textAlignment === 'right' ? 'filled' : 'default'}
+                      onClick={() => setTextAlignment('right')}
+                      size="md"
+                    >
+                      <LocalIcon icon="format-align-right" width={18} height={18} />
+                    </ActionIcon>
+                  </Group>
+                </Box>
+              </>
+            )}
+
+            {['square', 'circle', 'line', 'polygon'].includes(activeTool) && (
+              <>
+                <Box>
+                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+                  <Slider min={10} max={100} value={shapeOpacity} onChange={(value) => {
+                    setShapeOpacity(value);
+                    setShapeStrokeOpacity(value);
+                    setShapeFillOpacity(value);
+                  }} />
+                </Box>
+                <Box>
+                  {activeTool === 'line' ? (
+                    <>
+                      <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
+                      <Slider min={1} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                    </>
+                  ) : (
+                    <Group gap="xs" align="flex-end">
+                      <Box style={{ flex: 1 }}>
+                        <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Stroke')}</Text>
+                        <Slider min={0} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                      </Box>
+                      <Button
+                        size="xs"
+                        variant={shapeThickness === 0 ? 'filled' : 'light'}
+                        onClick={() => setShapeThickness(shapeThickness === 0 ? 1 : 0)}
+                      >
+                        {shapeThickness === 0
+                          ? t('annotation.borderOff', 'Border: Off')
+                          : t('annotation.borderOn', 'Border: On')
+                        }
+                      </Button>
+                    </Group>
+                  )}
+                </Box>
+              </>
+            )}
           </>
         )}
         </Stack>
@@ -643,15 +875,13 @@ const Annotate = (_props: BaseToolProps) => {
               <Slider
                 min={1}
                 max={12}
-                value={selectedAnn.object?.borderWidth ?? inkWidth}
+                value={selectedAnn.object?.strokeWidth ?? inkWidth}
                 onChange={(value) => {
                   annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
                     {
-                      borderWidth: value,
                       strokeWidth: value,
-                      lineWidth: value,
                     }
                   );
                   setInkWidth(value);
@@ -1258,6 +1488,12 @@ const Annotate = (_props: BaseToolProps) => {
     colorPickerTarget,
     activeColor,
     buildToolOptions,
+    undo,
+    redo,
+    historyAvailability,
+    handleSaveCopy,
+    isSavingCopy,
+    isAnnotationPaused,
   ]);
 
   return createToolFlow({
