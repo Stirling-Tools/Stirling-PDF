@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { springAuth } from '@app/auth/springAuthClient';
+import { connectionModeService } from '@app/services/connectionModeService';
+import { tauriBackendService } from '@app/services/tauriBackendService';
 
 /**
  * OAuth Callback Handler
@@ -50,6 +52,44 @@ export default function AuthCallback() {
             state: { error: 'OAuth login failed - invalid token.' }
           });
           return;
+        }
+
+        // Notify desktop popup listeners (self-hosted SSO flow)
+        const isDesktopPopup = typeof window !== 'undefined' && window.opener && window.name === 'stirling-desktop-sso';
+        if (isDesktopPopup) {
+          try {
+            window.opener.postMessage(
+              { type: 'stirling-desktop-sso', token },
+              '*'
+            );
+          } catch (postError) {
+            console.error('[AuthCallback] Failed to notify desktop window:', postError);
+          }
+
+          // Give the message a moment to flush before attempting to close
+          setTimeout(() => {
+            try {
+              window.close();
+            } catch (_) {
+              // ignore close errors
+            }
+          }, 150);
+        }
+
+        // Desktop fallback flow (when popup was blocked and we navigated directly)
+        try {
+          const pending = localStorage.getItem('desktop_self_hosted_sso_pending');
+          const hasTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__;
+          if (pending && hasTauri) {
+            const parsed = JSON.parse(pending) as { serverUrl?: string } | null;
+            if (parsed?.serverUrl) {
+              await connectionModeService.switchToSelfHosted({ url: parsed.serverUrl });
+              await tauriBackendService.initializeExternalBackend();
+            }
+            localStorage.removeItem('desktop_self_hosted_sso_pending');
+          }
+        } catch (desktopError) {
+          console.error('[AuthCallback] Desktop fallback completion failed:', desktopError);
         }
 
         console.log('[AuthCallback] Token validated, redirecting to home');

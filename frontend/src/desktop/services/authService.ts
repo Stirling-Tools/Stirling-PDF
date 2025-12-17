@@ -1,4 +1,6 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import axios from 'axios';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
@@ -433,6 +435,250 @@ export class AuthService {
       console.error('Failed to complete OAuth login:', error);
       this.setAuthStatus('unauthenticated', null);
       throw error;
+    }
+  }
+
+  /**
+   * Self-hosted SSO/OAuth2 flow for the desktop app.
+   * Opens a popup to the server's auth endpoint and listens for the AuthCallback page
+   * to postMessage the JWT back to the main window.
+   */
+  async loginWithSelfHostedOAuth(providerPath: string, serverUrl: string): Promise<UserInfo> {
+    const trimmedServer = serverUrl.replace(/\/+$/, '');
+    const fullUrl = providerPath.startsWith('http')
+      ? providerPath
+      : `${trimmedServer}${providerPath.startsWith('/') ? providerPath : `/${providerPath}`}`;
+
+    // Ensure backend redirects back to /auth/callback
+    try {
+      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback')}; path=/; max-age=300; SameSite=Lax`;
+    } catch {
+      // ignore cookie errors
+    }
+
+    // Force a real popup so the main webview stays on the app
+    const authWindow = window.open(fullUrl, '_blank', 'width=900,height=900');
+
+    // Fallback: use Tauri shell.open and wait for deep link back
+    if (!authWindow) {
+      if (await this.openInSystemBrowser(fullUrl)) {
+        return this.waitForDeepLinkCompletion(trimmedServer);
+      }
+      throw new Error('Unable to open browser window for SSO. Please allow pop-ups and try again.');
+    }
+
+    const expectedOrigin = new URL(fullUrl).origin;
+
+    // Always also listen for deep link completion in case the opener messaging path fails
+    const deepLinkPromise = this.waitForDeepLinkCompletion(trimmedServer).catch(() => null);
+
+    return new Promise<UserInfo>((resolve, reject) => {
+      let completed = false;
+
+      const cleanup = () => {
+        window.removeEventListener('message', handleMessage);
+        clearInterval(windowCheck);
+        clearInterval(localTokenCheck);
+        clearTimeout(timeoutId);
+      };
+
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== expectedOrigin) {
+          return;
+        }
+
+        const data = event.data as { type?: string; token?: string; access_token?: string };
+        if (!data || data.type !== 'stirling-desktop-sso') {
+          return;
+        }
+
+        const token = data.token || data.access_token;
+        if (!token) {
+          cleanup();
+          reject(new Error('No token returned from SSO'));
+          return;
+        }
+
+        completed = true;
+        cleanup();
+
+        try {
+          const userInfo = await this.completeSelfHostedSession(trimmedServer, token);
+          try {
+            authWindow.close();
+          } catch (closeError) {
+            console.warn('Could not close auth window:', closeError);
+          }
+          resolve(userInfo);
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error('Failed to complete login'));
+        }
+      };
+
+      // If deep link finishes first, resolve
+      deepLinkPromise.then(async (dlResult) => {
+        if (completed || !dlResult) return;
+        completed = true;
+        cleanup();
+        resolve(dlResult);
+      }).catch(() => {
+        // ignore deep link errors here
+      });
+
+      window.addEventListener('message', handleMessage);
+
+      const windowCheck = window.setInterval(() => {
+        if (authWindow.closed && !completed) {
+          cleanup();
+          reject(new Error('Authentication window was closed before completion'));
+        }
+      }, 500);
+
+      const localTokenCheck = window.setInterval(async () => {
+        if (completed) {
+          clearInterval(localTokenCheck);
+          return;
+        }
+        const token = localStorage.getItem('stirling_jwt');
+        if (token) {
+          completed = true;
+          cleanup();
+          try {
+            const userInfo = await this.completeSelfHostedSession(trimmedServer, token);
+            try {
+              authWindow.close();
+            } catch (_) {
+              // ignore close errors
+            }
+            resolve(userInfo);
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error('Failed to complete login'));
+          }
+        }
+      }, 1000);
+
+      const timeoutId = window.setTimeout(() => {
+        if (!completed) {
+          cleanup();
+          try {
+            authWindow.close();
+          } catch {
+            // ignore close errors
+          }
+          reject(new Error('SSO login timed out. Please try again.'));
+        }
+      }, 120_000);
+    });
+  }
+
+  /**
+   * Wait for a deep-link event to complete self-hosted SSO (used when popup cannot open)
+   */
+  private async waitForDeepLinkCompletion(serverUrl: string): Promise<UserInfo> {
+    if (!isTauri()) {
+      throw new Error('Unable to open browser window for SSO. Please allow pop-ups and try again.');
+    }
+
+    return new Promise<UserInfo>((resolve, reject) => {
+      let completed = false;
+      let unlisten: (() => void) | null = null;
+
+      const timeoutId = window.setTimeout(() => {
+        if (!completed) {
+          if (unlisten) unlisten();
+          reject(new Error('SSO login timed out. Please try again.'));
+        }
+      }, 120_000);
+
+      listen<string>('deep-link', async (event) => {
+        const url = event.payload;
+        if (!url || completed) return;
+        try {
+          const parsed = new URL(url);
+          const hash = parsed.hash.replace(/^#/, '');
+          const params = new URLSearchParams(hash);
+          const type = params.get('type') || parsed.searchParams.get('type');
+          if (type !== 'sso' && type !== 'sso-selfhosted') {
+            return;
+          }
+          const token = params.get('access_token') || parsed.searchParams.get('access_token');
+          if (!token) {
+            return;
+          }
+
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+
+          const userInfo = await this.completeSelfHostedSession(serverUrl, token);
+          resolve(userInfo);
+        } catch (err) {
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
+        }
+      }).then((fn) => {
+        unlisten = fn;
+      });
+    });
+  }
+
+  private async openInSystemBrowser(url: string): Promise<boolean> {
+    if (!isTauri()) {
+      return false;
+    }
+    try {
+      // Prefer plugin-shell (2.x) if available
+      await shellOpen(url);
+      return true;
+    } catch (err) {
+      console.error('Failed to open system browser for SSO:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Save JWT + user info for self-hosted SSO logins
+   */
+  async completeSelfHostedSession(serverUrl: string, token: string): Promise<UserInfo> {
+    await this.saveTokenEverywhere(token);
+
+    const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
+
+    await invoke('save_user_info', {
+      username: userInfo.username,
+      email: userInfo.email || null,
+    });
+
+    this.setAuthStatus('authenticated', userInfo);
+    return userInfo;
+  }
+
+  private async fetchSelfHostedUserInfo(serverUrl: string, token: string): Promise<UserInfo> {
+    try {
+      const response = await axios.get(
+        `${serverUrl.replace(/\/+$/, '')}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response.data;
+      const user = data.user || data;
+
+      return {
+        username: user.username || user.email || 'User',
+        email: user.email || undefined,
+      };
+    } catch (error) {
+      console.error('[Desktop AuthService] Failed to fetch user info after SSO:', error);
+      return {
+        username: 'User',
+        email: undefined,
+      };
     }
   }
 

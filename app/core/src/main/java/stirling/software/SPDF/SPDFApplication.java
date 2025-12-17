@@ -141,10 +141,10 @@ public class SPDFApplication {
         String backendUrl = appConfig.getBackendUrl();
         String contextPath = appConfig.getContextPath();
         String serverPort = appConfig.getServerPort();
-        baseUrlStatic = backendUrl;
+        baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = backendUrl + ":" + getStaticPort() + contextPath;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -210,7 +210,7 @@ public class SPDFApplication {
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
         log.info("Navigate to {}", url);
     }
 
@@ -257,5 +257,41 @@ public class SPDFApplication {
 
     public static String getStaticContextPath() {
         return contextPathStatic;
+    }
+
+    private static String buildFullUrl(String backendUrl, String port, String contextPath) {
+        String normalizedBase = normalizeBackendUrl(backendUrl, port);
+
+        String normalizedContextPath =
+                (contextPath == null || contextPath.isBlank() || "/".equals(contextPath))
+                        ? "/"
+                        : (contextPath.startsWith("/") ? contextPath : "/" + contextPath);
+
+        return normalizedBase + normalizedContextPath;
+    }
+
+    private static String normalizeBackendUrl(String backendUrl, String port) {
+        String trimmedBase =
+                (backendUrl == null || backendUrl.isBlank())
+                        ? "http://localhost"
+                        : backendUrl.trim().replaceAll("/+$", "");
+
+        try {
+            java.net.URI uri = new java.net.URI(trimmedBase);
+            boolean hasPort = uri.getPort() != -1;
+            boolean defaultHttp = "http".equalsIgnoreCase(uri.getScheme()) && "80".equals(port);
+            boolean defaultHttps = "https".equalsIgnoreCase(uri.getScheme()) && "443".equals(port);
+
+            if (hasPort || defaultHttp || defaultHttps) {
+                return trimmedBase;
+            }
+        } catch (java.net.URISyntaxException e) {
+            // If parsing fails, fall back to a simple suffix check
+            if (trimmedBase.matches(".+:\\d+$")) {
+                return trimmedBase;
+            }
+        }
+
+        return trimmedBase + ":" + port;
     }
 }
