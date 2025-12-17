@@ -5612,7 +5612,7 @@ perMonth = "/maand"
 perSeat = "/plaats"
 withServer = "+ Server-abonnement"
 licensedSeats = "Gelicenseerd: {{count}} plaatsen"
-includedInCurrent = "Inbegrepen in uw abonnement
+includedInCurrent = "Inbegrepen in uw abonnement"
 selectPlan = "Abonnement selecteren"
 manage = "Beheren"
 
