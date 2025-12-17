@@ -102,16 +102,31 @@ public class Saml2Configuration {
             log.error("Failed to load SAML2 SP credentials: {}", e.getMessage(), e);
             throw new IllegalStateException("Failed to load SAML2 SP credentials", e);
         }
+
+        // Get backend URL from configuration (for SAML endpoints)
+        String backendUrl = applicationProperties.getSystem().getBackendUrl();
+        if (backendUrl == null || backendUrl.isBlank()) {
+            backendUrl = "{baseUrl}"; // Fallback to Spring's auto-resolution
+            log.warn(
+                    "system.backendUrl not configured - SAML metadata will use request-based URLs. Set system.backendUrl for production use.");
+        } else {
+            log.info("Using configured backend URL for SAML: {}", backendUrl);
+        }
+
+        String entityId =
+                backendUrl + "/saml2/service-provider-metadata/" + samlConf.getRegistrationId();
+        String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
+        String sloResponseLocation = backendUrl + "/login";
+
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
                         .signingX509Credentials(c -> c.add(signingCredential))
-                        .entityId(samlConf.getIdpIssuer())
+                        .entityId(entityId)
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                         .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
-                        .singleLogoutServiceResponseLocation("{baseUrl}/login")
+                        .singleLogoutServiceResponseLocation(sloResponseLocation)
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
-                        .assertionConsumerServiceLocation(
-                                "{baseUrl}/login/saml2/sso/{registrationId}")
+                        .assertionConsumerServiceLocation(acsLocation)
                         .authnRequestsSigned(true)
                         .assertingPartyMetadata(
                                 metadata ->
@@ -127,7 +142,7 @@ public class Saml2Configuration {
                                                 .singleLogoutServiceLocation(
                                                         samlConf.getIdpSingleLogoutUrl())
                                                 .singleLogoutServiceResponseLocation(
-                                                        "{baseUrl}/login")
+                                                        sloResponseLocation)
                                                 .wantAuthnRequestsSigned(true))
                         .build();
 

@@ -38,16 +38,23 @@ public class AppConfig {
     private final ApplicationProperties applicationProperties;
 
     @Getter
-    @Value("${baseUrl:http://localhost}")
-    private String baseUrl;
-
-    @Getter
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
 
     @Getter
     @Value("${server.port:8080}")
     private String serverPort;
+
+    /**
+     * Get the backend URL from system configuration. Falls back to http://localhost if not
+     * configured.
+     *
+     * @return The backend base URL for SAML/OAuth/API callbacks
+     */
+    public String getBackendUrl() {
+        String backendUrl = applicationProperties.getSystem().getBackendUrl();
+        return (backendUrl != null && !backendUrl.isBlank()) ? backendUrl : "http://localhost";
+    }
 
     @Value("${v2}")
     public boolean v2Enabled;

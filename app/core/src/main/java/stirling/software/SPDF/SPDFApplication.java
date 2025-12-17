@@ -138,13 +138,13 @@ public class SPDFApplication {
 
     @PostConstruct
     public void init() {
-        String baseUrl = appConfig.getBaseUrl();
+        String backendUrl = appConfig.getBackendUrl();
         String contextPath = appConfig.getContextPath();
         String serverPort = appConfig.getServerPort();
-        baseUrlStatic = baseUrl;
+        baseUrlStatic = backendUrl;
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = baseUrl + ":" + getStaticPort() + contextPath;
+        String url = backendUrl + ":" + getStaticPort() + contextPath;
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
