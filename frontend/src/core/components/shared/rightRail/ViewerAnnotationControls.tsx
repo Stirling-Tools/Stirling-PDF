@@ -48,7 +48,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const isRedactMode = selectedTool === 'redact';
   
   // Get redaction pending state and navigation guard
-  const { pendingCount: redactionPendingCount, isRedacting: _isRedacting, activeType } = useRedactionMode();
+  const { pendingCount: redactionPendingCount, isRedacting: _isRedacting } = useRedactionMode();
   const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
   const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
 
