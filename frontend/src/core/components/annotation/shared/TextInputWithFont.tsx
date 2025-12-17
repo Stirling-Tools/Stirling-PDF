@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box } from '@mantine/core';
+import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 
 interface TextInputWithFontProps {
@@ -43,6 +44,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   colorLabel,
   onAnyChange
 }) => {
+  const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -221,7 +223,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
       {onTextAlignChange && (
         <SegmentedControl
           value={textAlign}
-          onChange={(value) => {
+          onChange={(value: string) => {
             onTextAlignChange(value as 'left' | 'center' | 'right');
             onAnyChange?.();
           }}

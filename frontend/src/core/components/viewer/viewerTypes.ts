@@ -66,10 +66,12 @@ export type AnnotationSelection = unknown;
 export interface AnnotationToolOptions {
   color?: string;
   fillColor?: string;
+  strokeColor?: string;
   opacity?: number;
   strokeOpacity?: number;
   fillOpacity?: number;
   thickness?: number;
+  borderWidth?: number;
   fontSize?: number;
   fontFamily?: string;
   textAlign?: number; // 0 = Left, 1 = Center, 2 = Right

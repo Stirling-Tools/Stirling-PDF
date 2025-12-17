@@ -253,7 +253,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         component: Annotate,
         description: t('home.annotate.desc', 'Highlight, draw, add notes, and shapes directly in the viewer'),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.EDIT,
+        subcategoryId: SubcategoryId.GENERAL,
         workbench: 'viewer',
         operationConfig: signOperationConfig,
         automationSettings: null,

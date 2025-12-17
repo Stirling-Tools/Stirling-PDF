@@ -126,9 +126,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
       }),
 
       // Register pan plugin (depends on Viewport, InteractionManager) - keep disabled to prevent drag panning
-      createPluginRegistration(PanPluginPackage, {
-        defaultMode: 'disabled',
-      }),
+      createPluginRegistration(PanPluginPackage, {}),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -265,7 +263,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'highlight',
               name: 'Highlight',
               interaction: { exclusive: true, cursor: 'text', textSelection: true },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.HIGHLIGHT,
                 color: '#ffd54f',
@@ -281,7 +279,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'underline',
               name: 'Underline',
               interaction: { exclusive: true, cursor: 'text', textSelection: true },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.UNDERLINE,
                 color: '#ffb300',
@@ -297,7 +295,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'strikeout',
               name: 'Strikeout',
               interaction: { exclusive: true, cursor: 'text', textSelection: true },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.STRIKEOUT,
                 color: '#e53935',
@@ -313,7 +311,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'squiggly',
               name: 'Squiggly',
               interaction: { exclusive: true, cursor: 'text', textSelection: true },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.SQUIGGLY,
                 color: '#00acc1',
@@ -329,7 +327,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'ink',
               name: 'Pen',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.INK ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.INK,
                 color: '#1f2933',
@@ -348,7 +346,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'inkHighlighter',
               name: 'Ink Highlighter',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.INK && annotation.color === '#ffd54f' ? 8 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK && annotation.color === '#ffd54f' ? 8 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.INK,
                 color: '#ffd54f',
@@ -367,7 +365,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'square',
               name: 'Square',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.SQUARE,
                 color: '#0000ff', // fill color (blue)
@@ -391,7 +389,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'circle',
               name: 'Circle',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.CIRCLE,
                 color: '#0000ff', // fill color (blue)
@@ -415,7 +413,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'line',
               name: 'Line',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.LINE,
                 color: '#1565c0',
@@ -439,7 +437,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'lineArrow',
               name: 'Arrow',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.LINE && (annotation.endStyle === 'ClosedArrow' || annotation.lineEndingStyles?.end === 'ClosedArrow') ? 9 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.LINE && (annotation.endStyle === 'ClosedArrow' || annotation.lineEndingStyles?.end === 'ClosedArrow') ? 9 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.LINE,
                 color: '#1565c0',
@@ -464,7 +462,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'polyline',
               name: 'Polyline',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.POLYLINE,
                 color: '#1565c0',
@@ -485,7 +483,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'polygon',
               name: 'Polygon',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.POLYGON,
                 color: '#0000ff', // fill color (blue)
@@ -508,7 +506,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'text',
               name: 'Text',
               interaction: { exclusive: true, cursor: 'text' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.FREETEXT,
                 textColor: '#111111',
@@ -528,7 +526,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'note',
               name: 'Note',
               interaction: { exclusive: true, cursor: 'pointer' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.FREETEXT,
                 textColor: '#1b1b1b',
@@ -552,7 +550,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, showBakedA
               id: 'stamp',
               name: 'Image Stamp',
               interaction: { exclusive: false, cursor: 'copy' },
-              matchScore: (annotation) => (annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.STAMP,
               },

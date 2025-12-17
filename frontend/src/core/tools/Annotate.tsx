@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useContext, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, Group, ActionIcon, Stack, Divider, Slider, Box, Tooltip as MantineTooltip, Button, TextInput, Textarea, NumberInput, Tooltip, Paper } from '@mantine/core';
+import { Text, Group, ActionIcon, Stack, Slider, Box, Tooltip as MantineTooltip, Button, Textarea, Tooltip, Paper } from '@mantine/core';
 import { alert as showToast, updateToast } from '@app/components/toast';
 
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
@@ -53,7 +53,7 @@ const Annotate = (_props: BaseToolProps) => {
     setSignatureConfig,
     setPlacementMode,
     placementPreviewSize,
-    activateSignaturePlacementMode,
+    activateSignaturePlacementMode: _activateSignaturePlacementMode,
     setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
@@ -72,6 +72,8 @@ const Annotate = (_props: BaseToolProps) => {
   const [squigglyColor, setSquigglyColor] = useState('#00acc1');
   const [squigglyOpacity, setSquigglyOpacity] = useState(100);
   const [textColor, setTextColor] = useState('#111111');
+  const [textBackgroundColor, setTextBackgroundColor] = useState<string>('');
+  const [noteBackgroundColor, setNoteBackgroundColor] = useState('#ffd54f');
   const [textSize, setTextSize] = useState(14);
   const [textAlignment, setTextAlignment] = useState<'left' | 'center' | 'right'>('left');
   const [shapeStrokeColor, setShapeStrokeColor] = useState('#cf5b5b');
@@ -80,7 +82,9 @@ const Annotate = (_props: BaseToolProps) => {
   const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(50);
   const [shapeFillOpacity, setShapeFillOpacity] = useState(50);
   const [shapeThickness, setShapeThickness] = useState(1);
-  const [colorPickerTarget, setColorPickerTarget] = useState<'ink' | 'highlight' | 'underline' | 'strikeout' | 'squiggly' | 'text' | 'shapeStroke' | 'shapeFill' | null>(null);
+  const [colorPickerTarget, setColorPickerTarget] = useState<
+    'ink' | 'highlight' | 'inkHighlighter' | 'underline' | 'strikeout' | 'squiggly' | 'text' | 'textBackground' | 'noteBackground' | 'shapeStroke' | 'shapeFill' | null
+  >(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [selectedAnn, setSelectedAnn] = useState<any | null>(null);
   const [selectedAnnId, setSelectedAnnId] = useState<string | null>(null);
@@ -174,16 +178,25 @@ const Annotate = (_props: BaseToolProps) => {
         return { color: strikeoutColor, opacity: strikeoutOpacity / 100, ...metadata };
       case 'squiggly':
         return { color: squigglyColor, opacity: squigglyOpacity / 100, ...metadata };
-      case 'text':
+      case 'text': {
         const textAlignNumber = textAlignment === 'left' ? 0 : textAlignment === 'center' ? 1 : 2;
-        return { color: textColor, fontSize: textSize, textAlign: textAlignNumber, ...metadata };
-      case 'note':
+        return {
+          color: textColor,
+          fontSize: textSize,
+          textAlign: textAlignNumber,
+          ...(textBackgroundColor ? { fillColor: textBackgroundColor } : {}),
+          ...metadata,
+        };
+      }
+      case 'note': {
+        const noteFillColor = noteBackgroundColor || 'transparent';
         return {
           color: textColor, // text color
-          fillColor: highlightColor, // background color, shares highlight picker defaults
+          fillColor: noteFillColor,
           opacity: 1,
           ...metadata,
         };
+      }
       case 'square':
       case 'circle':
       case 'polygon':
@@ -217,7 +230,33 @@ const Annotate = (_props: BaseToolProps) => {
       default:
         return {};
     }
-  }, [highlightColor, highlightOpacity, inkColor, inkWidth, freehandHighlighterWidth, underlineColor, underlineOpacity, strikeoutColor, strikeoutOpacity, squigglyColor, squigglyOpacity, textColor, textSize, textAlignment, shapeStrokeColor, shapeFillColor, shapeOpacity, shapeStrokeOpacity, shapeFillOpacity, shapeThickness, stampImageData, stampImageSize, cssToPdfSize]);
+  }, [
+    highlightColor,
+    highlightOpacity,
+    inkColor,
+    inkWidth,
+    freehandHighlighterWidth,
+    underlineColor,
+    underlineOpacity,
+    strikeoutColor,
+    strikeoutOpacity,
+    squigglyColor,
+    squigglyOpacity,
+    textColor,
+    textSize,
+    textAlignment,
+    textBackgroundColor,
+    noteBackgroundColor,
+    shapeStrokeColor,
+    shapeFillColor,
+    shapeOpacity,
+    shapeStrokeOpacity,
+    shapeFillOpacity,
+    shapeThickness,
+    stampImageData,
+    stampImageSize,
+    cssToPdfSize,
+  ]);
 
   useEffect(() => {
     setToolAndWorkbench('annotate', 'viewer');
@@ -433,6 +472,7 @@ const Annotate = (_props: BaseToolProps) => {
 
   const applySelectionFromAnnotation = useCallback((ann: any | null) => {
     const annObject = ann?.object ?? ann ?? null;
+    const type = annObject?.type;
     const annId = annObject?.id ?? null;
     selectedAnnIdRef.current = annId;
     setSelectedAnnId(annId);
@@ -444,8 +484,21 @@ const Annotate = (_props: BaseToolProps) => {
     if (annObject?.fontSize !== undefined) {
       setSelectedFontSize(annObject.fontSize ?? 14);
     }
+    if (type === 3) {
+      const derivedTool = deriveToolFromAnnotation(annObject);
+      const background = annObject?.backgroundColor as string | undefined;
+      if (annObject?.textColor) {
+        setTextColor(annObject.textColor);
+      }
+      if (derivedTool === 'note') {
+        if (background) {
+          setNoteBackgroundColor(background);
+        }
+      } else {
+        setTextBackgroundColor(background || '');
+      }
+    }
     // Sync width properties based on annotation type
-    const type = annObject?.type;
     if (type === 15 && annObject?.strokeWidth !== undefined) {
       // Type 15 = INK, uses strokeWidth
       setInkWidth(annObject.strokeWidth ?? 2);
@@ -536,7 +589,7 @@ const Annotate = (_props: BaseToolProps) => {
 
   const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
-    { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
+    // { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
     { id: 'stamp', label: t('annotation.stamp', 'Add Image'), icon: 'add-photo-alternate' },
   ];
 
@@ -550,12 +603,16 @@ const Annotate = (_props: BaseToolProps) => {
           : colorPickerTarget === 'strikeout'
             ? strikeoutColor
             : colorPickerTarget === 'squiggly'
-              ? squigglyColor
-              : colorPickerTarget === 'shapeStroke'
-                ? shapeStrokeColor
-                : colorPickerTarget === 'shapeFill'
+            ? squigglyColor
+            : colorPickerTarget === 'shapeStroke'
+              ? shapeStrokeColor
+              : colorPickerTarget === 'shapeFill'
                   ? shapeFillColor
-                  : textColor;
+                  : colorPickerTarget === 'textBackground'
+                    ? (textBackgroundColor || '#ffffff')
+                    : colorPickerTarget === 'noteBackground'
+                      ? (noteBackgroundColor || '#ffffff')
+                      : textColor;
 
   const steps = useMemo(() => {
     if (selectedFiles.length === 0) return [];
@@ -767,7 +824,70 @@ const Annotate = (_props: BaseToolProps) => {
                     </ActionIcon>
                   </Group>
                 </Box>
+                <Box>
+                  <Text size="xs" c="dimmed" mb={4}>{t('annotation.backgroundColor', 'Background color')}</Text>
+                  <Group gap="xs" align="center">
+                    <ColorSwatchButton
+                      color={textBackgroundColor || '#ffffff'}
+                      size={30}
+                      onClick={() => {
+                        setColorPickerTarget('textBackground');
+                        setIsColorPickerOpen(true);
+                      }}
+                    />
+                    <Button
+                      size="xs"
+                      variant={textBackgroundColor ? 'light' : 'default'}
+                      onClick={() => {
+                        setTextBackgroundColor('');
+                        annotationApiRef?.current?.setAnnotationStyle?.('text', buildToolOptions('text'));
+                        if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== 'note') {
+                          annotationApiRef?.current?.updateAnnotation?.(
+                            selectedAnn.object?.pageIndex ?? 0,
+                            selectedAnn.object?.id,
+                            { backgroundColor: 'transparent', fillColor: 'transparent' }
+                          );
+                        }
+                      }}
+                    >
+                      {textBackgroundColor ? t('annotation.clearBackground', 'Remove background') : t('annotation.noBackground', 'No background')}
+                    </Button>
+                  </Group>
+                </Box>
               </>
+            )}
+
+            {activeTool === 'note' && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.backgroundColor', 'Background color')}</Text>
+                <Group gap="xs" align="center">
+                  <ColorSwatchButton
+                    color={noteBackgroundColor || '#ffffff'}
+                    size={30}
+                    onClick={() => {
+                      setColorPickerTarget('noteBackground');
+                      setIsColorPickerOpen(true);
+                    }}
+                  />
+                  <Button
+                    size="xs"
+                    variant={noteBackgroundColor ? 'light' : 'default'}
+                    onClick={() => {
+                      setNoteBackgroundColor('');
+                      annotationApiRef?.current?.setAnnotationStyle?.('note', buildToolOptions('note'));
+                      if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === 'note') {
+                        annotationApiRef?.current?.updateAnnotation?.(
+                          selectedAnn.object?.pageIndex ?? 0,
+                          selectedAnn.object?.id,
+                          { backgroundColor: 'transparent', fillColor: 'transparent' }
+                        );
+                      }
+                    }}
+                  >
+                    {noteBackgroundColor ? t('annotation.clearBackground', 'Remove background') : t('annotation.noBackground', 'No background')}
+                  </Button>
+                </Group>
+              </Box>
             )}
 
             {['square', 'circle', 'line', 'polygon'].includes(activeTool) && (
@@ -895,10 +1015,15 @@ const Annotate = (_props: BaseToolProps) => {
 
       // Type 3: Text box
       if (type === 3) {
+        const derivedTool = deriveToolFromAnnotation(selectedAnn.object);
+        const isNote = derivedTool === 'note';
+        const selectedBackground =
+          selectedAnn.object?.backgroundColor ??
+          (isNote ? noteBackgroundColor || '#ffffff' : textBackgroundColor || '#ffffff');
         return (
           <Paper withBorder p="sm" radius="md">
             <Stack gap="sm">
-              <Text size="sm" fw={600}>{t('annotation.editText', 'Edit Text Box')}</Text>
+              <Text size="sm" fw={600}>{isNote ? t('annotation.editNote', 'Edit Sticky Note') : t('annotation.editText', 'Edit Text Box')}</Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
@@ -909,6 +1034,37 @@ const Annotate = (_props: BaseToolProps) => {
                   setIsColorPickerOpen(true);
                 }}
               />
+            </Box>
+            <Box>
+              <Text size="xs" c="dimmed" mb={4}>{t('annotation.backgroundColor', 'Background color')}</Text>
+              <Group gap="xs" align="center">
+                <ColorSwatchButton
+                  color={selectedBackground}
+                  size={28}
+                  onClick={() => {
+                    setColorPickerTarget(isNote ? 'noteBackground' : 'textBackground');
+                    setIsColorPickerOpen(true);
+                  }}
+                />
+                <Button
+                  size="xs"
+                  variant={selectedAnn.object?.backgroundColor ? 'light' : 'default'}
+                  onClick={() => {
+                    if (isNote) {
+                      setNoteBackgroundColor('');
+                    } else {
+                      setTextBackgroundColor('');
+                    }
+                    annotationApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { backgroundColor: 'transparent', fillColor: 'transparent' }
+                    );
+                  }}
+                >
+                  {t('annotation.clearBackground', 'Remove background')}
+                </Button>
+              </Group>
             </Box>
             <Textarea
               label={t('annotation.text', 'Text')}
@@ -1194,7 +1350,14 @@ const Annotate = (_props: BaseToolProps) => {
           isOpen={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
           selectedColor={activeColor}
-          showOpacity={colorPickerTarget !== 'text' && colorPickerTarget !== 'shapeStroke' && colorPickerTarget !== 'shapeFill' && colorPickerTarget !== null}
+          showOpacity={
+            colorPickerTarget !== 'text' &&
+            colorPickerTarget !== 'textBackground' &&
+            colorPickerTarget !== 'noteBackground' &&
+            colorPickerTarget !== 'shapeStroke' &&
+            colorPickerTarget !== 'shapeFill' &&
+            colorPickerTarget !== null
+          }
           opacity={
             colorPickerTarget === 'highlight' ? highlightOpacity :
             colorPickerTarget === 'underline' ? underlineOpacity :
@@ -1284,6 +1447,30 @@ const Annotate = (_props: BaseToolProps) => {
               annotationApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
               if (selectedAnn?.object?.id) {
                 annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+              }
+            } else if (colorPickerTarget === 'textBackground') {
+              setTextBackgroundColor(color);
+              if (activeTool === 'text') {
+                annotationApiRef?.current?.setAnnotationStyle?.('text', buildToolOptions('text'));
+              }
+              if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== 'note') {
+                annotationApiRef?.current?.updateAnnotation?.(
+                  selectedAnn.object?.pageIndex ?? 0,
+                  selectedAnn.object?.id,
+                  { backgroundColor: color, fillColor: color }
+                );
+              }
+            } else if (colorPickerTarget === 'noteBackground') {
+              setNoteBackgroundColor(color);
+              if (activeTool === 'note') {
+                annotationApiRef?.current?.setAnnotationStyle?.('note', buildToolOptions('note'));
+              }
+              if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === 'note') {
+                annotationApiRef?.current?.updateAnnotation?.(
+                  selectedAnn.object?.pageIndex ?? 0,
+                  selectedAnn.object?.id,
+                  { backgroundColor: color, fillColor: color }
+                );
               }
             } else {
               setTextColor(color);
@@ -1449,7 +1636,7 @@ const Annotate = (_props: BaseToolProps) => {
             {colorPickerComponent}
 
             {/* Suggested Tools */}
-            <SuggestedToolsSection currentTool="annotate" />
+            <SuggestedToolsSection />
           </Stack>
         ),
       },
@@ -1470,8 +1657,13 @@ const Annotate = (_props: BaseToolProps) => {
     squigglyOpacity,
     inkColor,
     inkWidth,
+    textBackgroundColor,
+    noteBackgroundColor,
+    textAlignment,
+    freehandHighlighterWidth,
     shapeStrokeColor,
     shapeFillColor,
+    shapeOpacity,
     shapeStrokeOpacity,
     shapeFillOpacity,
     shapeThickness,
@@ -1504,7 +1696,20 @@ const Annotate = (_props: BaseToolProps) => {
     steps,
     review: {
       isVisible: false,
-      operation: { files: [], downloadUrl: null },
+      operation: {
+        files: [],
+        thumbnails: [],
+        isGeneratingThumbnails: false,
+        downloadUrl: null,
+        downloadFilename: '',
+        isLoading: false,
+        status: '',
+        errorMessage: null,
+        progress: null,
+        executeOperation: async () => {},
+        resetResults: () => {},
+        clearError: () => {},
+      },
       title: '',
       onFileClick: () => {},
       onUndo: () => {},

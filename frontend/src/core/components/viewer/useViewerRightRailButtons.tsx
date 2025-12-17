@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
@@ -9,6 +9,9 @@ import { SearchInterface } from '@app/components/viewer/SearchInterface';
 import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnnotationControls';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationState } from '@app/contexts/NavigationContext';
+import { BASE_PATH, withBasePath } from '@app/constants/app';
 
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
@@ -16,6 +19,32 @@ export function useViewerRightRailButtons() {
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
+  const { handleToolSelect } = useToolWorkflow();
+  const { selectedTool } = useNavigationState();
+
+  const stripBasePath = useCallback((path: string) => {
+    if (BASE_PATH && path.startsWith(BASE_PATH)) {
+      return path.slice(BASE_PATH.length) || '/';
+    }
+    return path;
+  }, []);
+
+  const isAnnotationsPath = useCallback(() => {
+    const cleanPath = stripBasePath(window.location.pathname).toLowerCase();
+    return cleanPath === '/annotations' || cleanPath.endsWith('/annotations');
+  }, [stripBasePath]);
+
+  const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() => isAnnotationsPath());
+
+  useEffect(() => {
+    setIsAnnotationsActive(isAnnotationsPath());
+  }, [selectedTool, isAnnotationsPath]);
+
+  useEffect(() => {
+    const handlePopState = () => setIsAnnotationsActive(isAnnotationsPath());
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isAnnotationsPath]);
 
   // Lift i18n labels out of memo for clarity
   const searchLabel = t('rightRail.search', 'Search PDF');
@@ -25,6 +54,7 @@ export function useViewerRightRailButtons() {
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const printLabel = t('rightRail.print', 'Print PDF');
+  const annotationsLabel = t('rightRail.annotations', 'Annotations');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
@@ -148,6 +178,36 @@ export function useViewerRightRailButtons() {
         }
       },
       {
+        id: 'viewer-annotations',
+        tooltip: annotationsLabel,
+        ariaLabel: annotationsLabel,
+        section: 'top' as const,
+        order: 58,
+        render: ({ disabled }) => (
+          <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+            <ActionIcon
+              variant={isAnnotationsActive ? 'default' : 'subtle'}
+              radius="md"
+              className="right-rail-icon"
+              onClick={() => {
+                if (disabled || isAnnotationsActive) return;
+                const targetPath = withBasePath('/annotations');
+                if (window.location.pathname !== targetPath) {
+                  window.history.pushState(null, '', targetPath);
+                }
+                setIsAnnotationsActive(true);
+                handleToolSelect('annotate');
+              }}
+              disabled={disabled || isAnnotationsActive}
+              aria-pressed={isAnnotationsActive}
+              style={isAnnotationsActive ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
+            >
+              <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
+            </ActionIcon>
+          </Tooltip>
+        )
+      },
+      {
         id: 'viewer-annotation-controls',
         section: 'top' as const,
         order: 60,
@@ -156,7 +216,7 @@ export function useViewerRightRailButtons() {
         )
       }
     ];
-  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, printLabel, tooltipPosition]);
+  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, printLabel, tooltipPosition, annotationsLabel, isAnnotationsActive, handleToolSelect]);
 
   useRightRailButtons(viewerButtons);
 }
