@@ -33,14 +33,35 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Cache hashed assets (JS/CSS with content hashes) for 1 year
         // These files have names like index-ChAS4tCC.js that change when content changes
+        // Check customFiles/static first, then fall back to classpath
         registry.addResourceHandler("/assets/**")
-                .addResourceLocations("classpath:/static/assets/")
+                .addResourceLocations(
+                        "file:"
+                                + stirling.software.common.configuration.InstallationPathConfig
+                                        .getStaticPath()
+                                + "assets/",
+                        "classpath:/static/assets/")
                 .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic());
 
         // Don't cache index.html - it needs to be fresh to reference latest hashed assets
+        // Note: index.html is handled by ReactRoutingController for dynamic processing
         registry.addResourceHandler("/index.html")
-                .addResourceLocations("classpath:/static/")
+                .addResourceLocations(
+                        "file:"
+                                + stirling.software.common.configuration.InstallationPathConfig
+                                        .getStaticPath(),
+                        "classpath:/static/")
                 .setCacheControl(CacheControl.noCache().mustRevalidate());
+
+        // Handle all other static resources (js, css, images, fonts, etc.)
+        // Check customFiles/static first for user overrides
+        registry.addResourceHandler("/**")
+                .addResourceLocations(
+                        "file:"
+                                + stirling.software.common.configuration.InstallationPathConfig
+                                        .getStaticPath(),
+                        "classpath:/static/")
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS));
     }
 
     @Override
