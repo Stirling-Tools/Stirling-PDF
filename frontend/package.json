@@ -50,7 +50,6 @@
     "globals": "^16.4.0",
     "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.2.0",
-    "jscanify": "^1.4.0",
     "jszip": "^3.10.1",
     "license-report": "^6.8.0",
     "pdf-lib": "^1.17.1",

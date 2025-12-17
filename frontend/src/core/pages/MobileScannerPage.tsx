@@ -10,8 +10,14 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-// @ts-expect-error - jscanify doesn't have TypeScript definitions
-import jscanify from 'jscanify/src/jscanify.js';
+
+// jscanify is loaded via script tag in index.html as a global
+declare global {
+  interface Window {
+    jscanify: any;
+    cv: any;
+  }
+}
 
 /**
  * MobileScannerPage
@@ -55,68 +61,50 @@ export default function MobileScannerPage() {
   // Detection resolution - extremely low for mobile performance
   const DETECTION_WIDTH = 160; // Ultra-low for real-time mobile detection
 
-  // Initialize jscanify scanner and wait for OpenCV
+  // Initialize jscanify scanner and wait for OpenCV (loaded via script tags in index.html)
   useEffect(() => {
-    let script: HTMLScriptElement | null = null;
-
-    const loadOpenCV = () => {
-      // Check if OpenCV is already loaded
-      if ((window as any).cv && (window as any).cv.Mat) {
-        initScanner();
-        return;
-      }
-
-      // Check if script already exists
-      const existingScript = document.querySelector('script[src*="opencv.js"]');
-      if (existingScript) {
-        // Script exists, wait for it to load
-        (window as any).onOpenCvReady = initScanner;
-        return;
-      }
-
-      // Load OpenCV.js from CDN
-      script = document.createElement('script');
-      script.src = 'https://docs.opencv.org/4.7.0/opencv.js';
-      script.async = true;
-      script.onload = () => {
-        console.log('OpenCV.js loaded');
-        // OpenCV needs a moment to initialize after script loads
-        setTimeout(initScanner, 100);
-      };
-      script.onerror = () => {
-        console.error('Failed to load OpenCV.js');
-      };
-      document.head.appendChild(script);
-    };
+    let retryCount = 0;
+    const MAX_RETRIES = 50; // 5 seconds max wait
 
     const initScanner = () => {
-      // Verify OpenCV is actually ready
+      // Check if both OpenCV and jscanify are loaded
       if (!(window as any).cv || !(window as any).cv.Mat) {
-        console.warn('OpenCV not ready yet, retrying...');
-        setTimeout(initScanner, 100);
+        retryCount++;
+        if (retryCount < MAX_RETRIES) {
+          if (retryCount % 10 === 1) {
+            console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for OpenCV to load...`);
+          }
+          setTimeout(initScanner, 100);
+        } else {
+          console.error('OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.');
+        }
+        return;
+      }
+
+      if (!window.jscanify) {
+        retryCount++;
+        if (retryCount < MAX_RETRIES) {
+          if (retryCount % 10 === 1) {
+            console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for jscanify to load...`);
+          }
+          setTimeout(initScanner, 100);
+        } else {
+          console.error('jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.');
+        }
         return;
       }
 
       try {
-        scannerRef.current = new jscanify();
+        scannerRef.current = new window.jscanify();
         setOpenCvReady(true);
-        console.log('jscanify initialized with OpenCV');
+        console.log('✓ jscanify initialized with OpenCV');
       } catch (err) {
         console.error('Failed to initialize jscanify:', err);
       }
     };
 
-    // Start loading process
-    if (document.readyState === 'complete') {
-      loadOpenCV();
-    } else {
-      window.addEventListener('load', loadOpenCV);
-    }
-
-    return () => {
-      window.removeEventListener('load', loadOpenCV);
-      // Don't remove script on unmount as other components might use it
-    };
+    // Start initialization
+    initScanner();
   }, []);
 
   // Initialize camera
