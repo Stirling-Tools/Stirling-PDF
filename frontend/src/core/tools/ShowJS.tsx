@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
 import type { BaseToolProps, ToolComponent } from '@app/types/tool';
@@ -25,7 +25,7 @@ const ShowJS = (props: BaseToolProps) => {
 
 	const VIEW_ID = 'showJSView';
 	const WORKBENCH_ID = 'custom:showJS' as const;
-	const viewIcon = useMemo(() => <CodeRoundedIcon fontSize="small" />, []);
+	const viewIcon = useMemo(() => <LocalIcon icon="code-rounded" width={20} height={20} />, []);
 
 	const base = useBaseTool('showJS', useShowJSParameters, useShowJSOperation, props, { minFiles: 1 });
 	const operation = base.operation as ShowJSOperationHook;

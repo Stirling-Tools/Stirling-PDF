@@ -1,7 +1,6 @@
 import React from 'react';
 import { Stack, Text, Button, Group } from '@mantine/core';
-import HistoryIcon from '@mui/icons-material/History';
-import CloudIcon from '@mui/icons-material/Cloud';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
@@ -51,7 +50,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const buttons = (
     <>
       <Button
-        leftSection={<HistoryIcon />}
+        leftSection={<LocalIcon icon="history-rounded" width={24} height={24} />}
         justify={horizontal ? "center" : "flex-start"}
         onClick={() => onSourceChange('recent')}
         fullWidth={!horizontal}
@@ -86,7 +85,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       <Button
         variant="subtle"
         color='var(--mantine-color-gray-6)'
-        leftSection={<CloudIcon />}
+        leftSection={<LocalIcon icon="cloud" width={24} height={24} />}
         justify={horizontal ? "center" : "flex-start"}
         onClick={handleGoogleDriveClick}
         fullWidth={!horizontal}

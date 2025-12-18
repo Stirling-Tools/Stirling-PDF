@@ -10,10 +10,7 @@ import {
   Alert
 } from '@mantine/core';
 import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import WarningIcon from '@mui/icons-material/Warning';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { getAvailableToExtensions } from '@app/utils/convertUtils';
@@ -53,7 +50,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   const renderToolSettings = () => {
     if (!SettingsComponent) {
       return (
-        <Alert icon={<WarningIcon />} color="orange">
+        <Alert icon={<LocalIcon icon="warning-rounded" width={24} height={24} />} color="orange">
           <Text size="sm">
             {t('automate.config.noSettings', 'This tool does not have configurable settings.')}
           </Text>
@@ -97,7 +94,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
       onClose={onCancel}
       title={
         <Group gap="xs">
-          <SettingsIcon />
+          <LocalIcon icon="settings-rounded" width={24} height={24} />
           <Title order={3}>
             {t('automate.config.title', 'Configure {{toolName}}', { toolName: tool.name })}
           </Title>
@@ -119,13 +116,13 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
         <Group justify="flex-end" gap="sm">
           <Button
             variant="light"
-            leftSection={<CloseIcon />}
+            leftSection={<LocalIcon icon="close-rounded" width={24} height={24} />}
             onClick={onCancel}
           >
             {t('automate.config.cancel', 'Cancel')}
           </Button>
           <Button
-            leftSection={<CheckIcon />}
+            leftSection={<LocalIcon icon="check-rounded" width={24} height={24} />}
             onClick={handleSave}
           >
             {t('automate.config.save', 'Save Configuration')}

@@ -1,11 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { ActionIcon, CheckboxIndicator } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import PushPinIcon from '@mui/icons-material/PushPin';
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 import styles from '@app/components/pageEditor/PageEditor.module.css';
@@ -248,7 +244,7 @@ const FileThumbnail = ({
             setShowActions((v) => !v);
           }}
         >
-          <MoreVertIcon fontSize="small" />
+          <LocalIcon icon="more-vert" width={20} height={20} />
         </ActionIcon>
       </div>
 
@@ -274,7 +270,7 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            {isPinned ? <LocalIcon icon="keep-rounded" width={20} height={20} /> : <LocalIcon icon="keep-outline-rounded" width={20} height={20} />}
             <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
           </button>
 
@@ -296,7 +292,7 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
+            <LocalIcon icon="delete-outline-rounded" width={20} height={20} />
             <span>{t('delete', 'Delete')}</span>
           </button>
         </div>
@@ -351,13 +347,13 @@ const FileThumbnail = ({
         {/* Pin indicator (bottom-left) */}
         {isPinned && (
           <span className={styles.pinIndicator} aria-hidden>
-            <PushPinIcon fontSize="small" />
+            <LocalIcon icon="keep-rounded" width={20} height={20} />
           </span>
         )}
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
+          <LocalIcon icon="drag-indicator" width={20} height={20} />
         </span>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Menu, Loader, Group, Text } from '@mantine/core';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import FitText from '@app/components/shared/FitText';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 
@@ -30,12 +29,12 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
-            <VisibilityIcon fontSize="small" />
+            <LocalIcon icon="visibility-rounded" width={20} height={20} />
           )}
           <PrivateContent>
             <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
           </PrivateContent>
-          <KeyboardArrowDownIcon fontSize="small" />
+          <LocalIcon icon="keyboard-arrow-down-rounded" width={20} height={20} />
         </div>
       </Menu.Target>
       <Menu.Dropdown style={{

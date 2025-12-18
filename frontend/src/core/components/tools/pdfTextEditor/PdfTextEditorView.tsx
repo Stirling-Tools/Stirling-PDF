@@ -23,18 +23,7 @@ import {
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
-import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
-import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import MergeTypeIcon from '@mui/icons-material/MergeType';
-import CallSplitIcon from '@mui/icons-material/CallSplit';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import UploadFileIcon from '@mui/icons-material/UploadFileOutlined';
-import SaveIcon from '@mui/icons-material/SaveOutlined';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Rnd } from 'react-rnd';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
@@ -1412,7 +1401,7 @@ const selectionToolbarPosition = useMemo(() => {
             event.preventDefault();
           }}
         >
-          <CloseIcon style={{ fontSize: 12 }} />
+          <LocalIcon icon="close-rounded" width={12} height={12} />
         </ActionIcon>
       )}
     </Box>
@@ -1473,7 +1462,7 @@ const selectionToolbarPosition = useMemo(() => {
           <Stack gap="sm" pb="md">
             <Group justify="space-between" align="center">
               <Group gap="xs" align="center">
-                <DescriptionIcon fontSize="small" />
+                <LocalIcon icon="description-rounded" width={20} height={20} />
                 <Title order={3}>{t('pdfTextEditor.title', 'PDF JSON Editor')}</Title>
                 {hasChanges && <Badge color="orange" variant="light" size="sm">{t('pdfTextEditor.badges.unsaved', 'Edited')}</Badge>}
               </Group>
@@ -1482,7 +1471,7 @@ const selectionToolbarPosition = useMemo(() => {
             <Stack gap="xs">
               <Button
                 variant="subtle"
-                leftSection={<AutorenewIcon fontSize="small" />}
+                leftSection={<LocalIcon icon="autorenew-rounded" width={20} height={20} />}
                 onClick={onReset}
                 disabled={!hasDocument || isConverting}
                 fullWidth
@@ -1491,7 +1480,7 @@ const selectionToolbarPosition = useMemo(() => {
               </Button>
               <Button
                 variant="default"
-                leftSection={<FileDownloadIcon fontSize="small" />}
+                leftSection={<LocalIcon icon="download-rounded" width={20} height={20} />}
                 onClick={onDownloadJson}
                 disabled={!hasDocument || isConverting}
                 fullWidth
@@ -1499,7 +1488,7 @@ const selectionToolbarPosition = useMemo(() => {
                 {t('pdfTextEditor.actions.downloadJson', 'Download JSON')}
               </Button>
               <Button
-                leftSection={<PictureAsPdfIcon fontSize="small" />}
+                leftSection={<LocalIcon icon="picture-as-pdf-rounded" width={20} height={20} />}
                 onClick={onGeneratePdf}
                 loading={isGeneratingPdf}
                 disabled={!hasDocument || !hasChanges || isConverting}
@@ -1510,7 +1499,7 @@ const selectionToolbarPosition = useMemo(() => {
               <Button
                 variant="filled"
                 color="green"
-                leftSection={<SaveIcon fontSize="small" />}
+                leftSection={<LocalIcon icon="save-rounded" width={20} height={20} />}
                 onClick={onSaveToWorkbench}
                 loading={isSavingToWorkbench}
                 disabled={!hasDocument || !hasChanges || isConverting}
@@ -1623,7 +1612,7 @@ const selectionToolbarPosition = useMemo(() => {
               <Accordion.Item value="disclaimer">
                 <Accordion.Control>
                   <Group gap="xs" wrap="nowrap">
-                    <InfoOutlinedIcon fontSize="small" />
+                    <LocalIcon icon="info-rounded" width={20} height={20} />
                     <Text size="sm" fw={500}>
                       {t('pdfTextEditor.disclaimer.heading', 'Preview Limitations')}
                     </Text>
@@ -1661,7 +1650,7 @@ const selectionToolbarPosition = useMemo(() => {
 
       {errorMessage && (
         <Alert
-          icon={<WarningAmberIcon fontSize="small" />}
+          icon={<LocalIcon icon="warning-rounded" width={20} height={20} />}
           color="red"
           radius="md"
           style={{ gridColumn: '2 / 3' }}
@@ -1698,7 +1687,7 @@ const selectionToolbarPosition = useMemo(() => {
             }}
           >
             <Stack align="center" gap="md" style={{ pointerEvents: 'none' }}>
-              <UploadFileIcon sx={{ fontSize: 48, color: 'var(--mantine-color-blue-5)' }} />
+              <LocalIcon icon="upload-file-rounded" width={48} height={48} style={{ color: 'var(--mantine-color-blue-5)' }} />
               <Text size="lg" fw={600}>
                 {t('pdfTextEditor.empty.title', 'No document loaded')}
               </Text>
@@ -1736,7 +1725,7 @@ const selectionToolbarPosition = useMemo(() => {
                   </Group>
                 )}
               </div>
-              <AutorenewIcon sx={{ fontSize: 36 }} className="animate-spin" />
+              <LocalIcon icon="autorenew-rounded" width={36} height={36} className="animate-spin" />
             </Group>
             <Progress value={conversionProgress?.percent || 0} size="lg" radius="md" />
           </Stack>
@@ -1787,7 +1776,7 @@ const selectionToolbarPosition = useMemo(() => {
             onClose={handleDismissWelcomeBanner}
             title={
               <Group gap="xs">
-                <InfoOutlinedIcon fontSize="small" />
+                <LocalIcon icon="info-rounded" width={20} height={20} />
                 <Text fw={600}>{t('pdfTextEditor.welcomeBanner.title', 'Welcome to PDF Text Editor (Early Access)')}</Text>
               </Group>
             }
@@ -1952,7 +1941,7 @@ const selectionToolbarPosition = useMemo(() => {
                       aria-label={t('pdfTextEditor.manual.merge', 'Merge selection')}
                       onClick={handleMergeSelection}
                     >
-                      <MergeTypeIcon fontSize="small" />
+                      <LocalIcon icon="merge-type-rounded" width={20} height={20} />
                     </ActionIcon>
                   </Tooltip>
                 )}
@@ -1965,7 +1954,7 @@ const selectionToolbarPosition = useMemo(() => {
                       aria-label={t('pdfTextEditor.manual.ungroup', 'Ungroup selection')}
                       onClick={handleUngroupSelection}
                     >
-                      <CallSplitIcon fontSize="small" />
+                      <LocalIcon icon="call-split-rounded" width={20} height={20} />
                     </ActionIcon>
                   </Tooltip>
                 )}
@@ -1979,7 +1968,7 @@ const selectionToolbarPosition = useMemo(() => {
                       onMouseDown={(event) => event.stopPropagation()}
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <MoreVertIcon fontSize="small" />
+                      <LocalIcon icon="more-vert" width={20} height={20} />
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown>

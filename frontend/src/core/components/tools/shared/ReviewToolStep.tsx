@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UndoIcon from "@mui/icons-material/Undo";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
@@ -80,7 +80,7 @@ function ReviewStepContent<TParams = unknown>({
       {onUndo && (
         <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
           <Button
-            leftSection={<UndoIcon />}
+            leftSection={<LocalIcon icon="undo-rounded" width={24} height={24} />}
             variant="outline"
             color="var(--mantine-color-gray-6)"
             onClick={handleUndo}

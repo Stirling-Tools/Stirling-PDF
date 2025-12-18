@@ -1,7 +1,6 @@
 import React, { ReactNode, useState, useMemo } from 'react';
 import { Stack, Text, Popover, Box, Checkbox, Group, TextInput } from '@mantine/core';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import SearchIcon from '@mui/icons-material/Search';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 export interface DropdownItem {
   value: string;
@@ -133,7 +132,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <Text size="sm" style={{ flex: 1 }}>
               {getDisplayText()}
             </Text>
-            <UnfoldMoreIcon style={{ 
+            <LocalIcon icon="unfold-more-rounded" width={18} height={18} style={{ 
               fontSize: '1rem', 
               color: 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))' 
             }} />
@@ -160,7 +159,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  leftSection={<SearchIcon style={{ fontSize: '1rem' }} />}
+                  leftSection={<LocalIcon icon="search-rounded" width="1rem" height="1rem" />}
                   size="sm"
                   style={{ width: '100%' }}
                 />

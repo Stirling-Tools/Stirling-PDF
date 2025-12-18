@@ -5,12 +5,17 @@ import iconSet from '../../../assets/material-symbols-icons.json'; // eslint-dis
 // Load icons synchronously at import time - guaranteed to be ready on first render
 let iconsLoaded = false;
 let localIconCount = 0;
+const availableIcons = new Set<string>();
 
 try {
   if (iconSet) {
     addCollection(iconSet);
     iconsLoaded = true;
     localIconCount = Object.keys(iconSet.icons || {}).length;
+    // Build set of available icon names for fast lookup
+    Object.keys(iconSet.icons || {}).forEach(iconName => {
+      availableIcons.add(iconName);
+    });
     console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
   }
 } catch {
@@ -30,13 +35,38 @@ interface LocalIconProps {
  * instead of loading from CDN
  */
 export const LocalIcon: React.FC<LocalIconProps> = ({ icon, width, height, style, ...props }) => {
-  // Convert our icon naming convention to the local collection format
-  const iconName = icon.startsWith('material-symbols:')
-    ? icon
-    : `material-symbols:${icon}`;
+  // Strip material-symbols: prefix if present to get the base icon name
+  const baseIconName = icon.startsWith('material-symbols:')
+    ? icon.replace('material-symbols:', '')
+    : icon;
 
-  // Development logging (only in dev mode)
+  // Convert to the full icon naming convention with prefix
+  const iconName = `material-symbols:${baseIconName}`;
+
+  // Runtime validation in development mode
   if (process.env.NODE_ENV === 'development') {
+    if (iconsLoaded && !availableIcons.has(baseIconName)) {
+      const errorKey = `icon-error-${baseIconName}`;
+
+      // Only log each missing icon once per session
+      if (!sessionStorage.getItem(errorKey)) {
+        console.error(
+          `❌ LocalIcon: Icon "${baseIconName}" not found in bundle!\n` +
+          `   This icon will fall back to CDN (slower, external request).\n` +
+          `   Run "npm run generate-icons" to add it to the bundle, or fix the icon name.\n` +
+          `   Search available icons at: https://fonts.google.com/icons`
+        );
+        sessionStorage.setItem(errorKey, 'logged');
+
+        // Also throw error in development to make it more visible
+        throw new Error(
+          `LocalIcon: Missing icon "${baseIconName}". ` +
+          `Run "npm run generate-icons" to update the bundle.`
+        );
+      }
+    }
+
+    // Development logging for successful icon loads
     const logKey = `icon-${iconName}`;
     if (!sessionStorage.getItem(logKey)) {
       const source = iconsLoaded ? 'local' : 'CDN';

@@ -1,4 +1,4 @@
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import '@app/components/tools/validateSignature/reportView/styles.css';
 
 const ThumbnailPreview = ({
@@ -22,7 +22,7 @@ const ThumbnailPreview = ({
 
   return (
     <div className="thumbnail-placeholder">
-      <PictureAsPdfIcon fontSize="large" />
+      <LocalIcon icon="picture-as-pdf-rounded" width={32} height={32} />
     </div>
   );
 };

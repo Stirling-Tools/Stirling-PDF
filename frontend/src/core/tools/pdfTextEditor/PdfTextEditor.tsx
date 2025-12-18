@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileSelection, useFileManagement, useFileContext } from '@app/contexts/FileContext';
@@ -1680,7 +1680,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       id: WORKBENCH_VIEW_ID,
       workbenchId: WORKBENCH_ID,
       label: viewLabel,
-      icon: <DescriptionIcon fontSize="small" />,
+      icon: <LocalIcon icon="description-rounded" width={20} height={20} />,
       component: PdfTextEditorView,
     });
     setLeftPanelView('hidden');

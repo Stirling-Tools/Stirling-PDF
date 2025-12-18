@@ -11,7 +11,7 @@ import {
   Modal
 } from '@mantine/core';
 import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
-import CheckIcon from '@mui/icons-material/Check';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import ToolConfigurationModal from '@app/components/tools/automate/ToolConfigurationModal';
 import ToolList from '@app/components/tools/automate/ToolList';
@@ -196,7 +196,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         {/* Save Button */}
         <Button
-          leftSection={<CheckIcon />}
+          leftSection={<LocalIcon icon="check-rounded" width={24} height={24} />}
           onClick={saveAutomation}
           disabled={!canSaveAutomation()}
           fullWidth

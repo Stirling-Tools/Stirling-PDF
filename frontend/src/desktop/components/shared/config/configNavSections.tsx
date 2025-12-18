@@ -23,7 +23,7 @@ export const useConfigNavSections = (
       {
         key: 'connectionMode',
         label: t('settings.connection.title', 'Connection Mode'),
-        icon: 'cloud-rounded',
+        icon: 'cloud',
         component: <ConnectionSettings />,
       },
     ],
@@ -53,7 +53,7 @@ export const createConfigNavSections = (
       {
         key: 'connectionMode',
         label: 'Connection Mode',
-        icon: 'cloud-rounded',
+        icon: 'cloud',
         component: <ConnectionSettings />,
       },
     ],

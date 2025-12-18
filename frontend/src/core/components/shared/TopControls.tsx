@@ -2,10 +2,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import rainbowStyles from '@app/styles/rainbow.module.css';
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import GridViewIcon from "@mui/icons-material/GridView";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
 import { PageEditorFileDropdown } from '@app/components/shared/PageEditorFileDropdown';
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
@@ -55,7 +52,7 @@ const createViewOptions = (
         {switchingTo === "viewer" ? (
           <Loader size="sm" />
         ) : (
-          <InsertDriveFileIcon fontSize="medium" />
+          <LocalIcon icon="article-rounded" width={24} height={24} />
         )}
       </div>
     ),
@@ -84,7 +81,7 @@ const createViewOptions = (
         {switchingTo === "pageEditor" ? (
           <Loader size="sm" />
         ) : (
-          <GridViewIcon fontSize="medium" />
+          <LocalIcon icon="grid-view-rounded" width={24} height={24} />
         )}
       </div>
     ),
@@ -94,7 +91,7 @@ const createViewOptions = (
   const fileEditorOption = {
     label: (
       <div style={viewOptionStyle}>
-        {switchingTo === "fileEditor" ? <Loader size="sm" /> : <FolderIcon fontSize="medium" />}
+        {switchingTo === "fileEditor" ? <Loader size="sm" /> : <LocalIcon icon="folder-rounded" width={24} height={24} />}
       </div>
     ),
     value: "fileEditor",
@@ -114,7 +111,7 @@ const createViewOptions = (
           {switchingTo === view.workbenchId ? (
             <Loader size="sm" />
           ) : (
-            view.icon || <PictureAsPdfIcon fontSize="medium" />
+            view.icon || <LocalIcon icon="picture-as-pdf-rounded" width={24} height={24} />
           )}
           <span>{view.label}</span>
         </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Stack, Text, Group, Button, Box, Popover, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface FormatOption {
   value: string;
@@ -93,7 +93,7 @@ const GroupedFormatDropdown = ({
             <Text size="sm" c={value ? undefined : 'dimmed'}>
               {selectedLabel}
             </Text>
-            <KeyboardArrowDownIcon
+            <LocalIcon icon="keyboard-arrow-down-rounded"
               style={{
                 fontSize: '1rem',
                 transform: dropdownOpened ? 'rotate(180deg)' : 'rotate(0deg)',

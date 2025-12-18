@@ -1,9 +1,6 @@
 import React from 'react';
 import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import AddIcon from '@mui/icons-material/Add';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import FitText from '@app/components/shared/FitText';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
@@ -117,7 +114,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               color: 'var(--mantine-color-dimmed)',
             }}
           >
-            <DragIndicatorIcon fontSize="small" />
+            <LocalIcon icon="drag-indicator" width={20} height={20} />
           </div>
           <Checkbox
             checked={file.isSelected}
@@ -174,7 +171,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             <LocalIcon icon="dashboard-customize-rounded" width="1.4rem" height="1.4rem" />
           )}
           <span className="ph-no-capture">{selectedCount}/{totalCount} files selected</span>
-          <KeyboardArrowDownIcon fontSize="small" />
+          <LocalIcon icon="keyboard-arrow-down-rounded" width={20} height={20} />
         </div>
       </Menu.Target>
       <Menu.Dropdown className="ph-no-capture" style={{
@@ -222,7 +219,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           }}
         >
           <Group gap="xs" style={{ width: '100%' }}>
-            <AddIcon fontSize="small" style={{ color: 'var(--mantine-color-text)' }} />
+            <LocalIcon icon="add-rounded" width={20} height={20} style={{ color: 'var(--mantine-color-text)' }} />
             <Text size="sm" fw={500} style={{ color: 'var(--mantine-color-text)' }} className="ph-no-capture">
               Add File
             </Text>

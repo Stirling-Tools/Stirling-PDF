@@ -11,7 +11,7 @@ import rainbowStyles from '@app/styles/rainbow.module.css';
 import { ActionIcon, ScrollArea } from '@mantine/core';
 import { ToolId } from '@app/types/toolId';
 import { useIsMobile } from '@app/hooks/useIsMobile';
-import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from '@app/components/tools/FullscreenToolSurface';
 import { useToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
@@ -151,8 +151,10 @@ export default function ToolPanel() {
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"
                 >
-                  <DoubleArrowIcon
-                    fontSize="small"
+                  <LocalIcon
+                    icon="double-arrow-rounded"
+                    width={20}
+                    height={20}
                     style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}
                   />
                 </ActionIcon>

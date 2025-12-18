@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
-import SettingsIcon from "@mui/icons-material/Settings";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
@@ -39,7 +38,7 @@ export default function AutomationSelection({
     <Stack gap="xs">
       <AutomationEntry
         title={t("automate.selection.createNew.title", "Create New Automation")}
-        badgeIcon={AddCircleOutline}
+        badgeIcon={() => <LocalIcon icon="add-circle-outline-rounded" width={24} height={24} />}
         operations={[]}
         onClick={onCreateNew}
         keepIconColor={true}
@@ -47,13 +46,13 @@ export default function AutomationSelection({
       />
       {/* Saved Automations */}
       {savedAutomations.map((automation) => {
-        const IconComponent = automation.icon ? iconMap[automation.icon as keyof typeof iconMap] : SettingsIcon;
+        const IconComponent = automation.icon ? iconMap[automation.icon as keyof typeof iconMap] : () => <LocalIcon icon="settings-rounded" width={24} height={24} />;
         return (
           <AutomationEntry
             key={automation.id}
             title={automation.name}
             description={automation.description}
-            badgeIcon={IconComponent || SettingsIcon}
+            badgeIcon={IconComponent || <LocalIcon icon="settings-rounded" width={20} height={20} />}
             operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
             onClick={() => onRun(automation)}
             showMenu={true}

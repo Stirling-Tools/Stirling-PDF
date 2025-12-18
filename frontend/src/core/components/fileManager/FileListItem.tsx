@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
-import HistoryIcon from '@mui/icons-material/History';
-import RestoreIcon from '@mui/icons-material/Restore';
-import UnarchiveIcon from '@mui/icons-material/Unarchive';
-import CloseIcon from '@mui/icons-material/Close';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '@app/utils/fileUtils';
 import { FileId, StirlingFileStub } from '@app/types/fileContext';
@@ -168,7 +162,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   pointerEvents: shouldShowHovered ? 'auto' : 'none'
                 }}
               >
-                <MoreVertIcon style={{ fontSize: 20 }} />
+                <LocalIcon icon="more-vert" width={20} height={20} />
               </ActionIcon>
             </Menu.Target>
 
@@ -177,7 +171,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isActive && (
                 <>
                   <Menu.Item
-                    leftSection={<CloseIcon style={{ fontSize: 16 }} />}
+                    leftSection={<LocalIcon icon="close-rounded" width={16} height={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFiles([file.id]);
@@ -191,7 +185,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {onDownload && (
                 <Menu.Item
-                  leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                  leftSection={<LocalIcon icon="download-rounded" width={16} height={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownload();
@@ -206,7 +200,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 <>
                   <Menu.Item
                     leftSection={
-                        <HistoryIcon style={{ fontSize: 16 }} />
+                        <LocalIcon icon="history-rounded" width={16} height={16} />
                     }
                     onClick={(e) => {
                       e.stopPropagation();
@@ -228,7 +222,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isHistoryFile && (
                 <>
                   <Menu.Item
-                    leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
+                    leftSection={<LocalIcon icon="restore-from-trash-rounded" width={16} height={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
@@ -243,7 +237,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isZipFile && !isHistoryFile && (
                 <>
                   <Menu.Item
-                    leftSection={<UnarchiveIcon style={{ fontSize: 16 }} />}
+                    leftSection={<LocalIcon icon="unarchive-rounded" width={16} height={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onUnzipFile(file);
@@ -256,7 +250,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               )}
 
               <Menu.Item
-                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                leftSection={<LocalIcon icon="delete-rounded" width={16} height={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove();

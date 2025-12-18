@@ -1,7 +1,6 @@
 import { Modal, Text, Group, Button, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ScheduleIcon from '@mui/icons-material/Schedule';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface RestartConfirmationModalProps {
@@ -49,14 +48,14 @@ export default function RestartConfirmationModal({
         <Group justify="flex-end" gap="sm">
           <Button
             variant="default"
-            leftSection={<ScheduleIcon style={{ fontSize: 16 }} />}
+            leftSection={<LocalIcon icon="schedule-rounded" width={16} height={16} />}
             onClick={onClose}
           >
             {t('admin.settings.restart.later', 'Restart Later')}
           </Button>
           <Button
             color="blue"
-            leftSection={<RefreshIcon style={{ fontSize: 16 }} />}
+            leftSection={<LocalIcon icon="refresh-rounded" width={16} height={16} />}
             onClick={onRestart}
           >
             {t('admin.settings.restart.now', 'Restart Now')}

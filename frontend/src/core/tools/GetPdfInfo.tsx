@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import LinkIcon from '@mui/icons-material/Link';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Stack, Group, Divider, Text, UnstyledButton } from '@mantine/core';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
@@ -41,7 +40,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
 
   const REPORT_VIEW_ID = 'getPdfInfoReport';
   const REPORT_WORKBENCH_ID = 'custom:getPdfInfoReport' as const;
-  const reportIcon = useMemo(() => <PictureAsPdfIcon fontSize="small" />, []);
+  const reportIcon = useMemo(() => <LocalIcon icon="picture-as-pdf-rounded" width={20} height={20} />, []);
 
   const base = useBaseTool(
     'getPdfInfo',
@@ -134,7 +133,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
                   style={{ width: '100%', textAlign: 'left', padding: '8px 4px' }}
                 >
                   <Group justify="flex-start" gap="sm">
-                    <LinkIcon fontSize="small" style={{ opacity: 0.7 }} />
+                    <LocalIcon icon="link-rounded" width={20} height={20} style={{ opacity: 0.7 }} />
                     <Text size="md" c="dimmed">
                       {t(c.labelKey, c.fallback)}
                     </Text>

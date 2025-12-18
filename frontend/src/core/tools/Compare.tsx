@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import CompareRoundedIcon from '@mui/icons-material/CompareRounded';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Box, Group, Stack, Text, Button, Modal, ActionIcon } from '@mantine/core';
-import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
-import AddIcon from '@mui/icons-material/Add';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
@@ -54,7 +52,7 @@ const Compare = (props: BaseToolProps) => {
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
 
-  const compareIcon = useMemo(() => <CompareRoundedIcon fontSize="small" />, []);
+  const compareIcon = useMemo(() => <LocalIcon icon="compare-rounded" width={20} height={20} />, []);
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const performClearSelected = useCallback(() => {
@@ -366,7 +364,7 @@ const Compare = (props: BaseToolProps) => {
                   }}
                   style={{ flexShrink: 0 }}
                 >
-                  <AddIcon fontSize="small" />
+                  <LocalIcon icon="add-rounded" width={20} height={20} />
                 </ActionIcon>
               )}
             </Box>
@@ -516,7 +514,7 @@ const Compare = (props: BaseToolProps) => {
                   justifyContent: 'center',
                 }}
               >
-                <SwapVertRoundedIcon fontSize="medium" />
+                <LocalIcon icon="swap-vert-rounded" width={24} height={24} />
               </Button>
             </Box>
             )}

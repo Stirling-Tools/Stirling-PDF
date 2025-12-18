@@ -11,7 +11,8 @@ export default defineConfig({
     exclude: [
       'node_modules/',
       'src/**/*.spec.ts', // Exclude Playwright E2E tests
-      'src/tests/test-fixtures/**'
+      'src/tests/test-fixtures/**',
+      'src/assets/**' // Exclude generated icon files
     ],
     testTimeout: 10000,
     hookTimeout: 10000,
@@ -22,7 +23,8 @@ export default defineConfig({
         'src/core/setupTests.ts',
         '**/*.d.ts',
         'src/tests/test-fixtures/**',
-        'src/**/*.spec.ts'
+        'src/**/*.spec.ts',
+        'src/assets/**' // Exclude generated icon files
       ]
     },
     projects: [

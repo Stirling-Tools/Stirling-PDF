@@ -3,7 +3,6 @@ import { Box, ScrollArea, Text, ActionIcon, Loader, Stack, TextInput, Button } f
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { PdfBookmarkObject, PdfActionType } from '@embedpdf/models';
-import BookmarksIcon from '@mui/icons-material/BookmarksRounded';
 import '@app/components/viewer/BookmarkSidebar.css';
 
 interface BookmarkSidebarProps {
@@ -442,7 +441,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
       <div className="bookmark-sidebar__header">
         <div className="bookmark-sidebar__header-title">
           <span className="bookmark-sidebar__header-icon">
-            <BookmarksIcon />
+            <LocalIcon icon="bookmarks-rounded" width={24} height={24} />
           </span>
           <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
             Bookmarks

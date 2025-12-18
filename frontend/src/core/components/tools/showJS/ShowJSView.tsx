@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActionIcon, Box, Button, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
-import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import "@app/components/tools/showJS/ShowJSView.css";
 import { useTranslation } from "react-i18next";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -153,7 +150,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               }}
               aria-label={t("common.previous", "Previous")}
             >
-              <ArrowUpwardRoundedIcon fontSize="small" />
+              <LocalIcon icon="arrow-upward-rounded" width={20} height={20} />
             </ActionIcon>
             <ActionIcon
               size="sm"
@@ -163,7 +160,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               }}
               aria-label={t("common.next", "Next")}
             >
-              <ArrowDownwardRoundedIcon fontSize="small" />
+              <LocalIcon icon="arrow-downward-rounded" width={20} height={20} />
             </ActionIcon>
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
@@ -173,7 +170,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               className="showjs-outline-button"
               onClick={handleDownload}
               disabled={!downloadUrl}
-              leftSection={<DownloadRoundedIcon fontSize="small" />}
+              leftSection={<LocalIcon icon="download-rounded" width={20} height={20} />}
             >
               {terminology.download}
             </Button>
@@ -182,7 +179,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               variant="subtle"
               className="showjs-outline-button"
               onClick={handleCopy}
-              leftSection={<ContentCopyRoundedIcon fontSize="small" />}
+              leftSection={<LocalIcon icon="content-copy-rounded" width={20} height={20} />}
             >
               {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
             </Button>

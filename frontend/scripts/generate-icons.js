@@ -30,16 +30,21 @@ function scanForUsedIcons() {
   // Recursively scan all .tsx and .ts files
   function scanDirectory(dir) {
     const files = fs.readdirSync(dir);
-    
+
     files.forEach(file => {
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
-      
+
       if (stat.isDirectory()) {
+        // Skip the assets directory to avoid scanning generated files
+        if (file === 'assets') {
+          debug(`  Skipping assets directory: ${path.relative(srcDir, filePath)}`);
+          return;
+        }
         scanDirectory(filePath);
       } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
         const content = fs.readFileSync(filePath, 'utf8');
-        
+
         // Match LocalIcon usage: <LocalIcon icon="icon-name" ...>
         const localIconMatches = content.match(/<LocalIcon\s+[^>]*icon="([^"]+)"/g);
         if (localIconMatches) {
@@ -51,7 +56,19 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
+        // Match React.createElement(LocalIcon, { icon: 'icon-name', ... })
+        const createElementMatches = content.match(/React\.createElement\(LocalIcon,\s*\{[^}]*icon:\s*['"]([^'"]+)['"]/g);
+        if (createElementMatches) {
+          createElementMatches.forEach(match => {
+            const iconMatch = match.match(/icon:\s*['"]([^'"]+)['"]/);
+            if (iconMatch) {
+              usedIcons.add(iconMatch[1]);
+              debug(`  Found (createElement): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
+
         // Match old material-symbols-rounded spans: <span className="material-symbols-rounded">icon-name</span>
         const spanMatches = content.match(/<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g);
         if (spanMatches) {
@@ -64,7 +81,7 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
         // Match Icon component usage: <Icon icon="material-symbols:icon-name" ...>
         const iconMatches = content.match(/<Icon\s+[^>]*icon="material-symbols:([^"]+)"/g);
         if (iconMatches) {
@@ -73,6 +90,25 @@ function scanForUsedIcons() {
             if (iconMatch) {
               usedIcons.add(iconMatch[1]);
               debug(`  Found (Icon): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
+
+        // Match icon strings with common Material Symbols suffixes anywhere in the code
+        // Pattern: any string ending with -rounded, -outline, or -sharp that looks like an icon name
+        const iconStringMatches = content.match(/['"]([a-z][a-z0-9-]*(?:-rounded|-outline|-sharp))['"][,\s})]/g);
+        if (iconStringMatches) {
+          iconStringMatches.forEach(match => {
+            const iconMatch = match.match(/['"]([a-z][a-z0-9-]*(?:-rounded|-outline|-sharp))['"][,\s})]/);
+            if (iconMatch && iconMatch[1]) {
+              const iconName = iconMatch[1];
+              // Skip common false positives (CSS classes, file paths, etc.)
+              if (!iconName.includes('/') &&
+                  !iconName.startsWith('--') &&
+                  iconName.length < 50) {
+                usedIcons.add(iconName);
+                debug(`  Found (string): ${iconName} in ${path.relative(srcDir, filePath)}`);
+              }
             }
           });
         }

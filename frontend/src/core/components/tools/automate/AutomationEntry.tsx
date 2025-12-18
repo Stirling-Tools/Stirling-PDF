@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Group, Text, ActionIcon, Menu, Button, Box } from '@mantine/core';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ToolIcon } from '@app/components/shared/ToolIcon';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -198,14 +195,14 @@ export default function AutomationEntry({
                 pointerEvents: shouldShowMenu ? 'auto' : 'none'
               }}
             >
-              <MoreVertIcon style={{ fontSize: 20 }} />
+              <LocalIcon icon="more-vert" width={20} height={20} />
             </ActionIcon>
           </Menu.Target>
 
           <Menu.Dropdown>
             {onCopy && (
               <Menu.Item
-                leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
+                leftSection={<LocalIcon icon="content-copy-rounded" width={16} height={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onCopy();
@@ -216,7 +213,7 @@ export default function AutomationEntry({
             )}
             {onEdit && (
               <Menu.Item
-                leftSection={<EditIcon style={{ fontSize: 16 }} />}
+                leftSection={<LocalIcon icon="edit-rounded" width={16} height={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit();
@@ -227,7 +224,7 @@ export default function AutomationEntry({
             )}
             {onDelete && (
               <Menu.Item
-                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                leftSection={<LocalIcon icon="delete-rounded" width={16} height={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
