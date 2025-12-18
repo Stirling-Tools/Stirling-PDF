@@ -4103,6 +4103,7 @@ editStampHint = "To change the image, delete this stamp and add a new one."
 editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Search PDF"

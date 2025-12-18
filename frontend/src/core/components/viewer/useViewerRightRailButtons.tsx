@@ -58,9 +58,6 @@ export function useViewerRightRailButtons() {
   const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    const exportState = viewer.getExportState();
-    const canExport = Boolean(exportState?.canExport);
-
     const buttons: RightRailButtonWithAction[] = [
       {
         id: 'viewer-search',
