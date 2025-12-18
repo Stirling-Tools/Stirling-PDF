@@ -94,6 +94,7 @@ public class InitialSetup {
         }
         GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
+        applicationProperties.getAutomaticallyGenerated().setIsNewServer(isNewServer);
     }
 
     public static boolean isNewServer() {

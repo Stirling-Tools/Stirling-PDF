@@ -1,9 +1,10 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -107,7 +108,8 @@ class CertSignControllerTest {
             derCertBytes = baos.toByteArray();
         }
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+        lenient()
+                .when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(
                         invocation -> {
                             MultipartFile file = invocation.getArgument(0);
@@ -165,6 +167,31 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(response.getBody().length > 0);
+    }
+
+    @Test
+    void testSignPdfWithMissingPkcs12FileThrowsError() {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PFX");
+        request.setPassword("password");
+        request.setShowSignature(false);
+        request.setReason("test");
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request));
+
+        assertTrue(exception.getMessage().contains("PKCS12 keystore"));
     }
 
     @Test
