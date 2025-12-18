@@ -284,14 +284,26 @@ export class AuthService {
             headers['Authorization'] = `Bearer ${token}`;
           }
 
-          await axios
-            .post(`${base}/api/v1/auth/logout`, null, { headers, withCredentials: true })
-            .catch((err) => {
-              console.warn('[Desktop AuthService] Backend logout failed via /api/v1/auth/logout', err);
-            });
+          // Treat 401/403 as benign (session already expired)
+          const safePost = async (url: string) => {
+            try {
+              const resp = await axios.post(url, null, {
+                headers,
+                withCredentials: true,
+                validateStatus: () => true, // handle status manually
+              });
+              if (resp.status >= 400 && ![401, 403].includes(resp.status)) {
+                console.warn(`[Desktop AuthService] Logout call to ${url} failed: ${resp.status}`);
+              }
+            } catch (err) {
+              console.warn(`[Desktop AuthService] Backend logout failed via ${url}`, err);
+            }
+          };
+
+          await safePost(`${base}/api/v1/auth/logout`);
 
           // Also attempt framework logout endpoint to clear cookies/sessions
-          await axios.post(`${base}/logout`, null, { withCredentials: true }).catch(() => {});
+          await safePost(`${base}/logout`);
         }
       } catch (err) {
         console.warn('[Desktop AuthService] Failed to call backend logout endpoint', err);
@@ -440,6 +452,14 @@ export class AuthService {
 
   async initializeAuthState(): Promise<void> {
     console.log('[Desktop AuthService] Initializing auth state...');
+    // If we are on the login/setup screen, don't auto-restore a previous session; clear instead
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (path.startsWith('/login') || path.startsWith('/setup')) {
+      console.log('[Desktop AuthService] On login/setup path, clearing any cached auth');
+      await this.logout();
+      return;
+    }
+
     const token = await this.getAuthToken();
     const userInfo = await this.getUserInfo();
 
@@ -455,6 +475,9 @@ export class AuthService {
       console.log('[Desktop AuthService] No token or user info found');
       this.setAuthStatus('unauthenticated', null);
       console.log('[Desktop AuthService] Auth state initialized as unauthenticated');
+
+      // Defensive: ensure any partial tokens are purged to prevent auto-login loops
+      await this.clearTokenEverywhere().catch(() => {});
     }
   }
 
