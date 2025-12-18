@@ -39,7 +39,7 @@ function scanForUsedIcons() {
         scanDirectory(filePath);
       } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
         const content = fs.readFileSync(filePath, 'utf8');
-        
+
         // Match LocalIcon usage: <LocalIcon icon="icon-name" ...>
         const localIconMatches = content.match(/<LocalIcon\s+[^>]*icon="([^"]+)"/g);
         if (localIconMatches) {
@@ -51,7 +51,7 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
         // Match old material-symbols-rounded spans: <span className="material-symbols-rounded">icon-name</span>
         const spanMatches = content.match(/<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g);
         if (spanMatches) {
@@ -64,7 +64,7 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
         // Match Icon component usage: <Icon icon="material-symbols:icon-name" ...>
         const iconMatches = content.match(/<Icon\s+[^>]*icon="material-symbols:([^"]+)"/g);
         if (iconMatches) {
@@ -75,6 +75,23 @@ function scanForUsedIcons() {
               debug(`  Found (Icon): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
             }
           });
+        }
+
+        // Match icon strings in icon configuration files (iconMap.tsx, toolsTaxonomy.ts)
+        // Only scan these specific files to avoid false positives
+        if (filePath.includes('iconMap.tsx') || filePath.includes('toolsTaxonomy.ts')) {
+          // Pattern: : 'icon-name' or : "icon-name" (object value assignment)
+          const configIconMatches = content.match(/:\s*['"]([a-z][a-z0-9-]*(?:-rounded|-outline|-sharp)?)['"][,\s}]/g);
+          if (configIconMatches) {
+            configIconMatches.forEach(match => {
+              const iconMatch = match.match(/:\s*['"]([a-z][a-z0-9-]*(?:-rounded|-outline|-sharp)?)['"][,\s}]/);
+              if (iconMatch && iconMatch[1]) {
+                const iconName = iconMatch[1];
+                usedIcons.add(iconName);
+                debug(`  Found (config): ${iconName} in ${path.relative(srcDir, filePath)}`);
+              }
+            });
+          }
         }
       }
     });
