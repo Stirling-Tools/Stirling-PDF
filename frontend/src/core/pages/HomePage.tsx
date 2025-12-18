@@ -16,12 +16,12 @@ import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import QuickAccessBar from "@app/components/shared/QuickAccessBar";
-
-// Lazy-load Workbench - contains Viewer and PageEditor (heavy components)
-const Workbench = lazy(() => import("@app/components/layout/Workbench"));
 import RightRail from "@app/components/shared/RightRail";
-import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
+
+// Lazy-load heavy components that aren't needed on initial render
+const Workbench = lazy(() => import("@app/components/layout/Workbench"));
+const FileManager = lazy(() => import("@app/components/FileManager"));
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 
@@ -272,7 +272,9 @@ export default function HomePage() {
               <span className="mobile-bottom-button-label">{t('quickAccess.config', 'Config')}</span>
             </button>
           </div>
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <Suspense fallback={null}>
+            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          </Suspense>
           <AppConfigModal
             opened={configModalOpen}
             onClose={() => setConfigModalOpen(false)}
@@ -291,7 +293,9 @@ export default function HomePage() {
             <Workbench />
           </Suspense>
           <RightRail />
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <Suspense fallback={null}>
+            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          </Suspense>
         </Group>
       )}
     </div>
