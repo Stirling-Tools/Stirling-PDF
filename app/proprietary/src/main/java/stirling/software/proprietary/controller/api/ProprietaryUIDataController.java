@@ -210,7 +210,7 @@ public class ProprietaryUIDataController {
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
         if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
-            String samlIdp = saml2.getProvider();
+            String samlIdp = saml2.getIdpIssuer();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             // For SAML, we need to use the backend URL directly, not a relative path
