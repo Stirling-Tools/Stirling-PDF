@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, Suspense } from 'react';
 import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -223,7 +223,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
               </ActionIcon>
             </div>
             <div className="modal-body">
-              {activeComponent}
+              <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+                {activeComponent}
+              </Suspense>
             </div>
           </div>
         </div>
