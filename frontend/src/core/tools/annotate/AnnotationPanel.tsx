@@ -546,9 +546,6 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   );
 
   const selectedDerivedTool = selectedAnn?.object ? deriveToolFromAnnotation(selectedAnn.object) : undefined;
-  const selectedIsTextMarkup =
-    (selectedAnn?.object?.type && [9, 10, 11, 12].includes(selectedAnn.object.type)) ||
-    (selectedDerivedTool ? ['highlight', 'underline', 'strikeout', 'squiggly'].includes(selectedDerivedTool) : false);
 
   const selectedAnnotationControls = selectedAnn && (() => {
     const rawType = selectedAnn.object?.type;
@@ -888,7 +885,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if ([4, 8].includes(type) || toolId === 'line' || toolId === 'polyline') {
+    if ((type !== undefined && [4, 8].includes(type)) || toolId === 'line' || toolId === 'polyline') {
       return (
         <Paper withBorder p="sm" radius="md">
           <Stack gap="sm">
@@ -944,7 +941,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if ([5, 6, 7].includes(type) || toolId === 'square' || toolId === 'circle' || toolId === 'polygon') {
+    if ((type !== undefined && [5, 6, 7].includes(type)) || toolId === 'square' || toolId === 'circle' || toolId === 'polygon') {
       const shapeName = type === 5 ? 'Square' : type === 6 ? 'Circle' : 'Polygon';
       const strokeColorValue = selectedAnn.object?.strokeColor ?? shapeStrokeColor;
       const fillColorValue = selectedAnn.object?.color ?? shapeFillColor;
