@@ -81,6 +81,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     libc6-compat \
     libreoffice \
     ghostscript \
+    imagemagick \
     fontforge \
     # pdftohtml
     poppler-utils \

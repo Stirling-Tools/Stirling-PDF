@@ -58,6 +58,8 @@ security:
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
+    # IMPORTANT: For SAML setup, download your SP metadata from the BACKEND URL: http://localhost:8080/saml2/service-provider-metadata/{registrationId}
+    # Do NOT use the frontend dev server URL (localhost:5173) as it will generate incorrect ACS URLs. Always use the backend URL (localhost:8080) for SAML configuration.
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
@@ -126,13 +128,15 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
+  enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
-  corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS.
-  frontendUrl: '' # Base URL for frontend (e.g. 'https://pdf.example.com'). Used for generating invite links in emails. If empty, falls back to backend URL.
+  corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
+  backendUrl: '' # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
+  frontendUrl: '' # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
     organizationName: Stirling-PDF # Organization name for generated certificates
@@ -178,23 +182,6 @@ system:
   databaseBackup:
     cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
-stirling:
-  pdf:
-    fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
-    json:
-      font-normalization:
-        enabled: false # IMPORTANT: Disable to preserve ToUnicode CMaps for correct font rendering. Ghostscript strips Unicode mappings from CID fonts.
-      cff-converter:
-        enabled: true # Wrap CFF/Type1C fonts as OpenType-CFF for browser compatibility
-        method: python # Converter method: 'python' (fontTools, recommended - wraps as OTF), 'fontforge' (legacy - converts to TTF, may hang on CID fonts)
-        python-command: /opt/venv/bin/python3 # Python interpreter path
-        python-script: /scripts/convert_cff_to_ttf.py # Path to font wrapping script
-        fontforge-command: fontforge # Override if FontForge is installed under a different name/path
-      type3:
-        library:
-          enabled: true # Match common Type3 fonts against the built-in library of converted programs
-          index: classpath:/type3/library/index.json # Override to point at a custom index.json (supports http:, file:, classpath:)
-
 ui:
   appNameNavbar: '' # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
@@ -223,6 +210,7 @@ processExecutor:
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
+    imageMagickSessionLimit: 4
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
@@ -232,7 +220,26 @@ processExecutor:
     weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
+    imageMagickTimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
+
+pdfEditor:
+  fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
+  cache:
+    max-bytes: -1 # Max in-memory cache size in bytes; -1 disables byte cap
+    max-percent: 20 # Max in-memory cache as % of JVM max; used when max-bytes <= 0
+  font-normalization:
+    enabled: false # IMPORTANT: Disable to preserve ToUnicode CMaps for correct font rendering. Ghostscript strips Unicode mappings from CID fonts.
+  cff-converter:
+    enabled: true # Wrap CFF/Type1CFF fonts as OpenType-CFF for browser compatibility
+    method: python # Converter method: 'python' (fontTools, recommended - wraps as OTF), 'fontforge' (legacy - converts to TTF, may hang on CID fonts)
+    python-command: /opt/venv/bin/python3 # Python interpreter path
+    python-script: /scripts/convert_cff_to_ttf.py # Path to font wrapping script
+    fontforge-command: fontforge # Override if FontForge is installed under a different name/path
+  type3:
+    library:
+      enabled: true # Match common Type3 fonts against the built-in library of converted programs
+      index: classpath:/type3/library/index.json # Override to point at a custom index.json (supports http:, file:, classpath:)
