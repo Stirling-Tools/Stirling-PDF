@@ -22,8 +22,9 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 // Lazy-load heavy components that aren't needed on initial render
 const Workbench = lazy(() => import("@app/components/layout/Workbench"));
 const FileManager = lazy(() => import("@app/components/FileManager"));
+const AppConfigModal = lazy(() => import("@app/components/shared/AppConfigModal"));
+
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import AppConfigModal from "@app/components/shared/AppConfigModal";
 
 import "@app/pages/HomePage.css";
 
@@ -275,10 +276,12 @@ export default function HomePage() {
           <Suspense fallback={null}>
             <FileManager selectedTool={selectedTool as any /* FIX ME */} />
           </Suspense>
-          <AppConfigModal
-            opened={configModalOpen}
-            onClose={() => setConfigModalOpen(false)}
-          />
+          <Suspense fallback={null}>
+            <AppConfigModal
+              opened={configModalOpen}
+              onClose={() => setConfigModalOpen(false)}
+            />
+          </Suspense>
         </div>
       ) : (
         <Group
