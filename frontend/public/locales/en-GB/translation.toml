@@ -312,10 +312,10 @@ yamlAdvert = "Stirling PDF Pro supports YAML configuration files and other SSO f
 ssoAdvert = "Looking for more user management features? Check out Stirling PDF Pro"
 
 [analytics]
-title = "Do you want make Stirling PDF better?"
-paragraph1 = "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents."
+title = "Do you want to help make Stirling PDF better?"
+paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
-learnMore = "Learn more"
+learnMore = "Learn more about our analytics"
 enable = "Enable analytics"
 disable = "Disable analytics"
 settings = "You can change the settings for analytics in the config/settings.yml file"
@@ -339,6 +339,10 @@ security = "Sign & Security"
 advance = "Advanced"
 edit = "View & Edit"
 popular = "Popular"
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
 
 [settings.preferences]
 title = "Preferences"
@@ -435,6 +439,25 @@ latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Keyboard Shortcuts"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
@@ -488,11 +511,16 @@ low = "Low"
 title = "Change Credentials"
 header = "Update Your Account Details"
 changePassword = "You are using default login credentials. Please enter a new password"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "New Username"
 oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -3703,6 +3731,16 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Compress Settings Overview"
 
@@ -3719,6 +3757,10 @@ bullet2 = "Higher values reduce file size"
 [compress.tooltip.grayscale]
 title = "Grayscale"
 text = "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
+
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 
 [compress.error]
 failed = "An error occurred while compressing the PDF."
@@ -4038,12 +4080,20 @@ settings = "Settings"
 adminSettings = "Admin Settings"
 allTools = "Tools"
 reader = "Reader"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tools Tour"
 toolsTourDesc = "Learn what the tools can do"
 adminTour = "Admin Tour"
 adminTourDesc = "Explore admin settings & features"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Error"
@@ -5070,6 +5120,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
@@ -5236,6 +5287,16 @@ finish = "Finish"
 startTour = "Start Tour"
 startTourDescription = "Take a guided tour of Stirling PDF's key features"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Welcome to Stirling PDF!"
 description = "Would you like to take a quick 1-minute tour to learn the key features and how to get started?"
@@ -5255,6 +5316,10 @@ skipForNow = "Skip for now"
 download = "Download →"
 showMeAround = "Show me around"
 skipTheTour = "Skip the tour"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Skip for now"
@@ -5569,6 +5634,28 @@ contactSales = "Contact Sales"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
 maxUsers = "Max Users"
 upTo = "Up to"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "month"
@@ -5772,6 +5859,8 @@ notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Error loading audit system"
