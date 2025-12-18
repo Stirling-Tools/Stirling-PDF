@@ -31,6 +31,24 @@ export default defineConfig(({ mode }) => {
         ]
       })
     ],
+    build: {
+      // Increase chunk size warning limit for desktop builds
+      // Desktop apps don't have network download concerns
+      chunkSizeWarningLimit: isDesktopMode ? 5000 : 500,
+      rollupOptions: {
+        output: {
+          // Manual chunks for better code splitting
+          manualChunks: {
+            // Large UI libraries
+            'vendor-ui': ['@mantine/core', '@mantine/hooks', '@mantine/dates', '@mantine/dropzone'],
+            // React and related
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            // Other large dependencies
+            'vendor-utils': ['jszip'],
+          },
+        },
+      },
+    },
     server: {
       host: true,
       // make sure this port matches the devUrl port in tauri.conf.json file
