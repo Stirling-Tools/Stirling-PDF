@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig(({ mode }) => {
   // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
@@ -17,6 +18,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+    visualizer({
+      open: true,
+      filename: "stats.html"
+    }),
       react(),
       tsconfigPaths({
         projects: [tsconfigProject],

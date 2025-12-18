@@ -150,6 +150,7 @@
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "puppeteer": "^24.25.0",
+    "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.7",
