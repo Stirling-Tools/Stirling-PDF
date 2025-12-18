@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
@@ -15,8 +15,10 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
-import Workbench from "@app/components/layout/Workbench";
 import QuickAccessBar from "@app/components/shared/QuickAccessBar";
+
+// Lazy-load Workbench - contains Viewer and PageEditor (heavy components)
+const Workbench = lazy(() => import("@app/components/layout/Workbench"));
 import RightRail from "@app/components/shared/RightRail";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -218,7 +220,9 @@ export default function HomePage() {
             <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
-                  <Workbench />
+                  <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+                    <Workbench />
+                  </Suspense>
                   <RightRail />
                 </div>
               </div>
@@ -283,7 +287,9 @@ export default function HomePage() {
         >
           <QuickAccessBar ref={quickAccessRef} />
           <ToolPanel />
-          <Workbench />
+          <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+            <Workbench />
+          </Suspense>
           <RightRail />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
