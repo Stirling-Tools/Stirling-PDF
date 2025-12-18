@@ -11,6 +11,8 @@ import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { resetOAuthState } from '@proprietary/auth/oauthStorage';
+import { invoke } from '@tauri-apps/api/core';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -296,6 +298,40 @@ class SpringAuthClient {
 
       // Clean up local storage
       localStorage.removeItem('stirling_jwt');
+      try {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+          .forEach((key) => localStorage.removeItem(key));
+
+        // Clear any cached OAuth redirect/session state
+        resetOAuthState();
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear Supabase/local auth tokens', err);
+      }
+
+      // Clear cookies that might hold refresh/session tokens
+      try {
+        document.cookie.split(';').forEach(cookie => {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+          }
+        });
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear cookies on sign out', err);
+      }
+
+      // If running in the desktop app, also clear persisted desktop credentials
+      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+        try {
+          await invoke('clear_auth_token');
+          await invoke('clear_user_info');
+          console.debug('[SpringAuth] Cleared desktop auth data (keyring + user info)');
+        } catch (desktopError) {
+          console.warn('[SpringAuth] Failed to clear desktop auth data', desktopError);
+        }
+      }
 
       // Notify listeners
       this.notifyListeners('SIGNED_OUT', null);

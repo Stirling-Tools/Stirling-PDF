@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { resetOAuthState } from '@proprietary/auth/oauthStorage';
 import axios from 'axios';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
@@ -112,8 +113,21 @@ export class AuthService {
     this.cachedToken = null;
     console.log('[Desktop AuthService] Cache invalidated');
 
-    await invoke('clear_auth_token');
-    localStorage.removeItem('stirling_jwt');
+    // Best effort: clear Tauri keyring
+    try {
+      await invoke('clear_auth_token');
+      console.log('[Desktop AuthService] Cleared Tauri keyring token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear Tauri keyring token', error);
+    }
+
+    // Best effort: clear web storage
+    try {
+      localStorage.removeItem('stirling_jwt');
+      console.log('[Desktop AuthService] Cleared localStorage token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear localStorage token', error);
+    }
   }
 
   subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
@@ -257,8 +271,63 @@ export class AuthService {
     try {
       console.log('Logging out');
 
+      // Best-effort backend logout so any server-side session/cookies are cleared
+      try {
+        const currentConfig = await connectionModeService.getCurrentConfig().catch(() => null);
+        const serverUrl = currentConfig?.server_config?.url;
+        const token = await this.getAuthToken();
+
+        if (serverUrl) {
+          const base = serverUrl.replace(/\/+$/, '');
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          await axios
+            .post(`${base}/api/v1/auth/logout`, null, { headers, withCredentials: true })
+            .catch((err) => {
+              console.warn('[Desktop AuthService] Backend logout failed via /api/v1/auth/logout', err);
+            });
+
+          // Also attempt framework logout endpoint to clear cookies/sessions
+          await axios.post(`${base}/logout`, null, { withCredentials: true }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('[Desktop AuthService] Failed to call backend logout endpoint', err);
+      }
+
+      // Clear any cookies the backend may have set (e.g., refresh/session)
+      try {
+        document.cookie.split(';').forEach(cookie => {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+          }
+        });
+      } catch (err) {
+        console.warn('[Desktop AuthService] Failed to clear cookies during logout', err);
+      }
+
       // Clear token from all storage locations
       await this.clearTokenEverywhere();
+
+      // Clear any Supabase auth tokens that may persist in localStorage
+      try {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+          .forEach((key) => localStorage.removeItem(key));
+
+        // Clear any stored OAuth redirect state (used by SaaS auth)
+        try {
+          resetOAuthState();
+        } catch (err) {
+          console.warn('[Desktop AuthService] Failed to clear OAuth redirect state', err);
+        }
+      } catch (error) {
+        console.warn('[Desktop AuthService] Failed to clear Supabase tokens', error);
+      }
 
       // Clear user info from Tauri store
       await invoke('clear_user_info');

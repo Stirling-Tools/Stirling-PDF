@@ -79,6 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.debug('[Auth] Signed out successfully');
         setSession(null);
       }
+
+      // In desktop builds, also clear the desktop auth store/keyring to avoid auto-login on reload
+      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+        try {
+          const { authService } = await import('@app/services/authService');
+          await authService.logout();
+        } catch (desktopErr) {
+          console.warn('[Auth] Failed to clear desktop auth state after signOut', desktopErr);
+        }
+      }
     } catch (err) {
       console.error('[Auth] Unexpected error during sign out:', err);
       setError(err as AuthError);
@@ -94,6 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug('[Auth] Initializing auth...');
+        // Force-clear any stale cached token in desktop keyring on startup of auth page to prevent auto-login loops after logout
+        if (typeof window !== 'undefined' && (window as any).__TAURI__ && window.location.pathname.startsWith('/login')) {
+          try {
+            const { authService } = await import('@app/services/authService');
+            await authService.logout();
+          } catch (desktopErr) {
+            console.warn('[Auth] Failed to clear desktop auth state on login page init', desktopErr);
+          }
+        }
 
         // Skip config check entirely - let the app handle login state
         // The config will be fetched by useAppConfig when needed
