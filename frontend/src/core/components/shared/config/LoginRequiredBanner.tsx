@@ -17,7 +17,7 @@ export default function LoginRequiredBanner({ show }: LoginRequiredBannerProps) 
 
   return (
     <Alert
-      icon={<LocalIcon icon="lock-rounded" width={20} height={20} />}
+      icon={<LocalIcon icon="lock" width={20} height={20} />}
       title={t('admin.settings.loginDisabled.title', 'Login Mode Required')}
       color="blue"
       variant="light"

@@ -63,7 +63,7 @@ export default function ToastRenderer() {
                   {/* Icon */}
                   <div className="toast-icon">
                     {t.icon ?? (
-                      <LocalIcon icon={`material-symbols:${getDefaultIconName(t)}`} width={20} height={20} />
+                      <LocalIcon icon={getDefaultIconName(t)} width={20} height={20} />
                     )}
                   </div>
 
@@ -86,7 +86,7 @@ export default function ToastRenderer() {
                         }}
                         className={`toast-button toast-expand-button ${t.isExpanded ? 'toast-expand-button--expanded' : ''}`}
                       >
-                        <LocalIcon icon="material-symbols:expand-more-rounded" />
+                        <LocalIcon icon="expand-more-rounded" />
                       </button>
                     )}
                     <button
@@ -94,7 +94,7 @@ export default function ToastRenderer() {
                       onClick={() => dismiss(t.id)}
                       className="toast-button"
                     >
-                      <LocalIcon icon="material-symbols:close-rounded" width={20} height={20} />
+                      <LocalIcon icon="close-rounded" width={20} height={20} />
                     </button>
                   </div>
                 </div>
