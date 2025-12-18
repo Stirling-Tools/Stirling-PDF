@@ -125,6 +125,22 @@ const Annotate = (_props: BaseToolProps) => {
     setTextColor,
     setTextBackgroundColor,
     setNoteBackgroundColor,
+    setInkColor,
+    setHighlightColor,
+    setHighlightOpacity,
+    setFreehandHighlighterWidth,
+    setUnderlineColor,
+    setUnderlineOpacity,
+    setStrikeoutColor,
+    setStrikeoutOpacity,
+    setSquigglyColor,
+    setSquigglyOpacity,
+    setShapeStrokeColor,
+    setShapeFillColor,
+    setShapeOpacity,
+    setShapeStrokeOpacity,
+    setShapeFillOpacity,
+    setTextAlignment,
   } = styleActions;
 
   useEffect(() => {
@@ -150,22 +166,32 @@ const Annotate = (_props: BaseToolProps) => {
     const historyApi = historyApiRef?.current;
     if (!historyApi) return;
 
-    const updateAvailability = () => {
+    const updateAvailability = () =>
       setHistoryAvailability({
         canUndo: historyApi.canUndo?.() ?? false,
         canRedo: historyApi.canRedo?.() ?? false,
       });
-    };
 
     updateAvailability();
 
-    if (historyApi.subscribe) {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (!historyApi.subscribe) {
+      // Fallback polling in case the history API doesn't support subscriptions
+      interval = setInterval(updateAvailability, 350);
+    } else {
       const unsubscribe = historyApi.subscribe(updateAvailability);
-      if (typeof unsubscribe === 'function') {
-        return () => unsubscribe();
-      }
+      return () => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+        if (interval) clearInterval(interval);
+      };
     }
-  }, [historyApiRef]);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [historyApiRef?.current]);
 
   useEffect(() => {
     if (!viewerContext) return;
@@ -295,6 +321,22 @@ const Annotate = (_props: BaseToolProps) => {
     setTextColor,
     setTextBackgroundColor,
     setNoteBackgroundColor,
+    setInkColor,
+    setHighlightColor,
+    setHighlightOpacity,
+    setFreehandHighlighterWidth,
+    setUnderlineColor,
+    setUnderlineOpacity,
+    setStrikeoutColor,
+    setStrikeoutOpacity,
+    setSquigglyColor,
+    setSquigglyOpacity,
+    setShapeStrokeColor,
+    setShapeFillColor,
+    setShapeOpacity,
+    setShapeStrokeOpacity,
+    setShapeFillOpacity,
+    setTextAlignment,
   });
 
   const steps =

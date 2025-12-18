@@ -6,6 +6,7 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
 import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
+import { DrawingControls } from '@app/components/annotation/shared/DrawingControls';
 import type { AnnotationToolId, AnnotationAPI } from '@app/components/viewer/viewerTypes';
 
 interface StyleState {
@@ -235,7 +236,14 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   const defaultStyleControls = (
     <Paper withBorder p="sm" radius="md">
       <Stack gap="sm">
-        {activeTool === 'stamp' ? (
+        {activeTool === 'select' ? (
+          <>
+            <Text size="sm" fw={600}>{t('annotation.selectAndMove', 'Select and Edit')}</Text>
+            <Text size="xs" c="dimmed">
+              {t('annotation.editSelectDescription', 'Click an existing annotation to edit its color, opacity, text, or size.')}
+            </Text>
+          </>
+        ) : activeTool === 'stamp' ? (
           <>
             <Text size="sm" fw={600}>{t('annotation.stampSettings', 'Stamp Settings')}</Text>
             <ImageUploader
@@ -374,6 +382,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Box>
                 <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
                 <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} />
+              </Box>
+            )}
+
+            {activeTool === 'underline' && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+                <Slider min={10} max={100} value={underlineOpacity} onChange={setUnderlineOpacity} />
               </Box>
             )}
 
@@ -530,10 +545,32 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     </Paper>
   );
 
-  const selectedAnnotationControls = selectedAnn && (() => {
-    const type = selectedAnn.object?.type;
+  const selectedDerivedTool = selectedAnn?.object ? deriveToolFromAnnotation(selectedAnn.object) : undefined;
+  const selectedIsTextMarkup =
+    (selectedAnn?.object?.type && [9, 10, 11, 12].includes(selectedAnn.object.type)) ||
+    (selectedDerivedTool ? ['highlight', 'underline', 'strikeout', 'squiggly'].includes(selectedDerivedTool) : false);
 
-    if ([9, 10, 11, 12].includes(type)) {
+  const selectedAnnotationControls = selectedAnn && (() => {
+    const rawType = selectedAnn.object?.type;
+    const toolId = selectedDerivedTool ?? deriveToolFromAnnotation(selectedAnn.object);
+    const derivedType =
+      toolId === 'highlight' ? 9
+        : toolId === 'underline' ? 10
+          : toolId === 'squiggly' ? 11
+            : toolId === 'strikeout' ? 12
+              : toolId === 'line' ? 4
+                : toolId === 'square' ? 5
+                  : toolId === 'circle' ? 6
+                    : toolId === 'polygon' ? 7
+                      : toolId === 'polyline' ? 8
+                        : toolId === 'text' ? 3
+                          : toolId === 'note' ? 3
+                            : toolId === 'stamp' ? 13
+                              : toolId === 'ink' ? 15
+                                : undefined;
+    const type = typeof rawType === 'number' ? rawType : derivedType;
+
+    if (toolId && ['highlight', 'underline', 'strikeout', 'squiggly'].includes(toolId)) {
       return (
         <Paper withBorder p="sm" radius="md">
           <Stack gap="sm">
@@ -569,35 +606,73 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if (type === 15) {
+    if (type === 15 || toolId === 'inkHighlighter' || toolId === 'ink') {
+      const isHighlighter = toolId === 'inkHighlighter';
+      const thicknessValue =
+        selectedAnn.object?.strokeWidth ??
+        selectedAnn.object?.borderWidth ??
+        selectedAnn.object?.lineWidth ??
+        selectedAnn.object?.thickness ??
+        (isHighlighter ? freehandHighlighterWidth : inkWidth);
+      const colorValue = selectedAnn.object?.color ?? (isHighlighter ? highlightColor : inkColor);
+      const opacityValue = Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || (isHighlighter ? highlightOpacity : 100));
       return (
         <Paper withBorder p="sm" radius="md">
           <Stack gap="sm">
-            <Text size="sm" fw={600}>{t('annotation.editInk', 'Edit Pen')}</Text>
+            <Text size="sm" fw={600}>
+              {isHighlighter ? t('annotation.freehandHighlighter', 'Freehand Highlighter') : t('annotation.editInk', 'Edit Pen')}
+            </Text>
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.color', 'Color')}</Text>
               <ColorSwatchButton
-                color={selectedAnn.object?.color ?? inkColor}
+                color={colorValue}
                 size={28}
                 onClick={() => {
-                  setColorPickerTarget('ink');
+                  setColorPickerTarget(isHighlighter ? 'highlight' : 'ink');
                   setIsColorPickerOpen(true);
                 }}
               />
             </Box>
+            {isHighlighter && (
+              <Box>
+                <Text size="xs" c="dimmed" mb={4}>{t('annotation.opacity', 'Opacity')}</Text>
+                <Slider
+                  min={10}
+                  max={100}
+                  value={opacityValue}
+                  onChange={(value) => {
+                    setHighlightOpacity(value);
+                    annotationApiRef?.current?.updateAnnotation?.(
+                      selectedAnn.object?.pageIndex ?? 0,
+                      selectedAnn.object?.id,
+                      { opacity: value / 100 }
+                    );
+                  }}
+                />
+              </Box>
+            )}
             <Box>
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.strokeWidth', 'Width')}</Text>
               <Slider
                 min={1}
-                max={12}
-                value={selectedAnn.object?.strokeWidth ?? inkWidth}
+                max={isHighlighter ? 20 : 12}
+                value={thicknessValue}
                 onChange={(value) => {
                   annotationApiRef?.current?.updateAnnotation?.(
                     selectedAnn.object?.pageIndex ?? 0,
                     selectedAnn.object?.id,
-                    { strokeWidth: value }
+                    {
+                      strokeWidth: value,
+                      borderWidth: value,
+                      lineWidth: value,
+                      thickness: value,
+                    }
                   );
-                  setInkWidth(value);
+                  if (isHighlighter) {
+                    setFreehandHighlighterWidth?.(value);
+                  } else {
+                    setInkWidth(value);
+                  }
                 }}
               />
             </Box>
@@ -606,12 +681,24 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if (type === 3) {
-      const derivedTool = deriveToolFromAnnotation(selectedAnn.object);
-      const isNote = derivedTool === 'note';
+    if (type === 3 || toolId === 'text' || toolId === 'note') {
+      const isNote = toolId === 'note';
       const selectedBackground =
         selectedAnn.object?.backgroundColor ??
         (isNote ? noteBackgroundColor || '#ffffff' : textBackgroundColor || '#ffffff');
+      const alignValue = selectedAnn.object?.textAlign;
+      const currentAlign =
+        typeof alignValue === 'number'
+          ? alignValue === 1
+            ? 'center'
+            : alignValue === 2
+              ? 'right'
+              : 'left'
+          : alignValue === 'center'
+            ? 'center'
+            : alignValue === 'right'
+              ? 'right'
+              : 'left';
 
       return (
         <Paper withBorder p="sm" radius="md">
@@ -725,12 +812,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Text size="xs" c="dimmed" mb={4}>{t('annotation.textAlignment', 'Text Alignment')}</Text>
               <Group gap="xs">
                 <ActionIcon
-                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'left' ? 'filled' : 'default'}
+                  variant={currentAlign === 'left' ? 'filled' : 'default'}
                   onClick={() => {
+                    setTextAlignment('left');
                     annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
-                      { textAlign: 'left' }
+                      { textAlign: 0 }
                     );
                   }}
                   size="md"
@@ -738,12 +826,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   <LocalIcon icon="format-align-left" width={18} height={18} />
                 </ActionIcon>
                 <ActionIcon
-                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'center' ? 'filled' : 'default'}
+                  variant={currentAlign === 'center' ? 'filled' : 'default'}
                   onClick={() => {
+                    setTextAlignment('center');
                     annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
-                      { textAlign: 'center' }
+                      { textAlign: 1 }
                     );
                   }}
                   size="md"
@@ -751,12 +840,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   <LocalIcon icon="format-align-center" width={18} height={18} />
                 </ActionIcon>
                 <ActionIcon
-                  variant={(selectedAnn.object?.textAlign ?? 'left') === 'right' ? 'filled' : 'default'}
+                  variant={currentAlign === 'right' ? 'filled' : 'default'}
                   onClick={() => {
+                    setTextAlignment('right');
                     annotationApiRef?.current?.updateAnnotation?.(
                       selectedAnn.object?.pageIndex ?? 0,
                       selectedAnn.object?.id,
-                      { textAlign: 'right' }
+                      { textAlign: 2 }
                     );
                   }}
                   size="md"
@@ -770,7 +860,35 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if (type === 4) {
+    if (type === 13 || toolId === 'stamp') {
+      const imageSrc = selectedAnn.object?.imageSrc || selectedAnn.object?.data || selectedAnn.object?.url;
+      return (
+        <Paper withBorder p="sm" radius="md">
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('annotation.stamp', 'Add Image')}</Text>
+            {imageSrc ? (
+              <Stack gap="xs">
+                <Text size="xs" c="dimmed">{t('annotation.imagePreview', 'Preview')}</Text>
+                <img
+                  src={imageSrc}
+                  alt={t('annotation.stamp', 'Add Image')}
+                  style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </Stack>
+            ) : (
+              <Text size="xs" c="dimmed">
+                {t('annotation.unsupportedType', 'This annotation type is not fully supported for editing.')}
+              </Text>
+            )}
+            <Text size="xs" c="dimmed">
+              {t('annotation.editStampHint', 'To change the image, delete this stamp and add a new one.')}
+            </Text>
+          </Stack>
+        </Paper>
+      );
+    }
+
+    if ([4, 8].includes(type) || toolId === 'line' || toolId === 'polyline') {
       return (
         <Paper withBorder p="sm" radius="md">
           <Stack gap="sm">
@@ -826,8 +944,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       );
     }
 
-    if ([5, 6, 7].includes(type)) {
+    if ([5, 6, 7].includes(type) || toolId === 'square' || toolId === 'circle' || toolId === 'polygon') {
       const shapeName = type === 5 ? 'Square' : type === 6 ? 'Circle' : 'Polygon';
+      const strokeColorValue = selectedAnn.object?.strokeColor ?? shapeStrokeColor;
+      const fillColorValue = selectedAnn.object?.color ?? shapeFillColor;
+      const opacityValue = Math.round(((selectedAnn.object?.opacity ?? shapeOpacity / 100) * 100) || 100);
+      const pageIndex = selectedAnn.object?.pageIndex ?? 0;
+      const annId = selectedAnn.object?.id;
       return (
         <Paper withBorder p="sm" radius="md">
           <Stack gap="sm">
@@ -836,7 +959,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Stack gap={4} align="center">
                 <Text size="xs" c="dimmed">{t('annotation.strokeColor', 'Stroke Color')}</Text>
                 <ColorSwatchButton
-                  color={selectedAnn.object?.strokeColor ?? shapeStrokeColor}
+                  color={strokeColorValue}
                   size={28}
                   onClick={() => {
                     setColorPickerTarget('shapeStroke');
@@ -847,7 +970,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Stack gap={4} align="center">
                 <Text size="xs" c="dimmed">{t('annotation.fillColor', 'Fill Color')}</Text>
                 <ColorSwatchButton
-                  color={selectedAnn.object?.color ?? shapeFillColor}
+                  color={fillColorValue}
                   size={28}
                   onClick={() => {
                     setColorPickerTarget('shapeFill');
@@ -861,13 +984,18 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Slider
                 min={10}
                 max={100}
-                value={Math.round(((selectedAnn.object?.opacity ?? 1) * 100) || 100)}
+                value={opacityValue}
                 onChange={(value) => {
-                  annotationApiRef?.current?.updateAnnotation?.(
-                    selectedAnn.object?.pageIndex ?? 0,
-                    selectedAnn.object?.id,
-                    { opacity: value / 100 }
-                  );
+                  setShapeOpacity(value);
+                  setShapeStrokeOpacity(value);
+                  setShapeFillOpacity(value);
+                  if (annId) {
+                    annotationApiRef?.current?.updateAnnotation?.(pageIndex, annId, {
+                      opacity: value / 100,
+                      strokeOpacity: value / 100,
+                      fillOpacity: value / 100,
+                    });
+                  }
                 }}
               />
             </Box>
@@ -879,15 +1007,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   max={12}
                   value={selectedAnn.object?.borderWidth ?? shapeThickness}
                   onChange={(value) => {
-                    annotationApiRef?.current?.updateAnnotation?.(
-                      selectedAnn.object?.pageIndex ?? 0,
-                      selectedAnn.object?.id,
-                      {
+                    if (annId) {
+                      annotationApiRef?.current?.updateAnnotation?.(pageIndex, annId, {
                         borderWidth: value,
                         strokeWidth: value,
                         lineWidth: value,
-                      }
-                    );
+                      });
+                    }
                     setShapeThickness(value);
                   }}
                 />
@@ -897,15 +1023,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 variant={(selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 'filled' : 'light'}
                 onClick={() => {
                   const newValue = (selectedAnn.object?.borderWidth ?? shapeThickness) === 0 ? 1 : 0;
-                  annotationApiRef?.current?.updateAnnotation?.(
-                    selectedAnn.object?.pageIndex ?? 0,
-                    selectedAnn.object?.id,
-                    {
+                  if (annId) {
+                    annotationApiRef?.current?.updateAnnotation?.(pageIndex, annId, {
                       borderWidth: newValue,
                       strokeWidth: newValue,
                       lineWidth: newValue,
-                    }
-                  );
+                    });
+                  }
                   setShapeThickness(newValue);
                 }}
               >
@@ -941,6 +1065,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         colorPickerTarget !== 'noteBackground' &&
         colorPickerTarget !== 'shapeStroke' &&
         colorPickerTarget !== 'shapeFill' &&
+        colorPickerTarget !== 'underline' &&
         colorPickerTarget !== null
       }
       opacity={
@@ -1108,8 +1233,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
 
   return (
     <Stack gap="md">
-      <Group gap="xs" wrap="nowrap">
-        <Tooltip label={t('annotation.selectAndMove', 'Select and move annotations')}>
+      <Group gap="xs" wrap="nowrap" align="center">
+        <Tooltip label={t('annotation.selectAndMove', 'Select and edit annotations')}>
           <ActionIcon
             variant={activeTool === 'select' ? 'filled' : 'default'}
             size="lg"
@@ -1126,32 +1251,19 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           >
             <LocalIcon icon="material-symbols:touch-app-rounded" width={20} height={20} />
             <Text component="span" size="sm" fw={500}>
-              {t('annotation.selectAndMove', 'Select and Move')}
+              {t('annotation.selectAndMove', 'Select and Edit')}
             </Text>
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t('annotation.undo', 'Undo')}>
-          <ActionIcon
-            variant="default"
-            size="lg"
-            onClick={undo}
-            disabled={!historyAvailability.canUndo}
-          >
-            <LocalIcon icon="undo" width={20} height={20} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip label={t('annotation.redo', 'Redo')}>
-          <ActionIcon
-            variant="default"
-            size="lg"
-            onClick={redo}
-            disabled={!historyAvailability.canRedo}
-          >
-            <LocalIcon icon="redo" width={20} height={20} />
-          </ActionIcon>
-        </Tooltip>
+        <DrawingControls
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={historyAvailability.canUndo}
+          canRedo={historyAvailability.canRedo}
+          showPlaceButton={false}
+          additionalControls={null}
+        />
       </Group>
 
       <Box>
@@ -1174,9 +1286,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         {renderToolButtons(otherTools)}
       </Box>
 
-      {!selectedAnn && defaultStyleControls}
+      {activeTool !== 'select' && defaultStyleControls}
 
-      {selectedAnn && selectedAnnotationControls}
+      {activeTool === 'select' && selectedAnn && selectedAnnotationControls}
+
+      {activeTool === 'select' && !selectedAnn && defaultStyleControls}
 
       {colorPickerComponent}
 

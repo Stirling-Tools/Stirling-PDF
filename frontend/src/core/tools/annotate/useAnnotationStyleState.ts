@@ -95,7 +95,7 @@ export const useAnnotationStyleState = (
   const [shapeOpacity, setShapeOpacity] = useState(50);
   const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(50);
   const [shapeFillOpacity, setShapeFillOpacity] = useState(50);
-  const [shapeThickness, setShapeThickness] = useState(1);
+  const [shapeThickness, setShapeThickness] = useState(2);
 
   const buildToolOptions = useCallback<BuildToolOptionsFn>(
     (toolId, extras) => {
@@ -135,6 +135,7 @@ export const useAnnotationStyleState = (
           const textAlignNumber = textAlignment === 'left' ? 0 : textAlignment === 'center' ? 1 : 2;
           return {
             color: textColor,
+            textColor: textColor,
             fontSize: textSize,
             textAlign: textAlignNumber,
             ...(textBackgroundColor ? { fillColor: textBackgroundColor } : {}),
