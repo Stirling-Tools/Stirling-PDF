@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof window !== 'undefined' && (window as any).__TAURI__ && window.location.pathname.startsWith('/login')) {
           try {
             const { authService } = await import('@app/services/authService');
-            await authService.logout();
+            await authService.localClearAuth();
           } catch (desktopErr) {
             console.warn('[Auth] Failed to clear desktop auth state on login page init', desktopErr);
           }

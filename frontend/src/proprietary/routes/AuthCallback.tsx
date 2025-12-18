@@ -82,12 +82,8 @@ export default function AuthCallback() {
             const parsed = JSON.parse(pending) as { serverUrl?: string } | null;
             if (parsed?.serverUrl) {
               try {
-                // Lazy-load desktop services only in Tauri runtime; TypeScript ignores missing types
-                // and Vite ignores analysis for these optional imports.
-                const { connectionModeService } = await import(/* @vite-ignore */ '../../desktop/services/connectionModeService');
-                const { tauriBackendService } = await import(/* @vite-ignore */ '../../desktop/services/tauriBackendService');
-                await connectionModeService.switchToSelfHosted({ url: parsed.serverUrl });
-                await tauriBackendService.initializeExternalBackend();
+                const { completeSelfHostedDeepLink } = await import('../desktopBridge');
+                await completeSelfHostedDeepLink(parsed.serverUrl);
               } catch (innerErr) {
                 console.error('[AuthCallback] Desktop fallback services unavailable', innerErr);
               }
