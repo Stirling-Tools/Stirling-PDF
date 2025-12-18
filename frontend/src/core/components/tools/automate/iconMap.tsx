@@ -1,65 +1,65 @@
+import React from 'react';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
-// Icon wrapper components
-const SettingsIcon = (props: any) => <LocalIcon icon="settings-rounded" width={24} height={24} {...props} />;
-const CompressIcon = (props: any) => <LocalIcon icon="compress-rounded" width={24} height={24} {...props} />;
-const SwapHorizIcon = (props: any) => <LocalIcon icon="swap-horiz-rounded" width={24} height={24} {...props} />;
-const CleaningServicesIcon = (props: any) => <LocalIcon icon="cleaning-services-rounded" width={24} height={24} {...props} />;
-const CropIcon = (props: any) => <LocalIcon icon="crop-rounded" width={24} height={24} {...props} />;
-const TextFieldsIcon = (props: any) => <LocalIcon icon="text-fields-rounded" width={24} height={24} {...props} />;
-const PictureAsPdfIcon = (props: any) => <LocalIcon icon="picture-as-pdf-rounded" width={24} height={24} {...props} />;
-const EditIcon = (props: any) => <LocalIcon icon="edit-rounded" width={24} height={24} {...props} />;
-const DeleteIcon = (props: any) => <LocalIcon icon="delete-rounded" width={24} height={24} {...props} />;
-const FolderIcon = (props: any) => <LocalIcon icon="folder-rounded" width={24} height={24} {...props} />;
-const CloudIcon = (props: any) => <LocalIcon icon="cloud" width={24} height={24} {...props} />;
-const StorageIcon = (props: any) => <LocalIcon icon="storage-rounded" width={24} height={24} {...props} />;
-const SearchIcon = (props: any) => <LocalIcon icon="search-rounded" width={24} height={24} {...props} />;
-const DownloadIcon = (props: any) => <LocalIcon icon="download-rounded" width={24} height={24} {...props} />;
-const UploadIcon = (props: any) => <LocalIcon icon="upload-rounded" width={24} height={24} {...props} />;
-const PlayArrowIcon = (props: any) => <LocalIcon icon="play-arrow-rounded" width={24} height={24} {...props} />;
-const RotateLeftIcon = (props: any) => <LocalIcon icon="rotate-left-rounded" width={24} height={24} {...props} />;
-const RotateRightIcon = (props: any) => <LocalIcon icon="rotate-right-rounded" width={24} height={24} {...props} />;
-const VisibilityIcon = (props: any) => <LocalIcon icon="visibility-rounded" width={24} height={24} {...props} />;
-const ContentCutIcon = (props: any) => <LocalIcon icon="content-cut-rounded" width={24} height={24} {...props} />;
-const ContentCopyIcon = (props: any) => <LocalIcon icon="content-copy-rounded" width={24} height={24} {...props} />;
-const WorkIcon = (props: any) => <LocalIcon icon="work" width={24} height={24} {...props} />;
-const BuildIcon = (props: any) => <LocalIcon icon="build-rounded" width={24} height={24} {...props} />;
-const AutoAwesomeIcon = (props: any) => <LocalIcon icon="auto-awesome-rounded" width={24} height={24} {...props} />;
-const SmartToyIcon = (props: any) => <LocalIcon icon="smart-toy-rounded" width={24} height={24} {...props} />;
-const CheckIcon = (props: any) => <LocalIcon icon="check-rounded" width={24} height={24} {...props} />;
-const SecurityIcon = (props: any) => <LocalIcon icon="security-rounded" width={24} height={24} {...props} />;
-const StarIcon = (props: any) => <LocalIcon icon="star-rounded" width={24} height={24} {...props} />;
+// Type for the props that our icon wrapper components accept
+interface IconWrapperProps {
+  width?: string | number;
+  height?: string | number;
+  style?: React.CSSProperties;
+  className?: string;
+}
 
-export const iconMap = {
-  SettingsIcon,
-  CompressIcon,
-  SwapHorizIcon,
-  CleaningServicesIcon,
-  CropIcon,
-  TextFieldsIcon,
-  PictureAsPdfIcon,
-  EditIcon,
-  DeleteIcon,
-  FolderIcon,
-  CloudIcon,
-  StorageIcon,
-  SearchIcon,
-  DownloadIcon,
-  UploadIcon,
-  PlayArrowIcon,
-  RotateLeftIcon,
-  RotateRightIcon,
-  VisibilityIcon,
-  ContentCutIcon,
-  ContentCopyIcon,
-  WorkIcon,
-  BuildIcon,
-  AutoAwesomeIcon,
-  SmartToyIcon,
-  CheckIcon,
-  SecurityIcon,
-  StarIcon
-};
+// Type for an icon wrapper component
+type IconWrapperComponent = React.FC<IconWrapperProps>;
+
+// Icon configuration: maps component names to Material Symbols icon names
+const iconConfig = {
+  SettingsIcon: 'settings-rounded',
+  CompressIcon: 'compress-rounded',
+  SwapHorizIcon: 'swap-horiz-rounded',
+  CleaningServicesIcon: 'cleaning-services-rounded',
+  CropIcon: 'crop-rounded',
+  TextFieldsIcon: 'text-fields-rounded',
+  PictureAsPdfIcon: 'picture-as-pdf-rounded',
+  EditIcon: 'edit-rounded',
+  DeleteIcon: 'delete-rounded',
+  FolderIcon: 'folder-rounded',
+  CloudIcon: 'cloud',
+  StorageIcon: 'storage-rounded',
+  SearchIcon: 'search-rounded',
+  DownloadIcon: 'download-rounded',
+  UploadIcon: 'upload-rounded',
+  PlayArrowIcon: 'play-arrow-rounded',
+  RotateLeftIcon: 'rotate-left-rounded',
+  RotateRightIcon: 'rotate-right-rounded',
+  VisibilityIcon: 'visibility-rounded',
+  ContentCutIcon: 'content-cut-rounded',
+  ContentCopyIcon: 'content-copy-rounded',
+  WorkIcon: 'work',
+  BuildIcon: 'build-rounded',
+  AutoAwesomeIcon: 'auto-awesome-rounded',
+  SmartToyIcon: 'smart-toy-rounded',
+  CheckIcon: 'check-rounded',
+  SecurityIcon: 'security-rounded',
+  StarIcon: 'star-rounded',
+} as const;
+
+// Factory function to create icon wrapper components
+function createIconComponent(iconName: string): IconWrapperComponent {
+  return (props: IconWrapperProps) => (
+    <LocalIcon icon={iconName} width={24} height={24} {...props} />
+  );
+}
+
+// Generate the icon map from the configuration
+export const iconMap: Record<keyof typeof iconConfig, IconWrapperComponent> =
+  Object.entries(iconConfig).reduce(
+    (acc, [key, iconName]) => {
+      acc[key as keyof typeof iconConfig] = createIconComponent(iconName);
+      return acc;
+    },
+    {} as Record<keyof typeof iconConfig, IconWrapperComponent>
+  );
 
 export const iconOptions = [
   { value: 'SettingsIcon', label: 'Settings' },
@@ -89,7 +89,7 @@ export const iconOptions = [
   { value: 'SmartToyIcon', label: 'Robot' },
   { value: 'CheckIcon', label: 'Check' },
   { value: 'SecurityIcon', label: 'Security' },
-  { value: 'StarIcon', label: 'Star' }
-];
+  { value: 'StarIcon', label: 'Star' },
+] as const;
 
 export type IconKey = keyof typeof iconMap;
