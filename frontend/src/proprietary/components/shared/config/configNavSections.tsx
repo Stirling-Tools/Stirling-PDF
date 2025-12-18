@@ -16,6 +16,8 @@ import AdminEndpointsSection from '@app/components/shared/config/configSections/
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
 import ApiKeys from '@app/components/shared/config/configSections/ApiKeys';
+import AccountSection from '@app/components/shared/config/configSections/AccountSection';
+import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -29,6 +31,23 @@ export const useConfigNavSections = (
 
   // Get the core sections (just Preferences)
   const sections = useCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
+
+  // Add account management under Preferences
+  const preferencesSection = sections.find((section) => section.items.some((item) => item.key === 'general'));
+  if (preferencesSection) {
+    preferencesSection.items = preferencesSection.items.map((item) =>
+      item.key === 'general' ? { ...item, component: <GeneralSection /> } : item
+    );
+
+    if (loginEnabled) {
+      preferencesSection.items.push({
+        key: 'account',
+        label: t('account.accountSettings', 'Account'),
+        icon: 'person-rounded',
+        component: <AccountSection />
+      });
+    }
+  }
 
   // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
   if (isAdmin || !loginEnabled) {
@@ -219,6 +238,23 @@ export const createConfigNavSections = (
 
   // Get the core sections (just Preferences)
   const sections = createCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
+
+  // Add account management under Preferences
+  const preferencesSection = sections.find((section) => section.items.some((item) => item.key === 'general'));
+  if (preferencesSection) {
+    preferencesSection.items = preferencesSection.items.map((item) =>
+      item.key === 'general' ? { ...item, component: <GeneralSection /> } : item
+    );
+
+    if (loginEnabled) {
+      preferencesSection.items.push({
+        key: 'account',
+        label: 'Account',
+        icon: 'person-rounded',
+        component: <AccountSection />
+      });
+    }
+  }
 
   // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
   if (isAdmin || !loginEnabled) {

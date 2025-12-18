@@ -58,6 +58,7 @@ public class InitialSetup {
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
+
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
@@ -93,6 +94,7 @@ public class InitialSetup {
         }
         GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
+        applicationProperties.getAutomaticallyGenerated().setIsNewServer(isNewServer);
     }
 
     public static boolean isNewServer() {

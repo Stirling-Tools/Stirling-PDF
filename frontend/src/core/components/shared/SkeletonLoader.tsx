@@ -2,23 +2,44 @@ import React from 'react';
 import { Box, Group, Stack } from '@mantine/core';
 
 interface SkeletonLoaderProps {
-  type: 'pageGrid' | 'fileGrid' | 'controls' | 'viewer';
+  type: 'pageGrid' | 'fileGrid' | 'controls' | 'viewer' | 'block';
   count?: number;
   animated?: boolean;
+  width?: number | string;
+  height?: number | string;
+  radius?: number | string;
 }
 
-const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ 
-  type, 
-  count = 8, 
-  animated = true 
+const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
+  type,
+  count = 8,
+  animated = true,
+  width,
+  height,
+  radius = 8,
 }) => {
   const animationStyle = animated ? { animation: 'pulse 2s infinite' } : {};
 
+  // Generic block skeleton for inline text/inputs/etc.
+  const renderBlock = () => (
+    <Box
+      w={typeof width === 'number' ? `${width}px` : width}
+      h={typeof height === 'number' ? `${height}px` : height}
+      bg="gray.1"
+      style={{
+        borderRadius: radius,
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        ...animationStyle
+      }}
+    />
+  );
+
   const renderPageGridSkeleton = () => (
-    <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
-      gap: '1rem' 
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+      gap: '1rem'
     }}>
       {Array.from({ length: count }).map((_, i) => (
         <Box
@@ -26,7 +47,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
           w="100%"
           h={240}
           bg="gray.1"
-          style={{ 
+          style={{
             borderRadius: '8px',
             ...animationStyle,
             animationDelay: animated ? `${i * 0.1}s` : undefined
@@ -37,10 +58,10 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   );
 
   const renderFileGridSkeleton = () => (
-    <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-      gap: '1rem' 
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: '1rem'
     }}>
       {Array.from({ length: count }).map((_, i) => (
         <Box
@@ -48,7 +69,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
           w="100%"
           h={280}
           bg="gray.1"
-          style={{ 
+          style={{
             borderRadius: '8px',
             ...animationStyle,
             animationDelay: animated ? `${i * 0.1}s` : undefined
@@ -76,18 +97,20 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
         <Box w={40} h={40} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
       </Group>
       {/* Main content skeleton */}
-      <Box 
-        flex={1} 
-        bg="gray.1" 
-        style={{ 
+      <Box
+        flex={1}
+        bg="gray.1"
+        style={{
           borderRadius: '8px',
-          ...animationStyle 
-        }} 
+          ...animationStyle
+        }}
       />
     </Stack>
   );
 
   switch (type) {
+    case 'block':
+      return renderBlock();
     case 'pageGrid':
       return renderPageGridSkeleton();
     case 'fileGrid':

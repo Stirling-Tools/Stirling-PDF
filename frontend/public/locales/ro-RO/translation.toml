@@ -3036,6 +3036,91 @@ title = "Obține Informații despre PDF"
 header = "Obține Informații despre PDF"
 submit = "Obține Informații"
 downloadJson = "Descarcă JSON"
+processing = "Se extrag informațiile..."
+results = "Rezultate"
+noResults = "Rulați instrumentul pentru a genera un raport."
+downloads = "Descărcări"
+noneDetected = "Nu s-a detectat nimic"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Rezumat complet al informațiilor"
+shortTitle = "Informații PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadate"
+formFields = "Câmpuri de formular"
+basicInfo = "Informații de bază"
+documentInfo = "Informații despre document"
+compliance = "Conformitate"
+encryption = "Criptare"
+permissions = "Permisiuni"
+other = "Altele"
+perPageInfo = "Informații pe pagină"
+tableOfContents = "Cuprins"
+
+[getPdfInfo.other]
+attachments = "Atașamente"
+embeddedFiles = "Fișiere încorporate"
+javaScript = "JavaScript"
+layers = "Straturi"
+structureTree = "Arbore de structură"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Dimensiune"
+annotations = "Adnotări"
+images = "Imagini"
+links = "Linkuri"
+fonts = "Fonturi"
+xobjects = "Număr de XObject-uri"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary]
+pages = "Pagini"
+fileSize = "Dimensiune fișier"
+pdfVersion = "Versiune PDF"
+language = "Limbă"
+title = "Rezumat PDF"
+author = "Autor"
+created = "Creat"
+modified = "Modificat"
+permsAll = "Toate permisiunile sunt acordate"
+permsRestricted = "{{count}} restricții"
+permsMixed = "Unele permisiuni sunt restricționate"
+hasCompliance = "Are standarde de conformitate"
+noCompliance = "Fără standarde de conformitate"
+basic = "Informații de bază"
+documentInfo = "Informații despre document"
+securityTitle = "Starea securității"
+technical = "Tehnic"
+overviewTitle = "Prezentare generală PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "PDF criptat - Protejat cu parolă"
+unencrypted = "PDF necriptat - Fără protecție prin parolă"
+
+[getPdfInfo.summary.tech]
+images = "Imagini"
+fonts = "Fonturi"
+formFields = "Câmpuri de formular"
+embeddedFiles = "Fișiere încorporate"
+javaScript = "JavaScript"
+layers = "Straturi"
+bookmarks = "Marcaje"
+multimedia = "Multimedia"
+
+[getPdfInfo.summary.overview]
+untitled = "un document fără titlu"
+unknown = "Autor necunoscut"
+text = "Acesta este un PDF de {{pages}} pagini, intitulat {{title}}, creat de {{author}} (versiune PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Unele fișiere nu au putut fi procesate."
+unexpected = "Eroare neașteptată în timpul extragerii."
+
+[getPdfInfo.status]
+complete = "Extragere finalizată"
 
 [extractPage]
 tags = "extrage"
@@ -3948,7 +4033,7 @@ files = "Fișiere"
 activity = "Jurnal"
 help = "Ajutor"
 account = "Cont"
-config = "Config"
+config = "Configurare"
 settings = "Setări"
 adminSettings = "Setări admin"
 allTools = "All Tools"
@@ -4176,7 +4261,7 @@ description = "Urmărește acțiunile utilizatorilor și evenimentele de sistem 
 
 [admin.settings.security.audit.level]
 label = "Nivel audit"
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "0=OPRIT, 1=DE BAZĂ, 2=STANDARD, 3=DETALIAT"
 
 [admin.settings.security.audit.retentionDays]
 label = "Păstrare audit (zile)"
@@ -5177,7 +5262,7 @@ upgrade = "Fă upgrade acum →"
 freeTitle = "Licență server"
 overLimitTitle = "Necesită licență de server"
 overLimitBody = "Politica noastră de licențiere permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Ai <strong>{{overLimitUserCopy}}</strong> utilizatori Stirling. Pentru a continua fără întreruperi, fă upgrade la planul Stirling Server - <strong>locuri nelimitate</strong>, editare text PDF și control complet de admin pentru $99/server/lună."
-freeBody = "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru a scala fără întreruperi și a primi acces timpuriu la noul nostru <strong>instrument de editare text PDF</strong>, recomandăm planul Stirling Server - editare completă și <strong>locuri nelimitate</strong> pentru $99/server/lună."
+freeBody = "Licențierea noastră <strong>Open-Core</strong> permite până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit per server. Pentru scalare fără întreruperi, recomandăm planul Stirling Server - <strong>locuri nelimitate</strong> și <strong>suport SSO</strong> pentru $99/server/lună."
 
 [onboarding.desktopInstall]
 title = "Descărcare"
@@ -5281,6 +5366,31 @@ error = "Actualizarea stării utilizatorului a eșuat"
 [workspace.people.delete]
 success = "Utilizator șters cu succes"
 error = "Ștergerea utilizatorului a eșuat"
+
+[workspace.people.changePassword]
+action = "Schimbă parola"
+title = "Schimbă parola"
+subtitle = "Actualizați parola pentru"
+newPassword = "Parolă nouă"
+confirmPassword = "Confirmă parola"
+placeholder = "Introduceți o parolă nouă"
+confirmPlaceholder = "Reintroduceți parola nouă"
+passwordRequired = "Introduceți o parolă nouă"
+passwordMismatch = "Parolele nu coincid"
+generateRandom = "Generează o parolă sigură"
+generatedPreview = "Parolă generată:"
+copyTooltip = "Copiază în clipboard"
+copiedToClipboard = "Parola a fost copiată în clipboard"
+copyFailed = "Copierea parolei a eșuat"
+sendEmail = "Trimite un email utilizatorului despre această modificare"
+includePassword = "Include parola nouă în email"
+forcePasswordChange = "Forțează utilizatorul să schimbe parola la următoarea autentificare"
+emailUnavailable = "Emailul acestui utilizator nu este o adresă de email validă. Notificările sunt dezactivate."
+smtpDisabled = "Notificările prin email necesită activarea SMTP în setări."
+notifyOnly = "Se va trimite un email fără parolă, informând utilizatorul că un administrator a schimbat-o."
+submit = "Actualizează parola"
+success = "Parola a fost actualizată cu succes"
+error = "Actualizarea parolei a eșuat"
 
 [workspace.people.emailInvite]
 tab = "Invitație prin email"
@@ -5815,6 +5925,7 @@ subtitle = "Autentifică-te cu contul tău Stirling"
 [setup.selfhosted]
 title = "Autentifică-te pe server"
 subtitle = "Introdu acreditările serverului tău"
+link = "sau conectați-vă la un cont self-hosted"
 
 [setup.server]
 title = "Conectează-te la server"
@@ -5833,6 +5944,14 @@ description = "Introdu URL-ul complet al serverului tău Stirling PDF găzduit l
 emptyUrl = "Te rugăm să introduci un URL de server"
 unreachable = "Nu s-a putut conecta la server"
 testFailed = "Testul de conexiune a eșuat"
+configFetch = "Nu s-a putut prelua configurația serverului. Verificați URL-ul și încercați din nou."
+
+[setup.server.error.securityDisabled]
+title = "Autentificarea nu este activată"
+body = "Acest server nu are autentificarea activată. Pentru a vă conecta la acest server, trebuie să activați autentificarea:"
+step1 = "Setați DOCKER_ENABLE_SECURITY=true în mediul dvs."
+step2 = "Sau setați security.enableLogin=true în settings.yml"
+step3 = "Reporniți serverul"
 
 [setup.login]
 title = "Autentificare"
@@ -5905,6 +6024,7 @@ earlyAccess = "Acces timpuriu"
 reset = "Resetați modificările"
 downloadJson = "Descărcați JSON"
 generatePdf = "Generați PDF"
+saveChanges = "Salvează modificările"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scalare automată a textului pentru a se potrivi în casete"
@@ -5942,6 +6062,8 @@ alpha = "Acest vizualizator alpha este încă în dezvoltare — anumite fonturi
 [pdfTextEditor.empty]
 title = "Niciun document încărcat"
 subtitle = "Încărcați un fișier PDF sau JSON pentru a începe editarea conținutului text."
+dropzone = "Glisați și fixați aici un fișier PDF sau JSON, sau faceți clic pentru a răsfoi"
+dropzoneWithFiles = "Selectați un fișier din fila Fișiere sau glisați și fixați aici un fișier PDF sau JSON, sau faceți clic pentru a răsfoi"
 
 [pdfTextEditor.welcomeBanner]
 title = "Bine ați venit la Editor text PDF (Acces timpuriu)"
@@ -5984,7 +6106,7 @@ warnings = "Avertizări"
 suggestions = "Note"
 currentPageFonts = "Fonturi pe această pagină"
 allFonts = "Toate fonturile"
-fallback = "fallback"
+fallback = "rezervă"
 missing = "lipsește"
 perfectMessage = "Toate fonturile pot fi redate perfect."
 warningMessage = "Unele fonturi pot să nu fie redate corect."

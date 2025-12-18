@@ -14,6 +14,7 @@ interface SaaSLoginScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   onSelfHostedClick: () => void;
+  onSwitchToSignup: () => void;
   loading: boolean;
   error: string | null;
 }
@@ -23,6 +24,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   onLogin,
   onOAuthSuccess,
   onSelfHostedClick,
+  onSwitchToSignup,
   loading,
   error,
 }) => {
@@ -88,6 +90,20 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         isSubmitting={loading}
         submitButtonText={t('setup.login.submit', 'Login')}
       />
+
+      <div className="navigation-link-container" style={{ marginTop: '0.5rem', textAlign: 'right' }}>
+        <button
+          type="button"
+          onClick={() => {
+            setValidationError(null);
+            onSwitchToSignup();
+          }}
+          className="navigation-link-button"
+          disabled={loading}
+        >
+          {t('signup.signUp', 'Sign Up')}
+        </button>
+      </div>
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
     </>

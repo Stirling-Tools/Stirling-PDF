@@ -94,6 +94,22 @@ public class ProprietaryUIDataController {
         this.auditRepository = auditRepository;
     }
 
+    /**
+     * Get the backend base URL for SAML/OAuth redirects. Uses system.backendUrl from config if set,
+     * otherwise defaults to http://localhost:8080
+     */
+    private String getBackendBaseUrl() {
+        String backendUrl = applicationProperties.getSystem().getBackendUrl();
+
+        // If backendUrl is configured, use it
+        if (backendUrl != null && !backendUrl.trim().isEmpty()) {
+            return backendUrl.trim();
+        }
+
+        // For development, default to localhost:8080 (backend port)
+        return "http://localhost:8080";
+    }
+
     @GetMapping("/audit-dashboard")
     @PreAuthorize("hasRole('ADMIN')")
     @EnterpriseEndpoint
@@ -185,14 +201,17 @@ public class ProprietaryUIDataController {
         }
 
         SAML2 saml2 = securityProps.getSaml2();
-        if (securityProps.isSaml2Active()
-                && applicationProperties.getSystem().getEnableAlphaFunctionality()
-                && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
+            // For SAML, we need to use the backend URL directly, not a relative path
+            // This ensures Spring Security generates the correct ACS URL
+            String backendUrl = getBackendBaseUrl();
+            String fullSamlPath = backendUrl + saml2AuthenticationPath;
+
             if (!applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
-                providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
+                providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
             }
         }
 
@@ -204,6 +223,10 @@ public class ProprietaryUIDataController {
         data.setProviderList(providerList);
         data.setLoginMethod(securityProps.getLoginMethod());
         data.setAltLogin(!providerList.isEmpty() && securityProps.isAltLogin());
+
+        // Add language configuration for login page
+        data.setLanguages(applicationProperties.getUi().getLanguages());
+        data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
 
         return ResponseEntity.ok(data);
     }
@@ -328,6 +351,7 @@ public class ProprietaryUIDataController {
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
+        data.setMailEnabled(applicationProperties.getMail().isEnabled());
 
         return ResponseEntity.ok(data);
     }
@@ -376,7 +400,7 @@ public class ProprietaryUIDataController {
         data.setUsername(username);
         data.setRole(user.get().getRolesAsString());
         data.setSettings(settingsJson);
-        data.setChangeCredsFlag(user.get().isFirstLogin());
+        data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
 
@@ -491,6 +515,8 @@ public class ProprietaryUIDataController {
         private boolean altLogin;
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
+        private List<String> languages;
+        private String defaultLocale;
     }
 
     @Data
@@ -510,6 +536,7 @@ public class ProprietaryUIDataController {
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
         private boolean premiumEnabled;
+        private boolean mailEnabled;
     }
 
     @Data
