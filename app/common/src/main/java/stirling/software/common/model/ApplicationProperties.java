@@ -336,8 +336,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -537,10 +537,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -646,6 +646,44 @@ public class ApplicationProperties {
         private List<Long> allowChannelIDs = new ArrayList<>();
         private long processingTimeoutSeconds = 180;
         private long pollingIntervalMillis = 2000;
+        private Feedback feedback = new Feedback();
+
+        @Data
+        public static class Feedback {
+            private General general = new General();
+            private Channel channel = new Channel();
+            private User user = new User();
+
+            @Data
+            public static class General {
+                private Boolean enabled = true; // set to 'true' to enable feedback messages
+            }
+
+            @Data
+            public static class Channel {
+                private Boolean noValidDocument =
+                        false; // set to 'true' to deny feedback messages in channels (to avoid
+                // spam)
+                private Boolean processingError =
+                        false; // set to 'true' to deny feedback messages in channels (to avoid
+                // spam)
+                private Boolean errorMessage =
+                        false; // set to 'true' to deny error feedback messages in channels (to
+                // avoid spam)
+            }
+
+            @Data
+            public static class User {
+                private Boolean noValidDocument =
+                        false; // set to 'true' to deny feedback messages to users (to avoid
+                // spam)
+                private Boolean processingError =
+                        false; // set to 'true' to deny feedback messages to users (to avoid
+                // spam)
+                private Boolean errorMessage =
+                        false; // set to 'true' to deny error feedback messages to users (to avoid
+            }
+        }
     }
 
     @Data

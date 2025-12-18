@@ -124,6 +124,17 @@ telegram:
   allowChannelIDs: [] # List of allowed Telegram channel IDs (e.g. [-1001234567890, -1009876543210]). Leave empty to allow all channels.
   processingTimeoutSeconds: 180 # Maximum time in seconds to wait for processing a Telegram request
   pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
+  feedback:
+    general:
+        enabled: true # set to 'true' to enable feedback messages
+    channel:
+        noValidDocument: false # set to 'true' to deny feedback messages in channels (to avoid spam)
+        processingError: false # set to 'true' to deny feedback messages in channels (to avoid spam)
+        errorMessage: false # set to 'true' to deny error messages in channels (to avoid spam)
+    user:
+        noValidDocument: false # set to 'true' to deny feedback messages to users (to avoid spam)
+        processingError: false # set to 'true' to deny feedback messages to users (to avoid spam)
+        errorMessage: false # set to 'true' to deny error messages to users (to avoid spam)
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder

@@ -107,13 +107,17 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String message_text = update.getMessage().getText();
             long chat_id = update.getMessage().getChatId();
-            if (message_text.equals("/start")) {
+            if ("/start".equals(message_text)) {
                 sendMessage(
                         chat_id,
-                        "Welcome to the SPDF Telegram Bot!\n\n"
-                                + "To get started, please send me a PDF document that you would like to process."
-                                + " Make sure the document is in PDF format.\n\n"
-                                + "Once I receive your document, I'll begin processing it through the pipeline.");
+                        """
+                        Welcome to the SPDF Telegram Bot!
+
+                        To get started, please send me a PDF document that you would like to process.
+                        Make sure the document is in PDF format.
+
+                        Once I receive your document, I'll begin processing it through the pipeline.
+                        """);
                 return;
             }
         }
@@ -122,10 +126,11 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             handleIncomingFile(message);
             return;
         }
-
-        sendMessage(
-                chat.getId(),
-                "No valid file found in the message. Please send a document to process.");
+        if (telegramProperties.getFeedback().getGeneral().getEnabled()) {
+            sendMessage(
+                    chat.getId(),
+                    "No valid file found in the message. Please send a document to process.");
+        }
     }
 
     // ---------------------------
@@ -237,7 +242,8 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         if (!hasJsonConfig(chatId)) {
             sendMessage(
                     chatId,
-                    "No JSON configuration file found in the pipeline inbox folder. Please contact the administrator.");
+                    "No JSON configuration file found in the pipeline inbox folder. Please contact"
+                            + " the administrator.");
             return;
         }
 
