@@ -6,6 +6,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,11 +58,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             throws IOException {
 
         if (!response.isCommitted()) {
+            Optional<String> samlNameId = resolveSamlNameId(authentication, request);
+            if (samlNameId.isPresent()) {
+                getRedirect_saml2(request, response, samlNameId.get());
+                return;
+            }
+
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, samlAuthentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
+                if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
                     // Handle OAuth2 logout redirection
                     getRedirect_oauth2(request, response, oAuthToken);
                 } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
@@ -90,18 +95,25 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     // Redirect for SAML2 authentication logout
     private void getRedirect_saml2(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Saml2Authentication samlAuthentication)
+            HttpServletRequest request, HttpServletResponse response, Saml2Authentication samlAuth)
             throws IOException {
+        CustomSaml2AuthenticatedPrincipal principal =
+                (CustomSaml2AuthenticatedPrincipal) samlAuth.getPrincipal();
+        getRedirect_saml2(request, response, principal.nameId());
+    }
+
+    private void getRedirect_saml2(
+            HttpServletRequest request, HttpServletResponse response, String nameIdValue)
+            throws IOException {
+
+        if (nameIdValue == null || nameIdValue.isBlank()) {
+            log.warn("Unable to perform SAML logout due to missing NameID");
+            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+            return;
+        }
 
         SAML2 samlConf = securityProperties.getSaml2();
         String registrationId = samlConf.getRegistrationId();
-
-        CustomSaml2AuthenticatedPrincipal principal =
-                (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
-
-        String nameIdValue = principal.name();
 
         try {
             // Read certificate from the resource
@@ -130,11 +142,43 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         } catch (Exception e) {
             log.error(
                     "Error retrieving logout URL from Provider {} for user {}",
-                    samlConf.getProvider(),
+                    samlConf.getIdpIssuer(),
                     nameIdValue,
                     e);
             getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
         }
+    }
+
+    private Optional<String> resolveSamlNameId(
+            Authentication authentication, HttpServletRequest request) {
+        if (authentication instanceof Saml2Authentication samlAuthentication) {
+            CustomSaml2AuthenticatedPrincipal principal =
+                    (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
+            String nameId = principal.nameId();
+            if (nameId != null && !nameId.isBlank()) {
+                return Optional.of(nameId);
+            }
+        }
+
+        if (jwtService != null) {
+            try {
+                String token = jwtService.extractToken(request);
+                if (token != null && !token.isBlank()) {
+                    Map<String, Object> claims = jwtService.extractClaims(token);
+                    Object authType = claims.get("authType");
+                    if (authType != null && "SAML2".equalsIgnoreCase(authType.toString())) {
+                        Object nameId = claims.get("samlNameId");
+                        if (nameId instanceof String && !((String) nameId).isBlank()) {
+                            return Optional.of((String) nameId);
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.debug("Unable to resolve SAML NameID from JWT during logout", ex);
+            }
+        }
+
+        return Optional.empty();
     }
 
     // Redirect for OAuth2 authentication logout

@@ -1,9 +1,22 @@
 package stirling.software.proprietary.security.saml2;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,6 +32,10 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -35,37 +52,26 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 @RequiredArgsConstructor
 public class Saml2Configuration {
 
+    private static final String SAML_METADATA_NS = "urn:oasis:names:tc:SAML:2.0:metadata";
+    private static final String XML_DSIG_NS = "http://www.w3.org/2000/09/xmldsig#";
+
     private final ApplicationProperties applicationProperties;
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
+        Optional<IdpMetadataInfo> metadataInfo = loadIdpMetadata(samlConf);
 
         log.info(
                 "Initializing SAML2 configuration with registration ID: {}",
                 samlConf.getRegistrationId());
 
-        // Load IdP certificate
-        X509Certificate idpCert;
-        try {
-            Resource idpCertResource = samlConf.getIdpCert();
-            log.info("Loading IdP certificate from: {}", idpCertResource.getDescription());
-            if (!idpCertResource.exists()) {
-                log.error(
-                        "SAML2 IdP certificate not found at: {}", idpCertResource.getDescription());
-                throw new IllegalStateException(
-                        "SAML2 IdP certificate file does not exist: "
-                                + idpCertResource.getDescription());
-            }
-            idpCert = CertificateUtils.readCertificate(idpCertResource);
-            log.info(
-                    "Successfully loaded IdP certificate. Subject: {}",
-                    idpCert.getSubjectX500Principal().getName());
-        } catch (Exception e) {
-            log.error("Failed to load SAML2 IdP certificate: {}", e.getMessage(), e);
-            throw new IllegalStateException("Failed to load SAML2 IdP certificate", e);
-        }
+        // Load IdP certificate either from metadata or fallback resource
+        X509Certificate idpCert =
+                metadataInfo
+                        .map(IdpMetadataInfo::signingCertificate)
+                        .orElseGet(() -> loadIdpCertificateFromResource(samlConf));
 
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
 
@@ -102,6 +108,10 @@ public class Saml2Configuration {
             log.error("Failed to load SAML2 SP credentials: {}", e.getMessage(), e);
             throw new IllegalStateException("Failed to load SAML2 SP credentials", e);
         }
+        metadataInfo.ifPresent(info -> applyMetadataOverrides(samlConf, info));
+        String idpIssuer = samlConf.getIdpIssuer();
+        String idpSingleLoginUrl = samlConf.getIdpSingleLoginUrl();
+        String idpSingleLogoutUrl = samlConf.getIdpSingleLogoutUrl();
 
         // Get backend URL from configuration (for SAML endpoints)
         String backendUrl = applicationProperties.getSystem().getBackendUrl();
@@ -123,24 +133,22 @@ public class Saml2Configuration {
                         .signingX509Credentials(c -> c.add(signingCredential))
                         .entityId(entityId)
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
-                        .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
+                        .singleLogoutServiceLocation(idpSingleLogoutUrl)
                         .singleLogoutServiceResponseLocation(sloResponseLocation)
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
                         .assertionConsumerServiceLocation(acsLocation)
                         .authnRequestsSigned(true)
                         .assertingPartyMetadata(
                                 metadata ->
-                                        metadata.entityId(samlConf.getIdpIssuer())
+                                        metadata.entityId(idpIssuer)
                                                 .verificationX509Credentials(
                                                         c -> c.add(verificationCredential))
                                                 .singleSignOnServiceBinding(
                                                         Saml2MessageBinding.POST)
-                                                .singleSignOnServiceLocation(
-                                                        samlConf.getIdpSingleLoginUrl())
+                                                .singleSignOnServiceLocation(idpSingleLoginUrl)
                                                 .singleLogoutServiceBinding(
                                                         Saml2MessageBinding.POST)
-                                                .singleLogoutServiceLocation(
-                                                        samlConf.getIdpSingleLogoutUrl())
+                                                .singleLogoutServiceLocation(idpSingleLogoutUrl)
                                                 .singleLogoutServiceResponseLocation(
                                                         sloResponseLocation)
                                                 .wantAuthnRequestsSigned(true))
@@ -205,6 +213,153 @@ public class Saml2Configuration {
                 });
         return resolver;
     }
+
+    private X509Certificate loadIdpCertificateFromResource(SAML2 samlConf) {
+        try {
+            Resource idpCertResource = samlConf.getIdpCert();
+            if (idpCertResource == null) {
+                throw new IllegalStateException("SAML2 IdP certificate resource is not defined");
+            }
+            log.info("Loading IdP certificate from: {}", idpCertResource.getDescription());
+            if (!idpCertResource.exists()) {
+                throw new IllegalStateException(
+                        "SAML2 IdP certificate file does not exist: "
+                                + idpCertResource.getDescription());
+            }
+            X509Certificate certificate = CertificateUtils.readCertificate(idpCertResource);
+            log.info(
+                    "Successfully loaded IdP certificate. Subject: {}",
+                    certificate.getSubjectX500Principal().getName());
+            return certificate;
+        } catch (Exception e) {
+            log.error("Failed to load SAML2 IdP certificate: {}", e.getMessage(), e);
+            throw new IllegalStateException("Failed to load SAML2 IdP certificate", e);
+        }
+    }
+
+    private void applyMetadataOverrides(SAML2 samlConf, IdpMetadataInfo metadataInfo) {
+        log.info(
+                "Applying IdP metadata overrides for registration: {}",
+                samlConf.getRegistrationId());
+        overrideIfPresent(metadataInfo.entityId(), samlConf::setIdpIssuer);
+        overrideIfPresent(metadataInfo.singleSignOnServiceUrl(), samlConf::setIdpSingleLoginUrl);
+        overrideIfPresent(metadataInfo.singleLogoutServiceUrl(), samlConf::setIdpSingleLogoutUrl);
+    }
+
+    private Optional<IdpMetadataInfo> loadIdpMetadata(SAML2 samlConf) {
+        String metadataLocation = samlConf.getIdpMetadataUriLocation();
+        if (metadataLocation == null || metadataLocation.isBlank()) {
+            return Optional.empty();
+        }
+
+        try (InputStream metadataStream = samlConf.getIdpMetadataUri()) {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            try {
+                factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+                factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            } catch (IllegalArgumentException ignored) {
+                log.debug("XML parser does not support external entity restrictions");
+            }
+
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(metadataStream);
+
+            Element entityDescriptor = doc.getDocumentElement();
+            if (entityDescriptor == null) {
+                log.warn("No EntityDescriptor found in SAML metadata: {}", metadataLocation);
+                return Optional.empty();
+            }
+
+            String entityId = entityDescriptor.getAttribute("entityID");
+            NodeList idpDescriptors =
+                    entityDescriptor.getElementsByTagNameNS(SAML_METADATA_NS, "IDPSSODescriptor");
+            if (idpDescriptors.getLength() == 0) {
+                log.warn("No IDPSSODescriptor found in SAML metadata: {}", metadataLocation);
+                return Optional.empty();
+            }
+
+            Element idpDescriptor = (Element) idpDescriptors.item(0);
+            String ssoUrl = extractServiceLocation(idpDescriptor, "SingleSignOnService");
+            String sloUrl = extractServiceLocation(idpDescriptor, "SingleLogoutService");
+            X509Certificate signingCert = extractSigningCertificate(idpDescriptor);
+
+            log.info("Loaded IdP metadata from: {}", metadataLocation);
+            return Optional.of(new IdpMetadataInfo(entityId, ssoUrl, sloUrl, signingCert));
+        } catch (IOException
+                | ParserConfigurationException
+                | SAXException
+                | CertificateException e) {
+            log.warn("Failed to parse SAML metadata from {}: {}", metadataLocation, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private String extractServiceLocation(Element descriptor, String tagName) {
+        NodeList services = descriptor.getElementsByTagNameNS(SAML_METADATA_NS, tagName);
+        String fallback = null;
+        for (int i = 0; i < services.getLength(); i++) {
+            Element service = (Element) services.item(i);
+            String location = service.getAttribute("Location");
+            String binding = service.getAttribute("Binding");
+            if (!hasText(location)) {
+                continue;
+            }
+            if (Saml2MessageBinding.POST.getUrn().equals(binding)) {
+                return location;
+            }
+            if (fallback == null) {
+                fallback = location;
+            }
+        }
+        return fallback;
+    }
+
+    private X509Certificate extractSigningCertificate(Element descriptor)
+            throws CertificateException {
+        NodeList keyDescriptors =
+                descriptor.getElementsByTagNameNS(SAML_METADATA_NS, "KeyDescriptor");
+        for (int i = 0; i < keyDescriptors.getLength(); i++) {
+            Element keyDescriptor = (Element) keyDescriptors.item(i);
+            String use = keyDescriptor.getAttribute("use");
+            if (hasText(use) && !"signing".equalsIgnoreCase(use)) {
+                continue;
+            }
+
+            NodeList certificateNodes =
+                    keyDescriptor.getElementsByTagNameNS(XML_DSIG_NS, "X509Certificate");
+            if (certificateNodes.getLength() == 0) {
+                continue;
+            }
+            String certificateValue = certificateNodes.item(0).getTextContent();
+            if (!hasText(certificateValue)) {
+                continue;
+            }
+            byte[] decoded =
+                    Base64.getMimeDecoder().decode(certificateValue.replaceAll("\\s+", ""));
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            return (X509Certificate)
+                    certificateFactory.generateCertificate(new ByteArrayInputStream(decoded));
+        }
+        return null;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private void overrideIfPresent(String value, Consumer<String> setter) {
+        if (hasText(value)) {
+            setter.accept(value.trim());
+        }
+    }
+
+    private record IdpMetadataInfo(
+            String entityId,
+            String singleSignOnServiceUrl,
+            String singleLogoutServiceUrl,
+            X509Certificate signingCertificate) {}
 
     private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
         String message =

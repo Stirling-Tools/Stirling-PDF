@@ -31,10 +31,14 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     (config) => {
       const jwtToken = getJwtTokenFromStorage();
       const xsrfToken = getXsrfToken();
+      const url = config.url || 'unknown';
 
       if (jwtToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${jwtToken}`;
-        console.debug('[API Client] Added JWT token from localStorage to Authorization header');
+        console.debug('[API Client] Added JWT to request:', url);
+      } else if (!jwtToken) {
+        // Log when JWT is missing - helps debug auth issues
+        console.debug('[API Client] No JWT in localStorage for request:', url);
       }
 
       if (xsrfToken && !config.headers['X-XSRF-TOKEN']) {

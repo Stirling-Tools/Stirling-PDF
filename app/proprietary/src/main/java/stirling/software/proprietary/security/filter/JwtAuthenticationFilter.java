@@ -61,6 +61,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String contextPath = request.getContextPath();
 
+        if (isPublicAuthEndpoint(requestURI, contextPath)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (isStaticResource(contextPath, requestURI)) {
             filterChain.doFilter(request, response);
             return;
@@ -174,7 +179,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                log.debug("Setting authentication for user: {}", username);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.debug(
+                        "Authentication set successfully: {}",
+                        SecurityContextHolder.getContext().getAuthentication());
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
             }

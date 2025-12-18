@@ -29,7 +29,7 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
-                || normalizedUri.startsWith("/Login/")
+                || normalizedUri.startsWith("/login/")
                 || normalizedUri.startsWith("/samples/")
                 || normalizedUri.startsWith("/classic-logo/")
                 || normalizedUri.startsWith("/modern-logo/")
