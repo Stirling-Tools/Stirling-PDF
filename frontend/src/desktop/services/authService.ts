@@ -1,6 +1,8 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
+import { connectionModeService } from '@app/services/connectionModeService';
+import { tauriBackendService } from '@app/services/tauriBackendService';
 import axios from 'axios';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
@@ -457,7 +459,7 @@ export class AuthService {
     }
 
     // Force a real popup so the main webview stays on the app
-    const authWindow = window.open(fullUrl, '_blank', 'width=900,height=900');
+    const authWindow = window.open(fullUrl, 'stirling-desktop-sso', 'width=900,height=900');
 
     // Fallback: use Tauri shell.open and wait for deep link back
     if (!authWindow) {
@@ -470,7 +472,10 @@ export class AuthService {
     const expectedOrigin = new URL(fullUrl).origin;
 
     // Always also listen for deep link completion in case the opener messaging path fails
-    const deepLinkPromise = this.waitForDeepLinkCompletion(trimmedServer).catch(() => null);
+    const deepLinkPromise = this.waitForDeepLinkCompletion(trimmedServer).catch((err) => {
+      console.warn('[Desktop AuthService] Deep link completion failed or timed out:', err);
+      return null;
+    });
 
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
@@ -590,6 +595,28 @@ export class AuthService {
         }
       }, 120_000);
 
+      const localPollId = window.setInterval(async () => {
+        if (completed) {
+          window.clearInterval(localPollId);
+          return;
+        }
+        const token = localStorage.getItem('stirling_jwt');
+        if (token) {
+          completed = true;
+          window.clearInterval(localPollId);
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          try {
+            const userInfo = await this.completeSelfHostedSession(serverUrl, token);
+            await connectionModeService.switchToSelfHosted({ url: serverUrl });
+            await tauriBackendService.initializeExternalBackend();
+            resolve(userInfo);
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
+          }
+        }
+      }, 1000);
+
       listen<string>('deep-link', async (event) => {
         const url = event.payload;
         if (!url || completed) return;
@@ -609,13 +636,22 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
+          window.clearInterval(localPollId);
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
+          // Ensure connection mode is set and backend is ready (in case caller doesn't)
+          try {
+            await connectionModeService.switchToSelfHosted({ url: serverUrl });
+            await tauriBackendService.initializeExternalBackend();
+          } catch (e) {
+            console.warn('[Desktop AuthService] Failed to initialize backend after deep link:', e);
+          }
           resolve(userInfo);
         } catch (err) {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
+          window.clearInterval(localPollId);
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
       }).then((fn) => {

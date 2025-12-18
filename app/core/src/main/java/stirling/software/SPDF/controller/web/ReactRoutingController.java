@@ -176,7 +176,7 @@ public class ReactRoutingController {
                         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
                         const searchParams = new URLSearchParams(window.location.search);
                         const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
-                        const isDesktopPopup = window.opener && window.name === 'stirling-desktop-sso';
+                        const isDesktopPopup = !!window.opener;
                         const serverUrl = %s;
 
                         if (token) {
@@ -226,7 +226,7 @@ public class ReactRoutingController {
                         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
                         const searchParams = new URLSearchParams(window.location.search);
                         const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
-                        const isDesktopPopup = window.opener && window.name === 'stirling-desktop-sso';
+                        const isDesktopPopup = !!window.opener;
                         const serverUrl = %s;
 
                         if (token) {
