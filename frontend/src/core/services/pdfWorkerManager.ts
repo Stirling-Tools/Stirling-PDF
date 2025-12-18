@@ -3,9 +3,14 @@
  *
  * Prevents infinite worker creation by managing PDF.js workers globally
  * and ensuring proper cleanup when operations complete.
+ *
+ * Uses dynamic imports to avoid bundling PDF.js in main bundle.
  */
 
-import { GlobalWorkerOptions, getDocument, PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+// Dynamic import types for TypeScript
+type PDFDocumentProxy = import('pdfjs-dist').PDFDocumentProxy;
+type GlobalWorkerOptions = typeof import('pdfjs-dist').GlobalWorkerOptions;
+type GetDocumentFn = typeof import('pdfjs-dist').getDocument;
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -13,9 +18,10 @@ class PDFWorkerManager {
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
+  private pdfjsLib: { GlobalWorkerOptions: GlobalWorkerOptions; getDocument: GetDocumentFn } | null = null;
 
   private constructor() {
-    this.initializeWorker();
+    // Don't initialize worker in constructor - defer until first use
   }
 
   static getInstance(): PDFWorkerManager {
@@ -26,11 +32,14 @@ class PDFWorkerManager {
   }
 
   /**
-   * Initialize PDF.js worker once globally
+   * Lazy-load PDF.js library and initialize worker once globally
    */
-  private initializeWorker(): void {
+  private async initializeWorker(): Promise<void> {
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL(
+      // Dynamic import - only loads when first PDF operation is needed
+      this.pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+
+      this.pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
         'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
         import.meta.url
       ).toString();
@@ -51,6 +60,13 @@ class PDFWorkerManager {
       verbosity?: number;
     } = {}
   ): Promise<PDFDocumentProxy> {
+    // Lazy-load PDF.js on first use
+    await this.initializeWorker();
+
+    if (!this.pdfjsLib) {
+      throw new Error('Failed to load PDF.js library');
+    }
+
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker();
@@ -68,7 +84,7 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
-    const loadingTask = getDocument(
+    const loadingTask = this.pdfjsLib.getDocument(
       typeof pdfData === 'string' ? {
         url: pdfData,
         disableAutoFetch: options.disableAutoFetch ?? true,
