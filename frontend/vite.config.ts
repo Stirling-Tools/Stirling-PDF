@@ -3,6 +3,28 @@ import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { visualizer } from "rollup-plugin-visualizer";
+import type { OutputBundle } from "rollup";
+
+const maxChunkSize = 500;
+
+function failOnLargeChunks(limitKb: number) {
+  return {
+    name: "fail-on-large-chunks",
+    generateBundle(_: unknown, bundle: OutputBundle) {
+      for (const [fileName, chunk] of Object.entries(bundle)) {
+        if (chunk.type === "chunk") {
+          const sizeKb = Buffer.byteLength(chunk.code) / 1024;
+
+          if (sizeKb > limitKb) {
+            throw new Error(
+              `❌ Chunk "${fileName}" is ${sizeKb.toFixed(1)} KB (limit: ${limitKb} KB)`
+            );
+          }
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
@@ -34,12 +56,11 @@ export default defineConfig(({ mode }) => {
             dest: 'pdfium'
           }
         ]
-      })
+      }),
+      failOnLargeChunks(maxChunkSize),
     ],
     build: {
-      // Increase chunk size warning limit for desktop builds
-      // Desktop apps don't have network download concerns
-      chunkSizeWarningLimit: isDesktopMode ? 5000 : 500,
+      chunkSizeWarningLimit: maxChunkSize,
       rollupOptions: {
         output: {
           // Manual chunks for better code splitting
