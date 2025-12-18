@@ -1,8 +1,6 @@
 import { Modal, Text, Button, Group, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import CancelIcon from "@mui/icons-material/Cancel";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { CSSProperties } from "react";
 
 interface ZipWarningModalProps {
@@ -34,7 +32,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
       closeOnEscape={true}
     >
       <Stack ta="center" p="md" gap="sm">
-        <WarningAmberIcon style={WARNING_ICON_STYLE} />
+        <LocalIcon icon="warning-rounded" width={48} height={48} style={WARNING_ICON_STYLE} />
         <Text size="md" fw={300}>
           {zipFileName}
         </Text>
@@ -52,7 +50,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
           variant="light"
           color="var(--mantine-color-gray-8)"
           onClick={onCancel}
-          leftSection={<CancelIcon fontSize="small" />}
+          leftSection={<LocalIcon icon="cancel-rounded" width={20} height={20} />}
           w="10rem"
         >
           {t("zipWarning.cancel", "Cancel")}
@@ -61,7 +59,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
           variant="filled"
           color="var(--mantine-color-blue-9)"
           onClick={onConfirm}
-          leftSection={<CheckCircleOutlineIcon fontSize="small" />}
+          leftSection={<LocalIcon icon="check-circle-outline-rounded" width={20} height={20} />}
           w="10rem"
         >
           {t("zipWarning.confirm", "Extract")}
@@ -74,7 +72,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
           variant="light"
           color="var(--mantine-color-gray-8)"
           onClick={onCancel}
-          leftSection={<CancelIcon fontSize="small" />}
+          leftSection={<LocalIcon icon="cancel-rounded" width={20} height={20} />}
           w="10rem"
         >
           {t("zipWarning.cancel", "Cancel")}
@@ -83,7 +81,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
           variant="filled"
           color="var(--mantine-color-blue-9)"
           onClick={onConfirm}
-          leftSection={<CheckCircleOutlineIcon fontSize="small" />}
+          leftSection={<LocalIcon icon="check-circle-outline-rounded" width={20} height={20} />}
           w="10rem"
         >
           {t("zipWarning.confirm", "Extract")}

@@ -3,12 +3,7 @@ import { Button, Paper, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { Tooltip } from '@app/components/shared/Tooltip';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -139,7 +134,7 @@ export function PdfViewerToolbar({
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.firstPage", "First Page")}
         >
-          <FirstPageIcon fontSize="small" />
+          <LocalIcon icon="first-page-rounded" width={20} height={20} />
         </Button>
 
         {/* Previous Page Button */}
@@ -154,7 +149,7 @@ export function PdfViewerToolbar({
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.previousPage", "Previous Page")}
         >
-          <ArrowBackIosIcon fontSize="small" />
+          <LocalIcon icon="arrow-back-ios-rounded" width={20} height={20} />
         </Button>
 
         {/* Page Input */}
@@ -191,7 +186,7 @@ export function PdfViewerToolbar({
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.nextPage", "Next Page")}
         >
-          <ArrowForwardIosIcon fontSize="small" />
+          <LocalIcon icon="arrow-forward-ios-rounded" width={20} height={20} />
         </Button>
 
         {/* Last Page Button */}
@@ -206,7 +201,7 @@ export function PdfViewerToolbar({
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.lastPage", "Last Page")}
         >
-          <LastPageIcon fontSize="small" />
+          <LocalIcon icon="last-page-rounded" width={20} height={20} />
         </Button>
 
         {/* Dual Page Toggle */}
@@ -228,7 +223,7 @@ export function PdfViewerToolbar({
             disabled={scrollState.totalPages <= 1}
             style={{ minWidth: '2.5rem' }}
           >
-            {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
+            {isDualPageActive ? <LocalIcon icon="description-rounded" width={20} height={20} /> : <LocalIcon icon="view-week" width={20} height={20} />}
           </Button>
         </Tooltip>
 

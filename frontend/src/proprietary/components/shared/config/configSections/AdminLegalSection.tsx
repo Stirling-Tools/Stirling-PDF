@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
-import WarningIcon from '@mui/icons-material/Warning';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -79,7 +79,7 @@ export default function AdminLegalSection() {
 
       {/* Legal Disclaimer */}
       <Alert
-        icon={<WarningIcon style={{ fontSize: 18 }} />}
+        icon={<LocalIcon icon="warning-rounded" width={18} height={18} />}
         title={t('admin.settings.legal.disclaimer.title', 'Legal Responsibility Warning')}
         color="yellow"
         variant="light"

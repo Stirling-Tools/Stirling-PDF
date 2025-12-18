@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, Button, SimpleGrid, Tooltip, Popover } from "@mantine/core";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { iconMap, iconOptions } from '@app/components/tools/automate/iconMap';
 
 interface IconSelectorProps {
@@ -54,9 +54,11 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
             }}
           >
             {React.createElement(selectedIconComponent, { style: { fontSize: iconSize } })}
-            <KeyboardArrowDownIcon
+            <LocalIcon
+              icon="keyboard-arrow-down-rounded"
+              width={iconSize * 0.8}
+              height={iconSize * 0.8}
               style={{
-                fontSize: iconSize * 0.8,
                 position: "absolute",
                 right: "0.25rem",
                 top: "50%",

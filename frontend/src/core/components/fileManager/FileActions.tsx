@@ -1,7 +1,6 @@
 import React from "react";
 import { Group, Text, ActionIcon, Tooltip } from "@mantine/core";
-import SelectAllIcon from "@mui/icons-material/SelectAll";
-import DeleteIcon from "@mui/icons-material/Delete";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -64,7 +63,7 @@ const FileActions: React.FC = () => {
             disabled={filteredFiles.length === 0}
             radius="sm"
           >
-            <SelectAllIcon style={{ fontSize: "1rem" }} />
+            <LocalIcon icon="select-all-rounded" width="1rem" height="1rem" />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -95,7 +94,7 @@ const FileActions: React.FC = () => {
             disabled={!hasSelection}
             radius="sm"
           >
-            <DeleteIcon style={{ fontSize: "1rem" }} />
+            <LocalIcon icon="delete-rounded" width="1rem" height="1rem" />
           </ActionIcon>
         </Tooltip>
 

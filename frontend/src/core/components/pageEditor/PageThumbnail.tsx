@@ -1,13 +1,7 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Text, Checkbox } from '@mantine/core';
 import { useIsMobile } from '@app/hooks/useIsMobile';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCutIcon from '@mui/icons-material/ContentCut';
-import AddIcon from '@mui/icons-material/Add';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { PDFPage, PDFDocument } from '@app/types/pageEditor';
 import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
@@ -281,7 +275,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const hoverActions = useMemo<HoverAction[]>(() => [
     {
       id: 'move-left',
-      icon: <ArrowBackIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="arrow-back-rounded" width={20} height={20} />,
       label: 'Move Left',
       onClick: (e) => {
         e.stopPropagation();
@@ -296,7 +290,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     },
     {
       id: 'move-right',
-      icon: <ArrowForwardIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="arrow-forward-rounded" width={20} height={20} />,
       label: 'Move Right',
       onClick: (e) => {
         e.stopPropagation();
@@ -314,33 +308,33 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     },
     {
       id: 'rotate-left',
-      icon: <RotateLeftIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="rotate-left-rounded" width={20} height={20} />,
       label: 'Rotate Left',
       onClick: handleRotateLeft,
     },
     {
       id: 'rotate-right',
-      icon: <RotateRightIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="rotate-right-rounded" width={20} height={20} />,
       label: 'Rotate Right',
       onClick: handleRotateRight,
     },
     {
       id: 'delete',
-      icon: <DeleteIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="delete-rounded" width={20} height={20} />,
       label: 'Delete Page',
       onClick: handleDelete,
       color: 'red',
     },
     {
       id: 'split',
-      icon: <ContentCutIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="content-cut-rounded" width={20} height={20} />,
       label: 'Split After',
       onClick: handleSplit,
       hidden: pageIndex >= totalPages - 1,
     },
     {
       id: 'insert',
-      icon: <AddIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="add-rounded" width={20} height={20} />,
       label: 'Insert File After',
       onClick: handleInsertFileAfter,
     }

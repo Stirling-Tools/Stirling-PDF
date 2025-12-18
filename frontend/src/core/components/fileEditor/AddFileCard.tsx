@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Button, Group, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import AddIcon from '@mui/icons-material/Add';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
@@ -79,7 +78,7 @@ const AddFileCard = ({
         {/* Header bar - matches FileEditorThumbnail structure */}
         <div className={`${styles.header} ${styles.addFileHeader}`}>
           <div className={styles.logoMark}>
-            <AddIcon sx={{ color: 'inherit', fontSize: '1.5rem' }} />
+            <LocalIcon icon="add-rounded" width="1.5rem" height="1.5rem" style={{ color: 'inherit' }} />
           </div>
           <div className={styles.headerIndex}>
             {t('fileEditor.addFiles', 'Add Files')}

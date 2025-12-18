@@ -1,8 +1,6 @@
 import React from 'react';
 import { Stack, Box, Text, Button, ActionIcon, Center } from '@mantine/core';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { getFileSize } from '@app/utils/fileUtils';
 import { StirlingFileStub } from '@app/types/fileContext';
@@ -62,7 +60,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               backgroundColor: 'var(--mantine-color-gray-1)',
               borderRadius: 4
             }}>
-              <PictureAsPdfIcon style={{ fontSize: 20, color: 'var(--mantine-color-gray-6)' }} />
+              <LocalIcon icon="picture-as-pdf-rounded" width={20} height={20} style={{ color: 'var(--mantine-color-gray-6)' }} />
             </Center>
           ) : null}
         </Box>
@@ -99,7 +97,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               onClick={onPrevious}
               disabled={isAnimating}
             >
-              <ChevronLeftIcon style={{ fontSize: 16 }} />
+              <LocalIcon icon="chevron-left-rounded" width={16} height={16} />
             </ActionIcon>
             <ActionIcon
               variant="subtle"
@@ -107,7 +105,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               onClick={onNext}
               disabled={isAnimating}
             >
-              <ChevronRightIcon style={{ fontSize: 16 }} />
+              <LocalIcon icon="chevron-right-rounded" width={16} height={16} />
             </ActionIcon>
           </Box>
         )}

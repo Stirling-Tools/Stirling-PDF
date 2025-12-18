@@ -1,8 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
 import { useSelectedFiles } from "@app/contexts/file/fileHooks";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
@@ -83,7 +82,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
           title={t("rotate.rotateLeft", "Rotate Anticlockwise")}
         >
-          <RotateLeftIcon style={{ fontSize: '1.5rem' }} />
+          <LocalIcon icon="rotate-left-rounded" width="1.5rem" height="1.5rem" />
         </ActionIcon>
 
         <ActionIcon
@@ -94,7 +93,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}
           title={t("rotate.rotateRight", "Rotate Clockwise")}
         >
-          <RotateRightIcon style={{ fontSize: '1.5rem' }} />
+          <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />
         </ActionIcon>
       </Group>
     </Stack>

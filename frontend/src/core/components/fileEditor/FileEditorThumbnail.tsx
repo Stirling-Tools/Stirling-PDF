@@ -5,13 +5,7 @@ import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
-import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import UnarchiveIcon from '@mui/icons-material/Unarchive';
-import PushPinIcon from '@mui/icons-material/PushPin';
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { zipFileService } from '@app/services/zipFileService';
@@ -198,7 +192,7 @@ const FileEditorThumbnail = ({
   const hoverActions = useMemo<HoverAction[]>(() => [
     {
       id: 'view',
-      icon: <VisibilityIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="visibility-rounded" width={20} height={20} />,
       label: t('openInViewer', 'Open in Viewer'),
       onClick: (e) => {
         e.stopPropagation();
@@ -217,7 +211,7 @@ const FileEditorThumbnail = ({
     },
     {
       id: 'unzip',
-      icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="unarchive-rounded" width={20} height={20} />,
       label: t('fileManager.unzip', 'Unzip'),
       onClick: (e) => {
         e.stopPropagation();
@@ -230,7 +224,7 @@ const FileEditorThumbnail = ({
     },
     {
       id: 'close',
-      icon: <CloseIcon style={{ fontSize: 20 }} />,
+      icon: <LocalIcon icon="close-rounded" width={20} height={20} />,
       label: t('close', 'Close'),
       onClick: (e) => {
         e.stopPropagation();
@@ -325,7 +319,7 @@ const FileEditorThumbnail = ({
                   openEncryptedUnlockPrompt(file.id);
                 }}
               >
-                <LockOpenIcon fontSize="small" />
+                <LocalIcon icon="lock-open-rounded" width={20} height={20} />
               </ActionIcon>
             </Tooltip>
           )}
@@ -349,7 +343,7 @@ const FileEditorThumbnail = ({
                 }
               }}
             >
-              {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+              {isPinned ? <LocalIcon icon="keep-rounded" width={20} height={20} /> : <LocalIcon icon="keep-outline-rounded" width={20} height={20} />}
             </ActionIcon>
           </Tooltip>
         </div>
@@ -420,7 +414,7 @@ const FileEditorThumbnail = ({
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
+          <LocalIcon icon="drag-indicator" width={20} height={20} />
         </span>
 
         {/* Tool chain display at bottom */}

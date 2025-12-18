@@ -13,13 +13,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningIcon from '@mui/icons-material/Warning';
-import ErrorIcon from '@mui/icons-material/Error';
-import InfoIcon from '@mui/icons-material/Info';
-import FontDownloadIcon from '@mui/icons-material/FontDownload';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 import { PdfJsonDocument } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import {
@@ -42,15 +36,15 @@ const FontStatusBadge = ({ analysis }: { analysis: FontAnalysis }) => {
   const icon = useMemo(() => {
     switch (analysis.status) {
       case 'perfect':
-        return <CheckCircleIcon sx={{ fontSize: 14 }} />;
+        return <LocalIcon icon="check-circle-rounded" width={14} height={14} />;
       case 'embedded-subset':
-        return <InfoIcon sx={{ fontSize: 14 }} />;
+        return <LocalIcon icon="info-rounded" width={14} height={14} />;
       case 'system-fallback':
-        return <WarningIcon sx={{ fontSize: 14 }} />;
+        return <LocalIcon icon="warning-rounded" width={14} height={14} />;
       case 'missing':
-        return <ErrorIcon sx={{ fontSize: 14 }} />;
+        return <LocalIcon icon="error-rounded" width={14} height={14} />;
       default:
-        return <InfoIcon sx={{ fontSize: 14 }} />;
+        return <LocalIcon icon="info-rounded" width={14} height={14} />;
     }
   }, [analysis.status]);
 
@@ -78,7 +72,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
       <Stack gap={4}>
         <Group justify="space-between">
           <Group gap={4}>
-            <FontDownloadIcon sx={{ fontSize: 16 }} />
+            <LocalIcon icon="font-download-rounded" width={16} height={16} />
             <Text size="xs" fw={500} lineClamp={1}>
               {analysis.baseName}
             </Text>
@@ -90,7 +84,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
           </Group>
           <Group gap={4}>
             <FontStatusBadge analysis={analysis} />
-            {expanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+            {expanded ? <LocalIcon icon="expand-less-rounded" width={16} height={16} /> : <LocalIcon icon="expand-more-rounded" width={16} height={16} />}
           </Group>
         </Group>
 
@@ -177,12 +171,12 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
 
   const statusIcon = useMemo(() => {
     if (canReproducePerfectly) {
-      return <CheckCircleIcon sx={{ fontSize: 16 }} />;
+      return <LocalIcon icon="check-circle-rounded" width={16} height={16} />;
     }
     if (hasWarnings) {
-      return <WarningIcon sx={{ fontSize: 16 }} />;
+      return <LocalIcon icon="warning-rounded" width={16} height={16} />;
     }
-    return <InfoIcon sx={{ fontSize: 16 }} />;
+    return <LocalIcon icon="info-rounded" width={16} height={16} />;
   }, [canReproducePerfectly, hasWarnings]);
 
   // Early return AFTER all hooks are declared
@@ -214,12 +208,12 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
             {/* Warning badges BEFORE expansion */}
             <Group gap={4} wrap="wrap">
               {summary.systemFallback > 0 && (
-                <Badge size="xs" color="yellow" variant="filled" leftSection={<WarningIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="yellow" variant="filled" leftSection={<LocalIcon icon="warning-rounded" width={12} height={12} />}>
                   {summary.systemFallback} {t('pdfTextEditor.fontAnalysis.fallback', 'fallback')}
                 </Badge>
               )}
               {summary.missing > 0 && (
-                <Badge size="xs" color="red" variant="filled" leftSection={<ErrorIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="red" variant="filled" leftSection={<LocalIcon icon="error-rounded" width={12} height={12} />}>
                   {summary.missing} {t('pdfTextEditor.fontAnalysis.missing', 'missing')}
                 </Badge>
               )}
@@ -249,22 +243,22 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
             {/* Summary Statistics */}
             <Group gap={4} wrap="wrap">
               {summary.perfect > 0 && (
-                <Badge size="xs" color="green" variant="light" leftSection={<CheckCircleIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="green" variant="light" leftSection={<LocalIcon icon="check-circle-rounded" width={12} height={12} />}>
                   {summary.perfect} {t('pdfTextEditor.fontAnalysis.perfect', 'perfect')}
                 </Badge>
               )}
               {summary.embeddedSubset > 0 && (
-                <Badge size="xs" color="blue" variant="light" leftSection={<InfoIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="blue" variant="light" leftSection={<LocalIcon icon="info-rounded" width={12} height={12} />}>
                   {summary.embeddedSubset} {t('pdfTextEditor.fontAnalysis.subset', 'subset')}
                 </Badge>
               )}
               {summary.systemFallback > 0 && (
-                <Badge size="xs" color="yellow" variant="light" leftSection={<WarningIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="yellow" variant="light" leftSection={<LocalIcon icon="warning-rounded" width={12} height={12} />}>
                   {summary.systemFallback} {t('pdfTextEditor.fontAnalysis.fallback', 'fallback')}
                 </Badge>
               )}
               {summary.missing > 0 && (
-                <Badge size="xs" color="red" variant="light" leftSection={<ErrorIcon sx={{ fontSize: 12 }} />}>
+                <Badge size="xs" color="red" variant="light" leftSection={<LocalIcon icon="error-rounded" width={12} height={12} />}>
                   {summary.missing} {t('pdfTextEditor.fontAnalysis.missing', 'missing')}
                 </Badge>
               )}

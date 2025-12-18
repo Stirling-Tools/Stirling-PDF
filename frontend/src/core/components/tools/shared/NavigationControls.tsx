@@ -1,6 +1,5 @@
 import { Stack, Group, ActionIcon, Text } from '@mantine/core';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 export interface NavigationControlsProps {
   currentIndex: number;
@@ -27,7 +26,7 @@ const NavigationControls = ({
           disabled={totalFiles <= 1}
           data-testid="review-panel-prev"
         >
-          <ChevronLeftIcon style={{ fontSize: '1rem' }} />
+          <LocalIcon icon="chevron-left-rounded" width="1rem" height="1rem" />
         </ActionIcon>
         <Text size="xs" c="dimmed">
         {currentIndex + 1} of {totalFiles}
@@ -40,7 +39,7 @@ const NavigationControls = ({
           disabled={totalFiles <= 1}
           data-testid="review-panel-next"
         >
-          <ChevronRightIcon style={{ fontSize: '1rem' }} />
+          <LocalIcon icon="chevron-right-rounded" width="1rem" height="1rem" />
         </ActionIcon>
       </Group>
     </Stack>

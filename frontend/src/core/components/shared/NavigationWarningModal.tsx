@@ -1,9 +1,7 @@
 import { Modal, Text, Button, Group, Stack } from "@mantine/core";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useTranslation } from "react-i18next";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
@@ -70,16 +68,16 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
         {/* Desktop layout: 2 groups side by side */}
         <Group justify="space-between" gap="xl" visibleFrom="md">
           <Group gap="sm">
-            <Button variant="light" color="var(--mantine-color-gray-8)" onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<ArrowBackIcon fontSize="small" />}>
+            <Button variant="light" color="var(--mantine-color-gray-8)" onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="arrow-back-rounded" width={20} height={20} />}>
               {t("keepWorking", "Keep Working")}
             </Button>
           </Group>
           <Group gap="sm">
-            <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
+            <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="delete-outline-rounded" width={20} height={20} />}>
               {t("discardChanges", "Discard Changes")}
             </Button>
             {onApplyAndContinue && (
-              <Button variant="filled"  onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+              <Button variant="filled"  onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="check-circle-outline-rounded" width={20} height={20} />}>
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
             )}
@@ -88,14 +86,14 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
 
         {/* Mobile layout: centered stack of 4 buttons */}
         <Stack align="center" gap="sm" hiddenFrom="md">
-           <Button variant="light" color="var(--mantine-color-gray-8)"  onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<ArrowBackIcon fontSize="small" />}>
+           <Button variant="light" color="var(--mantine-color-gray-8)"  onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="arrow-back-rounded" width={20} height={20} />}>
             {t("keepWorking", "Keep Working")}
           </Button>
-          <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
+          <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="delete-outline-rounded" width={20} height={20} />}>
             {t("discardChanges", "Discard Changes")}
           </Button>
           {onApplyAndContinue && (
-            <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+            <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<LocalIcon icon="check-circle-outline-rounded" width={20} height={20} />}>
               {t("applyAndContinue", "Apply & Leave")}
             </Button>
           )}

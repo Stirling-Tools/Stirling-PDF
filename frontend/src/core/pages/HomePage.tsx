@@ -12,8 +12,6 @@ import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import AppsIcon from '@mui/icons-material/AppsRounded';
-
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
 import QuickAccessBar from "@app/components/shared/QuickAccessBar";
@@ -235,7 +233,7 @@ export default function HomePage() {
                 }
               }}
             >
-              <AppsIcon sx={{ fontSize: '1.5rem' }} />
+              <LocalIcon icon="apps" width="1.5rem" height="1.5rem" />
               <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'Tools')}</span>
             </button>
             <button

@@ -3,13 +3,14 @@ import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useToolNavigation } from '@app/hooks/useToolNavigation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { ToolId } from '@app/types/toolId';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
-// Material UI Icons
-import CompressIcon from '@mui/icons-material/Compress';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import CropIcon from '@mui/icons-material/Crop';
-import TextFieldsIcon from '@mui/icons-material/TextFields';
+// Icon wrapper components
+const CompressIcon = (props: any) => <LocalIcon icon="compress-rounded" width={24} height={24} {...props} />;
+const SwapHorizIcon = (props: any) => <LocalIcon icon="swap-horiz-rounded" width={24} height={24} {...props} />;
+const CleaningServicesIcon = (props: any) => <LocalIcon icon="cleaning-services-rounded" width={24} height={24} {...props} />;
+const CropIcon = (props: any) => <LocalIcon icon="crop-rounded" width={24} height={24} {...props} />;
+const TextFieldsIcon = (props: any) => <LocalIcon icon="text-fields-rounded" width={24} height={24} {...props} />;
 
 export interface SuggestedTool {
   id: ToolId;

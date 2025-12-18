@@ -3,7 +3,7 @@ import { Button, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useFileState } from '@app/contexts/FileContext';
 import { useFileActions } from '@app/contexts/file/fileHooks';
-import CloseIcon from '@mui/icons-material/Close';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { Z_INDEX_TOAST } from '@app/styles/zIndex';
 
 interface DismissAllErrorsButtonProps {
@@ -33,7 +33,7 @@ const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({ classNa
         variant="light"
         color="red"
         size="sm"
-        leftSection={<CloseIcon fontSize="small" />}
+        leftSection={<LocalIcon icon="close-rounded" width={20} height={20} />}
         onClick={handleDismissAllErrors}
         style={{
           position: 'absolute',

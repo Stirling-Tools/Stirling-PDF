@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import AppsIcon from '@mui/icons-material/AppsRounded';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
@@ -54,7 +54,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   return (
     <div className="mt-4 mb-2">
       <QuickAccessButton
-        icon={<AppsIcon sx={{ fontSize: isActive ? '1.875rem' : '1.5rem' }} />}
+        icon={<LocalIcon icon="apps" width={isActive ? '1.875rem' : '1.5rem'} height={isActive ? '1.875rem' : '1.5rem'} />}
         label={t("quickAccess.allTools", "Tools")}
         isActive={isActive}
         onClick={handleNavClick}

@@ -7,8 +7,6 @@
 
 import React from 'react';
 import { Modal, Stack, ActionIcon } from '@mantine/core';
-import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
-import CloseIcon from '@mui/icons-material/Close';
 
 import type { SlideDefinition, ButtonAction } from '@app/components/onboarding/onboardingFlowConfig';
 import type { OnboardingRuntimeState } from '@app/components/onboarding/orchestrator/onboardingConfig';
@@ -68,7 +66,7 @@ export default function OnboardingModalSlide({
         {slideDefinition.hero.type === 'analytics' && (
           <LocalIcon icon="analytics" width={64} height={64} className={styles.heroIcon} />
         )}
-        {slideDefinition.hero.type === 'diamond' && <DiamondOutlinedIcon sx={{ fontSize: 64, color: '#000000' }} />}
+        {slideDefinition.hero.type === 'diamond' && <LocalIcon icon="diamond-rounded" width={64} height={64} style={{ color: '#000000' }} />}
         {slideDefinition.hero.type === 'logo' && (
           <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
         )}
@@ -122,7 +120,7 @@ export default function OnboardingModalSlide({
                 },
               }}
             >
-              <CloseIcon fontSize="small" />
+              <LocalIcon icon="close-rounded" width={20} height={20} />
             </ActionIcon>
           )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>

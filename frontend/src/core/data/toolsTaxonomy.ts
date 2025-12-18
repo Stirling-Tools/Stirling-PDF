@@ -4,18 +4,8 @@ import { ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '@app/types/tool';
 import { WorkbenchType } from '@app/types/workbench';
 import { LinkToolId, RegularToolId, SuperToolId, ToolId, ToolKind } from '@app/types/toolId';
-import DrawRoundedIcon from '@mui/icons-material/DrawRounded';
-import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded';
-import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
-import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
-import ViewAgendaRoundedIcon from '@mui/icons-material/ViewAgendaRounded';
-import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
-import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
-import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
-import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
-import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
-import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
 import { ProprietaryToolId } from '@app/types/proprietaryToolId';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -100,32 +90,22 @@ export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
 };
 
 export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode => {
-  switch (subcategory) {
-    case SubcategoryId.SIGNING:
-      return React.createElement(DrawRoundedIcon);
-    case SubcategoryId.DOCUMENT_SECURITY:
-      return React.createElement(SecurityRoundedIcon);
-    case SubcategoryId.VERIFICATION:
-      return React.createElement(VerifiedUserRoundedIcon);
-    case SubcategoryId.DOCUMENT_REVIEW:
-      return React.createElement(RateReviewRoundedIcon);
-    case SubcategoryId.PAGE_FORMATTING:
-      return React.createElement(ViewAgendaRoundedIcon);
-    case SubcategoryId.EXTRACTION:
-      return React.createElement(FileDownloadRoundedIcon);
-    case SubcategoryId.REMOVAL:
-      return React.createElement(DeleteSweepRoundedIcon);
-    case SubcategoryId.AUTOMATION:
-      return React.createElement(SmartToyRoundedIcon);
-    case SubcategoryId.GENERAL:
-      return React.createElement(BuildRoundedIcon);
-    case SubcategoryId.ADVANCED_FORMATTING:
-      return React.createElement(TuneRoundedIcon);
-    case SubcategoryId.DEVELOPER_TOOLS:
-      return React.createElement(CodeRoundedIcon);
-    default:
-      return React.createElement(BuildRoundedIcon);
-  }
+  const iconMap: Record<SubcategoryId, string> = {
+    [SubcategoryId.SIGNING]: 'draw-rounded',
+    [SubcategoryId.DOCUMENT_SECURITY]: 'security-rounded',
+    [SubcategoryId.VERIFICATION]: 'verified-user-rounded',
+    [SubcategoryId.DOCUMENT_REVIEW]: 'rate-review-rounded',
+    [SubcategoryId.PAGE_FORMATTING]: 'view-agenda-rounded',
+    [SubcategoryId.EXTRACTION]: 'file-download-rounded',
+    [SubcategoryId.REMOVAL]: 'delete-sweep-rounded',
+    [SubcategoryId.AUTOMATION]: 'smart-toy-rounded',
+    [SubcategoryId.GENERAL]: 'build-rounded',
+    [SubcategoryId.ADVANCED_FORMATTING]: 'tune-rounded',
+    [SubcategoryId.DEVELOPER_TOOLS]: 'code-rounded',
+  };
+
+  const iconName = iconMap[subcategory] || 'build-rounded';
+  return React.createElement(LocalIcon, { icon: iconName, width: 24, height: 24 });
 };
 
 export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string => t(`toolPicker.categories.${id}`, id);

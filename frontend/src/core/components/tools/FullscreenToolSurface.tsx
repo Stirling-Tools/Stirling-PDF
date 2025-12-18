@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ActionIcon, ScrollArea, Switch, useMantineColorScheme } from '@mantine/core';
-import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
 import FullscreenToolList from '@app/components/tools/FullscreenToolList';
@@ -114,8 +114,10 @@ const FullscreenToolSurface = ({
                 aria-label={toggleLabel}
                 style={{ color: 'var(--right-rail-icon)' }}
               >
-                <DoubleArrowIcon
-                  fontSize="small"
+                <LocalIcon
+                  icon="double-arrow-rounded"
+                  width={20}
+                  height={20}
                   style={{ transform: isRTL ? undefined : 'rotate(180deg)' }}
                 />
               </ActionIcon>

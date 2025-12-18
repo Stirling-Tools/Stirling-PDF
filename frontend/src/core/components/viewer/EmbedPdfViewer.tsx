@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
-import CloseIcon from '@mui/icons-material/Close';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
@@ -311,7 +311,7 @@ const EmbedPdfViewerContent = ({
           style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000, borderRadius: '50%' }}
           onClick={onClose}
         >
-          <CloseIcon />
+          <LocalIcon icon="close-rounded" width={24} height={24} />
         </ActionIcon>
       )}
 

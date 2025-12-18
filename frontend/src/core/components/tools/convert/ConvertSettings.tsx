@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "@app/utils/convertUtils";
@@ -256,7 +256,7 @@ const ConvertSettings = ({
           >
             <Group justify="space-between">
               <Text size="sm">{t("convert.selectSourceFormatFirst", "Select a source format first")}</Text>
-              <KeyboardArrowDownIcon
+              <LocalIcon icon="keyboard-arrow-down-rounded"
                 style={{
                   fontSize: '1rem',
                   color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]

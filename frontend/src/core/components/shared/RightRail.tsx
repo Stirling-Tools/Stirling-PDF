@@ -16,8 +16,6 @@ import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
@@ -206,9 +204,9 @@ export default function RightRail() {
               onClick={toggleTheme}
             >
               {themeMode === 'dark' ? (
-                <LightModeIcon sx={{ fontSize: '1.5rem' }} />
+                <LocalIcon icon="light-mode-rounded" width="1.5rem" height="1.5rem" />
               ) : (
-                <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
+                <LocalIcon icon="dark-mode-rounded" width="1.5rem" height="1.5rem" />
               )}
             </ActionIcon>,
             t('rightRail.toggleTheme', 'Toggle Theme'),

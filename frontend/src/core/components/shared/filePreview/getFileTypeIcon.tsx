@@ -1,7 +1,5 @@
 import React from "react";
-import JavascriptIcon from "@mui/icons-material/Javascript";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { detectFileExtension } from "@app/utils/fileUtils";
 
@@ -19,14 +17,14 @@ export function getFileTypeIcon(file: FileLike, size: number | string = "2rem"):
 
   // JavaScript
   if (ext === "js" || mime.includes("javascript")) {
-    return <JavascriptIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+    return <LocalIcon icon="javascript-rounded" width={size} height={size} style={{ color: "var(--mantine-color-gray-6)" }} />;
   }
 
   // PDF
   if (ext === "pdf" || mime === "application/pdf") {
-    return <PictureAsPdfIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+    return <LocalIcon icon="picture-as-pdf-rounded" width={size} height={size} style={{ color: "var(--mantine-color-gray-6)" }} />;
   }
 
   // Fallback generic
-  return <InsertDriveFileIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+  return <LocalIcon icon="article-rounded" width={size} height={size} style={{ color: "var(--mantine-color-gray-6)" }} />;
 }

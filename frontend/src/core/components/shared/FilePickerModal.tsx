@@ -13,7 +13,7 @@ import {
   ThemeIcon,
   SimpleGrid
 } from '@mantine/core';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { FileId } from '@app/types/file';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
@@ -213,7 +213,7 @@ const FilePickerModal = ({
                               color="red"
                               size={40}
                             >
-                              <PictureAsPdfIcon style={{ fontSize: 24 }} />
+                              <LocalIcon icon="picture-as-pdf-rounded" width={24} height={24} />
                             </ThemeIcon>
                           )}
                         </Box>

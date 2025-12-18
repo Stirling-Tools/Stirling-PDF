@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Text, useMantineTheme, alpha } from '@mantine/core';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 
 interface DragOverlayProps {
@@ -32,7 +32,7 @@ const DragOverlay: React.FC<DragOverlayProps> = ({ isVisible }) => {
       }}
     >
       <Stack align="center" gap="md">
-        <UploadFileIcon style={{ fontSize: '4rem', color: theme.colors.blue[6] }} />
+        <LocalIcon icon="upload-file-rounded" width="4rem" height="4rem" style={{ color: theme.colors.blue[6] }} />
         <Text size="xl" fw={500} c="blue.6">
           {t('fileManager.dropFilesHere', 'Drop files here to upload')}
         </Text>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Group, ActionIcon } from '@mantine/core';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { ButtonDefinition, type FlowState } from '@app/components/onboarding/onboardingFlowConfig';
 import type { LicenseNotice } from '@app/types/types';
@@ -76,7 +76,7 @@ export function SlideButtons({ slideDefinition, licenseNotice, flowState, onActi
             },
           }}
         >
-          {button.icon === 'chevron-left' && <ChevronLeftIcon fontSize="small" />}
+          {button.icon === 'chevron-left' && <LocalIcon icon="chevron-left-rounded" width={20} height={20} />}
         </ActionIcon>
       );
     }
