@@ -1,21 +1,32 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useToolNavigation } from '@app/hooks/useToolNavigation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { ToolId } from '@app/types/toolId';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
-// Icon wrapper components
-const CompressIcon = (props: any) => <LocalIcon icon="compress-rounded" width={24} height={24} {...props} />;
-const SwapHorizIcon = (props: any) => <LocalIcon icon="swap-horiz-rounded" width={24} height={24} {...props} />;
-const CleaningServicesIcon = (props: any) => <LocalIcon icon="cleaning-services-rounded" width={24} height={24} {...props} />;
-const CropIcon = (props: any) => <LocalIcon icon="crop-rounded" width={24} height={24} {...props} />;
-const TextFieldsIcon = (props: any) => <LocalIcon icon="text-fields-rounded" width={24} height={24} {...props} />;
+// Type for the props that icon wrapper components accept
+interface IconWrapperProps {
+  width?: string | number;
+  height?: string | number;
+  style?: React.CSSProperties;
+  className?: string;
+}
+
+// Type for an icon wrapper component
+type IconWrapperComponent = React.FC<IconWrapperProps>;
+
+// Factory function to create icon wrapper components
+function createIconComponent(iconName: string): IconWrapperComponent {
+  return (props: IconWrapperProps) => (
+    <LocalIcon icon={iconName} width={24} height={24} {...props} />
+  );
+}
 
 export interface SuggestedTool {
   id: ToolId;
   title: string;
-  icon: React.ComponentType<any>;
+  icon: IconWrapperComponent;
   href: string;
   onClick: (e: React.MouseEvent) => void;
 }
@@ -24,27 +35,27 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'href' | 'onClick'>[] = [
   {
     id: 'compress',
     title: 'Compress',
-    icon: CompressIcon
+    icon: createIconComponent('compress-rounded'),
   },
   {
     id: 'convert',
     title: 'Convert',
-    icon: SwapHorizIcon
+    icon: createIconComponent('swap-horiz-rounded'),
   },
   {
     id: 'sanitize',
     title: 'Sanitize',
-    icon: CleaningServicesIcon
+    icon: createIconComponent('cleaning-services-rounded'),
   },
   {
     id: 'split',
     title: 'Split',
-    icon: CropIcon
+    icon: createIconComponent('crop-rounded'),
   },
   {
     id: 'ocr',
     title: 'OCR',
-    icon: TextFieldsIcon
+    icon: createIconComponent('text-fields-rounded'),
   }
 ];
 
@@ -68,7 +79,7 @@ export function useSuggestedTools(): SuggestedTool[] {
           onClick: (e: React.MouseEvent) => { e.preventDefault(); }
         };
       }
-      
+
       const navProps = getToolNavigation(tool.id, toolRegistryEntry);
       return {
         ...tool,
