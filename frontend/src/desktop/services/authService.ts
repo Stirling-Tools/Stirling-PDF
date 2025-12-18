@@ -516,9 +516,32 @@ export class AuthService {
    */
   async loginWithSelfHostedOAuth(providerPath: string, serverUrl: string): Promise<UserInfo> {
     const trimmedServer = serverUrl.replace(/\/+$/, '');
-    const fullUrl = providerPath.startsWith('http')
+    const baseUrl = providerPath.startsWith('http')
       ? providerPath
       : `${trimmedServer}${providerPath.startsWith('/') ? providerPath : `/${providerPath}`}`;
+
+    // Force account chooser like SaaS: add prompt=select_account (and max_age=0 to force re-auth)
+    const urlObj = new URL(baseUrl, trimmedServer);
+    urlObj.searchParams.set('prompt', 'select_account');
+    urlObj.searchParams.set('max_age', '0');
+
+    // Ensure any provider-specific "login_hint" or session cookies are ignored by requiring explicit approval
+    urlObj.searchParams.set('approval_prompt', 'force'); // for older OAuth providers
+    urlObj.searchParams.set('access_type', 'offline'); // common param, sometimes influences prompt behavior
+
+    // Break Keycloak/Okta/Google session by adding a random state to defeat cached redirect
+    urlObj.searchParams.set('state', `${crypto.randomUUID?.() ?? Date.now().toString(36)}-desktop`);
+
+    // For Google specifically, be extra aggressive about forcing the chooser/consent
+    const isGoogle = providerPath.toLowerCase().includes('google');
+    if (isGoogle) {
+      urlObj.searchParams.set('prompt', 'select_account consent');
+      urlObj.searchParams.set('include_granted_scopes', 'false');
+      urlObj.searchParams.delete('login_hint');
+      urlObj.searchParams.set('authuser', '-1'); // tell Google to show account selector
+    }
+
+    const fullUrl = urlObj.toString();
 
     // Ensure backend redirects back to /auth/callback
     try {
@@ -528,7 +551,26 @@ export class AuthService {
     }
 
     // Force a real popup so the main webview stays on the app
-    const authWindow = window.open(fullUrl, 'stirling-desktop-sso', 'width=900,height=900');
+    let authWindow: Window | null = null;
+    const popupName = `stirling-desktop-sso-${Date.now()}`;
+
+    if (isGoogle) {
+      // Hit the Google AccountChooser directly with prompt=select_account and continue to our OAuth URL
+      const googleAccountChooser = `https://accounts.google.com/AccountChooser?prompt=select_account&continue=${encodeURIComponent(fullUrl)}`;
+      authWindow = window.open(googleAccountChooser, popupName, 'width=900,height=900');
+      // Fallback: if navigation fails, push to OAuth URL shortly after
+      setTimeout(() => {
+        try {
+          if (authWindow && !authWindow.closed) {
+            authWindow.location.assign(fullUrl);
+          }
+        } catch (err) {
+          console.warn('Failed to navigate Google popup to OAuth URL', err);
+        }
+      }, 1500);
+    } else {
+      authWindow = window.open(fullUrl, popupName, 'width=900,height=900');
+    }
 
     // Fallback: use Tauri shell.open and wait for deep link back
     if (!authWindow) {
