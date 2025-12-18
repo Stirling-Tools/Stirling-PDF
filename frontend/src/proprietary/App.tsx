@@ -1,14 +1,16 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import Landing from "@app/routes/Landing";
-import Login from "@app/routes/Login";
-import Signup from "@app/routes/Signup";
-import AuthCallback from "@app/routes/AuthCallback";
-import InviteAccept from "@app/routes/InviteAccept";
 import Onboarding from "@app/components/onboarding/Onboarding";
+
+// Lazy-load auth routes - only loaded when user navigates to them
+const Landing = lazy(() => import("@app/routes/Landing"));
+const Login = lazy(() => import("@app/routes/Login"));
+const Signup = lazy(() => import("@app/routes/Signup"));
+const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
