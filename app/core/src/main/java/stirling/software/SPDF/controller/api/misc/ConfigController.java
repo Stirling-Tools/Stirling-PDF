@@ -84,6 +84,9 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().getEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            configData.put(
+                    "hideSettingsForNonAdmins",
+                    applicationProperties.getSystem().getHideSettingsForNonAdmins());
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();

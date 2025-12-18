@@ -23,6 +23,7 @@ export interface AppConfig {
   defaultLocale?: string;
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
+  hideSettingsForNonAdmins?: boolean;
   enableEmailInvites?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;

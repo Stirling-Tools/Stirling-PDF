@@ -173,6 +173,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   //  onClick: () => setActiveButton('activity')
   //},
 
+  // Determine if settings button should be hidden
+  // Only hide when login is disabled AND hideSettingsForNonAdmins is true AND user is not admin
+  const shouldHideSettingsButton = 
+    config?.enableLogin === false &&
+    config?.hideSettingsForNonAdmins === true &&
+    config?.isAdmin !== true;
+
   const bottomButtons: ButtonConfig[] = [
     {
       id: 'help',
@@ -185,17 +192,17 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         // This will be overridden by the wrapper logic
       },
     },
-    {
+    ...(shouldHideSettingsButton ? [] : [{
       id: 'config',
       name: t("quickAccess.settings", "Settings"),
       icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'md',
-      type: 'modal',
+      size: 'md' as const,
+      type: 'modal' as const,
       onClick: () => {
         navigate('/settings/overview');
         setConfigModalOpen(true);
       }
-    }
+    } as ButtonConfig])
   ];
 
   return (
