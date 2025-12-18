@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useEffect, lazy, Suspense } from "react";
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -14,8 +14,10 @@ import '@app/components/shared/quickAccessBar/QuickAccessBar.css';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
-import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+
+// Lazy-load AppConfigModal
+const AppConfigModal = lazy(() => import('@app/components/shared/AppConfigModal'));
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
 import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
@@ -365,10 +367,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         </div>
       </div>
 
-      <AppConfigModal
-        opened={configModalOpen}
-        onClose={() => setConfigModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <AppConfigModal
+          opened={configModalOpen}
+          onClose={() => setConfigModalOpen(false)}
+        />
+      </Suspense>
     </div>
   );
 });

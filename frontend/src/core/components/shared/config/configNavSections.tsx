@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavKey } from '@app/components/shared/config/types';
-import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
-import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
+
+// Lazy load config sections
+const HotkeysSection = lazy(() => import('@app/components/shared/config/configSections/HotkeysSection'));
+const GeneralSection = lazy(() => import('@app/components/shared/config/configSections/GeneralSection'));
 
 export interface ConfigNavItem {
   key: NavKey;
