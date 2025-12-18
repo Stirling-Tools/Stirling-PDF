@@ -38,7 +38,7 @@ const isKnownAnnotationTool = (toolId: string | undefined | null): toolId is Ann
 
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setToolAndWorkbench, selectedTool, workbench } = useNavigation();
+  const { selectedTool, workbench } = useNavigation();
   const { selectedFiles } = useFileSelection();
   const {
     signatureApiRef,
@@ -142,10 +142,6 @@ const Annotate = (_props: BaseToolProps) => {
     setShapeFillOpacity,
     setTextAlignment,
   } = styleActions;
-
-  useEffect(() => {
-    setToolAndWorkbench('annotate', 'viewer');
-  }, [setToolAndWorkbench]);
 
   useEffect(() => {
     const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';

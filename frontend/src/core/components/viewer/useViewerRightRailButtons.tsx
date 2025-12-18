@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
@@ -13,7 +13,15 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
 
-export function useViewerRightRailButtons() {
+interface ViewerRightRailButtonsOptions {
+  /**
+   * Optional handler to save annotation changes to a new PDF version.
+   * When provided, a Save button will be shown in the viewer right rail.
+   */
+  onSaveAnnotations?: () => void | Promise<void>;
+}
+
+export function useViewerRightRailButtons(options?: ViewerRightRailButtonsOptions) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
@@ -21,6 +29,14 @@ export function useViewerRightRailButtons() {
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
+
+  // Keep the latest save handler in a ref to avoid re-registering right-rail
+  // buttons on every render when the callback identity changes.
+  const saveAnnotationsRef = useRef<(() => void | Promise<void>) | undefined>(undefined);
+
+  useEffect(() => {
+    saveAnnotationsRef.current = options?.onSaveAnnotations;
+  }, [options?.onSaveAnnotations]);
 
   const stripBasePath = useCallback((path: string) => {
     if (BASE_PATH && path.startsWith(BASE_PATH)) {
@@ -55,9 +71,13 @@ export function useViewerRightRailButtons() {
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
+  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    return [
+    const exportState = viewer.getExportState();
+    const canExport = Boolean(exportState?.canExport);
+
+    const buttons: RightRailButtonWithAction[] = [
       {
         id: 'viewer-search',
         tooltip: searchLabel,
@@ -214,9 +234,47 @@ export function useViewerRightRailButtons() {
         render: ({ disabled }) => (
           <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
         )
-      }
+      },
     ];
-  }, [t, i18n.language, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, bookmarkLabel, printLabel, tooltipPosition, annotationsLabel, isAnnotationsActive, handleToolSelect]);
+
+    // Optional: Save button for annotations (always registered when this hook is used
+    // with a save handler; uses a ref to avoid infinite re-registration loops).
+    buttons.push({
+      id: 'viewer-save-annotations',
+      icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
+      tooltip: saveChangesLabel,
+      ariaLabel: saveChangesLabel,
+      section: 'top' as const,
+      order: 59,
+      disabled: !canExport,
+      visible: true,
+      onClick: () => {
+        const handler = saveAnnotationsRef.current;
+        if (handler) {
+          void handler();
+        }
+      },
+    });
+
+    return buttons;
+  }, [
+    t,
+    i18n.language,
+    viewer,
+    isPanning,
+    searchLabel,
+    panLabel,
+    rotateLeftLabel,
+    rotateRightLabel,
+    sidebarLabel,
+    bookmarkLabel,
+    printLabel,
+    tooltipPosition,
+    annotationsLabel,
+    saveChangesLabel,
+    isAnnotationsActive,
+    handleToolSelect,
+  ]);
 
   useRightRailButtons(viewerButtons);
 }
