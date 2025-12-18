@@ -37,17 +37,9 @@ const AccountSection: React.FC = () => {
 
   const userIdentifier = useMemo(() => user?.email || user?.username || '', [user?.email, user?.username]);
 
-  const redirectToLogin = useCallback(() => {
-    window.location.assign('/login');
-  }, []);
-
   const handleLogout = useCallback(async () => {
-    try {
-      await signOut();
-    } finally {
-      redirectToLogin();
-    }
-  }, [redirectToLogin, signOut]);
+    await signOut();
+  }, [signOut]);
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

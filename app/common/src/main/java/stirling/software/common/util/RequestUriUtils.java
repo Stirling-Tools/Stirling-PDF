@@ -160,7 +160,6 @@ public class RequestUriUtils {
                 || trimmedUri.contains("/oauth2/authorization/") // OAuth2 authorization endpoint
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
-                || trimmedUri.startsWith("/api/v1/auth/logout")
                 || trimmedUri.startsWith(
                         "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
                 // enableLogin)

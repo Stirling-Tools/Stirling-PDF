@@ -280,31 +280,39 @@ class SpringAuthClient {
 
   /**
    * Sign out user (invalidate session)
+   * Uses Spring Security's logout endpoint which handles OAuth2/SAML logout redirects
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      const response = await apiClient.post('/api/v1/auth/logout', null, {
+      // Extract token before making request (needed for OAuth/SAML logout)
+      const token = localStorage.getItem('stirling_jwt');
+
+      const response = await apiClient.post('/logout', null, {
         headers: {
-          'X-XSRF-TOKEN': this.getCsrfToken() || '',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'Accept': 'application/json', // Request JSON response for SPA
         },
         withCredentials: true,
       });
 
-      if (response.status === 200) {
-        // console.debug('[SpringAuth] signOut: Success');
-      }
-
-      // Clean up local storage
+      // Clean up local storage after successful logout request
       localStorage.removeItem('stirling_jwt');
 
-      // Notify listeners
-      this.notifyListeners('SIGNED_OUT', null);
+      // If we got a logout URL (for OIDC/OAuth2 providers), redirect immediately
+      // Don't notify listeners to avoid React re-render before redirect
+      if (response.data?.logoutUrl) {
+        window.location.href = response.data.logoutUrl;
+        return { error: null };
+      }
 
+      this.notifyListeners('SIGNED_OUT', null);
+      window.location.href = '/login?logout=true';
       return { error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signOut error:', error);
-      // Still remove token even if backend call fails
       localStorage.removeItem('stirling_jwt');
+      this.notifyListeners('SIGNED_OUT', null);
+      window.location.href = '/login?logout=true';
       return {
         error: { message: getErrorMessage(error, 'Logout failed') },
       };
