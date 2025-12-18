@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { resetOAuthState } from '@proprietary/auth/oauthStorage';
+import { resetOAuthState } from '@app/auth/oauthStorage';
 import axios from 'axios';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
@@ -128,6 +128,19 @@ export class AuthService {
     } catch (error) {
       console.warn('[Desktop AuthService] Failed to clear localStorage token', error);
     }
+  }
+
+  /**
+   * Local clear only (no backend calls) to reset auth state in desktop contexts
+   */
+  async localClearAuth(): Promise<void> {
+    await this.clearTokenEverywhere().catch(() => {});
+    try {
+      await invoke('clear_user_info');
+    } catch (err) {
+      console.warn('[Desktop AuthService] Failed to clear user info', err);
+    }
+    this.setAuthStatus('unauthenticated', null);
   }
 
   subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
@@ -277,12 +290,9 @@ export class AuthService {
         const serverUrl = currentConfig?.server_config?.url;
         const token = await this.getAuthToken();
 
-        if (serverUrl) {
+        if (serverUrl && token) {
           const base = serverUrl.replace(/\/+$/, '');
-          const headers: Record<string, string> = {};
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
+          const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
           // Treat 401/403 as benign (session already expired)
           const safePost = async (url: string) => {
@@ -456,7 +466,14 @@ export class AuthService {
     const path = typeof window !== 'undefined' ? window.location.pathname : '';
     if (path.startsWith('/login') || path.startsWith('/setup')) {
       console.log('[Desktop AuthService] On login/setup path, clearing any cached auth');
-      await this.logout();
+      // Local clear only; avoid backend logout to prevent noisy errors when already unauthenticated
+      await this.clearTokenEverywhere().catch(() => {});
+      try {
+        await invoke('clear_user_info');
+      } catch (err) {
+        console.warn('[Desktop AuthService] Failed to clear user info on login/setup init', err);
+      }
+      this.setAuthStatus('unauthenticated', null);
       return;
     }
 

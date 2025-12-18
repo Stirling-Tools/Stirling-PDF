@@ -84,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined' && (window as any).__TAURI__) {
         try {
           const { authService } = await import('@app/services/authService');
-          await authService.logout();
+          // Do a local clear only; avoid backend logout here to prevent double-calls/toasts
+          await authService.localClearAuth();
         } catch (desktopErr) {
           console.warn('[Auth] Failed to clear desktop auth state after signOut', desktopErr);
         }

@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { springAuth } from '@app/auth/springAuthClient';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { tauriBackendService } from '@app/services/tauriBackendService';
 
 /**
  * OAuth Callback Handler
@@ -83,8 +81,16 @@ export default function AuthCallback() {
           if (pending && hasTauri) {
             const parsed = JSON.parse(pending) as { serverUrl?: string } | null;
             if (parsed?.serverUrl) {
-              await connectionModeService.switchToSelfHosted({ url: parsed.serverUrl });
-              await tauriBackendService.initializeExternalBackend();
+              try {
+                // Lazy-load desktop services only in Tauri runtime; TypeScript ignores missing types
+                // and Vite ignores analysis for these optional imports.
+                const { connectionModeService } = await import(/* @vite-ignore */ '../../desktop/services/connectionModeService');
+                const { tauriBackendService } = await import(/* @vite-ignore */ '../../desktop/services/tauriBackendService');
+                await connectionModeService.switchToSelfHosted({ url: parsed.serverUrl });
+                await tauriBackendService.initializeExternalBackend();
+              } catch (innerErr) {
+                console.error('[AuthCallback] Desktop fallback services unavailable', innerErr);
+              }
             }
             localStorage.removeItem('desktop_self_hosted_sso_pending');
           }

@@ -11,7 +11,7 @@ import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
-import { resetOAuthState } from '@proprietary/auth/oauthStorage';
+import { resetOAuthState } from '@app/auth/oauthStorage';
 import { invoke } from '@tauri-apps/api/core';
 
 // Helper to extract error message from axios error
