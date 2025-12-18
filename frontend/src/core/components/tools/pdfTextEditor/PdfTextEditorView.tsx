@@ -1532,65 +1532,208 @@ const selectionToolbarPosition = useMemo(() => {
             title={
               <Group gap="xs">
                 <InfoOutlinedIcon fontSize="small" />
-                <Text fw={600}>{t('pdfTextEditor.welcomeBanner.title', 'Welcome to PDF Text Editor (Early Access)')}</Text>
+                <Text fw={600}>
+                  {t(
+                    'pdfTextEditor.welcomeBanner.title',
+                    'Welcome to PDF Text Editor (Early Access)',
+                  )}
+                </Text>
               </Group>
             }
             centered
             size="lg"
+            scrollAreaComponent={Box}
           >
-            <ScrollArea style={{ maxHeight: '70vh' }} offsetScrollbars>
-              <Stack gap="sm">
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                maxHeight: '70vh',
+                width: '100%',
+              }}
+            >
+              {/* Header (fixed) */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  marginBottom: '0.75rem',
+                }}
+              >
                 <Alert color="orange" variant="light" radius="md">
                   <Text size="sm" fw={500}>
-                    {t('pdfTextEditor.welcomeBanner.experimental', 'This is an experimental feature in active development. Expect some instability and issues during use.')}
+                    {t(
+                      'pdfTextEditor.welcomeBanner.experimental',
+                      'This is an experimental feature in active development. Expect some instability and issues during use.',
+                    )}
                   </Text>
                 </Alert>
                 <Text size="sm">
-                  {t('pdfTextEditor.welcomeBanner.howItWorks', 'This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.')}
+                  {t(
+                    'pdfTextEditor.welcomeBanner.howItWorks',
+                    'This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF.',
+                  )}
                 </Text>
+              </div>
+
+              {/* Body (scrollable) */}
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: 'auto',
+                  paddingRight: '0.25rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Divider />
+                  <Text size="sm" fw={500} c="green.7">
+                    {t('pdfTextEditor.welcomeBanner.bestFor', 'Works Best With:')}
+                  </Text>
+                  <Text
+                    size="sm"
+                    component="ul"
+                    style={{ marginLeft: '1rem', marginTop: '0.25rem' }}
+                  >
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.bestFor1',
+                        'Simple PDFs containing primarily text and images',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.bestFor2',
+                        'Documents with standard paragraph formatting',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.bestFor3',
+                        'Letters, essays, reports, and basic documents',
+                      )}
+                    </li>
+                  </Text>
+                  <Divider />
+                  <Text size="sm" fw={500} c="orange.7">
+                    {t('pdfTextEditor.welcomeBanner.notIdealFor', 'Not Ideal For:')}
+                  </Text>
+                  <Text
+                    size="sm"
+                    component="ul"
+                    style={{ marginLeft: '1rem', marginTop: '0.25rem' }}
+                  >
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.notIdealFor1',
+                        'PDFs with special formatting like bullet points, tables, or multi-column layouts',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.notIdealFor2',
+                        'Magazines, brochures, or heavily designed documents',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.notIdealFor3',
+                        'Instruction manuals with complex layouts',
+                      )}
+                    </li>
+                  </Text>
+                  <Divider />
+                  <Text size="sm" fw={500}>
+                    {t('pdfTextEditor.welcomeBanner.limitations', 'Current Limitations:')}
+                  </Text>
+                  <Text
+                    size="sm"
+                    component="ul"
+                    style={{ marginLeft: '1rem', marginTop: '0.25rem' }}
+                  >
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.limitation1',
+                        'Font rendering may differ slightly from the original PDF',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.limitation2',
+                        'Complex graphics, form fields, and annotations are preserved but not editable',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.limitation3',
+                        'Large files may take time to convert and process',
+                      )}
+                    </li>
+                  </Text>
+                  <Divider />
+                  <Text size="sm" fw={500}>
+                    {t('pdfTextEditor.welcomeBanner.knownIssues', 'Known Issues (Being Fixed):')}
+                  </Text>
+                  <Text
+                    size="sm"
+                    component="ul"
+                    style={{ marginLeft: '1rem', marginTop: '0.25rem' }}
+                  >
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.issue1',
+                        'Text colour is not currently preserved (will be added soon)',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.issue2',
+                        'Paragraph mode has more alignment and spacing issues - Single Line mode recommended',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.issue3',
+                        'The preview display differs from the exported PDF - exported PDFs are closer to the original',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.issue4',
+                        'Rotated text alignment may need manual adjustment',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'pdfTextEditor.welcomeBanner.issue5',
+                        'Transparency and layering effects may vary from original',
+                      )}
+                    </li>
+                  </Text>
+                </div>
+              </div>
+
+              {/* Footer (fixed) */}
+              <div
+                style={{
+                  marginTop: '0.75rem',
+                }}
+              >
                 <Divider />
-                <Text size="sm" fw={500} c="green.7">
-                  {t('pdfTextEditor.welcomeBanner.bestFor', 'Works Best With:')}
+                <Text size="xs" c="dimmed" mt="xs">
+                  {t(
+                    'pdfTextEditor.welcomeBanner.feedback',
+                    'This is an early access feature. Please report any issues you encounter to help us improve!',
+                  )}
                 </Text>
-                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                  <li>{t('pdfTextEditor.welcomeBanner.bestFor1', 'Simple PDFs containing primarily text and images')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.bestFor2', 'Documents with standard paragraph formatting')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.bestFor3', 'Letters, essays, reports, and basic documents')}</li>
-                </Text>
-                <Divider />
-                <Text size="sm" fw={500} c="orange.7">
-                  {t('pdfTextEditor.welcomeBanner.notIdealFor', 'Not Ideal For:')}
-                </Text>
-                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor1', 'PDFs with special formatting like bullet points, tables, or multi-column layouts')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor2', 'Magazines, brochures, or heavily designed documents')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.notIdealFor3', 'Instruction manuals with complex layouts')}</li>
-                </Text>
-                <Divider />
-                <Text size="sm" fw={500}>
-                  {t('pdfTextEditor.welcomeBanner.limitations', 'Current Limitations:')}
-                </Text>
-                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                  <li>{t('pdfTextEditor.welcomeBanner.limitation1', 'Font rendering may differ slightly from the original PDF')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.limitation2', 'Complex graphics, form fields, and annotations are preserved but not editable')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.limitation3', 'Large files may take time to convert and process')}</li>
-                </Text>
-                <Divider />
-                <Text size="sm" fw={500}>
-                  {t('pdfTextEditor.welcomeBanner.knownIssues', 'Known Issues (Being Fixed):')}
-                </Text>
-                <Text size="sm" component="ul" style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                  <li>{t('pdfTextEditor.welcomeBanner.issue1', 'Text colour is not currently preserved (will be added soon)')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.issue2', 'Paragraph mode has more alignment and spacing issues - Single Line mode recommended')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.issue3', 'The preview display differs from the exported PDF - exported PDFs are closer to the original')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.issue4', 'Rotated text alignment may need manual adjustment')}</li>
-                  <li>{t('pdfTextEditor.welcomeBanner.issue5', 'Transparency and layering effects may vary from original')}</li>
-                </Text>
-                <Divider />
-                <Text size="xs" c="dimmed">
-                  {t('pdfTextEditor.welcomeBanner.feedback', 'This is an early access feature. Please report any issues you encounter to help us improve!')}
-                </Text>
-                <Group justify="flex-end" gap="sm" mt="md">
+                <Group justify="flex-end" gap="sm" mt="xs">
                   <Button variant="default" onClick={handleDismissWelcomeBanner}>
                     {t('pdfTextEditor.welcomeBanner.gotIt', 'Got it')}
                   </Button>
@@ -1598,8 +1741,8 @@ const selectionToolbarPosition = useMemo(() => {
                     {t('pdfTextEditor.welcomeBanner.dontShowAgain', "Don't show again")}
                   </Button>
                 </Group>
-              </Stack>
-            </ScrollArea>
+              </div>
+            </div>
           </Modal>
 
           <Card
