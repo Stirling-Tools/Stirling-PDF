@@ -13,7 +13,7 @@ import {
   ProcessedFileMetadata,
 } from '@app/types/fileContext';
 import { FileId, ToolOperation } from '@app/types/file';
-import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
+import { generateThumbnailWithMetadata, generateThumbnailForFile } from '@app/utils/thumbnailUtils';
 import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
 import { buildQuickKeySet } from '@app/contexts/file/fileSelectors';
 import { StirlingFile } from '@app/types/fileContext';
@@ -296,7 +296,6 @@ export async function addFiles(
       // Non-PDF files: simple thumbnail generation, no processedFile metadata
       try {
         if (DEBUG) console.log(`📄 Generating simple thumbnail for non-PDF file ${file.name}`);
-        const { generateThumbnailForFile } = await import('@app/utils/thumbnailUtils');
         thumbnail = await generateThumbnailForFile(file);
         if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: SUCCESS`);
       } catch (error) {

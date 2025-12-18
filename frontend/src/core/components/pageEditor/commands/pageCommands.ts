@@ -1,5 +1,7 @@
 import { FileId } from '@app/types/file';
 import { PDFDocument, PDFPage, PageBreakSettings } from '@app/types/pageEditor';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
 
 // V1-style DOM-first command system (replaces the old React state commands)
 export abstract class DOMCommand {
@@ -727,8 +729,6 @@ export class InsertFilesCommand extends DOMCommand {
 
   private async generateThumbnailsForInsertedPages(updatedDocument: PDFDocument): Promise<void> {
     try {
-      const { thumbnailGenerationService } = await import('@app/services/thumbnailGenerationService');
-
       // Group pages by file ID to generate thumbnails efficiently
       const pagesByFileId = new Map<FileId, PDFPage[]>();
 
@@ -809,7 +809,6 @@ export class InsertFilesCommand extends DOMCommand {
           const clonedArrayBuffer = arrayBuffer.slice(0);
 
           // Use PDF.js via the worker manager to extract pages
-          const { pdfWorkerManager } = await import('@app/services/pdfWorkerManager');
           const pdf = await pdfWorkerManager.createDocument(clonedArrayBuffer);
 
           const pageCount = pdf.numPages;

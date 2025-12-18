@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useCallback } from "react";
+import JSZip from "jszip";
 
 import type {
   useFileActions,
@@ -194,8 +195,7 @@ export const usePageEditorExport = ({
       );
 
       if (files.length > 1) {
-        const JSZip = await import("jszip");
-        const zip = new JSZip.default();
+        const zip = new JSZip();
 
         files.forEach((file) => {
           zip.file(file.name, file);

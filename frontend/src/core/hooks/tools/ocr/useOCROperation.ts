@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import JSZip from 'jszip';
 import { OCRParameters, defaultParameters } from '@app/hooks/tools/ocr/useOCRParameters';
 import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
@@ -18,8 +19,7 @@ function getMimeType(filename: string): string {
 
 // Lightweight ZIP extractor (keep or replace with a shared util if you have one)
 async function extractZipFile(zipBlob: Blob): Promise<File[]> {
-  const JSZip = await import('jszip');
-  const zip = new JSZip.default();
+  const zip = new JSZip();
   const zipContent = await zip.loadAsync(await zipBlob.arrayBuffer());
   const out: File[] = [];
   for (const [filename, file] of Object.entries(zipContent.files)) {

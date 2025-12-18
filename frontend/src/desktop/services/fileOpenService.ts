@@ -1,4 +1,5 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 
 export interface FileOpenService {
   getOpenedFiles(): Promise<string[]>;
@@ -60,8 +61,6 @@ class TauriFileOpenService implements FileOpenService {
 
         // Only import if in Tauri environment
         if (isTauri()) {
-          const { listen } = await import('@tauri-apps/api/event');
-
           // Check again after async import
           if (isCleanedUp) {
             return;
