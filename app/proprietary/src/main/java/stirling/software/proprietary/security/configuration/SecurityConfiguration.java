@@ -24,6 +24,7 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -203,10 +204,10 @@ public class SecurityConfiguration {
 
         if (loginEnabledValue) {
 
-            http.addFilterBefore(
-                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
+            http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter, LogoutFilter.class)
+                    .addFilterAfter(
+                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
             http.sessionManagement(
                     sessionManagement ->
