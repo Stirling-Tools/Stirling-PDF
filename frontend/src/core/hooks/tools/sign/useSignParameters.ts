@@ -18,6 +18,7 @@ export interface SignParameters {
   fontFamily?: string;
   fontSize?: number;
   textColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export const DEFAULT_PARAMETERS: SignParameters = {
@@ -28,6 +29,7 @@ export const DEFAULT_PARAMETERS: SignParameters = {
   fontFamily: 'Helvetica',
   fontSize: 16,
   textColor: '#000000',
+  textAlign: 'left',
 };
 
 const validateSignParameters = (parameters: SignParameters): boolean => {

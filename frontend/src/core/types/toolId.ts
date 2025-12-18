@@ -25,6 +25,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   'ocr',
   'addImage',
   'rotate',
+  'annotate',
   'scannerImageSplit',
   'editTableOfContents',
   'scannerEffect',

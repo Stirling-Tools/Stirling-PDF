@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box } from '@mantine/core';
+import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 
 interface TextInputWithFontProps {
@@ -11,6 +12,8 @@ interface TextInputWithFontProps {
   onFontFamilyChange: (family: string) => void;
   textColor?: string;
   onTextColorChange?: (color: string) => void;
+  textAlign?: 'left' | 'center' | 'right';
+  onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
   disabled?: boolean;
   label: string;
   placeholder: string;
@@ -30,6 +33,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   onFontFamilyChange,
   textColor = '#000000',
   onTextColorChange,
+  textAlign = 'left',
+  onTextAlignChange,
   disabled = false,
   label,
   placeholder,
@@ -39,6 +44,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   colorLabel,
   onAnyChange
 }) => {
+  const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -210,6 +216,23 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
             onTextColorChange(color);
             onAnyChange?.();
           }}
+        />
+      )}
+
+      {/* Text Alignment */}
+      {onTextAlignChange && (
+        <SegmentedControl
+          value={textAlign}
+          onChange={(value: string) => {
+            onTextAlignChange(value as 'left' | 'center' | 'right');
+            onAnyChange?.();
+          }}
+          disabled={disabled}
+          data={[
+            { label: t('textAlign.left', 'Left'), value: 'left' },
+            { label: t('textAlign.center', 'Center'), value: 'center' },
+            { label: t('textAlign.right', 'Right'), value: 'right' },
+          ]}
         />
       )}
     </Stack>

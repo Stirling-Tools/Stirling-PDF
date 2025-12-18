@@ -104,12 +104,20 @@ const createTextStampImage = (
 
   ctx.fillStyle = textColor;
   ctx.font = `${fontSize}px ${fontFamily}`;
-  ctx.textAlign = 'left';
+  ctx.textAlign = config.textAlign || 'left';
   ctx.textBaseline = 'middle';
 
   const horizontalPadding = paddingX;
   const verticalCenter = naturalHeight / 2;
-  ctx.fillText(text, horizontalPadding, verticalCenter);
+
+  let xPosition = horizontalPadding;
+  if (config.textAlign === 'center') {
+    xPosition = naturalWidth / 2;
+  } else if (config.textAlign === 'right') {
+    xPosition = naturalWidth - horizontalPadding;
+  }
+
+  ctx.fillText(text, xPosition, verticalCenter);
 
   return {
     dataUrl: canvas.toDataURL('image/png'),
@@ -199,12 +207,21 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
+
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
     if (!annotationApi || (isPlacementMode === undefined)) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const editable = target?.getAttribute?.('contenteditable');
+      if (tag === 'input' || tag === 'textarea' || editable === 'true') {
+        return;
+      }
+
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
