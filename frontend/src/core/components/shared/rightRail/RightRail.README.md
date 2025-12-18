@@ -14,7 +14,7 @@ A dynamic vertical toolbar on the right side of the application that supports bo
 
 ```tsx
 import { useRightRailButtons } from '../hooks/useRightRailButtons';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 function MyTool() {
   const handleAction = useCallback(() => {
@@ -24,7 +24,7 @@ function MyTool() {
   useRightRailButtons([
     {
       id: 'my-action',
-      icon: <PlayArrowIcon />,
+      icon: <LocalIcon icon="play-arrow-rounded" width={24} height={24} />,
       tooltip: 'Execute Action',
       onClick: handleAction,
     },
@@ -137,7 +137,7 @@ useRightRailButtons([
 ## Best Practices
 
 - Use descriptive IDs: `'compress-optimize'`, `'ocr-process'`
-- Choose appropriate Material-UI icons
+- Choose appropriate Material Symbols icons via LocalIcon
 - Keep tooltips concise: `'Compress PDF'`, `'Process with OCR'`
 - Use `useCallback` for click handlers to prevent re-registration
 - Reach for `render` when you need popovers or multi-control groups inside the rail
