@@ -102,6 +102,8 @@ interface AnnotationPanelProps {
   undo: () => void;
   redo: () => void;
   historyAvailability: { canUndo: boolean; canRedo: boolean };
+  onApplyChanges: () => void;
+  applyDisabled: boolean;
 }
 
 // AnnotationPanel component extracted from Annotate.tsx to keep the main file smaller.
@@ -136,6 +138,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     undo,
     redo,
     historyAvailability,
+    onApplyChanges,
+    applyDisabled,
   } = props;
 
   const {
@@ -1290,6 +1294,19 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       {activeTool === 'select' && !selectedAnn && defaultStyleControls}
 
       {colorPickerComponent}
+
+      <Button
+        fullWidth
+        size="md"
+        radius="md"
+        mt="sm"
+        variant="filled"
+        color="blue"
+        disabled={applyDisabled}
+        onClick={onApplyChanges}
+      >
+        {t('annotation.applyChanges', 'Apply Changes')}
+      </Button>
 
       <SuggestedToolsSection />
     </Stack>

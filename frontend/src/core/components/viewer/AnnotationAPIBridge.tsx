@@ -307,7 +307,19 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       },
       getSelectedAnnotation: () => {
         const api = annotationApi as AnnotationApiSurface | undefined;
-        return api?.getSelectedAnnotation?.() ?? null;
+        if (!api?.getSelectedAnnotation) {
+          return null;
+        }
+        try {
+          return api.getSelectedAnnotation();
+        } catch (error) {
+          // Some EmbedPDF builds expose getSelectedAnnotation with an internal
+          // `this`/state dependency (e.g. reading `selectedUid` from undefined).
+          // If that happens, fail gracefully and treat it as "no selection"
+          // instead of crashing the entire annotations tool.
+          console.error('[AnnotationAPIBridge] getSelectedAnnotation failed:', error);
+          return null;
+        }
       },
       deselectAnnotation: () => {
         const api = annotationApi as AnnotationApiSurface | undefined;

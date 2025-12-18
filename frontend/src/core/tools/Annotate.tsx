@@ -38,7 +38,7 @@ const isKnownAnnotationTool = (toolId: string | undefined | null): toolId is Ann
 
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedTool, workbench } = useNavigation();
+  const { selectedTool, workbench, hasUnsavedChanges } = useNavigation();
   const { selectedFiles } = useFileSelection();
   const {
     signatureApiRef,
@@ -142,6 +142,10 @@ const Annotate = (_props: BaseToolProps) => {
     setShapeFillOpacity,
     setTextAlignment,
   } = styleActions;
+
+  const handleApplyChanges = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('stirling-annotations-apply'));
+  }, []);
 
   useEffect(() => {
     const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';
@@ -371,6 +375,8 @@ const Annotate = (_props: BaseToolProps) => {
                 undo={undo}
                 redo={redo}
                 historyAvailability={historyAvailability}
+                onApplyChanges={handleApplyChanges}
+                applyDisabled={!hasUnsavedChanges}
               />
             ),
           },

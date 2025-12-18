@@ -261,7 +261,19 @@ export function useAnnotationSelection({
     if (!api) return;
 
     const checkSelection = () => {
-      const ann = api.getSelectedAnnotation?.();
+      let ann: any = null;
+      if (typeof api.getSelectedAnnotation === 'function') {
+        try {
+          ann = api.getSelectedAnnotation();
+        } catch (error) {
+          // Some builds of the annotation plugin can throw when reading
+          // internal selection state (e.g., accessing `selectedUid` on
+          // an undefined object). Treat this as "no current selection"
+          // instead of crashing the annotations tool.
+          console.error('[useAnnotationSelection] getSelectedAnnotation failed:', error);
+          ann = null;
+        }
+      }
       const currentId = ann?.object?.id ?? ann?.id ?? null;
       if (currentId !== selectedAnnIdRef.current) {
         applySelectionFromAnnotation(ann ?? null);

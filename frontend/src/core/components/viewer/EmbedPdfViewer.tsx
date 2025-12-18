@@ -250,7 +250,7 @@ const EmbedPdfViewerContent = ({
         unsubscribe();
       }
     };
-  }, [historyApiRef, setHasUnsavedChanges]);
+  }, [historyApiRef.current, setHasUnsavedChanges]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
@@ -303,10 +303,20 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
 
-  // Register viewer right-rail buttons (including optional Save for annotations)
-  useViewerRightRailButtons({
-    onSaveAnnotations: applyChanges,
-  });
+  // Expose annotation apply via a global event so tools (like Annotate) can
+  // trigger saves from the left sidebar without tight coupling.
+  useEffect(() => {
+    const handler = () => {
+      void applyChanges();
+    };
+    window.addEventListener('stirling-annotations-apply', handler);
+    return () => {
+      window.removeEventListener('stirling-annotations-apply', handler);
+    };
+  }, [applyChanges]);
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
