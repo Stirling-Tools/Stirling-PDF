@@ -68,6 +68,7 @@
   "scripts": {
     "predev": "npm run generate-icons",
     "dev": "vite",
+    "clean": "rm -rf dist",
     "prebuild": "npm run generate-icons",
     "lint": "eslint --max-warnings=0",
     "build": "vite build",
