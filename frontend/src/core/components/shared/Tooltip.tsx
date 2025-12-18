@@ -33,6 +33,10 @@ export interface TooltipProps {
   disabled?: boolean;
   /** If false, tooltip will not open on focus (hover only) */
   openOnFocus?: boolean;
+  /** If true, tooltip stays open until explicitly closed (ignores hover/blur/esc/outside) */
+  manualCloseOnly?: boolean;
+  /** Show a close button even when not pinned */
+  showCloseButton?: boolean;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -55,6 +59,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   closeOnOutside = true,
   disabled = false,
   openOnFocus = true,
+  manualCloseOnly = false,
+  showCloseButton = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -81,6 +87,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
+  const allowAutoClose = !manualCloseOnly;
 
   const resolvedPosition: NonNullable<TooltipProps['position']> = useMemo(() => {
     const htmlDir = typeof document !== 'undefined' ? document.documentElement.dir : 'ltr';
@@ -132,11 +139,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
 
       // Not pinned and configured to close on outside
-      if (closeOnOutside && !insideTooltip && !insideTrigger) {
+      if (allowAutoClose && closeOnOutside && !insideTooltip && !insideTrigger) {
         setOpen(false);
       }
     },
-    [isPinned, closeOnOutside, setOpen]
+    [isPinned, closeOnOutside, setOpen, allowAutoClose]
   );
 
   useEffect(() => {
@@ -200,10 +207,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
 
       clearTimers();
-      if (!isPinned) setOpen(false);
+      if (allowAutoClose && !isPinned) setOpen(false);
       (children.props as any)?.onPointerLeave?.(e);
     },
-    [clearTimers, isPinned, setOpen, children.props]
+    [clearTimers, isPinned, setOpen, children.props, allowAutoClose]
   );
 
   const handleMouseDown = useCallback(
@@ -257,15 +264,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
         return;
       }
       clearTimers();
-      if (!isPinned) setOpen(false);
+      if (allowAutoClose && !isPinned) setOpen(false);
       (children.props as any)?.onBlur?.(e);
     },
-    [isPinned, setOpen, children.props, clearTimers]
+    [isPinned, setOpen, children.props, allowAutoClose, clearTimers]
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (manualCloseOnly) return;
     if (e.key === 'Escape') setOpen(false);
-  }, [setOpen]);
+  }, [setOpen, manualCloseOnly]);
 
   // Keep open while pointer is over the tooltip; close when leaving it (if not pinned)
   const handleTooltipPointerEnter = useCallback(() => {
@@ -276,9 +284,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
     (e: React.PointerEvent) => {
       const related = e.relatedTarget as Node | null;
       if (isDomNode(related) && triggerRef.current && triggerRef.current.contains(related)) return;
-      if (!isPinned) setOpen(false);
+      if (allowAutoClose && !isPinned) setOpen(false);
     },
-    [isPinned, setOpen]
+    [isPinned, setOpen, allowAutoClose]
   );
 
   // Enhance child with handlers and ref
@@ -301,6 +309,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   });
 
   const shouldShowTooltip = open;
+  const shouldShowCloseButton = showCloseButton || isPinned;
 
   const tooltipElement = shouldShowTooltip ? (
     <div
@@ -325,7 +334,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       className={`${styles['tooltip-container']} ${isPinned ? styles.pinned : ''}`}
       onClick={pinOnClick ? (e) => { e.stopPropagation(); setIsPinned(true); } : undefined}
     >
-      {isPinned && (
+      {shouldShowCloseButton && (
         <button
           className={styles['tooltip-pin-button']}
           onClick={(e) => {
@@ -363,7 +372,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           <span className={styles['tooltip-title']}>{header.title}</span>
         </div>
       )}
-      <TooltipContent content={content} tips={tips} />
+      <TooltipContent content={content} tips={tips} extraRightPadding={shouldShowCloseButton ? 48 : 0} />
     </div>
   ) : null;
 
