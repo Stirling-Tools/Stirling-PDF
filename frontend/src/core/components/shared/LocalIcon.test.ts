@@ -23,7 +23,7 @@ describe('LocalIcon Validation', () => {
     let grepOutput: string;
     try {
       grepOutput = execSync(
-        `grep -r 'LocalIcon' --include="*.tsx" --include="*.ts" ${srcPath} | grep 'icon='`,
+        `grep -r 'LocalIcon' --include="*.tsx" --include="*.ts" --exclude="*.test.ts" --exclude="*.test.tsx" ${srcPath} | grep 'icon='`,
         { encoding: 'utf-8' }
       );
     } catch (error: any) {
