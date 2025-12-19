@@ -225,6 +225,7 @@ public class ApplicationProperties {
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
+            private Boolean enableSingleLogout = false;
 
             @JsonProperty("idpCert")
             private String idpCert;
@@ -239,6 +240,9 @@ public class ApplicationProperties {
 
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
+                if (idpMetadataUri == null || idpMetadataUri.isBlank()) {
+                    throw new IOException("security.saml2.idpMetadataUri is not configured");
+                }
                 if (idpMetadataUri.startsWith("classpath:")) {
                     return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
                             .getInputStream();
@@ -252,6 +256,11 @@ public class ApplicationProperties {
                 } catch (URISyntaxException e) {
                     throw new IOException("Invalid URI format: " + idpMetadataUri, e);
                 }
+            }
+
+            @JsonIgnore
+            public String getIdpMetadataUriLocation() {
+                return idpMetadataUri;
             }
 
             @JsonIgnore

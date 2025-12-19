@@ -227,7 +227,7 @@ public class SettingsController {
                 "saml2",
                 Map.of(
                         "enabled", saml2.getEnabled(),
-                        "provider", saml2.getProvider() != null ? saml2.getProvider() : "",
+                        "provider", saml2.getIdpIssuer() != null ? saml2.getIdpIssuer() : "",
                         "autoCreateUser", saml2.getAutoCreateUser(),
                         "blockRegistration", saml2.getBlockRegistration(),
                         "registrationId", saml2.getRegistrationId()));

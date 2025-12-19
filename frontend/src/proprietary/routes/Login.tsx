@@ -33,7 +33,8 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
-  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
+  const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([]);
+  const [samlProviders, setSamlProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const backendProbe = useBackendProbe();
@@ -114,7 +115,14 @@ export default function Login() {
         // We'll use these full paths so the auth client knows where to redirect
         const providerPaths = Object.keys(data.providerList || {});
 
-        setEnabledProviders(providerPaths);
+        // Separate OAuth and SAML providers based on path
+        // OAuth paths are relative: /oauth2/authorization/...
+        // SAML paths are full URLs: http://localhost:8080/saml2/authenticate/...
+        const oauth = providerPaths.filter(path => path.includes('/oauth2/'));
+        const saml = providerPaths.filter(path => path.includes('/saml2/'));
+
+        setOauthProviders(oauth);
+        setSamlProviders(saml);
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -125,18 +133,18 @@ export default function Login() {
     }
   }, [navigate, backendProbe.status, backendProbe.loginDisabled]);
 
-  // Update hasSSOProviders and showEmailForm when enabledProviders changes
+  // Update hasSSOProviders and showEmailForm when providers change
   useEffect(() => {
     // In debug mode, check if any providers exist in the config
     const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
       ? Object.keys(oauthProviderConfig).length > 0
-      : enabledProviders.length > 0;
+      : (oauthProviders.length > 0 || samlProviders.length > 0);
     setHasSSOProviders(hasProviders);
     // If no SSO providers, show email form by default
     if (!hasProviders) {
       setShowEmailForm(true);
     }
-  }, [enabledProviders]);
+  }, [oauthProviders, samlProviders]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -318,15 +326,32 @@ export default function Login() {
 
       <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <OAuthButtons
-        onProviderClick={signInWithProvider}
-        isSubmitting={isSigningIn}
-        layout="vertical"
-        enabledProviders={enabledProviders}
-      />
+      {/* OAuth section */}
+      {oauthProviders.length > 0 && (
+        <OAuthButtons
+          onProviderClick={signInWithProvider}
+          isSubmitting={isSigningIn}
+          layout="vertical"
+          enabledProviders={oauthProviders}
+        />
+      )}
 
-      {/* Divider between OAuth and Email - only show if SSO is available */}
+      {/* SAML section - show with divider if there are also OAuth providers */}
+      {samlProviders.length > 0 && (
+        <>
+          {oauthProviders.length > 0 && (
+            <DividerWithText text="SAML" respondsToDarkMode={false} opacity={0.4} />
+          )}
+          <OAuthButtons
+            onProviderClick={signInWithProvider}
+            isSubmitting={isSigningIn}
+            layout="vertical"
+            enabledProviders={samlProviders}
+          />
+        </>
+      )}
+
+      {/* Divider between SSO and Email - only show if SSO is available */}
       {hasSSOProviders && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
