@@ -53,11 +53,12 @@ const AccountSection: React.FC = () => {
 
   const userIdentifier = useMemo(() => user?.email || user?.username || '', [user?.email, user?.username]);
 
-  const redirectToLogin = useCallback(() => {
-    window.location.assign('/login');
-  }, []);
-
   const handleLogout = useCallback(async () => {
+    console.log('[AccountSection] Logout button clicked, calling signOut()');
+    // signOut() handles navigation to /logout for SAML/OAuth SLO
+    // Do NOT navigate after signOut - it will redirect the page
+    await signOut();
+  }, [signOut]);
     await accountLogout({ signOut, redirectToLogin });
   }, [accountLogout, redirectToLogin, signOut]);
 
