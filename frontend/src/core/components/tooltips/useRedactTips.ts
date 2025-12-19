@@ -6,16 +6,16 @@ export const useRedactModeTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.mode.header.title", "Redaction Method")
+      title: t("redact.help.modeTitle", "Redaction Method")
     },
     tips: [
       {
-        title: t("redact.tooltip.mode.automatic.title", "Automatic Redaction"),
-        description: t("redact.tooltip.mode.automatic.text", "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, SSNs, or confidential markers.")
+        title: t("redact.help.overview", "Overview"),
+        description: t("redact.help.overviewDesc", "Redaction permanently removes sensitive content from PDFs. Text behind redaction boxes is completely removed, not just covered. Metadata is also cleaned automatically.")
       },
       {
-        title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
-        description: t("redact.tooltip.mode.manual.text", "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)")
+        title: t("redact.help.automaticMode", "Automatic Redaction"),
+        description: t("redact.help.automaticDesc", "Search for specific words, phrases, or patterns throughout the document and automatically redact all matches. Supports text search and regular expressions.")
       }
     ]
   };
@@ -26,21 +26,38 @@ export const useRedactWordsTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.words.header.title", "Words to Redact")
+      title: t("redact.help.wordsTitle", "Words & Patterns to Redact")
     },
     tips: [
       {
-        title: t("redact.tooltip.words.description.title", "Text Matching"),
-        description: t("redact.tooltip.words.description.text", "Enter words or phrases to find and redact in your document. Each word will be searched for separately."),
+        title: t("redact.help.enterWords", "Enter Text to Redact"),
+        description: t("redact.help.enterWordsDesc", "Type the words or phrases you want to remove from the document. Each word/phrase will be searched and redacted automatically."),
         bullets: [
-          t("redact.tooltip.words.bullet1", "Add one word at a time"),
-          t("redact.tooltip.words.bullet2", "Press Enter or click 'Add Another' to add"),
-          t("redact.tooltip.words.bullet3", "Click × to remove words")
+          t("redact.help.enterWordsBullet1", "Enter one or more words separated by commas"),
+          t("redact.help.enterWordsBullet2", "Case sensitive by default"),
+          t("redact.help.enterWordsBullet3", "Use whole word search to avoid partial matches")
         ]
       },
       {
-        title: t("redact.tooltip.words.examples.title", "Common Examples"),
-        description: t("redact.tooltip.words.examples.text", "Typical words to redact include: bank details, email addresses, or specific names.")
+        title: t("redact.help.wholeWordMode", "Whole Word Search"),
+        description: t("redact.help.wholeWordDesc", "Enable 'Whole Word Search' to match only complete words. Example: 'John' won't match 'Johnson' when enabled. Useful for names.")
+      },
+      {
+        title: t("redact.help.regexMode", "Regular Expression (Regex) Mode"),
+        description: t("redact.help.regexDesc", "Enable 'Use Regex' to use pattern-based matching for complex searches. Powerful for finding multiple instances of similar data.")
+      },
+      {
+        title: t("redact.help.regexExamples", "Common Regex Patterns"),
+        description: "",
+        bullets: [
+          t("redact.help.regexSSN", "Social Security Number: \\d{3}-\\d{2}-\\d{4} (matches XXX-XX-XXXX)"),
+          t("redact.help.regexPhone", "Phone Number: \\(?\\d{3}\\)?[-.]?\\d{3}[-.]?\\d{4} (matches various phone formats)"),
+          t("redact.help.regexEmail", "Email Address: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,} (matches email addresses)"),
+          t("redact.help.regexCreditCard", "Credit Card: \\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4} (matches card numbers)"),
+          t("redact.help.regexDate", "Date (YYYY-MM-DD): \\d{4}-\\d{2}-\\d{2}"),
+          t("redact.help.regexZipCode", "US ZIP Code: \\d{5}(-\\d{4})? (matches 12345 or 12345-6789)"),
+          t("redact.help.regexIPAddress", "IP Address: \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")
+        ]
       }
     ]
   };
@@ -51,28 +68,34 @@ export const useRedactAdvancedTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.advanced.header.title", "Advanced Redaction Settings")
+      title: t("redact.help.advancedTitle", "Advanced Settings")
     },
     tips: [
       {
-        title: t("redact.tooltip.advanced.color.title", "Box Colour & Padding"),
-        description: t("redact.tooltip.advanced.color.text", "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."),
+        title: t("redact.help.customColor", "Custom Redaction Color"),
+        description: t("redact.help.customColorDesc", "Choose the color of the redaction boxes. Default is black for maximum privacy.")
       },
       {
-        title: t("redact.tooltip.advanced.regex.title", "Use Regex"),
-        description: t("redact.tooltip.advanced.regex.text", "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns."),
+        title: t("redact.help.padding", "Custom Padding"),
+        description: t("redact.help.paddingDesc", "Add extra space around redaction boxes to ensure complete coverage. Useful when fonts vary in size or style.")
+      },
+      {
+        title: t("redact.help.securityFeatures", "Security Features"),
+        description: "",
         bullets: [
-          t("redact.tooltip.advanced.regex.bullet1", "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"),
-          t("redact.tooltip.advanced.regex.bullet2", "Use with caution - test thoroughly")
+          t("redact.help.securityConvert", "Convert to PDF-Image: Converts the entire PDF to images after redaction. This ensures text is truly unrecoverable. Note: Increases file size and makes text non-selectable."),
+          t("redact.help.securityMetadata", "Automatic Metadata Cleaning: Automatically removes author, subject, keywords, and XMP metadata for privacy.")
         ]
       },
       {
-        title: t("redact.tooltip.advanced.wholeWord.title", "Whole Word Search"),
-        description: t("redact.tooltip.advanced.wholeWord.text", "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled.")
-      },
-      {
-        title: t("redact.tooltip.advanced.convert.title", "Convert to PDF-Image"),
-        description: t("redact.tooltip.advanced.convert.text", "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable.")
+        title: t("redact.help.tips", "Best Practices"),
+        description: "",
+        bullets: [
+          t("redact.help.tip1", "Test First: Test your regex patterns on a copy before using on important documents."),
+          t("redact.help.tip2", "Review Results: Always review redacted documents to ensure all sensitive information is removed."),
+          t("redact.help.tip3", "Use Convert to Image: For highly sensitive documents, enable 'Convert to PDF-Image' to ensure complete removal."),
+          t("redact.help.tip4", "Padding: Add custom padding to ensure redaction boxes fully cover text (useful for different font sizes).")
+        ]
       }
     ]
   };

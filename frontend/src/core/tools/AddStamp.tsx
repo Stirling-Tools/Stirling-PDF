@@ -14,6 +14,7 @@ import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import ObscuredOverlay from "@app/components/shared/ObscuredOverlay";
 import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
 import StampPositionFormattingSettings from "@app/components/tools/addStamp/StampPositionFormattingSettings";
+import { useAddStampSetupTips, useAddStampPositionTips } from "@app/components/tooltips/useAddStampTips";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -24,6 +25,8 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const params = useAddStampParameters();
   const operation = useAddStampOperation();
+  const stampSetupTips = useAddStampSetupTips();
+  const stampPositionTips = useAddStampPositionTips();
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-stamp");
 
@@ -75,6 +78,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_SETUP),
       onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.STAMP_SETUP),
       isVisible: hasFiles || hasResults,
+      tooltip: stampSetupTips,
       content: (
         <StampSetupSettings
           parameters={params.parameters}
@@ -90,6 +94,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isCollapsed: accordion.getCollapsedState(AddStampStep.POSITION_FORMATTING),
       onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.POSITION_FORMATTING),
       isVisible: hasFiles || hasResults,
+      tooltip: stampPositionTips,
       content: (
         <Stack gap="md" justify="space-between">
           {/* Mode toggle: Quick grid vs Custom drag - only show for image stamps */}

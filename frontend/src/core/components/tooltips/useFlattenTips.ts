@@ -6,28 +6,55 @@ export const useFlattenTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("flatten.tooltip.header.title", "About Flattening PDFs")
+      title: t("flatten.help.title", "Flatten PDF Guide")
     },
     tips: [
       {
-        title: t("flatten.tooltip.description.title", "What does flattening do?"),
-        description: t("flatten.tooltip.description.text", "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere."),
+        title: t("flatten.help.overview", "Overview"),
+        description: t("flatten.help.overview", "Flattening converts interactive PDF elements into static content. Makes forms non-editable and removes interactivity.")
+      },
+      {
+        title: t("flatten.help.whatGetsFlattened", "What Gets Flattened"),
+        description: "",
         bullets: [
-          t("flatten.tooltip.description.bullet1", "Text boxes become regular text (can't be edited)"),
-          t("flatten.tooltip.description.bullet2", "Checkboxes and buttons become pictures"),
-          t("flatten.tooltip.description.bullet3", "Great for final versions you don't want changed"),
-          t("flatten.tooltip.description.bullet4", "Ensures consistent appearance across all devices")
+          t("flatten.help.fullFlatten", "Full Flatten (default): Text fields, checkboxes, radio buttons, dropdowns, buttons, annotations, and all interactive elements become static images/text."),
+          t("flatten.help.formsOnly", "Forms Only: Only form fields become static. Links, bookmarks, comments, and annotations remain interactive.")
         ]
       },
       {
-        title: t("flatten.tooltip.formsOnly.title", "What does 'Flatten only forms' mean?"),
-        description: t("flatten.tooltip.formsOnly.text", "This option only removes the ability to fill in forms, but keeps other features working like clicking links, viewing bookmarks, and reading comments."),
+        title: t("flatten.help.whenToFlatten", "When to Flatten"),
+        description: "",
         bullets: [
-          t("flatten.tooltip.formsOnly.bullet1", "Forms become non-editable"),
-          t("flatten.tooltip.formsOnly.bullet2", "Links still work when clicked"),
-          t("flatten.tooltip.formsOnly.bullet3", "Comments and notes remain visible"),
-          t("flatten.tooltip.formsOnly.bullet4", "Bookmarks still help you navigate")
+          t("flatten.help.useCase1", "Completed forms: After filling out a form, flatten to prevent further changes"),
+          t("flatten.help.useCase2", "Final documents: Create locked versions for record-keeping or distribution"),
+          t("flatten.help.useCase3", "Watermarked docs: After adding watermarks, flatten to prevent removal"),
+          t("flatten.help.useCase4", "Pre-printed forms: Convert fillable PDFs to printable forms with visible fields"),
+          t("flatten.help.useCase5", "Consistency: Ensure PDF looks identical across all viewers and devices")
         ]
+      },
+      {
+        title: t("flatten.help.whatStaysInteractive", "What Stays Interactive (Forms Only mode)"),
+        description: "",
+        bullets: [
+          t("flatten.help.interactive1", "Hyperlinks and web links remain clickable"),
+          t("flatten.help.interactive2", "Bookmarks/table of contents for navigation"),
+          t("flatten.help.interactive3", "Comments and annotations remain visible and editable"),
+          t("flatten.help.interactive4", "Document outline and layers")
+        ]
+      },
+      {
+        title: t("flatten.help.important", "Important Notes"),
+        description: "",
+        bullets: [
+          t("flatten.help.note1", "Flattening is permanent - cannot be reversed. Keep original if you need to edit later."),
+          t("flatten.help.note2", "File size may increase slightly as form elements become images"),
+          t("flatten.help.note3", "Flattened forms cannot be un-flattened - the form data is permanently merged"),
+          t("flatten.help.note4", "Digital signatures may be invalidated by flattening")
+        ]
+      },
+      {
+        title: t("flatten.help.alternatives", "Alternative to Flattening"),
+        description: t("flatten.help.altPermissions", "If you only want to prevent editing, consider using 'Change Permissions' instead of flattening. This keeps the PDF interactive but locked.")
       }
     ]
   };

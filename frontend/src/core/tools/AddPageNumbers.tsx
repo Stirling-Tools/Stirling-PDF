@@ -9,6 +9,7 @@ import { useAddPageNumbersOperation } from "@app/components/tools/addPageNumbers
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
 import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+import { useAddPageNumbersTips } from "@app/components/tooltips/useAddPageNumbersTips";
 
 const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
 
   const params = useAddPageNumbersParameters();
   const operation = useAddPageNumbersOperation();
+  const pageNumbersTips = useAddPageNumbersTips();
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-page-numbers");
 
@@ -66,6 +68,7 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       isCollapsed: accordion.getCollapsedState(AddPageNumbersStep.POSITION_AND_PAGES),
       onCollapsedClick: () => accordion.handleStepToggle(AddPageNumbersStep.POSITION_AND_PAGES),
       isVisible: hasFiles || hasResults,
+      tooltip: pageNumbersTips,
       content: (
         <AddPageNumbersPositionSettings
           parameters={params.parameters}

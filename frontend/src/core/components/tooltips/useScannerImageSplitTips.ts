@@ -6,48 +6,42 @@ export const useScannerImageSplitTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t('scannerImageSplit.tooltip.title', 'Photo Splitter')
+      title: t("scannerImageSplit.help.title", "Advanced OpenCV Parameters")
     },
     tips: [
       {
-        title: t('scannerImageSplit.tooltip.whatThisDoes', 'What this does'),
-        description: t('scannerImageSplit.tooltip.whatThisDoesDesc',
-          'Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.'
-        )
+        title: t("scannerImageSplit.help.overview", "Overview"),
+        description: t("scannerImageSplit.help.overview", "This tool uses OpenCV (computer vision library) to automatically detect individual photos on scanned pages.")
       },
       {
-        title: t('scannerImageSplit.tooltip.whenToUse', 'When to use'),
+        title: t("scannerImageSplit.help.angleThreshold", "Angle Threshold (Default: 5)"),
+        description: t("scannerImageSplit.help.angleThresholdDesc", "Rotation angle in degrees needed before auto-straightening a photo. Lower values (1-3) straighten more aggressively, higher values (10-15) only straighten very tilted photos.")
+      },
+      {
+        title: t("scannerImageSplit.help.tolerance", "Tolerance (Default: 20)"),
+        description: t("scannerImageSplit.help.toleranceDesc", "How closely a color must match the page background to count as background. Higher values (30-50) detect photos more easily but may include background noise. Lower values (10-15) are stricter.")
+      },
+      {
+        title: t("scannerImageSplit.help.minArea", "Minimum Area (Default: 8000)"),
+        description: t("scannerImageSplit.help.minAreaDesc", "Smallest photo size in pixels² to keep. Increase to 15,000-20,000 to filter out small fragments. Decrease to 3000-5000 to detect smaller photos.")
+      },
+      {
+        title: t("scannerImageSplit.help.minContourArea", "Minimum Contour Area (Default: 500)"),
+        description: t("scannerImageSplit.help.minContourAreaDesc", "Smallest edge/shape size when detecting photo boundaries. Increase to 1000-2000 to filter out dust and specks. Lower values detect finer edges.")
+      },
+      {
+        title: t("scannerImageSplit.help.borderSize", "Border Size (Default: 1)"),
+        description: t("scannerImageSplit.help.borderSizeDesc", "Extra padding in pixels around each extracted photo. Increase to 5-10 to avoid cutting edges. Set to 0 for no padding.")
+      },
+      {
+        title: t("scannerImageSplit.help.recommendedSettings", "Recommended Settings"),
+        description: "",
         bullets: [
-          t('scannerImageSplit.tooltip.useCase1', 'Scan whole album pages in one go'),
-          t('scannerImageSplit.tooltip.useCase2', 'Split flatbed batches into separate files'),
-          t('scannerImageSplit.tooltip.useCase3', 'Break collages into individual photos'),
-          t('scannerImageSplit.tooltip.useCase4', 'Pull photos from documents')
+          t("scannerImageSplit.help.normalScans", "Normal photo scans: Use defaults (Angle: 5, Tolerance: 20, Min Area: 8000)"),
+          t("scannerImageSplit.help.highQuality", "High-quality photos on clean background: Tolerance 15, Min Area 10000, Border 3"),
+          t("scannerImageSplit.help.noisyScans", "Noisy/dirty scans: Tolerance 30, Min Contour Area 1500, Border 5"),
+          t("scannerImageSplit.help.smallPhotos", "Small photos (ID cards, stamps): Min Area 3000, Border 2")
         ]
-      },
-      {
-        title: t('scannerImageSplit.tooltip.quickFixes', 'Quick fixes'),
-        bullets: [
-          t('scannerImageSplit.tooltip.problem1', 'Photos not detected → increase Tolerance to 30–50'),
-          t('scannerImageSplit.tooltip.problem2', 'Too many false detections → increase Minimum Area to 15,000–20,000'),
-          t('scannerImageSplit.tooltip.problem3', 'Crops are too tight → increase Border Size to 5–10'),
-          t('scannerImageSplit.tooltip.problem4', 'Tilted photos not straightened → lower Angle Threshold to ~5°'),
-          t('scannerImageSplit.tooltip.problem5', 'Dust/noise boxes → increase Minimum Contour Area to 1000–2000')
-        ]
-      },
-      {
-        title: t('scannerImageSplit.tooltip.setupTips', 'Setup tips'),
-        bullets: [
-          t('scannerImageSplit.tooltip.tip1', 'Use a plain, light background'),
-          t('scannerImageSplit.tooltip.tip2', 'Leave a small gap (≈1 cm) between photos'),
-          t('scannerImageSplit.tooltip.tip3', 'Scan at 300–600 DPI'),
-          t('scannerImageSplit.tooltip.tip4', 'Clean the scanner glass')
-        ]
-      },
-      {
-        title: t('scannerImageSplit.tooltip.headsUp', 'Heads-up'),
-        description: t('scannerImageSplit.tooltip.headsUpDesc',
-          'Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space.'
-        )
       }
     ]
   };

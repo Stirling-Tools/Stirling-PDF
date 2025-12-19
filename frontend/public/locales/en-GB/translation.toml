@@ -231,6 +231,26 @@ failed = "Add page numbers operation failed"
 [addPageNumbers.results]
 title = "Page Number Results"
 
+[addPageNumbers.help]
+title = "Page Numbers & Bates Numbering Help"
+variables = "Variable Substitution"
+variablesDesc = "Use these variables in the Custom Text Format field to create dynamic page numbering:"
+variableN = "{n} - Current page number"
+variableTotal = "{total} - Total number of pages"
+variableFilename = "{filename} - Document filename (without extension)"
+examples = "Common Examples"
+exampleSimple = "Simple numbering: {n} → 1, 2, 3, 4..."
+examplePageOf = "Page X of Y: Page {n} of {total} → Page 1 of 10, Page 2 of 10..."
+exampleBates = "Legal Bates numbering: ABC-{n} → ABC-001, ABC-002, ABC-003..."
+exampleDocument = "Document reference: {filename}-{n} → mydoc-001, mydoc-002..."
+exampleCustom = "Custom format: Doc {filename} | Page {n}/{total}"
+positioning = "Positioning"
+positioningDesc = "Use the 1-9 grid system to quickly position page numbers, or use the margin size to adjust distance from edges."
+tips = "Tips"
+tip1 = "Starting Number: Change the starting number to begin counting from any value (useful for multi-part documents)"
+tip2 = "Page Selection: Number only specific pages by entering ranges like 1,3,5-8"
+tip3 = "Formatting: Choose font type, size, and colour to match your document style"
+
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
@@ -657,24 +677,24 @@ title = "PDF Multi Tool"
 desc = "Merge, Rotate, Rearrange, Split, and Remove pages"
 
 [home.merge]
-tags = "combine,join,unite"
-title = "Merge"
-desc = "Easily merge multiple PDFs into one."
+tags = "combine,join,unite,merge,collate,append,concatenate,put together,bind,join files,multiple PDFs into one,PDF merge"
+title = "Merge / Combine PDFs"
+desc = "Easily merge multiple PDFs into one document"
 
 [home.split]
-tags = "divide,separate,break"
+tags = "divide,separate,break,burst,extract pages,split by size,split by chapters,partition,break into files,disassemble,PDF split"
 title = "Split"
-desc = "Split PDFs into multiple documents"
+desc = "Split PDFs by page numbers, file size, page count, chapters, or sections. Multiple splitting methods available."
 
 [home.rotate]
-tags = "turn,flip,orient"
+tags = "turn,flip,orient,rotate,spin,turn pages,flip orientation,rotate PDF,clockwise,counterclockwise"
 title = "Rotate"
-desc = "Easily rotate your PDFs."
+desc = "Easily rotate your PDFs clockwise or counterclockwise"
 
 [home.convert]
-tags = "transform,change"
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to JPG,Word to PDF,export,save as,format conversion,DOCX,XLSX,PPT,image to PDF"
 title = "Convert"
-desc = "Convert files between different formats"
+desc = "Convert between PDF and other formats: Word (DOCX), Excel (XLSX), PowerPoint (PPTX), Images (JPG/PNG), HTML, and more"
 
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder"
@@ -682,159 +702,159 @@ title = "Organise"
 desc = "Remove/Rearrange pages in any order"
 
 [home.addImage]
-tags = "insert,embed,place"
-title = "Add image"
-desc = "Adds a image onto a set location on the PDF"
+tags = "insert,embed,place,add image,insert image,add logo,add photo,place image,insert graphic,embed image"
+title = "Insert Image into PDF"
+desc = "Add images to PDF at specific locations. Insert logos, signatures, diagrams, or photos."
 
 [home.addAttachments]
-tags = "embed,attach,include"
-title = "Add Attachments"
-desc = "Add or remove embedded files (attachments) to/from a PDF"
+tags = "embed,attach,include,add files,embed files,attach documents,extract attachments,embedded files,PDF portfolio"
+title = "Add/Remove Embedded Files"
+desc = "Attach files to PDF (embed documents, spreadsheets, images) or extract existing attachments"
 
 [home.watermark]
-tags = "stamp,mark,overlay"
+tags = "stamp,mark,overlay,watermark,draft,confidential,copyright,brand,security watermark,tiled watermark,repeating pattern"
 title = "Add Watermark"
-desc = "Add a custom watermark to your PDF document."
+desc = "Add text or image watermarks. Create tiled patterns or single placement. Flatten for security."
 
 [home.removePassword]
-tags = "unlock"
-title = "Remove Password"
-desc = "Remove password protection from your PDF document."
+tags = "unlock,decrypt,remove protection,remove security,unlock PDF,password removal,remove password"
+title = "Unlock PDF / Remove Password"
+desc = "Remove password protection from your PDF document"
 
 [home.compress]
-tags = "shrink,reduce,optimize"
+tags = "shrink,reduce,optimize,reduce file size,make smaller,downsize,compress for email,optimize for web,downsample,reduce quality"
 title = "Compress"
-desc = "Compress PDFs to reduce their file size."
+desc = "Reduce PDF file size by compressing images and optimizing content. Choose quality level or target file size."
 
 [home.unlockPDFForms]
-tags = "unlock,enable,edit"
-title = "Unlock PDF Forms"
-desc = "Remove read-only property of form fields in a PDF document."
+tags = "unlock,enable,edit,unlock forms,make editable,remove read-only,enable form fields,editable forms"
+title = "Unlock Form Fields"
+desc = "Remove read-only restrictions from PDF form fields. Enable editing of locked forms."
 
 [home.changeMetadata]
-tags = "edit,modify,update"
-title = "Change Metadata"
-desc = "Change/Remove/Add metadata from a PDF document"
+tags = "edit,modify,update,metadata,document properties,file info,XMP,Dublin Core,author,title,subject,keywords"
+title = "Edit Metadata / Properties"
+desc = "Change title, author, subject, keywords, and other document properties (XMP metadata)"
 
 [home.ocr]
-tags = "extract,scan"
-title = "OCR / Cleanup scans"
-desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
+tags = "extract,scan,OCR,make searchable,text recognition,searchable PDF,extract text,scan to text,recognize text,optical character recognition"
+title = "OCR - Make PDF Searchable"
+desc = "Extract text from scanned images using Optical Character Recognition. Makes PDFs searchable and editable."
 
 [home.extractImages]
-tags = "pull,save,export"
+tags = "pull,save,export,extract images,get images,save images,export graphics,image extraction,pictures from PDF,save pictures"
 title = "Extract Images"
-desc = "Extracts all images from a PDF and saves them to zip"
+desc = "Extract all images from PDF and save them as separate files in ZIP archive"
 
 [home.scannerImageSplit]
-tags = "detect,split,photos"
-title = "Detect & Split Scanned Photos"
-desc = "Detect and split scanned photos into separate pages"
+tags = "detect,split,photos,extract photos,scan separation,photo detection,scanner image split,separate scanned photos,photo extraction"
+title = "Extract Photos from Scan"
+desc = "Automatically detect and separate individual photos from scanned pages. Advanced OpenCV-based detection."
 
 [home.sign]
-tags = "signature,autograph"
-title = "Sign"
-desc = "Adds signature to PDF by drawing, text or image"
+tags = "signature,autograph,e-sign,electronic signature,fill and sign,sign PDF online,add signature,e-signature"
+title = "E-Sign / Fill & Sign"
+desc = "Add electronic signature by drawing, typing, or uploading image. For legal digital signatures, use Certificate Sign tool."
 
 [home.flatten]
-tags = "simplify,remove,interactive"
-title = "Flatten"
-desc = "Remove all interactive elements and forms from a PDF"
+tags = "simplify,remove,interactive,flatten,rasterize,make non-editable,burn in,lock form,static PDF,remove form fields"
+title = "Flatten PDF"
+desc = "Convert interactive elements to static content. Removes form editability, burns in annotations, and locks content."
 
 [home.certSign]
-tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
-title = "Sign with Certificate"
-desc = "Signs a PDF with a Certificate/Key (PEM/P12)"
+tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto,digital signature,PKI signature,cryptographic signature,certificate-based"
+title = "Digital Signature (Certificate)"
+desc = "Add cryptographic digital signature using certificate (PEM/P12/PKCS12). More secure than basic e-signature."
 
 [home.repair]
-tags = "fix,restore"
+tags = "fix,restore,repair,corrupted PDF,damaged PDF,broken PDF,recover,fix errors,repair corrupted"
 title = "Repair"
-desc = "Tries to repair a corrupt/broken PDF"
+desc = "Attempt to repair corrupted or damaged PDF files. Recovers readable content when possible."
 
 [home.removeBlanks]
-tags = "delete,clean,empty"
-title = "Remove Blank pages"
-desc = "Detects and removes blank pages from a document"
+tags = "delete,clean,empty,remove blank pages,remove empty pages,delete blank,clean empty,auto-remove blanks"
+title = "Remove Blank/Empty Pages"
+desc = "Automatically detect and remove blank pages from document"
 
 [home.removeAnnotations]
-tags = "delete,clean,strip"
-title = "Remove Annotations"
-desc = "Removes all comments/annotations from a PDF"
+tags = "delete,clean,strip,remove annotations,remove comments,delete markup,strip comments,clean annotations"
+title = "Remove Comments & Annotations"
+desc = "Delete all comments, highlights, notes, and markup from PDF. Clean document for final version."
 
 [home.compare]
-tags = "difference"
+tags = "difference,compare,redline,track changes,document comparison,find differences,version comparison,diff"
 title = "Compare"
-desc = "Compares and shows the differences between 2 PDF Documents"
+desc = "Compare two PDF versions and highlight differences. Shows added, deleted, and modified content."
 
 [home.removeCertSign]
-tags = "remove,delete,unlock"
+tags = "remove,delete,unlock,remove signature,remove certificate,unsign,remove digital signature"
 title = "Remove Certificate Sign"
-desc = "Remove certificate signature from PDF"
+desc = "Remove certificate-based digital signatures from PDF. Note: May invalidate document authenticity."
 
 [home.pageLayout]
-tags = "layout,arrange,combine"
-title = "Multi-Page Layout"
-desc = "Merge multiple pages of a PDF document into a single page"
+tags = "layout,arrange,combine,N-up,2-up,4-up,multiple pages per sheet,pages per sheet,grid layout,print multiple"
+title = "Multi-Page Layout (N-Up)"
+desc = "Combine multiple pages into single sheet. Create 2-up, 4-up, 9-up layouts for printing or viewing."
 
 [home.bookletImposition]
-tags = "booklet,print,binding"
-title = "Booklet Imposition"
-desc = "Create booklets with proper page ordering and multi-page layout for printing and binding"
+tags = "booklet,print,binding,imposition,print booklet,duplex,gutter,saddle stitch,perfect binding,print layout"
+title = "Create Booklet / Imposition"
+desc = "Arrange pages for booklet printing with proper ordering. Supports duplex printing, gutter margins, and binding options."
 
 [home.scalePages]
-tags = "resize,adjust,scale"
-title = "Adjust page size/scale"
-desc = "Change the size/scale of a page and/or its contents."
+tags = "resize,adjust,scale,page size,paper size,A4,Letter,Legal,scale content,change dimensions"
+title = "Resize Pages / Change Page Size"
+desc = "Change page dimensions or scale content. Convert between paper sizes (A4, Letter, Legal) or apply custom scaling."
 
 [home.addPageNumbers]
-tags = "number,pagination,count"
-title = "Add Page Numbers"
-desc = "Add Page numbers throughout a document in a set location"
+tags = "number,pagination,count,bates,bates numbering,sequential,legal numbering,document numbering,header,footer,page numbers"
+title = "Add Page Numbers / Bates"
+desc = "Add page numbers or Bates-style sequential numbering with custom formatting (ABC-001, Page {n} of {total}). Use {n} for page number, {total} for total pages, {filename} for document name."
 
 [home.autoRename]
-tags = "auto-detect,header-based,organize,relabel"
-title = "Auto Rename PDF File"
-desc = "Auto renames a PDF file based on its detected header"
+tags = "auto-detect,header-based,organize,relabel,auto rename,smart rename,detect title,organize files"
+title = "Auto Rename by Header"
+desc = "Automatically rename PDF files based on detected header or title text. Organize documents intelligently."
 
 [home.adjustContrast]
-tags = "contrast,brightness,saturation"
-title = "Adjust Colours/Contrast"
-desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
+tags = "contrast,brightness,saturation,adjust colors,enhance,improve readability,image enhancement,scan enhancement,color adjustment"
+title = "Adjust Colors & Contrast"
+desc = "Enhance PDF appearance by adjusting colors, contrast, saturation, and brightness. Improve readability of scanned documents."
 
 [home.crop]
-tags = "trim,cut,resize"
+tags = "trim,cut,resize,crop,remove margins,crop margins,trim whitespace,adjust margins"
 title = "Crop PDF"
-desc = "Crop a PDF to reduce its size (maintains text!)"
+desc = "Crop PDF pages to remove margins or unwanted areas. Maintains text and quality (not image-based)."
 
 [home.autoSplitPDF]
-tags = "auto,split,QR"
-title = "Auto Split Pages"
-desc = "Auto Split Scanned PDF with physical scanned page splitter QR Code"
+tags = "auto,split,QR,QR code,divider,batch scanning,auto split,automatic splitting,duplex scan"
+title = "Auto Split by QR Code"
+desc = "Automatically split scanned PDFs using QR code divider pages. Supports duplex scanning mode."
 
 [home.sanitize]
-tags = "clean,purge,remove"
+tags = "clean,purge,remove,sanitize,remove hidden data,privacy,GDPR,remove metadata,clean document,security,strip data"
 title = "Sanitise"
-desc = "Remove potentially harmful elements from PDF files"
+desc = "Remove potentially harmful elements and hidden data from PDFs. Cleans metadata, scripts, and embedded content for privacy."
 
 [home.getPdfInfo]
-tags = "info,metadata,details"
+tags = "info,metadata,details,document properties,file information,PDF info,view properties,document details"
 title = "Get ALL Info on PDF"
-desc = "Grabs any and all information possible on PDFs"
+desc = "View comprehensive information about PDFs including metadata, properties, fonts, images, and structure"
 
 [home.pdfToSinglePage]
-tags = "combine,merge,single"
-title = "PDF to Single Large Page"
-desc = "Merges all PDF pages into one large single page"
+tags = "combine,merge,single,single page,continuous page,vertical scroll,one page,poster,long page"
+title = "Merge to Single Continuous Page"
+desc = "Combine all pages into one large continuous page. Useful for vertical scrolling or poster creation."
 
 [home.showJS]
-tags = "javascript,code,script"
-title = "Show Javascript"
-desc = "Searches and displays any JS injected into a PDF"
+tags = "javascript,code,script,view javascript,inspect code,security check,embedded scripts,PDF security"
+title = "View Embedded JavaScript"
+desc = "Display any JavaScript code embedded in PDF. Security tool to inspect potentially harmful scripts."
 
 [home.redact]
-tags = "censor,blackout,hide"
+tags = "censor,blackout,hide,redact,remove sensitive information,permanent removal,privacy,GDPR,sanitize text,regex redaction,sensitive data"
 title = "Redact"
-desc = "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
+desc = "Permanently remove sensitive content from PDFs. Supports text search, regex patterns, and manual selection. Cleans metadata."
 
 [home.splitBySections]
 tags = "split,sections,divide"
@@ -842,14 +862,14 @@ title = "Split PDF by Sections"
 desc = "Divide each page of a PDF into smaller horizontal and vertical sections"
 
 [home.addStamp]
-tags = "stamp,mark,seal"
+tags = "stamp,mark,seal,approval,reviewed,approved,confidential,certified,notarized,endorsement,business stamp"
 title = "Add Stamp to PDF"
-desc = "Add text or add image stamps at set locations"
+desc = "Add approval stamps, custom text, or images with positioning control. Supports variables: {n}, {total}, {filename}. Multi-language support available."
 
 [home.removeImage]
-tags = "remove,delete,clean"
-title = "Remove image"
-desc = "Remove image from PDF to reduce file size"
+tags = "remove,delete,clean,remove images,delete pictures,strip images,reduce size,remove graphics,delete photos"
+title = "Remove Images from PDF"
+desc = "Delete all images from PDF to reduce file size or remove sensitive visual content"
 
 [home.splitByChapters]
 tags = "split,chapters,structure"
@@ -857,9 +877,9 @@ title = "Split PDF by Chapters"
 desc = "Split a PDF into multiple files based on its chapter structure."
 
 [home.validateSignature]
-tags = "validate,verify,certificate"
-title = "Validate PDF Signature"
-desc = "Verify digital signatures and certificates in PDF documents"
+tags = "validate,verify,certificate,check signature,authenticity,signature verification,certificate check,PKI,digital signature validation"
+title = "Verify Digital Signature"
+desc = "Validate digital signatures and verify certificate authenticity. Check document integrity and signer identity."
 
 [home.swagger]
 tags = "API,documentation,test"
@@ -872,9 +892,9 @@ title = "Scanner Effect"
 desc = "Create a PDF that looks like it was scanned"
 
 [home.editTableOfContents]
-tags = "bookmarks,contents,edit"
-title = "Edit Table of Contents"
-desc = "Add or edit bookmarks and table of contents in PDF documents"
+tags = "bookmarks,contents,edit,table of contents,TOC,navigation,outline,document structure,edit bookmarks"
+title = "Edit Bookmarks / TOC"
+desc = "Add, edit, or remove PDF bookmarks (navigation outline). Create document structure for easy navigation."
 
 [home.manageCertificates]
 tags = "certificates,import,export"
@@ -882,24 +902,24 @@ title = "Manage Certificates"
 desc = "Import, export, or delete digital certificate files used for signing PDFs."
 
 [home.read]
-tags = "view,open,display"
-title = "Read"
-desc = "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+tags = "view,open,display,read,annotate,comment,highlight,markup,PDF viewer,collaboration,review"
+title = "View & Annotate PDF"
+desc = "View PDFs with annotation tools. Highlight text, draw, add comments, and collaborate on documents."
 
 [home.reorganizePages]
-tags = "rearrange,reorder,organize"
-title = "Reorganize Pages"
-desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+tags = "rearrange,reorder,organize,organize pages,resequence,resort,change page order,move pages,drag and drop,PDF organize"
+title = "Organize Pages"
+desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control"
 
 [home.extractPages]
-tags = "pull,select,copy"
+tags = "pull,select,copy,extract pages,save pages,copy pages,pull pages,select pages,PDF extract"
 title = "Extract Pages"
-desc = "Extract specific pages from a PDF document"
+desc = "Extract specific pages from a PDF document and save them separately"
 
 [home.removePages]
-tags = "delete,extract,exclude"
+tags = "delete,extract,exclude,remove pages,delete pages,take out pages,discard pages,PDF delete"
 title = "Remove Pages"
-desc = "Remove specific pages from a PDF document"
+desc = "Remove specific pages from a PDF document permanently"
 
 [home.autoSizeSplitPDF]
 tags = "auto,split,size"
@@ -907,8 +927,9 @@ title = "Auto Split by Size/Count"
 desc = "Automatically split PDFs by file size or page count"
 
 [home.replaceColor]
-title = "Replace & Invert Colour"
-desc = "Replace or invert colours in PDF documents"
+tags = "replace color,invert,color swap,dark mode,invert colors,change colors,color transformation,accessibility"
+title = "Replace & Invert Colors"
+desc = "Swap colors in PDF or invert all colors. Useful for dark mode, accessibility, or color correction."
 
 [home.devApi]
 tags = "API,development,documentation"
@@ -929,12 +950,14 @@ title = "Air-gapped Setup"
 desc = "Link to air-gapped setup guide"
 
 [home.addPassword]
-title = "Add Password"
-desc = "Add password protection and restrictions to PDF files"
+tags = "password,protect,encrypt,secure,lock,add password,security,user password,owner password,permissions,password protect"
+title = "Password Protect / Encrypt PDF"
+desc = "Add password protection to secure your PDF. Set user password (open document) or owner password (permissions)."
 
 [home.changePermissions]
-title = "Change Permissions"
-desc = "Change document restrictions and permissions"
+tags = "permissions,restrictions,security,access control,disable printing,disable copying,owner password,restrict editing,PDF permissions"
+title = "Set Permissions / Restrictions"
+desc = "Control what users can do with your PDF: printing, copying text, editing, form filling, and more"
 
 [home.automate]
 tags = "workflow,sequence,automation"
@@ -942,17 +965,19 @@ title = "Automate"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 
 [home.overlay-pdfs]
-desc = "Overlay one PDF on top of another"
+tags = "overlay,superimpose,combine,merge layers,background,letterhead,template,place over"
 title = "Overlay PDFs"
+desc = "Superimpose one PDF on top of another. Useful for adding letterheads, templates, or background designs."
 
 [home.pdfTextEditor]
-title = "PDF Text Editor"
-desc = "Edit existing text and images inside PDFs"
+tags = "edit,text,modify,edit PDF,change text,edit content,PDF editor,text editing,modify text"
+title = "Edit PDF Text Directly"
+desc = "Edit text content directly in PDF. Modify, add, or delete text like a word processor."
 
 [home.addText]
-tags = "text,annotation,label"
+tags = "text,annotation,label,insert text,add label,text overlay,custom text,add note,text placement"
 title = "Add Text"
-desc = "Add custom text anywhere in your PDF"
+desc = "Add custom text anywhere in your PDF with full positioning and formatting control"
 
 [landing]
 addFiles = "Add Files"
@@ -1562,6 +1587,16 @@ bullet4 = "Best for sensitive or copyrighted content"
 [watermark.type]
 1 = "Text"
 2 = "Image"
+
+[watermark.help]
+title = "Advanced Watermark Features"
+tiledPattern = "Creating Tiled/Repeating Patterns"
+tiledDesc = "Use the Horizontal and Vertical Spacing controls to create a repeating watermark pattern across the entire page. Set both values to create a grid of watermarks (useful for 'CONFIDENTIAL' or 'DRAFT' labels)."
+tiledExample = "Example: Set horizontal spacing to 200 and vertical spacing to 150 to create a diagonal pattern of watermarks."
+security = "Security Flatten Option"
+securityDesc = "Enable 'Flatten PDF pages to images' to convert the PDF to images, making the watermark impossible to remove. Note: This increases file size and makes text non-selectable."
+multiLanguage = "Multi-Language Support"
+multiLanguageDesc = "Choose the appropriate Font/Language option (Roman, Arabic, Japanese, Korean, Chinese, Thai) to ensure your watermark text displays correctly with proper fonts."
 
 [permissions]
 tags = "read,write,edit,print"
@@ -2232,6 +2267,25 @@ tip4 = "Clean the scanner glass"
 headsUp = "Heads-up"
 headsUpDesc = "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
 
+[scannerImageSplit.help]
+title = "Advanced OpenCV Parameters"
+overview = "This tool uses OpenCV (computer vision library) to automatically detect individual photos on scanned pages."
+angleThreshold = "Angle Threshold (Default: 5)"
+angleThresholdDesc = "Rotation angle in degrees needed before auto-straightening a photo. Lower values (1-3) straighten more aggressively, higher values (10-15) only straighten very tilted photos."
+tolerance = "Tolerance (Default: 20)"
+toleranceDesc = "How closely a colour must match the page background to count as background. Higher values (30-50) detect photos more easily but may include background noise. Lower values (10-15) are stricter."
+minArea = "Minimum Area (Default: 8000)"
+minAreaDesc = "Smallest photo size in pixels² to keep. Increase to 15,000-20,000 to filter out small fragments. Decrease to 3000-5000 to detect smaller photos."
+minContourArea = "Minimum Contour Area (Default: 500)"
+minContourAreaDesc = "Smallest edge/shape size when detecting photo boundaries. Increase to 1000-2000 to filter out dust and specks. Lower values detect finer edges."
+borderSize = "Border Size (Default: 1)"
+borderSizeDesc = "Extra padding in pixels around each extracted photo. Increase to 5-10 to avoid cutting edges. Set to 0 for no padding."
+recommendedSettings = "Recommended Settings"
+normalScans = "Normal photo scans: Use defaults (Angle: 5, Tolerance: 20, Min Area: 8000)"
+highQuality = "High-quality photos on clean background: Tolerance 15, Min Area 10000, Border 3"
+noisyScans = "Noisy/dirty scans: Tolerance 30, Min Contour Area 1500, Border 5"
+smallPhotos = "Small photos (ID cards, stamps): Min Area 3000, Border 2"
+
 [sign]
 title = "Sign"
 header = "Sign PDFs"
@@ -2404,6 +2458,31 @@ bullet1 = "Forms become non-editable"
 bullet2 = "Links still work when clicked"
 bullet3 = "Comments and notes remain visible"
 bullet4 = "Bookmarks still help you navigate"
+
+[flatten.help]
+title = "Flatten PDF Guide"
+overview = "Flattening converts interactive PDF elements into static content. Makes forms non-editable and removes interactivity."
+whatGetsFlattened = "What Gets Flattened"
+fullFlatten = "Full Flatten (default): Text fields, checkboxes, radio buttons, dropdowns, buttons, annotations, and all interactive elements become static images/text."
+formsOnly = "Forms Only: Only form fields become static. Links, bookmarks, comments, and annotations remain interactive."
+whenToFlatten = "When to Flatten"
+useCase1 = "Completed forms: After filling out a form, flatten to prevent further changes"
+useCase2 = "Final documents: Create locked versions for record-keeping or distribution"
+useCase3 = "Watermarked docs: After adding watermarks, flatten to prevent removal"
+useCase4 = "Pre-printed forms: Convert fillable PDFs to printable forms with visible fields"
+useCase5 = "Consistency: Ensure PDF looks identical across all viewers and devices"
+whatStaysInteractive = "What Stays Interactive (Forms Only mode)"
+interactive1 = "Hyperlinks and web links remain clickable"
+interactive2 = "Bookmarks/table of contents for navigation"
+interactive3 = "Comments and annotations remain visible and editable"
+interactive4 = "Document outline and layers"
+important = "Important Notes"
+note1 = "Flattening is permanent - cannot be reversed. Keep original if you need to edit later."
+note2 = "File size may increase slightly as form elements become images"
+note3 = "Flattened forms cannot be un-flattened - the form data is permanently merged"
+note4 = "Digital signatures may be invalidated by flattening"
+alternatives = "Alternative to Flattening"
+altPermissions = "If you only want to prevent editing, consider using 'Change Permissions' instead of flattening. This keeps the PDF interactive but locked."
 
 [repair]
 tags = "fix,restore,correction,recover"
@@ -2739,6 +2818,29 @@ bullet4 = "JKS – Java .jks keystore for dev / CI-CD workflows"
 title = "Key not listed?"
 text = "Convert your file to a Java keystore (.jks) with keytool, then pick JKS."
 
+[certSign.help]
+title = "Digital Signature Quick Reference"
+overview = "Digital signatures provide cryptographic proof of document authenticity and integrity. They show who signed and detect any modifications after signing."
+manualVsAuto = "Signing Modes"
+manualMode = "Manual: Use your own certificate (PEM/P12/PKCS12/JKS). Shows as 'Trusted' if certificate authority is recognized. Best for legal/client-facing documents."
+autoMode = "Auto: Uses server-generated certificate. Always tamper-evident but shows as 'Unverified'. Fast, no setup. Best for internal workflows."
+certificateFormats = "Certificate Format Guide"
+pem = "PEM: Two files needed - certificate (.crt/.pem) + private key (.key). Common in Linux/web servers."
+p12pkcs12 = "P12/PKCS12/PFX: Single file with certificate + key, password-protected. Windows-friendly format."
+jks = "JKS: Java KeyStore format. Common in Java applications."
+visibleVsInvisible = "Signature Visibility"
+visible = "Visible: Shows signature block on PDF with name, date, reason, location. Choose page number for placement."
+invisible = "Invisible: No visual change to PDF. Signature embedded for verification only. Best when document layout mustn't change."
+security = "Security Notes"
+securityTamper = "Any edit after signing invalidates the signature - PDF readers will show 'Document Modified'"
+securityChain = "Certificate trust depends on Certificate Authority (CA) chain recognition by PDF readers"
+securityPassword = "Password-protected certificates (.p12/.jks) require password to sign"
+tips = "Tips"
+tip1 = "Test signatures with PDF readers (Adobe, browsers) to verify they show as expected"
+tip2 = "For legal documents, use Manual mode with a certificate from a recognized CA"
+tip3 = "For internal tracking/audit trails, Auto mode is simpler and equally tamper-evident"
+tip4 = "Invisible signatures don't alter page count or layout - useful for pre-printed forms"
+
 [removeCertSign]
 tags = "authenticate,PEM,P12,official,decrypt"
 title = "Remove Certificate Signature"
@@ -2862,6 +2964,27 @@ bullet1 = "Right-to-Left Binding: For Arabic, Hebrew, or RTL languages"
 bullet2 = "Borders: Shows cut lines for trimming"
 bullet3 = "Gutter Margin: Adds space for binding/stapling"
 bullet4 = "Short-edge Flip: Only for automatic duplex printers"
+
+[bookletImposition.help]
+title = "Booklet Printing Help"
+overview = "Booklet imposition arranges your PDF pages for professional booklet printing. Pages are reordered so when printed double-sided, folded, and stapled, they read in correct sequence."
+duplexOptions = "Duplex Printing Options"
+automaticDuplex = "Automatic Duplex: Enable 'Double-sided printing' - printer handles both sides automatically. Use 'Flip on short edge' if your printer requires it."
+manualDuplex = "Manual Duplex (No automatic duplex printer): Turn OFF 'Double-sided printing', use 1st Pass to print fronts, then 2nd Pass to print backs after reloading paper."
+gutterMargin = "Gutter Margin"
+gutterDesc = "Adds extra space along the binding edge (inner margin) so text doesn't get lost in the fold. Typical values: 18-36 points (0.25-0.5 inches). Larger booklets need more gutter."
+spineLocation = "Spine Location"
+spineDesc = "Left (standard): For left-to-right languages (English, etc.). Right (RTL): For right-to-left languages (Arabic, Hebrew, etc.)."
+borderOption = "Border Option"
+borderDesc = "Adds visible borders around each page section. Useful for cutting guides or checking alignment before printing final copies."
+quickSteps = "Quick Steps"
+step1 = "1. Upload your PDF (must have even number of pages - tool will add blank if needed)"
+step2 = "2. Choose automatic duplex (recommended) or manual duplex mode"
+step3 = "3. Set gutter margin if binding/stapling (18-36 points typical)"
+step4 = "4. Download and print double-sided (flip on long edge for most printers)"
+step5 = "5. Fold printed sheets in half, stack in order, staple along spine"
+paperSize = "Paper Size"
+paperSizeDesc = "Automatically detected from your PDF. Booklet pages will be arranged 2-up on landscape-oriented sheets (e.g., two letter pages side-by-side on ledger)."
 
 [bookletImposition.error]
 failed = "An error occurred while creating the booklet imposition."
@@ -3013,6 +3136,30 @@ submit = "Submit"
 2 = "Scan all your documents at once by inserting the divider sheet between them."
 3 = "Upload the single large scanned PDF file and let Stirling PDF handle the rest."
 4 = "Divider pages are automatically detected and removed, guaranteeing a neat final document."
+
+[autoSplitPDF.help]
+title = "QR Code Auto-Split Help"
+overview = "This tool automatically splits scanned PDFs using special QR code divider pages. Perfect for batch scanning multiple documents."
+howItWorks = "How It Works"
+step1 = "1. Download and print the QR code divider page (black & white is fine)"
+step2 = "2. Place divider pages between your documents"
+step3 = "3. Scan all documents in one batch (dividers included)"
+step4 = "4. Upload to Stirling-PDF - documents are automatically separated and dividers removed"
+duplexMode = "Duplex Mode (Double-Sided Scanning)"
+duplexDesc = "Enable 'Duplex Mode' when scanning double-sided documents. This automatically skips the back sides of divider pages, preventing blank pages in your output."
+duplexExample = "Example: With duplex ON, if you scan a divider followed by a 2-page document, the tool knows the divider's back is blank and skips it."
+qrCodes = "Valid QR Codes"
+qrDesc = "Only QR codes from Stirling-PDF divider pages work. These contain specific URLs: github.com/Stirling-Tools/Stirling-PDF, github.com/Frooodle/Stirling-PDF, or stirlingpdf.com"
+useCases = "Best Use Cases"
+useCase1 = "Batch scanning multiple contracts, forms, or reports"
+useCase2 = "Digitizing physical file folders"
+useCase3 = "Scanning stacks of invoices or receipts"
+useCase4 = "Processing mail or paperwork in bulk"
+tips = "Tips"
+tip1 = "Print dividers once, reuse them for all your scanning sessions"
+tip2 = "Dividers work in black & white - no need for colour printing"
+tip3 = "Make sure QR codes are clearly visible (not crumpled or dirty)"
+tip4 = "For best results, use the same paper weight for dividers as your documents"
 
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
@@ -3283,6 +3430,31 @@ placeholder = "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
 [redact.manual.redactionColor]
 title = "Redaction Colour"
 
+[redact.help]
+title = "Redaction Help & Regex Patterns"
+overview = "Overview"
+overviewDesc = "Redaction permanently removes sensitive content from PDFs. Text behind redaction boxes is completely removed, not just covered. Metadata is also cleaned automatically."
+regexMode = "Regular Expression (Regex) Mode"
+regexDesc = "Enable 'Use Regex' to use pattern-based matching for complex searches. Powerful for finding multiple instances of similar data."
+regexExamples = "Common Regex Patterns"
+regexSSN = "Social Security Number: \\d{3}-\\d{2}-\\d{4} (matches XXX-XX-XXXX)"
+regexPhone = "Phone Number: \\(?\\d{3}\\)?[-.]?\\d{3}[-.]?\\d{4} (matches various phone formats)"
+regexEmail = "Email Address: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,} (matches email addresses)"
+regexCreditCard = "Credit Card: \\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4} (matches card numbers)"
+regexDate = "Date (YYYY-MM-DD): \\d{4}-\\d{2}-\\d{2}"
+regexZipCode = "US ZIP Code: \\d{5}(-\\d{4})? (matches 12345 or 12345-6789)"
+regexIPAddress = "IP Address: \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"
+wholeWordMode = "Whole Word Search"
+wholeWordDesc = "Enable 'Whole Word Search' to match only complete words. Example: 'John' won't match 'Johnson' when enabled. Useful for names."
+securityFeatures = "Security Features"
+securityConvert = "Convert to PDF-Image: Converts the entire PDF to images after redaction. This ensures text is truly unrecoverable. Note: Increases file size and makes text non-selectable."
+securityMetadata = "Automatic Metadata Cleaning: Automatically removes author, subject, keywords, and XMP metadata for privacy."
+tips = "Best Practices"
+tip1 = "Test First: Test your regex patterns on a copy before using on important documents."
+tip2 = "Review Results: Always review redacted documents to ensure all sensitive information is removed."
+tip3 = "Use Convert to Image: For highly sensitive documents, enable 'Convert to PDF-Image' to ensure complete removal."
+tip4 = "Padding: Add custom padding to ensure redaction boxes fully cover text (useful for different font sizes)."
+
 [tableExtraxt]
 tags = "CSV,Table Extraction,extract,convert"
 
@@ -3401,6 +3573,35 @@ failed = "An error occurred while adding stamp to the PDF."
 
 [AddStampRequest.results]
 title = "Stamp Results"
+
+[AddStampRequest.help]
+title = "Stamp Tool Help"
+overview = "Add text or image stamps to PDFs at precise locations. Supports variable substitution and multi-language fonts."
+variables = "Variable Substitution (Text Stamps)"
+variablesDesc = "Use these variables in your stamp text for dynamic content:"
+variableN = "{n} - Current page number"
+variableTotal = "{total} - Total pages"
+variableFilename = "{filename} - Document filename"
+variableExample = "Example: 'Document {filename} - Page {n}' becomes 'Document myfile - Page 5'"
+positioning = "Positioning System"
+positionGrid = "Quick Position: Use 1-9 grid (1=top-left, 5=center, 9=bottom-right) for fast placement"
+positionOverride = "Override Coordinates: Enter exact X/Y pixel coordinates for precise placement (overrides grid position)"
+positionMargin = "Custom Margin: Adjust distance from page edges (Small/Medium/Large/X-Large)"
+multiLanguage = "Multi-Language Support"
+multiLanguageDesc = "Choose alphabet/language for proper font rendering: Roman, Arabic, Japanese, Korean, Chinese, Thai. Essential for non-Latin text."
+formatting = "Formatting Options"
+rotation = "Rotation: -360° to 360° for angled stamps"
+opacity = "Opacity: 0-100% for transparency (lower = more transparent)"
+color = "Custom Colour: Choose any colour for text stamps"
+fontSize = "Font/Image Size: Adjust size of text or image stamps"
+stampTypes = "Stamp Types"
+textStamp = "Text: Quick approval stamps ('APPROVED', 'REVIEWED', 'CONFIDENTIAL'), custom messages"
+imageStamp = "Image: Upload logos, signatures, or custom graphics"
+useCases = "Common Use Cases"
+useCase1 = "Approval stamps: 'APPROVED', 'REVIEWED BY [NAME]', 'CONFIDENTIAL'"
+useCase2 = "Business stamps: Company logos, official seals"
+useCase3 = "Page references: 'Page {n} of {total}'"
+useCase4 = "Document identifiers: '{filename} - {n}'"
 
 [removeImagePdf]
 tags = "Remove Image,Page operations,Back end,server side"
@@ -3765,6 +3966,29 @@ text = "Convert pages to high-contrast black and white using ImageMagick. Use de
 
 [compress.error]
 failed = "An error occurred while compressing the PDF."
+
+[compress.help]
+title = "PDF Compression Guide"
+overview = "Reduce PDF file size while balancing quality. Uses qpdf for compression and optimization."
+methods = "Compression Methods"
+qualityMethod = "Quality: Choose compression strength (1-9). Lower preserves quality, higher reduces size more aggressively. Recommended: 3-5 for most documents."
+filesizeMethod = "File Size: Enter target size - tool automatically adjusts quality to reach it. Best when you have size limits (email attachments, etc.)."
+options = "Additional Options"
+grayscale = "Grayscale: Converts all colours to black & white. Dramatically reduces size for color-heavy documents. Best for: Text documents, reports, forms."
+lineArt = "Line Art: Maximum compression. Converts to high-contrast black & white (requires ImageMagick). Best for: Text-only documents, technical drawings. NOT recommended for photos."
+qualityLevels = "Quality Level Guide"
+level1to3 = "1-3: High quality. Minimal compression. Use for important documents, presentations, or photos."
+level4to6 = "4-6: Balanced. Noticeable compression with acceptable quality. Good for general use."
+level7to9 = "7-9: Maximum compression. Lower quality but smallest files. Use for drafts, internal documents."
+tips = "Tips"
+tip1 = "Start with quality level 3-4 and increase if more compression needed"
+tip2 = "Grayscale option works well for scanned documents without photos"
+tip3 = "Line art is extreme - preview results before using on final documents"
+tip4 = "File size method is convenient but may produce varying quality across pages"
+expectations = "Size Reduction Expectations"
+typical = "Typical: 20-40% reduction for standard PDFs"
+images = "Image-heavy: 50-70% reduction with grayscale"
+extreme = "Line art: 80-95% reduction (text becomes images)"
 
 [compress.selectText]
 2 = "Optimisation level:"
