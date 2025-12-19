@@ -35,7 +35,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [requiresMfa, setRequiresMfa] = useState(false);
-  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
+  const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([]);
+  const [samlProviders, setSamlProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const [loginMethod, setLoginMethod] = useState<string>('all');
@@ -117,7 +118,11 @@ export default function Login() {
         // We'll use these full paths so the auth client knows where to redirect
         const providerPaths = Object.keys(data.providerList || {});
 
-        setEnabledProviders(providerPaths);
+        const oauth = providerPaths.filter(path => path.includes('/oauth2/'));
+        const saml = providerPaths.filter(path => path.includes('/saml2/'));
+
+        setOauthProviders(oauth);
+        setSamlProviders(saml);
         setLoginMethod(data.loginMethod || 'all');
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
@@ -134,7 +139,7 @@ export default function Login() {
     // In debug mode, check if any providers exist in the config
     const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
       ? Object.keys(oauthProviderConfig).length > 0
-      : enabledProviders.length > 0;
+      : (oauthProviders.length > 0 || samlProviders.length > 0);
     setHasSSOProviders(hasProviders);
 
     // Check if username/password authentication is allowed
@@ -147,7 +152,7 @@ export default function Login() {
       // Hide email form if username/password auth is not allowed
       setShowEmailForm(false);
     }
-  }, [enabledProviders, loginMethod]);
+  }, [oauthProviders, samlProviders, loginMethod]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -340,15 +345,32 @@ export default function Login() {
 
       <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <OAuthButtons
-        onProviderClick={signInWithProvider}
-        isSubmitting={isSigningIn}
-        layout="vertical"
-        enabledProviders={enabledProviders}
-      />
+      {/* OAuth section */}
+      {oauthProviders.length > 0 && (
+        <OAuthButtons
+          onProviderClick={signInWithProvider}
+          isSubmitting={isSigningIn}
+          layout="vertical"
+          enabledProviders={oauthProviders}
+        />
+      )}
 
-      {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
+      {/* SAML section - show with divider if there are also OAuth providers */}
+      {samlProviders.length > 0 && (
+        <>
+          {oauthProviders.length > 0 && (
+            <DividerWithText text="SAML" respondsToDarkMode={false} opacity={0.4} />
+          )}
+          <OAuthButtons
+            onProviderClick={signInWithProvider}
+            isSubmitting={isSigningIn}
+            layout="vertical"
+            enabledProviders={samlProviders}
+          />
+        </>
+      )}
+
+      {/* Divider between SSO and Email - only show if SSO is available and username/password is allowed */}
       {hasSSOProviders && (loginMethod === 'all' || loginMethod === 'normal') && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
