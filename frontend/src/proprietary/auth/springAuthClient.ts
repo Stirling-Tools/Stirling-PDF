@@ -326,7 +326,8 @@ class SpringAuthClient {
       // it's sent with the redirect request
       if (token) {
         // Cookie expires in 30 seconds - just long enough for the logout redirect
-        document.cookie = `stirling_logout_token=${encodeURIComponent(token)}; path=/; max-age=30; SameSite=Lax`;
+        // Secure: only sent over HTTPS; Path=/logout: scoped to logout endpoint only
+        document.cookie = `stirling_logout_token=${encodeURIComponent(token)}; path=/logout; max-age=30; SameSite=Lax; Secure`;
       }
 
       // Clean up local storage
@@ -364,9 +365,15 @@ class SpringAuthClient {
       // Notify listeners before redirect
       this.notifyListeners('SIGNED_OUT', null);
 
-      // Navigate to /logout to trigger Spring Security's logout handler
-      console.log('[SpringAuth] Redirecting to /logout for session invalidation');
-      window.location.href = `${BASE_PATH}/logout`;
+      // Submit a POST form to /logout to trigger Spring Security's logout handler
+      // Using POST prevents logout CSRF attacks (GET-based logout can be triggered by any site)
+      console.log('[SpringAuth] Submitting POST to /logout for session invalidation');
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `${BASE_PATH}/logout`;
+      form.style.display = 'none';
+      document.body.appendChild(form);
+      form.submit();
 
       // This won't be reached if redirect happens, but return for type safety
       return { error: null };

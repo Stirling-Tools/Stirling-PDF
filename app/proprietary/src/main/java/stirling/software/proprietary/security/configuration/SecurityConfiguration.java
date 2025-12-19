@@ -30,7 +30,7 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -246,9 +246,9 @@ public class SecurityConfiguration {
 
             http.logout(
                     logout ->
+                            // Require POST to prevent logout CSRF attacks
                             logout.logoutRequestMatcher(
-                                            PathPatternRequestMatcher.withDefaults()
-                                                    .matcher("/logout"))
+                                            new AntPathRequestMatcher("/logout", "POST"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
                                                     securityProperties,

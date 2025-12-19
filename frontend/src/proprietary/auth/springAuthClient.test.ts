@@ -251,17 +251,23 @@ describe('SpringAuthClient', () => {
   });
 
   describe('signOut', () => {
-    let originalLocation: Location;
+    let mockForm: { method: string; action: string; style: { display: string }; submit: ReturnType<typeof vi.fn> };
+    let appendChildSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      // Save and mock window.location to prevent actual navigation
-      originalLocation = window.location;
-      delete (window as any).location;
-      window.location = { ...originalLocation, href: '' } as Location;
+      // Mock form creation and submission
+      mockForm = {
+        method: '',
+        action: '',
+        style: { display: '' },
+        submit: vi.fn(),
+      };
+      vi.spyOn(document, 'createElement').mockReturnValue(mockForm as unknown as HTMLElement);
+      appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockForm as unknown as HTMLFormElement);
     });
 
     afterEach(() => {
-      window.location = originalLocation;
+      vi.restoreAllMocks();
     });
 
     it('should successfully sign out and clear JWT', async () => {
@@ -272,23 +278,24 @@ describe('SpringAuthClient', () => {
 
       // JWT should be cleared from localStorage
       expect(localStorage.getItem('stirling_jwt')).toBeNull();
-      // Should redirect to /logout for Spring Security logout handler
-      expect(window.location.href).toBe('/logout');
+      // Should submit POST form to /logout for Spring Security logout handler
+      expect(mockForm.method).toBe('POST');
+      expect(mockForm.action).toBe('/logout');
+      expect(mockForm.submit).toHaveBeenCalled();
       // Should return no error on successful signOut
       expect(result.error).toBeNull();
     });
 
-    it('should set logout cookie with JWT before redirect', async () => {
+    it('should create hidden form and submit POST to /logout', async () => {
       const mockToken = 'jwt-to-clear';
       localStorage.setItem('stirling_jwt', mockToken);
 
-      // Clear any existing cookies
-      document.cookie = 'stirling_logout_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-
       await springAuth.signOut();
 
-      // Should have set the logout cookie with the token
-      expect(document.cookie).toContain('stirling_logout_token=' + encodeURIComponent(mockToken));
+      // Verify form was created with correct attributes
+      expect(document.createElement).toHaveBeenCalledWith('form');
+      expect(mockForm.style.display).toBe('none');
+      expect(appendChildSpy).toHaveBeenCalled();
     });
 
     it('should handle signOut when no JWT is present', async () => {
@@ -296,8 +303,10 @@ describe('SpringAuthClient', () => {
 
       const result = await springAuth.signOut();
 
-      // Should still redirect to /logout
-      expect(window.location.href).toBe('/logout');
+      // Should still submit POST form to /logout
+      expect(mockForm.method).toBe('POST');
+      expect(mockForm.action).toBe('/logout');
+      expect(mockForm.submit).toHaveBeenCalled();
       expect(result.error).toBeNull();
     });
   });
