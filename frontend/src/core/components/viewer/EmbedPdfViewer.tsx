@@ -52,10 +52,10 @@ const EmbedPdfViewerContent = ({
     rotationActions: _rotationActions,
     getScrollState,
     getRotationState,
-    isAnnotationMode,
     setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
+    setApplyChanges,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -78,7 +78,7 @@ const EmbedPdfViewerContent = ({
   const hasAnnotationChangesRef = useRef(false);
 
   // Get redaction context
-  const { isRedactionMode, redactionsApplied, setRedactionsApplied } = useRedaction();
+  const { redactionsApplied, setRedactionsApplied } = useRedaction();
   
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -99,13 +99,11 @@ const EmbedPdfViewerContent = ({
   const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
 
-  // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
-  // When in manual redaction mode, annotation mode takes priority if active (user clicked draw tool)
-  const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || (isAnnotationsVisible && !isManualRedactMode);
-  
-  // Enable redaction when the redact tool is selected and annotation mode is NOT active
-  // This allows switching between redaction and annotation tools while redact is the selected tool
-  const shouldEnableRedaction = (isManualRedactMode || isRedactionMode) && !isAnnotationMode;
+  // Enable annotations only when annotation tool is selected
+  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode;
+
+  // Enable redaction only when redaction tool is selected
+  const shouldEnableRedaction = selectedTool === 'redact';
 
   // Keep annotation mode enabled when entering placement tools without overriding manual toggles
   useEffect(() => {
@@ -311,7 +309,7 @@ const EmbedPdfViewerContent = ({
     };
   }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
 
-  // Apply changes - save annotations and redactions to new file version
+  // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
@@ -319,7 +317,15 @@ const EmbedPdfViewerContent = ({
       console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
 
       // Step 0: Commit any pending redactions before export
-      if (redactionTrackerRef.current?.getPendingCount() ?? 0 > 0) {
+      const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      
+      // Mark redactions as applied BEFORE committing, so the button stays enabled during the save process
+      // This ensures the button doesn't become disabled when pendingCount becomes 0
+      if (hadPendingRedactions || redactionsApplied) {
+        setRedactionsApplied(true);
+      }
+      
+      if (hadPendingRedactions) {
         console.log('[Viewer] Committing pending redactions before export');
         redactionTrackerRef.current?.commitAllPending();
         // Give a small delay for the commit to process
@@ -355,17 +361,13 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
 
-  // Expose annotation apply via a global event so tools (like Annotate) can
-  // trigger saves from the left sidebar without tight coupling.
+  // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {
-    const handler = () => {
-      void applyChanges();
-    };
-    window.addEventListener('stirling-annotations-apply', handler);
+    setApplyChanges(applyChanges);
     return () => {
-      window.removeEventListener('stirling-annotations-apply', handler);
+      setApplyChanges(null);
     };
-  }, [applyChanges]);
+  }, [applyChanges, setApplyChanges]);
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();

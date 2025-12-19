@@ -130,6 +130,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
         selectAfterCreate: true,
       }),
 
+      // Register redaction plugin (depends on InteractionManager, Selection, History)
+      // Always register for redaction functionality
+      createPluginRegistration(RedactionPluginPackage),
+
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
         defaultMode: 'mobile', // Try mobile mode which might be more permissive

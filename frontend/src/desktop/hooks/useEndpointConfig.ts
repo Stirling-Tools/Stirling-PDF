@@ -43,7 +43,7 @@ async function checkDependenciesReady(): Promise<boolean> {
 /**
  * Desktop-specific endpoint checker that hits the backend directly via axios.
  */
-export function useEndpointEnabled(endpoint: string): {
+export function useEndpointEnabled(endpoint: string | null): {
   enabled: boolean | null;
   loading: boolean;
   error: string | null;

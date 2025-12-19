@@ -4065,7 +4065,6 @@ draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
-saveChanges = "Save Changes"
 downloadAll = "Download All"
 saveAll = "Save All"
 
@@ -4139,6 +4138,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Search PDF"

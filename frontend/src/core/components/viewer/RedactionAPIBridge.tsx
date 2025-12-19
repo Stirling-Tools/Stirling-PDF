@@ -39,7 +39,8 @@ export function RedactionAPIBridge() {
     },
     commitAllPending: () => {
       provides?.commitAllPending();
-      setRedactionsApplied(true);
+      // Don't set redactionsApplied here - it should only be set after the file is saved
+      // The save operation in applyChanges will handle setting/clearing this flag
     },
     getActiveType: () => state?.activeType ?? null,
     getPendingCount: () => state?.pendingCount ?? 0,

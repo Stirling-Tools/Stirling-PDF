@@ -35,7 +35,7 @@ export const useRedactParameters = (): RedactParametersHook => {
         return '/api/v1/security/auto-redact';
       }
       // Manual redaction handled client-side
-      return '';
+      return null;
     },
     validateFn: (params) => {
       if (params.mode === 'automatic') {

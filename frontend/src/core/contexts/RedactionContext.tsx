@@ -143,8 +143,11 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
   const commitAllPending = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.commitAllPending();
+      // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
+      // The button will only be disabled after the file is successfully saved
+      setRedactionsApplied(true);
     }
-  }, []);
+  }, [setRedactionsApplied]);
 
   const contextValue: RedactionContextValue = {
     ...state,

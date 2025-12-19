@@ -6,12 +6,12 @@ export interface BaseParametersHook<T> {
   updateParameter: <K extends keyof T>(parameter: K, value: T[K]) => void;
   resetParameters: () => void;
   validateParameters: () => boolean;
-  getEndpointName: () => string;
+  getEndpointName: () => string | null;
 }
 
 export interface BaseParametersConfig<T> {
   defaultParameters: T;
-  endpointName: string | ((params: T) => string);
+  endpointName: string | ((params: T) => string | null);
   validateFn?: (params: T) => boolean;
 }
 
@@ -34,7 +34,7 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
   }, [parameters, config.validateFn]);
 
   const endpointName = config.endpointName;
-  let getEndpointName: () => string;
+  let getEndpointName: () => string | null;
   if (typeof endpointName === "string") {
     getEndpointName = useCallback(() => {
       return endpointName;
@@ -42,7 +42,7 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
   } else {
     getEndpointName = useCallback(() => {
       return endpointName(parameters);
-    }, [parameters]);
+    }, [parameters, endpointName]);
   }
 
   return {

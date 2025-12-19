@@ -10,8 +10,9 @@ import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnn
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useNavigationState, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
+import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
@@ -21,6 +22,9 @@ export function useViewerRightRailButtons() {
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
+  const { requestNavigation } = useNavigationGuard();
+  const { redactionsApplied } = useRedaction();
+  const { pendingCount } = useRedactionMode();
 
   const stripBasePath = useCallback((path: string) => {
     if (BASE_PATH && path.startsWith(BASE_PATH)) {
@@ -36,8 +40,15 @@ export function useViewerRightRailButtons() {
 
   const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() => isAnnotationsPath());
 
+  // Update isAnnotationsActive based on selected tool
   useEffect(() => {
-    setIsAnnotationsActive(isAnnotationsPath());
+    if (selectedTool === 'annotate') {
+      setIsAnnotationsActive(true);
+    } else if (selectedTool === 'redact') {
+      setIsAnnotationsActive(false);
+    } else {
+      setIsAnnotationsActive(isAnnotationsPath());
+    }
   }, [selectedTool, isAnnotationsPath]);
 
   useEffect(() => {
@@ -107,8 +118,8 @@ export function useViewerRightRailButtons() {
         render: ({ disabled }) => (
           <Tooltip content={panLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isPanning ? 'default' : 'subtle'}
-              color={undefined}
+              variant={isPanning ? 'filled' : 'subtle'}
+              color={isPanning ? 'blue' : undefined}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
@@ -116,7 +127,6 @@ export function useViewerRightRailButtons() {
                 setIsPanning(prev => !prev);
               }}
               disabled={disabled}
-              style={isPanning ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
             >
               <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
             </ActionIcon>
@@ -187,21 +197,33 @@ export function useViewerRightRailButtons() {
         render: ({ disabled }) => (
           <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isAnnotationsActive ? 'default' : 'subtle'}
+              variant={isAnnotationsActive ? 'filled' : 'subtle'}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
-                const targetPath = withBasePath('/annotations');
-                if (window.location.pathname !== targetPath) {
-                  window.history.pushState(null, '', targetPath);
+
+                // Check for unsaved redaction changes (pending or applied)
+                const hasRedactionChanges = pendingCount > 0 || redactionsApplied;
+
+                const switchToAnnotations = () => {
+                  const targetPath = withBasePath('/annotations');
+                  if (window.location.pathname !== targetPath) {
+                    window.history.pushState(null, '', targetPath);
+                  }
+                  setIsAnnotationsActive(true);
+                  handleToolSelect('annotate');
+                };
+
+                if (hasRedactionChanges) {
+                  requestNavigation(switchToAnnotations);
+                } else {
+                  switchToAnnotations();
                 }
-                setIsAnnotationsActive(true);
-                handleToolSelect('annotate');
               }}
-              disabled={disabled || isAnnotationsActive}
+              disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              style={isAnnotationsActive ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
+              color={isAnnotationsActive ? 'blue' : undefined}
             >
               <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
             </ActionIcon>

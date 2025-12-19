@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { useEffect, useRef } from 'react';
-import { Button, Stack, Text, Badge, Group, Divider, Tooltip } from '@mantine/core';
+import { useEffect, useRef, useCallback } from 'react';
+import { Button, Stack, Text, Group, Divider } from '@mantine/core';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import CropFreeIcon from '@mui/icons-material/CropFree';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -21,11 +20,11 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { activateTextSelection, activateMarquee, commitAllPending, redactionApiRef } = useRedaction();
+  const { activateTextSelection, activateMarquee, redactionApiRef, redactionsApplied } = useRedaction();
   const { pendingCount, activeType, isRedacting } = useRedactionMode();
   
-  // Get viewer context to manage annotation mode
-  const { isAnnotationMode, setAnnotationMode } = useViewer();
+  // Get viewer context to manage annotation mode and save changes
+  const { isAnnotationMode, setAnnotationMode, applyChanges } = useViewer();
   
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
@@ -103,9 +102,16 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
     }
   };
 
-  const handleApplyAll = () => {
-    commitAllPending();
-  };
+  // Handle saving changes - this will apply pending redactions and save to file
+  const handleSaveChanges = useCallback(async () => {
+    if (applyChanges) {
+      await applyChanges();
+    }
+  }, [applyChanges]);
+
+  // Check if there are unsaved changes to save (pending redactions OR applied redactions)
+  // Save Changes button will apply pending redactions and then save everything
+  const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
   
   // Check if API is available
   const isApiReady = redactionApiRef.current !== null;
@@ -160,51 +166,19 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           </Button>
         </Group>
 
-        <Divider />
-
-        {/* Pending Count and Apply Button */}
-        <Group justify="space-between" align="center" wrap="nowrap">
-          <Group gap="xs" wrap="nowrap">
-            <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-              {t('redact.manual.pendingLabel', 'Pending:')}
-            </Text>
-            <Badge 
-              color={pendingCount > 0 ? 'red' : 'gray'} 
-              variant="filled" 
-              size="lg"
-            >
-              {pendingCount}
-            </Badge>
-          </Group>
-          
-          <Tooltip
-            label={t('redact.manual.applyWarning', '⚠️ Permanent application, cannot be undone and the data underneath will be deleted')}
-            withArrow
-            position="top"
-            disabled={disabled || pendingCount === 0 || !isApiReady}
-          >
-            <Button
-              variant="filled"
-              color="red"
-              leftSection={<CheckCircleIcon style={{ fontSize: 18, flexShrink: 0 }} />}
-              onClick={handleApplyAll}
-              disabled={disabled || pendingCount === 0 || !isApiReady}
-              size="sm"
-              styles={{
-                root: { flexShrink: 0 },
-                label: { whiteSpace: 'nowrap' },
-              }}
-            >
-              {t('redact.manual.apply', 'Apply')}
-            </Button>
-          </Tooltip>
-        </Group>
-
-        {pendingCount === 0 && (
-          <Text size="xs" c="dimmed" ta="center">
-            {t('redact.manual.noMarks', 'No redaction marks. Use the tools above to mark content for redaction.')}
-          </Text>
-        )}
+        {/* Save Changes Button - applies pending redactions and saves to file */}
+        <Button
+          fullWidth
+          size="md"
+          radius="md"
+          mt="sm"
+          variant="filled"
+          color="blue"
+          disabled={!hasUnsavedChanges}
+          onClick={handleSaveChanges}
+        >
+          {t('annotation.saveChanges', 'Save Changes')}
+        </Button>
       </Stack>
     </>
   );

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useRedaction } from '@app/contexts/RedactionContext';
 
 /**
  * Custom menu component that appears when a pending redaction mark is selected.
@@ -14,6 +15,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: SelectionMenuProps) {
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction();
+  const { setRedactionsApplied } = useRedaction();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   
@@ -39,8 +41,11 @@ export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: Sel
   const handleApply = useCallback(() => {
     if (provides?.commitPending && item) {
       provides.commitPending(item.page, item.id);
+      // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
+      // This ensures the button doesn't become disabled when pendingCount decreases
+      setRedactionsApplied(true);
     }
-  }, [provides, item]);
+  }, [provides, item, setRedactionsApplied]);
 
   // Calculate position for portal based on wrapper element
   useEffect(() => {
