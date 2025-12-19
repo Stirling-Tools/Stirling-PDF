@@ -70,6 +70,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/scanner-image-split': 'scannerImageSplit',
 
   // Annotation and content removal
+  '/annotations': 'annotate',
+  '/annotate': 'annotate',
   '/remove-annotations': 'removeAnnotations',
   '/remove-image': 'removeImage',
 

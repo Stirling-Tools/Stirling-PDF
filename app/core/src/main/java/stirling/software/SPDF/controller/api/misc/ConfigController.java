@@ -66,7 +66,8 @@ public class ConfigController {
             AppConfig appConfig = applicationContext.getBean(AppConfig.class);
 
             // Extract key configuration values from AppConfig
-            configData.put("baseUrl", appConfig.getBaseUrl());
+            // Note: Frontend expects "baseUrl" field name for compatibility
+            configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
 

@@ -58,9 +58,6 @@ const EmbedPdfViewerContent = ({
     exportActions,
   } = useViewer();
 
-  // Register viewer right-rail buttons
-  useViewerRightRailButtons();
-
   const scrollState = getScrollState();
   const rotationState = getRotationState();
 
@@ -72,8 +69,13 @@ const EmbedPdfViewerContent = ({
     }
   }, [rotationState.rotation]);
 
-  // Get signature context
-  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+  // Get signature and annotation contexts
+  const { signatureApiRef, annotationApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+
+  // Track whether there are unsaved annotation changes in this viewer session.
+  // This is our source of truth for navigation guards; it is set when the
+  // annotation history changes, and cleared after we successfully apply changes.
+  const hasAnnotationChangesRef = useRef(false);
 
   // Get redaction context
   const { isRedactionMode, redactionsApplied, setRedactionsApplied } = useRedaction();
@@ -92,7 +94,8 @@ const EmbedPdfViewerContent = ({
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
-  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
   const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
 
@@ -242,20 +245,44 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
 
-  // Register checker for unsaved changes
-  // In redact mode: check for pending (unapplied) OR applied but not saved redactions
-  // In other modes: check annotation history
+  // Watch the annotation history API to detect when the document becomes "dirty".
+  // We treat any change that makes the history undoable as unsaved changes until
+  // the user explicitly applies them via applyChanges.
+  useEffect(() => {
+    const historyApi = historyApiRef.current;
+    if (!historyApi || !historyApi.subscribe) {
+      return;
+    }
+
+    const updateHasChanges = () => {
+      const canUndo = historyApi.canUndo?.() ?? false;
+      if (!hasAnnotationChangesRef.current && canUndo) {
+        hasAnnotationChangesRef.current = true;
+        setHasUnsavedChanges(true);
+      }
+    };
+
+    const unsubscribe = historyApi.subscribe(updateHasChanges);
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [historyApiRef.current, setHasUnsavedChanges]);
+
+  // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
     if (previewFile) {
       return;
     }
 
     const checkForChanges = () => {
+      // Check for annotation history changes (using ref that's updated by useEffect)
+      const hasAnnotationChanges = hasAnnotationChangesRef.current;
+      
       // Check for pending redactions
       const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      // Check for annotation history changes
-      const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
-
+      
       // Always consider applied redactions as unsaved until export
       const hasAppliedRedactions = redactionsApplied;
 
@@ -277,11 +304,9 @@ const EmbedPdfViewerContent = ({
       return hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions;
     };
 
-    console.log('[Viewer] Registering unsaved changes checker');
     registerUnsavedChangesChecker(checkForChanges);
 
     return () => {
-      console.log('[Viewer] Unregistering unsaved changes checker');
       unregisterUnsavedChangesChecker();
     };
   }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
@@ -307,8 +332,6 @@ const EmbedPdfViewerContent = ({
         throw new Error('Failed to export PDF');
       }
 
-      console.log('[Viewer] Exported PDF size:', arrayBuffer.byteLength);
-
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
       const filename = currentFile.name || 'document.pdf';
@@ -323,13 +346,29 @@ const EmbedPdfViewerContent = ({
       // Step 4: Consume files (replace in context)
       await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
 
-      // Clear unsaved changes flags
+      // Mark annotations as saved so navigation away from the viewer is allowed.
+      hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
+
+  // Expose annotation apply via a global event so tools (like Annotate) can
+  // trigger saves from the left sidebar without tight coupling.
+  useEffect(() => {
+    const handler = () => {
+      void applyChanges();
+    };
+    window.addEventListener('stirling-annotations-apply', handler);
+    return () => {
+      window.removeEventListener('stirling-annotations-apply', handler);
+    };
+  }, [applyChanges]);
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
@@ -388,6 +427,7 @@ const EmbedPdfViewerContent = ({
               enableRedaction={shouldEnableRedaction}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
+              annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               onSignatureAdded={() => {
