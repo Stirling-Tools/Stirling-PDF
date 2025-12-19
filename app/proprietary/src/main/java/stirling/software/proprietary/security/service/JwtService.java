@@ -258,6 +258,24 @@ public class JwtService implements JwtServiceInterface {
             return token;
         }
 
+        // Check for logout cookie (set by frontend before redirecting to /logout for SAML SLO)
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("stirling_logout_token".equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        try {
+                            return java.net.URLDecoder.decode(
+                                    value, java.nio.charset.StandardCharsets.UTF_8);
+                        } catch (Exception e) {
+                            log.debug("Failed to decode logout token cookie", e);
+                            return value;
+                        }
+                    }
+                }
+            }
+        }
+
         return null;
     }
 
