@@ -12,8 +12,21 @@ public record CustomSaml2AuthenticatedPrincipal(
         String name,
         Map<String, List<Object>> attributes,
         String nameId,
-        List<String> sessionIndexes)
+        List<String> sessionIndexes,
+        String relyingPartyRegistrationId)
         implements Saml2AuthenticatedPrincipal, Serializable {
+
+    /**
+     * Constructor without relyingPartyRegistrationId for backwards compatibility. Sets
+     * relyingPartyRegistrationId to null.
+     */
+    public CustomSaml2AuthenticatedPrincipal(
+            String name,
+            Map<String, List<Object>> attributes,
+            String nameId,
+            List<String> sessionIndexes) {
+        this(name, attributes, nameId, sessionIndexes, null);
+    }
 
     @Override
     public String getName() {
@@ -23,5 +36,15 @@ public record CustomSaml2AuthenticatedPrincipal(
     @Override
     public Map<String, List<Object>> getAttributes() {
         return this.attributes;
+    }
+
+    @Override
+    public List<String> getSessionIndexes() {
+        return this.sessionIndexes;
+    }
+
+    @Override
+    public String getRelyingPartyRegistrationId() {
+        return this.relyingPartyRegistrationId;
     }
 }
