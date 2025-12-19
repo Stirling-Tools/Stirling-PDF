@@ -241,6 +241,7 @@ public class ApplicationProperties {
             @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpIssuer;
+            private Boolean enableSingleLogout = false;
 
             @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
