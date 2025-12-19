@@ -104,7 +104,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private boolean handleSamlLogout(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
-        if (securityProperties.getSaml2().getEnableSingleLogout()) {
+        // Check if SAML SLO is enabled (samlLogoutHandler is only set when SLO is configured)
+        if (samlLogoutHandler != null) {
             if (authentication instanceof Saml2Authentication samlAuthentication) {
                 CustomSaml2AuthenticatedPrincipal principal =
                         (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();

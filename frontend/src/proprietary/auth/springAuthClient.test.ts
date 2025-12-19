@@ -251,40 +251,54 @@ describe('SpringAuthClient', () => {
   });
 
   describe('signOut', () => {
+    let originalLocation: Location;
+
+    beforeEach(() => {
+      // Save and mock window.location to prevent actual navigation
+      originalLocation = window.location;
+      delete (window as any).location;
+      window.location = { ...originalLocation, href: '' } as Location;
+    });
+
+    afterEach(() => {
+      window.location = originalLocation;
+    });
+
     it('should successfully sign out and clear JWT', async () => {
       const mockToken = 'jwt-to-clear';
       localStorage.setItem('stirling_jwt', mockToken);
 
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        status: 200,
-        data: {},
-      } as any);
-
       const result = await springAuth.signOut();
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/auth/logout',
-        null,
-        expect.objectContaining({ withCredentials: true })
-      );
+      // JWT should be cleared from localStorage
       expect(localStorage.getItem('stirling_jwt')).toBeNull();
+      // Should redirect to /logout for Spring Security logout handler
+      expect(window.location.href).toBe('/logout');
+      // Should return no error on successful signOut
       expect(result.error).toBeNull();
     });
 
-    it('should clear JWT even if logout request fails', async () => {
+    it('should set logout cookie with JWT before redirect', async () => {
       const mockToken = 'jwt-to-clear';
       localStorage.setItem('stirling_jwt', mockToken);
 
-      vi.mocked(apiClient.post).mockRejectedValueOnce({
-        isAxiosError: true,
-        response: { status: 500 },
-        message: 'Server error',
-      });
+      // Clear any existing cookies
+      document.cookie = 'stirling_logout_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+      await springAuth.signOut();
+
+      // Should have set the logout cookie with the token
+      expect(document.cookie).toContain('stirling_logout_token=' + encodeURIComponent(mockToken));
+    });
+
+    it('should handle signOut when no JWT is present', async () => {
+      localStorage.removeItem('stirling_jwt');
 
       const result = await springAuth.signOut();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
-      expect(result.error).toBeTruthy();
+      // Should still redirect to /logout
+      expect(window.location.href).toBe('/logout');
+      expect(result.error).toBeNull();
     });
   });
 
