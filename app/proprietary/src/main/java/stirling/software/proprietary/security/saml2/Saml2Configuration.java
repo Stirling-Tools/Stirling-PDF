@@ -79,7 +79,7 @@ public class Saml2Configuration {
         Resource privateKeyResource = samlConf.getPrivateKey();
         Resource certificateResource = samlConf.getSpCert();
 
-        log.info("Loading SP private key from: {}", privateKeyResource.getDescription());
+        log.debug("Loading SP private key from: {}", privateKeyResource.getDescription());
         if (!privateKeyResource.exists()) {
             log.error("SAML2 SP private key not found at: {}", privateKeyResource.getDescription());
             throw new IllegalStateException(
@@ -87,7 +87,7 @@ public class Saml2Configuration {
                             + privateKeyResource.getDescription());
         }
 
-        log.info("Loading SP certificate from: {}", certificateResource.getDescription());
+        log.debug("Loading SP certificate from: {}", certificateResource.getDescription());
         if (!certificateResource.exists()) {
             log.error(
                     "SAML2 SP certificate not found at: {}", certificateResource.getDescription());
@@ -126,15 +126,17 @@ public class Saml2Configuration {
         String entityId =
                 backendUrl + "/saml2/service-provider-metadata/" + samlConf.getRegistrationId();
         String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
-        String sloResponseLocation = backendUrl + "/login";
+        // SP's Single Logout Service endpoint (where SP receives logout requests/responses from
+        // IdP)
+        String spSloLocation = backendUrl + "/logout/saml2/slo";
 
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
                         .signingX509Credentials(c -> c.add(signingCredential))
                         .entityId(entityId)
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
-                        .singleLogoutServiceLocation(idpSingleLogoutUrl)
-                        .singleLogoutServiceResponseLocation(sloResponseLocation)
+                        .singleLogoutServiceLocation(spSloLocation)
+                        .singleLogoutServiceResponseLocation(spSloLocation)
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
                         .assertionConsumerServiceLocation(acsLocation)
                         .authnRequestsSigned(true)
@@ -149,8 +151,6 @@ public class Saml2Configuration {
                                                 .singleLogoutServiceBinding(
                                                         Saml2MessageBinding.POST)
                                                 .singleLogoutServiceLocation(idpSingleLogoutUrl)
-                                                .singleLogoutServiceResponseLocation(
-                                                        sloResponseLocation)
                                                 .wantAuthnRequestsSigned(true))
                         .build();
 
