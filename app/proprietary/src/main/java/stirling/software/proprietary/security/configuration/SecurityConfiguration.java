@@ -20,11 +20,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.logout.OpenSaml4LogoutRequestResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -227,6 +230,20 @@ public class SecurityConfiguration {
                                         return requestURI.startsWith(contextPath + "/api/");
                                     }));
 
+            // Create SAML logout handler if SAML SLO is enabled
+            final LogoutSuccessHandler samlLogoutHandler;
+            if (securityProperties.isSaml2Active()
+                    && Boolean.TRUE.equals(securityProperties.getSaml2().getEnableSingleLogout())
+                    && saml2RelyingPartyRegistrations != null) {
+                log.info("Creating SAML2 SLO handler for SP-initiated logout");
+                OpenSaml4LogoutRequestResolver logoutRequestResolver =
+                        new OpenSaml4LogoutRequestResolver(saml2RelyingPartyRegistrations);
+                samlLogoutHandler =
+                        new Saml2RelyingPartyInitiatedLogoutSuccessHandler(logoutRequestResolver);
+            } else {
+                samlLogoutHandler = null;
+            }
+
             http.logout(
                     logout ->
                             logout.logoutRequestMatcher(
@@ -234,10 +251,17 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
+                                                    securityProperties,
+                                                    appConfig,
+                                                    jwtService,
+                                                    samlLogoutHandler))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
-                                    .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
+                                    .deleteCookies(
+                                            "JSESSIONID",
+                                            "remember-me",
+                                            "stirling_jwt",
+                                            "stirling_logout_token"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
                     rememberMeConfigurer
@@ -361,6 +385,20 @@ public class SecurityConfiguration {
                                     }
                                 })
                         .saml2Metadata(metadata -> {});
+
+                // Configure SAML2 Single Logout if enabled
+                // This sets up endpoints for:
+                // - IdP-initiated logout: IdP sends LogoutRequest to /logout/saml2/slo
+                // - SP-initiated logout response: IdP sends LogoutResponse to /logout/saml2/slo
+                if (Boolean.TRUE.equals(securityProperties.getSaml2().getEnableSingleLogout())) {
+                    log.info("SAML2 Single Logout (SLO) is enabled - configuring SLO endpoints");
+                    http.saml2Logout(
+                            logout ->
+                                    logout.logoutUrl(
+                                            "/logout/saml2/slo") // URL that handles both request
+                            // and response
+                            );
+                }
             }
         } else {
             log.debug("Login is not enabled.");

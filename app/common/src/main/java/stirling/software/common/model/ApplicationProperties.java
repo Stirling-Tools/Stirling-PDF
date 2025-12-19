@@ -227,6 +227,7 @@ public class ApplicationProperties {
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
+            private Boolean enableSingleLogout = false;
 
             @JsonProperty("idpCert")
             private String idpCert;
