@@ -40,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.SPDF.service.telegram.FeedbackEnum;
+
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -51,7 +54,10 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     private static final String CHAT_SUPERGROUP = "supergroup";
     private static final String CHAT_CHANNEL = "channel";
 
-    private static final List<String> ALLOWED_MIME_TYPES = List.of("application/pdf");
+    private static final Set<String> SUPPORTED_CHAT_TYPES =
+            Set.of(CHAT_PRIVATE, CHAT_GROUP, CHAT_SUPERGROUP, CHAT_CHANNEL);
+
+    private static final Set<String> ALLOWED_MIME_TYPES = Set.of("application/pdf");
 
     private final Object pipelinePollMonitor = new Object();
 
@@ -93,7 +99,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         Chat chat = message.getChat();
         if (chat == null || !isSupportedChatType(chat.getType())) {
-            log.debug(
+            log.info(
                     "Ignoring message {}, unsupported chat type {}",
                     message.getMessageId(),
                     chat != null ? chat.getType() : "null");
@@ -126,11 +132,26 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             handleIncomingFile(message);
             return;
         }
-        if (telegramProperties.getFeedback().getGeneral().getEnabled()) {
+        if (feedback(FeedbackEnum.NOVALIDDOCUMENT)) {
             sendMessage(
                     chat.getId(),
                     "No valid file found in the message. Please send a document to process.");
         }
+    }
+
+    private boolean feedback(FeedbackEnum feedbackEnum) {
+        return switch (feedbackEnum) {
+            case NOVALIDDOCUMENT ->
+                    !(telegramProperties.getFeedback().getChannel().getNoValidDocument()
+                            || telegramProperties.getFeedback().getUser().getNoValidDocument());
+            case PROCESSINGERROR ->
+                    !(telegramProperties.getFeedback().getChannel().getProcessingError()
+                            || telegramProperties.getFeedback().getUser().getProcessingError());
+            case ERRORMESSAGE ->
+                    !(telegramProperties.getFeedback().getChannel().getErrorMessage()
+                            || telegramProperties.getFeedback().getUser().getErrorMessage());
+            default -> true;
+        };
     }
 
     // ---------------------------
@@ -144,10 +165,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     }
 
     private boolean isSupportedChatType(String type) {
-        return CHAT_PRIVATE.equals(type)
-                || CHAT_GROUP.equals(type)
-                || CHAT_SUPERGROUP.equals(type)
-                || CHAT_CHANNEL.equals(type);
+        return type != null && SUPPORTED_CHAT_TYPES.contains(type);
     }
 
     // ---------------------------
@@ -376,7 +394,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         List<Path> results = new ArrayList<>();
 
         while (Duration.between(start, Instant.now()).compareTo(timeout) <= 0) {
-            try (Stream<Path> s = Files.walk(finishedDir, 1)) {
+            try (Stream<Path> s = Files.list(finishedDir)) {
                 results =
                         s.filter(Files::isRegularFile)
                                 .filter(path -> matchesBaseName(info.uniqueBaseName(), path))
@@ -410,7 +428,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         try {
             return Files.getLastModifiedTime(path).toInstant().isAfter(since);
         } catch (IOException e) {
-            log.debug("Could not read modification time for {}", path);
+            log.info("Could not read modification time for {}", path);
             return false;
         }
     }

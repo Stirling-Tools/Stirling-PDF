@@ -601,10 +601,12 @@ public class ApplicationProperties {
             private String creator;
             private String producer;
 
+            @Deprecated
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
             }
 
+            @Deprecated
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
@@ -662,14 +664,14 @@ public class ApplicationProperties {
             @Data
             public static class Channel {
                 private Boolean noValidDocument =
-                        false; // set to 'true' to deny feedback messages in channels (to avoid
+                        false; // set to 'true' to deny feedback messages to channel (to avoid
                 // spam)
                 private Boolean processingError =
-                        false; // set to 'true' to deny feedback messages in channels (to avoid
+                        false; // set to 'true' to deny feedback messages to channel (to avoid
                 // spam)
                 private Boolean errorMessage =
-                        false; // set to 'true' to deny error feedback messages in channels (to
-                // avoid spam)
+                        false; // set to 'true' to deny error feedback messages to channel (to avoid
+                // spam)
             }
 
             @Data
@@ -682,6 +684,7 @@ public class ApplicationProperties {
                 // spam)
                 private Boolean errorMessage =
                         false; // set to 'true' to deny error feedback messages to users (to avoid
+                // spam)
             }
         }
     }

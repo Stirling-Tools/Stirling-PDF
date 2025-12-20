@@ -15,6 +15,7 @@ import AdminFeaturesSection from '@app/components/shared/config/configSections/A
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
+import AdminTelegramSection from '@app/components/shared/config/configSections/AdminTelegramSection';
 import ApiKeys from '@app/components/shared/config/configSections/ApiKeys';
 import AccountSection from '@app/components/shared/config/configSections/AccountSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
@@ -145,6 +146,21 @@ export const useConfigNavSections = (
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
         },
+      ],
+    });
+
+    // Messaging Services
+    sections.push({
+      title: t('settings.securityAuth.messagingServices', 'Messaging Services'),
+      items: [
+        {
+          key: 'adminTelegram',
+          label: t('settings.securityAuth.telegram', 'Telegram'),
+          icon: 'send-rounded',
+          component: <AdminTelegramSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
+        }
       ],
     });
 
@@ -350,6 +366,21 @@ export const createConfigNavSections = (
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
+      ],
+    });
+
+    // Messaging Services
+    sections.push({
+      title: 'Messaging Services',
+      items: [
+        {
+          key: 'adminTelegram',
+          label: 'Telegram',
+          icon: 'send-rounded',
+          component: <AdminTelegramSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
+        }
       ],
     });
 

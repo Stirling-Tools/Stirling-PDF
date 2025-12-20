@@ -551,6 +551,7 @@ public class AdminSettingsController {
             case "processexecutor", "processExecutor" -> applicationProperties.getProcessExecutor();
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
+            case "telegram" -> applicationProperties.getTelegram();
             default -> null;
         };
     }
@@ -572,7 +573,8 @@ public class AdminSettingsController {
                     "processexecutor",
                     "autoPipeline",
                     "autopipeline",
-                    "legal");
+                    "legal",
+                    "telegram");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =
