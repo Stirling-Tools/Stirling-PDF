@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Paper, Group, Text, Button, Collapse, Stack, TextInput, Textarea, Switch, PasswordInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -25,14 +25,22 @@ export default function ProviderCard({
   const [expanded, setExpanded] = useState(false);
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
 
+  // Keep local settings in sync with incoming settings (values loaded from settings.yml)
+  useEffect(() => {
+    if (!expanded) {
+      setLocalSettings(settings);
+    }
+  }, [settings, expanded]);
+
   // Initialize local settings with defaults when opening an unconfigured provider
   const handleConnectToggle = () => {
     if (!isConfigured && !expanded) {
       // First time opening an unconfigured provider - initialize with defaults
-      const defaultSettings: Record<string, any> = {};
+      // while preserving any values already present (from settings.yml)
+      const defaultSettings: Record<string, any> = { ...settings };
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
-          defaultSettings[field.key] = field.defaultValue;
+          defaultSettings[field.key] = defaultSettings[field.key] ?? field.defaultValue;
         }
       });
       setLocalSettings(defaultSettings);
