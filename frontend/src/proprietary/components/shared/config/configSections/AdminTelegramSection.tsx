@@ -483,7 +483,7 @@ export default function AdminTelegramSection() {
 
       <Group justify="flex-end">
         <Button onClick={handleSave} loading={saving} disabled={!settings.enabled && !saving}>
-          {t('admin.save', 'Save Changes')}
+          {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
 
