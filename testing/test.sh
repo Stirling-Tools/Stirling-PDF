@@ -92,18 +92,20 @@ capture_file_list() {
     echo "Capturing file list from $container_name..."
     # Get all files in one command, output directly from Docker to avoid path issues
     # Skip proc, sys, dev, and the specified LibreOffice config directory
-    # Also skip PDFBox and LibreOffice temporary files
+    # Also skip PDFBox, LibreOffice, and Jetty temporary files
     docker exec "$container_name" sh -c "find / -type f \
         -not -path '*/proc/*' \
         -not -path '*/sys/*' \
         -not -path '*/dev/*' \
         -not -path '/config/*' \
+        -not -path '/configs/*' \
         -not -path '/logs/*' \
         -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+        -not -path '*/tmp/stirling-pdf/jetty-*/*' \
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
@@ -119,12 +121,14 @@ capture_file_list() {
             -not -path '*/sys/*' \
             -not -path '*/dev/*' \
             -not -path '/config/*' \
+        -not -path '/configs/*' \
             -not -path '/logs/*' \
             -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
+            -not -path '*/tmp/stirling-pdf/jetty-*/*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
             2>/dev/null | sort" > "$output_file"
