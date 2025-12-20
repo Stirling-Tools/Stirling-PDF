@@ -17,6 +17,7 @@ import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isSearchInterfaceVisible } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
@@ -66,7 +67,6 @@ export function useViewerRightRailButtons() {
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
-  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -83,7 +83,7 @@ export function useViewerRightRailButtons() {
               withArrow
               shadow="md"
               offset={8}
-              opened={viewer.isSearchInterfaceVisible}
+              opened={isSearchInterfaceVisible}
               onClose={viewer.searchInterfaceActions.close}
             >
               <Popover.Target>
@@ -102,7 +102,7 @@ export function useViewerRightRailButtons() {
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: '20rem' }}>
-                  <SearchInterface visible={viewer.isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
+                  <SearchInterface visible={isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
                 </div>
               </Popover.Dropdown>
             </Popover>
@@ -111,27 +111,16 @@ export function useViewerRightRailButtons() {
       },
       {
         id: 'viewer-pan-mode',
+        icon: <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />,
         tooltip: panLabel,
         ariaLabel: panLabel,
         section: 'top' as const,
         order: 20,
-        render: ({ disabled }) => (
-          <Tooltip content={panLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
-            <ActionIcon
-              variant={isPanning ? 'filled' : 'subtle'}
-              color={isPanning ? 'blue' : undefined}
-              radius="md"
-              className="right-rail-icon"
-              onClick={() => {
-                viewer.panActions.togglePan();
-                setIsPanning(prev => !prev);
-              }}
-              disabled={disabled}
-            >
-              <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
-            </ActionIcon>
-          </Tooltip>
-        )
+        active: isPanning,
+        onClick: () => {
+          viewer.panActions.togglePan();
+          setIsPanning(prev => !prev);
+        },
       },
       {
         id: 'viewer-rotate-left',
@@ -162,6 +151,7 @@ export function useViewerRightRailButtons() {
         ariaLabel: sidebarLabel,
         section: 'top' as const,
         order: 50,
+        active: isThumbnailSidebarVisible,
         onClick: () => {
           viewer.toggleThumbnailSidebar();
         }
@@ -173,6 +163,7 @@ export function useViewerRightRailButtons() {
         ariaLabel: bookmarkLabel,
         section: 'top' as const,
         order: 55,
+        active: isBookmarkSidebarVisible,
         onClick: () => {
           viewer.toggleBookmarkSidebar();
         }
@@ -194,6 +185,7 @@ export function useViewerRightRailButtons() {
         ariaLabel: annotationsLabel,
         section: 'top' as const,
         order: 58,
+        active: isAnnotationsActive,
         render: ({ disabled }) => (
           <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
             <ActionIcon
@@ -247,6 +239,9 @@ export function useViewerRightRailButtons() {
     t,
     i18n.language,
     viewer,
+    isThumbnailSidebarVisible,
+    isBookmarkSidebarVisible,
+    isSearchInterfaceVisible,
     isPanning,
     searchLabel,
     panLabel,
@@ -257,7 +252,6 @@ export function useViewerRightRailButtons() {
     printLabel,
     tooltipPosition,
     annotationsLabel,
-    saveChangesLabel,
     isAnnotationsActive,
     handleToolSelect,
   ]);

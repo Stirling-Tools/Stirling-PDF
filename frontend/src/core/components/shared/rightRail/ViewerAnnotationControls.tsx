@@ -53,6 +53,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
   // Check if we're on annotate tool to highlight the button
   const isAnnotateActive = selectedTool === 'annotate';
+  const annotationsHidden = viewerContext ? !viewerContext.isAnnotationsVisible : false;
 
   // Don't show any annotation controls in sign mode
   if (isSignMode) {
@@ -158,14 +159,16 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       {/* Annotation Visibility Toggle */}
       <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
-          variant={viewerContext?.isAnnotationsVisible ? "subtle" : "filled"}
-          color={viewerContext?.isAnnotationsVisible ? undefined : "blue"}
+          variant={annotationsHidden ? "filled" : "subtle"}
+          color={annotationsHidden ? "blue" : undefined}
           radius="md"
           className="right-rail-icon"
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
           disabled={disabled || currentView !== 'viewer' || (isInAnnotationTool && !isAnnotateActive) || isPlacementMode}
+          data-active={annotationsHidden ? 'true' : undefined}
+          aria-pressed={annotationsHidden}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "preview-off-rounded"}
