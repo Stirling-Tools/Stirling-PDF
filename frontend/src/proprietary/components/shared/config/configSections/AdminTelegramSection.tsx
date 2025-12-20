@@ -490,8 +490,7 @@ export default function AdminTelegramSection() {
       <RestartConfirmationModal
         opened={restartModalOpened}
         onClose={closeRestartModal}
-        onConfirm={restartServer} // Ensure the function matches the expected type
-        isRestarting={false}
+        onRestart={restartServer}
       />
     </Stack>
   );
