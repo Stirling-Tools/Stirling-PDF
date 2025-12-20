@@ -27,8 +27,10 @@ export default function ProviderCard({
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
   useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
+    if (!expanded) {
+      setLocalSettings(settings);
+    }
+  }, [settings, expanded]);
 
   // Initialize local settings with defaults when opening an unconfigured provider
   const handleConnectToggle = () => {
