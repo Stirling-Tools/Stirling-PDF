@@ -10,7 +10,7 @@ const globalEndpointCache: Record<string, EndpointAvailabilityDetails> = {};
  * Hook to check if a specific endpoint is enabled
  * This wraps the context for single endpoint checks
  */
-export function useEndpointEnabled(endpoint: string | null): {
+export function useEndpointEnabled(endpoint: string): {
   enabled: boolean | null;
   loading: boolean;
   error: string | null;
