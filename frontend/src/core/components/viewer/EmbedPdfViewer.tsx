@@ -17,6 +17,8 @@ import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
+import { ViewerMorphAnchor } from '@app/components/viewer/ViewerMorphAnchor';
+import { ViewerPageMorphs } from '@app/components/viewer/ViewerPageMorphs';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -134,6 +136,13 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileIndex]);
 
+  const currentFileId = React.useMemo(() => {
+    if (currentFile && isStirlingFile(currentFile)) {
+      return currentFile.fileId;
+    }
+    return undefined;
+  }, [currentFile]);
+
   // Get file with URL for rendering
   const fileWithUrl = useFileWithUrl(currentFile);
 
@@ -149,6 +158,13 @@ const EmbedPdfViewerContent = ({
       return fileWithUrl;
     }
   }, [previewFile, fileWithUrl]);
+
+  const fileForThumbnails = React.useMemo(() => {
+    if (effectiveFile?.file instanceof File) {
+      return effectiveFile.file;
+    }
+    return null;
+  }, [effectiveFile]);
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
@@ -335,6 +351,8 @@ const EmbedPdfViewerContent = ({
         overflow: 'hidden',
         contain: 'layout style paint'
       }}>
+      <ViewerMorphAnchor fileId={currentFileId} />
+      <ViewerPageMorphs fileId={currentFileId} file={fileForThumbnails} />
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon

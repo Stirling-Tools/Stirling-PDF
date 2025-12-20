@@ -22,6 +22,8 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
+import { WorkbenchTransitionProvider } from "@app/contexts/WorkbenchTransitionContext";
+import { MorphOverlay } from "@app/components/shared/MorphOverlay";
 
 import "@app/pages/HomePage.css";
 
@@ -175,7 +177,9 @@ export default function HomePage() {
   // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <div className="h-screen overflow-hidden">
+    <WorkbenchTransitionProvider>
+      <MorphOverlay />
+      <div className="h-screen overflow-hidden">
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -288,6 +292,7 @@ export default function HomePage() {
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}
-    </div>
+      </div>
+    </WorkbenchTransitionProvider>
   );
 }

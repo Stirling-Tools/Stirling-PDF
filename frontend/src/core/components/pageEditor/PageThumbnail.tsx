@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Text, Checkbox } from '@mantine/core';
 import { useIsMobile } from '@app/hooks/useIsMobile';
+import { useMorphElement } from '@app/hooks/useMorphElement';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
@@ -23,6 +24,7 @@ interface PageThumbnailProps {
   index: number;
   totalPages: number;
   originalFile?: File;
+  fileId: string;
   fileColorIndex: number;
   selectedPageIds: string[];
   selectionMode: boolean;
@@ -56,6 +58,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   index: _index,
   totalPages,
   originalFile,
+  fileId,
   fileColorIndex,
   selectedPageIds,
   selectionMode,
@@ -81,6 +84,24 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   justMoved = false,
 }: PageThumbnailProps) => {
   const pageIndex = page.pageNumber - 1;
+
+  // Register for morphing - ALL pages register for split/merge animations
+  const morphId = page.originalFileId
+    ? `page-${page.originalFileId}-${page.pageNumber}`
+    : `page-${page.id}`;
+
+  const morphRef = useMorphElement<HTMLDivElement>(
+    morphId,
+    {
+      pageId: page.id,
+      fileId: fileId || page.originalFileId, // Used for grouping in morph pairs
+      pageNumber: page.pageNumber,
+      type: 'page',
+    },
+    {
+      onlyIn: ['pageEditor'],
+    }
+  );
 
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
@@ -162,11 +183,16 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       pageRefs.current.delete(page.id);
     }
 
+    // Assign to morph ref for animation system
+    if (morphRef) {
+      (morphRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+    }
+
     // Call dnd-kit's ref if provided
     if (dragHandleProps?.ref) {
       dragHandleProps.ref(element);
     }
-  }, [page.id, pageRefs, dragHandleProps]);
+  }, [page.id, pageRefs, dragHandleProps, morphRef]);
 
 
   // DOM command handlers
@@ -352,6 +378,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       {...restDragProps}
       data-page-id={page.id}
       data-page-number={page.pageNumber}
+      data-morph-id={morphId}
+      data-morph-file-id={fileId || page.originalFileId}
+      data-morph-page-number={page.pageNumber}
+      data-morph-type="page"
       className={`
         ${styles.pageContainer}
         !rounded-lg

@@ -469,6 +469,7 @@ const PageEditor = ({
                   index={index}
                   totalPages={displayDocument.pages.length}
                   originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
+                  fileId={page.originalFileId || displayDocument.id}
                   fileColorIndex={fileColorIndex}
                   selectedPageIds={selectedPageIds}
                   selectionMode={selectionMode}

@@ -47,6 +47,7 @@
     "@tauri-apps/plugin-http": "^2.5.4",
     "autoprefixer": "^10.4.21",
     "axios": "^1.12.2",
+    "framer-motion": "^12.23.26",
     "globals": "^16.4.0",
     "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.2.0",

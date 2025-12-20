@@ -399,3 +399,20 @@
   font-size: 0.875rem;
   opacity: 0.8;
 }
+
+/* =========================
+   Grid Animation Styles
+   ========================= */
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  row-gap: 1.5rem;
+  padding: 1rem;
+  pointer-events: auto;
+}
+
+.fileCardItem {
+  /* Target for stagger animations */
+  will-change: transform, opacity;
+}

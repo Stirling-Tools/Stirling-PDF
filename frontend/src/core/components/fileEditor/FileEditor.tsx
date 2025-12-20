@@ -5,16 +5,19 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useMorphElement } from '@app/hooks/useMorphElement';
 import { zipFileService } from '@app/services/zipFileService';
 import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
 import AddFileCard from '@app/components/fileEditor/AddFileCard';
 import FilePickerModal from '@app/components/shared/FilePickerModal';
+import { FileCardMorph } from '@app/components/fileEditor/FileCardMorph';
 import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
 import { downloadBlob } from '@app/utils/downloadUtils';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import styles from '@app/components/fileEditor/FileEditor.module.css';
 
 
 interface FileEditorProps {
@@ -379,42 +382,37 @@ const FileEditor = ({
             </Stack>
           </Center>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              rowGap: '1.5rem',
-              padding: '1rem',
-              pointerEvents: 'auto'
-            }}
-          >
+          <div className={styles.gridContainer}>
             {/* Add File Card - only show when files exist */}
             {activeStirlingFileStubs.length > 0 && (
-              <AddFileCard
-                key="add-file-card"
-                onFileSelect={handleFileUpload}
-              />
+              <div className={styles.fileCardItem}>
+                <AddFileCard
+                  key="add-file-card"
+                  onFileSelect={handleFileUpload}
+                />
+              </div>
             )}
 
             {activeStirlingFileStubs.map((record, index) => {
               return (
-                <FileEditorThumbnail
-                  key={record.id}
-                  file={record}
-                  index={index}
-                  totalFiles={activeStirlingFileStubs.length}
-                  selectedFiles={localSelectedIds}
-                  selectionMode={selectionMode}
-                  onToggleFile={toggleFile}
-                  onCloseFile={handleCloseFile}
-                  onViewFile={handleViewFile}
-                  _onSetStatus={showStatus}
-                  onReorderFiles={handleReorderFiles}
-                  onDownloadFile={handleDownloadFile}
-                  onUnzipFile={handleUnzipFile}
-                  toolMode={toolMode}
-                  isSupported={isFileSupported(record.name)}
-                />
+                <FileCardMorph key={record.id} fileId={record.id} className={styles.fileCardItem}>
+                  <FileEditorThumbnail
+                    file={record}
+                    index={index}
+                    totalFiles={activeStirlingFileStubs.length}
+                    selectedFiles={localSelectedIds}
+                    selectionMode={selectionMode}
+                    onToggleFile={toggleFile}
+                    onCloseFile={handleCloseFile}
+                    onViewFile={handleViewFile}
+                    _onSetStatus={showStatus}
+                    onReorderFiles={handleReorderFiles}
+                    onDownloadFile={handleDownloadFile}
+                    onUnzipFile={handleUnzipFile}
+                    toolMode={toolMode}
+                    isSupported={isFileSupported(record.name)}
+                  />
+                </FileCardMorph>
               );
             })}
           </div>

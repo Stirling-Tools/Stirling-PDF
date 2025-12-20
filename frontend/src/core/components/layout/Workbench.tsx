@@ -1,12 +1,16 @@
 import { Box } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import { isBaseWorkbench } from '@app/types/workbench';
+import { isBaseWorkbench, type BaseWorkbenchType } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useWorkbenchMorphTransition } from '@app/hooks/useWorkbenchMorphTransition';
+import { useWorkbenchTransition } from '@app/contexts/WorkbenchTransitionContext';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -28,6 +32,14 @@ export default function Workbench() {
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
+
+  // Track the displayed workbench (for transitions)
+  const [displayedView, setDisplayedView] = useState(currentView);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Workbench morphing transition hook
+  const { transition } = useWorkbenchMorphTransition();
+  const { transitionState } = useWorkbenchTransition();
   const activeFiles = selectors.getFiles();
   const {
     previewFile,
@@ -52,6 +64,33 @@ export default function Workbench() {
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
 
+  // Trigger morphing transition when workbench changes
+  useEffect(() => {
+    if (currentView === displayedView || isTransitioning) return;
+
+    const performTransition = async () => {
+      if (isBaseWorkbench(currentView) && isBaseWorkbench(displayedView)) {
+        // Both are base workbenches - perform morphing transition
+        setIsTransitioning(true);
+
+        await transition(displayedView as BaseWorkbenchType, currentView as BaseWorkbenchType, () => {
+          // Swap content after source snapshots are captured
+          setDisplayedView(currentView);
+        });
+
+        // Transition completes automatically after animation
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 550);
+      } else {
+        // One is custom view - just swap without morph
+        setDisplayedView(currentView);
+      }
+    };
+
+    performTransition();
+  }, [currentView, displayedView, isTransitioning, transition]);
+
   const handlePreviewClose = () => {
     setPreviewFile(null);
     const previousMode = sessionStorage.getItem('previousMode');
@@ -71,12 +110,15 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // Use displayedView for rendering (sync with transition)
+    const viewToRender = displayedView;
+
     // Check for custom workbench views first
-    if (!isBaseWorkbench(currentView)) {
-      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+    if (!isBaseWorkbench(viewToRender)) {
+      const customView = customWorkbenchViews.find((view) => view.workbenchId === viewToRender && view.data != null);
       if (customView) {
         // PDF text editor handles its own empty state (shows dropzone when no document)
-        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor';
+        const handlesOwnEmptyState = viewToRender === 'custom:pdfTextEditor';
         if (handlesOwnEmptyState || activeFiles.length > 0) {
           const CustomComponent = customView.component;
           return <CustomComponent data={customView.data} />;
@@ -92,7 +134,7 @@ export default function Workbench() {
       );
     }
 
-    switch (currentView) {
+    switch (viewToRender) {
       case "fileEditor":
 
         return (
@@ -189,15 +231,20 @@ export default function Workbench() {
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
 
-      {/* Main content area */}
-      <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
-        style={{
-          transition: 'opacity 0.15s ease-in-out',
-        }}
-      >
-        {renderMainContent()}
-      </Box>
+      {/* Main content area with workbench transitions */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={displayedView}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: transitionState.isTransitioning ? 0 : 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+          style={{ display: 'flex', flexDirection: 'column' }}
+        >
+          {renderMainContent()}
+        </motion.div>
+      </AnimatePresence>
 
       <Footer
         analyticsEnabled={config?.enableAnalytics === true}
