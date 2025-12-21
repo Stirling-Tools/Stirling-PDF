@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
@@ -24,7 +23,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -87,13 +85,9 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<Map<String, Object>> result = response.getBody();
         assertNotNull(result);
         assertEquals(1, result.size());
 
@@ -113,13 +107,9 @@ class EditTableOfContentsControllerTest {
         when(mockCatalog.getDocumentOutline()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<Map<String, Object>> result = response.getBody();
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(mockDocument).close();
@@ -151,13 +141,9 @@ class EditTableOfContentsControllerTest {
         when(childItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<Map<String, Object>> result = response.getBody();
         assertNotNull(result);
         assertEquals(1, result.size());
 
@@ -191,13 +177,9 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<Map<String, Object>> result = response.getBody();
         assertNotNull(result);
         assertEquals(1, result.size());
 

@@ -1,9 +1,6 @@
 package stirling.software.common.util.propertyeditor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
@@ -33,7 +30,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -63,7 +60,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -91,7 +88,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -106,7 +103,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -125,7 +122,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;

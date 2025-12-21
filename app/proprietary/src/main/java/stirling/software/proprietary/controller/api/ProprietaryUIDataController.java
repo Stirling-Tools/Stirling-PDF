@@ -134,7 +134,7 @@ public class ProprietaryUIDataController {
         Security securityProps = applicationProperties.getSecurity();
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
-        data.setEnableLogin(securityProps.getEnableLogin());
+        data.setEnableLogin(securityProps.isEnableLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state

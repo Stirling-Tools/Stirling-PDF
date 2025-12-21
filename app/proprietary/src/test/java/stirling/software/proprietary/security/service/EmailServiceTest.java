@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,7 +62,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForMissingFilename() throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForMissingFilename() {
         Email email = new Email();
         email.setTo("test@example.com");
         email.setSubject("Test Email");
@@ -82,8 +81,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForMissingFilenameNull()
-            throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForMissingFilenameNull() {
         Email email = new Email();
         email.setTo("test@example.com");
         email.setSubject("Test Email");
@@ -102,7 +100,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForMissingFile() throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForMissingFile() {
         Email email = new Email();
         email.setTo("test@example.com");
         email.setSubject("Test Email");
@@ -120,7 +118,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForMissingFileNull() throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForMissingFileNull() {
         Email email = new Email();
         email.setTo("test@example.com");
         email.setSubject("Test Email");
@@ -136,8 +134,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForInvalidAddressNull()
-            throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForInvalidAddressNull() {
         Email email = new Email();
         email.setTo(null); // Invalid address
         email.setSubject("Test Email");
@@ -153,8 +150,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendEmailWithAttachmentThrowsExceptionForInvalidAddressEmpty()
-            throws MessagingException {
+    void testSendEmailWithAttachmentThrowsExceptionForInvalidAddressEmpty() {
         Email email = new Email();
         email.setTo(""); // Invalid address
         email.setSubject("Test Email");

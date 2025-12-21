@@ -86,7 +86,7 @@ public class ConfigController {
             // If userService is null, proprietary module isn't loaded
             // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
             boolean enableLogin =
-                    applicationProperties.getSecurity().getEnableLogin() && userService != null;
+                    applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
 
             // Mail settings - check both SMTP enabled AND invites enabled
@@ -124,7 +124,7 @@ public class ConfigController {
             // System settings
             configData.put(
                     "enableAlphaFunctionality",
-                    applicationProperties.getSystem().getEnableAlphaFunctionality());
+                    applicationProperties.getSystem().isEnableAlphaFunctionality());
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
