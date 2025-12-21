@@ -35,7 +35,7 @@ const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: Fl
           description={t('flatten.renderDpi.help', 'Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size.')}
           placeholder={t('flatten.renderDpi.placeholder', 'e.g. 150')}
           value={parameters.renderDpi ?? undefined}
-          onChange={(value) => onParameterChange('renderDpi', value || undefined)}
+          onChange={(value) => onParameterChange('renderDpi', value != null && value !== '' ? Number(value) : undefined)}
           disabled={disabled}
           min={72}
           max={2400}
