@@ -66,7 +66,8 @@ public class ConfigController {
             AppConfig appConfig = applicationContext.getBean(AppConfig.class);
 
             // Extract key configuration values from AppConfig
-            configData.put("baseUrl", appConfig.getBaseUrl());
+            // Note: Frontend expects "baseUrl" field name for compatibility
+            configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
 
@@ -124,6 +125,9 @@ public class ConfigController {
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
             configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
+            configData.put(
+                    "enableDesktopInstallSlide",
+                    applicationProperties.getSystem().getEnableDesktopInstallSlide());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
@@ -226,5 +230,11 @@ public class ConfigController {
                     endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/group-enabled")
+    public ResponseEntity<Boolean> isGroupEnabled(@RequestParam(name = "group") String group) {
+        boolean enabled = endpointConfiguration.isGroupEnabled(group);
+        return ResponseEntity.ok(enabled);
     }
 }

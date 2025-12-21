@@ -199,7 +199,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private SamlClient getSamlClient(
             String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
             throws SamlException {
-        String serverUrl = appConfig.getBaseUrl() + ":" + appConfig.getServerPort();
+        String serverUrl = appConfig.getBackendUrl() + ":" + appConfig.getServerPort();
 
         String relyingPartyIdentifier =
                 serverUrl + "/saml2/service-provider-metadata/" + registrationId;

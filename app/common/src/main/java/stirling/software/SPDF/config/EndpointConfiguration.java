@@ -498,6 +498,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
+        /* ImageMagick */
+        addEndpointToGroup("ImageMagick", "compress-pdf");
+
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
 
@@ -581,6 +584,7 @@ public class EndpointConfiguration {
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
+                || "ImageMagick".equals(group)
                 || "rar".equals(group);
     }
 

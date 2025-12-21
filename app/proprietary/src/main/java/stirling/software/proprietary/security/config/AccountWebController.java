@@ -7,7 +7,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -87,8 +86,7 @@ public class AccountWebController {
                 if (oauth.isSettingsValid()) {
                     String firstChar = String.valueOf(oauth.getProvider().charAt(0));
                     String clientName =
-                            oauth.getProvider()
-                                    .replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
+                            oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
                     providerList.put(OAUTH_2_AUTHORIZATION + oauth.getProvider(), clientName);
                 }
 
@@ -122,9 +120,7 @@ public class AccountWebController {
 
         SAML2 saml2 = securityProps.getSaml2();
 
-        if (securityProps.isSaml2Active()
-                && applicationProperties.getSystem().isEnableAlphaFunctionality()
-                && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 

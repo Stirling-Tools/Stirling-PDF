@@ -24,6 +24,9 @@ public class RequestUriUtilsTest {
                 RequestUriUtils.isStaticResource("/pdfjs/pdf.worker.js"),
                 "PDF.js files should be static");
         assertTrue(
+                RequestUriUtils.isStaticResource("/pdfium/pdfium.wasm"),
+                "PDFium wasm should be static");
+        assertTrue(
                 RequestUriUtils.isStaticResource("/api/v1/info/status"),
                 "API status should be static");
         assertTrue(
@@ -109,7 +112,8 @@ public class RequestUriUtilsTest {
                 "/downloads/document.png",
                 "/assets/brand.ico",
                 "/any/path/with/image.svg",
-                "/deep/nested/folder/icon.png"
+                "/deep/nested/folder/icon.png",
+                "/pdfium/pdfium.wasm"
             })
     void testIsStaticResourceWithFileExtensions(String path) {
         assertTrue(
@@ -147,6 +151,9 @@ public class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isTrackableResource("/script.js"),
                 "JS files should not be trackable");
+        assertFalse(
+                RequestUriUtils.isTrackableResource("/pdfium/pdfium.wasm"),
+                "PDFium wasm should not be trackable");
         assertFalse(
                 RequestUriUtils.isTrackableResource("/swagger/index.html"),
                 "Swagger files should not be trackable");
@@ -223,7 +230,8 @@ public class RequestUriUtilsTest {
                 "/api/v1/info/health",
                 "/site.webmanifest",
                 "/fonts/roboto.woff",
-                "/pdfjs/viewer.js"
+                "/pdfjs/viewer.js",
+                "/pdfium/pdfium.wasm"
             })
     void testNonTrackableResources(String path) {
         assertFalse(
