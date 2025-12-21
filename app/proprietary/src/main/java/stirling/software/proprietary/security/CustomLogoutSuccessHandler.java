@@ -5,6 +5,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -150,7 +151,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         registrationId = oAuthToken.getAuthorizedClientRegistrationId();
 
         // Redirect based on OAuth2 provider
-        switch (registrationId.toLowerCase()) {
+        switch (registrationId.toLowerCase(Locale.ROOT)) {
             case "keycloak" -> {
                 KeycloakProvider keycloak = oauth.getClient().getKeycloak();
 
@@ -198,7 +199,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private SamlClient getSamlClient(
             String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
             throws SamlException {
-        String serverUrl = appConfig.getBaseUrl() + ":" + appConfig.getServerPort();
+        String serverUrl = appConfig.getBackendUrl() + ":" + appConfig.getServerPort();
 
         String relyingPartyIdentifier =
                 serverUrl + "/saml2/service-provider-metadata/" + registrationId;

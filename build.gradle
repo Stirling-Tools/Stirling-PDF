@@ -2,27 +2,30 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "3.5.6"
+    id "org.springframework.boot" version "3.5.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id "com.diffplug.spotless" version "7.2.1"
-    id "com.github.jk1.dependency-license-report" version "2.9"
+    id "com.diffplug.spotless" version "8.1.0"
+    id "com.github.jk1.dependency-license-report" version "3.0.1"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "6.3.1.5724"
+    id "org.sonarqube" version "7.1.0.6387"
 }
 
 import com.github.jk1.license.render.*
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 ext {
-    springBootVersion = "3.5.6"
-    pdfboxVersion = "3.0.5"
+    springBootVersion = "3.5.7"
+    pdfboxVersion = "3.0.6"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.82"
-    springSecuritySamlVersion = "6.5.5"
+    springSecuritySamlVersion = "6.5.6"
     openSamlVersion = "4.3.2"
-    commonmarkVersion = "0.26.0"
+    commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
+    logback = "1.5.21"
     junitPlatformVersion = "1.12.2"
 }
 
@@ -57,11 +60,56 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.1.2'
+    version = '2.1.5'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+    }
+}
+
+def writeIfChanged(File targetFile, String newContent) {
+    if (targetFile.getText('UTF-8') != newContent) {
+        targetFile.write(newContent, 'UTF-8')
+    }
+}
+
+def updateTauriConfigVersion(String version) {
+    File tauriConfig = file('frontend/src-tauri/tauri.conf.json')
+    def parsed = new JsonSlurper().parse(tauriConfig)
+    parsed.version = version
+
+    def formatted = JsonOutput.prettyPrint(JsonOutput.toJson(parsed)) + System.lineSeparator()
+    writeIfChanged(tauriConfig, formatted)
+}
+
+def updateSimulationVersion(File fileToUpdate, String version) {
+    def content = fileToUpdate.getText('UTF-8')
+    def matcher = content =~ /(appVersion:\s*')([^']*)(')/
+
+    if (!matcher.find()) {
+        throw new GradleException("Could not locate appVersion in ${fileToUpdate} for synchronization")
+    }
+
+    def updatedContent = matcher.replaceFirst("${matcher.group(1)}${version}${matcher.group(3)}")
+    writeIfChanged(fileToUpdate, updatedContent)
+}
+
+tasks.register('syncAppVersion') {
+    group = 'versioning'
+    description = 'Synchronizes app version across desktop and simulation configs.'
+
+    doLast {
+        def appVersion = project.version.toString()
+        println "Synchronizing application version to ${appVersion}"
+        updateTauriConfigVersion(appVersion)
+
+        [
+            'frontend/src/core/testing/serverExperienceSimulations.ts',
+            'frontend/src/proprietary/testing/serverExperienceSimulations.ts'
+        ].each { path ->
+            updateSimulationVersion(file(path), appVersion)
+        }
     }
 }
 
@@ -115,22 +163,24 @@ subprojects {
         implementation 'io.github.pixee:java-security-toolkit:1.2.2'
 
         //tmp for security bumps
-        implementation 'ch.qos.logback:logback-core:1.5.19'
-        implementation 'ch.qos.logback:logback-classic:1.5.19'
+        implementation "ch.qos.logback:logback-core:$logback"
+        implementation "ch.qos.logback:logback-classic:$logback"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-        testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.1")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        dependsOn "spotlessApply"
+        if (!project.hasProperty("noSpotless")) {
+            dependsOn "spotlessApply"
+        }
     }
 
     compileJava {
@@ -314,7 +364,7 @@ tasks.named('bootRun') {
 tasks.named('build') {
     group = 'build'
     description = 'Delegates to :stirling-pdf:bootJar'
-    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper'
+    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper', 'syncAppVersion'
 
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
