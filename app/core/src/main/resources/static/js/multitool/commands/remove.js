@@ -1,35 +1,45 @@
 import { Command } from "./command.js";
 
+/**
+ * Deletes a set of selected pages and restores them on undo.
+ */
 export class RemoveSelectedCommand extends Command {
+  /**
+   * @param {HTMLElement} pagesContainer - Parent container.
+   * @param {number[]} selectedPages - 1-based page numbers to remove.
+   * @param {Function} updatePageNumbersAndCheckboxes - Callback to refresh UI state.
+   */
   constructor(pagesContainer, selectedPages, updatePageNumbersAndCheckboxes) {
     super();
     this.pagesContainer = pagesContainer;
     this.selectedPages = selectedPages;
 
+    /** @type {{idx:number, childNode:HTMLElement}[]} */
     this.deletedChildren = [];
 
-    if (updatePageNumbersAndCheckboxes) {
-      this.updatePageNumbersAndCheckboxes = updatePageNumbersAndCheckboxes;
-    } else {
+    this.updatePageNumbersAndCheckboxes = updatePageNumbersAndCheckboxes || (() => {
       const pageDivs = document.querySelectorAll(".pdf-actions_container");
-
       pageDivs.forEach((div, index) => {
         const pageNumber = index + 1;
         const checkbox = div.querySelector(".pdf-actions_checkbox");
-        checkbox.id = `selectPageCheckbox-${pageNumber}`;
-        checkbox.setAttribute("data-page-number", pageNumber);
-        checkbox.checked = window.selectedPages.includes(pageNumber);
+        if (checkbox) {
+          checkbox.id = `selectPageCheckbox-${pageNumber}`;
+          checkbox.setAttribute("data-page-number", pageNumber);
+          checkbox.checked = window.selectedPages.includes(pageNumber);
+        }
       });
-    }
+    });
 
     const filenameInput = document.getElementById("filename-input");
     const filenameParagraph = document.getElementById("filename");
 
+    /** @type {string} */
     this.originalFilenameInputValue = filenameInput ? filenameInput.value : "";
-    if (filenameParagraph)
-      this.originalFilenameParagraphText = filenameParagraph.innerText;
+    /** @type {string|undefined} */
+    this.originalFilenameParagraphText = filenameParagraph?.innerText;
   }
 
+  /** Execute: remove selected pages and update empty state. */
   execute() {
     let deletions = 0;
 
@@ -53,10 +63,9 @@ export class RemoveSelectedCommand extends Command {
       const downloadBtn = document.getElementById("export-button");
 
       if (filenameInput) filenameInput.disabled = true;
-      filenameInput.value = "";
+      if (filenameInput) filenameInput.value = "";
       if (filenameParagraph) filenameParagraph.innerText = "";
-
-      downloadBtn.disabled = true;
+      if (downloadBtn) downloadBtn.disabled = true;
     }
 
     window.selectedPages = [];
@@ -64,12 +73,13 @@ export class RemoveSelectedCommand extends Command {
     document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
+  /** Undo: restore all removed nodes at their original indices. */
   undo() {
     while (this.deletedChildren.length > 0) {
-      let deletedChild = this.deletedChildren.pop();
-      if (this.pagesContainer.children.length <= deletedChild.idx)
+      const deletedChild = this.deletedChildren.pop();
+      if (this.pagesContainer.children.length <= deletedChild.idx) {
         this.pagesContainer.appendChild(deletedChild.childNode);
-      else {
+      } else {
         this.pagesContainer.insertBefore(
           deletedChild.childNode,
           this.pagesContainer.children[deletedChild.idx]
@@ -83,11 +93,11 @@ export class RemoveSelectedCommand extends Command {
       const downloadBtn = document.getElementById("export-button");
 
       if (filenameInput) filenameInput.disabled = false;
-      filenameInput.value = this.originalFilenameInputValue;
-      if (filenameParagraph)
+      if (filenameInput) filenameInput.value = this.originalFilenameInputValue;
+      if (filenameParagraph && this.originalFilenameParagraphText !== undefined) {
         filenameParagraph.innerText = this.originalFilenameParagraphText;
-
-      downloadBtn.disabled = false;
+      }
+      if (downloadBtn) downloadBtn.disabled = false;
     }
 
     window.selectedPages = this.selectedPages;
@@ -95,6 +105,7 @@ export class RemoveSelectedCommand extends Command {
     document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
+  /** Redo mirrors execute. */
   redo() {
     this.execute();
   }

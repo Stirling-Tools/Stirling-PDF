@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
@@ -121,7 +122,9 @@ public class PipelineProcessor {
                     boolean hasInputFileType = false;
                     for (String extension : inputFileTypes) {
                         if ("ALL".equals(extension)
-                                || file.getFilename().toLowerCase().endsWith(extension)) {
+                                || file.getFilename()
+                                        .toLowerCase(Locale.ROOT)
+                                        .endsWith(extension)) {
                             hasInputFileType = true;
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);
@@ -159,7 +162,8 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf(".")).toLowerCase();
+                                    filename.substring(filename.lastIndexOf("."))
+                                            .toLowerCase(Locale.ROOT);
                         }
 
                         logPrintStream.println(
@@ -187,7 +191,10 @@ public class PipelineProcessor {
                                             file ->
                                                     finalinputFileTypes.stream()
                                                             .anyMatch(
-                                                                    file.getFilename().toLowerCase()
+                                                                    file.getFilename()
+                                                                                    .toLowerCase(
+                                                                                            Locale
+                                                                                                    .ROOT)
                                                                             ::endsWith))
                                     .toList();
                 }
@@ -228,7 +235,7 @@ public class PipelineProcessor {
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
                                                                     filename.lastIndexOf("."))
-                                                            .toLowerCase();
+                                                            .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
                                             })
@@ -289,7 +296,7 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody())) {
+        if (isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
             newOutputFiles.addAll(unzip(response.getBody()));
         } else {
@@ -379,12 +386,23 @@ public class PipelineProcessor {
         return outputFiles;
     }
 
-    private boolean isZip(byte[] data) {
+    private boolean isZip(byte[] data, String filename) {
         if (data == null || data.length < 4) {
             return false;
         }
+        if (filename != null) {
+            String lower = filename.toLowerCase();
+            if (lower.endsWith(".cbz")) {
+                // Treat CBZ as non-zip for our unzipping purposes
+                return false;
+            }
+        }
         // Check the first four bytes of the data against the standard zip magic number
         return data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04;
+    }
+
+    private boolean isZip(byte[] data) {
+        return isZip(data, null);
     }
 
     private List<Resource> unzip(byte[] data) throws IOException {
@@ -410,7 +428,7 @@ public class PipelineProcessor {
                             }
                         };
                 // If the unzipped file is a zip file, unzip it
-                if (isZip(baos.toByteArray())) {
+                if (isZip(baos.toByteArray(), filename)) {
                     log.info("File {} is a zip file. Unzipping...", filename);
                     unzippedFiles.addAll(unzip(baos.toByteArray()));
                 } else {
