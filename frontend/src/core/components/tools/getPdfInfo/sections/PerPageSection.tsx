@@ -11,6 +11,23 @@ interface PerPageSectionProps {
   perPage?: PdfPerPageInfo | null;
 }
 
+const renderImagesList = (images: PdfImageInfo[] | undefined, emptyText: string) => {
+  if (!images || images.length === 0) return <Text size="sm" c="dimmed">{emptyText}</Text>;
+  return (
+    <Stack gap={4}>
+      {images.map((image, idx) => (
+        <div key={idx} style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+          <Text size="sm" c="dimmed">
+            {image.Name ? `${image.Name} ` : 'Image '}
+            ({image.Width}×{image.Height}px
+            {image.ColorSpace ? `, ${image.ColorSpace}` : ''})
+          </Text>
+        </div>
+      ))}
+    </Stack>
+  );
+};
+
 const renderList = (arr: unknown[] | undefined, emptyText: string) => {
   if (!arr || arr.length === 0) return <Text size="sm" c="dimmed">{emptyText}</Text>;
   return (
@@ -84,7 +101,7 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({ anchorId, perPage }) =>
                     )}
                     <Stack gap={4}>
                       <Text fw={600} size="sm">{t('getPdfInfo.perPage.images', 'Images')}</Text>
-                      {renderList(pageInfo?.Images, noneDetected)}
+                      {renderImagesList(pageInfo?.Images, noneDetected)}
                     </Stack>
                     <Stack gap={4}>
                       <Text fw={600} size="sm">{t('getPdfInfo.perPage.links', 'Links')}</Text>
