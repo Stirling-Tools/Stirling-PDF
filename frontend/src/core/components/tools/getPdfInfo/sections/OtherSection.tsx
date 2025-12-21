@@ -1,7 +1,7 @@
 import React from 'react';
 import { Accordion, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { PdfOtherInfo, PdfAttachmentInfo } from '@app/types/getPdfInfo';
+import type { PdfOtherInfo, PdfAttachmentInfo, PdfEmbeddedFileInfo } from '@app/types/getPdfInfo';
 import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
 import ScrollableCodeBlock from '@app/components/tools/getPdfInfo/shared/ScrollableCodeBlock';
 import { pdfInfoAccordionStyles } from '@app/components/tools/getPdfInfo/shared/accordionStyles';

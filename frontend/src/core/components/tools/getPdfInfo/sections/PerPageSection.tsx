@@ -1,7 +1,7 @@
 import React from 'react';
 import { Accordion, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { PdfPerPageInfo, PdfPageInfo, PdfFontInfo } from '@app/types/getPdfInfo';
+import type { PdfPerPageInfo, PdfPageInfo, PdfFontInfo, PdfImageInfo } from '@app/types/getPdfInfo';
 import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
 import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
 import { pdfInfoAccordionStyles } from '@app/components/tools/getPdfInfo/shared/accordionStyles';
