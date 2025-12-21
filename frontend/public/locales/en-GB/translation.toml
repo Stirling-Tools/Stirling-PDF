@@ -3736,6 +3736,9 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
 [compress.lineArt]
 label = "Convert images to line art"
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
