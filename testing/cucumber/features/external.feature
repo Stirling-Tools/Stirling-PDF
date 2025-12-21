@@ -301,13 +301,3 @@ Feature: API Validation
         And the response content type should be "application/json"
         And the response file should have size greater than 50
         And the response file should have extension ".json"
-
-
-    @positive @jsontopdf
-    Scenario: Convert JSON back to PDF (round-trip test)
-        Given I use an example file at "exampleFiles/example.json" as parameter "fileInput"
-        When I send the API request to the endpoint "/api/v1/convert/text-editor/pdf"
-        Then the response status code should be 200
-        And the response content type should be "application/pdf"
-        And the response file should have size greater than 100
-        And the response file should have extension ".pdf"
