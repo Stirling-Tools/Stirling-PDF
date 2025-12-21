@@ -1,9 +1,6 @@
 package stirling.software.proprietary.security.saml2;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -62,7 +59,6 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         String id = "testId";
         String relayState = "testRelayState";
         String authnRequestUri = "example.com/authnRequest";
-        Map<String, Object> claims = Map.of();
         String samlRequest = "testSamlRequest";
         String relyingPartyRegistrationId = "stirling-pdf";
 

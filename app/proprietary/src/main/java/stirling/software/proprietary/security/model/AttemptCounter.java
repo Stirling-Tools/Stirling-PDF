@@ -18,7 +18,8 @@ public class AttemptCounter {
     }
 
     public boolean shouldReset(long attemptIncrementTime) {
-        return System.currentTimeMillis() - lastAttemptTime > attemptIncrementTime;
+        long elapsed = System.currentTimeMillis() - lastAttemptTime;
+        return elapsed >= attemptIncrementTime;
     }
 
     public void reset() {

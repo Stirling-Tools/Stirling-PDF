@@ -3,6 +3,7 @@ ignore = [
     'lang.div',
     'lang.dzo',
     'lang.que',
+    'language.direction',
 ]
 
 [az_AZ]
@@ -36,10 +37,7 @@ ignore = [
 
 [bg_BG]
 ignore = [
-    'lang.div',
-    'lang.dzo',
     'lang.iku',
-    'lang.que',
     'language.direction',
 ]
 
@@ -50,6 +48,7 @@ ignore = [
 
 [ca_CA]
 ignore = [
+    'adminUserSettings.admin',
     'lang.amh',
     'lang.ceb',
     'lang.chr',
@@ -190,7 +189,8 @@ ignore = [
 ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
-    'PDFToBook.selectText.1',
+    'PDFToText.tags',
+    'addPageNumbers.selectText.3',
     'adminUserSettings.team',
     'alphabet',
     'audit.dashboard.modal.id',
@@ -200,6 +200,7 @@ ignore = [
     'audit.dashboard.table.details',
     'audit.dashboard.table.id',
     'certSign.name',
+    'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'fileChooser.dragAndDrop',
@@ -236,11 +237,11 @@ ignore = [
     'pipelineOptions.pipelineHeader',
     'pro',
     'redact.zoom',
-    'scannerEffect.quality.medium',
     'sponsor',
     'team.status',
     'text',
     'update.version',
+    'validateSignature.cert.bits',
     'validateSignature.cert.version',
     'validateSignature.status',
     'watermark.type.1',
@@ -262,11 +263,17 @@ ignore = [
 
 [es_ES]
 ignore = [
+    'audit.dashboard.export.csv',
+    'audit.dashboard.export.json',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.table.id',
     'error',
+    'fileChooser.click',
     'lang.ceb',
     'lang.chr',
     'lang.div',
     'lang.dzo',
+    'lang.epo',
     'lang.fil',
     'lang.guj',
     'lang.iku',
@@ -274,6 +281,7 @@ ignore = [
     'lang.lao',
     'lang.mal',
     'lang.ori',
+    'lang.que',
     'lang.snd',
     'lang.tam',
     'lang.tel',
@@ -281,7 +289,12 @@ ignore = [
     'lang.yor',
     'language.direction',
     'no',
+    'pro',
+    'redact.zoom',
+    'scannerEffect.colorspace.color',
     'showJS.tags',
+    'update.priority.normal',
+    'validateSignature.cert.bits',
 ]
 
 [eu_ES]
@@ -307,50 +320,88 @@ ignore = [
 ]
 
 [fa_IR]
-ignore = []
+ignore = [
+    'language.direction',
+]
 
 [fr_FR]
 ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
     'AddStampRequest.rotation',
-    'PDFToBook.selectText.1',
+    'addPageNumbers.selectText.3',
     'adminUserSettings.actions',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.modal.type',
+    'audit.dashboard.pagination.pageInfo1',
+    'audit.dashboard.table.id',
+    'audit.dashboard.table.type',
     'compare.document.1',
     'compare.document.2',
+    'cookieBanner.preferencesModal.analytics.posthog.label',
+    'cookieBanner.preferencesModal.analytics.scarf.label',
+    'cookieBanner.preferencesModal.serviceCounterLabel',
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'home.pipeline.title',
+    'lang.afr',
+    'lang.ben',
     'lang.bre',
+    'lang.cat',
     'lang.ceb',
     'lang.chr',
     'lang.div',
     'lang.dzo',
     'lang.eus',
     'lang.guj',
+    'lang.hin',
     'lang.iku',
     'lang.kan',
     'lang.kaz',
     'lang.khm',
-    'lang.lao',
-    'lang.ltz',
+    'lang.lat',
     'lang.mal',
     'lang.mar',
+    'lang.mri',
     'lang.oci',
     'lang.ori',
+    'lang.osd',
+    'lang.pan',
+    'lang.pus',
     'lang.que',
     'lang.san',
     'lang.snd',
     'lang.swa',
-    'lang.tel',
+    'lang.tam',
+    'lang.tat',
     'lang.tgl',
-    'lang.tir',
+    'lang.yid',
     'lang.yor',
     'language.direction',
     'licenses.license',
     'licenses.module',
     'licenses.nav',
     'licenses.version',
+    'multiTool.page',
+    'page',
+    'pages',
     'pdfOrganiser.mode',
     'pipeline.title',
+    'pro',
+    'redact.pageRedactionNumbers.title',
+    'redact.zoom',
+    'showJS.tags',
+    'split.desc.3',
+    'split.desc.6',
+    'split.desc.7',
+    'split.desc.8',
+    'update.version',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.date',
+    'validateSignature.signature',
     'watermark.type.2',
 ]
 
@@ -384,7 +435,6 @@ ignore = [
 
 [hr_HR]
 ignore = [
-    'PDFToBook.selectText.1',
     'lang.ceb',
     'lang.chr',
     'lang.dzo',
@@ -400,13 +450,14 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'home.pipeline.title',
     'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'pro',
     'showJS.tags',
 ]
@@ -515,11 +566,6 @@ ignore = [
     'language.direction',
 ]
 
-[ml_ML]
-ignore = [
-    'language.direction',
-]
-
 [nl_NL]
 ignore = [
     'compare.document.1',
@@ -556,13 +602,11 @@ ignore = [
     'lang.urd',
     'lang.yor',
     'language.direction',
-    'navbar.allTools',
     'sponsor',
 ]
 
 [no_NB]
 ignore = [
-    'PDFToBook.selectText.1',
     'adminUserSettings.admin',
     'info',
     'lang.afr',
@@ -609,12 +653,12 @@ ignore = [
     'lang.urd',
     'lang.yor',
     'language.direction',
+    'oops',
     'sponsor',
 ]
 
 [pl_PL]
 ignore = [
-    'PDFToBook.selectText.1',
     'lang.afr',
     'lang.bre',
     'lang.ceb',
@@ -684,6 +728,12 @@ ignore = [
 
 [pt_PT]
 ignore = [
+    'audit.dashboard.table.id',
+    'endpointStatistics.endpoint',
+    'endpointStatistics.login',
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
     'lang.bre',
     'lang.ceb',
     'lang.chr',
@@ -710,6 +760,8 @@ ignore = [
     'lang.uzb',
     'lang.yid',
     'language.direction',
+    'pro',
+    'update.priority.normal',
 ]
 
 [ro_RO]
@@ -763,6 +815,7 @@ ignore = [
 [sk_SK]
 ignore = [
     'adminUserSettings.admin',
+    'home.multiTool.title',
     'info',
     'lang.ceb',
     'lang.chr',
@@ -784,6 +837,7 @@ ignore = [
     'lang.urd',
     'lang.uzb',
     'language.direction',
+    'navbar.sections.security',
     'text',
     'watermark.type.1',
 ]
@@ -833,6 +887,7 @@ ignore = [
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'font',
+    'info',
     'lang.div',
     'lang.epo',
     'lang.hin',
@@ -890,6 +945,7 @@ ignore = [
     'lang.tir',
     'lang.uzb_cyrl',
     'language.direction',
+    'pipelineOptions.pipelineHeader',
     'showJS.tags',
 ]
 
@@ -963,13 +1019,9 @@ ignore = [
     'lang.yid',
     'lang.yor',
     'language.direction',
+    'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'showJS.tags',
-]
-
-[zh_BO]
-ignore = [
-    'language.direction',
 ]
 
 [zh_CN]
@@ -980,5 +1032,6 @@ ignore = [
 [zh_TW]
 ignore = [
     'language.direction',
+    'poweredBy',
     'showJS.tags',
 ]

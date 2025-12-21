@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.awt.Color;
@@ -70,61 +69,45 @@ class RedactControllerTest {
     private PDDocument realDocument;
     private PDPage realPage;
 
-    // Helpers
-    private void testAutoRedaction(
-            String searchText,
-            boolean useRegex,
-            boolean wholeWordSearch,
-            String redactColor,
-            float padding,
-            boolean convertToImage,
-            boolean expectSuccess)
-            throws Exception {
-        RedactPdfRequest request = createRedactPdfRequest();
-        request.setListOfText(searchText);
-        request.setUseRegex(useRegex);
-        request.setWholeWordSearch(wholeWordSearch);
-        request.setRedactColor(redactColor);
-        request.setCustomPadding(padding);
-        request.setConvertPDFToImage(convertToImage);
-
-        try {
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
-
-            if (expectSuccess && response != null) {
-                assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                assertNotNull(response.getBody());
-                assertTrue(response.getBody().length > 0);
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
-                verify(mockDocument, times(1)).close();
+    private static byte[] createSimplePdfContent() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                contentStream.newLineAtOffset(100, 700);
+                contentStream.showText("This is a simple PDF.");
+                contentStream.endText();
             }
-        } catch (Exception e) {
-            if (expectSuccess) {
-                log.info("Redaction test completed with graceful handling: {}", e.getMessage());
-            } else {
-                assertNotNull(e.getMessage());
-            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
     }
 
-    private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage)
-            throws Exception {
-        ManualRedactPdfRequest request = createManualRedactPdfRequest();
-        request.setRedactions(redactionAreas);
-        request.setConvertPDFToImage(convertToImage);
+    private static List<RedactionArea> createValidRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
 
-        try {
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+        RedactionArea area1 = new RedactionArea();
+        area1.setPage(1);
+        area1.setX(100.0);
+        area1.setY(100.0);
+        area1.setWidth(200.0);
+        area1.setHeight(50.0);
+        area1.setColor("000000");
+        areas.add(area1);
 
-            if (response != null) {
-                assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
-            }
-        } catch (Exception e) {
-            log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
-        }
+        RedactionArea area2 = new RedactionArea();
+        area2.setPage(1);
+        area2.setX(300.0);
+        area2.setY(200.0);
+        area2.setWidth(150.0);
+        area2.setHeight(30.0);
+        area2.setColor("FF0000");
+        areas.add(area2);
+
+        return areas;
     }
 
     @BeforeEach
@@ -190,16 +173,18 @@ class RedactControllerTest {
         setupRealDocument();
     }
 
-    private void setupRealDocument() throws IOException {
-        realDocument = new PDDocument();
-        realPage = new PDPage(PDRectangle.A4);
-        realDocument.addPage(realPage);
+    private static List<RedactionArea> createInvalidRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
 
-        // Set up basic page resources
-        PDResources resources = new PDResources();
-        resources.put(
-                COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-        realPage.setResources(resources);
+        RedactionArea invalidArea = new RedactionArea();
+        invalidArea.setPage(null); // Invalid - null page
+        invalidArea.setX(100.0);
+        invalidArea.setY(100.0);
+        invalidArea.setWidth(200.0);
+        invalidArea.setHeight(50.0);
+        areas.add(invalidArea);
+
+        return areas;
     }
 
     @AfterEach
@@ -608,13 +593,266 @@ class RedactControllerTest {
         }
     }
 
+    private static List<RedactionArea> createMultipleRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            RedactionArea area = new RedactionArea();
+            area.setPage(1);
+            area.setX(50.0 + (i * 60));
+            area.setY(50.0 + (i * 40));
+            area.setWidth(50.0);
+            area.setHeight(30.0);
+            area.setColor(String.format("%06X", i * 0x333333));
+            areas.add(area);
+        }
+
+        return areas;
+    }
+
+    private static List<RedactionArea> createOverlappingRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        RedactionArea area1 = new RedactionArea();
+        area1.setPage(1);
+        area1.setX(100.0);
+        area1.setY(100.0);
+        area1.setWidth(200.0);
+        area1.setHeight(100.0);
+        area1.setColor("FF0000");
+        areas.add(area1);
+
+        RedactionArea area2 = new RedactionArea();
+        area2.setPage(1);
+        area2.setX(150.0); // Overlaps with area1
+        area2.setY(150.0); // Overlaps with area1
+        area2.setWidth(200.0);
+        area2.setHeight(100.0);
+        area2.setColor("00FF00");
+        areas.add(area2);
+
+        return areas;
+    }
+
+    // Helper for token creation
+    private static List<Object> createSampleTokenList() {
+        return List.of(
+                Operator.getOperator("BT"),
+                COSName.getPDFName("F1"),
+                new COSFloat(12),
+                Operator.getOperator("Tf"),
+                new COSString("Sample text"),
+                Operator.getOperator("Tj"),
+                Operator.getOperator("ET"));
+    }
+
+    private RedactPdfRequest createRedactPdfRequest() {
+        RedactPdfRequest request = new RedactPdfRequest();
+        request.setFileInput(mockPdfFile);
+        return request;
+    }
+
+    private ManualRedactPdfRequest createManualRedactPdfRequest() {
+        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
+        request.setFileInput(mockPdfFile);
+        return request;
+    }
+
+    private static String extractTextFromTokens(List<Object> tokens) {
+        StringBuilder text = new StringBuilder();
+        for (Object token : tokens) {
+            if (token instanceof COSString cosString) {
+                text.append(cosString.getString());
+            } else if (token instanceof COSArray array) {
+                for (int i = 0; i < array.size(); i++) {
+                    if (array.getObject(i) instanceof COSString cosString) {
+                        text.append(cosString.getString());
+                    }
+                }
+            }
+        }
+        return text.toString();
+    }
+
+    private static byte[] readAllBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[1024];
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        return buffer.toByteArray();
+    }
+
+    // Helpers
+    private void testAutoRedaction(
+            String searchText,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            String redactColor,
+            float padding,
+            boolean convertToImage,
+            boolean expectSuccess) {
+        RedactPdfRequest request = createRedactPdfRequest();
+        request.setListOfText(searchText);
+        request.setUseRegex(useRegex);
+        request.setWholeWordSearch(wholeWordSearch);
+        request.setRedactColor(redactColor);
+        request.setCustomPadding(padding);
+        request.setConvertPDFToImage(convertToImage);
+
+        try {
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            if (expectSuccess && response != null) {
+                assertNotNull(response);
+                assertEquals(200, response.getStatusCode().value());
+                assertNotNull(response.getBody());
+                assertTrue(response.getBody().length > 0);
+                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+                verify(mockDocument, times(1)).close();
+            }
+        } catch (Exception e) {
+            if (expectSuccess) {
+                log.info("Redaction test completed with graceful handling: {}", e.getMessage());
+            } else {
+                assertNotNull(e.getMessage());
+            }
+        }
+    }
+
+    private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage) {
+        ManualRedactPdfRequest request = createManualRedactPdfRequest();
+        request.setRedactions(redactionAreas);
+        request.setConvertPDFToImage(convertToImage);
+
+        try {
+            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+
+            if (response != null) {
+                assertNotNull(response);
+                assertEquals(200, response.getStatusCode().value());
+                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+            }
+        } catch (Exception e) {
+            log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
+        }
+    }
+
+    private void setupRealDocument() {
+        realDocument = new PDDocument();
+        realPage = new PDPage(PDRectangle.A4);
+        realDocument.addPage(realPage);
+
+        // Set up basic page resources
+        PDResources resources = new PDResources();
+        resources.put(
+                COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.setResources(resources);
+    }
+
+    // Helper methods for real PDF content creation
+    private void createRealPageWithSimpleText(String text) throws IOException {
+        realPage = new PDPage(PDRectangle.A4);
+        while (realDocument.getNumberOfPages() > 0) {
+            realDocument.removePage(0);
+        }
+        realDocument.addPage(realPage);
+        realPage.setResources(new PDResources());
+        realPage.getResources()
+                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+            contentStream.beginText();
+            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+            contentStream.newLineAtOffset(50, 750);
+            contentStream.showText(text);
+            contentStream.endText();
+        }
+    }
+
+    private void createRealPageWithTJArrayText() throws IOException {
+        realPage = new PDPage(PDRectangle.A4);
+        while (realDocument.getNumberOfPages() > 0) {
+            realDocument.removePage(0);
+        }
+        realDocument.addPage(realPage);
+        realPage.setResources(new PDResources());
+        realPage.getResources()
+                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+            contentStream.beginText();
+            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+            contentStream.newLineAtOffset(50, 750);
+
+            contentStream.showText("This is ");
+            contentStream.newLineAtOffset(-10, 0); // Simulate positioning
+            contentStream.showText("secret");
+            contentStream.newLineAtOffset(10, 0); // Reset positioning
+            contentStream.showText(" information");
+            contentStream.endText();
+        }
+    }
+
+    private void createRealPageWithMixedContent() throws IOException {
+        realPage = new PDPage(PDRectangle.A4);
+        while (realDocument.getNumberOfPages() > 0) {
+            realDocument.removePage(0);
+        }
+        realDocument.addPage(realPage);
+        realPage.setResources(new PDResources());
+        realPage.getResources()
+                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+            contentStream.setLineWidth(2);
+            contentStream.moveTo(100, 100);
+            contentStream.lineTo(200, 200);
+            contentStream.stroke();
+
+            contentStream.beginText();
+            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+            contentStream.newLineAtOffset(50, 750);
+            contentStream.showText("Please redact this content");
+            contentStream.endText();
+        }
+    }
+
+    private void createRealPageWithSpecificOperator(String operatorName) throws IOException {
+        createRealPageWithSimpleText("sensitive data");
+    }
+
+    private void createRealPageWithPositionedText() throws IOException {
+        realPage = new PDPage(PDRectangle.A4);
+        while (realDocument.getNumberOfPages() > 0) {
+            realDocument.removePage(0);
+        }
+        realDocument.addPage(realPage);
+        realPage.setResources(new PDResources());
+        realPage.getResources()
+                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+            contentStream.beginText();
+            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+            contentStream.newLineAtOffset(50, 750);
+            contentStream.showText("Normal text ");
+            contentStream.newLineAtOffset(100, 0);
+            contentStream.showText("confidential");
+            contentStream.newLineAtOffset(100, 0);
+            contentStream.showText(" more text");
+            contentStream.endText();
+        }
+    }
+
     @Nested
     @DisplayName("Error Handling and Edge Cases")
     class ErrorHandlingTests {
 
         @Test
         @DisplayName("Should handle null file input gracefully")
-        void handleNullFileInput() throws Exception {
+        void handleNullFileInput() {
             RedactPdfRequest request = new RedactPdfRequest();
             request.setFileInput(null);
             request.setListOfText("test");
@@ -631,7 +869,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle malformed PDF gracefully")
-        void handleMalformedPdfGracefully() throws Exception {
+        void handleMalformedPdfGracefully() {
             MockMultipartFile malformedFile =
                     new MockMultipartFile(
                             "fileInput",
@@ -675,7 +913,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle null redact color gracefully")
-        void handleNullRedactColor() throws Exception {
+        void handleNullRedactColor() {
             RedactPdfRequest request = createRedactPdfRequest();
             request.setListOfText("test");
             request.setRedactColor(null);
@@ -723,34 +961,50 @@ class RedactControllerTest {
         }
     }
 
+    private List<Object> getOriginalTokens() throws Exception {
+        // Create a new page to avoid side effects from other tests
+        PDPage pageForTokenExtraction = new PDPage(PDRectangle.A4);
+        pageForTokenExtraction.setResources(realPage.getResources());
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(realDocument, pageForTokenExtraction)) {
+            contentStream.beginText();
+            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+            contentStream.newLineAtOffset(50, 750);
+            contentStream.showText("Original content");
+            contentStream.endText();
+        }
+        return redactController.createTokensWithoutTargetText(
+                realDocument, pageForTokenExtraction, Collections.emptySet(), false, false);
+    }
+
     @Nested
     @DisplayName("Color Decoding Utility Tests")
     class ColorDecodingTests {
 
         @Test
         @DisplayName("Should decode valid hex color with hash")
-        void decodeValidHexColorWithHash() throws Exception {
+        void decodeValidHexColorWithHash() {
             Color result = redactController.decodeOrDefault("#FF0000");
             assertEquals(Color.RED, result);
         }
 
         @Test
         @DisplayName("Should decode valid hex color without hash")
-        void decodeValidHexColorWithoutHash() throws Exception {
+        void decodeValidHexColorWithoutHash() {
             Color result = redactController.decodeOrDefault("FF0000");
             assertEquals(Color.RED, result);
         }
 
         @Test
         @DisplayName("Should default to black for null color")
-        void defaultToBlackForNullColor() throws Exception {
+        void defaultToBlackForNullColor() {
             Color result = redactController.decodeOrDefault(null);
             assertEquals(Color.BLACK, result);
         }
 
         @Test
         @DisplayName("Should default to black for invalid color")
-        void defaultToBlackForInvalidColor() throws Exception {
+        void defaultToBlackForInvalidColor() {
             Color result = redactController.decodeOrDefault("invalid-color");
             assertEquals(Color.BLACK, result);
         }
@@ -762,7 +1016,7 @@ class RedactControllerTest {
                     "0000FF"
                 })
         @DisplayName("Should handle various valid color formats")
-        void handleVariousValidColorFormats(String colorInput) throws Exception {
+        void handleVariousValidColorFormats(String colorInput) {
             Color result = redactController.decodeOrDefault(colorInput);
             assertNotNull(result);
             assertTrue(
@@ -778,13 +1032,22 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle short hex codes appropriately")
-        void handleShortHexCodes() throws Exception {
+        void handleShortHexCodes() {
             Color result1 = redactController.decodeOrDefault("123");
             Color result2 = redactController.decodeOrDefault("#12");
 
             assertNotNull(result1);
             assertNotNull(result2);
         }
+    }
+
+    private String extractTextFromModifiedPage(PDPage page) throws IOException {
+        if (page.getContents() != null) {
+            try (InputStream inputStream = page.getContents()) {
+                return new String(readAllBytes(inputStream));
+            }
+        }
+        return "";
     }
 
     @Nested
@@ -975,7 +1238,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Placeholder creation should maintain text width")
-        void shouldCreateWidthMatchingPlaceholder() throws Exception {
+        void shouldCreateWidthMatchingPlaceholder() {
             String originalText = "confidential";
             String placeholder =
                     redactController.createPlaceholderWithFont(
@@ -989,7 +1252,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Placeholder should handle special characters")
-        void shouldHandleSpecialCharactersInPlaceholder() throws Exception {
+        void shouldHandleSpecialCharactersInPlaceholder() {
             String originalText = "café naïve";
             String placeholder =
                     redactController.createPlaceholderWithFont(
@@ -1163,271 +1426,5 @@ class RedactControllerTest {
             assertNotNull(response.getBody());
             assertTrue(response.getBody().length > 0);
         }
-    }
-
-    private RedactPdfRequest createRedactPdfRequest() {
-        RedactPdfRequest request = new RedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private ManualRedactPdfRequest createManualRedactPdfRequest() {
-        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private byte[] createSimplePdfContent() throws IOException {
-        try (PDDocument doc = new PDDocument()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            doc.addPage(page);
-            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
-                contentStream.beginText();
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.newLineAtOffset(100, 700);
-                contentStream.showText("This is a simple PDF.");
-                contentStream.endText();
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            doc.save(baos);
-            return baos.toByteArray();
-        }
-    }
-
-    private List<RedactionArea> createValidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(50.0);
-        area1.setColor("000000");
-        areas.add(area1);
-
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(300.0);
-        area2.setY(200.0);
-        area2.setWidth(150.0);
-        area2.setHeight(30.0);
-        area2.setColor("FF0000");
-        areas.add(area2);
-
-        return areas;
-    }
-
-    private List<RedactionArea> createInvalidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea invalidArea = new RedactionArea();
-        invalidArea.setPage(null); // Invalid - null page
-        invalidArea.setX(100.0);
-        invalidArea.setY(100.0);
-        invalidArea.setWidth(200.0);
-        invalidArea.setHeight(50.0);
-        areas.add(invalidArea);
-
-        return areas;
-    }
-
-    private List<RedactionArea> createMultipleRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        for (int i = 0; i < 5; i++) {
-            RedactionArea area = new RedactionArea();
-            area.setPage(1);
-            area.setX(50.0 + (i * 60));
-            area.setY(50.0 + (i * 40));
-            area.setWidth(50.0);
-            area.setHeight(30.0);
-            area.setColor(String.format("%06X", i * 0x333333));
-            areas.add(area);
-        }
-
-        return areas;
-    }
-
-    private List<RedactionArea> createOverlappingRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(100.0);
-        area1.setColor("FF0000");
-        areas.add(area1);
-
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(150.0); // Overlaps with area1
-        area2.setY(150.0); // Overlaps with area1
-        area2.setWidth(200.0);
-        area2.setHeight(100.0);
-        area2.setColor("00FF00");
-        areas.add(area2);
-
-        return areas;
-    }
-
-    // Helper methods for real PDF content creation
-    private void createRealPageWithSimpleText(String text) throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText(text);
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithTJArrayText() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-
-            contentStream.showText("This is ");
-            contentStream.newLineAtOffset(-10, 0); // Simulate positioning
-            contentStream.showText("secret");
-            contentStream.newLineAtOffset(10, 0); // Reset positioning
-            contentStream.showText(" information");
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithMixedContent() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.setLineWidth(2);
-            contentStream.moveTo(100, 100);
-            contentStream.lineTo(200, 200);
-            contentStream.stroke();
-
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Please redact this content");
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithSpecificOperator(String operatorName) throws IOException {
-        createRealPageWithSimpleText("sensitive data");
-    }
-
-    private void createRealPageWithPositionedText() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Normal text ");
-            contentStream.newLineAtOffset(100, 0);
-            contentStream.showText("confidential");
-            contentStream.newLineAtOffset(100, 0);
-            contentStream.showText(" more text");
-            contentStream.endText();
-        }
-    }
-
-    // Helper for token creation
-    private List<Object> createSampleTokenList() {
-        return List.of(
-                Operator.getOperator("BT"),
-                COSName.getPDFName("F1"),
-                new COSFloat(12),
-                Operator.getOperator("Tf"),
-                new COSString("Sample text"),
-                Operator.getOperator("Tj"),
-                Operator.getOperator("ET"));
-    }
-
-    private List<Object> getOriginalTokens() throws Exception {
-        // Create a new page to avoid side effects from other tests
-        PDPage pageForTokenExtraction = new PDPage(PDRectangle.A4);
-        pageForTokenExtraction.setResources(realPage.getResources());
-        try (PDPageContentStream contentStream =
-                new PDPageContentStream(realDocument, pageForTokenExtraction)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Original content");
-            contentStream.endText();
-        }
-        return redactController.createTokensWithoutTargetText(
-                realDocument, pageForTokenExtraction, Collections.emptySet(), false, false);
-    }
-
-    private String extractTextFromTokens(List<Object> tokens) {
-        StringBuilder text = new StringBuilder();
-        for (Object token : tokens) {
-            if (token instanceof COSString cosString) {
-                text.append(cosString.getString());
-            } else if (token instanceof COSArray array) {
-                for (int i = 0; i < array.size(); i++) {
-                    if (array.getObject(i) instanceof COSString cosString) {
-                        text.append(cosString.getString());
-                    }
-                }
-            }
-        }
-        return text.toString();
-    }
-
-    private String extractTextFromModifiedPage(PDPage page) throws IOException {
-        if (page.getContents() != null) {
-            try (InputStream inputStream = page.getContents()) {
-                return new String(readAllBytes(inputStream));
-            }
-        }
-        return "";
-    }
-
-    private byte[] readAllBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int nRead;
-        byte[] data = new byte[1024];
-        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-        return buffer.toByteArray();
     }
 }

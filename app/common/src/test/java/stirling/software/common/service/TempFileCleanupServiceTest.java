@@ -1,8 +1,6 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import java.io.File;
@@ -133,6 +131,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for each directory we'll process
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -177,18 +178,17 @@ public class TempFileCleanupServiceTest {
                                 // maxAgeMillis
                                 if (fileName.contains("old")) {
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 5000000);
+                                            testTime - 5000000); // ~1.4 hours ago
                                 }
                                 // For empty.tmp file, return a timestamp older than 5 minutes (for
                                 // empty file test)
-                                else if (fileName.equals("empty.tmp")) {
+                                else if ("empty.tmp".equals(fileName)) {
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 6 * 60 * 1000);
+                                            testTime - 6 * 60 * 1000); // 6 minutes ago
                                 }
                                 // For all other files, return a recent timestamp
                                 else {
-                                    return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 60000); // 1 minute ago
+                                    return FileTime.fromMillis(testTime - 60000); // 1 minute ago
                                 }
                             });
 
@@ -201,7 +201,7 @@ public class TempFileCleanupServiceTest {
                                 String fileName = path.getFileName().toString();
 
                                 // Return 0 bytes for the empty file
-                                if (fileName.equals("empty.tmp")) {
+                                if ("empty.tmp".equals(fileName)) {
                                     return 0L;
                                 }
                                 // Return normal size for all other files
@@ -221,9 +221,9 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act - set containerMode to false for this test
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
-            invokeCleanupDirectoryStreaming(customTempDir, false, 0, 3600000);
-            invokeCleanupDirectoryStreaming(libreOfficeTempDir, false, 0, 3600000);
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
+            invokeCleanupDirectoryStreaming(customTempDir, false, 3600000);
+            invokeCleanupDirectoryStreaming(libreOfficeTempDir, false, 3600000);
 
             // Assert - Only old temp files and empty files should be deleted
             assertTrue(deletedFiles.contains(oldTempFile), "Old temp file should be deleted");
@@ -276,6 +276,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for systemTempDir
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -290,9 +293,7 @@ public class TempFileCleanupServiceTest {
             // Configure Files.getLastModifiedTime to return recent timestamps
             mockedFiles
                     .when(() -> Files.getLastModifiedTime(any(Path.class)))
-                    .thenReturn(
-                            FileTime.fromMillis(
-                                    System.currentTimeMillis() - 60000)); // 1 minute ago
+                    .thenReturn(FileTime.fromMillis(testTime - 60000)); // 1 minute ago
 
             // Configure Files.size to return normal size
             mockedFiles.when(() -> Files.size(any(Path.class))).thenReturn(1024L); // 1 KB
@@ -308,7 +309,7 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act - set containerMode to true and maxAgeMillis to 0 for container startup cleanup
-            invokeCleanupDirectoryStreaming(systemTempDir, true, 0, 0);
+            invokeCleanupDirectoryStreaming(systemTempDir, true, 0);
 
             // Assert - In container mode, both our temp files and system temp files should be
             // deleted
@@ -337,6 +338,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for systemTempDir
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -356,14 +360,14 @@ public class TempFileCleanupServiceTest {
                                 Path path = invocation.getArgument(0);
                                 String fileName = path.getFileName().toString();
 
-                                if (fileName.equals("empty.tmp")) {
+                                if ("empty.tmp".equals(fileName)) {
                                     // More than 5 minutes old
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 6 * 60 * 1000);
+                                            testTime - 6 * 60 * 1000); // 6 minutes ago
                                 } else {
                                     // Less than 5 minutes old
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 2 * 60 * 1000);
+                                            testTime - 2 * 60 * 1000); // 2 minutes ago
                                 }
                             });
 
@@ -381,7 +385,7 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
 
             // Assert
             assertTrue(
@@ -412,14 +416,25 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for each directory
-            mockedFiles.when(() -> Files.list(eq(systemTempDir))).thenReturn(Stream.of(dir1));
+            mockedFiles
+                    .when(() -> Files.list(eq(systemTempDir)))
+                    .thenAnswer(invocation -> Stream.of(dir1));
 
-            mockedFiles.when(() -> Files.list(eq(dir1))).thenReturn(Stream.of(tempFile1, dir2));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir1)))
+                    .thenAnswer(invocation -> Stream.of(tempFile1, dir2));
 
-            mockedFiles.when(() -> Files.list(eq(dir2))).thenReturn(Stream.of(tempFile2, dir3));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir2)))
+                    .thenAnswer(invocation -> Stream.of(tempFile2, dir3));
 
-            mockedFiles.when(() -> Files.list(eq(dir3))).thenReturn(Stream.of(tempFile3));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir3)))
+                    .thenAnswer(invocation -> Stream.of(tempFile3));
 
             // Configure Files.isDirectory for each path
             mockedFiles.when(() -> Files.isDirectory(eq(dir1))).thenReturn(true);
@@ -432,6 +447,9 @@ public class TempFileCleanupServiceTest {
             // Configure Files.exists to return true for all paths
             mockedFiles.when(() -> Files.exists(any(Path.class))).thenReturn(true);
 
+            // Configure Files.size to return 0 for all files (ensure they're not empty)
+            mockedFiles.when(() -> Files.size(any(Path.class))).thenReturn(1024L);
+
             // Configure Files.getLastModifiedTime to return different times based on file names
             mockedFiles
                     .when(() -> Files.getLastModifiedTime(any(Path.class)))
@@ -441,19 +459,14 @@ public class TempFileCleanupServiceTest {
                                 String fileName = path.getFileName().toString();
 
                                 if (fileName.contains("old")) {
-                                    // Old file
-                                    return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 5000000);
+                                    // Old file - very old timestamp (older than 1 hour)
+                                    return FileTime.fromMillis(testTime - 7200000); // 2 hours ago
                                 } else {
-                                    // Recent file
-                                    return FileTime.fromMillis(System.currentTimeMillis() - 60000);
+                                    // Recent file - very recent timestamp (less than 1 hour)
+                                    return FileTime.fromMillis(testTime - 60000); // 1 minute ago
                                 }
                             });
 
-            // Configure Files.size to return normal size
-            mockedFiles.when(() -> Files.size(any(Path.class))).thenReturn(1024L);
-
-            // For deleteIfExists, track which files would be deleted
             mockedFiles
                     .when(() -> Files.deleteIfExists(any(Path.class)))
                     .thenAnswer(
@@ -463,12 +476,8 @@ public class TempFileCleanupServiceTest {
                                 return true;
                             });
 
-            // Act
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
-
-            // Debug - print what was deleted
-            System.out.println("Deleted files: " + deletedFiles);
-            System.out.println("Looking for: " + tempFile3);
+            // Act - pass maxAgeMillis = 3600000 (1 hour)
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
 
             // Assert
             assertFalse(deletedFiles.contains(tempFile1), "Recent temp file should be preserved");
@@ -481,8 +490,7 @@ public class TempFileCleanupServiceTest {
 
     /** Helper method to invoke the private cleanupDirectoryStreaming method using reflection */
     private void invokeCleanupDirectoryStreaming(
-            Path directory, boolean containerMode, int depth, long maxAgeMillis)
-            throws IOException {
+            Path directory, boolean containerMode, long maxAgeMillis) {
         try {
             // Create a consumer that tracks deleted files
             AtomicInteger deleteCount = new AtomicInteger(0);
@@ -505,7 +513,7 @@ public class TempFileCleanupServiceTest {
                     cleanupService,
                     directory,
                     containerMode,
-                    depth,
+                    0,
                     maxAgeMillis,
                     false,
                     deleteCallback);

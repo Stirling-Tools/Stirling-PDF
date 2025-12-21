@@ -1,7 +1,6 @@
 package stirling.software.common.util.misc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -106,7 +105,7 @@ class CustomColorReplaceStrategyTest {
 
         } catch (Exception e) {
             // If we get here, the test failed
-            org.junit.jupiter.api.Assertions.fail("Exception occurred: " + e.getMessage());
+            fail("Exception occurred: " + e.getMessage());
         }
     }
 }

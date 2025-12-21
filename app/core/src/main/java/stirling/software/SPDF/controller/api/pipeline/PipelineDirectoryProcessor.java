@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -203,7 +204,7 @@ public class PipelineDirectoryProcessor {
                                                         ? filename.substring(
                                                                         filename.lastIndexOf(".")
                                                                                 + 1)
-                                                                .toLowerCase()
+                                                                .toLowerCase(Locale.ROOT)
                                                         : "";
 
                                         // Check against allowed extensions
@@ -213,7 +214,8 @@ public class PipelineDirectoryProcessor {
                                                                 extension.toLowerCase());
                                         if (!isAllowed) {
                                             log.info(
-                                                    "Skipping file with unsupported extension: {} ({})",
+                                                    "Skipping file with unsupported extension: {}"
+                                                            + " ({})",
                                                     filename,
                                                     extension);
                                         }
@@ -226,7 +228,8 @@ public class PipelineDirectoryProcessor {
                                                 fileMonitor.isFileReadyForProcessing(path);
                                         if (!isReady) {
                                             log.info(
-                                                    "File not ready for processing (locked/created last 5s): {}",
+                                                    "File not ready for processing (locked/created"
+                                                            + " last 5s): {}",
                                                     path);
                                         }
                                         return isReady;

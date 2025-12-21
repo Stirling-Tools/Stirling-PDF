@@ -11,6 +11,8 @@ public class CheckProgramInstall {
     private static final List<String> PYTHON_COMMANDS = Arrays.asList("python3", "python");
     private static boolean pythonAvailableChecked = false;
     private static String availablePythonCommand = null;
+    private static boolean ffmpegAvailableChecked = false;
+    private static boolean ffmpegAvailable = false;
 
     /**
      * Checks which Python command is available and returns it.
@@ -55,5 +57,26 @@ public class CheckProgramInstall {
      */
     public static boolean isPythonAvailable() {
         return getAvailablePythonCommand() != null;
+    }
+
+    /**
+     * Checks if FFmpeg is available on the system.
+     *
+     * @return true if FFmpeg is installed and accessible, false otherwise.
+     */
+    public static boolean isFfmpegAvailable() {
+        if (!ffmpegAvailableChecked) {
+            try {
+                ProcessExecutorResult result =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
+                                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+                ffmpegAvailable = true;
+            } catch (IOException | InterruptedException e) {
+                ffmpegAvailable = false;
+            } finally {
+                ffmpegAvailableChecked = true;
+            }
+        }
+        return ffmpegAvailable;
     }
 }

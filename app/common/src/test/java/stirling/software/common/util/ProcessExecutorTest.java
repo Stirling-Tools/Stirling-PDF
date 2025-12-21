@@ -1,9 +1,6 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,9 +45,7 @@ public class ProcessExecutorTest {
         IOException thrown =
                 assertThrows(
                         IOException.class,
-                        () -> {
-                            processExecutor.runCommandWithOutputHandling(command);
-                        });
+                        () -> processExecutor.runCommandWithOutputHandling(command));
 
         // Check the exception message to ensure it indicates the command was not found
         String errorMessage = thrown.getMessage();

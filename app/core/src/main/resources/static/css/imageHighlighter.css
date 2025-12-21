@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   transition:
-    visbility 0.1s linear,
+    visibility 0.1s linear,
     background-color 0.1s linear;
 }
 

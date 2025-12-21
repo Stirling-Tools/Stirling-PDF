@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}"
+  th:dir="#{language.direction}"
+  th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{pdfToEpub.title}, header=#{pdfToEpub.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon convert">menu_book</span>
+                <span class="tool-header-text"
+                  th:text="#{pdfToEpub.header}"></span>
+              </div>
+              <p th:text="#{processTimeWarning}"></p>
+
+              <div class="alert alert-warning"
+                th:if="${!@endpointConfiguration.isGroupEnabled('Calibre')}">
+                <span th:text="#{pdfToEpub.calibreDisabled}">Calibre support is disabled.</span>
+              </div>
+
+              <form enctype="multipart/form-data"
+                id="pdfToEpubForm"
+                method="post"
+                th:action="@{'/api/v1/convert/pdf/epub'}"
+                th:if="${@endpointConfiguration.isGroupEnabled('Calibre')}">
+                <div
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.pdf', inputText=#{pdfToEpub.selectText})}">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="outputFormat"
+                    th:text="#{pdfToEpub.outputFormat}"></label>
+                  <select class="form-select"
+                    id="outputFormat"
+                    name="outputFormat">
+                    <option selected
+                      th:text="#{pdfToEpub.outputFormat.epub}"
+                      value="EPUB"></option>
+                    <option th:text="#{pdfToEpub.outputFormat.azw3}"
+                      value="AZW3"></option>
+                  </select>
+                </div>
+
+                <div class="form-check mb-3">
+                  <input checked id="detectChapters" name="detectChapters" type="checkbox">
+                  <label for="detectChapters" th:text="#{pdfToEpub.detectChapters}"></label>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="targetDevice"
+                    th:text="#{pdfToEpub.targetDevice}"></label>
+                  <select class="form-select"
+                    id="targetDevice"
+                    name="targetDevice">
+                    <option selected
+                      th:text="#{pdfToEpub.targetDevice.tablet}"
+                      value="TABLET_PHONE_IMAGES"></option>
+                    <option th:text="#{pdfToEpub.targetDevice.kindle}"
+                      value="KINDLE_EINK_TEXT"></option>
+                  </select>
+                </div>
+
+                <button class="btn btn-primary"
+                  id="submitBtn"
+                  th:text="#{pdfToEpub.submit}"
+                  type="submit">Convert</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+
+</html>

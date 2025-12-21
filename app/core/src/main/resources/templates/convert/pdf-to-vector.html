@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfToVector.title}, header=#{pdfToVector.header})}"></th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convert">stroke_full</span>
+              <span class="tool-header-text" th:text="#{pdfToVector.header}"></span>
+            </div>
+            <form enctype="multipart/form-data" method="post" th:action="@{'/api/v1/convert/pdf/vector'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+              <div class="mb-3">
+                <label for="outputFormat" th:text="#{pdfToVector.outputFormat}"></label>
+                <select class="form-control" id="outputFormat" name="outputFormat">
+                  <option selected value="eps">EPS (Encapsulated PostScript)</option>
+                  <option value="ps">PS (PostScript)</option>
+                  <option value="pcl">PCL (Printer Command Language)</option>
+                  <option value="xps">XPS (XML Paper Specification)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="submitBtn" th:text="#{pdfToVector.submit}" type="submit"></button>
+            </form>
+            <p class="mt-3" th:text="#{pdfToVector.description}"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>

@@ -1,12 +1,11 @@
 package stirling.software.common.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,11 +32,11 @@ class ResourceMonitorTest {
     @Mock private MemoryMXBean memoryMXBean;
 
     @Spy
-    private AtomicReference<ResourceStatus> currentStatus =
+    private final AtomicReference<ResourceStatus> currentStatus =
             new AtomicReference<>(ResourceStatus.OK);
 
     @Spy
-    private AtomicReference<ResourceMetrics> latestMetrics =
+    private final AtomicReference<ResourceMetrics> latestMetrics =
             new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
@@ -118,18 +117,24 @@ class ResourceMonitorTest {
                 shouldQueue,
                 result,
                 String.format(
+                        Locale.ROOT,
                         "For weight %d and status %s, shouldQueue should be %s",
-                        weight, status, shouldQueue));
+                        weight,
+                        status,
+                        shouldQueue));
     }
 
     @Test
     void resourceMetricsShouldDetectStaleState() {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Given
-        Instant now = Instant.now();
-        Instant pastInstant = now.minusMillis(6000);
+        Instant pastInstant =
+                testTime.minusMillis(6000); // 6 seconds ago (relative to test start time)
 
         ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, pastInstant);
-        ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
+        ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, testTime);
 
         // When/Then
         assertTrue(

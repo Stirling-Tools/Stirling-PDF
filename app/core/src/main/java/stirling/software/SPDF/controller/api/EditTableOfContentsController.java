@@ -10,65 +10,53 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
-import stirling.software.common.annotations.AutoJobPostMapping;
-import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@GeneralApi
+@RestController
+@RequestMapping("/api/v1/general")
 @Slf4j
+@Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
 public class EditTableOfContentsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @AutoJobPostMapping(
-            value = "/extract-bookmarks",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/extract-bookmarks", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
-            @RequestParam("file") MultipartFile file) throws Exception {
-        PDDocument document = null;
-        try {
-            document = pdfDocumentFactory.load(file);
+    public List<Map<String, Object>> extractBookmarks(@RequestParam("file") MultipartFile file)
+            throws Exception {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
                 log.info("No outline/bookmarks found in PDF");
-                return ResponseEntity.ok(new ArrayList<>());
+                return new ArrayList<>();
             }
 
-            return ResponseEntity.ok(extractBookmarkItems(document, outline));
-        } finally {
-            if (document != null) {
-                document.close();
-            }
+            return extractBookmarkItems(document, outline);
         }
     }
 
@@ -97,7 +85,6 @@ public class EditTableOfContentsController {
             PDOutlineItem child = current.getFirstChild();
             if (child != null) {
                 List<Map<String, Object>> children = new ArrayList<>();
-                PDOutlineNode parent = current;
 
                 while (child != null) {
                     // Recursively process child items
@@ -155,20 +142,16 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @AutoJobPostMapping(
-            value = "/edit-table-of-contents",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @StandardPdfResponse
+    @PostMapping(value = "/edit-table-of-contents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
     public ResponseEntity<byte[]> editTableOfContents(
             @ModelAttribute EditTableOfContentsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
-        PDDocument document = null;
 
-        try {
-            document = pdfDocumentFactory.load(file);
+        try (PDDocument document = pdfDocumentFactory.load(file);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
@@ -183,18 +166,12 @@ public class EditTableOfContentsController {
             addBookmarksToOutline(document, outline, bookmarks);
 
             // Save the document to a byte array
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
 
             return WebResponseUtils.bytesToWebResponse(
                     baos.toByteArray(),
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
                     MediaType.APPLICATION_PDF);
-
-        } finally {
-            if (document != null) {
-                document.close();
-            }
         }
     }
 

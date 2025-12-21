@@ -1690,9 +1690,9 @@ public class FormUtils {
         acroForm.getFields().add(field);
     }
 
-    // Delegation methods to FormCopyUtils for form field transformation
+    // Delegation methods to GeneralFormCopyUtils for form field transformation
     public boolean hasAnyRotatedPage(PDDocument document) {
-        return FormCopyUtils.hasAnyRotatedPage(document);
+        return stirling.software.common.util.GeneralFormCopyUtils.hasAnyRotatedPage(document);
     }
 
     public void copyAndTransformFormFields(
@@ -1705,7 +1705,7 @@ public class FormUtils {
             float cellWidth,
             float cellHeight)
             throws IOException {
-        FormCopyUtils.copyAndTransformFormFields(
+        stirling.software.common.util.GeneralFormCopyUtils.copyAndTransformFormFields(
                 sourceDocument,
                 newDocument,
                 totalPages,

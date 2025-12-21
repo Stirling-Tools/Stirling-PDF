@@ -61,7 +61,7 @@ class ApplicationPropertiesSaml2HttpTest {
         Resource r = s.getSpCert();
 
         assertNotNull(r);
-        assertTrue(r instanceof FileSystemResource, "Expected FileSystemResource for FS path");
+        assertInstanceOf(FileSystemResource.class, r, "Expected FileSystemResource for FS path");
         assertTrue(r.exists(), "Temp file should exist");
     }
 
@@ -75,7 +75,7 @@ class ApplicationPropertiesSaml2HttpTest {
         Resource r = s.getIdpCert();
 
         assertNotNull(r);
-        assertTrue(r instanceof FileSystemResource, "Expected FileSystemResource for FS path");
+        assertInstanceOf(FileSystemResource.class, r, "Expected FileSystemResource for FS path");
         assertFalse(r.exists(), "Resource should not exist for missing file");
     }
 }

@@ -62,17 +62,11 @@ public class RegexPatternUtilsTest {
 
     @Test
     void testNullRegexHandling() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    utils.getPattern(null);
-                });
+        assertThrows(IllegalArgumentException.class, () -> utils.getPattern(null));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    utils.getPattern(null, Pattern.CASE_INSENSITIVE);
-                });
+                () -> utils.getPattern(null, Pattern.CASE_INSENSITIVE));
 
         assertFalse(utils.isCached(null));
         assertFalse(utils.removeFromCache(null));

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -145,6 +146,7 @@ public class UserService implements UserServiceInterface {
         return addApiKeyToUser(username);
     }
 
+    @Override
     public String getApiKeyForUser(String username) {
         User user =
                 findByUsernameIgnoreCase(username)
@@ -581,9 +583,10 @@ public class UserService implements UserServiceInterface {
                         .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
-        notAllowedUserList.add("ALL_USERS".toLowerCase());
+        notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
         notAllowedUserList.add("anonymoususer");
-        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
+        String normalizedUsername = username.toLowerCase(Locale.ROOT);
+        boolean notAllowedUser = notAllowedUserList.contains(normalizedUsername);
         return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
 
@@ -631,6 +634,7 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public String getCurrentUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -717,6 +721,7 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public long getTotalUsersCount() {
         // Count all users in the database
         long userCount = userRepository.count();

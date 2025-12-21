@@ -14,32 +14,34 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
-import stirling.software.common.annotations.AutoJobPostMapping;
-import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralFormCopyUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@GeneralApi
+@RestController
+@RequestMapping("/api/v1/general")
+@Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
 @Slf4j
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(
-            value = "/multi-page-layout",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @StandardPdfResponse
+    @PostMapping(value = "/multi-page-layout", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
@@ -55,7 +57,11 @@ public class MultiPageLayoutController {
         if (pagesPerSheet != 2
                 && pagesPerSheet != 3
                 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-            throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "pagesPerSheet",
+                    "must be 2, 3 or a perfect square");
         }
 
         int cols =
@@ -135,6 +141,26 @@ public class MultiPageLayoutController {
         }
 
         contentStream.close();
+
+        // If any source page is rotated, skip form copying/transformation entirely
+        boolean hasRotation = GeneralFormCopyUtils.hasAnyRotatedPage(sourceDocument);
+        if (hasRotation) {
+            log.info("Source document has rotated pages; skipping form field copying.");
+        } else {
+            try {
+                GeneralFormCopyUtils.copyAndTransformFormFields(
+                        sourceDocument,
+                        newDocument,
+                        totalPages,
+                        pagesPerSheet,
+                        cols,
+                        rows,
+                        cellWidth,
+                        cellHeight);
+            } catch (Exception e) {
+                log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
+            }
+        }
 
         sourceDocument.close();
 

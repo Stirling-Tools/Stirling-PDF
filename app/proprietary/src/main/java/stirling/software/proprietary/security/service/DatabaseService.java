@@ -7,7 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.FileInfo;
+import stirling.software.proprietary.security.database.DatabaseNotificationServiceInterface;
 import stirling.software.proprietary.security.model.exception.BackupNotFoundException;
 
 @Slf4j
@@ -44,12 +48,16 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private final DatabaseNotificationServiceInterface backupNotificationService;
 
     public DatabaseService(
-            ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
+            ApplicationProperties.Datasource datasourceProps,
+            DataSource dataSource,
+            DatabaseNotificationServiceInterface backupNotificationService) {
         this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.backupNotificationService = backupNotificationService;
         moveBackupFiles();
     }
 
@@ -172,6 +180,8 @@ public class DatabaseService implements DatabaseServiceInterface {
     public boolean importDatabaseFromUI(String fileName) {
         try {
             importDatabaseFromUI(getBackupFilePath(fileName));
+            backupNotificationService.notifyImportsSuccess(
+                    "Database import completed", "Import file: " + fileName);
             return true;
         } catch (IOException e) {
             log.error(
@@ -179,6 +189,9 @@ public class DatabaseService implements DatabaseServiceInterface {
                     fileName,
                     e.getMessage(),
                     e.getCause());
+            backupNotificationService.notifyImportsFailure(
+                    "Database import failed",
+                    "Import file: " + fileName + " Message: " + e.getMessage());
             return false;
         }
     }
@@ -219,14 +232,57 @@ public class DatabaseService implements DatabaseServiceInterface {
                     PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, insertOutputFilePath.toString());
                 stmt.execute();
+                backupNotificationService.notifyBackupsSuccess(
+                        "Database backup export completed",
+                        "Backup file: " + insertOutputFilePath.getFileName());
             } catch (SQLException e) {
                 log.error("Error during database export: {}", e.getMessage(), e);
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup export failed",
+                        "Backup file: "
+                                + insertOutputFilePath.getFileName()
+                                + " Message: "
+                                + e.getMessage());
             } catch (CannotReadScriptException e) {
                 log.error("Error during database export: File {} not found", insertOutputFilePath);
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup export failed",
+                        "Error during database export: File "
+                                + insertOutputFilePath.getFileName()
+                                + " not found. Message: "
+                                + e.getMessage());
             }
 
             log.info("Database export completed: {}", insertOutputFilePath);
+            verifyBackup(insertOutputFilePath);
         }
+    }
+
+    private boolean verifyBackup(Path backupPath) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] content = Files.readAllBytes(backupPath);
+            String checksum = bytesToHex(digest.digest(content));
+            log.info("Checksum for {}: {}", backupPath.getFileName(), checksum);
+
+            try (Connection conn = DriverManager.getConnection("jdbc:h2:mem:backupVerify");
+                    PreparedStatement stmt = conn.prepareStatement("RUNSCRIPT FROM ?")) {
+                stmt.setString(1, backupPath.toString());
+                stmt.execute();
+            }
+            return true;
+        } catch (IOException | NoSuchAlgorithmException | SQLException e) {
+            log.error("Backup verification failed for {}: {}", backupPath, e.getMessage(), e);
+        }
+        return false;
+    }
+
+    private String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            hexString.append(String.format("%02x", b));
+        }
+        return hexString.toString();
     }
 
     @Override
@@ -384,6 +440,12 @@ public class DatabaseService implements DatabaseServiceInterface {
      */
     private void executeDatabaseScript(Path scriptPath) {
         if (isH2Database()) {
+
+            if (!verifyBackup(scriptPath)) {
+                log.error("Backup verification failed for: {}", scriptPath);
+                throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
+            }
+
             String query = "RUNSCRIPT from ?;";
 
             try (Connection conn = dataSource.getConnection();

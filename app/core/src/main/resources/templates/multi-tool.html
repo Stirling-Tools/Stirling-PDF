@@ -142,10 +142,15 @@
       split: '[[#{multiTool.split}]]',
       addFile: '[[#{multiTool.addFile}]]',
       insertPageBreak: '[[#{multiTool.insertPageBreak}]]',
+      duplicate: '[[#{multiTool.duplicate}]]',
       dragDropMessage: '[[#{multiTool.dragDropMessage}]]',
       undo: '[[#{multiTool.undo}]]',
       redo: '[[#{multiTool.redo}]]',
     };
+
+    window.multiTool = Object.assign({}, window.multiTool, {
+      svgNotSupported: '[[#{multiTool.svgNotSupported}]]',
+    });
 
     window.decrypt = {
       passwordPrompt: '[[#{decrypt.passwordPrompt}]]',

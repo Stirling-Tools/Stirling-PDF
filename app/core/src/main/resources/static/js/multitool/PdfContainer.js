@@ -8,6 +8,55 @@ import { AddFilesCommand } from './commands/add-page.js';
 import { DecryptFile } from '../DecryptFiles.js';
 import { CommandSequence } from './commands/commands-sequence.js';
 
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
+const isSvgFile = (file) => {
+  if (!file) return false;
+  const type = (file.type || '').toLowerCase();
+  if (type === 'image/svg+xml') {
+    return true;
+  }
+  const name = (file.name || '').toLowerCase();
+  return name.endsWith('.svg');
+};
+
+const partitionSvgFiles = (files = []) => {
+  const allowed = [];
+  const rejected = [];
+
+  files.forEach((file) => {
+    if (isSvgFile(file)) {
+      rejected.push(file);
+    } else {
+      allowed.push(file);
+    }
+  });
+
+  return { allowed, rejected };
+};
+
+const notifySvgUnsupported = (files = []) => {
+  if (!files.length) return;
+  if (!window.location.pathname?.includes('multi-tool')) return;
+
+  const message = window.multiTool?.svgNotSupported ||
+    'SVG files are not supported in Multi Tool and were ignored.';
+  const names = files
+    .map((file) => file?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  if (names) {
+    alert(`${message}\n${names}`);
+  } else {
+    alert(message);
+  }
+};
+
 class PdfContainer {
   fileName;
   pagesContainer;
@@ -30,6 +79,7 @@ class PdfContainer {
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
     this.addImageFile = this.addImageFile.bind(this);
+    this.duplicatePage = this.duplicatePage.bind(this);
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
@@ -56,6 +106,7 @@ class PdfContainer {
         rotateElement: this.rotateElement,
         updateFilename: this.updateFilename,
         deleteSelected: this.deleteSelected,
+        duplicatePage: this.duplicatePage,
       });
     });
 
@@ -154,19 +205,31 @@ class PdfContainer {
     return movePageCommand;
   }
 
-  async addFiles(element) {
-    let addFilesCommand = new AddFilesCommand(
+  /**
+   * Adds files or a single blank page (when blank=true) near an anchor element.
+   * @param {HTMLElement|null} element - Anchor element (insert before its nextSibling).
+   * @param {boolean} [blank=false] - When true, insert a single blank page.
+   */
+  async addFiles(element, blank = false) {
+    // Choose the action: real file picker or blank page generator.
+    const action = blank
+      ? async (nextSiblingElement) => {
+          // Create exactly one blank page and return the created elements array.
+          const pages = await this.addFilesBlank(nextSiblingElement, []);
+          return pages; // array of inserted elements
+        }
+      : this.addFilesAction.bind(this);
+
+    const addFilesCommand = new AddFilesCommand(
       element,
       window.selectedPages,
-      this.addFilesAction.bind(this),
+      action,
       this.pagesContainer
     );
 
     await addFilesCommand.execute();
-
     this.undoManager.pushUndoClearRedo(addFilesCommand);
     window.tooltipSetup();
-
   }
 
   async addFilesAction(nextSiblingElement) {
@@ -180,10 +243,18 @@ class PdfContainer {
       input.onchange = async (e) => {
         const files = e.target.files;
         if (files.length > 0) {
-          pages = await this.addFilesFromFiles(files, nextSiblingElement, pages);
-          this.updateFilename(files[0].name);
+          const {
+            pages: updatedPages,
+            acceptedFileCount,
+          } = await this.addFilesFromFiles(files, nextSiblingElement, pages);
 
-          if(window.selectPage){
+          pages = updatedPages;
+
+          if (acceptedFileCount > 0) {
+            this.updateFilename();
+          }
+
+          if (window.selectPage && acceptedFileCount > 0) {
             this.showButton(document.getElementById('select-pages-container'), true);
           }
         }
@@ -196,11 +267,17 @@ class PdfContainer {
 
   async handleDroppedFiles(files, nextSiblingElement = null) {
     if (files.length > 0) {
-      const pages = await this.addFilesFromFiles(files, nextSiblingElement, []);
-      this.updateFilename(files[0]?.name || 'untitled');
+      const {
+        pages,
+        acceptedFileCount,
+      } = await this.addFilesFromFiles(files, nextSiblingElement, []);
 
-      if(window.selectPage) {
-        this.showButton(document.getElementById('select-pages-container'), true);
+      if (acceptedFileCount > 0) {
+        this.updateFilename();
+
+        if (window.selectPage) {
+          this.showButton(document.getElementById('select-pages-container'), true);
+        }
       }
 
       return pages;
@@ -209,14 +286,24 @@ class PdfContainer {
 
   async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
-    for (var i = 0; i < files.length; i++) {
+    const fileArray = Array.from(files || []);
+    const { allowed: allowedFiles, rejected: rejectedSvgFiles } = partitionSvgFiles(fileArray);
+
+    if (allowedFiles.length > 0) {
+      this.fileName = allowedFiles[0].name || 'untitled';
+    }
+
+    let acceptedFileCount = 0;
+
+    for (let i = 0; i < allowedFiles.length; i++) {
+      const file = allowedFiles[i];
       const startTime = Date.now();
       let processingTime,
         errorMessage = null,
         pageCount = 0;
 
       try {
-        let decryptedFile = files[i];
+        let decryptedFile = file;
         let isEncrypted = false;
         let requiresPassword = false;
         await this.decryptFile
@@ -245,18 +332,27 @@ class PdfContainer {
 
         processingTime = Date.now() - startTime;
         this.captureFileProcessingEvent(true, decryptedFile, processingTime, null, pageCount);
+        acceptedFileCount++;
       } catch (error) {
         processingTime = Date.now() - startTime;
         errorMessage = error.message || 'Unknown error';
-        this.captureFileProcessingEvent(false, files[i], processingTime, errorMessage, pageCount);
+        this.captureFileProcessingEvent(false, file, processingTime, errorMessage, pageCount);
+
+        if (isSvgFile(file)) {
+          rejectedSvgFiles.push(file);
+        }
       }
+    }
+
+    if (rejectedSvgFiles.length > 0) {
+      notifySvgUnsupported(rejectedSvgFiles);
     }
 
     document.querySelectorAll('.enable-on-file').forEach((element) => {
       element.disabled = false;
     });
 
-    return pages;
+    return { pages, acceptedFileCount };
   }
 
   captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
@@ -329,12 +425,20 @@ class PdfContainer {
   }
 
   async addImageFile(file, nextSiblingElement, pages) {
+    // Ensure the provided file is a safe image type to prevent DOM XSS when
+    // rendering user-supplied content. Reject SVG and non-image files that could
+    // contain executable scripts.
+    if (!(file instanceof File) || !file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      throw new Error('Invalid image file');
+    }
     const div = document.createElement('div');
     div.classList.add('page-container');
 
-    var img = document.createElement('img');
+    const img = document.createElement('img');
     img.classList.add('page-image');
-    img.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+    img.onload = () => URL.revokeObjectURL(objectUrl);
     div.appendChild(img);
 
     this.pdfAdapters.forEach((adapter) => {
@@ -349,6 +453,30 @@ class PdfContainer {
     return pages;
   }
 
+  duplicatePage(element) {
+    const clone = document.createElement('div');
+    clone.classList.add('page-container');
+
+    const originalImg = element.querySelector('img');
+    const img = document.createElement('img');
+    img.classList.add('page-image');
+    img.src = originalImg.src;
+    img.pageIdx = originalImg.pageIdx;
+    img.rend = originalImg.rend;
+    img.doc = originalImg.doc;
+    img.style.rotate = originalImg.style.rotate;
+    clone.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter?.adapt?.(clone);
+    });
+
+    const nextSibling = element.nextSibling;
+    this.pagesContainer.insertBefore(clone, nextSibling);
+    this.updatePageNumbersAndCheckboxes();
+    return clone;
+  }
+
   async loadFile(file) {
     var objectUrl = URL.createObjectURL(file);
     var pdfDocument = await this.toPdfLib(objectUrl);
@@ -357,8 +485,11 @@ class PdfContainer {
   }
 
   async toRenderer(objectUrl) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-    const pdf = await pdfjsLib.getDocument(objectUrl).promise;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+    const pdf = await pdfjsLib.getDocument({
+      url: objectUrl,
+      ...PDFJS_DEFAULT_OPTIONS,
+    }).promise;
     return {
       document: pdf,
       pageCount: pdf.numPages,
@@ -609,7 +740,7 @@ class PdfContainer {
         this.showButton(selectIcon, true);
       }
     } else {
-      console.log("Page Select off. Hidding buttons");
+      console.log("Page Select off. Hiding buttons");
       this.showButton(selectIcon, false);
       this.showButton(deselectIcon, false);
     }
@@ -703,20 +834,48 @@ class PdfContainer {
   async exportPdf(selected) {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll('.page-container'); // Select all .page-container elements
+
+    const docPageMap = new Map();
+
+    pageContainers.forEach((container, index) => {
+      if (selected && !window.selectedPages.includes(index + 1)) {
+        return;
+      }
+
+      const img = container.querySelector('img');
+      if (!img?.doc) {
+        return;
+      }
+
+      let entry = docPageMap.get(img.doc);
+      if (!entry) {
+        entry = { indices: [], copiedPages: [], cursor: 0 };
+        docPageMap.set(img.doc, entry);
+      }
+
+      entry.indices.push(img.pageIdx);
+    });
+
+    for (const [doc, entry] of docPageMap.entries()) {
+      entry.copiedPages = await pdfDoc.copyPages(doc, entry.indices);
+    }
+
     for (var i = 0; i < pageContainers.length; i++) {
       if (!selected || window.selectedPages.includes(i + 1)) {
         const img = pageContainers[i].querySelector('img'); // Find the img element within each .page-container
         if (!img) continue;
         let page;
         if (img.doc) {
-          const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
-          page = pages[0];
+          const entry = docPageMap.get(img.doc);
+          page = entry.copiedPages[entry.cursor++];
           pdfDoc.addPage(page);
         } else {
           page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
-          const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
+
+          // NEU: Bildbytes robust ermitteln (Canvas für blob:, fetch für http/https)
+          const { bytes: imageBytes, forcedType } = await bytesFromImageElement(img);
           const uint8Array = new Uint8Array(imageBytes);
-          const imageType = detectImageType(uint8Array);
+          const imageType = forcedType || detectImageType(uint8Array);
 
           let image;
           switch (imageType) {
@@ -939,6 +1098,36 @@ class PdfContainer {
       checkbox.checked = window.selectedPages.includes(pageNumber);
     });
   }
+}
+
+async function bytesFromImageElement(img) {
+  // Handle Blob URLs without using fetch()
+  if (img.src.startsWith('blob:')) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Canvas toBlob() failed');
+    const buf = await blob.arrayBuffer();
+    return { bytes: buf, forcedType: 'PNG' }; // Canvas always generates PNG
+  }
+
+  // Fetch http(s)/data:-URLs normally (if necessary)
+  const res = await fetch(img.src, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status} beim Laden von ${img.src}`);
+  const buf = await res.arrayBuffer();
+
+  // Use Content-Type as a hint (optional)
+  let forcedType = null;
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('png')) forcedType = 'PNG';
+  else if (ct.includes('jpeg') || ct.includes('jpg')) forcedType = 'JPEG';
+  else if (ct.includes('tiff')) forcedType = 'TIFF';
+  else if (ct.includes('gif')) forcedType = 'GIF';
+
+  return { bytes: buf, forcedType };
 }
 
 function detectImageType(uint8Array) {

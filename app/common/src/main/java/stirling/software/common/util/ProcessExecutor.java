@@ -102,6 +102,11 @@ public class ProcessExecutor {
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
                                 case CFF_CONVERTER -> 1;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getFfmpegSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -162,6 +167,11 @@ public class ProcessExecutor {
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
                                 case CFF_CONVERTER -> 5L;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getFfmpegTimeoutMinutes();
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
@@ -316,7 +326,8 @@ public class ProcessExecutor {
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
-        CFF_CONVERTER
+        CFF_CONVERTER,
+        FFMPEG
     }
 
     @Setter

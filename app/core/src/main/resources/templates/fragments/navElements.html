@@ -54,6 +54,9 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('cbr-to-pdf', 'auto_stories', 'home.cbrToPdf.title', 'home.cbrToPdf.desc', 'cbrToPdf.tags', 'convertto')}">
       </div>
       <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('ebook-to-pdf', 'menu_book', 'home.ebookToPdf.title', 'home.ebookToPdf.desc', 'ebookToPdf.tags', 'convertto')}">
+      </div>
+      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('file-to-pdf', 'draft', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags', 'convertto')}">
       </div>
       <div
@@ -67,6 +70,9 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('eml-to-pdf', 'email', 'home.EMLToPDF.title', 'home.EMLToPDF.desc', 'EMLToPDF.tags', 'convertto')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('vector-to-pdf', 'picture_as_pdf', 'home.vectorToPdf.title', 'home.vectorToPdf.desc', 'vectorToPdf.tags', 'convertto')}">
       </div>
     </div>
   </div>
@@ -82,6 +88,9 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-cbr', 'auto_stories', 'home.pdfToCbr.title', 'home.pdfToCbr.desc', 'pdfToCbr.tags', 'convert')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-epub', 'menu_book', 'home.pdfToEpub.title', 'home.pdfToEpub.desc', 'pdfToEpub.tags', 'convert')}">
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-pdfa', 'picture_as_pdf', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags', 'convert')}">
@@ -107,6 +116,12 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-markdown', 'markdown_copy', 'home.PDFToMarkdown.title', 'home.PDFToMarkdown.desc', 'PDFToMarkdown.tags', 'convert')}">
       </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-vector', 'stroke_full', 'home.pdfToVector.title', 'home.pdfToVector.desc', 'pdfToVector.tags', 'convert')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-video', 'movie', 'home.PDFToVideo.title', 'home.PDFToVideo.desc', 'PDFToVideo.tags', 'convert')}">
+      </div>
 
     </div>
   </div>
@@ -124,6 +139,9 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('cbr-to-pdf', 'auto_stories', 'home.cbrToPdf.title', 'home.cbrToPdf.desc', 'cbrToPdf.tags', 'convertto')}">
       </div>
       <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('ebook-to-pdf', 'menu_book', 'home.ebookToPdf.title', 'home.ebookToPdf.desc', 'ebookToPdf.tags', 'convertto')}">
+      </div>
+      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('file-to-pdf', 'draft', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags', 'convertto')}">
       </div>
       <div
@@ -135,6 +153,9 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convertto')}">
       </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('vector-to-pdf', 'picture_as_pdf', 'home.vectorToPdf.title', 'home.vectorToPdf.desc', 'vectorToPdf.tags', 'convertto')}">
+      </div>
     </div>
     <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
     </div>
@@ -144,6 +165,9 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-pdfa', 'picture_as_pdf', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags', 'convert')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-epub', 'menu_book', 'home.pdfToEpub.title', 'home.pdfToEpub.desc', 'pdfToEpub.tags', 'convert')}">
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-word', 'description', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags', 'convert')}">
@@ -162,6 +186,12 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'tableExtraxt.tags', 'convert')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-vector', 'stroke_full', 'home.pdfToVector.title', 'home.pdfToVector.desc', 'pdfToVector.tags', 'convert')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-video', 'movie', 'home.PDFToVideo.title', 'home.PDFToVideo.desc', 'PDFToVideo.tags', 'convert')}">
       </div>
     </div>
   </div>
@@ -257,6 +287,9 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('extract-attachments', 'folder_zip', 'home.extractAttachments.title', 'home.extractAttachments.desc', 'extractAttachments.tags', 'other')}">
       </div>
     </div>
   </div>

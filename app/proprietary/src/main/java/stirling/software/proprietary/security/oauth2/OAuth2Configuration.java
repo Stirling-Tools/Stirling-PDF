@@ -7,6 +7,7 @@ import static stirling.software.common.util.ValidationUtils.isStringEmpty;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -197,7 +198,7 @@ public class OAuth2Configuration {
 
         String name = oauth.getProvider();
         String firstChar = String.valueOf(name.charAt(0));
-        String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase());
+        String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
 
         Provider oidcProvider =
                 new Provider(
@@ -207,7 +208,8 @@ public class OAuth2Configuration {
                         oauth.getClientId(),
                         oauth.getClientSecret(),
                         oauth.getScopes(),
-                        UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),
+                        UsernameAttribute.valueOf(
+                                oauth.getUseAsUsername().toUpperCase(Locale.ROOT)),
                         null,
                         null,
                         null);

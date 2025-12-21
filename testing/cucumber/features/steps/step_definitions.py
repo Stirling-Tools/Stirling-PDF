@@ -321,7 +321,15 @@ def step_send_api_request(context, endpoint):
 
     form_data = []
     for key, value in context.request_data.items():
-        form_data.append((key, (None, value)))
+        # Handle list parameters (like 'languages') - send multiple form fields
+        # Split comma-separated values or treat single values as single-item lists
+        if key == "languages":
+            # Split by comma if present, otherwise treat as single value
+            values = [v.strip() for v in value.split(",")] if "," in value else [value]
+            for val in values:
+                form_data.append((key, (None, val)))
+        else:
+            form_data.append((key, (None, value)))
 
     for key, file in files.items():
         mime_type, _ = mimetypes.guess_type(file.name)
@@ -385,9 +393,11 @@ def step_check_response_status_code(context, status_code):
 @then('the response should contain error message "{message}"')
 def step_check_response_error_message(context, message):
     response_json = context.response.json()
+    # Check for error message in both "error" (old format) and "detail" (RFC 7807 ProblemDetail)
+    error_message = response_json.get("error") or response_json.get("detail")
     assert (
-        response_json.get("error") == message
-    ), f"Expected error message '{message}' but got '{response_json.get('error')}'"
+        error_message == message
+    ), f"Expected error message '{message}' but got '{error_message}'"
 
 
 @then('the response PDF metadata should include "{metadata_key}" as "{metadata_value}"')
