@@ -17,6 +17,7 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -142,6 +143,9 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx-1',
+    });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
     });
@@ -209,6 +213,9 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx-1',
     });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
@@ -358,6 +365,19 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertToPdfaSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to PDF/X options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfx' && (
+        <>
+          <Divider />
+          <ConvertToPdfxSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}

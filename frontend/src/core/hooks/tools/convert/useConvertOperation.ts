@@ -17,8 +17,8 @@ export const shouldProcessFilesSeparately = (
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
-    // PDF to PDF/A conversions (each PDF should be processed separately)
-    (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
+    // PDF to PDF/A and PDF/X conversions (each PDF should be processed separately)
+    (parameters.fromExtension === 'pdf' && (parameters.toExtension === 'pdfa' || parameters.toExtension === 'pdfx')) ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
     // PDF to office format conversions (each PDF should generate its own office file)
@@ -43,7 +43,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, pdfxOptions, cbzOptions, cbzOutputOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -69,6 +69,9 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("includeAllRecipients", emailOptions.includeAllRecipients.toString());
   } else if (fromExtension === 'pdf' && toExtension === 'pdfa') {
     formData.append("outputFormat", pdfaOptions.outputFormat);
+  } else if (fromExtension === 'pdf' && toExtension === 'pdfx') {
+    // Use PDF/A endpoint with PDF/X format parameter
+    formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx-1');
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
   } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
@@ -89,7 +92,8 @@ export const createFileFromResponse = (
 ): File => {
   const originalName = originalFileName.split('.')[0];
 
-  if (targetExtension == 'pdfa') {
+  // Map both pdfa and pdfx to pdf since they both result in PDF files
+  if (targetExtension == 'pdfa' || targetExtension == 'pdfx') {
     targetExtension = 'pdf';
   }
 
@@ -104,14 +108,21 @@ export const convertProcessor = async (
   selectedFiles: File[]
 ): Promise<CustomProcessorResult> => {
   const processedFiles: File[] = [];
-  const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
+
+  // Map PDF/X to use PDF/A endpoint
+  const actualToExtension = parameters.toExtension === 'pdfx' ? 'pdfa' : parameters.toExtension;
+  const endpoint = getEndpointUrl(parameters.fromExtension, actualToExtension);
 
   if (!endpoint) {
     throw new Error('Unsupported conversion format');
   }
 
   // Convert-specific routing logic: decide batch vs individual processing
-  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, parameters);
+  // For PDF/X, we want to treat it similar to PDF/A (separate processing)
+  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, {
+    ...parameters,
+    toExtension: actualToExtension  // Use the mapped extension for decision logic
+  });
 
   if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
@@ -120,7 +131,7 @@ export const convertProcessor = async (
         const formData = buildConvertFormData(parameters, [file]);
         const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
-        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, actualToExtension === 'pdfa' ? 'pdfx' : parameters.toExtension);
 
         processedFiles.push(convertedFile);
       } catch (error) {
@@ -136,7 +147,7 @@ export const convertProcessor = async (
       ? selectedFiles[0].name
       : 'converted_files';
 
-    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
+    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, actualToExtension === 'pdfa' ? 'pdfx' : parameters.toExtension);
     processedFiles.push(convertedFile);
   }
 
