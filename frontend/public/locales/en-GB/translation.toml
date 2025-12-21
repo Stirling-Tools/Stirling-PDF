@@ -2958,6 +2958,7 @@ header = "Crop PDF"
 submit = "Apply Crop"
 noFileSelected = "Select a PDF file to begin cropping"
 reset = "Reset to full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Crop Area Selection"
