@@ -2384,6 +2384,11 @@ note = "Flattening removes interactive elements from the PDF, making them non-ed
 label = "Flatten only forms"
 desc = "Only flatten form fields, leaving other interactive elements intact"
 
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
+
 [flatten.results]
 title = "Flatten Results"
 
