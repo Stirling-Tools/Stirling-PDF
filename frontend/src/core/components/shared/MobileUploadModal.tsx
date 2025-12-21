@@ -1,11 +1,12 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { Modal, Stack, Text, Badge, Box, Group, Alert } from '@mantine/core';
+import { Modal, Stack, Text, Badge, Box, Group, Alert, Progress } from '@mantine/core';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
-import { useFrontendUrl } from '@app/hooks/useFrontendUrl';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { withBasePath } from '@app/constants/app';
 
@@ -24,6 +25,13 @@ function generateSessionId(): string {
   });
 }
 
+interface SessionInfo {
+  sessionId: string;
+  createdAt: number;
+  expiresAt: number;
+  timeoutMs: number;
+}
+
 /**
  * MobileUploadModal
  *
@@ -32,17 +40,53 @@ function generateSessionId(): string {
  */
 export default function MobileUploadModal({ opened, onClose, onFilesReceived }: MobileUploadModalProps) {
   const { t } = useTranslation();
-  const frontendUrl = useFrontendUrl();
+  const { config } = useAppConfig();
 
-  const [sessionId] = useState(() => generateSessionId());
+  const [sessionId, setSessionId] = useState(() => generateSessionId());
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [filesReceived, setFilesReceived] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [showExpiryWarning, setShowExpiryWarning] = useState(false);
   const pollIntervalRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<number | null>(null);
   const processedFiles = useRef<Set<string>>(new Set());
 
   // Use configured frontendUrl if set, otherwise use current origin
   // Combine with base path and mobile-scanner route
+  const frontendUrl = config?.frontendUrl || window.location.origin;
   const mobileUrl = `${frontendUrl}${withBasePath('/mobile-scanner')}?session=${sessionId}`;
+
+  // Create session on backend
+  const createSession = useCallback(async (newSessionId: string) => {
+    try {
+      const response = await fetch(`/api/v1/mobile-scanner/create-session/${newSessionId}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+
+      const data = await response.json();
+      setSessionInfo(data);
+      setError(null);
+      console.log('Session created:', data);
+    } catch (err) {
+      console.error('Failed to create session:', err);
+      setError(t('mobileUpload.sessionCreateError', 'Failed to create session'));
+    }
+  }, [t]);
+
+  // Regenerate session (when expired or warned)
+  const regenerateSession = useCallback(() => {
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+    setShowExpiryWarning(false);
+    setFilesReceived(0);
+    processedFiles.current.clear();
+    createSession(newSessionId);
+  }, [createSession]);
 
   const pollForFiles = useCallback(async () => {
     if (!opened) return;
@@ -96,13 +140,26 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
     }
   }, [opened, sessionId, onFilesReceived, t]);
 
-  // Start polling when modal opens
+  // Create session when modal opens
   useEffect(() => {
     if (opened) {
+      createSession(sessionId);
       setFilesReceived(0);
       setError(null);
+      setShowExpiryWarning(false);
       processedFiles.current.clear();
+    } else {
+      // Clean up session when modal closes
+      if (sessionId) {
+        fetch(`/api/v1/mobile-scanner/session/${sessionId}`, { method: 'DELETE' })
+          .catch(err => console.warn('Failed to cleanup session on close:', err));
+      }
+    }
+  }, [opened]); // Only run when opened changes
 
+  // Start polling for files when modal opens
+  useEffect(() => {
+    if (opened && sessionInfo) {
       // Poll every 2 seconds
       pollIntervalRef.current = window.setInterval(pollForFiles, 2000);
 
@@ -121,7 +178,40 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [opened, pollForFiles]);
+  }, [opened, sessionInfo, pollForFiles]);
+
+  // Session timeout timer
+  useEffect(() => {
+    if (!opened || !sessionInfo) return;
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = sessionInfo.expiresAt - now;
+
+      if (remaining <= 0) {
+        // Session expired - regenerate
+        setShowExpiryWarning(false);
+        regenerateSession();
+      } else if (remaining <= 60000 && !showExpiryWarning) {
+        // Less than 1 minute remaining - show warning
+        setShowExpiryWarning(true);
+      }
+
+      setTimeRemaining(Math.max(0, remaining));
+    };
+
+    // Update immediately
+    updateTimer();
+
+    // Update every second
+    timerIntervalRef.current = window.setInterval(updateTimer, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [opened, sessionInfo, showExpiryWarning, regenerateSession]);
 
   return (
     <Modal
@@ -130,7 +220,14 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       title={t('mobileUpload.title', 'Upload from Mobile')}
       centered
       size="md"
+      radius="lg"
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+      overlayProps={{ opacity: 0.35, blur: 2 }}
+      styles={{
+        body: {
+          paddingTop: '1.5rem',
+        },
+      }}
     >
       <Stack gap="md">
         <Alert
@@ -145,6 +242,22 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
             )}
           </Text>
         </Alert>
+
+        {showExpiryWarning && timeRemaining !== null && (
+          <Alert
+            icon={<WarningRoundedIcon style={{ fontSize: '1rem' }} />}
+            title={t('mobileUpload.expiryWarning', 'Session Expiring Soon')}
+            color="orange"
+          >
+            <Text size="sm">
+              {t(
+                'mobileUpload.expiryWarningMessage',
+                'This QR code will expire in {{seconds}} seconds. A new code will be generated automatically.',
+                { seconds: Math.ceil(timeRemaining / 1000) }
+              )}
+            </Text>
+          </Alert>
+        )}
 
         {error && (
           <Alert
@@ -167,15 +280,6 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           >
             <QRCodeSVG value={mobileUrl} size={256} level="H" includeMargin />
           </Box>
-
-          <Group gap="xs">
-            <Text size="sm" c="dimmed">
-              {t('mobileUpload.sessionId', 'Session ID')}:
-            </Text>
-            <Badge variant="light" color="blue" size="lg">
-              {sessionId}
-            </Badge>
-          </Group>
 
           {filesReceived > 0 && (
             <Badge variant="filled" color="green" size="lg" leftSection={<CheckRoundedIcon style={{ fontSize: '1rem' }} />}>

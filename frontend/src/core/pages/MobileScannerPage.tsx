@@ -49,6 +49,10 @@ export default function MobileScannerPage() {
   const [openCvReady, setOpenCvReady] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
+  const [sessionValid, setSessionValid] = useState<boolean | null>(null); // null = checking, true = valid, false = invalid
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState<string>('Initializing...');
+  const [cameraReady, setCameraReady] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,6 +65,48 @@ export default function MobileScannerPage() {
   // Detection resolution - extremely low for mobile performance
   const DETECTION_WIDTH = 160; // Ultra-low for real-time mobile detection
 
+  // Validate session on page load
+  useEffect(() => {
+    const validateSession = async () => {
+      setLoadingStatus('Validating session...');
+      if (!sessionId) {
+        setSessionValid(false);
+        setSessionError(t('mobileScanner.noSessionMessage', 'Session not found. Please try again.'));
+        setLoadingStatus('Session validation failed');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/v1/mobile-scanner/validate-session/${sessionId}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.valid) {
+            setSessionValid(true);
+            setSessionError(null);
+            // Don't set status here - let camera/detection effects control status from now on
+            console.log('Session validated successfully:', data);
+          } else {
+            setSessionValid(false);
+            setSessionError(t('mobileScanner.sessionExpired', 'This session has expired. Please refresh and try again.'));
+            setLoadingStatus('Session expired ✗');
+          }
+        } else {
+          setSessionValid(false);
+          setSessionError(t('mobileScanner.sessionNotFound', 'Session not found. Please refresh and try again.'));
+          setLoadingStatus('Session not found ✗');
+        }
+      } catch (err) {
+        console.error('Failed to validate session:', err);
+        setSessionValid(false);
+        setSessionError(t('mobileScanner.sessionValidationError', 'Unable to verify session. Please try again.'));
+        setLoadingStatus('Session validation error: ' + (err as Error).message);
+      }
+    };
+
+    validateSession();
+  }, [sessionId, t]);
+
   // Initialize jscanify scanner and wait for OpenCV (loaded via script tags in index.html)
   useEffect(() => {
     let retryCount = 0;
@@ -72,11 +118,14 @@ export default function MobileScannerPage() {
         retryCount++;
         if (retryCount < MAX_RETRIES) {
           if (retryCount % 10 === 1) {
+            setLoadingStatus(`Loading OpenCV... (${retryCount}/${MAX_RETRIES})`);
             console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for OpenCV to load...`);
           }
           setTimeout(initScanner, 100);
         } else {
-          console.error('OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.');
+          const error = 'OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.';
+          setLoadingStatus('OpenCV load failed ✗');
+          console.error(error);
         }
         return;
       }
@@ -85,11 +134,14 @@ export default function MobileScannerPage() {
         retryCount++;
         if (retryCount < MAX_RETRIES) {
           if (retryCount % 10 === 1) {
+            setLoadingStatus(`Loading jscanify... (${retryCount}/${MAX_RETRIES})`);
             console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for jscanify to load...`);
           }
           setTimeout(initScanner, 100);
         } else {
-          console.error('jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.');
+          const error = 'jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.';
+          setLoadingStatus('jscanify load failed ✗');
+          console.error(error);
         }
         return;
       }
@@ -97,22 +149,32 @@ export default function MobileScannerPage() {
       try {
         scannerRef.current = new window.jscanify();
         setOpenCvReady(true);
+        // Don't set status here - let camera/detection effects control status from now on
         console.log('✓ jscanify initialized with OpenCV');
       } catch (err) {
+        const error = 'Failed to initialize jscanify: ' + (err as Error).message;
+        setLoadingStatus('jscanify init failed ✗');
         console.error('Failed to initialize jscanify:', err);
       }
     };
 
     // Start initialization
+    setLoadingStatus('Loading OpenCV...');
     initScanner();
   }, []);
 
   // Initialize camera
   useEffect(() => {
+    console.log(`[Mobile Scanner] Camera effect triggered: activeTab=${activeTab}, cameraError=${cameraError}, currentPreview=${currentPreview}`);
+
     if (activeTab === 'camera' && !cameraError && !currentPreview) {
+      console.log('[Mobile Scanner] Camera effect: Starting camera initialization');
+
       // Check if mediaDevices API is available (requires HTTPS or localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.error('MediaDevices API not available - requires HTTPS or localhost');
+        const error = 'MediaDevices API not available - requires HTTPS or localhost';
+        console.error(error);
+        setLoadingStatus('Camera API not available ✗');
         setCameraError(
           t(
             'mobileScanner.httpsRequired',
@@ -123,6 +185,9 @@ export default function MobileScannerPage() {
         return;
       }
 
+      setLoadingStatus('Initializing camera...');
+
+      console.log('[Mobile Scanner] Requesting camera permission...');
       navigator.mediaDevices
         .getUserMedia({
           video: {
@@ -134,14 +199,34 @@ export default function MobileScannerPage() {
           audio: false,
         })
         .then(async (stream) => {
+          console.log('[Mobile Scanner] Camera permission granted, stream received');
           streamRef.current = stream;
           if (videoRef.current) {
-            videoRef.current.srcObject = stream;
+            const video = videoRef.current;
+            video.srcObject = stream;
 
-            // Log actual resolution we got
+            // Wait for video metadata to load before marking camera as ready
+            const handleLoadedMetadata = () => {
+              console.log('[Mobile Scanner] Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+              setLoadingStatus(`Camera ready: ${video.videoWidth}x${video.videoHeight} ✓`);
+
+              // Signal that camera is ready - this will trigger detection effect
+              console.log('[Mobile Scanner] Setting cameraReady = true');
+              setCameraReady(true);
+            };
+
+            // Check if metadata is already loaded
+            if (video.readyState >= 1) { // HAVE_METADATA or greater
+              handleLoadedMetadata();
+            } else {
+              // Wait for loadedmetadata event
+              video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+            }
+
+            // Log actual resolution we got from stream settings
             const videoTrack = stream.getVideoTracks()[0];
             const settings = videoTrack.getSettings();
-            console.log('Camera resolution:', settings.width, 'x', settings.height);
+            console.log('[Mobile Scanner] Camera stream settings:', settings.width, 'x', settings.height);
 
             // Configure camera capabilities for document scanning
             try {
@@ -177,6 +262,7 @@ export default function MobileScannerPage() {
         })
         .catch((err) => {
           console.error('Camera error:', err);
+          setLoadingStatus('Camera access denied ✗');
           setCameraError(t('mobileScanner.cameraAccessDenied', 'Camera access denied. Please enable camera access.'));
           // Auto-switch to file upload if camera fails
           setActiveTab('file');
@@ -194,20 +280,43 @@ export default function MobileScannerPage() {
         clearInterval(highlightIntervalRef.current);
         highlightIntervalRef.current = null;
       }
+      // Reset camera ready state
+      setCameraReady(false);
     };
   }, [activeTab, cameraError, currentPreview, t]);
 
   // Real-time document highlighting on camera feed
   useEffect(() => {
-    console.log(`[Mobile Scanner] Effect triggered: activeTab=${activeTab}, showLiveDetection=${showLiveDetection}, openCvReady=${openCvReady}, currentPreview=${currentPreview}`);
+    console.log(`[Mobile Scanner] Effect triggered: activeTab=${activeTab}, showLiveDetection=${showLiveDetection}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`);
 
-    if (activeTab === 'camera' && showLiveDetection && openCvReady && scannerRef.current && !currentPreview) {
+    // Show helpful status if detection is enabled but waiting for dependencies
+    if (activeTab === 'camera' && showLiveDetection && !currentPreview) {
+      if (!openCvReady) {
+        setLoadingStatus('Waiting for OpenCV...');
+      } else if (!cameraReady) {
+        setLoadingStatus('Waiting for camera...');
+      }
+    }
+
+    if (activeTab === 'camera' && showLiveDetection && openCvReady && cameraReady && scannerRef.current && !currentPreview) {
       const startHighlighting = () => {
-        if (!videoRef.current || !highlightCanvasRef.current) return;
-        if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) return;
+        console.log('[Mobile Scanner] startHighlighting() called');
+
+        if (!videoRef.current || !highlightCanvasRef.current) {
+          setLoadingStatus('Missing video/canvas refs ✗');
+          console.error('[Mobile Scanner] Missing refs: video=' + !!videoRef.current + ', canvas=' + !!highlightCanvasRef.current);
+          return;
+        }
+        if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) {
+          setLoadingStatus('Video has no dimensions ✗');
+          console.error('[Mobile Scanner] Missing video dimensions: ' + videoRef.current.videoWidth + 'x' + videoRef.current.videoHeight);
+          return;
+        }
 
         const video = videoRef.current;
         const highlightCanvas = highlightCanvasRef.current;
+        setLoadingStatus('Detection active ✓');
+        console.log('[Mobile Scanner] Starting highlighting loop for ' + video.videoWidth + 'x' + video.videoHeight + ' video');
 
         // Create low-res detection canvas with optimized context for frequent pixel reading
         const detectionCanvas = document.createElement('canvas');
@@ -257,31 +366,26 @@ export default function MobileScannerPage() {
               detectionCtx.drawImage(video, 0, 0, detectionCanvas.width, detectionCanvas.height);
               const copyTime = performance.now() - copyStart;
 
-              // Step 2: Run detection on low-res to get corner points
+              // Step 2: Simple jscanify detection
               const detectionStart = performance.now();
-              const mat = (window as any).cv.imread(detectionCanvas);
-              const contour = scannerRef.current.findPaperContour(mat);
               let corners = null;
 
-              if (contour) {
-                // Validate contour area (reject if too small or too large)
-                const contourArea = (window as any).cv.contourArea(contour);
-                const frameArea = detectionCanvas.width * detectionCanvas.height;
-                const areaPercent = (contourArea / frameArea) * 100;
-
-                // Only accept if contour is 15-85% of frame (filters out noise and frame edges)
-                if (areaPercent >= 15 && areaPercent <= 85) {
-                  corners = scannerRef.current.getCornerPoints(contour);
-                }
-              }
+              // Run jscanify detection directly - convert canvas to Mat first
+              const mat = (window as any).cv.imread(detectionCanvas);
+              const contour = scannerRef.current.findPaperContour(mat);
               mat.delete();
+
+              if (contour) {
+                corners = scannerRef.current.getCornerPoints(contour);
+              }
+
               const detectionTime = performance.now() - detectionStart;
 
-              // Step 3: Draw ONLY the corner lines on full-res canvas (super fast!)
+              // Step 3: Draw corner lines on full-res canvas
               const drawStart = performance.now();
               highlightCtx.clearRect(0, 0, highlightCanvas.width, highlightCanvas.height);
 
-              // Validate we have all 4 corners (no triangles!)
+              // Draw lines if corners detected
               if (
                 corners &&
                 corners.topLeftCorner &&
@@ -296,43 +400,18 @@ export default function MobileScannerPage() {
                 const br = { x: corners.bottomRightCorner.x * scaleFactor, y: corners.bottomRightCorner.y * scaleFactor };
                 const bl = { x: corners.bottomLeftCorner.x * scaleFactor, y: corners.bottomLeftCorner.y * scaleFactor };
 
-                // Validation 1: Minimum distance between corners
-                const minDistance = 50;
-                const distances = [
-                  Math.hypot(tr.x - tl.x, tr.y - tl.y),
-                  Math.hypot(br.x - tr.x, br.y - tr.y),
-                  Math.hypot(bl.x - br.x, bl.y - br.y),
-                  Math.hypot(tl.x - bl.x, tl.y - bl.y),
-                ];
-
-                const allCornersSpaced = distances.every((d) => d > minDistance);
-
-                // Validation 2: Aspect ratio (documents are ~1.0 to 1.5 ratio)
-                const width1 = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-                const width2 = Math.hypot(br.x - bl.x, br.y - bl.y);
-                const height1 = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-                const height2 = Math.hypot(br.x - tr.x, br.y - tr.y);
-
-                const avgWidth = (width1 + width2) / 2;
-                const avgHeight = (height1 + height2) / 2;
-                const aspectRatio = Math.max(avgWidth, avgHeight) / Math.min(avgWidth, avgHeight);
-
-                // Accept aspect ratios from 1:1 (square) to 1:2 (elongated document)
-                const goodAspectRatio = aspectRatio >= 1.0 && aspectRatio <= 2.0;
-
-                if (allCornersSpaced && goodAspectRatio) {
-                  // Draw lines connecting corners (vector graphics - super lightweight!)
-                  highlightCtx.strokeStyle = '#00FF00';
-                  highlightCtx.lineWidth = 4;
-                  highlightCtx.beginPath();
-                  highlightCtx.moveTo(tl.x, tl.y);
-                  highlightCtx.lineTo(tr.x, tr.y);
-                  highlightCtx.lineTo(br.x, br.y);
-                  highlightCtx.lineTo(bl.x, bl.y);
-                  highlightCtx.lineTo(tl.x, tl.y);
-                  highlightCtx.stroke();
-                }
+                // Draw green lines connecting corners
+                highlightCtx.strokeStyle = '#00FF00';
+                highlightCtx.lineWidth = 4;
+                highlightCtx.beginPath();
+                highlightCtx.moveTo(tl.x, tl.y);
+                highlightCtx.lineTo(tr.x, tr.y);
+                highlightCtx.lineTo(br.x, br.y);
+                highlightCtx.lineTo(bl.x, bl.y);
+                highlightCtx.lineTo(tl.x, tl.y);
+                highlightCtx.stroke();
               }
+
               const drawTime = performance.now() - drawStart;
 
               const totalTime = performance.now() - startTime;
@@ -386,22 +465,70 @@ export default function MobileScannerPage() {
         highlightIntervalRef.current = requestAnimationFrame(runDetection);
       };
 
-      // Wait for video to be ready
-      if (videoRef.current && videoRef.current.readyState >= 2) {
-        startHighlighting();
-      } else if (videoRef.current) {
-        videoRef.current.addEventListener('loadedmetadata', startHighlighting);
+      // Wait for video to be ready with retry logic
+      let retryCount = 0;
+      let retryTimeout: number | null = null;
+
+      const startWhenReady = () => {
+        const video = videoRef.current;
+
+        if (!video) {
+          setLoadingStatus('No video element ✗');
+          console.log('[Mobile Scanner] No video element');
+          return;
+        }
+
+        console.log(`[Mobile Scanner] Video check: readyState=${video.readyState}, width=${video.videoWidth}, height=${video.videoHeight}`);
+
+        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+          setLoadingStatus('Detection starting... ✓');
+          console.log('[Mobile Scanner] ✓ Video ready, starting detection now');
+          startHighlighting();
+        } else if (retryCount < 50) {
+          // Retry up to 50 times (5 seconds)
+          retryCount++;
+          setLoadingStatus(`Waiting for video... (${retryCount}/50)`);
+          console.log(`[Mobile Scanner] Video not ready yet, retry ${retryCount}/50...`);
+          retryTimeout = window.setTimeout(startWhenReady, 100);
+        } else {
+          setLoadingStatus('Video failed to load ✗');
+          console.error('[Mobile Scanner] ✗ Video failed to become ready after 5 seconds');
+        }
+      };
+
+      // Add event listener as fallback
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        console.log('[Mobile Scanner] Adding loadedmetadata listener');
+        videoElement.addEventListener('loadedmetadata', startWhenReady);
+        // Also try immediately
+        startWhenReady();
+      } else {
+        console.error('[Mobile Scanner] No video element available');
       }
 
       return () => {
+        console.log('[Mobile Scanner] Cleanup: Stopping detection');
+
+        // Clean up animation frame
         if (highlightIntervalRef.current) {
-          console.log('[Mobile Scanner] Stopping detection');
           cancelAnimationFrame(highlightIntervalRef.current);
           highlightIntervalRef.current = null;
         }
+
+        // Clean up retry timeout
+        if (retryTimeout !== null) {
+          clearTimeout(retryTimeout);
+          retryTimeout = null;
+        }
+
+        // Clean up event listener
+        if (videoElement) {
+          videoElement.removeEventListener('loadedmetadata', startWhenReady);
+        }
       };
     }
-  }, [activeTab, showLiveDetection, openCvReady, currentPreview]);
+  }, [activeTab, showLiveDetection, openCvReady, cameraReady, currentPreview]);
 
   const captureImage = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -454,29 +581,11 @@ export default function MobileScannerPage() {
                 bottomRightCorner: { x: cornerPoints.bottomRightCorner.x * scaleFactor, y: cornerPoints.bottomRightCorner.y * scaleFactor },
               };
 
-              // Use scaled corners for validation and extraction
+              // Use scaled corners for extraction
               const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner } = scaledCorners;
 
-              // Validate corner points are reasonable (minimum distance in full-res)
-              const minDistance = 100; // Minimum pixels between corners at full resolution
-              const distances = [
-                Math.hypot(topRightCorner.x - topLeftCorner.x, topRightCorner.y - topLeftCorner.y),
-                Math.hypot(bottomRightCorner.x - topRightCorner.x, bottomRightCorner.y - topRightCorner.y),
-                Math.hypot(bottomLeftCorner.x - bottomRightCorner.x, bottomLeftCorner.y - bottomRightCorner.y),
-                Math.hypot(topLeftCorner.x - bottomLeftCorner.x, topLeftCorner.y - bottomLeftCorner.y),
-              ];
-
-              const isValidDetection = distances.every((d) => d > minDistance);
-
-              if (!isValidDetection) {
-                console.warn('Detected corners are too close together, using original image');
-                finalDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                return;
-              }
-
-              console.log('Valid document detected at full resolution:', {
+              console.log('Document detected at full resolution:', {
                 corners: scaledCorners,
-                distances: distances.map((d) => Math.round(d)),
               });
 
               // Calculate width and height of the document
@@ -491,6 +600,9 @@ export default function MobileScannerPage() {
 
               // Extract paper from full-resolution canvas with scaled corner points
               const resultCanvas = scannerRef.current.extractPaper(canvas, docWidth, docHeight, scaledCorners);
+
+              // Clean up Mat
+              mat.delete();
 
               // Use high quality JPEG compression to preserve image quality
               finalDataUrl = resultCanvas.toDataURL('image/jpeg', 0.95);
@@ -621,11 +733,21 @@ export default function MobileScannerPage() {
     }
   }, [torchEnabled]);
 
-  if (!sessionId) {
+  // Show loading while validating
+  if (sessionValid === null) {
+    return (
+      <Box p="xl" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <Text size="lg">{t('mobileScanner.validating', 'Validating session...')}</Text>
+      </Box>
+    );
+  }
+
+  // Show error if session is invalid
+  if (!sessionValid || !sessionId) {
     return (
       <Box p="xl">
-        <Alert color="red" title={t('mobileScanner.noSession', 'Invalid Session')}>
-          {t('mobileScanner.noSessionMessage', 'Please scan a valid QR code to access this page.')}
+        <Alert color="red" title={t('mobileScanner.sessionInvalid', 'Session Error')}>
+          {sessionError || t('mobileScanner.noSessionMessage', 'Session not found. Please try again.')}
         </Alert>
       </Box>
     );
@@ -684,6 +806,24 @@ export default function MobileScannerPage() {
           />
         </Group>
       </Box>
+
+      {/* Status Banner */}
+      {loadingStatus && (
+        <Box
+          p="xs"
+          style={{
+            background: loadingStatus.includes('✗') ? 'var(--mantine-color-red-1)' :
+                       loadingStatus.includes('✓') ? 'var(--mantine-color-green-1)' :
+                       'var(--mantine-color-blue-1)',
+            borderBottom: '1px solid var(--border-subtle)',
+            fontSize: '0.85rem',
+            fontFamily: 'monospace',
+            textAlign: 'center',
+          }}
+        >
+          {loadingStatus}
+        </Box>
+      )}
 
       {uploadError && (
         <Box p="md">

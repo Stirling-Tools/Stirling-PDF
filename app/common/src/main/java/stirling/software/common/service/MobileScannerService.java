@@ -37,6 +37,51 @@ public class MobileScannerService {
     }
 
     /**
+     * Register a new session (called by desktop when QR code is generated)
+     *
+     * @param sessionId Unique session identifier
+     * @return SessionInfo with creation time and expiry
+     */
+    public SessionInfo createSession(String sessionId) {
+        validateSessionId(sessionId);
+
+        SessionData session = new SessionData(sessionId);
+        activeSessions.put(sessionId, session);
+
+        log.info("Created mobile scanner session: {}", sessionId);
+        return new SessionInfo(
+                sessionId,
+                session.createdAt,
+                session.createdAt + SESSION_TIMEOUT_MS,
+                SESSION_TIMEOUT_MS);
+    }
+
+    /**
+     * Validate if a session exists and is not expired
+     *
+     * @param sessionId Session identifier to validate
+     * @return SessionInfo if valid, null if invalid/expired
+     */
+    public SessionInfo validateSession(String sessionId) {
+        SessionData session = activeSessions.get(sessionId);
+        if (session == null) {
+            return null;
+        }
+
+        long now = System.currentTimeMillis();
+        long expiryTime = session.getLastAccessTime() + SESSION_TIMEOUT_MS;
+
+        // Check if expired
+        if (now > expiryTime) {
+            deleteSession(sessionId);
+            return null;
+        }
+
+        session.updateLastAccess();
+        return new SessionInfo(sessionId, session.createdAt, expiryTime, SESSION_TIMEOUT_MS);
+    }
+
+    /**
      * Stores uploaded files for a session
      *
      * @param sessionId Unique session identifier
@@ -221,6 +266,37 @@ public class MobileScannerService {
     private String sanitizeFilename(String filename) {
         // Remove path traversal attempts and dangerous characters
         return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
+
+    /** Session information for client */
+    public static class SessionInfo {
+        private final String sessionId;
+        private final long createdAt;
+        private final long expiresAt;
+        private final long timeoutMs;
+
+        public SessionInfo(String sessionId, long createdAt, long expiresAt, long timeoutMs) {
+            this.sessionId = sessionId;
+            this.createdAt = createdAt;
+            this.expiresAt = expiresAt;
+            this.timeoutMs = timeoutMs;
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public long getCreatedAt() {
+            return createdAt;
+        }
+
+        public long getExpiresAt() {
+            return expiresAt;
+        }
+
+        public long getTimeoutMs() {
+            return timeoutMs;
+        }
     }
 
     /** File metadata for client */

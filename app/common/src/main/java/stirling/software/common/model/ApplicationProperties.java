@@ -416,6 +416,7 @@ public class ApplicationProperties {
         private String frontendUrl; // Frontend URL for invite email links (e.g.
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
+        private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

@@ -11,8 +11,9 @@ import { useLogoVariant } from '@app/hooks/useLogoVariant';
 import { useFileManager } from '@app/hooks/useFileManager';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
-import PhonelinkIcon from '@mui/icons-material/Phonelink';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -29,6 +30,8 @@ const LandingPage = () => {
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = React.useState(false);
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { config } = useAppConfig();
+  const isMobile = useIsMobile();
 
   const handleFileDrop = async (files: File[]) => {
     await addFiles(files);
@@ -215,18 +218,25 @@ const LandingPage = () => {
                       </span>
                     )}
                   </Button>
-                  <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
-                    <ActionIcon
-                      size={38}
-                      variant="subtle"
-                      onClick={handleMobileUploadClick}
-                      style={{
-                        color: 'var(--accent-interactive)',
-                      }}
-                    >
-                      <PhonelinkIcon />
-                    </ActionIcon>
-                  </Tooltip>
+                  {config?.enableMobileScanner && !isMobile && (
+                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
+                      <ActionIcon
+                        size={38}
+                        variant="subtle"
+                        onClick={handleMobileUploadClick}
+                        style={{
+                          backgroundColor: 'var(--landing-button-bg)',
+                          color: 'var(--accent-interactive)',
+                          border: '1px solid var(--landing-button-border)',
+                          borderRadius: '1rem',
+                          paddingLeft: '0.5rem',
+                          paddingRight: '0.5rem',
+                        }}
+                      >
+                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </>
               )}
               {!hasRecents && (
@@ -254,18 +264,25 @@ const LandingPage = () => {
                       {t('landing.uploadFromComputer', 'Upload from computer')}
                     </span>
                   </Button>
-                  <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
-                    <ActionIcon
-                      size={38}
-                      variant="subtle"
-                      onClick={handleMobileUploadClick}
-                      style={{
-                        color: 'var(--accent-interactive)',
-                      }}
-                    >
-                      <PhonelinkIcon />
-                    </ActionIcon>
-                  </Tooltip>
+                  {config?.enableMobileScanner && !isMobile && (
+                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
+                      <ActionIcon
+                        size={38}
+                        variant="subtle"
+                        onClick={handleMobileUploadClick}
+                        style={{
+                          backgroundColor: 'var(--landing-button-bg)',
+                          color: 'var(--accent-interactive)',
+                          border: '1px solid var(--landing-button-border)',
+                          borderRadius: '1rem',
+                          paddingLeft: '0.5rem',
+                          paddingRight: '0.5rem',
+                        }}
+                      >
+                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </>
               )}
             </div>

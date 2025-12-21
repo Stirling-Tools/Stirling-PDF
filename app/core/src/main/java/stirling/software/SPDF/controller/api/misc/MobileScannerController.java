@@ -57,6 +57,81 @@ public class MobileScannerController {
     }
 
     /**
+     * Create a new session (called by desktop when QR code is generated)
+     *
+     * @param sessionId Unique session identifier
+     * @return Session information with expiry time
+     */
+    @PostMapping("/create-session/{sessionId}")
+    @Operation(
+            summary = "Create a new mobile scanner session",
+            description = "Desktop clients call this when generating a QR code")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Session created successfully",
+            content = @Content(schema = @Schema(implementation = SessionInfoResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid session ID")
+    public ResponseEntity<Map<String, Object>> createSession(
+            @Parameter(description = "Session ID for QR code", required = true) @PathVariable
+                    String sessionId) {
+
+        try {
+            MobileScannerService.SessionInfo sessionInfo =
+                    mobileScannerService.createSession(sessionId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("sessionId", sessionInfo.getSessionId());
+            response.put("createdAt", sessionInfo.getCreatedAt());
+            response.put("expiresAt", sessionInfo.getExpiresAt());
+            response.put("timeoutMs", sessionInfo.getTimeoutMs());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid session creation request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Validate if a session exists and is not expired
+     *
+     * @param sessionId Session identifier to validate
+     * @return Session information if valid, error if invalid/expired
+     */
+    @GetMapping("/validate-session/{sessionId}")
+    @Operation(
+            summary = "Validate a mobile scanner session",
+            description = "Check if session exists and is not expired")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Session is valid",
+            content = @Content(schema = @Schema(implementation = SessionInfoResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Session not found or expired")
+    public ResponseEntity<Map<String, Object>> validateSession(
+            @Parameter(description = "Session ID to validate", required = true) @PathVariable
+                    String sessionId) {
+
+        MobileScannerService.SessionInfo sessionInfo =
+                mobileScannerService.validateSession(sessionId);
+
+        if (sessionInfo == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("valid", false, "error", "Session not found or expired"));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("valid", true);
+        response.put("sessionId", sessionInfo.getSessionId());
+        response.put("createdAt", sessionInfo.getCreatedAt());
+        response.put("expiresAt", sessionInfo.getExpiresAt());
+        response.put("timeoutMs", sessionInfo.getTimeoutMs());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Upload files from mobile device
      *
      * @param sessionId Unique session identifier from QR code
@@ -204,6 +279,14 @@ public class MobileScannerController {
     }
 
     // Response schemas for OpenAPI documentation
+    private static class SessionInfoResponse {
+        public boolean success;
+        public String sessionId;
+        public long createdAt;
+        public long expiresAt;
+        public long timeoutMs;
+    }
+
     private static class UploadResponse {
         public boolean success;
         public String sessionId;

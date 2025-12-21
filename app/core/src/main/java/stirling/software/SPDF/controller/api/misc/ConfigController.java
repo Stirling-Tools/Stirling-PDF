@@ -75,6 +75,11 @@ public class ConfigController {
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
 
+            // Add mobile scanner setting
+            configData.put(
+                    "enableMobileScanner",
+                    applicationProperties.getSystem().isEnableMobileScanner());
+
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
