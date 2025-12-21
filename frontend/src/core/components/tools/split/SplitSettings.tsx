@@ -1,4 +1,4 @@
-import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text, Radio, Group } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '@app/constants/splitConstants';
@@ -49,6 +49,30 @@ const SplitSettings = ({
         placeholder={t("split-by-sections.vertical.placeholder", "Enter number of vertical divisions")}
         disabled={disabled}
       />
+      <Radio.Group
+        name="splitMode"
+        label={t("split-by-sections.splitMode.label", "Split Mode")}
+        value={parameters.splitMode || 'SPLIT_ALL'}
+        onChange={(value) => onParameterChange('splitMode', value)}
+        description={t("split-by-sections.splitMode.description", "Choose how to split the pages")}
+      >
+        <Group mt="xs">
+          <Radio value="SPLIT_ALL" label={t("split-by-sections.splitMode.splitAll", "Split all pages")} />
+          <Radio value="SPLIT_ALL_EXCEPT_FIRST" label={t("split-by-sections.splitMode.splitAllExceptFirst", "Split all except first")} />
+          <Radio value="SPLIT_ALL_EXCEPT_LAST" label={t("split-by-sections.splitMode.splitAllExceptLast", "Split all except last")} />
+          <Radio value="SPLIT_ALL_EXCEPT_FIRST_AND_LAST" label={t("split-by-sections.splitMode.splitAllExceptFirstAndLast", "Split all except first and last")} />
+          <Radio value="CUSTOM" label={t("split-by-sections.splitMode.custom", "Custom pages")} />
+        </Group>
+      </Radio.Group>
+      {parameters.splitMode === 'CUSTOM' && (
+        <TextInput
+          label={t("split-by-sections.customPages.label", "Custom Page Numbers")}
+          placeholder={t("split-by-sections.customPages.placeholder", "e.g. 2,4,6")}
+          value={parameters.customPages || ''}
+          onChange={(e) => onParameterChange('customPages', e.target.value)}
+          disabled={disabled}
+        />
+      )}
       <Checkbox
         label={t("split-by-sections.merge", "Merge sections into one PDF")}
         checked={parameters.merge}
