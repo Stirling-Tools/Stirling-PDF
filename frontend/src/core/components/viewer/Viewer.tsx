@@ -1,4 +1,4 @@
-import EmbedPdfViewer from '@app/components/viewer/EmbedPdfViewer';
+import EmbedPdfViewer, { ViewerInitialPageConfig } from '@app/components/viewer/EmbedPdfViewer';
 
 export interface ViewerProps {
   sidebarsVisible: boolean;
@@ -7,6 +7,7 @@ export interface ViewerProps {
   previewFile?: File | null;
   activeFileIndex?: number;
   setActiveFileIndex?: (index: number) => void;
+  initialPage?: ViewerInitialPageConfig | null;
 }
 
 const Viewer = (props: ViewerProps) => {

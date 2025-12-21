@@ -30,8 +30,11 @@ const createViewOptions = (
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
   pageEditorState?: PageEditorDropdownState,
-  customViews?: CustomWorkbenchViewInstance[]
+  customViews?: CustomWorkbenchViewInstance[],
+  allowedViews?: Set<WorkbenchType> | null
 ) => {
+  const includeView = (view: WorkbenchType) => !allowedViews || allowedViews.has(view);
+
   // Viewer dropdown logic
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
@@ -101,13 +104,13 @@ const createViewOptions = (
   };
 
   const baseOptions = [
-    viewerOption,
-    pageEditorOption,
-    fileEditorOption,
-  ];
+    includeView('viewer') ? viewerOption : null,
+    includeView('pageEditor') ? pageEditorOption : null,
+    includeView('fileEditor') ? fileEditorOption : null,
+  ].filter(Boolean) as Array<{ label: React.ReactNode; value: WorkbenchType }>;
 
   const customOptions = (customViews ?? [])
-    .filter((view) => view.data != null)
+    .filter((view) => view.data != null && includeView(view.workbenchId))
     .map((view) => ({
       label: (
         <div style={viewOptionStyle as React.CSSProperties}>
@@ -132,6 +135,7 @@ interface TopControlsProps {
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
+  allowedViews?: WorkbenchType[];
 }
 
 const TopControls = ({
@@ -141,11 +145,13 @@ const TopControls = ({
   activeFiles = [],
   currentFileIndex = 0,
   onFileSelect,
+  allowedViews,
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
   const pageEditorState = usePageEditorDropdownState();
+  const allowedViewSet = useMemo(() => allowedViews ? new Set(allowedViews) : null, [allowedViews]);
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -177,8 +183,9 @@ const TopControls = ({
     currentFileIndex,
     onFileSelect,
     pageEditorState,
-    customViews
-  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews]);
+    customViews,
+    allowedViewSet
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews, allowedViewSet]);
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">

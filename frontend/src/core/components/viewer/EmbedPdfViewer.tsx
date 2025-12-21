@@ -18,6 +18,13 @@ import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRight
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 
+export interface ViewerInitialPageConfig {
+  pageIndex: number;
+  zoomPercent?: number;
+  requestId?: string;
+  fileId?: string | null;
+}
+
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
@@ -25,6 +32,7 @@ export interface EmbedPdfViewerProps {
   previewFile?: File | null;
   activeFileIndex?: number;
   setActiveFileIndex?: (index: number) => void;
+  initialPage?: ViewerInitialPageConfig | null;
 }
 
 const EmbedPdfViewerContent = ({
@@ -34,10 +42,12 @@ const EmbedPdfViewerContent = ({
   previewFile,
   activeFileIndex: externalActiveFileIndex,
   setActiveFileIndex: externalSetActiveFileIndex,
+  initialPage,
 }: EmbedPdfViewerProps) => {
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  const initialViewAppliedRef = useRef<string | null>(null);
 
   const {
     isThumbnailSidebarVisible,
@@ -46,6 +56,7 @@ const EmbedPdfViewerContent = ({
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
+    scrollActions,
     panActions: _panActions,
     rotationActions: _rotationActions,
     getScrollState,
@@ -107,7 +118,7 @@ const EmbedPdfViewerContent = ({
 
   // When viewer opens with a selected file, switch to that file
   useEffect(() => {
-    if (!hasInitializedFromSelection.current && selectedFileIds.length > 0 && activeFiles.length > 0) {
+    if (!initialPage?.fileId && !hasInitializedFromSelection.current && selectedFileIds.length > 0 && activeFiles.length > 0) {
       const selectedFileId = selectedFileIds[0];
       const index = activeFiles.findIndex(f => f.fileId === selectedFileId);
       if (index !== -1 && index !== activeFileIndex) {
@@ -115,7 +126,7 @@ const EmbedPdfViewerContent = ({
       }
       hasInitializedFromSelection.current = true;
     }
-  }, [selectedFileIds, activeFiles, activeFileIndex]);
+  }, [selectedFileIds, activeFiles, activeFileIndex, initialPage?.fileId]);
 
   // Reset active tab if it's out of bounds
   useEffect(() => {
@@ -133,6 +144,23 @@ const EmbedPdfViewerContent = ({
     }
     return null;
   }, [previewFile, activeFiles, activeFileIndex]);
+
+  useEffect(() => {
+    if (!initialPage?.fileId || previewFile) {
+      return;
+    }
+
+    const targetIndex = activeFiles.findIndex(file => isStirlingFile(file) && file.fileId === initialPage.fileId);
+    if (targetIndex >= 0 && targetIndex !== activeFileIndex) {
+      setActiveFileIndex(targetIndex);
+    }
+  }, [initialPage?.fileId, previewFile, activeFiles, activeFileIndex, setActiveFileIndex]);
+
+  useEffect(() => {
+    if (initialPage?.fileId) {
+      hasInitializedFromSelection.current = true;
+    }
+  }, [initialPage?.fileId]);
 
   // Get file with URL for rendering
   const fileWithUrl = useFileWithUrl(currentFile);
@@ -186,11 +214,100 @@ const EmbedPdfViewerContent = ({
     }).filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 
+  const embedSourceKey = React.useMemo(() => {
+    if (currentFile && isStirlingFile(currentFile)) {
+      return currentFile.fileId;
+    }
+    if (effectiveFile?.file instanceof File) {
+      const fileObj = effectiveFile.file;
+      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? 'na'}`;
+    }
+    return effectiveFile?.url ?? 'viewer-default';
+  }, [currentFile, effectiveFile]);
+
   useWheelZoom({
     ref: viewerRef,
     onZoomIn: zoomActions.zoomIn,
     onZoomOut: zoomActions.zoomOut,
   });
+
+  useEffect(() => {
+    initialViewAppliedRef.current = null;
+  }, [embedSourceKey]);
+
+  useEffect(() => {
+    if (!initialPage) {
+      initialViewAppliedRef.current = null;
+    }
+  }, [initialPage]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!initialPage) {
+      return;
+    }
+
+    const requestKey =
+      initialPage.requestId ??
+      `${embedSourceKey}-${initialPage.pageIndex}-${initialPage.zoomPercent ?? 'auto'}`;
+
+    if (initialViewAppliedRef.current === requestKey) {
+      return;
+    }
+
+    let cancelled = false;
+    let frame: number | null = null;
+
+    const applyInitialView = () => {
+      if (cancelled) {
+        return;
+      }
+
+      const scrollStateSnapshot = getScrollState();
+      if (!scrollStateSnapshot || scrollStateSnapshot.totalPages === 0) {
+        frame = window.requestAnimationFrame(applyInitialView);
+        return;
+      }
+
+      try {
+        if (typeof initialPage.pageIndex === 'number') {
+          scrollActions.scrollToPage(initialPage.pageIndex + 1);
+        }
+
+        const targetZoomPercent =
+          typeof initialPage.zoomPercent === 'number' && initialPage.zoomPercent > 0
+            ? initialPage.zoomPercent
+            : 100;
+
+        zoomActions.requestZoom(targetZoomPercent / 100);
+
+        initialViewAppliedRef.current = requestKey;
+      } catch (error) {
+        console.warn('[EmbedPdfViewer] initial view sync failed, retrying...', error);
+        frame = window.requestAnimationFrame(applyInitialView);
+      }
+    };
+
+    applyInitialView();
+
+    return () => {
+      cancelled = true;
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, [
+    initialPage?.pageIndex,
+    initialPage?.zoomPercent,
+    initialPage?.requestId,
+    scrollActions,
+    zoomActions,
+    getScrollState,
+    embedSourceKey,
+  ]);
 
   // Handle keyboard shortcuts (zoom and search)
   useEffect(() => {
@@ -367,7 +484,7 @@ const EmbedPdfViewerContent = ({
               transition: 'margin-right 0.3s ease'
             }}>
             <LocalEmbedPDF
-              key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
+              key={embedSourceKey}
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={isAnnotationMode}

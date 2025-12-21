@@ -1,0 +1,61 @@
+.root {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding-top: 3.25rem;
+}
+
+.overlayPortal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.viewerStage {
+  position: absolute;
+  inset: 0;
+  z-index: 998;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.95));
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.viewerCanvas {
+  flex: 1;
+  background: var(--bg-background, #111);
+  pointer-events: auto;
+}
+
+.viewerDismissZone {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 2;
+}
+
+.viewerBackButton {
+  background: rgba(15, 23, 42, 0.8);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.viewerBackButton:hover,
+.viewerBackButton:focus {
+  background: rgba(15, 23, 42, 0.95);
+  outline: none;
+  transform: translateY(-1px);
+}

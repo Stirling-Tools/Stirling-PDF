@@ -1,0 +1,201 @@
+.container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem;
+}
+
+/* Grid Container */
+.gridContainer {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: center;
+  grid-auto-flow: row;
+}
+
+/* File Card Styles */
+.fileCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fileCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.fileCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.fileCardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fileTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.pageCount {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.fileThumbnail {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+  flex: 1;
+  min-height: 0;
+  max-height: 300px;
+  background: #f5f5f5;
+}
+
+.expandedIndicator {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+/* Page Card Styles */
+.pageCard {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 200px;
+  /* Prevent layout shift by reserving space */
+  contain: layout;
+}
+
+.pageCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pageImage {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  object-fit: contain;
+  background: #f5f5f5;
+  flex: 1;
+  min-height: 0;
+  /* Prevent layout shift */
+  display: block;
+}
+
+.pagePlaceholder {
+  width: 100%;
+  aspect-ratio: 8.5 / 11;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.pageNumber {
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+  font-weight: 500;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #666;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Viewer Transition + Stage */
+.transitionOverlay {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  background: #fff;
+}
+
+.transitionContent {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transitionImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.transitionPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f5, #eaeaea);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topControlsHost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+}
+
+.viewerMount {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

@@ -52,6 +52,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "jszip": "^3.10.1",
     "license-report": "^6.8.0",
+    "framer-motion": "^11.11.17",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.149",
     "posthog-js": "^1.268.0",

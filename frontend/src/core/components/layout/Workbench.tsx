@@ -1,22 +1,15 @@
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
-import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
+import { useNavigationState } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
-import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import styles from '@app/components/layout/Workbench.module.css';
-
-import TopControls from '@app/components/shared/TopControls';
-import FileEditor from '@app/components/fileEditor/FileEditor';
-import PageEditor from '@app/components/pageEditor/PageEditor';
-import PageEditorControls from '@app/components/pageEditor/PageEditorControls';
-import Viewer from '@app/components/viewer/Viewer';
 import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
+import FileStackView from '@app/components/layout/FileStackView';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -26,20 +19,11 @@ export default function Workbench() {
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
-  const { actions: navActions } = useNavigationActions();
-  const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
+  const activeFileStubs = selectors.getStirlingFileStubs();
   const {
-    previewFile,
-    pageEditorFunctions,
-    sidebarsVisible,
-    setPreviewFile,
-    setPageEditorFunctions,
-    setSidebarsVisible,
     customWorkbenchViews,
   } = useToolWorkflow();
-
-  const { handleToolSelect } = useToolWorkflow();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -47,28 +31,6 @@ export default function Workbench() {
   // Get tool registry from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
-  const { addFiles } = useFileHandler();
-
-  // Get active file index from ViewerContext
-  const { activeFileIndex, setActiveFileIndex } = useViewer();
-
-  const handlePreviewClose = () => {
-    setPreviewFile(null);
-    const previousMode = sessionStorage.getItem('previousMode');
-    if (previousMode === 'split') {
-      // Use context's handleToolSelect which coordinates tool selection and view changes
-      handleToolSelect('split');
-      sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'compress') {
-      handleToolSelect('compress');
-      sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'convert') {
-      handleToolSelect('convert');
-      sessionStorage.removeItem('previousMode');
-    } else {
-      setCurrentView('fileEditor');
-    }
-  };
 
   const renderMainContent = () => {
     // Check for custom workbench views first
@@ -84,81 +46,16 @@ export default function Workbench() {
       }
     }
 
-    // For base workbenches (or custom views that don't handle empty state), show landing page when no files
-    if (activeFiles.length === 0) {
-      return (
-        <LandingPage
-        />
-      );
+    // Show file stack view when there are active files
+    if (activeFiles.length > 0) {
+      return <FileStackView files={activeFileStubs} />;
     }
 
-    switch (currentView) {
-      case "fileEditor":
+    // Show landing page when no files
+    return (
+      <LandingPage />
+    );
 
-        return (
-          <FileEditor
-            toolMode={!!selectedToolId}
-            supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
-            {...(!selectedToolId && {
-              onOpenPageEditor: () => {
-                setCurrentView("pageEditor");
-              },
-              onMergeFiles: (filesToMerge) => {
-                addFiles(filesToMerge);
-                setCurrentView("viewer");
-              }
-            })}
-          />
-        );
-
-      case "viewer":
-        
-        return (
-          <Viewer
-            sidebarsVisible={sidebarsVisible}
-            setSidebarsVisible={setSidebarsVisible}
-            previewFile={previewFile}
-            onClose={handlePreviewClose}
-            activeFileIndex={activeFileIndex}
-            setActiveFileIndex={setActiveFileIndex}
-          />
-        );
-
-      case "pageEditor":
-        
-        return (
-          <>
-            <PageEditor
-              onFunctionsReady={setPageEditorFunctions}
-            />
-            {pageEditorFunctions && (
-              <PageEditorControls
-                onClosePdf={pageEditorFunctions.closePdf}
-                onUndo={pageEditorFunctions.handleUndo}
-                onRedo={pageEditorFunctions.handleRedo}
-                canUndo={pageEditorFunctions.canUndo}
-                canRedo={pageEditorFunctions.canRedo}
-                onRotate={pageEditorFunctions.handleRotate}
-                onDelete={pageEditorFunctions.handleDelete}
-                onSplit={pageEditorFunctions.handleSplit}
-                onSplitAll={pageEditorFunctions.handleSplitAll}
-                onPageBreak={pageEditorFunctions.handlePageBreak}
-                onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                onExportAll={pageEditorFunctions.onExportAll}
-                exportLoading={pageEditorFunctions.exportLoading}
-                selectionMode={pageEditorFunctions.selectionMode}
-                selectedPageIds={pageEditorFunctions.selectedPageIds}
-                displayDocument={pageEditorFunctions.displayDocument}
-                splitPositions={pageEditorFunctions.splitPositions}
-                totalPages={pageEditorFunctions.totalPages}
-              />
-            )}
-          </>
-        );
-
-      default:
-        return <LandingPage />;
-    }
   };
 
   return (
@@ -171,21 +68,6 @@ export default function Workbench() {
           : { backgroundColor: 'var(--bg-background)' }
       }
     >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map(f => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={setActiveFileIndex}
-        />
-      )}
-
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
 

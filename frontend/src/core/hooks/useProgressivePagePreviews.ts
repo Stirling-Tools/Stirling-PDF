@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { PagePreview } from '@app/types/compare';
@@ -23,6 +23,13 @@ interface ProgressivePagePreviewsState {
   loadingPages: Set<number>; // 0-based page indices currently being loaded
 }
 
+// Refs to keep Sets stable for loadPageRange callback
+interface ProgressivePagePreviewsRefs {
+  loadedPages: React.MutableRefObject<Set<number>>;
+  loadingPages: React.MutableRefObject<Set<number>>;
+  totalPages: React.MutableRefObject<number>;
+}
+
 export const useProgressivePagePreviews = ({
   file,
   enabled,
@@ -39,6 +46,24 @@ export const useProgressivePagePreviews = ({
 
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Refs to keep Sets stable for loadPageRange callback
+  const loadedPagesRef = useRef<Set<number>>(new Set());
+  const loadingPagesRef = useRef<Set<number>>(new Set());
+  const totalPagesRef = useRef<number>(0);
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    loadedPagesRef.current = state.loadedPages;
+  }, [state.loadedPages]);
+  
+  useEffect(() => {
+    loadingPagesRef.current = state.loadingPages;
+  }, [state.loadingPages]);
+  
+  useEffect(() => {
+    totalPagesRef.current = state.totalPages;
+  }, [state.totalPages]);
 
   const renderPageBatch = useCallback(async (
     pdf: PDFDocumentProxy,
@@ -80,6 +105,11 @@ export const useProgressivePagePreviews = ({
         canvas.width = 0;
         canvas.height = 0;
       } catch (error) {
+        // Don't log RenderingCancelledException - it's expected when components unmount
+        if (error && typeof error === 'object' && 'name' in error && error.name === 'RenderingCancelledException') {
+          // Expected cancellation, skip this page and continue with others
+          continue;
+        }
         console.error(`[progressive-pages] failed to render page ${pageNumber}:`, error);
       }
     }
@@ -92,21 +122,36 @@ export const useProgressivePagePreviews = ({
     endPage: number,
     signal: AbortSignal
   ) => {
-    // Use the live PDF ref for bounds instead of possibly stale state
-    const totalPages = pdfRef.current?.numPages ?? state.totalPages;
-    if (startPage < 0 || endPage >= totalPages || startPage > endPage) {
+    const pdfDoc = pdfRef.current;
+    if (!pdfDoc) {
+      console.warn('[progressive-pages] PDF doc not available for loading pages');
       return;
     }
 
-    // Check which pages need to be loaded
+    // Use refs for stable access to current values
+    const totalPages = pdfDoc.numPages ?? totalPagesRef.current;
+    
+    // Guard: allow inclusive end, check correctly
+    if (startPage < 0 || endPage < startPage || endPage >= totalPages) {
+      console.warn(`[progressive-pages] Invalid range: startPage=${startPage}, endPage=${endPage}, totalPages=${totalPages}`);
+      return;
+    }
+
+    // Check which pages need to be loaded using refs (always current)
+    const loaded = loadedPagesRef.current;
+    const loading = loadingPagesRef.current;
     const pagesToLoad: number[] = [];
+    
     for (let i = startPage; i <= endPage; i++) {
-      if (!state.loadedPages.has(i) && !state.loadingPages.has(i)) {
+      if (!loaded.has(i) && !loading.has(i)) {
         pagesToLoad.push(i + 1); // Convert to 1-based page numbers
       }
     }
 
-    if (pagesToLoad.length === 0) return;
+    if (pagesToLoad.length === 0) {
+      console.log(`[progressive-pages] All pages ${startPage}-${endPage} already loaded or loading`);
+      return;
+    }
 
     // Mark pages as loading
     setState(prev => ({
@@ -115,9 +160,16 @@ export const useProgressivePagePreviews = ({
     }));
 
     try {
-      const pdfDoc = pdfRef.current;
-      if (!pdfDoc) return;
+      console.log(`[progressive-pages] Loading pages ${pagesToLoad.join(', ')}`);
       const previews = await renderPageBatch(pdfDoc, pagesToLoad, signal);
+      
+      // Ensure previews is an array (should always be, but safety check)
+      if (!Array.isArray(previews)) {
+        console.warn('[progressive-pages] renderPageBatch did not return an array:', previews);
+        return;
+      }
+      
+      console.log(`[progressive-pages] Successfully loaded ${previews.length} pages:`, previews.map(p => p.pageNumber));
       
       if (!signal.aborted) {
         setState(prev => {
@@ -140,6 +192,8 @@ export const useProgressivePagePreviews = ({
             }
           }
 
+          console.log(`[progressive-pages] State updated. Total pages in state: ${newPages.length}, loaded pages:`, Array.from(newLoadedPages).sort((a, b) => a - b));
+
           return {
             ...prev,
             pages: newPages,
@@ -161,7 +215,7 @@ export const useProgressivePagePreviews = ({
         });
       }
     }
-  }, [state.loadedPages, state.loadingPages, state.totalPages, renderPageBatch]);
+  }, [renderPageBatch]); // Only depend on renderPageBatch, not state
 
   // Initialize PDF and load first batch
   useEffect(() => {
@@ -234,11 +288,13 @@ export const useProgressivePagePreviews = ({
 
   // Load pages based on visible range
   useEffect(() => {
-    if (!visiblePageRange || state.totalPages === 0) return;
+    if (!visiblePageRange || state.totalPages === 0 || !pdfRef.current) return;
 
     const { start, end } = visiblePageRange;
-    const startPage = Math.max(0, start - 5); // Add buffer before
-    const endPage = Math.min(state.totalPages - 1, end + 5); // Add buffer after
+    const startPage = Math.max(0, start);
+    const endPage = Math.min(state.totalPages - 1, end); // Ensure inclusive end is valid
+
+    console.log('[progressive-pages] visiblePageRange effect:', { start, end, startPage, endPage, totalPages: state.totalPages });
 
     // Cancel previous loading
     if (abortControllerRef.current) {
@@ -248,12 +304,13 @@ export const useProgressivePagePreviews = ({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Load the range - loadPageRange will check if pages are already loaded
     loadPageRange(startPage, endPage, abortController.signal);
 
     return () => {
       abortController.abort();
     };
-  }, [visiblePageRange, state.totalPages, loadPageRange]);
+  }, [visiblePageRange, state.totalPages, loadPageRange]); // Now safe to depend on loadPageRange
 
   // Cleanup on unmount
   useEffect(() => {
