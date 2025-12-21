@@ -49,7 +49,7 @@ public class SPDFApplicationTest {
 
     @Test
     public void testInit() {
-        when(appConfig.getBaseUrl()).thenReturn("http://localhost");
+        when(appConfig.getBackendUrl()).thenReturn("http://localhost");
         when(appConfig.getContextPath()).thenReturn("/app");
         when(appConfig.getServerPort()).thenReturn("8080");
 

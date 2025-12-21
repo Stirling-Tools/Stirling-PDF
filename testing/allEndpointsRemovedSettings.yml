@@ -111,6 +111,11 @@ mail:
   username: '' # SMTP server username
   password: '' # SMTP server password
   from: '' # sender email address
+  startTlsEnable: true # enable STARTTLS (explicit TLS upgrade after connecting) when supported by the SMTP server
+  startTlsRequired: false # require STARTTLS; connection fails if the upgrade command is not supported
+  sslEnable: false # enable SSL/TLS wrapper for implicit TLS (typically used with port 465)
+  sslTrust: '' # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
+  sslCheckServerIdentity: false # enable hostname verification when using SSL/TLS
 
 legal:
   termsAndConditions: https://www.stirlingpdf.com/terms # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
@@ -146,7 +151,7 @@ system:
       level: MEDIUM # Security level: MAX (whitelist only), MEDIUM (block internal networks), OFF (no restrictions)
       allowedDomains: [] # Whitelist of allowed domains (e.g. ['cdn.example.com', 'images.google.com'])
       blockedDomains: [] # Additional domains to block (e.g. ['evil.com', 'malicious.org'])
-      internalTlds: ['.local', '.internal', '.corp', '.home'] # Block domains with these TLD patterns
+      internalTlds: [.local, .internal, .corp, .home] # Block domains with these TLD patterns
       blockPrivateNetworks: true # Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
       blockLocalhost: true # Block localhost and loopback addresses (127.x.x.x, ::1)
       blockLinkLocal: true # Block link-local addresses (169.254.x.x, fe80::/10)
@@ -181,7 +186,7 @@ system:
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
   databaseBackup:
-    cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
+    cron: 0 0 0 * * ? # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 stirling:
   pdf:
@@ -216,7 +221,7 @@ metrics:
 AutomaticallyGenerated:
   key: cbb81c0f-50b1-450c-a2b5-89ae527776eb
   UUID: 10dd4fba-01fa-4717-9b78-3dc4f54e398a
-  appVersion: 2.1.1
+  appVersion: 2.1.2
 
 processExecutor:
   sessionLimit: # Process executor instances limits

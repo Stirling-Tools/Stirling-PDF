@@ -1119,45 +1119,45 @@ public class CompressController {
     }
 
     private Path applyLineArtConversion(
-            Path currentFile, List<Path> tempFiles, double threshold, int edgeLevel)
+            Path currentFile, List<TempFile> tempFiles, double threshold, int edgeLevel)
             throws IOException {
 
-        Path lineArtFile = Files.createTempFile("lineart_output_", ".pdf");
+        TempFile lineArtFile = new TempFile(tempFileManager, ".pdf");
         tempFiles.add(lineArtFile);
 
         try (PDDocument doc = pdfDocumentFactory.load(currentFile.toFile())) {
-            Map<String, List<ImageReference>> uniqueImages = findImages(doc);
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
             CompressionStats stats = new CompressionStats();
             stats.uniqueImagesCount = uniqueImages.size();
             calculateImageStats(uniqueImages, stats);
 
-            Map<String, PDImageXObject> convertedImages =
+            Map<ImageIdentity, PDImageXObject> convertedImages =
                     createLineArtImages(doc, uniqueImages, stats, threshold, edgeLevel);
 
-            replaceImages(doc, uniqueImages, convertedImages, stats);
+            replaceImages(doc, uniqueImages, convertedImages);
 
             log.info(
                     "Applied line art conversion to {} unique images ({} total references)",
                     stats.uniqueImagesCount,
                     stats.totalImages);
 
-            doc.save(lineArtFile.toString());
-            return lineArtFile;
+            doc.save(lineArtFile.getPath().toString());
+            return lineArtFile.getPath();
         }
     }
 
-    private Map<String, PDImageXObject> createLineArtImages(
+    private Map<ImageIdentity, PDImageXObject> createLineArtImages(
             PDDocument doc,
-            Map<String, List<ImageReference>> uniqueImages,
+            Map<ImageIdentity, List<ImageReference>> uniqueImages,
             CompressionStats stats,
             double threshold,
             int edgeLevel)
             throws IOException {
 
-        Map<String, PDImageXObject> convertedImages = new HashMap<>();
+        Map<ImageIdentity, PDImageXObject> convertedImages = new HashMap<>();
 
-        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
-            String imageHash = entry.getKey();
+        for (Entry<ImageIdentity, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            ImageIdentity imageIdentity = entry.getKey();
             List<ImageReference> references = entry.getValue();
             if (references.isEmpty()) continue;
 
@@ -1169,7 +1169,7 @@ public class CompressController {
             PDImageXObject converted =
                     lineArtConversionService.convertImageToLineArt(
                             doc, originalImage, threshold, edgeLevel);
-            convertedImages.put(imageHash, converted);
+            convertedImages.put(imageIdentity, converted);
             stats.compressedImages++;
 
             int convertedSize = (int) converted.getCOSObject().getLength();
@@ -1177,8 +1177,8 @@ public class CompressController {
 
             double reductionPercentage = 100.0 - ((convertedSize * 100.0) / originalSize);
             log.info(
-                    "Image hash {}: Line art conversion {} → {} (reduced by {}%)",
-                    imageHash,
+                    "Image identity {}: Line art conversion {} → {} (reduced by {}%)",
+                    imageIdentity,
                     GeneralUtils.formatBytes(originalSize),
                     GeneralUtils.formatBytes(convertedSize),
                     String.format("%.1f", reductionPercentage));
