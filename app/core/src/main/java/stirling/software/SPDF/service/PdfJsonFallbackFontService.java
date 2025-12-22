@@ -312,11 +312,28 @@ public class PdfJsonFallbackFontService {
                                     "ttf")));
 
     private final ResourceLoader resourceLoader;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
     @Value("${stirling.pdf.fallback-font:" + DEFAULT_FALLBACK_FONT_LOCATION + "}")
+    private String legacyFallbackFontLocation;
+
     private String fallbackFontLocation;
 
     private final Map<String, byte[]> fallbackFontCache = new ConcurrentHashMap<>();
+
+    @jakarta.annotation.PostConstruct
+    private void loadConfig() {
+        String configured = null;
+        if (applicationProperties.getPdfEditor() != null) {
+            configured = applicationProperties.getPdfEditor().getFallbackFont();
+        }
+        if (configured != null && !configured.isBlank()) {
+            fallbackFontLocation = configured;
+        } else {
+            fallbackFontLocation = legacyFallbackFontLocation;
+        }
+        log.info("Using fallback font location: {}", fallbackFontLocation);
+    }
 
     public PdfJsonFont buildFallbackFontModel() throws IOException {
         return buildFallbackFontModel(FALLBACK_FONT_ID);

@@ -28,11 +28,13 @@ export function SearchAPIBridge() {
     if (!search) return;
 
     const unsubscribe = search.onSearchResultStateChange?.((state: any) => {
+      if (!state) return;
+
       const newState = {
-        results: state?.results || null,
-        activeIndex: (state?.activeResultIndex || 0) + 1 // Convert to 1-based index
+        results: state.results || null,
+        activeIndex: (state.activeResultIndex || 0) + 1 // Convert to 1-based index
       };
-      
+
       setLocalState(prevState => {
         // Only update if state actually changed
         if (prevState.results !== newState.results || prevState.activeIndex !== newState.activeIndex) {
@@ -52,16 +54,42 @@ export function SearchAPIBridge() {
         state: localState,
         api: {
           search: async (query: string) => {
-            search.startSearch();
-            return search.searchAllPages(query);
+            if (search?.startSearch && search?.searchAllPages) {
+              search.startSearch();
+              return search.searchAllPages(query);
+            }
           },
           clear: () => {
-            search.stopSearch();
+            try {
+              if (search?.stopSearch) {
+                search.stopSearch();
+              }
+            } catch (error) {
+              console.warn('Error stopping search:', error);
+            }
             setLocalState({ results: null, activeIndex: 0 });
           },
-          next: () => search.nextResult(),
-          previous: () => search.previousResult(),
-          goToResult: (index: number) => search.goToResult(index),
+          next: () => {
+            try {
+              search?.nextResult?.();
+            } catch (error) {
+              console.warn('Error navigating to next result:', error);
+            }
+          },
+          previous: () => {
+            try {
+              search?.previousResult?.();
+            } catch (error) {
+              console.warn('Error navigating to previous result:', error);
+            }
+          },
+          goToResult: (index: number) => {
+            try {
+              search?.goToResult?.(index);
+            } catch (error) {
+              console.warn('Error going to result:', error);
+            }
+          },
         }
       });
     }

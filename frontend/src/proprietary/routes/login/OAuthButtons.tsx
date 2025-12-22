@@ -27,7 +27,7 @@ interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
-  enabledProviders?: OAuthProvider[]  // List of enabled provider IDs from backend
+  enabledProviders?: OAuthProvider[]  // List of full auth paths from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
 }
 
 export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {
@@ -38,19 +38,24 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
     ? Object.keys(oauthProviderConfig)
     : enabledProviders;
 
-  // Build provider list - use provider ID to determine icon and label
-  const providers = providersToShow.map(id => {
-    if (id in oauthProviderConfig) {
+  // Build provider list - extract provider ID from full path for display
+  const providers = providersToShow.map(pathOrId => {
+    // Extract provider ID from full path (e.g., '/saml2/authenticate/stirling' -> 'stirling')
+    const providerId = pathOrId.split('/').pop() || pathOrId;
+
+    if (providerId in oauthProviderConfig) {
       // Known provider - use predefined icon and label
       return {
-        id,
-        ...oauthProviderConfig[id]
+        id: pathOrId,  // Keep full path for redirect
+        providerId,    // Store extracted ID for display lookup
+        ...oauthProviderConfig[providerId]
       };
     }
     // Unknown provider - use generic icon and capitalize ID for label
     return {
-      id,
-      label: id.charAt(0).toUpperCase() + id.slice(1),
+      id: pathOrId,  // Keep full path for redirect
+      providerId,    // Store extracted ID for display lookup
+      label: providerId.charAt(0).toUpperCase() + providerId.slice(1),
       file: GENERIC_PROVIDER_ICON
     };
   });

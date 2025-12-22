@@ -26,6 +26,7 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/public/")
                 || normalizedUri.startsWith("/pdfjs/")
                 || normalizedUri.startsWith("/pdfjs-legacy/")
+                || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
                 || normalizedUri.startsWith("/Login/")
@@ -61,7 +62,8 @@ public class RequestUriUtils {
                 || normalizedUri.endsWith(".css")
                 || normalizedUri.endsWith(".mjs")
                 || normalizedUri.endsWith(".html")
-                || normalizedUri.endsWith(".toml");
+                || normalizedUri.endsWith(".toml")
+                || normalizedUri.endsWith(".wasm");
     }
 
     public static boolean isFrontendRoute(String contextPath, String requestURI) {
@@ -125,11 +127,13 @@ public class RequestUriUtils {
                 || requestURI.endsWith("popularity.txt")
                 || requestURI.endsWith(".js")
                 || requestURI.endsWith(".toml")
+                || requestURI.endsWith(".wasm")
                 || requestURI.contains("swagger")
                 || requestURI.startsWith("/api/v1/info")
                 || requestURI.startsWith("/site.webmanifest")
                 || requestURI.startsWith("/fonts")
-                || requestURI.startsWith("/pdfjs"));
+                || requestURI.startsWith("/pdfjs")
+                || requestURI.startsWith("/pdfium"));
     }
 
     /**

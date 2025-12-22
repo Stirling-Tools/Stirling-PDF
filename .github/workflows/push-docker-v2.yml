@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - V2-master
-      - alljavadocker
+      - V1_V2_merge
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -24,6 +24,7 @@ permissions:
 
 jobs:
   push:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
@@ -94,10 +95,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}
             type=raw,value=latest
 
-      - name: Generate tags for latest (alljavadocker branch - test)
+      - name: Generate tags for latest (V1_V2_merge branch - test)
         id: meta-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/alljavadocker'
+        if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -150,10 +151,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat
             type=raw,value=latest-fat
 
-      - name: Generate tags for latest-fat (alljavadocker branch - test)
+      - name: Generate tags for latest-fat (V1_V2_merge branch - test)
         id: meta-fat-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/alljavadocker'
+        if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
@@ -204,10 +205,10 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite
             type=raw,value=latest-ultra-lite
 
-      - name: Generate tags for ultra-lite (alljavadocker branch - test)
+      - name: Generate tags for ultra-lite (V1_V2_merge branch - test)
         id: meta-lite-test
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref == 'refs/heads/alljavadocker'
+        if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
             ghcr.io/stirling-tools/stirling-pdf-test
