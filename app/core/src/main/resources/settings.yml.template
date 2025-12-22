@@ -133,15 +133,17 @@ telegram:
   pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
   feedback:
     general:
-        enabled: true # set to 'true' to enable feedback messages
+      enabled: true # set to 'true' to enable feedback messages
     channel:
-        noValidDocument: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
-        processingError: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
-        errorMessage: false # set to 'true' to hide/suppress error messages in channels (to avoid spam)
+      noValidDocument: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
+      processingError: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
+      errorMessage: false # set to 'true' to hide/suppress error messages in channels (to avoid spam)
+      processing: false # set to 'true' to hide/suppress processing messages in channels (to avoid spam)
     user:
-        noValidDocument: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
-        processingError: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
-        errorMessage: false # set to 'true' to hide/suppress error messages to users (to avoid spam)
+      noValidDocument: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
+      processingError: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
+      errorMessage: false # set to 'true' to hide/suppress error messages to users (to avoid spam)
+      processing: false # set to 'true' to hide/suppress processing messages to users (to avoid spam)
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
@@ -157,7 +159,7 @@ system:
   showUpdate: false # see when a new update is available
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
-  tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  tessdataDir: '' # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled

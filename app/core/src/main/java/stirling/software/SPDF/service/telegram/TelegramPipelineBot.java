@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -200,7 +201,9 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                     "Rejecting user {} in private chat {}",
                     from != null ? from.getId() : "unknown",
                     chat.getId());
-            sendMessage(chat.getId(), "You are not authorized to use this bot.");
+            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+                sendMessage(chat.getId(), "You are not authorized to use this bot.");
+            }
             return false;
         }
 
@@ -223,8 +226,9 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                     "Rejecting channel {} in chat {}",
                     senderChat != null ? senderChat.getId() : "unknown",
                     chat.getId());
-
-            sendMessage(chat.getId(), "This channel is not authorized to use this bot.");
+            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+                sendMessage(chat.getId(), "This channel is not authorized to use this bot.");
+            }
             return false;
         }
 
@@ -246,25 +250,30 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         if (doc.getMimeType() != null
                 && !ALLOWED_MIME_TYPES.contains(doc.getMimeType().toLowerCase())) {
-            sendMessage(
-                    chatId,
-                    "Unsupported MIME type: "
-                            + doc.getMimeType()
-                            + "\nAllowed: "
-                            + String.join(", ", ALLOWED_MIME_TYPES));
+            if (feedback(FeedbackEnum.NOVALIDDOCUMENT)) {
+                sendMessage(
+                        chatId,
+                        "Unsupported MIME type: "
+                                + doc.getMimeType()
+                                + "\nAllowed: "
+                                + String.join(", ", ALLOWED_MIME_TYPES));
+            }
             return;
         }
 
         if (!hasJsonConfig(chatId)) {
-            sendMessage(
-                    chatId,
-                    "No JSON configuration file found in the pipeline inbox folder. Please contact"
-                            + " the administrator.");
+            if (feedback(FeedbackEnum.PROCESSINGERROR)) {
+                sendMessage(
+                        chatId,
+                        "No JSON configuration file found in the pipeline inbox folder. Please"
+                                + " contact the administrator.");
+            }
             return;
         }
 
         try {
-            if (!CHAT_CHANNEL.equals(message.getChat().getType())) {
+            if (!CHAT_CHANNEL.equals(message.getChat().getType())
+                    && feedback(FeedbackEnum.PROCESSING)) {
                 sendMessage(chatId, "File received. Starting processing...");
             }
 
@@ -272,10 +281,12 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             List<Path> outputs = waitForPipelineOutputs(info);
 
             if (outputs.isEmpty()) {
-                sendMessage(
-                        chatId,
-                        "No results were found in the pipeline output folder. Check"
-                                + " configuration.");
+                if (feedback(FeedbackEnum.PROCESSINGERROR)) {
+                    sendMessage(
+                            chatId,
+                            "No results were found in the pipeline output folder. Check"
+                                    + " configuration.");
+                }
                 return;
             }
 
@@ -288,13 +299,19 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         } catch (TelegramApiException e) {
             log.error("Telegram API error", e);
-            sendMessage(chatId, "Telegram API error occurred.");
+            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+                sendMessage(chatId, "Telegram API error occurred.");
+            }
         } catch (IOException e) {
             log.error("IO error", e);
-            sendMessage(chatId, "An IO error occurred.");
+            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+                sendMessage(chatId, "An IO error occurred.");
+            }
         } catch (Exception e) {
             log.error("Unexpected error", e);
-            sendMessage(chatId, "Unexpected error occurred.");
+            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+                sendMessage(chatId, "Unexpected error occurred.");
+            }
         }
     }
 
@@ -339,8 +356,22 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     }
 
     private URL buildDownloadUrl(String filePath) throws MalformedURLException {
-        return URI.create("https://api.telegram.org/file/bot" + getBotToken() + "/" + filePath)
-                .toURL();
+        try {
+            URI uri =
+                    new URI(
+                            "https",
+                            "api.telegram.org",
+                            "/file/bot" + getBotToken() + "/" + filePath,
+                            null);
+            return uri.toURL();
+        } catch (URISyntaxException e) {
+            throw new MalformedURLException("Failed to build Telegram download URL");
+        } catch (MalformedURLException e) {
+            MalformedURLException sanitized =
+                    new MalformedURLException("Failed to build Telegram download URL");
+            sanitized.initCause(e);
+            throw sanitized;
+        }
     }
 
     // ---------------------------

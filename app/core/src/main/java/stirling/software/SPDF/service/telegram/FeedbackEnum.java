@@ -8,5 +8,8 @@ public enum FeedbackEnum {
     PROCESSINGERROR,
 
     /** Represents a generic error message. */
-    ERRORMESSAGE
+    ERRORMESSAGE,
+
+    /** Indicates that processing is ongoing. */
+    PROCESSING
 }

@@ -642,7 +642,7 @@ public class ApplicationProperties {
     @Data
     public static class Telegram {
         private Boolean enabled = false;
-        private String botToken;
+        @ToString.Exclude private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
         private Boolean customFolderSuffix = false;
@@ -675,37 +675,49 @@ public class ApplicationProperties {
                 private Boolean noValidDocument = false;
 
                 /**
-                 * Set to {@code true} to deny processing error feedback messages to the channel
-                 * (to avoid spam).
+                 * Set to {@code true} to deny processing error feedback messages to the channel (to
+                 * avoid spam).
                  */
                 private Boolean processingError = false;
 
                 /**
-                 * Set to {@code true} to deny generic error feedback messages to the channel
-                 * (to avoid spam).
+                 * Set to {@code true} to deny generic error feedback messages to the channel (to
+                 * avoid spam).
                  */
                 private Boolean errorMessage = false;
+
+                /**
+                 * Set to {@code true} to deny "processing" feedback messages to the channel (to
+                 * avoid spam).
+                 */
+                private Boolean processing = false;
             }
 
             @Data
             public static class User {
                 /**
-                 * Set to {@code true} to deny "no valid document" feedback messages to users
-                 * (to avoid spam).
+                 * Set to {@code true} to deny "no valid document" feedback messages to users (to
+                 * avoid spam).
                  */
                 private Boolean noValidDocument = false;
 
                 /**
-                 * Set to {@code true} to deny processing error feedback messages to users
-                 * (to avoid spam).
+                 * Set to {@code true} to deny processing error feedback messages to users (to avoid
+                 * spam).
                  */
                 private Boolean processingError = false;
 
                 /**
-                 * Set to {@code true} to deny generic error feedback messages to users
-                 * (to avoid spam).
+                 * Set to {@code true} to deny generic error feedback messages to users (to avoid
+                 * spam).
                  */
                 private Boolean errorMessage = false;
+
+                /**
+                 * Set to {@code true} to deny "processing" feedback messages to users (to avoid
+                 * spam).
+                 */
+                private Boolean processing = false;
             }
         }
     }
