@@ -144,6 +144,17 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           disabled={disabled}
           label={t("compress.grayscale.label", "Apply Grayscale for compression")}
         />
+
+        {/* Linearize Option */}
+        <Stack gap="sm">
+          <Checkbox
+            checked={parameters.linearize}
+            onChange={(event) => onParameterChange('linearize', event.currentTarget.checked)}
+            disabled={disabled}
+            label={t("compress.linearize.label", "Linearize PDF for fast web viewing")}
+          />
+        </Stack>
+
         <Checkbox
           checked={parameters.lineArt}
           onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}
