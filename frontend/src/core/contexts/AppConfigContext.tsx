@@ -18,6 +18,7 @@ export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;
+  frontendUrl?: string;
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;

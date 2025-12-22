@@ -40,13 +40,9 @@ function generateSessionId(): string {
     ].join('-');
   }
 
-  // Fallback for environments without Web Crypto (should not happen in modern browsers)
-  console.warn('Web Crypto API not available, falling back to Math.random()');
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  // If Web Crypto is not available, fail fast rather than using insecure randomness
+  console.error('Web Crypto API not available. Cannot generate secure session ID.');
+  throw new Error('Web Crypto API not available. Cannot generate secure session ID.');
 }
 
 interface SessionInfo {
