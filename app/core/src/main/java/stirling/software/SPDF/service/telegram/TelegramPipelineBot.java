@@ -109,11 +109,11 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String message_text = update.getMessage().getText();
-            long chat_id = update.getMessage().getChatId();
-            if ("/start".equals(message_text)) {
+            String messageText = update.getMessage().getText();
+            long chatId = update.getMessage().getChatId();
+            if ("/start".equals(messageText)) {
                 sendMessage(
-                        chat_id,
+                        chatId,
                         """
                         Welcome to the SPDF Telegram Bot!
 
