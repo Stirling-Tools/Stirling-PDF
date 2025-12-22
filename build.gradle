@@ -20,12 +20,12 @@ ext {
     pdfboxVersion = "3.0.6"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.42"
-    bouncycastleVersion = "1.82"
+    bouncycastleVersion = "1.83"
     springSecuritySamlVersion = "6.5.6"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
-    logback = "1.5.21"
+    logback = "1.5.22"
     junitPlatformVersion = "1.12.2"
 }
 
@@ -172,7 +172,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.1")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -334,7 +334,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
