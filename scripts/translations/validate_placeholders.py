@@ -13,7 +13,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 import argparse
 import tomllib  # Python 3.11+ (stdlib)
 
@@ -22,10 +22,10 @@ def find_placeholders(text: str) -> Set[str]:
     """Find all placeholders in text like {n}, {{var}}, {0}, etc."""
     if not isinstance(text, str):
         return set()
-    return set(re.findall(r'\{\{?[^}]+\}\}?', text))
+    return set(re.findall(r"\{\{?[^}]+\}\}?", text))
 
 
-def flatten_dict(d: dict, parent_key: str = '', sep: str = '.') -> Dict[str, str]:
+def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> Dict[str, str]:
     """Flatten nested dict to dot-notation keys."""
     items = []
     for k, v in d.items():
@@ -38,9 +38,7 @@ def flatten_dict(d: dict, parent_key: str = '', sep: str = '.') -> Dict[str, str
 
 
 def validate_language(
-    en_gb_flat: Dict[str, str],
-    lang_flat: Dict[str, str],
-    lang_code: str
+    en_gb_flat: Dict[str, str], lang_flat: Dict[str, str], lang_code: str
 ) -> List[Dict]:
     """Validate placeholders for a language against en-GB."""
     issues = []
@@ -57,12 +55,12 @@ def validate_language(
             extra = lang_placeholders - en_placeholders
 
             issue = {
-                'language': lang_code,
-                'key': key,
-                'missing': missing,
-                'extra': extra,
-                'en_text': en_gb_flat[key],
-                'lang_text': lang_flat[key]
+                "language": lang_code,
+                "key": key,
+                "missing": missing,
+                "extra": extra,
+                "en_text": en_gb_flat[key],
+                "lang_text": lang_flat[key],
             }
             issues.append(issue)
 
@@ -82,9 +80,9 @@ def print_issues(issues: List[Dict], verbose: bool = False):
         print(f"\n{i}. Language: {issue['language']}")
         print(f"   Key: {issue['key']}")
 
-        if issue['missing']:
+        if issue["missing"]:
             print(f"   ⚠️  MISSING placeholders: {issue['missing']}")
-        if issue['extra']:
+        if issue["extra"]:
             print(f"   ⚠️  EXTRA placeholders: {issue['extra']}")
 
         if verbose:
@@ -96,37 +94,34 @@ def print_issues(issues: List[Dict], verbose: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate translation placeholder consistency'
+        description="Validate translation placeholder consistency"
     )
     parser.add_argument(
-        '--language',
-        help='Specific language code to validate (e.g., es-ES)',
-        default=None
+        "--language",
+        help="Specific language code to validate (e.g., es-ES)",
+        default=None,
     )
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show full text samples for each issue'
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show full text samples for each issue",
     )
-    parser.add_argument(
-        '--json',
-        action='store_true',
-        help='Output results as JSON'
-    )
+    parser.add_argument("--json", action="store_true", help="Output results as JSON")
 
     args = parser.parse_args()
 
     # Define paths
-    locales_dir = Path('frontend/public/locales')
-    en_gb_path = locales_dir / 'en-GB' / 'translation.toml'
-    file_ext = '.toml'
+    locales_dir = Path("frontend/public/locales")
+    en_gb_path = locales_dir / "en-GB" / "translation.toml"
+    file_ext = ".toml"
 
     if not en_gb_path.exists():
         print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
         sys.exit(1)
 
     # Load en-GB (source of truth)
-    with open(en_gb_path, 'rb') as f:
+    with open(en_gb_path, "rb") as f:
         en_gb = tomllib.load(f)
 
     en_gb_flat = flatten_dict(en_gb)
@@ -138,22 +133,22 @@ def main():
         # Validate all languages except en-GB
         languages = []
         for d in locales_dir.iterdir():
-            if d.is_dir() and d.name != 'en-GB':
-                if (d / 'translation.toml').exists():
+            if d.is_dir() and d.name != "en-GB":
+                if (d / "translation.toml").exists():
                     languages.append(d.name)
 
     all_issues = []
 
     # Validate each language
     for lang_code in sorted(languages):
-        lang_path = locales_dir / lang_code / 'translation.toml'
+        lang_path = locales_dir / lang_code / "translation.toml"
 
         if not lang_path.exists():
             print(f"⚠️  Warning: {lang_code}/translation.toml not found, skipping")
             continue
 
         # Load language file
-        with open(lang_path, 'rb') as f:
+        with open(lang_path, "rb") as f:
             lang_data = tomllib.load(f)
 
         lang_flat = flatten_dict(lang_data)
@@ -168,19 +163,19 @@ def main():
             # Group by language
             by_language = {}
             for issue in all_issues:
-                lang = issue['language']
+                lang = issue["language"]
                 if lang not in by_language:
                     by_language[lang] = []
                 by_language[lang].append(issue)
 
-            print(f"📊 Validation Summary:")
+            print("📊 Validation Summary:")
             print(f"   Total issues: {len(all_issues)}")
             print(f"   Languages with issues: {len(by_language)}\n")
 
             for lang in sorted(by_language.keys()):
-                print(f"\n{'='*100}")
+                print(f"\n{'=' * 100}")
                 print(f"Language: {lang} ({len(by_language[lang])} issue(s))")
-                print(f"{'='*100}")
+                print(f"{'=' * 100}")
                 print_issues(by_language[lang], verbose=args.verbose)
         else:
             print("✅ All translations have correct placeholders!")
@@ -189,5 +184,5 @@ def main():
     sys.exit(1 if all_issues else 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
