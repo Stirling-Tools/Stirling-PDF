@@ -55,7 +55,19 @@ export default defineConfig(({ mode }) => {
           secure: false,
           xfwd: true,
         },
+        '/saml2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
         '/login/oauth2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/login/saml2': {
           target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,

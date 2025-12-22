@@ -27,7 +27,7 @@ public class AddWatermarkRequest extends PDFFile {
 
     @Schema(
             description = "The selected alphabet",
-            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese"},
+            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet;
 
