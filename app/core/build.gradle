@@ -268,6 +268,18 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
 }
 
+tasks.register('copyApiLandingPage', Copy) {
+    group = 'frontend'
+    description = 'Copy API landing page to index.html for backend-only mode'
+    from(new File(resourcesStaticDir, 'api-landing.html'))
+    into(resourcesStaticDir)
+    rename('api-landing.html', 'index.html')
+    dependsOn cleanFrontendAssets
+    doFirst {
+        println "Copying API landing page to index.html for backend-only mode..."
+    }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
@@ -277,9 +289,9 @@ if (buildWithFrontend) {
     println "Frontend build enabled - JAR will include React frontend"
     processResources.dependsOn copyFrontendAssets
 } else {
-    println "Frontend build disabled - JAR will be backend-only"
-    // When not building the UI, ensure any stale frontend assets are removed
-    processResources.dependsOn cleanFrontendAssets
+    println "Frontend build disabled - JAR will be backend-only with API landing page"
+    // When not building the UI, ensure any stale frontend assets are removed and use API landing page
+    processResources.dependsOn copyApiLandingPage
 }
 
 bootJar.dependsOn ':common:jar'
