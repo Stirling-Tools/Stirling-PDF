@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
+import { useState, useEffect } from "react";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
+import apiClient from "@app/services/apiClient";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -13,6 +14,20 @@ interface CompressSettingsProps {
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
   const [isSliding, setIsSliding] = useState(false);
+  const [imageMagickAvailable, setImageMagickAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkImageMagick = async () => {
+      try {
+        const response = await apiClient.get<boolean>('/api/v1/config/group-enabled?group=ImageMagick');
+        setImageMagickAvailable(response.data);
+      } catch (error) {
+        console.error('Failed to check ImageMagick availability:', error);
+        setImageMagickAvailable(true); // Optimistic fallback
+      }
+    };
+    checkImageMagick();
+  }, []);
 
   return (
     <Stack gap="md">
@@ -129,6 +144,73 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           disabled={disabled}
           label={t("compress.grayscale.label", "Apply Grayscale for compression")}
         />
+
+        {/* Linearize Option */}
+        <Stack gap="sm">
+          <Checkbox
+            checked={parameters.linearize}
+            onChange={(event) => onParameterChange('linearize', event.currentTarget.checked)}
+            disabled={disabled}
+            label={t("compress.linearize.label", "Linearize PDF for fast web viewing")}
+          />
+        </Stack>
+
+        <Checkbox
+          checked={parameters.lineArt}
+          onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}
+          disabled={disabled || imageMagickAvailable === false}
+          label={t("compress.lineArt.label", "Convert images to line art (bilevel)")}
+          description={
+            imageMagickAvailable === false
+              ? t("compress.lineArt.unavailable", "ImageMagick is not installed or enabled on this server")
+              : t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")
+          }
+        />
+        {parameters.lineArt && (
+          <Stack gap="xs" style={{ opacity: (disabled || imageMagickAvailable === false) ? 0.6 : 1 }}>
+            <Text size="sm" fw={600}>{t('compress.lineArt.detailLevel', 'Detail level')}</Text>
+            <Slider
+              min={1}
+              max={5}
+              step={1}
+              value={(() => {
+                // Map threshold to slider position
+                const thresholdMap = [20, 35, 50, 65, 80];
+                const closest = thresholdMap.reduce((prev, curr, idx) =>
+                  Math.abs(curr - parameters.lineArtThreshold) < Math.abs(thresholdMap[prev] - parameters.lineArtThreshold)
+                    ? idx : prev, 0);
+                return closest + 1;
+              })()}
+              onChange={(value) => {
+                // Map slider position to threshold: 1=20%, 2=35%, 3=50%, 4=65%, 5=80%
+                const thresholdMap = [20, 35, 50, 65, 80];
+                onParameterChange('lineArtThreshold', thresholdMap[value - 1]);
+              }}
+              disabled={disabled || imageMagickAvailable === false}
+              label={null}
+              marks={[
+                { value: 1 },
+                { value: 2 },
+                { value: 3 },
+                { value: 4 },
+                { value: 5 },
+              ]}
+            />
+
+            <Text size="sm" fw={600}>{t('compress.lineArt.edgeEmphasis', 'Edge emphasis')}</Text>
+            <SegmentedControl
+              fullWidth
+              disabled={disabled || imageMagickAvailable === false}
+              data={[
+                { value: '1', label: t('compress.lineArt.edgeLow', 'Gentle') },
+                { value: '2', label: t('compress.lineArt.edgeMedium', 'Balanced') },
+                { value: '3', label: t('compress.lineArt.edgeHigh', 'Strong') },
+              ]}
+              value={parameters.lineArtEdgeLevel.toString()}
+              onChange={(value) => onParameterChange('lineArtEdgeLevel', parseInt(value) as 1 | 2 | 3)}
+            />
+          </Stack>
+        )}
       </Stack>
     </Stack>
   );

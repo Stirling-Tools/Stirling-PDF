@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.service;
 
+import java.util.Locale;
+
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -60,7 +62,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         AuthenticationType userAuthenticationType =
-                AuthenticationType.valueOf(authTypeStr.toUpperCase());
+                AuthenticationType.valueOf(authTypeStr.toUpperCase(Locale.ROOT));
         if (!user.hasPassword() && userAuthenticationType == AuthenticationType.WEB) {
             throw new IllegalArgumentException("Password must not be null");
         }

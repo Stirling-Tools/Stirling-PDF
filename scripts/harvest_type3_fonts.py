@@ -28,13 +28,15 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Bulk collect Type3 font signatures from PDFs.")
+    parser = argparse.ArgumentParser(
+        description="Bulk collect Type3 font signatures from PDFs."
+    )
     parser.add_argument(
         "--input",
         nargs="+",
@@ -145,7 +147,7 @@ def run_signature_tool(
     if pretty:
         args += " --pretty"
     # Use shell invocation so the quoted --args string is parsed correctly by Gradle.
-    cmd = f"{gradle_cmd} -q :proprietary:type3SignatureTool --args=\"{args}\""
+    cmd = f'{gradle_cmd} -q :proprietary:type3SignatureTool --args="{args}"'
     completed = subprocess.run(
         cmd,
         shell=True,
@@ -207,11 +209,15 @@ def main() -> None:
             try:
                 payload = load_signature_file(signature_path)
             except Exception as exc:
-                print(f"[WARN] Failed to parse cached signature {signature_path}: {exc}")
+                print(
+                    f"[WARN] Failed to parse cached signature {signature_path}: {exc}"
+                )
                 payload = None
         else:
             try:
-                run_signature_tool(args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT)
+                run_signature_tool(
+                    args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT
+                )
             except Exception as exc:
                 print(f"[ERROR] Harvest failed for {pdf}: {exc}", file=sys.stderr)
                 continue
