@@ -193,7 +193,7 @@ python scripts/translations/translation_merger.py fr-FR remove-unused
 - Creates structured templates for AI translation
 - Applies translated content back to language files
 - Automatic backup creation
-- Remove unused translations not present in en-GB
+- Removes unused translations not present in en-GB
 
 ### 3. `ai_translation_helper.py`
 Specialized tool for AI-assisted translation workflows with batch processing and validation.

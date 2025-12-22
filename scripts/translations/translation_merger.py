@@ -462,6 +462,7 @@ def main():
             print(f"Failed: {result.get('error', 'Unknown error')}")
 
     elif args.command == "remove-unused":
+        print(f"Removing unused translations from {args.language}...")
         result = merger.remove_unused_translations(target_file, backup=args.backup)
 
         if result["success"]:
