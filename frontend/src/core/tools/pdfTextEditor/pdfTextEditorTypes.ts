@@ -201,6 +201,8 @@ export interface PdfTextEditorViewData {
   hasChanges: boolean;
   forceSingleTextElement: boolean;
   groupingMode: 'auto' | 'paragraph' | 'singleLine';
+  autoScaleText: boolean;
+  onAutoScaleTextChange: (value: boolean) => void;
   requestPagePreview: (pageIndex: number, scale: number) => void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;

@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Accordion,
   Badge,
   Box,
   Code,
   Collapse,
+  Divider,
+  Flex,
   Group,
   List,
   Paper,
@@ -29,10 +30,14 @@ import {
   getFontStatusColor,
   getFontStatusDescription,
 } from '@app/tools/pdfTextEditor/fontAnalysis';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip as CustomTooltip } from '@app/components/shared/Tooltip';
 
 interface FontStatusPanelProps {
   document: PdfJsonDocument | null;
   pageIndex?: number;
+  isCollapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const FontStatusBadge = ({ analysis }: { analysis: FontAnalysis }) => {
@@ -74,25 +79,31 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <Paper withBorder p="xs" style={{ cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
+    <Paper withBorder px="sm" py="md" style={{ cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
       <Stack gap={4}>
-        <Group justify="space-between">
-          <Group gap={4}>
-            <FontDownloadIcon sx={{ fontSize: 16 }} />
-            <Text size="xs" fw={500} lineClamp={1}>
-              {analysis.baseName}
-            </Text>
+        <Flex align="center" justify="space-between" wrap="nowrap">
+          <Group gap={4} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+            <FontDownloadIcon sx={{ fontSize: 16, flexShrink: 0 }} />
+            <CustomTooltip
+              sidebarTooltip={false}
+              content={analysis.baseName}
+              position="top"
+            >
+              <Text size="xs" fw={500} lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
+                {analysis.baseName}
+              </Text>
+            </CustomTooltip>
             {analysis.isSubset && (
-              <Badge size="xs" color="gray" variant="outline">
+              <Badge size="xs" color="gray" variant="outline" style={{ flexShrink: 0 }}>
                 subset
               </Badge>
             )}
           </Group>
-          <Group gap={4}>
+          <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
             <FontStatusBadge analysis={analysis} />
             {expanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
           </Group>
-        </Group>
+        </Flex>
 
         <Collapse in={expanded}>
           <Stack gap={4} mt={4}>
@@ -165,7 +176,12 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
   );
 };
 
-const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }) => {
+const FontStatusPanel: React.FC<FontStatusPanelProps> = ({
+  document,
+  pageIndex,
+  isCollapsed = false,
+  onCollapsedChange
+}) => {
   const { t } = useTranslation();
 
   const fontAnalysis: DocumentFontAnalysis = useMemo(
@@ -174,16 +190,6 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
   );
 
   const { canReproducePerfectly, hasWarnings, summary, fonts } = fontAnalysis;
-
-  const statusIcon = useMemo(() => {
-    if (canReproducePerfectly) {
-      return <CheckCircleIcon sx={{ fontSize: 16 }} />;
-    }
-    if (hasWarnings) {
-      return <WarningIcon sx={{ fontSize: 16 }} />;
-    }
-    return <InfoIcon sx={{ fontSize: 16 }} />;
-  }, [canReproducePerfectly, hasWarnings]);
 
   // Early return AFTER all hooks are declared
   if (!document || fontAnalysis.fonts.length === 0) {
@@ -197,37 +203,46 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
     : t('pdfTextEditor.fontAnalysis.allFonts', 'All fonts');
 
   return (
-    <Accordion variant="contained" defaultValue={hasWarnings ? 'fonts' : undefined}>
-      <Accordion.Item value="fonts">
-        <Accordion.Control>
-          <Group gap="xs" wrap="wrap" style={{ flex: 1 }}>
-            <Group gap="xs" wrap="nowrap">
-              {statusIcon}
-              <Text size="sm" fw={500}>
-                {pageLabel}
-              </Text>
-              <Badge size="xs" color={statusColor} variant="dot">
-                {fonts.length}
-              </Badge>
-            </Group>
+    <div>
+      <div
+        style={{
+          padding: '0.5rem',
+          opacity: isCollapsed ? 0.8 : 1,
+          color: isCollapsed ? 'var(--mantine-color-dimmed)' : 'inherit',
+          transition: 'opacity 0.2s ease, color 0.2s ease'
+        }}
+      >
+        {/* Header - matches ToolStep style */}
+        <Flex
+          align="center"
+          justify="space-between"
+          mb={isCollapsed ? 0 : 'sm'}
+          style={{ cursor: 'pointer' }}
+          onClick={() => onCollapsedChange?.(!isCollapsed)}
+        >
+          <Flex align="center" gap="xs">
+            <Text fw={500} size="sm">
+              {pageLabel}
+            </Text>
+            <Badge size="xs" color={statusColor} variant="dot">
+              {fonts.length}
+            </Badge>
+          </Flex>
 
-            {/* Warning badges BEFORE expansion */}
-            <Group gap={4} wrap="wrap">
-              {summary.systemFallback > 0 && (
-                <Badge size="xs" color="yellow" variant="filled" leftSection={<WarningIcon sx={{ fontSize: 12 }} />}>
-                  {summary.systemFallback} {t('pdfTextEditor.fontAnalysis.fallback', 'fallback')}
-                </Badge>
-              )}
-              {summary.missing > 0 && (
-                <Badge size="xs" color="red" variant="filled" leftSection={<ErrorIcon sx={{ fontSize: 12 }} />}>
-                  {summary.missing} {t('pdfTextEditor.fontAnalysis.missing', 'missing')}
-                </Badge>
-              )}
-            </Group>
-          </Group>
-        </Accordion.Control>
-        <Accordion.Panel>
-          <Stack gap="xs">
+          {isCollapsed ? (
+            <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
+              color: 'var(--mantine-color-dimmed)'
+            }} />
+          ) : (
+            <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
+              color: 'var(--mantine-color-dimmed)'
+            }} />
+          )}
+        </Flex>
+
+        {/* Content */}
+        {!isCollapsed && (
+          <Stack gap="xs" pl="sm">
             {/* Overall Status Message */}
             <Text size="xs" c="dimmed">
               {canReproducePerfectly
@@ -277,9 +292,10 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
               ))}
             </Stack>
           </Stack>
-        </Accordion.Panel>
-      </Accordion.Item>
-    </Accordion>
+        )}
+      </div>
+      <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
+    </div>
   );
 };
 
