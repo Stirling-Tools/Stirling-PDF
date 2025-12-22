@@ -7,10 +7,7 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
-import {
-  ALL_PROVIDERS,
-  Provider,
-} from '@app/components/shared/config/configSections/providerDefinitions';
+import { Provider, useAllProviders } from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -77,6 +74,7 @@ export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
@@ -421,8 +419,8 @@ export default function AdminConnectionsSection() {
     }
   };
 
-  const linkedProviders = ALL_PROVIDERS.filter((p) => isProviderConfigured(p));
-  const availableProviders = ALL_PROVIDERS.filter((p) => !isProviderConfigured(p));
+  const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
+  const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
   return (
     <Stack gap="xl">

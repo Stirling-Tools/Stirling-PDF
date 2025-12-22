@@ -360,6 +360,7 @@ advanced = "Erweitert"
 title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -4388,6 +4389,93 @@ description = "Benutzerkonten bei der ersten SAML2-Anmeldung automatisch erstell
 [admin.settings.connections.saml2.blockRegistration]
 label = "Registrierung blockieren"
 description = "Neue Benutzerregistrierung über SAML2 verhindern"
+
+[admin.settings.telegram]
+title = "Telegram-Bot"
+description = "Telegram-Bot-Anbindung, Zugriffskontrollen und Feedback-Verhalten konfigurieren."
+
+[admin.settings.telegram.enabled]
+label = "Telegram-Bot aktivieren"
+description = "Erlaubt Benutzern die Interaktion mit Stirling PDF über den konfigurierten Telegram-Bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot-Benutzername"
+description = "Der öffentliche Benutzername Ihres Telegram-Bots."
+
+[admin.settings.telegram.botToken]
+label = "Bot-Token"
+description = "API-Token, das von BotFather für Ihren Telegram-Bot bereitgestellt wird."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Posteingangsordner"
+description = "Ordner innerhalb des Pipeline-Verzeichnisses, in dem eingehende Telegram-Dateien gespeichert werden."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Benutzerdefinierten Ordner-Suffix verwenden"
+description = "Hängt die Chat-ID an eingehende Dateiordner an, um Uploads pro Chat zu isolieren."
+
+[admin.settings.telegram.accessControl]
+title = "Zugriffskontrolle"
+description = "Einschränken, welche Benutzer oder Kanäle mit dem Bot interagieren dürfen."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Bestimmte Benutzer-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Benutzer-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Erlaubte Benutzer-IDs"
+description = "Telegram-Benutzer-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Benutzer-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Bestimmte Kanal-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Kanal-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Erlaubte Kanal-IDs"
+description = "Telegram-Kanal-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Kanal-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.processing]
+title = "Verarbeitung"
+description = "Polling-Intervalle und Verarbeitungs-Timeouts für Telegram-Uploads steuern."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Verarbeitungs-Timeout (Sekunden)"
+description = "Maximale Wartezeit für einen Verarbeitungsjob, bevor ein Fehler gemeldet wird."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling-Intervall (ms)"
+description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback-Nachrichten"
+description = "Festlegen, wann der Bot Feedback an Benutzer und Kanäle senden soll."
+noValidDocument = "\"Kein gültiges Dokument\" ausblenden"
+processingError = "Verarbeitungsfehler ausblenden"
+errorMessage = "Fehlermeldungen ausblenden"
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Feedback aktivieren"
+description = "Legt fest, ob der Bot überhaupt Feedback-Nachrichten sendet."
+
+[admin.settings.telegram.feedback.channel]
+title = "Kanal-Feedback-Regeln"
+noValidDocument.label = "\"Kein gültiges Dokument\" ausblenden (Kanal)"
+noValidDocument.description = "Unterdrückt die Meldung „Kein gültiges Dokument“ bei Kanal-Uploads."
+processingError.label = "Verarbeitungsfehler ausblenden (Kanal)"
+processingError.description = "Keine Verarbeitungsfehlermeldungen an Kanäle senden."
+errorMessage.label = "Fehlermeldungen ausblenden (Kanal)"
+errorMessage.description = "Detaillierte Fehlermeldungen für Kanäle ausblenden."
+
+[admin.settings.telegram.feedback.user]
+title = "Benutzer-Feedback-Regeln"
+noValidDocument.label = "\"Kein gültiges Dokument\" ausblenden (Benutzer)"
+noValidDocument.description = "Unterdrückt die Meldung „Kein gültiges Dokument“ bei Benutzer-Uploads."
+processingError.label = "Verarbeitungsfehler ausblenden (Benutzer)"
+processingError.description = "Keine Verarbeitungsfehlermeldungen an Benutzer senden."
+errorMessage.label = "Fehlermeldungen ausblenden (Benutzer)"
+errorMessage.description = "Detaillierte Fehlermeldungen für Benutzer ausblenden."
 
 [admin.settings.database]
 title = "Datenbank"

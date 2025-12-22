@@ -4589,9 +4589,21 @@ description = "Control whether the bot sends feedback messages at all."
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
+noValidDocument.label = "Hide \"No valid document\" (Channel)"
+noValidDocument.description = "Suppress the no valid document response for channel uploads."
+processingError.label = "Hide processing errors (Channel)"
+processingError.description = "Do not send processing error messages to channels."
+errorMessage.label = "Hide error messages (Channel)"
+errorMessage.description = "Hide detailed error messages for channels."
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
+noValidDocument.label = "Hide \"No valid document\" (User)"
+noValidDocument.description = "Suppress the no valid document response for user uploads."
+processingError.label = "Hide processing errors (User)"
+processingError.description = "Do not send processing error messages to users."
+errorMessage.label = "Hide error messages (User)"
+errorMessage.description = "Hide detailed error messages for users."
 
 [admin.settings.database]
 title = "Database"
