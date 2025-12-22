@@ -18,7 +18,9 @@ from typing import Dict, List
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Summarize Type3 signature JSON dumps.")
+    parser = argparse.ArgumentParser(
+        description="Summarize Type3 signature JSON dumps."
+    )
     parser.add_argument(
         "--input",
         default="docs/type3/signatures",
@@ -53,7 +55,9 @@ def load_signatures(directory: Path) -> Dict[str, List[dict]]:
     return inventory
 
 
-def write_markdown(inventory: Dict[str, List[dict]], output: Path, input_dir: Path) -> None:
+def write_markdown(
+    inventory: Dict[str, List[dict]], output: Path, input_dir: Path
+) -> None:
     lines: List[str] = []
     lines.append("# Type3 Signature Inventory")
     lines.append("")
@@ -72,7 +76,9 @@ def write_markdown(inventory: Dict[str, List[dict]], output: Path, input_dir: Pa
         for entry in entries:
             signature = entry.get("signature") or "—"
             sample = Path(entry["source"]).name
-            glyph_count = entry.get("glyphCount") if entry.get("glyphCount") is not None else "—"
+            glyph_count = (
+                entry.get("glyphCount") if entry.get("glyphCount") is not None else "—"
+            )
             coverage = entry.get("glyphCoverage") or []
             preview = ", ".join(str(code) for code in coverage[:10])
             lines.append(f"| `{signature}` | `{sample}` | {glyph_count} | {preview} |")

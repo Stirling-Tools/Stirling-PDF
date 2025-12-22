@@ -1251,7 +1251,7 @@ includeAllRecipients = "Include CC and BCC recipients in header"
 downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
 fileFormat = "File Format"
 wordDoc = "Word Document"
@@ -3737,6 +3737,9 @@ filesize = "File Size"
 
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
 label = "Convert images to line art"
