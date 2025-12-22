@@ -43,6 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
+/**
+ * Telegram bot that processes incoming files through a defined pipeline.
+ *
+ * @since 2.2.x
+ */
 @Slf4j
 @Component
 @ConditionalOnProperty(prefix = "telegram", name = "enabled", havingValue = "true")

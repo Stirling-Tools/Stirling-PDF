@@ -1,5 +1,10 @@
 package stirling.software.SPDF.service.telegram;
 
+/**
+ * Enumeration representing different feedback types for Telegram service.
+ *
+ * @since 2.2.x
+ */
 public enum FeedbackEnum {
     /** Indicates that the provided document is not valid. */
     NOVALIDDOCUMENT,

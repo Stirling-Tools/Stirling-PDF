@@ -617,6 +617,11 @@ public class ApplicationProperties {
         }
     }
 
+    /**
+     * Mail server configuration properties.
+     *
+     * @since 0.46.1
+     */
     @Data
     public static class Mail {
         private boolean enabled;
@@ -639,6 +644,11 @@ public class ApplicationProperties {
         private Boolean sslCheckServerIdentity;
     }
 
+    /**
+     * Telegram bot configuration properties.
+     *
+     * @since 2.2.x
+     */
     @Data
     public static class Telegram {
         private Boolean enabled = false;
