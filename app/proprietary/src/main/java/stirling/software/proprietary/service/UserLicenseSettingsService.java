@@ -177,6 +177,13 @@ public class UserLicenseSettingsService {
      */
     @Transactional
     public void grandfatherExistingOAuthUsers() {
+        // Only grandfather users if this is a V1→V2 upgrade, not a fresh V2 install
+        Boolean isNewServer = applicationProperties.getAutomaticallyGenerated().getIsNewServer();
+        if (Boolean.TRUE.equals(isNewServer)) {
+            log.info("Fresh V2 installation detected - skipping OAuth user grandfathering");
+            return;
+        }
+
         UserLicenseSettings settings = getOrCreateSettings();
 
         // Check if we've already run this migration
@@ -348,30 +355,22 @@ public class UserLicenseSettingsService {
         String username = (user != null) ? user.getUsername() : "<new user>";
         log.info("OAuth eligibility check for user: {}", username);
 
-        // Grandfathered users always have OAuth access
-        if (user != null && user.isOauthGrandfathered()) {
-            log.debug("User {} is grandfathered for OAuth", user.getUsername());
+        // Check license first - if paying, they're eligible (no need to check grandfathering)
+        boolean hasPaid = hasPaidLicense();
+        if (hasPaid) {
+            log.debug("User {} eligible for OAuth via paid license", username);
             return true;
         }
 
-        // todo: remove
-        if (user != null) {
-            log.info(
-                    "User {} is NOT grandfathered (isOauthGrandfathered={})",
-                    username,
-                    user.isOauthGrandfathered());
-        } else {
-            log.info("New user attempting OAuth login - checking license requirement");
+        // No license - check if grandfathered (fallback for V1 users)
+        if (user != null && user.isOauthGrandfathered()) {
+            log.info("User {} eligible for OAuth via grandfathering (no paid license)", username);
+            return true;
         }
 
-        // Users can use OAuth with SERVER or ENTERPRISE license
-        boolean hasPaid = hasPaidLicense();
-        log.info(
-                "OAuth eligibility result: hasPaidLicense={}, user={}, eligible={}",
-                hasPaid,
-                username,
-                hasPaid);
-        return hasPaid;
+        // Not grandfathered and no license
+        log.info("User {} NOT eligible for OAuth: no paid license and not grandfathered", username);
+        return false;
     }
 
     /**
@@ -391,29 +390,26 @@ public class UserLicenseSettingsService {
         String username = (user != null) ? user.getUsername() : "<new user>";
         log.info("SAML2 eligibility check for user: {}", username);
 
-        // Grandfathered users always have SAML access
-        if (user != null && user.isOauthGrandfathered()) {
-            log.info("User {} is grandfathered for SAML2 - ELIGIBLE", username);
+        // Check license first - if paying, they're eligible (no need to check grandfathering)
+        boolean hasEnterprise = hasEnterpriseLicense();
+        if (hasEnterprise) {
+            log.debug("User {} eligible for SAML2 via ENTERPRISE license", username);
             return true;
         }
 
-        if (user != null) {
+        // No license - check if grandfathered (fallback for V1 users)
+        if (user != null && user.isOauthGrandfathered()) {
             log.info(
-                    "User {} is NOT grandfathered (isOauthGrandfathered={})",
-                    username,
-                    user.isOauthGrandfathered());
-        } else {
-            log.info("New user attempting SAML2 login - checking license requirement");
+                    "User {} eligible for SAML2 via grandfathering (no ENTERPRISE license)",
+                    username);
+            return true;
         }
 
-        // Users can use SAML only with ENTERPRISE license
-        boolean hasEnterprise = hasEnterpriseLicense();
+        // Not grandfathered and no license
         log.info(
-                "SAML2 eligibility result: hasEnterpriseLicense={}, user={}, eligible={}",
-                hasEnterprise,
-                username,
-                hasEnterprise);
-        return hasEnterprise;
+                "User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered",
+                username);
+        return false;
     }
 
     /**

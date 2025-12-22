@@ -14,6 +14,7 @@ jobs:
     permissions:
       issues: write
     if: |
+      vars.CI_PROFILE != 'lite' &&
       github.event.issue.pull_request &&
       (
         contains(github.event.comment.body, 'prdeploy') ||
@@ -40,12 +41,12 @@ jobs:
       enable_enterprise: ${{ steps.check-pro-flag.outputs.enable_enterprise }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -128,12 +129,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -145,7 +146,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Checkout PR
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
           token: ${{ steps.setup-bot.outputs.token }}
@@ -356,3 +357,149 @@ jobs:
           rm -f ../private.key docker-compose.yml
           echo "Cleanup complete."
         continue-on-error: true
+
+  handle-label-commands:
+    if: ${{ github.event.issue.pull_request != null }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Apply label commands
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const { comment, issue } = context.payload;
+            const commentBody = comment?.body ?? '';
+            if (!commentBody.includes('::label::')) {
+              core.info('No label commands detected in comment.');
+              return;
+            }
+
+            const configPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'config', 'repo_devs.json');
+            const repoDevsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            const label_changer = (repoDevsConfig.label_changer || []).map((login) => login.toLowerCase());
+
+            const commenter = (comment?.user?.login || '').toLowerCase();
+            if (!label_changer.includes(commenter)) {
+              core.info(`User ${commenter} is not authorized to manage labels.`);
+              return;
+            }
+
+            const labelsConfigPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'labels.yml');
+            const labelsFile = fs.readFileSync(labelsConfigPath, 'utf8');
+
+            const labelNameMap = new Map();
+            for (const match of labelsFile.matchAll(/-\s+name:\s*(?:"([^"]+)"|'([^']+)'|([^\n]+))/g)) {
+              const labelName = (match[1] ?? match[2] ?? match[3] ?? '').trim();
+
+              if (!labelName) {
+                continue;
+              }
+              const normalized = labelName.toLowerCase();
+              if (!labelNameMap.has(normalized)) {
+                labelNameMap.set(normalized, labelName);
+              }
+            }
+
+            if (!labelNameMap.size) {
+              core.warning('No labels could be read from .github/labels.yml; aborting label commands.');
+              return;
+            }
+
+            let allowedLabelNames = new Set(labelNameMap.values());
+
+            const labelsToAdd = new Set();
+            const labelsToRemove = new Set();
+            const commandRegex = /^(\w+)::(label)::"([^"]+)"/gim;
+            let match;
+            while ((match = commandRegex.exec(commentBody)) !== null) {
+              core.info(`Found label command: ${match[0]} (action: ${match[1]}, label: ${match[2]}, labelName: ${match[3]})`);
+              const action = match[1].toLowerCase();
+              const labelName = match[3].trim();
+
+              if (!labelName) {
+                continue;
+              }
+
+              const normalized = labelName.toLowerCase();
+              const resolvedLabelName = labelNameMap.get(normalized);
+              if (action === 'add') {
+                if (!resolvedLabelName) {
+                  core.warning(`Label "${labelName}" is not defined in .github/labels.yml and cannot be added.`);
+                  continue;
+                }
+                if (!allowedLabelNames.has(resolvedLabelName)) {
+                  core.warning(`Label "${resolvedLabelName}" is not allowed for add commands and will be skipped.`);
+                  continue;
+                }
+                labelsToAdd.add(resolvedLabelName);
+              } else if (action === 'rm') {
+                const labelToRemove = resolvedLabelName ?? labelName;
+                if (!resolvedLabelName) {
+                  core.warning(`Label "${labelName}" is not defined in .github/labels.yml; attempting to remove as provided.`);
+                }
+                labelsToRemove.add(labelToRemove);
+              }
+            }
+
+            const addLabels = Array.from(labelsToAdd);
+            const removeLabels = Array.from(labelsToRemove);
+
+            if (!addLabels.length && !removeLabels.length) {
+              core.info('No valid label commands found after parsing.');
+              return;
+            }
+
+            const issueParams = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+            };
+
+            if (addLabels.length) {
+              core.info(`Adding labels: ${addLabels.join(', ')}`);
+              await github.rest.issues.addLabels({
+                ...issueParams,
+                labels: addLabels,
+              });
+            }
+
+            for (const labelName of removeLabels) {
+              core.info(`Removing label: ${labelName}`);
+              try {
+                await github.rest.issues.removeLabel({
+                  ...issueParams,
+                  name: labelName,
+                });
+              } catch (error) {
+                if (error.status === 404) {
+                  core.warning(`Label "${labelName}" was not present on the pull request.`);
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: comment.id,
+            });
+            core.info('Processed label commands and deleted the comment.');
