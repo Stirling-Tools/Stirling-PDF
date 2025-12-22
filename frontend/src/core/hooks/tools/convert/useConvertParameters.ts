@@ -42,6 +42,12 @@ export interface ConvertParameters extends BaseParameters {
   cbzOutputOptions: {
     dpi: number;
   };
+  ebookOptions: {
+    embedAllFonts: boolean;
+    includeTableOfContents: boolean;
+    includePageNumbers: boolean;
+    optimizeForEbook: boolean;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -80,6 +86,12 @@ export const defaultParameters: ConvertParameters = {
   },
   cbzOutputOptions: {
     dpi: 150,
+  },
+  ebookOptions: {
+    embedAllFonts: false,
+    includeTableOfContents: false,
+    includePageNumbers: false,
+    optimizeForEbook: false,
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

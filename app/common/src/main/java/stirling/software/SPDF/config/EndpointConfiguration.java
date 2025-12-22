@@ -156,17 +156,17 @@ public class EndpointConfiguration {
             return false;
         }
 
+        // Rule 2: For tool groups, they're enabled unless explicitly disabled (handled above)
+        if (isToolGroup(group)) {
+            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
+            return true;
+        }
+
+        // Rule 3: For functional groups, check if all endpoints are enabled
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints == null || endpoints.isEmpty()) {
             log.debug("isGroupEnabled('{}') -> false (no endpoints)", group);
             return false;
-        }
-
-        // Rule 2: For functional groups, check if all endpoints are enabled
-        // Rule 3: For tool groups, they're enabled unless explicitly disabled (handled above)
-        if (isToolGroup(group)) {
-            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
-            return true;
         }
 
         // For functional groups, check each endpoint individually
@@ -585,7 +585,9 @@ public class EndpointConfiguration {
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
                 || "ImageMagick".equals(group)
-                || "rar".equals(group);
+                || "rar".equals(group)
+                || "Calibre".equals(group)
+                || "FFmpeg".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {
