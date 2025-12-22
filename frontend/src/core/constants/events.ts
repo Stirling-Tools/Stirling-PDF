@@ -25,7 +25,7 @@ export interface UpgradeBannerAlertPayload {
   freeTierLimit?: number;
 }
 
-export type TourType = 'admin' | 'tools';
+export type TourType = 'admin' | 'tools' | 'whatsnew';
 
 export interface StartTourPayload {
   tourType: TourType;

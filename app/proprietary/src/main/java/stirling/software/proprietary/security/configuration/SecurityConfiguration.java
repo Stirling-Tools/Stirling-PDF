@@ -197,7 +197,6 @@ public class SecurityConfiguration {
         http.csrf(CsrfConfigurer::disable);
 
         if (loginEnabledValue) {
-            boolean v2Enabled = appConfig.v2Enabled();
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -205,19 +204,9 @@ public class SecurityConfiguration {
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
-                    sessionManagement -> {
-                        if (v2Enabled) {
+                    sessionManagement ->
                             sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
-                        } else {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
-                                    .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true");
-                        }
-                    });
+                                    SessionCreationPolicy.STATELESS));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
@@ -300,18 +289,7 @@ public class SecurityConfiguration {
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 -> {
-                            // v1: Use /oauth2 as login page for Thymeleaf templates
-                            if (!v2Enabled) {
-                                oauth2.loginPage("/oauth2");
-                            }
-
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
-                            oauth2
-                                    /*
-                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                       is set as true, else login fails with an error message advising the same.
-                                    */
+                            oauth2.loginPage("/login")
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,
@@ -345,12 +323,8 @@ public class SecurityConfiguration {
                         .saml2Login(
                                 saml2 -> {
                                     try {
-                                        // Only set login page for v1/Thymeleaf mode
-                                        if (!v2Enabled) {
-                                            saml2.loginPage("/saml2");
-                                        }
-
-                                        saml2.relyingPartyRegistrationRepository(
+                                        saml2.loginPage("/login")
+                                                .relyingPartyRegistrationRepository(
                                                         saml2RelyingPartyRegistrations)
                                                 .authenticationManager(
                                                         new ProviderManager(authenticationProvider))
@@ -360,7 +334,8 @@ public class SecurityConfiguration {
                                                                 securityProperties.getSaml2(),
                                                                 userService,
                                                                 jwtService,
-                                                                licenseSettingsService))
+                                                                licenseSettingsService,
+                                                                applicationProperties))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(
@@ -369,7 +344,8 @@ public class SecurityConfiguration {
                                         log.error("Error configuring SAML 2 login", e);
                                         throw new RuntimeException(e);
                                     }
-                                });
+                                })
+                        .saml2Metadata(metadata -> {});
             }
         } else {
             log.debug("Login is not enabled.");

@@ -312,10 +312,10 @@ yamlAdvert = "Stirling PDF Pro supports YAML configuration files and other SSO f
 ssoAdvert = "Looking for more user management features? Check out Stirling PDF Pro"
 
 [analytics]
-title = "Do you want make Stirling PDF better?"
-paragraph1 = "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents."
+title = "Do you want to help make Stirling PDF better?"
+paragraph1 = "Stirling PDF has opt-in analytics to help us improve the product. We do not track any personal information or file contents."
 paragraph2 = "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better."
-learnMore = "Learn more"
+learnMore = "Learn more about our analytics"
 enable = "Enable analytics"
 disable = "Disable analytics"
 settings = "You can change the settings for analytics in the config/settings.yml file"
@@ -339,6 +339,10 @@ security = "Sign & Security"
 advance = "Advanced"
 edit = "View & Edit"
 popular = "Popular"
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
 
 [settings.preferences]
 title = "Preferences"
@@ -435,6 +439,25 @@ latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Keyboard Shortcuts"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
@@ -488,11 +511,16 @@ low = "Low"
 title = "Change Credentials"
 header = "Update Your Account Details"
 changePassword = "You are using default login credentials. Please enter a new password"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "New Username"
 oldPassword = "Current Password"
 newPassword = "New Password"
 confirmNewPassword = "Confirm New Password"
 submit = "Submit Changes"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Account Settings"
@@ -707,6 +735,11 @@ desc = "Detect and split scanned photos into separate pages"
 tags = "signature,autograph"
 title = "Sign"
 desc = "Adds signature to PDF by drawing, text or image"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "simplify,remove,interactive"
@@ -1216,7 +1249,7 @@ includeAllRecipients = "Include CC and BCC recipients in header"
 downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
 fileFormat = "File Format"
 wordDoc = "Word Document"
@@ -3342,6 +3375,19 @@ placeholder = "Enter number of horizontal divisions"
 label = "Vertical Divisions"
 placeholder = "Enter number of vertical divisions"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
 header = "Stamp PDF"
@@ -3703,6 +3749,19 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Compress Settings Overview"
 
@@ -3719,6 +3778,10 @@ bullet2 = "Higher values reduce file size"
 [compress.tooltip.grayscale]
 title = "Grayscale"
 text = "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
+
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 
 [compress.error]
 failed = "An error occurred while compressing the PDF."
@@ -3971,23 +4034,92 @@ deleteSelected = "Delete Selected Pages"
 closePdf = "Close PDF"
 exportAll = "Export PDF"
 downloadSelected = "Download Selected Files"
-downloadAll = "Download All"
-saveAll = "Save All"
+annotations = "Annotations"
+exportSelected = "Export Selected Pages"
+saveChanges = "Save Changes"
 toggleTheme = "Toggle Theme"
-toggleBookmarks = "Toggle Bookmarks"
 language = "Language"
+toggleAnnotations = "Toggle Annotations Visibility"
 search = "Search PDF"
 panMode = "Pan Mode"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 toggleSidebar = "Toggle Sidebar"
-exportSelected = "Export Selected Pages"
-toggleAnnotations = "Toggle Annotations Visibility"
-annotationMode = "Toggle Annotation Mode"
+toggleBookmarks = "Toggle Bookmarks"
 print = "Print PDF"
-draw = "Draw"
-save = "Save"
-saveChanges = "Save Changes"
+downloadAll = "Download All"
+saveAll = "Save All"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Search PDF"
@@ -4038,12 +4170,20 @@ settings = "Settings"
 adminSettings = "Admin Settings"
 allTools = "Tools"
 reader = "Reader"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tools Tour"
 toolsTourDesc = "Learn what the tools can do"
 adminTour = "Admin Tour"
 adminTourDesc = "Explore admin settings & features"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Error"
@@ -5070,6 +5210,7 @@ loading = "Loading..."
 back = "Back"
 continue = "Continue"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Application Configuration"
@@ -5236,6 +5377,16 @@ finish = "Finish"
 startTour = "Start Tour"
 startTourDescription = "Take a guided tour of Stirling PDF's key features"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Welcome to Stirling PDF!"
 description = "Would you like to take a quick 1-minute tour to learn the key features and how to get started?"
@@ -5255,6 +5406,10 @@ skipForNow = "Skip for now"
 download = "Download →"
 showMeAround = "Show me around"
 skipTheTour = "Skip the tour"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Skip for now"
@@ -5569,6 +5724,28 @@ contactSales = "Contact Sales"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
 maxUsers = "Max Users"
 upTo = "Up to"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "month"
@@ -5772,6 +5949,8 @@ notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Error loading audit system"
@@ -5997,7 +6176,7 @@ title = "Authentication Failed"
 message = "Authentication was not successful. You can close this window and try again."
 
 [pdfTextEditor]
-title = "PDF JSON Editor"
+title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 converting = "Converting PDF to editable format..."
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -6026,6 +6205,8 @@ reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
 saveChanges = "Save Changes"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -6043,6 +6224,24 @@ descriptionInline = "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A
 [pdfTextEditor.options.forceSingleElement]
 title = "Lock edited text to a single PDF element"
 description = "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Merge selected boxes"
@@ -6063,8 +6262,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
-dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
+dropzone = "Drag and drop a PDF here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"
