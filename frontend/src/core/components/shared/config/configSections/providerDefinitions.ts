@@ -1,8 +1,8 @@
-export type ProviderType = 'oauth2' | 'saml2';
+export type ProviderType = 'oauth2' | 'saml2' | 'telegram';
 
 export interface ProviderField {
   key: string;
-  type: 'text' | 'password' | 'switch' | 'textarea';
+  type: 'text' | 'password' | 'switch' | 'textarea' | 'number' | 'tags';
   label: string;
   description: string;
   placeholder?: string;
@@ -231,7 +231,7 @@ export const SMTP_PROVIDER: Provider = {
     },
     {
       key: 'port',
-      type: 'text',
+      type: 'number',
       label: 'SMTP Port',
       description: 'The port number for SMTP connection (typically 25, 465, or 587)',
       placeholder: '587',
@@ -255,6 +255,144 @@ export const SMTP_PROVIDER: Provider = {
       label: 'From Address',
       description: 'The email address to use as the sender',
       placeholder: 'noreply@example.com',
+    },
+  ],
+};
+
+export const TELEGRAM_PROVIDER: Provider = {
+  id: 'telegram',
+  name: 'Telegram Bot',
+  icon: 'send-rounded',
+  type: 'telegram',
+  scope: 'Telegram Notifications & File Uploads',
+  fields: [
+    {
+      key: 'enabled',
+      type: 'switch',
+      label: 'Enable Telegram Bot',
+      description: 'Allow users to interact with Stirling PDF through your configured Telegram bot.',
+      defaultValue: false,
+    },
+    {
+      key: 'botUsername',
+      type: 'text',
+      label: 'Bot Username',
+      description: 'The public username of your Telegram bot.',
+      placeholder: 'my_pdf_bot',
+    },
+    {
+      key: 'botToken',
+      type: 'password',
+      label: 'Bot Token',
+      description: 'API token provided by BotFather for your Telegram bot.',
+      placeholder: '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11',
+    },
+    {
+      key: 'pipelineInboxFolder',
+      type: 'text',
+      label: 'Inbox Folder',
+      description: 'Folder under the pipeline directory where incoming Telegram files are stored.',
+      placeholder: 'telegram',
+    },
+    {
+      key: 'customFolderSuffix',
+      type: 'switch',
+      label: 'Use Custom Folder Suffix',
+      description: 'Append the chat ID to incoming file folders to isolate uploads per chat.',
+      defaultValue: false,
+    },
+    {
+      key: 'enableAllowUserIDs',
+      type: 'switch',
+      label: 'Allow Specific User IDs',
+      description: 'When enabled, only listed user IDs can use the bot.',
+      defaultValue: false,
+    },
+    {
+      key: 'allowUserIDs',
+      type: 'tags',
+      label: 'Allowed User IDs',
+      description: 'Enter Telegram user IDs allowed to interact with the bot.',
+      placeholder: 'Add user ID and press enter',
+      defaultValue: [],
+    },
+    {
+      key: 'enableAllowChannelIDs',
+      type: 'switch',
+      label: 'Allow Specific Channel IDs',
+      description: 'When enabled, only listed channel IDs can use the bot.',
+      defaultValue: false,
+    },
+    {
+      key: 'allowChannelIDs',
+      type: 'tags',
+      label: 'Allowed Channel IDs',
+      description: 'Enter Telegram channel IDs allowed to interact with the bot.',
+      placeholder: 'Add channel ID and press enter',
+      defaultValue: [],
+    },
+    {
+      key: 'processingTimeoutSeconds',
+      type: 'number',
+      label: 'Processing Timeout (seconds)',
+      description: 'Maximum time to wait for a processing job before reporting an error.',
+      defaultValue: 180,
+    },
+    {
+      key: 'pollingIntervalMillis',
+      type: 'number',
+      label: 'Polling Interval (ms)',
+      description: 'Interval between checks for new Telegram updates.',
+      defaultValue: 2000,
+    },
+    {
+      key: 'feedback.general.enabled',
+      type: 'switch',
+      label: 'Enable Feedback Messages',
+      description: 'Control whether the bot sends feedback messages at all.',
+      defaultValue: true,
+    },
+    {
+      key: 'feedback.channel.noValidDocument',
+      type: 'switch',
+      label: 'Hide "No valid document" (Channel)',
+      description: 'Suppress the no valid document response for channel uploads.',
+      defaultValue: false,
+    },
+    {
+      key: 'feedback.channel.processingError',
+      type: 'switch',
+      label: 'Hide processing errors (Channel)',
+      description: 'Do not send processing error messages to channels.',
+      defaultValue: false,
+    },
+    {
+      key: 'feedback.channel.errorMessage',
+      type: 'switch',
+      label: 'Hide error messages (Channel)',
+      description: 'Hide detailed error messages for channels.',
+      defaultValue: false,
+    },
+    {
+      key: 'feedback.user.noValidDocument',
+      type: 'switch',
+      label: 'Hide "No valid document" (User)',
+      description: 'Suppress the no valid document response for user uploads.',
+      defaultValue: false,
+    },
+    {
+      key: 'feedback.user.processingError',
+      type: 'switch',
+      label: 'Hide processing errors (User)',
+      description: 'Do not send processing error messages to users.',
+      defaultValue: false,
+    },
+    {
+      key: 'feedback.user.errorMessage',
+      type: 'switch',
+      label: 'Hide error messages (User)',
+      description: 'Hide detailed error messages for users.',
+      defaultValue: false,
     },
   ],
 };
@@ -352,4 +490,10 @@ export const SAML2_PROVIDER: Provider = {
   ],
 };
 
-export const ALL_PROVIDERS = [...OAUTH2_PROVIDERS, GENERIC_OAUTH2_PROVIDER, SAML2_PROVIDER, SMTP_PROVIDER];
+export const ALL_PROVIDERS = [
+  ...OAUTH2_PROVIDERS,
+  GENERIC_OAUTH2_PROVIDER,
+  SAML2_PROVIDER,
+  SMTP_PROVIDER,
+  TELEGRAM_PROVIDER,
+];
