@@ -114,6 +114,29 @@ class TranslationMerger:
                 items.append((new_key, v))
         return dict(items)
 
+    def _delete_nested_key(self, data: Dict, key_path: str) -> bool:
+        """Delete a nested key using dot notation and clean up empty branches."""
+
+        def _delete(current: Dict, keys: List[str]) -> bool:
+            key = keys[0]
+
+            if key not in current:
+                return False
+
+            if len(keys) == 1:
+                del current[key]
+                return True
+
+            if not isinstance(current[key], dict):
+                return False
+
+            removed = _delete(current[key], keys[1:])
+            if removed and current[key] == {}:
+                del current[key]
+            return removed
+
+        return _delete(data, key_path.split("."))
+
     def get_missing_keys(self, target_file: Path) -> List[str]:
         """Get list of missing keys in target file."""
         lang_code = target_file.parent.name.replace("-", "_")
@@ -129,6 +152,17 @@ class TranslationMerger:
 
         missing = set(golden_flat.keys()) - set(target_flat.keys())
         return sorted(missing - ignore_set)
+
+    def get_unused_keys(self, target_file: Path) -> List[str]:
+        """Get list of keys that are not present in the golden truth file."""
+        if not target_file.exists():
+            return []
+
+        target_data = self._load_translation_file(target_file)
+        target_flat = self._flatten_dict(target_data)
+        golden_flat = self._flatten_dict(self.golden_truth)
+
+        return sorted(set(target_flat.keys()) - set(golden_flat.keys()))
 
     def add_missing_translations(
         self, target_file: Path, keys_to_add: List[str] = None
@@ -245,6 +279,32 @@ class TranslationMerger:
             "data": target_data,
         }
 
+    def remove_unused_translations(
+        self, target_file: Path, keys_to_remove: List[str] = None, backup: bool = False
+    ) -> Dict:
+        """Remove translations that are not present in the golden truth file."""
+        if not target_file.exists():
+            print(f"Error: Target file does not exist: {target_file}")
+            return {"success": False, "error": "File not found"}
+
+        target_data = self._load_translation_file(target_file)
+        keys_to_remove = keys_to_remove or self.get_unused_keys(target_file)
+
+        removed_count = 0
+
+        for key in keys_to_remove:
+            if self._delete_nested_key(target_data, key):
+                removed_count += 1
+
+        if removed_count > 0:
+            self._save_translation_file(target_data, target_file, backup)
+
+        return {
+            "success": True,
+            "removed_count": removed_count,
+            "data": target_data,
+        }
+
     def create_translation_template(self, target_file: Path, output_file: Path) -> None:
         """Create a template file for AI translation with context."""
         untranslated = self.extract_untranslated_entries(target_file)
@@ -334,6 +394,14 @@ def main():
         "--backup", action="store_true", help="Create backup before modifying files"
     )
 
+    # Remove unused translations command
+    remove_parser = subparsers.add_parser(
+        "remove-unused", help="Remove unused translations not present in en-GB"
+    )
+    remove_parser.add_argument(
+        "--backup", action="store_true", help="Create backup before modifying files"
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -390,6 +458,14 @@ def main():
                 print(f"Errors: {len(result['errors'])}")
                 for error in result["errors"][:5]:
                     print(f"  - {error}")
+        else:
+            print(f"Failed: {result.get('error', 'Unknown error')}")
+
+    elif args.command == "remove-unused":
+        result = merger.remove_unused_translations(target_file, backup=args.backup)
+
+        if result["success"]:
+            print(f"Removed {result['removed_count']} unused translations")
         else:
             print(f"Failed: {result.get('error', 'Unknown error')}")
 
