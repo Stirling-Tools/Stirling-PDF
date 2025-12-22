@@ -562,7 +562,7 @@ jobs:
         run: ls -R ./artifacts
 
       - name: Upload binaries to Release
-        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
