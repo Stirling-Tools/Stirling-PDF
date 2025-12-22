@@ -1,4 +1,4 @@
-import { Stack, TextInput, Checkbox, Anchor, Text, Radio, Group, Select } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text, Select } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '@app/constants/splitConstants';
