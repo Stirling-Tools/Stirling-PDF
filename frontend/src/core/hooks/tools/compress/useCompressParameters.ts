@@ -11,6 +11,7 @@ export interface CompressParameters extends BaseParameters {
   compressionMethod: 'quality' | 'filesize';
   fileSizeValue: string;
   fileSizeUnit: 'KB' | 'MB';
+  linearize: boolean;
 }
 
 export const defaultParameters: CompressParameters = {
@@ -23,6 +24,7 @@ export const defaultParameters: CompressParameters = {
   compressionMethod: 'quality',
   fileSizeValue: '',
   fileSizeUnit: 'MB',
+  linearize: false,
 };
 
 export type CompressParametersHook = BaseParametersHook<CompressParameters>;
