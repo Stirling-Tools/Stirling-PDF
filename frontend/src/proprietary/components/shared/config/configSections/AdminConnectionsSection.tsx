@@ -93,7 +93,6 @@ export default function AdminConnectionsSection() {
 
       // Fetch Telegram settings
       const telegramResponse = await apiClient.get('/api/v1/admin/settings/section/telegram');
-      console.log('Telegram response data:', telegramResponse);
       const telegramData = telegramResponse.data || {};
 
       const result: any = {
