@@ -135,13 +135,13 @@ telegram:
     general:
         enabled: true # set to 'true' to enable feedback messages
     channel:
-        noValidDocument: false # set to 'true' to deny feedback messages in channels (to avoid spam)
-        processingError: false # set to 'true' to deny feedback messages in channels (to avoid spam)
-        errorMessage: false # set to 'true' to deny error messages in channels (to avoid spam)
+        noValidDocument: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
+        processingError: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
+        errorMessage: false # set to 'true' to hide/suppress error messages in channels (to avoid spam)
     user:
-        noValidDocument: false # set to 'true' to deny feedback messages to users (to avoid spam)
-        processingError: false # set to 'true' to deny feedback messages to users (to avoid spam)
-        errorMessage: false # set to 'true' to deny error messages to users (to avoid spam)
+        noValidDocument: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
+        processingError: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
+        errorMessage: false # set to 'true' to hide/suppress error messages to users (to avoid spam)
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
