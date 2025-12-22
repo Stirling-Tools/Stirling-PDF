@@ -17,28 +17,36 @@ const ConvertFromEbookSettings = ({
 
   const handleEmbedAllFontsChange = (value: boolean) => {
     onParameterChange('ebookOptions', {
-      ...parameters.ebookOptions,
       embedAllFonts: value,
+      includeTableOfContents: parameters.ebookOptions?.includeTableOfContents ?? false,
+      includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
+      optimizeForEbook: parameters.ebookOptions?.optimizeForEbook ?? false,
     });
   };
 
   const handleIncludeTableOfContentsChange = (value: boolean) => {
     onParameterChange('ebookOptions', {
-      ...parameters.ebookOptions,
+      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
       includeTableOfContents: value,
+      includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
+      optimizeForEbook: parameters.ebookOptions?.optimizeForEbook ?? false,
     });
   };
 
   const handleIncludePageNumbersChange = (value: boolean) => {
     onParameterChange('ebookOptions', {
-      ...parameters.ebookOptions,
+      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
+      includeTableOfContents: parameters.ebookOptions?.includeTableOfContents ?? false,
       includePageNumbers: value,
+      optimizeForEbook: parameters.ebookOptions?.optimizeForEbook ?? false,
     });
   };
 
   const handleOptimizeForEbookChange = (value: boolean) => {
     onParameterChange('ebookOptions', {
-      ...parameters.ebookOptions,
+      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
+      includeTableOfContents: parameters.ebookOptions?.includeTableOfContents ?? false,
+      includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
       optimizeForEbook: value,
     });
   };

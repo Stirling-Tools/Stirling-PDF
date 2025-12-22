@@ -42,7 +42,7 @@ export interface ConvertParameters extends BaseParameters {
   cbzOutputOptions: {
     dpi: number;
   };
-  ebookOptions: {
+  ebookOptions?: {
     embedAllFonts: boolean;
     includeTableOfContents: boolean;
     includePageNumbers: boolean;
