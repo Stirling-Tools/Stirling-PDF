@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { Modal, Stack, Text, Badge, Box, Group, Alert, Progress } from '@mantine/core';
+import { Modal, Stack, Text, Badge, Box, Alert } from '@mantine/core';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { useAppConfig } from '@app/contexts/AppConfigContext';

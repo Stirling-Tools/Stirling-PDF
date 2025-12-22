@@ -152,7 +152,6 @@ export default function MobileScannerPage() {
         // Don't set status here - let camera/detection effects control status from now on
         console.log('✓ jscanify initialized with OpenCV');
       } catch (err) {
-        const error = 'Failed to initialize jscanify: ' + (err as Error).message;
         setLoadingStatus('jscanify init failed ✗');
         console.error('Failed to initialize jscanify:', err);
       }
