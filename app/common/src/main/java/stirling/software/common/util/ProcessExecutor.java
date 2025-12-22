@@ -20,17 +20,21 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
 public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
+    private static volatile UnoServerPool unoServerPool;
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
+    private final Processes processType;
 
-    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
+    private ProcessExecutor(Processes processType, int semaphoreLimit, boolean liveUpdates, long timeout) {
+        this.processType = processType;
         this.semaphore = new Semaphore(semaphoreLimit);
         this.liveUpdates = liveUpdates;
         this.timeoutDuration = timeout;
@@ -173,8 +177,12 @@ public class ProcessExecutor {
                                                 .getTimeoutMinutes()
                                                 .getFfmpegTimeoutMinutes();
                             };
-                    return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
+                    return new ProcessExecutor(processType, semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
+    }
+
+    public static void setUnoServerPool(UnoServerPool pool) {
+        unoServerPool = pool;
     }
 
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
@@ -186,11 +194,21 @@ public class ProcessExecutor {
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
-        semaphore.acquire();
+        UnoServerPool.UnoServerLease unoLease = null;
+        boolean useSemaphore = true;
+        List<String> commandToRun = command;
+        if (shouldUseUnoServerPool(command)) {
+            unoLease = unoServerPool.acquireEndpoint();
+            commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
+            useSemaphore = false;
+        }
+        if (useSemaphore) {
+            semaphore.acquire();
+        }
         try {
 
-            log.info("Running command: {}", String.join(" ", command));
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            log.info("Running command: {}", String.join(" ", commandToRun));
+            ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
 
             // Use the working directory if it's set
             if (workingDirectory != null) {
@@ -268,7 +286,9 @@ public class ProcessExecutor {
             outputReaderThread.join();
 
             boolean isQpdf =
-                    command != null && !command.isEmpty() && command.get(0).contains("qpdf");
+                    commandToRun != null
+                            && !commandToRun.isEmpty()
+                            && commandToRun.get(0).contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
@@ -309,9 +329,58 @@ public class ProcessExecutor {
                 }
             }
         } finally {
-            semaphore.release();
+            if (useSemaphore) {
+                semaphore.release();
+            }
+            if (unoLease != null) {
+                unoLease.close();
+            }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private boolean shouldUseUnoServerPool(List<String> command) {
+        if (processType != Processes.LIBRE_OFFICE || unoServerPool == null) {
+            return false;
+        }
+        if (unoServerPool.isEmpty()) {
+            return false;
+        }
+        if (command == null || command.isEmpty()) {
+            return false;
+        }
+        String executable = command.get(0);
+        return executable != null && executable.toLowerCase().contains("unoconvert");
+    }
+
+    private List<String> applyUnoServerEndpoint(
+            List<String> command, ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+        if (endpoint == null || command == null || command.isEmpty()) {
+            return command;
+        }
+        boolean hasHost = false;
+        boolean hasPort = false;
+        for (String arg : command) {
+            if ("--host".equals(arg)) {
+                hasHost = true;
+            } else if ("--port".equals(arg)) {
+                hasPort = true;
+            }
+        }
+        if (hasHost && hasPort) {
+            return command;
+        }
+        List<String> updated = new ArrayList<>(command);
+        int insertIndex = 1;
+        if (!hasHost) {
+            updated.add(insertIndex++, "--host");
+            updated.add(insertIndex++, endpoint.getHost());
+        }
+        if (!hasPort) {
+            updated.add(insertIndex++, "--port");
+            updated.add(insertIndex, String.valueOf(endpoint.getPort()));
+        }
+        return updated;
     }
 
     public enum Processes {

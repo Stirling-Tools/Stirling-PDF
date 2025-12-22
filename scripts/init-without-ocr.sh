@@ -4,6 +4,9 @@ set -euo pipefail
 
 log() { printf '%s\n' "$*" >&2; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
+UNOSERVER_PIDS=()
+UNOSERVER_PORTS=()
+UNOSERVER_UNO_PORTS=()
 
 SU_EXEC_BIN=""
 if command_exists su-exec; then
@@ -32,6 +35,119 @@ run_as_runtime_user() {
     warn_switch_user_once
     "$@"
   fi
+}
+
+CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
+
+read_setting_value() {
+  local key=$1
+  if [ ! -f "$CONFIG_FILE" ]; then
+    return
+  fi
+  awk -F: -v key="$key" '
+    $1 ~ "^[[:space:]]*"key"[[:space:]]*$" {
+      val=$2
+      sub(/#.*/, "", val)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+      print val
+      exit
+    }
+  ' "$CONFIG_FILE"
+}
+
+get_unoserver_auto() {
+  if [ -n "${PROCESS_EXECUTOR_AUTO_UNO_SERVER:-}" ]; then
+    echo "$PROCESS_EXECUTOR_AUTO_UNO_SERVER"
+    return
+  fi
+  if [ -n "${UNO_SERVER_AUTO:-}" ]; then
+    echo "$UNO_SERVER_AUTO"
+    return
+  fi
+  read_setting_value "autoUnoServer"
+}
+
+get_unoserver_count() {
+  if [ -n "${PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT:-}" ]; then
+    echo "$PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT"
+    return
+  fi
+  if [ -n "${UNO_SERVER_COUNT:-}" ]; then
+    echo "$UNO_SERVER_COUNT"
+    return
+  fi
+  read_setting_value "libreOfficeSessionLimit"
+}
+
+start_unoserver_instance() {
+  local port=$1
+  local uno_port=$2
+  run_as_runtime_user "$UNOSERVER_BIN" \
+    --interface 127.0.0.1 \
+    --port "$port" \
+    --uno-port "$uno_port" \
+    &
+  LAST_UNOSERVER_PID=$!
+}
+
+start_unoserver_watchdog() {
+  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
+  if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
+    interval=30
+  fi
+  (
+    while true; do
+      local i=0
+      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+        local pid=${UNOSERVER_PIDS[$i]}
+        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+          local port=${UNOSERVER_PORTS[$i]}
+          local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+          log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+          start_unoserver_instance "$port" "$uno_port"
+          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+        fi
+        i=$((i + 1))
+      done
+      sleep "$interval"
+    done
+  ) &
+}
+
+start_unoserver_pool() {
+  local auto
+  auto="$(get_unoserver_auto)"
+  auto="${auto,,}"
+  if [ -z "$auto" ]; then
+    auto="true"
+  fi
+  if [ "$auto" != "true" ]; then
+    log "Skipping local unoserver pool (autoUnoServer=$auto)"
+    return 0
+  fi
+
+  local count
+  count="$(get_unoserver_count)"
+  if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+    count=1
+  fi
+  if [ "$count" -le 0 ]; then
+    count=1
+  fi
+
+  local i=0
+  while [ "$i" -lt "$count" ]; do
+    local port=$((2003 + (i * 2)))
+    local uno_port=$((2004 + (i * 2)))
+    log "Starting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+    UNOSERVER_PORTS+=("$port")
+    UNOSERVER_UNO_PORTS+=("$uno_port")
+    start_unoserver_instance "$port" "$uno_port"
+    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+    i=$((i + 1))
+  done
+
+  start_unoserver_watchdog
 }
 
 # ---------- VERSION_TAG ----------
@@ -131,37 +247,38 @@ fi
 # Start LibreOffice UNO server for document conversions.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
-UNOSERVER_PID=""
-
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
 
-  log "Starting unoserver on 127.0.0.1:2003"
-  run_as_runtime_user "$UNOSERVER_BIN" \
-    --interface 127.0.0.1 \
-    --port 2003 \
-    --uno-port 2004 \
-    &
-  UNOSERVER_PID=$!
-  log "unoserver PID: $UNOSERVER_PID (Profile: $LIBREOFFICE_PROFILE)"
+  start_unoserver_pool
+  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE)"
+
+  check_unoserver_ready() {
+    if command_exists timeout; then
+      run_as_runtime_user timeout 5s "$UNOCONVERT_BIN" --version >/dev/null 2>&1
+      return $?
+    fi
+    run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1
+  }
 
   # Wait until UNO server is ready.
   log "Waiting for unoserver..."
   for _ in {1..20}; do
-    if run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1; then
+    if check_unoserver_ready; then
       log "unoserver is ready!"
       break
     fi
+    log "unoserver not ready yet; retrying..."
     sleep 1
   done
 
-  if ! run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1; then
+  if ! check_unoserver_ready; then
     log "ERROR: unoserver failed!"
-    if [ -n "$UNOSERVER_PID" ]; then
-      kill "$UNOSERVER_PID" 2>/dev/null || true
-      wait "$UNOSERVER_PID" 2>/dev/null || true
-    fi
+    for pid in "${UNOSERVER_PIDS[@]}"; do
+      kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    done
     exit 1
   fi
 else

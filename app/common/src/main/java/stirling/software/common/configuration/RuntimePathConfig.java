@@ -2,6 +2,9 @@ package stirling.software.common.configuration;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.UnoServerPool;
 import stirling.software.common.model.ApplicationProperties.CustomPaths;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
@@ -31,6 +36,8 @@ public class RuntimePathConfig {
 
     // Tesseract data path
     private final String tessDataPath;
+
+    private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> unoServerEndpoints;
 
     // Pipeline paths
     private final String pipelineWatchedFoldersPath;
@@ -105,6 +112,14 @@ public class RuntimePathConfig {
                         defaultTessDataPath,
                         (tessPath != null && !tessPath.isEmpty()) ? tessPath : tessdataDir);
         log.info("Using Tesseract data path: {}", this.tessDataPath);
+
+        this.unoServerEndpoints =
+                buildUnoServerEndpoints(
+                        properties.getProcessExecutor(),
+                        properties.getProcessExecutor()
+                                .getSessionLimit()
+                                .getLibreOfficeSessionLimit());
+        ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
     }
 
     private String resolvePath(String defaultPath, String customPath) {
@@ -113,5 +128,59 @@ public class RuntimePathConfig {
 
     private boolean isRunningInDocker() {
         return Files.exists(Path.of("/.dockerenv"));
+    }
+
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildUnoServerEndpoints(
+            ApplicationProperties.ProcessExecutor processExecutor, int sessionLimit) {
+        if (processExecutor == null) {
+            return Collections.singletonList(
+                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
+        }
+        if (!processExecutor.isAutoUnoServer()) {
+            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> configured =
+                    sanitizeUnoServerEndpoints(processExecutor.getUnoServerEndpoints());
+            if (!configured.isEmpty()) {
+                return configured;
+            }
+        }
+        int count = sessionLimit > 0 ? sessionLimit : 1;
+        return buildAutoUnoServerEndpoints(count);
+    }
+
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildAutoUnoServerEndpoints(
+            int count) {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                new ArrayList<>();
+        int basePort = 2003;
+        for (int i = 0; i < count; i++) {
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint =
+                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+            endpoint.setHost("127.0.0.1");
+            endpoint.setPort(basePort + (i * 2));
+            endpoints.add(endpoint);
+        }
+        return endpoints;
+    }
+
+
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitizeUnoServerEndpoints(
+            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
+        if (endpoints == null || endpoints.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitized =
+                new ArrayList<>();
+        for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : endpoints) {
+            if (endpoint == null) {
+                continue;
+            }
+            String host = endpoint.getHost();
+            int port = endpoint.getPort();
+            if (host == null || host.isBlank() || port <= 0) {
+                continue;
+            }
+            sanitized.add(endpoint);
+        }
+        return sanitized;
     }
 }

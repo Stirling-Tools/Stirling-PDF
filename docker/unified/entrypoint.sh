@@ -92,6 +92,118 @@ run_as_user() {
     fi
 }
 
+CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
+UNOSERVER_PIDS=()
+UNOSERVER_PORTS=()
+UNOSERVER_UNO_PORTS=()
+
+read_setting_value() {
+    local key=$1
+    if [ ! -f "$CONFIG_FILE" ]; then
+        return
+    fi
+    awk -F: -v key="$key" '
+        $1 ~ "^[[:space:]]*"key"[[:space:]]*$" {
+            val=$2
+            sub(/#.*/, "", val)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+            print val
+            exit
+        }
+    ' "$CONFIG_FILE"
+}
+
+get_unoserver_auto() {
+    if [ -n "${PROCESS_EXECUTOR_AUTO_UNO_SERVER:-}" ]; then
+        echo "$PROCESS_EXECUTOR_AUTO_UNO_SERVER"
+        return
+    fi
+    if [ -n "${UNO_SERVER_AUTO:-}" ]; then
+        echo "$UNO_SERVER_AUTO"
+        return
+    fi
+    read_setting_value "autoUnoServer"
+}
+
+get_unoserver_count() {
+    if [ -n "${PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT:-}" ]; then
+        echo "$PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT"
+        return
+    fi
+    if [ -n "${UNO_SERVER_COUNT:-}" ]; then
+        echo "$UNO_SERVER_COUNT"
+        return
+    fi
+    read_setting_value "libreOfficeSessionLimit"
+}
+
+start_unoserver_instance() {
+    local port=$1
+    local uno_port=$2
+    run_as_user /opt/venv/bin/unoserver --port "$port" --interface 127.0.0.1 --uno-port "$uno_port" &
+    LAST_UNOSERVER_PID=$!
+}
+
+start_unoserver_watchdog() {
+    local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
+    if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
+        interval=30
+    fi
+    (
+        while true; do
+            local i=0
+            while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+                local pid=${UNOSERVER_PIDS[$i]}
+                if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+                    local port=${UNOSERVER_PORTS[$i]}
+                    local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+                    echo "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+                    start_unoserver_instance "$port" "$uno_port"
+                    UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+                fi
+                i=$((i + 1))
+            done
+            sleep "$interval"
+        done
+    ) &
+}
+
+start_unoserver_pool() {
+    local auto
+    auto="$(get_unoserver_auto)"
+    auto="${auto,,}"
+    if [ -z "$auto" ]; then
+        auto="true"
+    fi
+    if [ "$auto" != "true" ]; then
+        echo "Skipping local unoserver pool (autoUnoServer=$auto)"
+        return
+    fi
+
+    local count
+    count="$(get_unoserver_count)"
+    if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+        count=1
+    fi
+    if [ "$count" -le 0 ]; then
+        count=1
+    fi
+
+    local i=0
+    while [ "$i" -lt "$count" ]; do
+        local port=$((2003 + (i * 2)))
+        local uno_port=$((2004 + (i * 2)))
+        echo "Starting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+        UNOSERVER_PORTS+=("$port")
+        UNOSERVER_UNO_PORTS+=("$uno_port")
+        start_unoserver_instance "$port" "$uno_port"
+        UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+        i=$((i + 1))
+    done
+
+    start_unoserver_watchdog
+}
+
 # Setup OCR and permissions
 setup_ocr
 setup_permissions
@@ -112,9 +224,8 @@ case "$MODE" in
             -jar /app.jar" &
         BACKEND_PID=$!
 
-        # Start unoserver for document conversion
-        run_as_user /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1 &
-        UNO_PID=$!
+        # Start unoserver pool for document conversion
+        start_unoserver_pool
 
         # Wait for backend to start
         sleep 3
@@ -157,7 +268,8 @@ case "$MODE" in
         run_as_user sh -c "java -Dfile.encoding=UTF-8 \
             -Djava.io.tmpdir=/tmp/stirling-pdf \
             -Dserver.port=8080 \
-            -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1" &
+            -jar /app.jar" &
+        start_unoserver_pool
         BACKEND_PID=$!
 
         echo "==================================="
