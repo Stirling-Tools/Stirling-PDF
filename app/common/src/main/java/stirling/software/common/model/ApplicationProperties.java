@@ -662,33 +662,50 @@ public class ApplicationProperties {
 
             @Data
             public static class General {
-                private Boolean enabled = true; // set to 'true' to enable feedback messages
+                /** Set to {@code true} to enable feedback messages. */
+                private Boolean enabled = true;
             }
 
             @Data
             public static class Channel {
-                private Boolean noValidDocument =
-                        false; // set to 'true' to deny feedback messages to channel (to avoid
-                // spam)
-                private Boolean processingError =
-                        false; // set to 'true' to deny feedback messages to channel (to avoid
-                // spam)
-                private Boolean errorMessage =
-                        false; // set to 'true' to deny error feedback messages to channel (to avoid
-                // spam)
+                /**
+                 * Set to {@code true} to deny "no valid document" feedback messages to the channel
+                 * (to avoid spam).
+                 */
+                private Boolean noValidDocument = false;
+
+                /**
+                 * Set to {@code true} to deny processing error feedback messages to the channel
+                 * (to avoid spam).
+                 */
+                private Boolean processingError = false;
+
+                /**
+                 * Set to {@code true} to deny generic error feedback messages to the channel
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = false;
             }
 
             @Data
             public static class User {
-                private Boolean noValidDocument =
-                        false; // set to 'true' to deny feedback messages to users (to avoid
-                // spam)
-                private Boolean processingError =
-                        false; // set to 'true' to deny feedback messages to users (to avoid
-                // spam)
-                private Boolean errorMessage =
-                        false; // set to 'true' to deny error feedback messages to users (to avoid
-                // spam)
+                /**
+                 * Set to {@code true} to deny "no valid document" feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean noValidDocument = false;
+
+                /**
+                 * Set to {@code true} to deny processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean processingError = false;
+
+                /**
+                 * Set to {@code true} to deny generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = false;
             }
         }
     }
