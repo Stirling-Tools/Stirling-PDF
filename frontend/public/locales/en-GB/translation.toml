@@ -4310,6 +4310,13 @@ description = "Path to WeasyPrint executable for HTML to PDF conversion (leave e
 label = "Unoconvert Executable"
 description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
 
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
+
 [admin.settings.security]
 title = "Security"
 description = "Configure authentication, login behaviour, and security policies."
@@ -4514,6 +4521,13 @@ description = "Automatically create user accounts on first SAML2 login"
 label = "Block Registration"
 description = "Prevent new user registration via SAML2"
 
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+
 [admin.settings.database]
 title = "Database"
 description = "Configure custom database connection settings for enterprise deployments."
@@ -4694,6 +4708,10 @@ description = "Allow admins to invite users via email with auto-generated passwo
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Legal Documents"
@@ -6338,6 +6356,9 @@ description = "Scan this QR code with your mobile device to upload photos direct
 error = "Connection Error"
 pollingError = "Error checking for files"
 sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
 filesReceived = "{{count}} file(s) received"
 connected = "Mobile device connected"
 instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
@@ -6346,6 +6367,11 @@ instructions = "Open the camera app on your phone and scan this code. Files will
 title = "Mobile Scanner"
 noSession = "Invalid Session"
 noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
 uploadSuccess = "Upload Successful!"
 uploadSuccessMessage = "Your images have been transferred."
 httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
