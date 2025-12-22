@@ -160,12 +160,16 @@ export interface PdfPerPageInfo {
 export interface PdfEmbeddedFileInfo {
   Name?: string;
   FileSize?: number;
+  MimeType?: string;
+  CreationDate?: string;
+  ModificationDate?: string;
 }
 
 /** Attachment info */
 export interface PdfAttachmentInfo {
   Name?: string;
   Description?: string;
+  FileSize?: number;
 }
 
 /** JavaScript info */
