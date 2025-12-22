@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Paper, Card, useMantineColorScheme } from '@mantine/core';
+import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Card, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useLogoPath } from '@app/hooks/useLogoPath';
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
