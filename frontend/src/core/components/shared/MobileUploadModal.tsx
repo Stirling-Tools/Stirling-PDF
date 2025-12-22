@@ -16,8 +16,32 @@ interface MobileUploadModalProps {
   onFilesReceived: (files: File[]) => void;
 }
 
-// Generate a UUID-like session ID
+// Generate a cryptographically secure UUID v4-like session ID
 function generateSessionId(): string {
+  // Use Web Crypto API for cryptographically secure random values
+  const cryptoObj = typeof crypto !== 'undefined' ? crypto : (window as any).crypto;
+
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const bytes = new Uint8Array(16);
+    cryptoObj.getRandomValues(bytes);
+
+    // Set version (4) and variant bits per RFC 4122
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+
+    // Convert bytes to hex string in UUID format
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0'));
+    return [
+      hex.slice(0, 4).join(''),
+      hex.slice(4, 6).join(''),
+      hex.slice(6, 8).join(''),
+      hex.slice(8, 10).join(''),
+      hex.slice(10, 16).join(''),
+    ].join('-');
+  }
+
+  // Fallback for environments without Web Crypto (should not happen in modern browsers)
+  console.warn('Web Crypto API not available, falling back to Math.random()');
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;

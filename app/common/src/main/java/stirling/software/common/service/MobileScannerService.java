@@ -95,7 +95,7 @@ public class MobileScannerService {
                 activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
 
         // Create session directory
-        Path sessionDir = tempDirectory.resolve(sessionId);
+        Path sessionDir = getSafeSessionDirectory(sessionId);
         Files.createDirectories(sessionDir);
 
         // Save each file
@@ -111,7 +111,12 @@ public class MobileScannerService {
 
             // Sanitize filename
             String safeFilename = sanitizeFilename(originalFilename);
-            Path filePath = sessionDir.resolve(safeFilename);
+            Path filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
+
+            // Ensure resulting path stays within the session directory
+            if (!filePath.startsWith(sessionDir)) {
+                throw new IOException("Invalid filename");
+            }
 
             // Handle duplicate filenames
             int counter = 1;
@@ -122,7 +127,10 @@ public class MobileScannerService {
                                 ? safeFilename.substring(safeFilename.lastIndexOf("."))
                                 : "";
                 safeFilename = nameWithoutExt + "-" + counter + ext;
-                filePath = sessionDir.resolve(safeFilename);
+                filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
+                if (!filePath.startsWith(sessionDir)) {
+                    throw new IOException("Invalid filename");
+                }
                 counter++;
             }
 
@@ -167,7 +175,7 @@ public class MobileScannerService {
             throw new IOException("Session not found: " + sessionId);
         }
 
-        Path filePath = tempDirectory.resolve(sessionId).resolve(filename);
+        Path filePath = getSafeFilePath(sessionId, filename);
         if (!Files.exists(filePath)) {
             throw new IOException("File not found: " + filename);
         }
@@ -186,7 +194,7 @@ public class MobileScannerService {
      */
     public void deleteFileAfterDownload(String sessionId, String filename) {
         try {
-            Path filePath = tempDirectory.resolve(sessionId).resolve(filename);
+            Path filePath = getSafeFilePath(sessionId, filename);
             Files.deleteIfExists(filePath);
             log.info("Deleted file after download: {}/{}", sessionId, filename);
 
@@ -196,7 +204,7 @@ public class MobileScannerService {
                 deleteSession(sessionId);
                 log.info("All files downloaded - deleted session: {}", sessionId);
             }
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             log.warn("Failed to delete file after download: {}/{}", sessionId, filename, e);
         }
     }
@@ -210,7 +218,7 @@ public class MobileScannerService {
         SessionData session = activeSessions.remove(sessionId);
         if (session != null) {
             try {
-                Path sessionDir = tempDirectory.resolve(sessionId);
+                Path sessionDir = getSafeSessionDirectory(sessionId);
                 if (Files.exists(sessionDir)) {
                     // Delete all files in session directory
                     Files.walk(sessionDir)
@@ -228,6 +236,11 @@ public class MobileScannerService {
                                     });
                 }
                 log.info("Deleted session: {}", sessionId);
+            } catch (IllegalArgumentException e) {
+                log.warn(
+                        "Refused to delete session with invalid sessionId '{}': {}",
+                        sessionId,
+                        e.getMessage());
             } catch (IOException e) {
                 log.error("Error deleting session directory: {}", sessionId, e);
             }
@@ -265,7 +278,65 @@ public class MobileScannerService {
 
     private String sanitizeFilename(String filename) {
         // Remove path traversal attempts and dangerous characters
-        return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String sanitized = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        // Ensure we have a non-empty, safe filename
+        if (sanitized.isBlank()) {
+            sanitized = "upload-" + System.currentTimeMillis();
+        }
+        return sanitized;
+    }
+
+    /**
+     * Safely resolves and validates a session directory path to prevent directory traversal
+     * attacks.
+     *
+     * @param sessionId Session identifier
+     * @return Normalized absolute path to the session directory
+     * @throws IllegalArgumentException if the resolved path escapes the temp directory
+     */
+    private Path getSafeSessionDirectory(String sessionId) {
+        validateSessionId(sessionId);
+
+        Path baseDir = tempDirectory.normalize().toAbsolutePath();
+        Path sessionDir = baseDir.resolve(sessionId).normalize().toAbsolutePath();
+
+        // Verify the resolved path is still within the temp directory
+        if (!sessionDir.startsWith(baseDir)) {
+            throw new IllegalArgumentException("Invalid session ID: path traversal detected");
+        }
+
+        return sessionDir;
+    }
+
+    /**
+     * Safely resolves and validates a file path within a session directory to prevent directory
+     * traversal attacks.
+     *
+     * @param sessionId Session identifier
+     * @param filename Filename within the session
+     * @return Normalized absolute path to the file
+     * @throws IOException if the resolved path escapes the session directory
+     */
+    private Path getSafeFilePath(String sessionId, String filename) throws IOException {
+        if (filename == null || filename.isBlank()) {
+            throw new IOException("Filename cannot be empty");
+        }
+
+        // Additional validation: reject filenames with path separators or parent references
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            throw new IOException(
+                    "Invalid filename: contains path separators or parent references");
+        }
+
+        Path sessionDir = getSafeSessionDirectory(sessionId);
+        Path filePath = sessionDir.resolve(filename).normalize().toAbsolutePath();
+
+        // Verify the resolved path is still within the session directory
+        if (!filePath.startsWith(sessionDir)) {
+            throw new IOException("Invalid filename: path traversal detected");
+        }
+
+        return filePath;
     }
 
     /** Session information for client */
