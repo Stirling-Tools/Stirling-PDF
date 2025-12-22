@@ -13,6 +13,8 @@ export interface SplitParameters extends BaseParameters {
   includeMetadata: boolean;
   allowDuplicates: boolean;
   duplexMode: boolean;
+  splitMode?: string;
+  customPages?: string;
 }
 
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
@@ -28,6 +30,8 @@ export const defaultParameters: SplitParameters = {
   includeMetadata: false,
   allowDuplicates: false,
   duplexMode: false,
+  splitMode: 'SPLIT_ALL',
+  customPages: '',
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
@@ -44,7 +48,11 @@ export const useSplitParameters = (): SplitParametersHook => {
         case SPLIT_METHODS.BY_PAGES:
           return params.pages.trim() !== "";
         case SPLIT_METHODS.BY_SECTIONS:
-          return params.hDiv !== "" && params.vDiv !== "";
+          if (params.hDiv === "" || params.vDiv === "") return false;
+          if (params.splitMode === 'CUSTOM') {
+            return (params.customPages || '').trim() !== "";
+          }
+          return true;
         case SPLIT_METHODS.BY_SIZE:
         case SPLIT_METHODS.BY_PAGE_COUNT:
         case SPLIT_METHODS.BY_DOC_COUNT:

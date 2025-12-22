@@ -1,4 +1,4 @@
-import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text, Select } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '@app/constants/splitConstants';
@@ -49,6 +49,29 @@ const SplitSettings = ({
         placeholder={t("split-by-sections.vertical.placeholder", "Enter number of vertical divisions")}
         disabled={disabled}
       />
+      <Select
+        label={t("split-by-sections.splitMode.label", "Split Mode")}
+        value={parameters.splitMode || 'SPLIT_ALL'}
+        onChange={(value) => onParameterChange('splitMode', value || 'SPLIT_ALL')}
+        description={t("split-by-sections.splitMode.description", "Choose how to split the pages")}
+        data={[
+          { value: 'SPLIT_ALL', label: t("split-by-sections.splitMode.splitAll", "Split all pages") },
+          { value: 'SPLIT_ALL_EXCEPT_FIRST', label: t("split-by-sections.splitMode.splitAllExceptFirst", "Split all except first") },
+          { value: 'SPLIT_ALL_EXCEPT_LAST', label: t("split-by-sections.splitMode.splitAllExceptLast", "Split all except last") },
+          { value: 'SPLIT_ALL_EXCEPT_FIRST_AND_LAST', label: t("split-by-sections.splitMode.splitAllExceptFirstAndLast", "Split all except first and last") },
+          { value: 'CUSTOM', label: t("split-by-sections.splitMode.custom", "Custom pages") },
+        ]}
+        disabled={disabled}
+      />
+      {parameters.splitMode === 'CUSTOM' && (
+        <TextInput
+          label={t("split-by-sections.customPages.label", "Custom Page Numbers")}
+          placeholder={t("split-by-sections.customPages.placeholder", "e.g. 2,4,6")}
+          value={parameters.customPages || ''}
+          onChange={(e) => onParameterChange('customPages', e.target.value)}
+          disabled={disabled}
+        />
+      )}
       <Checkbox
         label={t("split-by-sections.merge", "Merge sections into one PDF")}
         checked={parameters.merge}

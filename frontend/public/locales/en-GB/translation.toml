@@ -3375,6 +3375,19 @@ placeholder = "Enter number of horizontal divisions"
 label = "Vertical Divisions"
 placeholder = "Enter number of vertical divisions"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
 header = "Stamp PDF"
