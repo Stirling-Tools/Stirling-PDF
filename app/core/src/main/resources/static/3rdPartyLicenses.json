@@ -8,9 +8,23 @@
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
+            "moduleName": "ch.qos.logback:logback-classic",
+            "moduleUrl": "http://www.qos.ch",
+            "moduleVersion": "1.5.22",
+            "moduleLicense": "GNU Lesser General Public License",
+            "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
+        },
+        {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
             "moduleVersion": "1.5.20",
+            "moduleLicense": "GNU Lesser General Public License",
+            "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
+        },
+        {
+            "moduleName": "ch.qos.logback:logback-core",
+            "moduleUrl": "http://www.qos.ch",
+            "moduleVersion": "1.5.22",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -173,23 +187,9 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.google.code.gson:gson",
-            "moduleUrl": "https://github.com/google/gson",
-            "moduleVersion": "2.13.2",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
             "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
             "moduleVersion": "2.40.0",
-            "moduleLicense": "Apache 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "com.google.errorprone:error_prone_annotations",
-            "moduleUrl": "https://errorprone.info/error_prone_annotations",
-            "moduleVersion": "2.41.0",
             "moduleLicense": "Apache 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -223,7 +223,7 @@
         {
             "moduleName": "com.google.zxing:core",
             "moduleUrl": "https://github.com/zxing/zxing/core",
-            "moduleVersion": "3.5.3",
+            "moduleVersion": "3.5.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -560,7 +560,7 @@
         {
             "moduleName": "commons-io:commons-io",
             "moduleUrl": "https://commons.apache.org/proper/commons-io/",
-            "moduleVersion": "2.20.0",
+            "moduleVersion": "2.21.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -609,6 +609,13 @@
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
             "moduleVersion": "1.15.5",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.micrometer:micrometer-core",
+            "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
+            "moduleVersion": "1.16.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -678,42 +685,42 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.36",
+            "moduleVersion": "2.2.38",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.40",
+            "moduleVersion": "2.2.41",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.36",
+            "moduleVersion": "2.2.38",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.40",
+            "moduleVersion": "2.2.41",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.36",
+            "moduleVersion": "2.2.38",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.40",
+            "moduleVersion": "2.2.41",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -823,34 +830,6 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
-            "moduleName": "me.friwi:gluegen-rt",
-            "moduleUrl": "http://jogamp.org/gluegen/www/",
-            "moduleVersion": "v2.4.0-rc-20210111",
-            "moduleLicense": "BSD-4 License",
-            "moduleLicenseUrl": "http://www.spdx.org/licenses/BSD-4-Clause"
-        },
-        {
-            "moduleName": "me.friwi:jcef-api",
-            "moduleUrl": "https://bitbucket.org/chromiumembedded/java-cef/",
-            "moduleVersion": "jcef-1770317+cef-132.3.1+g144febe+chromium-132.0.6834.83",
-            "moduleLicense": "BSD License",
-            "moduleLicenseUrl": "https://bitbucket.org/chromiumembedded/java-cef/src/master/LICENSE.txt"
-        },
-        {
-            "moduleName": "me.friwi:jcefmaven",
-            "moduleUrl": "https://github.com/jcefmaven/jcefmaven/",
-            "moduleVersion": "132.3.1",
-            "moduleLicense": "Apache-2.0 License",
-            "moduleLicenseUrl": "https://github.com/jcefmaven/jcefmaven/blob/master/LICENSE"
-        },
-        {
-            "moduleName": "me.friwi:jogl-all",
-            "moduleUrl": "http://jogamp.org/jogl/www/",
-            "moduleVersion": "v2.4.0-rc-20210111",
-            "moduleLicense": "Ubuntu Font Licence 1.0",
-            "moduleLicenseUrl": "http://font.ubuntu.com/ufl/ubuntu-font-licence-1.0.txt"
-        },
-        {
             "moduleName": "net.bytebuddy:byte-buddy",
             "moduleVersion": "1.17.8",
             "moduleLicense": "Apache License, Version 2.0",
@@ -891,13 +870,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "org.apache.commons:commons-compress",
-            "moduleUrl": "https://commons.apache.org/proper/commons-compress/",
-            "moduleVersion": "1.27.1",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
             "moduleName": "org.apache.commons:commons-csv",
             "moduleUrl": "https://commons.apache.org/proper/commons-csv/",
             "moduleVersion": "1.9.0",
@@ -914,7 +886,7 @@
         {
             "moduleName": "org.apache.commons:commons-lang3",
             "moduleUrl": "https://commons.apache.org/proper/commons-lang/",
-            "moduleVersion": "3.19.0",
+            "moduleVersion": "3.20.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1057,14 +1029,14 @@
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.82",
+            "moduleVersion": "1.83",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.82",
+            "moduleVersion": "1.83",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1078,7 +1050,7 @@
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
-            "moduleVersion": "1.82",
+            "moduleVersion": "1.83",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1548,19 +1520,19 @@
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",
-            "moduleVersion": "2.8.13",
+            "moduleVersion": "2.8.14",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-api",
-            "moduleVersion": "2.8.13",
+            "moduleVersion": "2.8.14",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-ui",
-            "moduleVersion": "2.8.13",
+            "moduleVersion": "2.8.14",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1678,13 +1650,6 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-security",
-            "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "3.5.7",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "org.springframework.boot:spring-boot-starter-thymeleaf",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.5.7",
             "moduleLicense": "Apache License, Version 2.0",
@@ -1891,12 +1856,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "org.thymeleaf:thymeleaf-spring6",
-            "moduleVersion": "3.1.3.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
             "moduleName": "org.unbescape:unbescape",
             "moduleUrl": "http://www.unbescape.org",
             "moduleVersion": "1.1.6.RELEASE",
@@ -1906,7 +1865,7 @@
         {
             "moduleName": "org.webjars:swagger-ui",
             "moduleUrl": "https://www.webjars.org",
-            "moduleVersion": "5.28.1",
+            "moduleVersion": "5.30.1",
             "moduleLicense": "Apache-2.0"
         },
         {
