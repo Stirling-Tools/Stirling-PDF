@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Text, Group, Alert, Tabs, Progress, Switch, useMantineColorScheme } from '@mantine/core';
+import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Paper, Card, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useLogoPath } from '@app/hooks/useLogoPath';
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
@@ -35,7 +35,7 @@ export default function MobileScannerPage() {
   const { wordmark } = useLogoAssets();
   const brandTextSrc = colorScheme === 'dark' ? wordmark.white : wordmark.black;
 
-  const [activeTab, setActiveTab] = useState<string | null>('camera');
+  const [mode, setMode] = useState<'choice' | 'camera' | 'file' | null>('choice');
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [currentPreview, setCurrentPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -44,7 +44,6 @@ export default function MobileScannerPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [autoEnhance, setAutoEnhance] = useState(true);
-  const [showLiveDetection, setShowLiveDetection] = useState(true); // On by default with adaptive performance
   const [isProcessing, setIsProcessing] = useState(false);
   const [openCvReady, setOpenCvReady] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
@@ -164,9 +163,9 @@ export default function MobileScannerPage() {
 
   // Initialize camera
   useEffect(() => {
-    console.log(`[Mobile Scanner] Camera effect triggered: activeTab=${activeTab}, cameraError=${cameraError}, currentPreview=${currentPreview}`);
+    console.log(`[Mobile Scanner] Camera effect triggered: mode=${mode}, cameraError=${cameraError}, currentPreview=${currentPreview}`);
 
-    if (activeTab === 'camera' && !cameraError && !currentPreview) {
+    if (mode === 'camera' && !cameraError && !currentPreview) {
       console.log('[Mobile Scanner] Camera effect: Starting camera initialization');
 
       // Check if mediaDevices API is available (requires HTTPS or localhost)
@@ -180,7 +179,7 @@ export default function MobileScannerPage() {
             'Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost.'
           )
         );
-        setActiveTab('file');
+        setMode('file');
         return;
       }
 
@@ -264,7 +263,7 @@ export default function MobileScannerPage() {
           setLoadingStatus('Camera access denied ✗');
           setCameraError(t('mobileScanner.cameraAccessDenied', 'Camera access denied. Please enable camera access.'));
           // Auto-switch to file upload if camera fails
-          setActiveTab('file');
+          setMode('file');
         });
     }
 
@@ -282,14 +281,14 @@ export default function MobileScannerPage() {
       // Reset camera ready state
       setCameraReady(false);
     };
-  }, [activeTab, cameraError, currentPreview, t]);
+  }, [mode, cameraError, currentPreview, t]);
 
   // Real-time document highlighting on camera feed
   useEffect(() => {
-    console.log(`[Mobile Scanner] Effect triggered: activeTab=${activeTab}, showLiveDetection=${showLiveDetection}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`);
+    console.log(`[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`);
 
     // Show helpful status if detection is enabled but waiting for dependencies
-    if (activeTab === 'camera' && showLiveDetection && !currentPreview) {
+    if (mode === 'camera' && autoEnhance && !currentPreview) {
       if (!openCvReady) {
         setLoadingStatus('Waiting for OpenCV...');
       } else if (!cameraReady) {
@@ -297,7 +296,7 @@ export default function MobileScannerPage() {
       }
     }
 
-    if (activeTab === 'camera' && showLiveDetection && openCvReady && cameraReady && scannerRef.current && !currentPreview) {
+    if (mode === 'camera' && autoEnhance && openCvReady && cameraReady && scannerRef.current && !currentPreview) {
       const startHighlighting = () => {
         console.log('[Mobile Scanner] startHighlighting() called');
 
@@ -527,7 +526,7 @@ export default function MobileScannerPage() {
         }
       };
     }
-  }, [activeTab, showLiveDetection, openCvReady, cameraReady, currentPreview]);
+  }, [mode, autoEnhance, openCvReady, cameraReady, currentPreview]);
 
   const captureImage = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -760,7 +759,7 @@ export default function MobileScannerPage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '100vh',
+          height: '100dvh',
           padding: '2rem',
         }}
       >
@@ -778,7 +777,7 @@ export default function MobileScannerPage() {
   return (
     <Box
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: 'var(--bg-background)',
         display: 'flex',
         flexDirection: 'column',
@@ -806,13 +805,12 @@ export default function MobileScannerPage() {
         </Group>
       </Box>
 
-      {/* Status Banner */}
-      {loadingStatus && (
+      {/* Status Banner - only show during camera loading or errors */}
+      {loadingStatus && mode === 'camera' && !loadingStatus.includes('✓') && (
         <Box
           p="xs"
           style={{
             background: loadingStatus.includes('✗') ? 'var(--mantine-color-red-1)' :
-                       loadingStatus.includes('✓') ? 'var(--mantine-color-green-1)' :
                        'var(--mantine-color-blue-1)',
             borderBottom: '1px solid var(--border-subtle)',
             fontSize: '0.85rem',
@@ -849,103 +847,196 @@ export default function MobileScannerPage() {
         </Box>
       )}
 
-      {!currentPreview && (
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List grow>
-            <Tabs.Tab value="camera" leftSection={<PhotoCameraRoundedIcon />}>
-              {t('mobileScanner.camera', 'Camera')}
-            </Tabs.Tab>
-            <Tabs.Tab value="file" leftSection={<UploadRoundedIcon />}>
-              {t('mobileScanner.fileUpload', 'File Upload')}
-            </Tabs.Tab>
-          </Tabs.List>
+      {/* Choice screen */}
+      {mode === 'choice' && !currentPreview && (
+        <Stack gap="lg" p="xl" align="center" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <Stack gap="xs" align="center">
+            <Text size="xl" fw={700} ta="center">
+              {t('mobileScanner.chooseMethod', 'Choose Upload Method')}
+            </Text>
+            <Text size="sm" c="dimmed" ta="center">
+              {t('mobileScanner.chooseMethodDescription', 'Select how you want to scan and upload documents')}
+            </Text>
+          </Stack>
 
-          <Tabs.Panel value="camera" pt="md">
-            <Box style={{ position: 'relative', width: '100%', maxWidth: '100vw', background: '#000', overflow: 'hidden' }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{
-                  width: '100%',
-                  maxHeight: '60vh',
-                  display: 'block',
-                  objectFit: 'contain',
-                }}
-              />
-              <canvas ref={canvasRef} style={{ display: 'none' }} />
-              {/* Highlight overlay canvas - shows real-time document edge detection */}
-              <canvas
-                ref={highlightCanvasRef}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  pointerEvents: 'none',
-                  opacity: showLiveDetection ? 1 : 0,
-                  transition: 'opacity 0.2s',
-                  objectFit: 'contain', // Maintain aspect ratio
-                  imageRendering: 'auto', // Smooth scaling
-                }}
-              />
-            </Box>
-            <Stack gap="sm" p="sm">
-              <Stack gap="sm">
-                <Group justify="space-between">
-                  <Text size="sm" fw={600}>
-                    {t('mobileScanner.liveDetection', 'Live Detection')}
-                  </Text>
+          <Stack gap="md" style={{ width: '100%' }}>
+            <Card
+              shadow="sm"
+              padding="xl"
+              radius="md"
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() => setMode('camera')}
+              styles={{
+                root: {
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    boxShadow: 'var(--mantine-shadow-md)',
+                  },
+                },
+              }}
+            >
+              <Stack align="center" gap="md">
+                <PhotoCameraRoundedIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-blue-6)' }} />
+                <Text size="lg" fw={600}>
+                  {t('mobileScanner.camera', 'Camera')}
+                </Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  {t('mobileScanner.cameraDescription', 'Scan documents using your device camera with automatic edge detection')}
+                </Text>
+              </Stack>
+            </Card>
+
+            <Card
+              shadow="sm"
+              padding="xl"
+              radius="md"
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() => setMode('file')}
+              styles={{
+                root: {
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    boxShadow: 'var(--mantine-shadow-md)',
+                  },
+                },
+              }}
+            >
+              <Stack align="center" gap="md">
+                <UploadRoundedIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-green-6)' }} />
+                <Text size="lg" fw={600}>
+                  {t('mobileScanner.fileUpload', 'File Upload')}
+                </Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  {t('mobileScanner.fileDescription', 'Upload existing photos or documents from your device')}
+                </Text>
+              </Stack>
+            </Card>
+          </Stack>
+        </Stack>
+      )}
+
+      {/* Camera interface */}
+      {mode === 'camera' && !currentPreview && (
+        <Box style={{ position: 'relative', height: 'calc(100dvh - 60px)', display: 'flex', flexDirection: 'column' }}>
+          {/* Back button - floating top left */}
+          <Button
+            onClick={() => setMode('choice')}
+            variant="filled"
+            size="sm"
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              left: '1rem',
+              zIndex: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(8px)',
+              border: 'none',
+            }}
+          >
+            ← {t('mobileScanner.back', 'Back')}
+          </Button>
+
+          {/* Video feed - fills available space */}
+          <Box style={{ position: 'relative', flex: 1, background: '#000', overflow: 'hidden' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'block',
+                objectFit: 'contain',
+              }}
+            />
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            {/* Highlight overlay canvas - shows real-time document edge detection */}
+            <canvas
+              ref={highlightCanvasRef}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                opacity: autoEnhance ? 1 : 0,
+                transition: 'opacity 0.2s',
+                objectFit: 'contain',
+                imageRendering: 'auto',
+              }}
+            />
+          </Box>
+
+          {/* Controls bar - fixed at bottom */}
+          <Box
+            style={{
+              backgroundColor: 'var(--bg-toolbar)',
+              borderTop: '1px solid var(--border-subtle)',
+              padding: '0.75rem 1rem',
+            }}
+          >
+            <Stack gap="sm">
+              {/* Settings toggles */}
+              <Group justify="space-around" style={{ width: '100%' }}>
+                <Group gap="xs">
                   <Switch
-                    checked={showLiveDetection}
-                    onChange={(e) => setShowLiveDetection(e.currentTarget.checked)}
-                    disabled={!openCvReady}
-                  />
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" fw={600}>
-                    {t('mobileScanner.autoEnhance', 'Auto-enhance')}
-                  </Text>
-                  <Switch
+                    size="sm"
                     checked={autoEnhance}
                     onChange={(e) => setAutoEnhance(e.currentTarget.checked)}
                     disabled={!openCvReady}
                   />
+                  <Text size="xs">{t('mobileScanner.edgeDetection', 'Edge Detection')}</Text>
                 </Group>
                 {torchSupported && (
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600}>
-                      {t('mobileScanner.flashlight', 'Flashlight')}
-                    </Text>
-                    <Switch checked={torchEnabled} onChange={toggleTorch} />
+                  <Group gap="xs">
+                    <Switch size="sm" checked={torchEnabled} onChange={toggleTorch} />
+                    <Text size="xs">{t('mobileScanner.flashlight', 'Flash')}</Text>
                   </Group>
                 )}
-              </Stack>
+              </Group>
+
+              {/* Capture button */}
               <Button
                 fullWidth
                 size="lg"
                 onClick={captureImage}
                 loading={isProcessing}
+                variant="filled"
+                radius="xl"
               >
                 {isProcessing
                   ? t('mobileScanner.processing', 'Processing...')
-                  : t('mobileScanner.capture', 'Capture Photo')}
+                  : t('mobileScanner.capture', 'Capture')}
               </Button>
-              {autoEnhance && openCvReady && (
-                <Text size="xs" c="dimmed" ta="center">
-                  {t(
-                    'mobileScanner.autoEnhanceInfo',
-                    'Document edges will be automatically detected and perspective corrected'
-                  )}
-                </Text>
-              )}
             </Stack>
-          </Tabs.Panel>
+          </Box>
+        </Box>
+      )}
 
-          <Tabs.Panel value="file">
-            <Stack gap="sm" p="sm" align="center">
+      {/* File upload interface */}
+      {mode === 'file' && !currentPreview && (
+        <Stack gap="lg" p="xl" align="center" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <Button
+            onClick={() => setMode('choice')}
+            variant="subtle"
+            size="sm"
+            style={{ alignSelf: 'flex-start' }}
+          >
+            ← {t('mobileScanner.back', 'Back')}
+          </Button>
+
+          <Card shadow="sm" padding="xl" radius="md" withBorder style={{ width: '100%' }}>
+            <Stack align="center" gap="lg">
+              <UploadRoundedIcon style={{ fontSize: '4rem', color: 'var(--mantine-color-gray-5)' }} />
+              <Text size="lg" fw={600} ta="center">
+                {t('mobileScanner.selectFilesPrompt', 'Select files to upload')}
+              </Text>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -956,46 +1047,49 @@ export default function MobileScannerPage() {
               />
               <Button
                 size="lg"
+                variant="filled"
+                fullWidth
                 onClick={() => fileInputRef.current?.click()}
                 leftSection={<AddPhotoAlternateRoundedIcon />}
               >
                 {t('mobileScanner.selectImage', 'Select Image')}
               </Button>
             </Stack>
-          </Tabs.Panel>
-        </Tabs>
+          </Card>
+        </Stack>
       )}
 
+      {/* Preview interface */}
       {currentPreview && (
-        <Stack gap="sm" p="sm">
-          <Text size="lg" fw={600}>
-            {t('mobileScanner.preview', 'Preview')}
-          </Text>
+        <Box style={{ position: 'relative', height: 'calc(100dvh - 60px)', display: 'flex', flexDirection: 'column' }}>
+          {/* Preview image - fills available space */}
+          <Box style={{ position: 'relative', flex: 1, background: '#000', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={currentPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', display: 'block', objectFit: 'contain' }} />
+          </Box>
+
+          {/* Controls bar - fixed at bottom */}
           <Box
             style={{
-              width: '100%',
-              background: '#000',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              backgroundColor: 'var(--bg-toolbar)',
+              borderTop: '1px solid var(--border-subtle)',
+              padding: '0.75rem 1rem',
             }}
           >
-            <img src={currentPreview} alt="Preview" style={{ width: '100%', display: 'block' }} />
+            <Stack gap="sm">
+              <Group grow>
+                <Button variant="default" onClick={retake} size="lg">
+                  {t('mobileScanner.retake', 'Retake')}
+                </Button>
+                <Button variant="filled" onClick={addToBatch} size="lg">
+                  {t('mobileScanner.addToBatch', 'Add to Batch')}
+                </Button>
+              </Group>
+              <Button fullWidth variant="filled" size="lg" onClick={uploadImages} loading={isUploading} radius="xl">
+                {t('mobileScanner.upload', 'Upload')}
+              </Button>
+            </Stack>
           </Box>
-          <Group grow>
-            <Button variant="outline" onClick={retake}>
-              {t('mobileScanner.retake', 'Retake')}
-            </Button>
-            <Button variant="light" onClick={addToBatch} color="green">
-              {t('mobileScanner.addToBatch', 'Add to Batch')}
-            </Button>
-          </Group>
-          <Button fullWidth onClick={uploadImages} loading={isUploading}>
-            {t('mobileScanner.upload', 'Upload')}
-          </Button>
-        </Stack>
+        </Box>
       )}
 
       {capturedImages.length > 0 && (
