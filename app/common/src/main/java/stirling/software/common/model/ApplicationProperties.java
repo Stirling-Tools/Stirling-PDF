@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -153,7 +154,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Security {
-        private Boolean enableLogin;
+        private boolean enableLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -328,7 +329,7 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    return switch (registrationId.toLowerCase()) {
+                    return switch (registrationId.toLowerCase(Locale.ROOT)) {
                         case "google" -> getGoogle();
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
@@ -390,20 +391,20 @@ public class ApplicationProperties {
     @Data
     public static class System {
         private String defaultLocale;
-        private Boolean googlevisibility;
+        private boolean googlevisibility;
         private boolean showUpdate;
-        private Boolean showUpdateOnlyAdmin;
+        private boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
         private String tessdataDir;
-        private Boolean enableAlphaFunctionality;
+        private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
-        private Boolean disableSanitize;
+        private boolean disableSanitize;
         private int maxDPI;
-        private Boolean enableUrlToPDF;
+        private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
@@ -455,6 +456,9 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+            private String calibre;
+            private String ocrmypdf;
+            private String soffice;
         }
     }
 
@@ -572,7 +576,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private Boolean enabled;
+        private boolean enabled;
     }
 
     @Data
@@ -726,6 +730,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
@@ -760,6 +783,7 @@ public class ApplicationProperties {
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -804,6 +828,10 @@ public class ApplicationProperties {
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
+
+            public int getFfmpegSessionLimit() {
+                return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
+            }
         }
 
         @Data
@@ -832,6 +860,7 @@ public class ApplicationProperties {
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long ffmpegTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -875,6 +904,10 @@ public class ApplicationProperties {
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getFfmpegTimeoutMinutes() {
+                return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
             }
         }
     }

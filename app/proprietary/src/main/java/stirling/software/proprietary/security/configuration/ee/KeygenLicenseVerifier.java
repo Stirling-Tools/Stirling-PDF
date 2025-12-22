@@ -5,6 +5,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
+import java.util.Locale;
 
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
@@ -185,7 +186,7 @@ public class KeygenLicenseVerifier {
             byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
 
             // Create the signing data format - prefix with "license/"
-            String signingData = String.format("license/%s", encryptedData);
+            String signingData = String.format(Locale.ROOT, "license/%s", encryptedData);
             byte[] signingDataBytes = signingData.getBytes();
 
             log.info("Signing data length: {} bytes", signingDataBytes.length);
@@ -348,7 +349,7 @@ public class KeygenLicenseVerifier {
                             .decode(encodedSignature.replace('-', '+').replace('_', '/'));
 
             // For ED25519_SIGN format, the signing data is "key/" + encodedPayload
-            String signingData = String.format("key/%s", encodedPayload);
+            String signingData = String.format(Locale.ROOT, "key/%s", encodedPayload);
             byte[] dataBytes = signingData.getBytes();
 
             byte[] publicKeyBytes = Hex.decode(PUBLIC_KEY);
@@ -526,8 +527,10 @@ public class KeygenLicenseVerifier {
             String licenseKey, String machineFingerprint, LicenseContext context) throws Exception {
         String requestBody =
                 String.format(
+                        Locale.ROOT,
                         "{\"meta\":{\"key\":\"%s\",\"scope\":{\"fingerprint\":\"%s\"}}}",
-                        licenseKey, machineFingerprint);
+                        licenseKey,
+                        machineFingerprint);
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(

@@ -15,7 +15,6 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Ui;
@@ -24,10 +23,15 @@ class LanguageServiceTest {
 
     private LanguageService languageService;
     private ApplicationProperties applicationProperties;
-    private PathMatchingResourcePatternResolver mockedResolver;
+
+    private static Resource createMockResource(String filename) {
+        Resource mockResource = mock(Resource.class);
+        when(mockResource.getFilename()).thenReturn(filename);
+        return mockResource;
+    }
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         // Mock ApplicationProperties
         applicationProperties = mock(ApplicationProperties.class);
         Ui ui = mock(Ui.class);
@@ -38,7 +42,7 @@ class LanguageServiceTest {
     }
 
     @Test
-    void testGetSupportedLanguages_NoRestrictions() throws IOException {
+    void testGetSupportedLanguages_NoRestrictions() {
         // Setup
         Set<String> expectedLanguages =
                 new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
@@ -61,7 +65,7 @@ class LanguageServiceTest {
     }
 
     @Test
-    void testGetSupportedLanguages_WithRestrictions() throws IOException {
+    void testGetSupportedLanguages_WithRestrictions() {
         // Setup
         Set<String> expectedLanguages =
                 new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
@@ -87,7 +91,7 @@ class LanguageServiceTest {
     }
 
     @Test
-    void testGetSupportedLanguages_ExceptionHandling() throws IOException {
+    void testGetSupportedLanguages_ExceptionHandling() {
         // Setup - make resolver throw an exception
         ((LanguageServiceForTest) languageService).setShouldThrowException(true);
 
@@ -98,19 +102,24 @@ class LanguageServiceTest {
         assertTrue(supportedLanguages.isEmpty(), "Should return empty set on exception");
     }
 
+    // Helper methods to create mock resources
+    private Resource[] createMockResources(Set<String> languages) {
+        return languages.stream()
+                .map(lang -> createMockResource("messages_" + lang + ".properties"))
+                .toArray(Resource[]::new);
+    }
+
     @Test
-    void testGetSupportedLanguages_FilteringNonMatchingFiles() throws IOException {
+    void testGetSupportedLanguages_FilteringNonMatchingFiles() {
         // Setup with some valid and some invalid filenames
-        Resource[] mixedResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"),
-                    createMockResource(
-                            "messages_en_GB.properties"), // Explicitly add en_GB resource
-                    createMockResource("messages_fr_FR.properties"),
-                    createMockResource("not_a_messages_file.properties"),
-                    createMockResource("messages_.properties"), // Invalid format
-                    createMockResource(null) // Null filename
-                };
+        Resource[] mixedResources = {
+            createMockResource("messages_en_US.properties"),
+            createMockResource("messages_en_GB.properties"), // Explicitly add en_GB resource
+            createMockResource("messages_fr_FR.properties"),
+            createMockResource("not_a_messages_file.properties"),
+            createMockResource("messages_.properties"), // Invalid format
+            createMockResource(null) // Null filename
+        };
 
         ((LanguageServiceForTest) languageService).setMockResources(mixedResources);
         when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
@@ -130,19 +139,6 @@ class LanguageServiceTest {
                 "Invalid format should be excluded");
         // Skip the empty string check as it depends on implementation details of extracting
         // language codes
-    }
-
-    // Helper methods to create mock resources
-    private Resource[] createMockResources(Set<String> languages) {
-        return languages.stream()
-                .map(lang -> createMockResource("messages_" + lang + ".properties"))
-                .toArray(Resource[]::new);
-    }
-
-    private Resource createMockResource(String filename) {
-        Resource mockResource = mock(Resource.class);
-        when(mockResource.getFilename()).thenReturn(filename);
-        return mockResource;
     }
 
     // Test subclass that allows us to control the resource resolver

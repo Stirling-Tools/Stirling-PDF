@@ -89,8 +89,8 @@ public class HomeWebController {
     @ResponseBody
     @Hidden
     public String getRobotsTxt() {
-        Boolean allowGoogle = applicationProperties.getSystem().getGooglevisibility();
-        if (Boolean.TRUE.equals(allowGoogle)) {
+        boolean allowGoogle = applicationProperties.getSystem().isGooglevisibility();
+        if (allowGoogle) {
             return "User-agent: Googlebot\nAllow: /\n\nUser-agent: *\nAllow: /";
         } else {
             return "User-agent: Googlebot\nDisallow: /\n\nUser-agent: *\nDisallow: /";
