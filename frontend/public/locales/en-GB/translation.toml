@@ -1250,7 +1250,7 @@ downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 pdfxOptions = "PDF/X Options"
 outputFormat = "Output Format"
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaFormat = "PDF/A Format"
 pdfxFormat = "PDF/X Format"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
@@ -3390,6 +3390,19 @@ placeholder = "Enter number of horizontal divisions"
 label = "Vertical Divisions"
 placeholder = "Enter number of vertical divisions"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
 header = "Stamp PDF"
@@ -3750,6 +3763,9 @@ filesize = "File Size"
 
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
 label = "Convert images to line art"
@@ -6175,7 +6191,7 @@ title = "Authentication Failed"
 message = "Authentication was not successful. You can close this window and try again."
 
 [pdfTextEditor]
-title = "PDF JSON Editor"
+title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 converting = "Converting PDF to editable format..."
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -6204,6 +6220,8 @@ reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
 saveChanges = "Save Changes"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -6221,6 +6239,24 @@ descriptionInline = "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A
 [pdfTextEditor.options.forceSingleElement]
 title = "Lock edited text to a single PDF element"
 description = "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Merge selected boxes"
@@ -6241,8 +6277,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
-dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
+dropzone = "Drag and drop a PDF here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"

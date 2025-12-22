@@ -9,10 +9,10 @@ The script prints size and font statistics so we can confirm whether the
 lightweight export (no COS dictionaries) is active and how large the font
 payloads are.
 """
+
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import math
 from pathlib import Path
@@ -105,7 +105,11 @@ def analyze_fonts(fonts: Iterable[Dict[str, Any]]) -> FontBreakdown:
                 sample_cos_ids.append((font_id, uid))
 
         metadata_bytes += approx_struct_size(
-            {k: v for k, v in font.items() if k not in {"program", "webProgram", "pdfProgram"}}
+            {
+                k: v
+                for k, v in font.items()
+                if k not in {"program", "webProgram", "pdfProgram"}
+            }
         )
 
         program = font.get("program")
@@ -259,18 +263,14 @@ def main() -> None:
         f"  Text payload characters (not counting JSON overhead): "
         f"{page_stats.text_payload_chars:,}"
     )
-    print(
-        f"  Approx text structure bytes: {human_bytes(page_stats.text_struct_bytes)}"
-    )
+    print(f"  Approx text structure bytes: {human_bytes(page_stats.text_struct_bytes)}")
     print(
         f"  Approx image structure bytes: {human_bytes(page_stats.image_struct_bytes)}"
     )
     print(
         f"  Approx content stream bytes: {human_bytes(page_stats.content_stream_bytes)}"
     )
-    print(
-        f"  Approx annotations bytes: {human_bytes(page_stats.annotations_bytes)}"
-    )
+    print(f"  Approx annotations bytes: {human_bytes(page_stats.annotations_bytes)}")
 
 
 if __name__ == "__main__":

@@ -23,9 +23,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleImageChange = async (file: File | null) => {
     if (file && !disabled) {
       try {
-        // Validate that it's actually an image file
-        if (!file.type.startsWith('image/')) {
-          console.error('Selected file is not an image');
+        // Validate that it's actually an image file or SVG
+        if (!file.type.startsWith('image/') && !file.name.toLowerCase().endsWith('.svg')) {
+          console.error('Selected file is not an image or SVG');
           return;
         }
 
@@ -45,7 +45,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <FileInput
           label={label}
           placeholder={placeholder || t('sign.image.placeholder', 'Select image file')}
-          accept="image/*"
+          accept="image/*,.svg"
           onChange={handleImageChange}
           disabled={disabled}
         />
