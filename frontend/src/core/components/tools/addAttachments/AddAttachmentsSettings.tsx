@@ -8,7 +8,6 @@ import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox, Tooltip, 
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { IconInfoCircle } from "@tabler/icons-react";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -122,7 +121,7 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
                 withArrow
               >
                 <ThemeIcon size="xs" variant="transparent" color="dimmed" style={{ cursor: 'help' }}>
-                  <IconInfoCircle size={14} />
+                  <LocalIcon icon="info-rounded" width="14" height="14" />
                 </ThemeIcon>
               </Tooltip>
             </Group>
