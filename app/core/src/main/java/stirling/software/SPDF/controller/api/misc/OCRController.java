@@ -255,6 +255,7 @@ public class OCRController {
                 command.add("--force-ocr");
             }
         }
+        command.add("--invalidate-digital-signatures");
 
         command.addAll(
                 Arrays.asList(
