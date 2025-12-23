@@ -7,13 +7,13 @@ package stirling.software.SPDF.service.telegram;
  */
 public enum FeedbackEnum {
     /** Indicates that the provided document is not valid. */
-    NOVALIDDOCUMENT,
-
-    /** Indicates that an error occurred during processing. */
-    PROCESSINGERROR,
+    NO_VALID_DOCUMENT,
 
     /** Represents a generic error message. */
-    ERRORMESSAGE,
+    ERROR_MESSAGE,
+
+    /** Indicates that an error occurred during processing. */
+    ERROR_PROCESSING,
 
     /** Indicates that processing is ongoing. */
     PROCESSING

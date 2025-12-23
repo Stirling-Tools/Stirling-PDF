@@ -82,7 +82,7 @@ incorrectPasswordMessage = "Das Passwort ist falsch."
 usernameExistsMessage = "Neuer Benutzername existiert bereits."
 invalidUsernameMessage = "Ungültiger Benutzername. Der Benutzername darf nur Buchstaben, Zahlen und die folgenden Sonderzeichen @._+- enthalten oder muss eine gültige E-Mail-Adresse sein."
 invalidPasswordMessage = "Das Passwort darf nicht leer sein und kein Leerzeichen am Anfang und Ende haben."
-confirmPasswordErrorMessage = "„Neues Passwort“ und „Neues Passwort bestätigen“ müssen übereinstimmen."
+confirmPasswordErrorMessage = "\"Neues Passwort\" und \"Neues Passwort bestätigen\" müssen übereinstimmen."
 deleteCurrentUserMessage = "Der aktuell angemeldete Benutzer kann nicht gelöscht werden."
 deleteUsernameExistsMessage = "Der Benutzername existiert nicht und kann nicht gelöscht werden."
 downgradeCurrentUserMessage = "Die Rolle des aktuellen Benutzers kann nicht herabgestuft werden"
@@ -2285,7 +2285,7 @@ colorLabel = "Textfarbe"
 heading = "Gespeicherte Unterschriften"
 description = "Gespeicherte Unterschriften jederzeit wiederverwenden."
 emptyTitle = "Noch keine gespeicherten Unterschriften"
-emptyDescription = "Zeichnen, laden oder tippen Sie oben eine Unterschrift und wählen Sie dann „In Bibliothek speichern“, um bis zu {{max}} Favoriten bereitzuhalten."
+emptyDescription = "Zeichnen, laden oder tippen Sie oben eine Unterschrift und wählen Sie dann \"In Bibliothek speichern\", um bis zu {{max}} Favoriten bereitzuhalten."
 limitTitle = "Limit erreicht"
 limitDescription = "Entfernen Sie eine gespeicherte Unterschrift, bevor Sie neue hinzufügen (max. {{max}})."
 carouselPosition = "{{current}} von {{total}}"
@@ -2486,7 +2486,7 @@ title = "Über Anmerkungen entfernen"
 description = "Dieses Werkzeug entfernt alle Anmerkungen (Kommentare, Hervorhebungen, Notizen usw.) aus Ihren PDF-Dokumenten."
 
 [removeAnnotations.tooltip.header]
-title = "Über „Anmerkungen entfernen“"
+title = "Über \"Anmerkungen entfernen\""
 
 [removeAnnotations.tooltip.description]
 title = "Funktion"
@@ -3933,7 +3933,7 @@ showPreferencesBtn = "Einstellungen verwalten"
 
 [cookieBanner.popUp.description]
 1 = "Wir verwenden Cookies und andere Technologien, damit Stirling PDF für Sie besser funktioniert. Dies hilft uns dabei, unsere Tools zu verbessern und weiterhin Funktionen zu entwickeln, die Ihnen gefallen werden."
-2 = "Wenn Sie dies nicht möchten, klicken Sie auf „Nein, Danke“. Dadurch werden nur die unbedingt erforderlichen Cookies aktiviert, die für einen reibungslosen Ablauf erforderlich sind."
+2 = "Wenn Sie dies nicht möchten, klicken Sie auf \"Nein, Danke\". Dadurch werden nur die unbedingt erforderlichen Cookies aktiviert, die für einen reibungslosen Ablauf erforderlich sind."
 
 [cookieBanner.preferencesModal]
 title = "Einwilligungszentrum"
@@ -4504,9 +4504,9 @@ description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
 [admin.settings.telegram.feedback]
 title = "Feedback-Nachrichten"
 description = "Festlegen, wann der Bot Feedback an Benutzer und Kanäle senden soll."
-noValidDocument = "\"Kein gültiges Dokument\" ausblenden"
-processingError = "Verarbeitungsfehler ausblenden"
-errorMessage = "Fehlermeldungen ausblenden"
+noValidDocument = "\"Kein gültiges Dokument\" einblenden"
+errorPocessing = "Verarbeitungsfehler einblenden"
+errorMessage = "Fehlermeldungen einblenden"
 
 [admin.settings.telegram.feedback.general.enabled]
 label = "Feedback aktivieren"
@@ -4516,31 +4516,31 @@ description = "Legt fest, ob der Bot überhaupt Feedback-Nachrichten sendet."
 title = "Kanal-Feedback-Regeln"
 
 [admin.settings.telegram.feedback.channel.noValidDocument]
-label = "\"Kein gültiges Dokument\" ausblenden (Kanal)"
-description = "Unterdrückt die Meldung „Kein gültiges Dokument“ bei Kanal-Uploads."
+label = "\"Kein gültiges Dokument\" einblenden (Kanal)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Kanal-Uploads."
 
-[admin.settings.telegram.feedback.channel.processingError]
-label = "Verarbeitungsfehler ausblenden (Kanal)"
-description = "Keine Verarbeitungsfehlermeldungen an Kanäle senden."
+[admin.settings.telegram.feedback.channel.errorPocessing]
+label = "Verarbeitungsfehler einblenden (Kanal)"
+description = "Sendet Verarbeitungsfehlermeldungen an Kanäle senden."
 
 [admin.settings.telegram.feedback.channel.errorMessage]
-label = "Fehlermeldungen ausblenden (Kanal)"
-description = "Detaillierte Fehlermeldungen für Kanäle ausblenden."
+label = "Fehlermeldungen einblenden (Kanal)"
+description = "Detaillierte Fehlermeldungen für Kanäle einblenden."
 
 [admin.settings.telegram.feedback.user]
 title = "Benutzer-Feedback-Regeln"
 
 [admin.settings.telegram.feedback.user.noValidDocument]
-label = "\"Kein gültiges Dokument\" ausblenden (Benutzer)"
-description = "Unterdrückt die Meldung „Kein gültiges Dokument“ bei Benutzer-Uploads."
+label = "\"Kein gültiges Dokument\" einblenden (Benutzer)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Benutzer-Uploads."
 
-[admin.settings.telegram.feedback.user.processingError]
-label = "Verarbeitungsfehler ausblenden (Benutzer)"
-description = "Keine Verarbeitungsfehlermeldungen an Benutzer senden."
+[admin.settings.telegram.feedback.user.errorPocessing]
+label = "Verarbeitungsfehler einblenden (Benutzer)"
+description = "Sendet Verarbeitungsfehlermeldungen an Benutzer."
 
 [admin.settings.telegram.feedback.user.errorMessage]
-label = "Fehlermeldungen ausblenden (Benutzer)"
-description = "Detaillierte Fehlermeldungen für Benutzer ausblenden."
+label = "Fehlermeldungen einblenden (Benutzer)"
+description = "Detaillierte Fehlermeldungen für Benutzer einblenden."
 
 [admin.settings.database]
 title = "Datenbank"
@@ -4806,11 +4806,11 @@ description = "Optionale Funktionen und Features konfigurieren."
 
 [admin.settings.features.serverCertificate]
 label = "Serverzertifikat"
-description = "Serverseitige Zertifikatserstellung für die Funktion „Mit Stirling-PDF signieren“ konfigurieren"
+description = "Serverseitige Zertifikatserstellung für die Funktion \"Mit Stirling-PDF signieren\" konfigurieren"
 
 [admin.settings.features.serverCertificate.enabled]
 label = "Serverzertifikat aktivieren"
-description = "Serverseitiges Zertifikat für die Option „Mit Stirling-PDF signieren“ aktivieren"
+description = "Serverseitiges Zertifikat für die Option \"Mit Stirling-PDF signieren\" aktivieren"
 
 [admin.settings.features.serverCertificate.organizationName]
 label = "Name der Organisation"
@@ -5295,7 +5295,7 @@ selectedFiles = "Ausgewählte Dateien"
 submit = "Anhänge hinzufügen"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "Über „Anhänge hinzufügen“"
+title = "Über \"Anhänge hinzufügen\""
 
 [AddAttachmentsRequest.tooltip.description]
 title = "Funktion"
@@ -5304,7 +5304,7 @@ title = "Funktion"
 title = "Anhangs-Ergebnisse"
 
 [AddAttachmentsRequest.error]
-failed = "Operation „Anhänge hinzufügen“ fehlgeschlagen"
+failed = "Operation \"Anhänge hinzufügen\" fehlgeschlagen"
 
 [addAttachments.error]
 failed = "Beim Hinzufügen von Anhängen zur PDF ist ein Fehler aufgetreten."

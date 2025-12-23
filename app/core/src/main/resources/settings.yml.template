@@ -16,30 +16,30 @@ security:
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
-    username: '' # initial username for the first login
-    password: '' # initial password for the first login
+    username: "" # initial username for the first login
+    password: "" # initial password for the first login
   oauth2:
     enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
       keycloak:
-        issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
-        clientId: '' # client ID for Keycloak OAuth2
-        clientSecret: '' # client secret for Keycloak OAuth2
+        issuer: "" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
+        clientId: "" # client ID for Keycloak OAuth2
+        clientSecret: "" # client secret for Keycloak OAuth2
         scopes: openid, profile, email # scopes for Keycloak OAuth2
         useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | name | given_name | family_name | preferred_name]
       google:
-        clientId: '' # client ID for Google OAuth2
-        clientSecret: '' # client secret for Google OAuth2
+        clientId: "" # client ID for Google OAuth2
+        clientSecret: "" # client secret for Google OAuth2
         scopes: email, profile # scopes for Google OAuth2
         useAsUsername: email # field to use as the username for Google OAuth2. Available options are: [email | name | given_name | family_name]
       github:
-        clientId: '' # client ID for GitHub OAuth2
-        clientSecret: '' # client secret for GitHub OAuth2
+        clientId: "" # client ID for GitHub OAuth2
+        clientSecret: "" # client secret for GitHub OAuth2
         scopes: read:user # scope for GitHub OAuth2
         useAsUsername: login # field to use as the username for GitHub OAuth2. Available options are: [email | login | name]
-    issuer: '' # set to any Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
-    clientId: '' # client ID from your Provider
-    clientSecret: '' # client secret from your Provider
+    issuer: "" # set to any Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
+    clientId: "" # client ID from your Provider
+    clientSecret: "" # client secret from your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # default is 'email'; custom fields can be used as the username
@@ -47,14 +47,14 @@ security:
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
-    provider: '' # The name of your Provider
+    provider: "" # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
     idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
     idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
     idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
-    idpIssuer: '' # The ID of your Provider
+    idpIssuer: "" # The ID of your Provider
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
@@ -110,19 +110,19 @@ mail:
   enableInvites: false # set to 'true' to enable email invites for user management (requires mail.enabled and security.enableLogin)
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
-  username: '' # SMTP server username
-  password: '' # SMTP server password
-  from: '' # sender email address
+  username: "" # SMTP server username
+  password: "" # SMTP server password
+  from: "" # sender email address
   startTlsEnable: true # enable STARTTLS (explicit TLS upgrade after connecting) when supported by the SMTP server
   startTlsRequired: false # require STARTTLS; connection fails if the upgrade command is not supported
   sslEnable: false # enable SSL/TLS wrapper for implicit TLS (typically used with port 465)
-  sslTrust: '' # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
+  sslTrust: "" # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
   sslCheckServerIdentity: false # enable hostname verification when using SSL/TLS
 
 telegram:
   enabled: false # set to 'true' to enable Telegram bot integration
-  botToken: '' # Telegram bot token obtained from BotFather
-  botUsername: '' # Telegram bot username (without @)
+  botToken: "" # Telegram bot token obtained from BotFather
+  botUsername: "" # Telegram bot username (without @)
   pipelineInboxFolder: telegram # Name of the pipeline inbox folder for Telegram uploads
   customFolderSuffix: true # set to 'true' to allow users to specify custom target folders via UserID
   enableAllowUserIDs: true # set to 'true' to restrict access to specific Telegram user IDs
@@ -132,25 +132,23 @@ telegram:
   processingTimeoutSeconds: 180 # Maximum time in seconds to wait for processing a Telegram request
   pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
   feedback:
-    general:
-      enabled: true # set to 'true' to enable feedback messages
     channel:
-      noValidDocument: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
-      processingError: false # set to 'true' to hide/suppress feedback messages in channels (to avoid spam)
-      errorMessage: false # set to 'true' to hide/suppress error messages in channels (to avoid spam)
-      processing: false # set to 'true' to hide/suppress processing messages in channels (to avoid spam)
+      noValidDocument: true # set to 'false' to hide/suppress feedback messages in channels (to avoid spam)
+      errorPocessing: true # set to 'false' to hide/suppress feedback messages in channels (to avoid spam)
+      errorMessage: true # set to 'false' to hide/suppress error messages in channels (to avoid spam)
+      processing: true # set to 'false' to hide/suppress processing messages in channels (to avoid spam)
     user:
-      noValidDocument: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
-      processingError: false # set to 'true' to hide/suppress feedback messages to users (to avoid spam)
-      errorMessage: false # set to 'true' to hide/suppress error messages to users (to avoid spam)
-      processing: false # set to 'true' to hide/suppress processing messages to users (to avoid spam)
+      noValidDocument: true # set to 'false' to hide/suppress feedback messages to users (to avoid spam)
+      errorPocessing: true # set to 'false' to hide/suppress feedback messages to users (to avoid spam)
+      errorMessage: true # set to 'false' to hide/suppress error messages to users (to avoid spam)
+      processing: true # set to 'false' to hide/suppress processing messages to users (to avoid spam)
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirling.com/legal/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
-  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
-  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
-  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
+  accessibilityStatement: "" # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
+  cookiePolicy: "" # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
+  impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
   defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
@@ -159,7 +157,7 @@ system:
   showUpdate: false # see when a new update is available
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
-  tessdataDir: '' # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
@@ -168,8 +166,8 @@ system:
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
-  backendUrl: '' # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
-  frontendUrl: '' # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
+  backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
+  frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
     organizationName: Stirling-PDF # Organization name for generated certificates
@@ -181,14 +179,14 @@ system:
       level: MEDIUM # Security level: MAX (whitelist only), MEDIUM (block internal networks), OFF (no restrictions)
       allowedDomains: [] # Whitelist of allowed domains (e.g. ['cdn.example.com', 'images.google.com'])
       blockedDomains: [] # Additional domains to block (e.g. ['evil.com', 'malicious.org'])
-      internalTlds: ['.local', '.internal', '.corp', '.home'] # Block domains with these TLD patterns
+      internalTlds: [".local", ".internal", ".corp", ".home"] # Block domains with these TLD patterns
       blockPrivateNetworks: true # Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
       blockLocalhost: true # Block localhost and loopback addresses (127.x.x.x, ::1)
       blockLinkLocal: true # Block link-local addresses (169.254.x.x, fe80::/10)
       blockCloudMetadata: true # Block cloud provider metadata endpoints (169.254.169.254)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
-    customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
+    customDatabaseUrl: "" # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
     username: postgres # set the database username
     password: postgres # set the database password
     type: postgresql # the type of the database to set (e.g. 'h2', 'postgresql')
@@ -197,29 +195,29 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
-      watchedFoldersDir: '' # Defaults to /pipeline/watchedFolders
-      finishedFoldersDir: '' # Defaults to /pipeline/finishedFolders
+      watchedFoldersDir: "" # Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: '' # Defaults to /opt/venv/bin/weasyprint
-      unoconvert: '' # Defaults to /opt/venv/bin/unoconvert
-      calibre: '' # Defaults to /usr/bin/ebook-convert
-      ocrmypdf: '' # Defaults to /usr/bin/ocrmypdf
-      soffice: '' # Defaults to /usr/bin/soffice
-  fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
+      weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
+      unoconvert: "" # Defaults to /opt/venv/bin/unoconvert
+      calibre: "" # Defaults to /usr/bin/ebook-convert
+      ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
+      soffice: "" # Defaults to /usr/bin/soffice
+  fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
-    baseTmpDir: '' # Defaults to java.io.tmpdir/stirling-pdf
-    libreofficeDir: '' # Defaults to tempFileManagement.baseTmpDir/libreoffice
-    systemTempDir: '' # Only used if cleanupSystemTemp is true
+    baseTmpDir: "" # Defaults to java.io.tmpdir/stirling-pdf
+    libreofficeDir: "" # Defaults to tempFileManagement.baseTmpDir/libreoffice
+    systemTempDir: "" # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
   databaseBackup:
-    cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
+    cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 ui:
-  appNameNavbar: '' # name displayed on the navigation bar
+  appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 

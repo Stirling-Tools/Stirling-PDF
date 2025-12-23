@@ -136,24 +136,47 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             handleIncomingFile(message);
             return;
         }
-        if (feedback(FeedbackEnum.NOVALIDDOCUMENT)) {
+        if (feedback(FeedbackEnum.NO_VALID_DOCUMENT, chat.getType())) {
             sendMessage(
                     chat.getId(),
                     "No valid file found in the message. Please send a document to process.");
         }
     }
 
-    private boolean feedback(FeedbackEnum feedbackEnum) {
+    private boolean feedback(FeedbackEnum feedbackEnum, String chatType) {
         return switch (feedbackEnum) {
-            case NOVALIDDOCUMENT ->
-                    !(telegramProperties.getFeedback().getChannel().getNoValidDocument()
-                            || telegramProperties.getFeedback().getUser().getNoValidDocument());
-            case PROCESSINGERROR ->
-                    !(telegramProperties.getFeedback().getChannel().getProcessingError()
-                            || telegramProperties.getFeedback().getUser().getProcessingError());
-            case ERRORMESSAGE ->
-                    !(telegramProperties.getFeedback().getChannel().getErrorMessage()
-                            || telegramProperties.getFeedback().getUser().getErrorMessage());
+            case NO_VALID_DOCUMENT ->
+                    switch (chatType) {
+                        case CHAT_CHANNEL ->
+                                telegramProperties.getFeedback().getChannel().getNoValidDocument();
+                        case CHAT_PRIVATE ->
+                                telegramProperties.getFeedback().getUser().getNoValidDocument();
+                        default -> true;
+                    };
+            case ERROR_MESSAGE ->
+                    switch (chatType) {
+                        case CHAT_CHANNEL ->
+                                telegramProperties.getFeedback().getChannel().getErrorMessage();
+                        case CHAT_PRIVATE ->
+                                telegramProperties.getFeedback().getUser().getErrorMessage();
+                        default -> true;
+                    };
+            case ERROR_PROCESSING ->
+                    switch (chatType) {
+                        case CHAT_CHANNEL ->
+                                telegramProperties.getFeedback().getChannel().getErrorPocessing();
+                        case CHAT_PRIVATE ->
+                                telegramProperties.getFeedback().getUser().getErrorPocessing();
+                        default -> true;
+                    };
+            case PROCESSING ->
+                    switch (chatType) {
+                        case CHAT_CHANNEL ->
+                                telegramProperties.getFeedback().getChannel().getProcessing();
+                        case CHAT_PRIVATE ->
+                                telegramProperties.getFeedback().getUser().getProcessing();
+                        default -> true;
+                    };
             default -> true;
         };
     }
@@ -206,7 +229,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                     "Rejecting user {} in private chat {}",
                     from != null ? from.getId() : "unknown",
                     chat.getId());
-            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+            if (feedback(FeedbackEnum.ERROR_MESSAGE, chat.getType())) {
                 sendMessage(chat.getId(), "You are not authorized to use this bot.");
             }
             return false;
@@ -231,7 +254,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                     "Rejecting channel {} in chat {}",
                     senderChat != null ? senderChat.getId() : "unknown",
                     chat.getId());
-            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+            if (feedback(FeedbackEnum.ERROR_MESSAGE, chat.getType())) {
                 sendMessage(chat.getId(), "This channel is not authorized to use this bot.");
             }
             return false;
@@ -247,15 +270,18 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     private void handleIncomingFile(Message message) {
         Long chatId = message.getChatId();
         Document doc = message.getDocument();
+        String chatType = message.getChat().getType();
 
         if (doc == null) {
-            sendMessage(chatId, "No document found.");
+            if (feedback(FeedbackEnum.NO_VALID_DOCUMENT, chatType)) {
+                sendMessage(chatId, "No document found.");
+            }
             return;
         }
 
         if (doc.getMimeType() != null
                 && !ALLOWED_MIME_TYPES.contains(doc.getMimeType().toLowerCase())) {
-            if (feedback(FeedbackEnum.NOVALIDDOCUMENT)) {
+            if (feedback(FeedbackEnum.NO_VALID_DOCUMENT, chatType)) {
                 sendMessage(
                         chatId,
                         "Unsupported MIME type: "
@@ -267,7 +293,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
 
         if (!hasJsonConfig(chatId)) {
-            if (feedback(FeedbackEnum.PROCESSINGERROR)) {
+            if (feedback(FeedbackEnum.ERROR_PROCESSING, chatType)) {
                 sendMessage(
                         chatId,
                         "No JSON configuration file found in the pipeline inbox folder. Please"
@@ -277,8 +303,8 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
 
         try {
-            if (!CHAT_CHANNEL.equals(message.getChat().getType())
-                    && feedback(FeedbackEnum.PROCESSING)) {
+            if (!CHAT_CHANNEL.equalsIgnoreCase(chatType)
+                    && feedback(FeedbackEnum.PROCESSING, chatType)) {
                 sendMessage(chatId, "File received. Starting processing...");
             }
 
@@ -286,7 +312,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             List<Path> outputs = waitForPipelineOutputs(info);
 
             if (outputs.isEmpty()) {
-                if (feedback(FeedbackEnum.PROCESSINGERROR)) {
+                if (feedback(FeedbackEnum.ERROR_PROCESSING, chatType)) {
                     sendMessage(
                             chatId,
                             "No results were found in the pipeline output folder. Check"
@@ -304,17 +330,17 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         } catch (TelegramApiException e) {
             log.error("Telegram API error", e);
-            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+            if (feedback(FeedbackEnum.ERROR_MESSAGE, chatType)) {
                 sendMessage(chatId, "Telegram API error occurred.");
             }
         } catch (IOException e) {
             log.error("IO error", e);
-            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+            if (feedback(FeedbackEnum.ERROR_MESSAGE, chatType)) {
                 sendMessage(chatId, "An IO error occurred.");
             }
         } catch (Exception e) {
             log.error("Unexpected error", e);
-            if (feedback(FeedbackEnum.ERRORMESSAGE)) {
+            if (feedback(FeedbackEnum.ERROR_MESSAGE, chatType)) {
                 sendMessage(chatId, "Unexpected error occurred.");
             }
         }

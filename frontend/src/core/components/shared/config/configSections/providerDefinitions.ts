@@ -403,7 +403,7 @@ const useTelegramProvider = (): Provider => {
         type: 'switch',
         label: t(
           'admin.settings.telegram.feedback.channel.noValidDocument.label',
-          'Hide "No valid document" (Channel)'
+          'Show "No valid document" (Channel)'
         ),
         description: t(
           'admin.settings.telegram.feedback.channel.noValidDocument.description',
@@ -412,15 +412,15 @@ const useTelegramProvider = (): Provider => {
         defaultValue: false,
       },
       {
-        key: 'feedback.channel.processingError',
+        key: 'feedback.channel.errorPocessing',
         type: 'switch',
         label: t(
-          'admin.settings.telegram.feedback.channel.processingError.label',
-          'Hide processing errors (Channel)'
+          'admin.settings.telegram.feedback.channel.errorPocessing.label',
+          'Show processing errors (Channel)'
         ),
         description: t(
-          'admin.settings.telegram.feedback.channel.processingError.description',
-          'Do not send processing error messages to channels.'
+          'admin.settings.telegram.feedback.channel.errorPocessing.description',
+          'Send processing error messages to channels.'
         ),
         defaultValue: false,
       },
@@ -429,18 +429,18 @@ const useTelegramProvider = (): Provider => {
         type: 'switch',
         label: t(
           'admin.settings.telegram.feedback.channel.errorMessage.label',
-          'Hide error messages (Channel)'
+          'Show error messages (Channel)'
         ),
         description: t(
           'admin.settings.telegram.feedback.channel.errorMessage.description',
-          'Hide detailed error messages for channels.'
+          'Show detailed error messages for channels.'
         ),
         defaultValue: false,
       },
       {
         key: 'feedback.user.noValidDocument',
         type: 'switch',
-        label: t('admin.settings.telegram.feedback.user.noValidDocument.label', 'Hide "No valid document" (User)'),
+        label: t('admin.settings.telegram.feedback.user.noValidDocument.label', 'Show "No valid document" (User)'),
         description: t(
           'admin.settings.telegram.feedback.user.noValidDocument.description',
           'Suppress the no valid document response for user uploads.'
@@ -448,22 +448,22 @@ const useTelegramProvider = (): Provider => {
         defaultValue: false,
       },
       {
-        key: 'feedback.user.processingError',
+        key: 'feedback.user.errorPocessing',
         type: 'switch',
-        label: t('admin.settings.telegram.feedback.user.processingError.label', 'Hide processing errors (User)'),
+        label: t('admin.settings.telegram.feedback.user.errorPocessing.label', 'Show processing errors (User)'),
         description: t(
-          'admin.settings.telegram.feedback.user.processingError.description',
-          'Do not send processing error messages to users.'
+          'admin.settings.telegram.feedback.user.errorPocessing.description',
+          'Send processing error messages to users.'
         ),
         defaultValue: false,
       },
       {
         key: 'feedback.user.errorMessage',
         type: 'switch',
-        label: t('admin.settings.telegram.feedback.user.errorMessage.label', 'Hide error messages (User)'),
+        label: t('admin.settings.telegram.feedback.user.errorMessage.label', 'Show error messages (User)'),
         description: t(
           'admin.settings.telegram.feedback.user.errorMessage.description',
-          'Hide detailed error messages for users.'
+          'Show detailed error messages for users.'
         ),
         defaultValue: false,
       },

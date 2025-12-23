@@ -364,7 +364,6 @@ advanced = "Advanced"
 title = "Security & Authentication"
 security = "Security"
 connections = "Connections"
-messagingServices = "Messaging Services"
 telegram = "Telegram"
 
 [settings.licensingAnalytics]
@@ -4579,9 +4578,6 @@ description = "Interval between checks for new Telegram updates."
 [admin.settings.telegram.feedback]
 title = "Feedback Messages"
 description = "Choose when the bot should send feedback to users and channels."
-noValidDocument = "Hide \"No valid document\""
-processingError = "Hide processing errors"
-errorMessage = "Hide error messages"
 
 [admin.settings.telegram.feedback.general.enabled]
 label = "Enable Feedback"
@@ -4589,21 +4585,21 @@ description = "Control whether the bot sends feedback messages at all."
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
-noValidDocument.label = "Hide \"No valid document\" (Channel)"
+noValidDocument.label = "Show \"No valid document\" (Channel)"
 noValidDocument.description = "Suppress the no valid document response for channel uploads."
-processingError.label = "Hide processing errors (Channel)"
-processingError.description = "Do not send processing error messages to channels."
-errorMessage.label = "Hide error messages (Channel)"
-errorMessage.description = "Hide detailed error messages for channels."
+errorPocessing.label = "Show processing errors (Channel)"
+errorPocessing.description = "Send processing error messages to channels."
+errorMessage.label = "Show error messages (Channel)"
+errorMessage.description = "Show detailed error messages for channels."
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
-noValidDocument.label = "Hide \"No valid document\" (User)"
+noValidDocument.label = "Show \"No valid document\" (User)"
 noValidDocument.description = "Suppress the no valid document response for user uploads."
-processingError.label = "Hide processing errors (User)"
-processingError.description = "Do not send processing error messages to users."
-errorMessage.label = "Hide error messages (User)"
-errorMessage.description = "Hide detailed error messages for users."
+errorPocessing.label = "Show processing errors (User)"
+errorPocessing.description = "Send processing error messages to users."
+errorMessage.label = "Show error messages (User)"
+errorMessage.description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "Database"

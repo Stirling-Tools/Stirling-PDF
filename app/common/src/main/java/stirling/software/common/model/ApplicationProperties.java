@@ -664,70 +664,78 @@ public class ApplicationProperties {
         private long pollingIntervalMillis = 2000;
         private Feedback feedback = new Feedback();
 
+        /**
+         * Configuration for feedback messages sent by the Telegram bot.
+         *
+         * @since 2.2.x
+         */
         @Data
         public static class Feedback {
-            private General general = new General();
             private Channel channel = new Channel();
             private User user = new User();
 
-            @Data
-            public static class General {
-                /** Set to {@code true} to enable feedback messages. */
-                private Boolean enabled = true;
-            }
-
+            /**
+             * Channel-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
             @Data
             public static class Channel {
                 /**
-                 * Set to {@code true} to deny "no valid document" feedback messages to the channel
-                 * (to avoid spam).
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * the channel (to avoid spam).
                  */
-                private Boolean noValidDocument = false;
+                private Boolean noValidDocument = true;
 
                 /**
-                 * Set to {@code true} to deny processing error feedback messages to the channel (to
-                 * avoid spam).
+                 * Set to {@code false} to hide/suppress generic error feedback messages to the
+                 * channel (to avoid spam).
                  */
-                private Boolean processingError = false;
+                private Boolean errorMessage = true;
 
                 /**
-                 * Set to {@code true} to deny generic error feedback messages to the channel (to
-                 * avoid spam).
+                 * Set to {@code false} to hide/suppress processing error feedback messages to the
+                 * channel (to avoid spam).
                  */
-                private Boolean errorMessage = false;
+                private Boolean errorPocessing = true;
 
                 /**
-                 * Set to {@code true} to deny "processing" feedback messages to the channel (to
-                 * avoid spam).
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to the
+                 * channel (to avoid spam).
                  */
-                private Boolean processing = false;
+                private Boolean processing = true;
             }
 
+            /**
+             * User-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
             @Data
             public static class User {
                 /**
-                 * Set to {@code true} to deny "no valid document" feedback messages to users (to
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * users (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorPocessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to users (to
                  * avoid spam).
                  */
-                private Boolean noValidDocument = false;
-
-                /**
-                 * Set to {@code true} to deny processing error feedback messages to users (to avoid
-                 * spam).
-                 */
-                private Boolean processingError = false;
-
-                /**
-                 * Set to {@code true} to deny generic error feedback messages to users (to avoid
-                 * spam).
-                 */
-                private Boolean errorMessage = false;
-
-                /**
-                 * Set to {@code true} to deny "processing" feedback messages to users (to avoid
-                 * spam).
-                 */
-                private Boolean processing = false;
+                private Boolean processing = true;
             }
         }
     }

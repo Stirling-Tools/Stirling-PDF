@@ -14,7 +14,7 @@ import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBann
 
 interface FeedbackFlags {
   noValidDocument?: boolean;
-  processingError?: boolean;
+  errorPocessing?: boolean;
   errorMessage?: boolean;
 }
 
