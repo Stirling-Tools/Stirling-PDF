@@ -353,6 +353,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "verify-pdf");
         addEndpointToGroup("Security", "stamp");
         addEndpointToGroup("Security", "sign");
 
@@ -479,6 +480,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-json");
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("rar", "pdf-to-cbr");
+        addEndpointToGroup("Java", "pdf-to-video");
+        addEndpointToGroup("Java", "verify-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -535,6 +538,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
         addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
+        // veraPDF dependent endpoints
+        addEndpointToGroup("veraPDF", "verify-pdf");
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
@@ -585,7 +591,9 @@ public class EndpointConfiguration {
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
                 || "ImageMagick".equals(group)
-                || "rar".equals(group);
+                || "rar".equals(group)
+                || "FFmpeg".equals(group)
+                || "veraPDF".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {
