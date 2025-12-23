@@ -20,7 +20,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
 public class ProcessExecutor {
@@ -33,7 +32,8 @@ public class ProcessExecutor {
     private long timeoutDuration;
     private final Processes processType;
 
-    private ProcessExecutor(Processes processType, int semaphoreLimit, boolean liveUpdates, long timeout) {
+    private ProcessExecutor(
+            Processes processType, int semaphoreLimit, boolean liveUpdates, long timeout) {
         this.processType = processType;
         this.semaphore = new Semaphore(semaphoreLimit);
         this.liveUpdates = liveUpdates;
@@ -177,7 +177,8 @@ public class ProcessExecutor {
                                                 .getTimeoutMinutes()
                                                 .getFfmpegTimeoutMinutes();
                             };
-                    return new ProcessExecutor(processType, semaphoreLimit, liveUpdates, timeoutMinutes);
+                    return new ProcessExecutor(
+                            processType, semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
     }
 
@@ -354,7 +355,8 @@ public class ProcessExecutor {
     }
 
     private List<String> applyUnoServerEndpoint(
-            List<String> command, ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+            List<String> command,
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
         if (endpoint == null || command == null || command.isEmpty()) {
             return command;
         }

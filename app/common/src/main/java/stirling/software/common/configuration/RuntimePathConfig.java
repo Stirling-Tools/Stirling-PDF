@@ -13,12 +13,12 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.UnoServerPool;
 import stirling.software.common.model.ApplicationProperties.CustomPaths;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
 import stirling.software.common.model.ApplicationProperties.System;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
 @Configuration
@@ -116,7 +116,8 @@ public class RuntimePathConfig {
         this.unoServerEndpoints =
                 buildUnoServerEndpoints(
                         properties.getProcessExecutor(),
-                        properties.getProcessExecutor()
+                        properties
+                                .getProcessExecutor()
                                 .getSessionLimit()
                                 .getLibreOfficeSessionLimit());
         ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
@@ -147,10 +148,9 @@ public class RuntimePathConfig {
         return buildAutoUnoServerEndpoints(count);
     }
 
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildAutoUnoServerEndpoints(
-            int count) {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                new ArrayList<>();
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
+            buildAutoUnoServerEndpoints(int count) {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
         int basePort = 2003;
         for (int i = 0; i < count; i++) {
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint =
@@ -162,14 +162,13 @@ public class RuntimePathConfig {
         return endpoints;
     }
 
-
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitizeUnoServerEndpoints(
-            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
+            sanitizeUnoServerEndpoints(
+                    List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
         if (endpoints == null || endpoints.isEmpty()) {
             return Collections.emptyList();
         }
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitized =
-                new ArrayList<>();
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitized = new ArrayList<>();
         for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : endpoints) {
             if (endpoint == null) {
                 continue;

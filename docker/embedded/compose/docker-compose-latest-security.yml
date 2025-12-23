@@ -5,10 +5,6 @@ services:
     build:
       context: ../../..
       dockerfile: docker/embedded/Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 2G
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
