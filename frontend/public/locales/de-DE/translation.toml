@@ -361,7 +361,6 @@ title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
 telegram = "Telegram"
-messagingServices = "Messaging Services"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -4504,9 +4503,6 @@ description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
 [admin.settings.telegram.feedback]
 title = "Feedback-Nachrichten"
 description = "Festlegen, wann der Bot Feedback an Benutzer und Kanäle senden soll."
-noValidDocument = "\"Kein gültiges Dokument\" einblenden"
-errorPocessing = "Verarbeitungsfehler einblenden"
-errorMessage = "Fehlermeldungen einblenden"
 
 [admin.settings.telegram.feedback.general.enabled]
 label = "Feedback aktivieren"
