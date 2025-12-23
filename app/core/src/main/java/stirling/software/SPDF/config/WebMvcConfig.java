@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
-import org.springframework.http.MediaType;
-import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -29,26 +27,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
-    }
-
-    /**
-     * Configure content negotiation to support both PDF responses and JSON error responses. This
-     * allows error handlers to return JSON ProblemDetail even when the client sends Accept:
-     * application/pdf, preventing 406 Not Acceptable errors.
-     */
-    @Override
-    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer
-                // Don't use path extension for content type detection
-                .favorParameter(false)
-                // Use Accept header but don't fail if no match
-                .ignoreAcceptHeader(false)
-                // Default to JSON for error responses
-                .defaultContentType(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF)
-                // Register common media types
-                .mediaType("json", MediaType.APPLICATION_JSON)
-                .mediaType("pdf", MediaType.APPLICATION_PDF)
-                .mediaType("xml", MediaType.APPLICATION_XML);
     }
 
     @Override
