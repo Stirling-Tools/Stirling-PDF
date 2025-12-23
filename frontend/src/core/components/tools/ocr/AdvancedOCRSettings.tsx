@@ -34,7 +34,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
     { value: 'sidecar', label: t('ocr.settings.advancedOptions.sidecar', 'Create a text file'), isSpecial: false },
     { value: 'deskew', label: t('ocr.settings.advancedOptions.deskew', 'Deskew pages'), isSpecial: false },
     { value: 'clean', label: t('ocr.settings.advancedOptions.clean', 'Clean input file'), isSpecial: false },
-    { value: 'cleanFinal', label: t('ocr.settings.advancedOptions.cleanFinal', 'Clean final output'), isSpecial: false }
+    { value: 'cleanFinal', label: t('ocr.settings.advancedOptions.cleanFinal', 'Clean final output'), isSpecial: false },
   ];
 
   // Handle individual checkbox changes

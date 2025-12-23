@@ -46,5 +46,4 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
 
     @Schema(description = "Remove images from the output PDF if set to true")
     private boolean removeImagesAfter;
-
 }
