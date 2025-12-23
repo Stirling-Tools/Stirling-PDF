@@ -67,7 +67,7 @@ class AttachmentControllerTest {
     }
 
     @Test
-    void addAttachments_Success() throws IOException {
+    void addAttachments_Success() throws Exception {
         List<MultipartFile> attachments = List.of(attachment1, attachment2);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
@@ -99,7 +99,7 @@ class AttachmentControllerTest {
     }
 
     @Test
-    void addAttachments_SingleAttachment() throws IOException {
+    void addAttachments_SingleAttachment() throws Exception {
         List<MultipartFile> attachments = List.of(attachment1);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
@@ -131,7 +131,7 @@ class AttachmentControllerTest {
     }
 
     @Test
-    void addAttachments_IOExceptionFromPDFLoad() throws IOException {
+    void addAttachments_IOExceptionFromPDFLoad() throws Exception {
         List<MultipartFile> attachments = List.of(attachment1);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
@@ -145,7 +145,7 @@ class AttachmentControllerTest {
     }
 
     @Test
-    void addAttachments_IOExceptionFromAttachmentService() throws IOException {
+    void addAttachments_IOExceptionFromAttachmentService() throws Exception {
         List<MultipartFile> attachments = List.of(attachment1);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);

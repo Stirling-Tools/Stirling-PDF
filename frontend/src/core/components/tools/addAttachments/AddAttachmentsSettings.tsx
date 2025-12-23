@@ -1,13 +1,14 @@
 /**
  * AddAttachmentsSettings - Shared settings component for both tool UI and automation
  *
- * Allows selecting files to attach to PDFs.
+ * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
 
-import { Stack, Text, Group, ActionIcon, ScrollArea, Button } from "@mantine/core";
+import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox, Tooltip, ThemeIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { IconInfoCircle } from "@tabler/icons-react";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -103,6 +104,36 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
           </ScrollArea.Autosize>
         </Stack>
       )}
+
+      {/* PDF/A-3b conversion option with informative tooltip */}
+      <Group gap="xs" align="flex-start">
+        <Checkbox
+          label={
+            <Group gap={4}>
+              <Text size="sm">{t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}</Text>
+              <Tooltip
+                label={t(
+                  "attachments.convertToPdfA3bTooltip",
+                  "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+                )}
+                multiline
+                w={300}
+                position="top"
+                withArrow
+              >
+                <ThemeIcon size="xs" variant="transparent" color="dimmed" style={{ cursor: 'help' }}>
+                  <IconInfoCircle size={14} />
+                </ThemeIcon>
+              </Tooltip>
+            </Group>
+          }
+          description={t("attachments.convertToPdfA3bDescription", "Creates an archival PDF with embedded attachments")}
+          checked={parameters.convertToPdfA3b}
+          onChange={(event) => onParameterChange('convertToPdfA3b', event.currentTarget.checked)}
+          disabled={disabled}
+          styles={{ root: { flex: 1 } }}
+        />
+      </Group>
     </Stack>
   );
 };
