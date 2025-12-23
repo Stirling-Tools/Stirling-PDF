@@ -3372,6 +3372,19 @@ placeholder = "Anzahl horizontaler Teiler eingeben"
 label = "Vertikale Teiler"
 placeholder = "Anzahl vertikaler Teiler eingeben"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "stempeln,bild hinzufügen,bild zentrieren,wasserzeichen,pdf,einbetten,anpassen"
 header = "PDF Stempel"
@@ -6213,6 +6226,8 @@ reset = "Änderungen zurücksetzen"
 downloadJson = "JSON herunterladen"
 generatePdf = "PDF generieren"
 saveChanges = "Änderungen speichern"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Text automatisch in Rahmen einpassen"
@@ -6230,6 +6245,9 @@ descriptionInline = "Tipp: Halten Sie Strg (Cmd) oder Umschalt, um mehrere Textf
 [pdfTextEditor.options.forceSingleElement]
 title = "Bearbeiteten Text auf ein einzelnes PDF-Element fixieren"
 description = "Wenn aktiviert, exportiert der Editor jedes bearbeitete Textfeld als ein PDF-Textelement, um überlappende Glyphen oder gemischte Schriften zu vermeiden."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Ausgewählte Felder zusammenführen"
@@ -6305,6 +6323,21 @@ subset = "Subset"
 [pdfTextEditor.errors]
 invalidJson = "JSON-Datei kann nicht gelesen werden. Stellen Sie sicher, dass sie vom PDF-zu-JSON-Tool erzeugt wurde."
 pdfConversion = "Das bearbeitete JSON kann nicht zurück in ein PDF konvertiert werden."
+
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
 
 [auth]
 sessionExpired = "Sitzung abgelaufen"
