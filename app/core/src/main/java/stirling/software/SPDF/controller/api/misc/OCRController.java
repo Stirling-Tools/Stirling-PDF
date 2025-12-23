@@ -104,7 +104,6 @@ public class OCRController {
         String ocrType = request.getOcrType();
         String ocrRenderType = request.getOcrRenderType();
         Boolean removeImagesAfter = request.isRemoveImagesAfter();
-        boolean invalidateDigitalSignatures = request.isInvalidateDigitalSignatures();
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrLanguageRequiredException();
@@ -143,7 +142,6 @@ public class OCRController {
                         ocrType,
                         ocrRenderType,
                         removeImagesAfter,
-                        invalidateDigitalSignatures,
                         tempInputFile.getPath(),
                         tempOutputFile.getPath(),
                         sidecarTextFile != null ? sidecarTextFile.getPath() : null);
@@ -217,7 +215,6 @@ public class OCRController {
             String ocrType,
             String ocrRenderType,
             Boolean removeImagesAfter,
-            boolean invalidateDigitalSignatures,
             Path tempInputFile,
             Path tempOutputFile,
             Path sidecarTextPath)
@@ -258,9 +255,7 @@ public class OCRController {
                 command.add("--force-ocr");
             }
         }
-        if (invalidateDigitalSignatures) {
-            command.add("--invalidate-digital-signatures");
-        }
+        command.add("--invalidate-digital-signatures");
 
         command.addAll(
                 Arrays.asList(

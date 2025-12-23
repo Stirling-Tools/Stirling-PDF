@@ -47,8 +47,4 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
     @Schema(description = "Remove images from the output PDF if set to true")
     private boolean removeImagesAfter;
 
-    @Schema(
-            description =
-                    "Invalidate digital signatures in the PDF to allow OCR processing. WARNING: This will make any digital signatures in the document invalid.")
-    private boolean invalidateDigitalSignatures;
 }

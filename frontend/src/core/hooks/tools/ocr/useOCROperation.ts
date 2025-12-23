@@ -49,7 +49,6 @@ export const buildOCRFormData = (parameters: OCRParameters, file: File): FormDat
   formData.append('clean', parameters.additionalOptions.includes('clean').toString());
   formData.append('cleanFinal', parameters.additionalOptions.includes('cleanFinal').toString());
   formData.append('removeImagesAfter', parameters.additionalOptions.includes('removeImagesAfter').toString());
-  formData.append('invalidateDigitalSignatures', parameters.additionalOptions.includes('invalidateDigitalSignatures').toString());
   return formData;
 };
 
