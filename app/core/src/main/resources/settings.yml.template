@@ -214,7 +214,7 @@ processExecutor:
   autoUnoServer: true # true: use local pool based on libreOfficeSessionLimit; false: use unoServerEndpoints
   unoServerEndpoints: [] # Used when autoUnoServer is false (each item: {host, port})
   sessionLimit: # Process executor instances limits
-    libreOfficeSessionLimit: 1
+    libreOfficeSessionLimit: 1 # Each additional uno server adds ~50MB idle RAM
     pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1

@@ -113,13 +113,12 @@ public class RuntimePathConfig {
                         (tessPath != null && !tessPath.isEmpty()) ? tessPath : tessdataDir);
         log.info("Using Tesseract data path: {}", this.tessDataPath);
 
-        this.unoServerEndpoints =
-                buildUnoServerEndpoints(
-                        properties.getProcessExecutor(),
-                        properties
-                                .getProcessExecutor()
-                                .getSessionLimit()
-                                .getLibreOfficeSessionLimit());
+        ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
+        int libreOfficeLimit = 1;
+        if (processExecutor != null && processExecutor.getSessionLimit() != null) {
+            libreOfficeLimit = processExecutor.getSessionLimit().getLibreOfficeSessionLimit();
+        }
+        this.unoServerEndpoints = buildUnoServerEndpoints(processExecutor, libreOfficeLimit);
         ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
     }
 
@@ -134,6 +133,7 @@ public class RuntimePathConfig {
     private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildUnoServerEndpoints(
             ApplicationProperties.ProcessExecutor processExecutor, int sessionLimit) {
         if (processExecutor == null) {
+            log.warn("ProcessExecutor config missing; defaulting to a single UNO endpoint.");
             return Collections.singletonList(
                     new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
         }
@@ -143,6 +143,10 @@ public class RuntimePathConfig {
             if (!configured.isEmpty()) {
                 return configured;
             }
+            log.warn(
+                    "autoUnoServer disabled but no unoServerEndpoints configured; defaulting to 127.0.0.1:2003.");
+            return Collections.singletonList(
+                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
         }
         int count = sessionLimit > 0 ? sessionLimit : 1;
         return buildAutoUnoServerEndpoints(count);

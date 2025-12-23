@@ -41,17 +41,16 @@ public class ProcessExecutorTest {
         List<String> command = new ArrayList<>();
         command.add("nonexistent-command");
 
-        // Execute the command and expect an IOException
-        IOException thrown =
+        // Execute the command and expect an IllegalArgumentException
+        IllegalArgumentException thrown =
                 assertThrows(
-                        IOException.class,
+                        IllegalArgumentException.class,
                         () -> processExecutor.runCommandWithOutputHandling(command));
 
-        // Check the exception message to ensure it indicates the command was not found
+        // Check the exception message to ensure it indicates the command was not allowed
         String errorMessage = thrown.getMessage();
         assertTrue(
-                errorMessage.contains("error=2")
-                        || errorMessage.contains("No such file or directory"),
+                errorMessage.contains("allowlist"),
                 "Unexpected error message: " + errorMessage);
     }
 }

@@ -6,9 +6,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +32,7 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
+    private static final Set<String> ALLOWED_EXECUTABLES = initAllowedExecutables();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -208,6 +214,7 @@ public class ProcessExecutor {
         }
         try {
 
+            validateCommand(commandToRun);
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
 
@@ -360,29 +367,105 @@ public class ProcessExecutor {
         if (endpoint == null || command == null || command.isEmpty()) {
             return command;
         }
-        boolean hasHost = false;
-        boolean hasPort = false;
+        List<String> updated = stripUnoEndpointArgs(command);
+        String host = endpoint.getHost();
+        int port = endpoint.getPort();
+        if (host == null || host.isBlank()) {
+            host = "127.0.0.1";
+        }
+        if (port <= 0) {
+            port = 2003;
+        }
+        int insertIndex = Math.min(1, updated.size());
+        updated.add(insertIndex++, "--host");
+        updated.add(insertIndex++, host);
+        updated.add(insertIndex++, "--port");
+        updated.add(insertIndex, String.valueOf(port));
+        return updated;
+    }
+
+    private List<String> stripUnoEndpointArgs(List<String> command) {
+        List<String> stripped = new ArrayList<>(command.size());
+        for (int i = 0; i < command.size(); i++) {
+            String arg = command.get(i);
+            if ("--host".equals(arg) || "--port".equals(arg)) {
+                i++;
+                continue;
+            }
+            if (arg != null && (arg.startsWith("--host=") || arg.startsWith("--port="))) {
+                continue;
+            }
+            stripped.add(arg);
+        }
+        return stripped;
+    }
+
+    private void validateCommand(List<String> command) {
+        if (command == null || command.isEmpty()) {
+            throw new IllegalArgumentException("Command must not be empty");
+        }
         for (String arg : command) {
-            if ("--host".equals(arg)) {
-                hasHost = true;
-            } else if ("--port".equals(arg)) {
-                hasPort = true;
+            if (arg == null) {
+                throw new IllegalArgumentException("Command contains null argument");
+            }
+            if (arg.indexOf('\0') >= 0 || arg.indexOf('\n') >= 0 || arg.indexOf('\r') >= 0) {
+                throw new IllegalArgumentException("Command contains invalid characters");
+            }
+            if (containsDisallowedToken(arg)) {
+                throw new IllegalArgumentException("Command contains disallowed token");
             }
         }
-        if (hasHost && hasPort) {
-            return command;
+        String executable = command.get(0);
+        if (executable == null || executable.isBlank()) {
+            throw new IllegalArgumentException("Command executable must not be empty");
         }
-        List<String> updated = new ArrayList<>(command);
-        int insertIndex = 1;
-        if (!hasHost) {
-            updated.add(insertIndex++, "--host");
-            updated.add(insertIndex++, endpoint.getHost());
+        if (executable.contains("..")) {
+            throw new IllegalArgumentException("Command executable contains invalid path segment");
         }
-        if (!hasPort) {
-            updated.add(insertIndex++, "--port");
-            updated.add(insertIndex, String.valueOf(endpoint.getPort()));
+        if (executable.contains("/") || executable.contains("\\")) {
+            if (!Files.exists(Path.of(executable))) {
+                throw new IllegalArgumentException(
+                        "Command executable does not exist: " + executable);
+            }
+            return;
         }
-        return updated;
+        if (!ALLOWED_EXECUTABLES.contains(executable)) {
+            throw new IllegalArgumentException(
+                    "Command executable is not in allowlist: " + executable);
+        }
+    }
+
+    private boolean containsDisallowedToken(String value) {
+        return value.contains("&&")
+                || value.contains("||")
+                || value.contains("..")
+                || value.contains(";")
+                || value.contains("|")
+                || value.contains("`")
+                || value.contains("$(");
+    }
+
+    private static Set<String> initAllowedExecutables() {
+        Set<String> allowed = new HashSet<>();
+        Collections.addAll(
+                allowed,
+                "unoconvert",
+                "soffice",
+                "weasyprint",
+                "ocrmypdf",
+                "qpdf",
+                "tesseract",
+                "gs",
+                "ghostscript",
+                "pdftohtml",
+                "python3",
+                "python",
+                "java",
+                "ebook-convert",
+                "ffmpeg",
+                "magick",
+                "convert");
+        return Collections.unmodifiableSet(allowed);
     }
 
     public enum Processes {

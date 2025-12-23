@@ -269,8 +269,8 @@ case "$MODE" in
             -Djava.io.tmpdir=/tmp/stirling-pdf \
             -Dserver.port=8080 \
             -jar /app.jar" &
-        start_unoserver_pool
         BACKEND_PID=$!
+        start_unoserver_pool
 
         echo "==================================="
         echo "✓ Backend API available at: http://localhost:8080/api"

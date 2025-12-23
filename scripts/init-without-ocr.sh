@@ -247,6 +247,7 @@ fi
 # Start LibreOffice UNO server for document conversions.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
+UNOPING_BIN="$(command -v unoping || true)"
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
@@ -254,12 +255,36 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   start_unoserver_pool
   log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE)"
 
-  check_unoserver_ready() {
-    if command_exists timeout; then
-      run_as_runtime_user timeout 5s "$UNOCONVERT_BIN" --version >/dev/null 2>&1
+  check_unoserver_port_ready() {
+    local port=$1
+    if [ -z "$UNOPING_BIN" ]; then
+      log "WARNING: unoping not found; falling back to unoconvert --version for readiness."
+      if command_exists timeout; then
+        run_as_runtime_user timeout 5s "$UNOCONVERT_BIN" --version >/dev/null 2>&1
+        return $?
+      fi
+      run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1
       return $?
     fi
-    run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1
+    if command_exists timeout; then
+      run_as_runtime_user timeout 5s "$UNOPING_BIN" --host 127.0.0.1 --port "$port" \
+        >/dev/null 2>&1
+      return $?
+    fi
+    run_as_runtime_user "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1
+  }
+
+  check_unoserver_ready() {
+    if [ "${#UNOSERVER_PORTS[@]}" -eq 0 ]; then
+      log "Skipping unoserver readiness check (no local ports started)"
+      return 0
+    fi
+    for port in "${UNOSERVER_PORTS[@]}"; do
+      if ! check_unoserver_port_ready "$port"; then
+        return 1
+      fi
+    done
+    return 0
   }
 
   # Wait until UNO server is ready.
