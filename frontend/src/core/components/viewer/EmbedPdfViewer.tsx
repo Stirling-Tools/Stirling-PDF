@@ -56,9 +56,6 @@ const EmbedPdfViewerContent = ({
     exportActions,
   } = useViewer();
 
-  // Register viewer right-rail buttons
-  useViewerRightRailButtons();
-
   const scrollState = getScrollState();
   const rotationState = getRotationState();
 
@@ -70,8 +67,13 @@ const EmbedPdfViewerContent = ({
     }
   }, [rotationState.rotation]);
 
-  // Get signature context
-  const { signatureApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+  // Get signature and annotation contexts
+  const { signatureApiRef, annotationApiRef, historyApiRef, signatureConfig, isPlacementMode } = useSignature();
+
+  // Track whether there are unsaved annotation changes in this viewer session.
+  // This is our source of truth for navigation guards; it is set when the
+  // annotation history changes, and cleared after we successfully apply changes.
+  const hasAnnotationChangesRef = useRef(false);
 
   // Get current file from FileContext
   const { selectors, state } = useFileState();
@@ -85,8 +87,8 @@ const EmbedPdfViewerContent = ({
 
   // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that require the annotation layer (Sign, Add Text, Add Image)
-  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage';
+  // Tools that require the annotation layer (Sign, Add Text, Add Image, Annotate)
+  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
 
   // Sync isAnnotationMode in ViewerContext with current tool
   useEffect(() => {
@@ -225,6 +227,31 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
 
+  // Watch the annotation history API to detect when the document becomes "dirty".
+  // We treat any change that makes the history undoable as unsaved changes until
+  // the user explicitly applies them via applyChanges.
+  useEffect(() => {
+    const historyApi = historyApiRef.current;
+    if (!historyApi || !historyApi.subscribe) {
+      return;
+    }
+
+    const updateHasChanges = () => {
+      const canUndo = historyApi.canUndo?.() ?? false;
+      if (!hasAnnotationChangesRef.current && canUndo) {
+        hasAnnotationChangesRef.current = true;
+        setHasUnsavedChanges(true);
+      }
+    };
+
+    const unsubscribe = historyApi.subscribe(updateHasChanges);
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [historyApiRef.current, setHasUnsavedChanges]);
+
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
     if (previewFile) {
@@ -232,38 +259,27 @@ const EmbedPdfViewerContent = ({
     }
 
     const checkForChanges = () => {
-      // Check for annotation changes via history
-      const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
-
-      console.log('[Viewer] Checking for unsaved changes:', {
-        hasAnnotationChanges
-      });
+      const hasAnnotationChanges = hasAnnotationChangesRef.current;
       return hasAnnotationChanges;
     };
 
-    console.log('[Viewer] Registering unsaved changes checker');
     registerUnsavedChangesChecker(checkForChanges);
 
     return () => {
-      console.log('[Viewer] Unregistering unsaved changes checker');
       unregisterUnsavedChangesChecker();
     };
-  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   // Apply changes - save annotations to new file version
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
-      console.log('[Viewer] Applying changes - exporting PDF with annotations');
-
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error('Failed to export PDF');
       }
-
-      console.log('[Viewer] Exported PDF size:', arrayBuffer.byteLength);
 
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
@@ -279,11 +295,28 @@ const EmbedPdfViewerContent = ({
       // Step 4: Consume files (replace in context)
       await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
 
+      // Mark annotations as saved so navigation away from the viewer is allowed.
+      hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
   }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
+
+  // Expose annotation apply via a global event so tools (like Annotate) can
+  // trigger saves from the left sidebar without tight coupling.
+  useEffect(() => {
+    const handler = () => {
+      void applyChanges();
+    };
+    window.addEventListener('stirling-annotations-apply', handler);
+    return () => {
+      window.removeEventListener('stirling-annotations-apply', handler);
+    };
+  }, [applyChanges]);
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
@@ -340,6 +373,7 @@ const EmbedPdfViewerContent = ({
               enableAnnotations={isAnnotationMode}
               showBakedAnnotations={isAnnotationsVisible}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
+              annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed

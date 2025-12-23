@@ -174,11 +174,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   //},
 
   // Determine if settings button should be hidden
-  // Only hide when login is disabled AND hideSettingsForNonAdmins is true AND user is not admin
-  const shouldHideSettingsButton = 
+  // Hide when login is disabled AND showSettingsWhenNoLogin is false
+  const shouldHideSettingsButton =
     config?.enableLogin === false &&
-    config?.hideSettingsForNonAdmins === true &&
-    config?.isAdmin !== true;
+    config?.showSettingsWhenNoLogin === false;
 
   const bottomButtons: ButtonConfig[] = [
     {
