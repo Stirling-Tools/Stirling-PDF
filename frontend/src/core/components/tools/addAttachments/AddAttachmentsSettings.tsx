@@ -4,10 +4,11 @@
  * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
 
-import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox, Tooltip, ThemeIcon } from "@mantine/core";
+import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -111,18 +112,22 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
             <Group gap={4}>
               <Text size="sm">{t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}</Text>
               <Tooltip
-                label={t(
-                  "attachments.convertToPdfA3bTooltip",
-                  "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
-                )}
-                multiline
-                w={300}
-                position="top"
-                withArrow
+                header={{
+                  title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion")
+                }}
+                tips={[
+                  {
+                    title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
+                    description: t(
+                      "attachments.convertToPdfA3bTooltip",
+                      "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+                    )
+                  }
+                ]}
+                sidebarTooltip={true}
+                pinOnClick={true}
               >
-                <ThemeIcon size="xs" variant="transparent" color="dimmed" style={{ cursor: 'help' }}>
-                  <LocalIcon icon="info-rounded" width="14" height="14" />
-                </ThemeIcon>
+                <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)', cursor: 'help' }} />
               </Tooltip>
             </Group>
           }
