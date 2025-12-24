@@ -20,4 +20,10 @@ public class AddAttachmentRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             format = "binary")
     private List<MultipartFile> attachments;
+
+    @Schema(
+            description = "Convert the resulting PDF to PDF/A-3b format after adding attachments",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean convertToPdfA3b = false;
 }

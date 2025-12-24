@@ -1,13 +1,14 @@
 /**
  * AddAttachmentsSettings - Shared settings component for both tool UI and automation
  *
- * Allows selecting files to attach to PDFs.
+ * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
 
-import { Stack, Text, Group, ActionIcon, ScrollArea, Button } from "@mantine/core";
+import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -103,6 +104,40 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
           </ScrollArea.Autosize>
         </Stack>
       )}
+
+      {/* PDF/A-3b conversion option with informative tooltip */}
+      <Group gap="xs" align="flex-start">
+        <Checkbox
+          label={
+            <Group gap={4}>
+              <Text size="sm">{t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}</Text>
+              <Tooltip
+                header={{
+                  title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion")
+                }}
+                tips={[
+                  {
+                    title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
+                    description: t(
+                      "attachments.convertToPdfA3bTooltip",
+                      "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+                    )
+                  }
+                ]}
+                sidebarTooltip={true}
+                pinOnClick={true}
+              >
+                <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)', cursor: 'help' }} />
+              </Tooltip>
+            </Group>
+          }
+          description={t("attachments.convertToPdfA3bDescription", "Creates an archival PDF with embedded attachments")}
+          checked={parameters.convertToPdfA3b}
+          onChange={(event) => onParameterChange('convertToPdfA3b', event.currentTarget.checked)}
+          disabled={disabled}
+          styles={{ root: { flex: 1 } }}
+        />
+      </Group>
     </Stack>
   );
 };

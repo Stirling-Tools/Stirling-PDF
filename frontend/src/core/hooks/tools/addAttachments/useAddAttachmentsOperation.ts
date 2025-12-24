@@ -16,6 +16,8 @@ const buildFormData = (parameters: AddAttachmentsParameters, file: File): FormDa
     if (attachment) formData.append("attachments", attachment);
   });
 
+  formData.append("convertToPdfA3b", String(parameters.convertToPdfA3b));
+
   return formData;
 };
 
