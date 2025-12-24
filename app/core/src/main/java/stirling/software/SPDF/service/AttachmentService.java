@@ -8,6 +8,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,9 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.AttachmentInfo;
+import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
 @Service
@@ -214,6 +218,142 @@ public class AttachmentService implements AttachmentServiceInterface {
 
             return Optional.of(baos.toByteArray());
         }
+    }
+
+    @Override
+    public List<AttachmentInfo> listAttachments(PDDocument document) throws IOException {
+        List<AttachmentInfo> attachments = new ArrayList<>();
+
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        if (catalog == null) {
+            return attachments;
+        }
+
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+        if (documentNames == null) {
+            return attachments;
+        }
+
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
+        if (embeddedFilesTree == null) {
+            return attachments;
+        }
+
+        Map<String, PDComplexFileSpecification> embeddedFiles = new LinkedHashMap<>();
+        collectEmbeddedFiles(embeddedFilesTree, embeddedFiles);
+
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            PDComplexFileSpecification fileSpecification = entry.getValue();
+            PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpecification);
+
+            if (embeddedFile != null) {
+                String filename = determineFilename(entry.getKey(), fileSpecification);
+                String description = fileSpecification.getFileDescription();
+                String contentType = embeddedFile.getSubtype();
+                Long size = (long) embeddedFile.getSize();
+
+                String creationDate = null;
+                if (embeddedFile.getCreationDate() != null) {
+                    creationDate = embeddedFile.getCreationDate().getTime().toString();
+                }
+
+                String modificationDate = null;
+                if (embeddedFile.getModDate() != null) {
+                    modificationDate = embeddedFile.getModDate().getTime().toString();
+                }
+
+                AttachmentInfo attachmentInfo =
+                        new AttachmentInfo(
+                                filename,
+                                size,
+                                contentType,
+                                description,
+                                creationDate,
+                                modificationDate);
+
+                attachments.add(attachmentInfo);
+            }
+        }
+
+        return attachments;
+    }
+
+    @Override
+    public PDDocument renameAttachment(PDDocument document, String attachmentName, String newName)
+            throws IOException {
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
+
+        Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
+        collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
+
+        PDComplexFileSpecification fileToRename = null;
+        String keyToRename = null;
+
+        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
+            String currentName = determineFilename(entry.getKey(), entry.getValue());
+            if (currentName.equals(attachmentName)) {
+                fileToRename = entry.getValue();
+                keyToRename = entry.getKey();
+                break;
+            }
+        }
+
+        if (fileToRename == null || keyToRename == null) {
+            log.warn("Attachment '{}' not found for renaming", attachmentName);
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.attachmentNotFound",
+                    "Attachment ''{0}'' not found for renaming",
+                    attachmentName);
+        }
+
+        fileToRename.setFile(newName);
+        fileToRename.setFileUnicode(newName);
+
+        allEmbeddedFiles.remove(keyToRename);
+        allEmbeddedFiles.put(newName, fileToRename);
+
+        embeddedFilesTree.setKids(null);
+
+        embeddedFilesTree.setNames(allEmbeddedFiles);
+        log.info("Renamed attachment from '{}' to '{}'", attachmentName, newName);
+
+        return document;
+    }
+
+    @Override
+    public PDDocument deleteAttachment(PDDocument document, String attachmentName)
+            throws IOException {
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
+
+        Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
+        collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
+
+        String keyToRemove = null;
+
+        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
+            String currentName = determineFilename(entry.getKey(), entry.getValue());
+            if (currentName.equals(attachmentName)) {
+                keyToRemove = entry.getKey();
+                break;
+            }
+        }
+
+        if (keyToRemove == null) {
+            log.warn("Attachment '{}' not found for deletion", attachmentName);
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.attachmentNotFound",
+                    "Attachment ''{0}'' not found for deletion",
+                    attachmentName);
+        }
+
+        allEmbeddedFiles.remove(keyToRemove);
+
+        embeddedFilesTree.setKids(null);
+
+        embeddedFilesTree.setNames(allEmbeddedFiles);
+        log.info("Deleted attachment: '{}'", attachmentName);
+
+        return document;
     }
 
     private String sanitizeFilename(String candidate) {
