@@ -98,6 +98,22 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Mozilla Public License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": 	"CDDL+GPL License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "UnboundID SCIM2 SDK Free Use License"
     },
     {
