@@ -18,7 +18,7 @@ import groovy.json.JsonSlurper
 ext {
     springBootVersion = "3.5.7"
     pdfboxVersion = "3.0.6"
-    imageioVersion = "3.12.0"
+    imageioVersion = "3.13.0"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.83"
     springSecuritySamlVersion = "6.5.6"
