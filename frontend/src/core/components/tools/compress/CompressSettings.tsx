@@ -14,7 +14,6 @@ interface CompressSettingsProps {
 
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const [isSliding, setIsSliding] = useState(false);
   const [imageMagickAvailable, setImageMagickAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
