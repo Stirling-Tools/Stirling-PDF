@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -68,6 +69,7 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
+    private PdfEditor pdfEditor = new PdfEditor();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -101,6 +103,46 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class PdfEditor {
+        private Cache cache = new Cache();
+        private FontNormalization fontNormalization = new FontNormalization();
+        private CffConverter cffConverter = new CffConverter();
+        private Type3 type3 = new Type3();
+        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
+
+        @Data
+        public static class Cache {
+            private long maxBytes = -1;
+            private int maxPercent = 20;
+        }
+
+        @Data
+        public static class FontNormalization {
+            private boolean enabled = false;
+        }
+
+        @Data
+        public static class CffConverter {
+            private boolean enabled = true;
+            private String method = "python";
+            private String pythonCommand = "/opt/venv/bin/python3";
+            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
+            private String fontforgeCommand = "fontforge";
+        }
+
+        @Data
+        public static class Type3 {
+            private Library library = new Library();
+
+            @Data
+            public static class Library {
+                private boolean enabled = true;
+                private String index = "classpath:/type3/library/index.json";
+            }
+        }
+    }
+
+    @Data
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
@@ -111,7 +153,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Security {
-        private Boolean enableLogin;
+        private boolean enableLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -286,7 +328,7 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    return switch (registrationId.toLowerCase()) {
+                    return switch (registrationId.toLowerCase(Locale.ROOT)) {
                         case "google" -> getGoogle();
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
@@ -294,8 +336,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -348,29 +390,32 @@ public class ApplicationProperties {
     @Data
     public static class System {
         private String defaultLocale;
-        private Boolean googlevisibility;
+        private boolean googlevisibility;
         private boolean showUpdate;
-        private Boolean showUpdateOnlyAdmin;
+        private boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
         private String tessdataDir;
-        private Boolean enableAlphaFunctionality;
+        private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
+        private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
-        private Boolean disableSanitize;
+        private boolean disableSanitize;
         private int maxDPI;
-        private Boolean enableUrlToPDF;
+        private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String
-                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
+        // 'http://localhost:8080', 'https://api.example.com'). Required for
+        // SSO.
+        private String frontendUrl; // Frontend URL for invite email links (e.g.
 
-        // falls back to backend URL.
+        // 'https://app.example.com'). If not set, falls back to backendUrl.
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -410,7 +455,9 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
-            private String embedpdfFrontend;
+            private String calibre;
+            private String ocrmypdf;
+            private String soffice;
         }
     }
 
@@ -493,10 +540,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+      Driver {
+        driverName='%s'
+      }
+      """
                     .formatted(driverName);
         }
     }
@@ -528,7 +575,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private Boolean enabled;
+        private boolean enabled;
     }
 
     @Data
@@ -536,6 +583,7 @@ public class ApplicationProperties {
         @ToString.Exclude private String key;
         private String UUID;
         private String appVersion;
+        private Boolean isNewServer;
     }
 
     // TODO: Remove post migration
@@ -624,6 +672,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
@@ -653,11 +720,13 @@ public class ApplicationProperties {
             private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
             private int calibreSessionLimit;
+            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int pdfiumRedactorSessionLimit;
+            private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -691,6 +760,10 @@ public class ApplicationProperties {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
 
+            public int getImageMagickSessionLimit() {
+                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
+            }
+
             public int getGhostscriptSessionLimit() {
                 return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
             }
@@ -698,9 +771,12 @@ public class ApplicationProperties {
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
-
             public int getPdfiumRedactorSessionLimit() {
                 return pdfiumRedactorSessionLimit > 0 ? pdfiumRedactorSessionLimit : 1;
+            }
+
+            public int getFfmpegSessionLimit() {
+                return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
             }
         }
 
@@ -724,11 +800,13 @@ public class ApplicationProperties {
             @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
 
+            private long imageMagickTimeoutMinutes;
+
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
-            private long pdfiumRedactorTimeoutMinutes;
+            private PdfEditor pdfEditor = new PdfEditor();
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -762,6 +840,10 @@ public class ApplicationProperties {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
             }
 
+            public long getImageMagickTimeoutMinutes() {
+                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
+            }
+
             public long getGhostscriptTimeoutMinutes() {
                 return ghostscriptTimeoutMinutes > 0 ? ghostscriptTimeoutMinutes : 30;
             }
@@ -769,9 +851,12 @@ public class ApplicationProperties {
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
             }
-
             public long getPdfiumRedactorTimeoutMinutes() {
                 return pdfiumRedactorTimeoutMinutes > 0 ? pdfiumRedactorTimeoutMinutes : 30;
+            }
+
+            public long getFfmpegTimeoutMinutes() {
+                return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
             }
         }
     }

@@ -99,6 +99,22 @@ export default function Footer({
             className="footer-link px-3"
             target="_blank"
             rel="noopener noreferrer"
+            href="https://discord.gg/Cn8pWhQRxZ"
+          >
+            {t('footer.discord', 'Discord')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/Stirling-Tools/Stirling-PDF"
+          >
+            {t('footer.issues', 'GitHub')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
             href={finalAccessibilityUrl}
           >
             {t('legal.accessibility', 'Accessibility')}

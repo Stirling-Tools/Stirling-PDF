@@ -334,6 +334,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-vector");
+        addEndpointToGroup("Convert", "vector-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-video");
         addEndpointToGroup("Convert", "cbz-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-cbz");
         addEndpointToGroup("Convert", "pdf-to-json");
@@ -350,6 +353,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "verify-pdf");
         addEndpointToGroup("Security", "stamp");
         addEndpointToGroup("Security", "sign");
 
@@ -476,6 +480,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-json");
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("rar", "pdf-to-cbr");
+        addEndpointToGroup("Java", "pdf-to-video");
+        addEndpointToGroup("Java", "verify-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -490,6 +496,13 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "crop");
+        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
+        addEndpointToGroup("Ghostscript", "pdf-to-vector");
+        addEndpointToGroup("Ghostscript", "vector-to-pdf");
+
+        /* ImageMagick */
+        addEndpointToGroup("ImageMagick", "compress-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -525,6 +538,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
         addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
+        // veraPDF dependent endpoints
+        addEndpointToGroup("veraPDF", "verify-pdf");
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
@@ -551,7 +567,7 @@ public class EndpointConfiguration {
             disableGroup("enterprise");
         }
 
-        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
@@ -574,7 +590,10 @@ public class EndpointConfiguration {
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
-                || "rar".equals(group);
+                || "ImageMagick".equals(group)
+                || "rar".equals(group)
+                || "FFmpeg".equals(group)
+                || "veraPDF".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {
