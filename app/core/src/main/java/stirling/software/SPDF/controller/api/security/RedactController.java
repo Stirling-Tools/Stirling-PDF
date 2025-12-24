@@ -782,7 +782,7 @@ public class RedactController {
 
                 // Log detailed information about the text block
                 log.debug(
-                        "⚠️ REDACT PROCESSING: Page {} (0-indexed={}), text='{}' | RAW COORDINATES from PDFText: x1={}, y1={}, x2={}, y2={} | COMPUTED: width={}, height={} | FONT: size={} | PAGE BOUNDS (cropBox): minX={}, minY={}, maxX={}, maxY={}",
+                        "REDACT PROCESSING: Page {} (0-indexed={}), text='{}' | RAW COORDINATES from PDFText: x1={}, y1={}, x2={}, y2={} | COMPUTED: width={}, height={} | FONT: size={} | PAGE BOUNDS (cropBox): minX={}, minY={}, maxX={}, maxY={}",
                         pageIndex + 1,
                         pageIndex,
                         block.getText(),
@@ -806,19 +806,6 @@ public class RedactController {
                             height);
                     continue;
                 }
-
-                // Calculate actual text bounds - ensure we cover the full text height
-                // In PDFBox coordinates: Y1 is bottom (minY), Y2 is top (maxY)
-                // CRITICAL: block.getY1() should be the BOTTOM of the text (minY)
-                //          block.getY2() should be the TOP of the text (maxY)
-                // Update: TextFinder returns tight bounds around glyphs. If the text is all
-                // lowercase (x-height), height might be smaller than fontSize.
-                // To guarantee removal by PDFium, we should cover the full font height.
-
-                // Use the same padding logic as redactFoundText (Visual Redaction)
-                // This ensures PDFium attempts to remove the text in the exact same area where the
-                // black box will be drawn.
-
                 float padding = resolvePdfiumVerticalPadding(block, customPadding);
                 float horizontalPadding = resolvePdfiumHorizontalPadding(block, customPadding);
 
@@ -831,7 +818,7 @@ public class RedactController {
                 float finalHeight = height + (2 * padding);
 
                 log.debug(
-                        "📐 CALCULATION (Synced): textBottom={} textTop={} height={} | Padding: {} | Final Box: origin=({}, {}) size=({}, {})",
+                        "CALCULATION (Synced): textBottom={} textTop={} height={} | Padding: {} | Final Box: origin=({}, {}) size=({}, {})",
                         block.getY1(),
                         block.getY2(),
                         height,
@@ -842,7 +829,6 @@ public class RedactController {
                         finalHeight);
 
                 // Validation and clamping
-
                 if (originX < minX) {
                     float adjustment = minX - originX;
                     originX = minX;
@@ -897,7 +883,7 @@ public class RedactController {
                                 adjustedRect.height);
                 regions.add(region);
                 log.debug(
-                        "✓ Created PDFium region #{}: page={} text='{}' | FINAL: origin=({}, {}) size=({}, {}) | Coverage: x[{} to {}] y[{} to {}]",
+                        "Created PDFium region #{}: page={} text='{}' | FINAL: origin=({}, {}) size=({}, {}) | Coverage: x[{} to {}] y[{} to {}]",
                         regions.size(),
                         pageIndex + 1,
                         block.getText(),
