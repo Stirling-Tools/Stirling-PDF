@@ -8,6 +8,9 @@ export const buildFlattenFormData = (parameters: FlattenParameters, file: File):
   const formData = new FormData();
   formData.append('fileInput', file);
   formData.append('flattenOnlyForms', parameters.flattenOnlyForms.toString());
+  if (parameters.renderDpi != null) {
+    formData.append('renderDpi', parameters.renderDpi.toString());
+  }
   return formData;
 };
 
