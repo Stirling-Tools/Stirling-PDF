@@ -1279,6 +1279,18 @@ optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
 
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
 
@@ -2970,6 +2982,7 @@ header = "Crop PDF"
 submit = "Apply Crop"
 noFileSelected = "Select a PDF file to begin cropping"
 reset = "Reset to full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Crop Area Selection"
