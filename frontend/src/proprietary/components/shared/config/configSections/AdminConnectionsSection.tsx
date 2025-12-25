@@ -513,6 +513,7 @@ export default function AdminConnectionsSection() {
                 key={provider.id}
                 provider={provider}
                 isConfigured={false}
+                settings={getProviderSettings(provider)}
                 onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
                 disabled={!loginEnabled}
               />
