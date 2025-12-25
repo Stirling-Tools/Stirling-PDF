@@ -17,7 +17,6 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
-import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
@@ -372,18 +371,6 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertToPdfaSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            selectedFiles={selectedFiles}
-            disabled={disabled}
-          />
-        </>
-      )}
-      {/* PDF to PDF/X options */}
-      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfx' && (
-        <>
-          <Divider />
-          <ConvertToPdfxSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}

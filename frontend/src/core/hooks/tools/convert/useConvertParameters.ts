@@ -85,7 +85,7 @@ export const defaultParameters: ConvertParameters = {
     outputFormat: 'pdfa-1',
   },
   pdfxOptions: {
-    outputFormat: 'pdfx',
+    outputFormat: 'pdfx-3',
   },
   cbzOptions: {
     optimizeForEbook: false,
