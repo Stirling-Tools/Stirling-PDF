@@ -32,14 +32,15 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
     confirmNavigation();
   };
 
-  const _handleExportAndContinue = async () => {
+  const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
     setHasUnsavedChanges(false);
     confirmNavigation();
   };
-  const BUTTON_WIDTH = "10rem";
+
+  const BUTTON_WIDTH = "12rem";
 
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
   // This prevents the modal from showing due to spurious state updates
@@ -83,6 +84,11 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
             )}
+            {onExportAndContinue && (
+              <Button variant="filled"  onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+                {t("exportAndContinue", "Export & Leave")}
+              </Button>
+            )}
           </Group>
         </Group>
 
@@ -97,6 +103,11 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
           {onApplyAndContinue && (
             <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
               {t("applyAndContinue", "Apply & Leave")}
+            </Button>
+          )}
+          {onExportAndContinue && (
+            <Button variant="filled" onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+              {t("exportAndContinue", "Export & Leave")}
             </Button>
           )}
         </Stack>

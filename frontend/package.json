@@ -17,6 +17,7 @@
     "@embedpdf/plugin-loader": "^1.5.0",
     "@embedpdf/plugin-pan": "^1.5.0",
     "@embedpdf/plugin-print": "^1.5.0",
+    "@embedpdf/plugin-redaction": "^1.5.0",
     "@embedpdf/plugin-render": "^1.5.0",
     "@embedpdf/plugin-rotate": "^1.5.0",
     "@embedpdf/plugin-scroll": "^1.5.0",

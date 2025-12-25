@@ -52,7 +52,7 @@ const Annotate = (_props: BaseToolProps) => {
     setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
-  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const { getZoomState, registerImmediateZoomUpdate, applyChanges } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('select');
   const activeToolRef = useRef<AnnotationToolId>('select');
@@ -143,9 +143,11 @@ const Annotate = (_props: BaseToolProps) => {
     setTextAlignment,
   } = styleActions;
 
-  const handleApplyChanges = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('stirling-annotations-apply'));
-  }, []);
+  const handleApplyChanges = useCallback(async () => {
+    if (applyChanges) {
+      await applyChanges();
+    }
+  }, [applyChanges]);
 
   useEffect(() => {
     const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';

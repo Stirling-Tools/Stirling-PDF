@@ -103,13 +103,14 @@ describe('buildRedactFormData', () => {
     expect(formData.get('convertPDFToImage')).toBe('false');
   });
 
-  test('should throw error for manual mode (not implemented)', () => {
+  test('should return empty form data for manual mode (handled client-side)', () => {
     const parameters: RedactParameters = {
       ...defaultParameters,
       mode: 'manual',
     };
 
-    expect(() => buildRedactFormData(parameters, mockFile)).toThrow('Manual redaction not yet implemented');
+    const formData = buildRedactFormData(parameters, mockFile);
+    expect(formData.get('fileInput')).toBeNull();
   });
 });
 

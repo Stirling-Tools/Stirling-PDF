@@ -140,6 +140,10 @@ interface ViewerContextType {
     type: K,
     ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
   ) => void;
+
+  // Save changes function - registered by EmbedPdfViewer
+  applyChanges: (() => Promise<void>) | null;
+  setApplyChanges: (fn: (() => Promise<void>) | null) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -162,6 +166,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // Bridge registry - bridges register their state and APIs here
   const bridgeRefs = useRef<ViewerBridgeRegistry>(createBridgeRegistry());
+
+  // Apply changes function - registered by EmbedPdfViewer
+  const applyChangesRef = useRef<(() => Promise<void>) | null>(null);
+  
+  const setApplyChanges = useCallback((fn: (() => Promise<void>) | null) => {
+    applyChangesRef.current = fn;
+  }, []);
+  
+  const applyChanges = useCallback(async () => {
+    if (applyChangesRef.current) {
+      await applyChangesRef.current();
+    }
+  }, []);
 
   const {
     register: registerImmediateZoomUpdate,
@@ -353,6 +370,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
     // Bridge registration
     registerBridge,
+
+    // Apply changes
+    applyChanges,
+    setApplyChanges,
   };
 
   return (

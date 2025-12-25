@@ -86,6 +86,7 @@ interface RightRailButtonWithAction {
   id: string;                    // Unique identifier
   icon?: React.ReactNode;        // Icon component (omit when using render)
   tooltip?: React.ReactNode;     // Hover tooltip / description
+  active?: boolean;              // Optional active state for highlight
   section?: 'top' | 'middle' | 'bottom'; // Section (default: 'top')
   order?: number;                // Sort order (default: 0)
   disabled?: boolean;            // Disabled state (default: false)
@@ -100,6 +101,7 @@ interface RightRailRenderContext {
   allButtonsDisabled: boolean;
   action?: () => void;
   triggerAction: () => void;
+  active: boolean;
 }
 ```
 

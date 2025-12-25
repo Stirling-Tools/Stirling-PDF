@@ -11,6 +11,8 @@ import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
+import { useRedaction } from '@app/contexts/RedactionContext';
+import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
@@ -50,10 +52,10 @@ const EmbedPdfViewerContent = ({
     rotationActions: _rotationActions,
     getScrollState,
     getRotationState,
-    isAnnotationMode,
     setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
+    setApplyChanges,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -75,6 +77,12 @@ const EmbedPdfViewerContent = ({
   // annotation history changes, and cleared after we successfully apply changes.
   const hasAnnotationChangesRef = useRef(false);
 
+  // Get redaction context
+  const { redactionsApplied, setRedactionsApplied } = useRedaction();
+  
+  // Ref for redaction pending tracker API
+  const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
+
   // Get current file from FileContext
   const { selectors, state } = useFileState();
   const { actions } = useFileActions();
@@ -85,16 +93,24 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that require the annotation layer (Sign, Add Text, Add Image, Annotate)
+
   const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
+  const isSignatureMode = isInAnnotationTool;
+  const isManualRedactMode = selectedTool === 'redact';
 
-  // Sync isAnnotationMode in ViewerContext with current tool
+  // Enable annotations only when annotation tool is selected
+  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode;
+
+  // Enable redaction only when redaction tool is selected
+  const shouldEnableRedaction = selectedTool === 'redact';
+
+  // Keep annotation mode enabled when entering placement tools without overriding manual toggles
   useEffect(() => {
-    setAnnotationMode(isInAnnotationTool);
+    if (isInAnnotationTool) {
+      setAnnotationMode(true);
+    }
   }, [isInAnnotationTool, setAnnotationMode]);
-
   const isPlacementOverlayActive = Boolean(
     isInAnnotationTool && isPlacementMode && signatureConfig
   );
@@ -259,8 +275,31 @@ const EmbedPdfViewerContent = ({
     }
 
     const checkForChanges = () => {
+      // Check for annotation history changes (using ref that's updated by useEffect)
       const hasAnnotationChanges = hasAnnotationChangesRef.current;
-      return hasAnnotationChanges;
+      
+      // Check for pending redactions
+      const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      
+      // Always consider applied redactions as unsaved until export
+      const hasAppliedRedactions = redactionsApplied;
+
+      // When in redact mode, still include annotation changes (users may draw)
+      if (isManualRedactMode) {
+        console.log('[Viewer] Checking for unsaved changes (redact mode):', {
+          hasPendingRedactions,
+          hasAppliedRedactions,
+          hasAnnotationChanges,
+        });
+      } else {
+        console.log('[Viewer] Checking for unsaved changes:', {
+          hasAnnotationChanges,
+          hasPendingRedactions,
+          hasAppliedRedactions,
+        });
+      }
+
+      return hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions;
     };
 
     registerUnsavedChangesChecker(checkForChanges);
@@ -268,13 +307,31 @@ const EmbedPdfViewerContent = ({
     return () => {
       unregisterUnsavedChangesChecker();
     };
-  }, [previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
 
-  // Apply changes - save annotations to new file version
+  // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
+      console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
+
+      // Step 0: Commit any pending redactions before export
+      const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      
+      // Mark redactions as applied BEFORE committing, so the button stays enabled during the save process
+      // This ensures the button doesn't become disabled when pendingCount becomes 0
+      if (hadPendingRedactions || redactionsApplied) {
+        setRedactionsApplied(true);
+      }
+      
+      if (hadPendingRedactions) {
+        console.log('[Viewer] Committing pending redactions before export');
+        redactionTrackerRef.current?.commitAllPending();
+        // Give a small delay for the commit to process
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
@@ -298,22 +355,19 @@ const EmbedPdfViewerContent = ({
       // Mark annotations as saved so navigation away from the viewer is allowed.
       hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
+      setRedactionsApplied(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
-  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
+  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
 
-  // Expose annotation apply via a global event so tools (like Annotate) can
-  // trigger saves from the left sidebar without tight coupling.
+  // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {
-    const handler = () => {
-      void applyChanges();
-    };
-    window.addEventListener('stirling-annotations-apply', handler);
+    setApplyChanges(applyChanges);
     return () => {
-      window.removeEventListener('stirling-annotations-apply', handler);
+      setApplyChanges(null);
     };
-  }, [applyChanges]);
+  }, [applyChanges, setApplyChanges]);
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -370,11 +424,14 @@ const EmbedPdfViewerContent = ({
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
-              enableAnnotations={isAnnotationMode}
+              enableAnnotations={shouldEnableAnnotations}
               showBakedAnnotations={isAnnotationsVisible}
+              enableRedaction={shouldEnableRedaction}
+              isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
+              redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion

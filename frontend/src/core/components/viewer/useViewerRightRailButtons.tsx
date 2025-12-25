@@ -10,17 +10,22 @@ import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnn
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useNavigationState, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
+import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isSearchInterfaceVisible } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
+  const { requestNavigation } = useNavigationGuard();
+  const { redactionsApplied } = useRedaction();
+  const { pendingCount } = useRedactionMode();
 
   const stripBasePath = useCallback((path: string) => {
     if (BASE_PATH && path.startsWith(BASE_PATH)) {
@@ -36,8 +41,15 @@ export function useViewerRightRailButtons() {
 
   const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() => isAnnotationsPath());
 
+  // Update isAnnotationsActive based on selected tool
   useEffect(() => {
-    setIsAnnotationsActive(isAnnotationsPath());
+    if (selectedTool === 'annotate') {
+      setIsAnnotationsActive(true);
+    } else if (selectedTool === 'redact') {
+      setIsAnnotationsActive(false);
+    } else {
+      setIsAnnotationsActive(isAnnotationsPath());
+    }
   }, [selectedTool, isAnnotationsPath]);
 
   useEffect(() => {
@@ -55,7 +67,6 @@ export function useViewerRightRailButtons() {
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
-  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -72,7 +83,7 @@ export function useViewerRightRailButtons() {
               withArrow
               shadow="md"
               offset={8}
-              opened={viewer.isSearchInterfaceVisible}
+              opened={isSearchInterfaceVisible}
               onClose={viewer.searchInterfaceActions.close}
             >
               <Popover.Target>
@@ -91,7 +102,7 @@ export function useViewerRightRailButtons() {
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: '20rem' }}>
-                  <SearchInterface visible={viewer.isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
+                  <SearchInterface visible={isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
                 </div>
               </Popover.Dropdown>
             </Popover>
@@ -100,28 +111,16 @@ export function useViewerRightRailButtons() {
       },
       {
         id: 'viewer-pan-mode',
+        icon: <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />,
         tooltip: panLabel,
         ariaLabel: panLabel,
         section: 'top' as const,
         order: 20,
-        render: ({ disabled }) => (
-          <Tooltip content={panLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
-            <ActionIcon
-              variant={isPanning ? 'default' : 'subtle'}
-              color={undefined}
-              radius="md"
-              className="right-rail-icon"
-              onClick={() => {
-                viewer.panActions.togglePan();
-                setIsPanning(prev => !prev);
-              }}
-              disabled={disabled}
-              style={isPanning ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
-            >
-              <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
-            </ActionIcon>
-          </Tooltip>
-        )
+        active: isPanning,
+        onClick: () => {
+          viewer.panActions.togglePan();
+          setIsPanning(prev => !prev);
+        },
       },
       {
         id: 'viewer-rotate-left',
@@ -152,6 +151,7 @@ export function useViewerRightRailButtons() {
         ariaLabel: sidebarLabel,
         section: 'top' as const,
         order: 50,
+        active: isThumbnailSidebarVisible,
         onClick: () => {
           viewer.toggleThumbnailSidebar();
         }
@@ -163,6 +163,7 @@ export function useViewerRightRailButtons() {
         ariaLabel: bookmarkLabel,
         section: 'top' as const,
         order: 55,
+        active: isBookmarkSidebarVisible,
         onClick: () => {
           viewer.toggleBookmarkSidebar();
         }
@@ -184,24 +185,37 @@ export function useViewerRightRailButtons() {
         ariaLabel: annotationsLabel,
         section: 'top' as const,
         order: 58,
+        active: isAnnotationsActive,
         render: ({ disabled }) => (
           <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isAnnotationsActive ? 'default' : 'subtle'}
+              variant={isAnnotationsActive ? 'filled' : 'subtle'}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
-                const targetPath = withBasePath('/annotations');
-                if (window.location.pathname !== targetPath) {
-                  window.history.pushState(null, '', targetPath);
+
+                // Check for unsaved redaction changes (pending or applied)
+                const hasRedactionChanges = pendingCount > 0 || redactionsApplied;
+
+                const switchToAnnotations = () => {
+                  const targetPath = withBasePath('/annotations');
+                  if (window.location.pathname !== targetPath) {
+                    window.history.pushState(null, '', targetPath);
+                  }
+                  setIsAnnotationsActive(true);
+                  handleToolSelect('annotate');
+                };
+
+                if (hasRedactionChanges) {
+                  requestNavigation(switchToAnnotations);
+                } else {
+                  switchToAnnotations();
                 }
-                setIsAnnotationsActive(true);
-                handleToolSelect('annotate');
               }}
-              disabled={disabled || isAnnotationsActive}
+              disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              style={isAnnotationsActive ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
+              color={isAnnotationsActive ? 'blue' : undefined}
             >
               <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
             </ActionIcon>
@@ -225,6 +239,9 @@ export function useViewerRightRailButtons() {
     t,
     i18n.language,
     viewer,
+    isThumbnailSidebarVisible,
+    isBookmarkSidebarVisible,
+    isSearchInterfaceVisible,
     isPanning,
     searchLabel,
     panLabel,
@@ -235,7 +252,6 @@ export function useViewerRightRailButtons() {
     printLabel,
     tooltipPosition,
     annotationsLabel,
-    saveChangesLabel,
     isAnnotationsActive,
     handleToolSelect,
   ]);

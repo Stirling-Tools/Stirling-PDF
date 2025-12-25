@@ -22,6 +22,7 @@ import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import AppConfigLoader from '@app/components/shared/AppConfigLoader';
+import { RedactionProvider } from "@app/contexts/RedactionContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -96,6 +97,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                 <ViewerProvider>
                                   <PageEditorProvider>
                                     <SignatureProvider>
+                                      <RedactionProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
@@ -105,6 +107,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
                                       </AnnotationProvider>
+                                      </RedactionProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>
                                 </ViewerProvider>
