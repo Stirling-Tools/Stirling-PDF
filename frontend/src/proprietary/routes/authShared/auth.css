@@ -185,8 +185,8 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 1rem 1rem; /* 16px 16px */
+  justify-content: flex-start;
+  padding: 0.75rem 1rem; /* 12px 16px */
   border: 1px solid #d1d5db;
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg-light-only);
@@ -195,11 +195,22 @@
   color: var(--auth-text-primary-light-only);
   cursor: pointer;
   gap: 0.75rem; /* 12px */
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.oauth-button-vertical:hover:not(:disabled) {
+  background-color: #f3f4f6;
 }
 
 .oauth-button-vertical:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.oauth-button-vertical:focus-visible {
+  outline: 2px solid var(--auth-border-focus-light-only);
+  outline-offset: 2px;
 }
 
 .oauth-icon-small {
@@ -217,6 +228,8 @@
 .oauth-icon-tiny {
   width: 1.25rem; /* 20px */
   height: 1.25rem; /* 20px */
+  display: block;
+  flex-shrink: 0;
 }
 
 /* Login Header Styles */

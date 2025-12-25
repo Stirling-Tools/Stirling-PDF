@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
 import { useTranslation } from 'react-i18next';
-import { Checkbox } from '@mantine/core';
+import { Checkbox, TextInput, PasswordInput, Button } from '@mantine/core';
 import { SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
 
 interface SignupFormProps {
@@ -53,57 +53,49 @@ export default function SignupForm({
       <div className="auth-fields">
         {showName && (
           <div className="auth-field">
-            <label htmlFor="name" className="auth-label">{t('signup.name')}</label>
-            <input
+            <TextInput
               id="name"
-              type="text"
+              label={t('signup.name')}
               name="name"
               autoComplete="name"
               placeholder={t('signup.enterName')}
               value={name}
               onChange={(e) => setName?.(e.target.value)}
-              className={`auth-input ${fieldErrors.name ? 'auth-input-error' : ''}`}
+              error={fieldErrors.name}
+              classNames={{ label: 'auth-label' }}
             />
-            {fieldErrors.name && (
-              <div className="auth-field-error">{fieldErrors.name}</div>
-            )}
           </div>
         )}
 
         <div className="auth-field">
-          <label htmlFor="email" className="auth-label">{t('signup.email')}</label>
-          <input
+          <TextInput
             id="email"
+            label={t('signup.email')}
             type="email"
             name="email"
             autoComplete="email"
             placeholder={t('signup.enterEmail')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
-            className={`auth-input ${fieldErrors.email ? 'auth-input-error' : ''}`}
+            onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+            error={fieldErrors.email}
+            classNames={{ label: 'auth-label' }}
           />
-          {fieldErrors.email && (
-            <div className="auth-field-error">{fieldErrors.email}</div>
-          )}
         </div>
 
         <div className="auth-field">
-          <label htmlFor="password" className="auth-label">{t('signup.password')}</label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
+            label={t('signup.password')}
             name="new-password"
             autoComplete="new-password"
             placeholder={t('signup.enterPassword')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
-            className={`auth-input ${fieldErrors.password ? 'auth-input-error' : ''}`}
+            onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+            error={fieldErrors.password}
+            classNames={{ label: 'auth-label' }}
           />
-          {fieldErrors.password && (
-            <div className="auth-field-error">{fieldErrors.password}</div>
-          )}
         </div>
 
         <div
@@ -112,21 +104,18 @@ export default function SignupForm({
           style={{ maxHeight: showConfirm ? 96 : 0, opacity: showConfirm ? 1 : 0 }}
         >
           <div className="auth-field">
-            <label htmlFor="confirmPassword" className="auth-label">{t('signup.confirmPassword')}</label>
-            <input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
+              label={t('signup.confirmPassword')}
               name="new-password"
               autoComplete="new-password"
               placeholder={t('signup.confirmPasswordPlaceholder')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
-              className={`auth-input ${fieldErrors.confirmPassword ? 'auth-input-error' : ''}`}
+              onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+              error={fieldErrors.confirmPassword}
+              classNames={{ label: 'auth-label' }}
             />
-            {fieldErrors.confirmPassword && (
-              <div className="auth-field-error">{fieldErrors.confirmPassword}</div>
-            )}
           </div>
         </div>
       </div>
@@ -152,13 +141,15 @@ export default function SignupForm({
       )}
 
       {/* Sign Up Button */}
-      <button
+      <Button
         onClick={onSubmit}
         disabled={isSubmitting || !email || !password || !confirmPassword || (showTerms && !agree)}
         className="auth-button"
+        fullWidth
+        loading={isSubmitting}
       >
         {isSubmitting ? t('signup.creatingAccount') : t('signup.signUp')}
-      </button>
+      </Button>
     </>
   );
 }

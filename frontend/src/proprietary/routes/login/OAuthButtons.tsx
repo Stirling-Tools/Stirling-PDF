@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { Button } from '@mantine/core';
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
@@ -69,14 +70,15 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       <div className="oauth-container-icons">
         {providers.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
-            <button
+            <Button
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
+              variant="default"
             >
               <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-small"/>
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -88,14 +90,15 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       <div className="oauth-container-grid">
         {providers.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
-            <button
+            <Button
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
+              variant="default"
             >
               <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-medium"/>
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -105,16 +108,18 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   return (
     <div className="oauth-container-vertical">
       {providers.map((p) => (
-        <button
-          key={p.id}
-          onClick={() => onProviderClick(p.id)}
-          disabled={isSubmitting}
-          className="oauth-button-vertical"
-          title={p.label}
-        >
-          <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
-          {p.label}
-        </button>
+        <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
+          <Button
+            onClick={() => onProviderClick(p.id)}
+            disabled={isSubmitting}
+            className="oauth-button-vertical"
+            aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
+            variant="default"
+          >
+            <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
+            <span>{p.label}</span>
+          </Button>
+        </div>
       ))}
     </div>
   );

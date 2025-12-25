@@ -1,3 +1,5 @@
+import { Button } from '@mantine/core';
+
 interface NavigationLinkProps {
   onClick: () => void
   text: string
@@ -7,13 +9,14 @@ interface NavigationLinkProps {
 export default function NavigationLink({ onClick, text, isDisabled = false }: NavigationLinkProps) {
   return (
     <div className="navigation-link-container">
-      <button
+      <Button
         onClick={onClick}
         disabled={isDisabled}
         className="navigation-link-button"
+        variant="subtle"
       >
         {text}
-      </button>
+      </Button>
     </div>
   );
 }
