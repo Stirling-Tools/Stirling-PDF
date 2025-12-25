@@ -182,6 +182,9 @@ python scripts/translations/translation_merger.py fr-FR create-template --output
 
 # Apply translations from a file
 python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
+
+# Remove unused translations not present in en-GB
+python scripts/translations/translation_merger.py fr-FR remove-unused
 ```
 
 **Features:**
@@ -190,6 +193,7 @@ python scripts/translations/translation_merger.py fr-FR apply-translations --tra
 - Creates structured templates for AI translation
 - Applies translated content back to language files
 - Automatic backup creation
+- Removes unused translations not present in en-GB
 
 ### 3. `ai_translation_helper.py`
 Specialized tool for AI-assisted translation workflows with batch processing and validation.
