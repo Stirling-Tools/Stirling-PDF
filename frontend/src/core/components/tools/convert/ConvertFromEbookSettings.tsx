@@ -61,7 +61,6 @@ const ConvertFromEbookSettings = ({
 
   return (
     <Stack gap="sm">
-      <Divider />
       <Checkbox
         label={t("convert.ebookOptions.embedAllFonts", "Embed all fonts")}
         description={t("convert.ebookOptions.embedAllFontsDesc", "Embed all fonts from the eBook into the generated PDF")}
