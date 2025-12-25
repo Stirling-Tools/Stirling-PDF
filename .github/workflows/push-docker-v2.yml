@@ -83,7 +83,7 @@ jobs:
 
       - name: Generate tags for latest (V2-master branch - production)
         id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V2-master'
         with:
           images: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Generate tags for latest (V1_V2_merge branch - test)
         id: meta-test
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
@@ -139,7 +139,7 @@ jobs:
 
       - name: Generate tags for latest-fat (V2-master branch - production)
         id: meta-fat
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V2-master'
         with:
           images: |
@@ -153,7 +153,7 @@ jobs:
 
       - name: Generate tags for latest-fat (V1_V2_merge branch - test)
         id: meta-fat-test
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
@@ -193,7 +193,7 @@ jobs:
 
       - name: Generate tags for ultra-lite (V2-master branch - production)
         id: meta-lite
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V2-master'
         with:
           images: |
@@ -207,7 +207,7 @@ jobs:
 
       - name: Generate tags for ultra-lite (V1_V2_merge branch - test)
         id: meta-lite-test
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         if: github.ref == 'refs/heads/V1_V2_merge'
         with:
           images: |
