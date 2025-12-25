@@ -28,6 +28,8 @@ export const shouldProcessFilesSeparately = (
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
+    // eBook files to PDF conversions (each file should be processed separately via Calibre)
+    (['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
     // Web files smart detection
     (parameters.isSmartDetection && parameters.smartDetectionType === 'web') ||
     // Mixed file types (smart detection)
@@ -43,7 +45,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions, ebookOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -75,6 +77,11 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
   } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
     formData.append("dpi", (cbzOutputOptions?.dpi ?? 150).toString());
+  } else if (['epub', 'mobi', 'azw3', 'fb2'].includes(fromExtension) && toExtension === 'pdf') {
+    formData.append("embedAllFonts", (ebookOptions?.embedAllFonts ?? false).toString());
+    formData.append("includeTableOfContents", (ebookOptions?.includeTableOfContents ?? false).toString());
+    formData.append("includePageNumbers", (ebookOptions?.includePageNumbers ?? false).toString());
+    formData.append("optimizeForEbook", (ebookOptions?.optimizeForEbook ?? false).toString());
   }
 
   return formData;
