@@ -15,8 +15,7 @@ interface ConvertToPdfxSettingsProps {
 const ConvertToPdfxSettings = ({
   parameters,
   onParameterChange,
-  selectedFiles,
-  disabled = false
+  selectedFiles
 }: ConvertToPdfxSettingsProps) => {
   const { t } = useTranslation();
   const { hasDigitalSignatures } = usePdfSignatureDetection(selectedFiles);
