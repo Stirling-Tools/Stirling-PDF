@@ -1394,6 +1394,11 @@ header = "Add Attachments"
 add = "Add Attachment"
 remove = "Remove Attachment"
 embed = "Embed Attachment"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add Attachments"
 
 [watermark]
@@ -3799,6 +3804,11 @@ failed = "An error occurred while compressing the PDF."
 [compress.selectText.1]
 _value = "Compression Settings"
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "This file is password-protected. Please enter the password:"
