@@ -1,4 +1,5 @@
 import { Stack, Text, Alert } from '@mantine/core';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { usePdfSignatureDetection } from '@app/hooks/usePdfSignatureDetection';
@@ -12,15 +13,26 @@ interface ConvertToPdfxSettingsProps {
 }
 
 const ConvertToPdfxSettings = ({
+  parameters,
+  onParameterChange,
   selectedFiles,
+  disabled = false
 }: ConvertToPdfxSettingsProps) => {
   const { t } = useTranslation();
   const { hasDigitalSignatures } = usePdfSignatureDetection(selectedFiles);
 
+  // Automatically set PDF/X-3 format when this component is rendered
+  useEffect(() => {
+    if (parameters.pdfxOptions.outputFormat !== 'pdfx-3') {
+      onParameterChange('pdfxOptions', {
+        ...parameters.pdfxOptions,
+        outputFormat: 'pdfx-3'
+      });
+    }
+  }, [parameters.pdfxOptions.outputFormat, onParameterChange]);
+
   return (
     <Stack gap="sm" data-testid="pdfx-settings">
-      <Text size="sm" fw={500}>{t("convert.pdfxOptions", "PDF/X Options")}:</Text>
-
       {hasDigitalSignatures && (
         <Alert color="yellow">
           <Text size="sm">
@@ -30,7 +42,7 @@ const ConvertToPdfxSettings = ({
       )}
 
       <Text size="sm">
-        {t("convert.pdfxDescription", "This tool will convert your PDF to PDF/X format, which is optimized for print production.")}
+        {t("convert.pdfxDescription", "PDF/X is an ISO standard PDF subset for reliable printing and graphics exchange.")}
       </Text>
     </Stack>
   );
