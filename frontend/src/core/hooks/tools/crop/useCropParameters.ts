@@ -6,10 +6,12 @@ import { DEFAULT_CROP_AREA } from '@app/constants/cropConstants';
 
 export interface CropParameters extends BaseParameters {
   cropArea: Rectangle;
+  autoCrop: boolean;
 }
 
 export const defaultParameters: CropParameters = {
   cropArea: DEFAULT_CROP_AREA,
+  autoCrop: false,
 };
 
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
