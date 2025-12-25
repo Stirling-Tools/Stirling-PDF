@@ -2210,7 +2210,7 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", "1.4", "2008", "pdfx", "pdfx-1", "pdfx-3", "pdfx-4");
+        PDF_X("PDF/X", "_PDFX.pdf", "1.4", "2008", "pdfx");
 
         private final String displayName;
         private final String suffix;
