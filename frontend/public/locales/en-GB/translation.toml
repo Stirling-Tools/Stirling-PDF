@@ -3800,6 +3800,11 @@ failed = "An error occurred while compressing the PDF."
 _value = "Compression Settings"
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
 
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
 [decrypt]
 passwordPrompt = "This file is password-protected. Please enter the password:"
 cancelled = "Operation cancelled for PDF: {0}"
