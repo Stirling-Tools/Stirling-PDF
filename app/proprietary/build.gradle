@@ -62,7 +62,7 @@ dependencies {
     api "io.jsonwebtoken:jjwt-api:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
+    runtimeOnly 'com.h2database:h2:2.4.240' // Don't upgrade h2database
     runtimeOnly 'org.postgresql:postgresql:42.7.8'
     constraints {
         implementation "org.opensaml:opensaml-core:$openSamlVersion"
