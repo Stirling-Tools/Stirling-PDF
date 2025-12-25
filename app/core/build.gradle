@@ -72,6 +72,13 @@ dependencies {
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
+    implementation 'org.verapdf:validation-model:1.28.2'
+
+    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
+    implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
         exclude group: 'org.slf4j', module: 'slf4j-simple'

@@ -394,6 +394,7 @@ public class ApplicationProperties {
         private boolean googlevisibility;
         private boolean showUpdate;
         private boolean showUpdateOnlyAdmin;
+        private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
