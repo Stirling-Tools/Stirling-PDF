@@ -12,13 +12,10 @@ interface ConvertToPdfxSettingsProps {
 }
 
 const ConvertToPdfxSettings = ({
-  parameters,
-  onParameterChange,
   selectedFiles,
-  disabled = false
 }: ConvertToPdfxSettingsProps) => {
   const { t } = useTranslation();
-  const { hasDigitalSignatures, isChecking } = usePdfSignatureDetection(selectedFiles);
+  const { hasDigitalSignatures } = usePdfSignatureDetection(selectedFiles);
 
   return (
     <Stack gap="sm" data-testid="pdfx-settings">
