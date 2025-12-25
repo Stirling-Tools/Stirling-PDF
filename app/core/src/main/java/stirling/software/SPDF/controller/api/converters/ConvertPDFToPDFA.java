@@ -2210,9 +2210,7 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X_1("PDF/X-1", "_PDFX-1.pdf", "1.3", "2001", "pdfx-1", "pdfx"),
-        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", "1.3", "2003", "pdfx-3"),
-        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", "1.4", "2008", "pdfx-4");
+        PDF_X("PDF/X", "_PDFX.pdf", "1.4", "2008", "pdfx", "pdfx-1", "pdfx-3", "pdfx-4");
 
         private final String displayName;
         private final String suffix;
@@ -2238,7 +2236,7 @@ public class ConvertPDFToPDFA {
 
         static PdfXProfile fromRequest(String requestToken) {
             if (requestToken == null) {
-                return PDF_X_4;
+                return PDF_X;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
@@ -2246,7 +2244,7 @@ public class ConvertPDFToPDFA {
                             .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
-            return match.orElse(PDF_X_4);
+            return match.orElse(PDF_X);
         }
 
         String outputSuffix() {

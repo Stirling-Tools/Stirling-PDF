@@ -145,7 +145,7 @@ const ConvertSettings = ({
       outputFormat: 'pdfa-1',
     });
     onParameterChange('pdfxOptions', {
-      outputFormat: 'pdfx-1',
+      outputFormat: 'pdfx',
     });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
@@ -222,7 +222,7 @@ const ConvertSettings = ({
       outputFormat: 'pdfa-1',
     });
     onParameterChange('pdfxOptions', {
-      outputFormat: 'pdfx-1',
+      outputFormat: 'pdfx',
     });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,

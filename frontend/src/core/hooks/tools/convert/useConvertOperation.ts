@@ -73,7 +73,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'pdfx') {
     // Use PDF/A endpoint with PDF/X format parameter
-    formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx-1');
+    formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx');
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
   } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
