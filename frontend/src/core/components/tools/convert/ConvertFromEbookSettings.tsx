@@ -1,4 +1,4 @@
-import { Stack, Checkbox, Divider } from "@mantine/core";
+import { Stack, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 
