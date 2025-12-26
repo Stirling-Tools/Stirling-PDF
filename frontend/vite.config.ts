@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => {
             //provides static pdfium so embedpdf can run without cdn
             src: 'node_modules/@embedpdf/pdfium/dist/pdfium.wasm',
             dest: 'pdfium'
+          },
+          {
+            // Copy jscanify vendor files to dist
+            src: 'public/vendor/jscanify/*',
+            dest: 'vendor/jscanify'
           }
         ]
       })

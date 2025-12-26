@@ -370,7 +370,7 @@ const SignSettings = ({
       isReady,
       onClick,
       'personal',
-      'material-symbols:person-rounded',
+      'person-rounded',
       translate('saved.savePersonal', 'Save Personal')
     );
 
@@ -379,7 +379,7 @@ const SignSettings = ({
       isReady,
       onClick,
       'shared',
-      'material-symbols:groups-rounded',
+      'groups-rounded',
       translate('saved.saveShared', 'Save Shared')
     );
 
@@ -474,7 +474,7 @@ const SignSettings = ({
           reader.readAsDataURL(file);
         });
 
-        // Reset pause state and directly activate placement
+        // Reset pause-rounded state and directly activate placement
         setPlacementManuallyPaused(false);
         lastAppliedPlacementKey.current = null;
         setImageSignatureData(result);
@@ -500,7 +500,7 @@ const SignSettings = ({
   const handleCanvasSignatureChange = useCallback((data: string | null) => {
     const nextValue = data ?? undefined;
     setCanvasSignatureData(prevData => {
-      // Reset pause state and trigger placement for signature changes
+      // Reset pause-rounded state and trigger placement for signature changes
       // (onDrawingComplete handles initial activation)
       if (prevData && prevData !== nextValue && nextValue) {
         setPlacementManuallyPaused(false);
@@ -905,7 +905,7 @@ const SignSettings = ({
         color: isPlacementMode ? 'blue' : 'teal',
         title: isPlacementMode
           ? translate('instructions.title', 'How to add your signature')
-          : translate('instructions.paused', 'Placement paused'),
+          : translate('instructions.pause-roundedd', 'Placement pause-roundedd'),
         message: isPlacementMode
           ? placementInstructions()
           : translate('instructions.resumeHint', 'Resume placement to click and add your signature.'),
@@ -926,7 +926,7 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   };
 
-  // Handle Escape key to toggle pause/resume
+  // Handle Escape key to toggle pause-rounded/resume
   useEffect(() => {
     if (!isCurrentTypeReady) return;
 
@@ -949,11 +949,11 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
         ? (
-            <Tooltip label={translate('mode.pause', 'Pause placement')}>
+            <Tooltip label={translate('mode.pause-rounded', 'Pause placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={translate('mode.pause', 'Pause placement')}
+                aria-label={translate('mode.pause-rounded', 'Pause placement')}
                 onClick={handlePausePlacement}
                 disabled={disabled || !onDeactivateSignature}
                 style={{
@@ -964,9 +964,9 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {translate('mode.pause', 'Pause placement')}
+                  {translate('mode.pause-rounded', 'Pause placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
@@ -987,7 +987,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.resume', 'Resume placement')}
                 </Text>

@@ -18,6 +18,7 @@ export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;
+  frontendUrl?: string;
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
@@ -43,6 +44,7 @@ export interface AppConfig {
   license?: string;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
+  enableMobileScanner?: boolean;
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;
