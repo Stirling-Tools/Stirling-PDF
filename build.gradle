@@ -26,7 +26,7 @@ ext {
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.23"
-    junitPlatformVersion = "1.12.2"
+    junitPlatformVersion = "6.0.1"
 }
 
 ext.isSecurityDisabled = { ->
