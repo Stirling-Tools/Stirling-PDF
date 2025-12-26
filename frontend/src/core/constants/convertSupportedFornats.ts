@@ -12,6 +12,8 @@ export const CONVERT_SUPPORTED_FORMATS = [
   'sda', 'sdc', 'sdd', 'sdw', 'stc', 'std', 'sti', 'stw', 'sxd', 'sxg', 'sxi', 'sxw',
   // Email formats
   'eml',
+  // Ebook formats
+  'epub', 'mobi', 'azw3', 'fb2',
   // Archive formats
   'zip', 'cbr', 'cbz',
   // Other

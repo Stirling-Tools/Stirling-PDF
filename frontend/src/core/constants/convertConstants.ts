@@ -36,6 +36,7 @@ export const CONVERSION_ENDPOINTS = {
   'eml-pdf': '/api/v1/convert/eml/pdf',
   'cbr-pdf': '/api/v1/convert/cbr/pdf',
   'pdf-cbr': '/api/v1/convert/pdf/cbr',
+  'ebook-pdf': '/api/v1/convert/ebook/pdf',
   'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
   'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
@@ -57,6 +58,7 @@ export const ENDPOINT_NAMES = {
   'html-pdf': 'html-to-pdf',
   'markdown-pdf': 'markdown-to-pdf',
   'eml-pdf': 'eml-to-pdf',
+  'ebook-pdf': 'ebook-to-pdf',
   'cbr-pdf': 'cbr-to-pdf',
   'pdf-cbr': 'pdf-to-cbr',
   'pdf-text-editor': 'pdf-to-text-editor',
@@ -94,6 +96,10 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
+  { value: 'epub', label: 'EPUB', group: 'eBook' },
+  { value: 'mobi', label: 'MOBI', group: 'eBook' },
+  { value: 'azw3', label: 'AZW3', group: 'eBook' },
+  { value: 'fb2', label: 'FB2', group: 'eBook' },
 ];
 
 export const TO_FORMAT_OPTIONS = [
@@ -134,7 +140,8 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'md': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
   'eml': ['pdf'],
-  'cbr': ['pdf']
+  'cbr': ['pdf'],
+  'epub': ['pdf'], 'mobi': ['pdf'], 'azw3': ['pdf'], 'fb2': ['pdf']
 };
 
 // Map extensions to endpoint keys
@@ -162,8 +169,9 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'zip': { 'pdf': 'html-to-pdf' },
   'md': { 'pdf': 'markdown-to-pdf' },
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
+  'cbr': { 'pdf': 'cbr-to-pdf' },
   'eml': { 'pdf': 'eml-to-pdf' },
-  'cbr': { 'pdf': 'cbr-to-pdf' }
+  'epub': { 'pdf': 'ebook-to-pdf' }, 'mobi': { 'pdf': 'ebook-to-pdf' }, 'azw3': { 'pdf': 'ebook-to-pdf' }, 'fb2': { 'pdf': 'ebook-to-pdf' }
 };
 
 export type ColorType = typeof COLOR_TYPES[keyof typeof COLOR_TYPES];

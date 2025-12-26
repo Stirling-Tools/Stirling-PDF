@@ -19,6 +19,7 @@ import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSett
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
+import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -155,6 +156,12 @@ const ConvertSettings = ({
     });
     onParameterChange('cbzOutputOptions', {
       dpi: 150,
+    });
+    onParameterChange('ebookOptions', {
+      embedAllFonts: false,
+      includeTableOfContents: false,
+      includePageNumbers: false,
+      optimizeForEbook: false,
     });
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
@@ -375,6 +382,18 @@ const ConvertSettings = ({
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* eBook to PDF options */}
+      {['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromEbookSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
             disabled={disabled}
           />
         </>
