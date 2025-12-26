@@ -1107,7 +1107,7 @@ title = "Dividi per conteggio"
 text = "Crea più PDF con un numero specifico di pagine o documenti ciascuno."
 bullet1 = "Conteggio pagine: numero fisso per file"
 bullet2 = "Numero documenti: numero fisso di file in output"
-bullet3 = "Utile per workflow batch"
+bullet3 = "Utile per batch di flusso di lavoro"
 
 [split.tooltip.byChapters]
 title = "Dividi per capitoli"
@@ -1696,7 +1696,7 @@ submit = "Estrai pagine"
 
 [extractPages.pageNumbers]
 label = "Pagine da estrarre"
-placeholder = "es., 1,3,5-8 o odd & 1-10"
+placeholder = "es., 1,3,5-8 o dispari & 1-10"
 
 [extractPages.settings]
 title = "Impostazioni"
@@ -1711,7 +1711,7 @@ failed = "Impossibile estrarre le pagine"
 title = "Pagine estratte"
 
 [pageSelection.tooltip]
-description = "Scegli quali pagine usare per l'operazione. Supporta pagine singole, intervalli, formule e la parola chiave \"all\"."
+description = "Scegli quali pagine usare per l'operazione. Supporta pagine singole, intervalli, formule e la parola chiave \"tutte\"."
 
 [pageSelection.tooltip.header]
 title = "Guida Selezione Pagine"
@@ -1721,7 +1721,7 @@ title = "Uso di base"
 text = "Seleziona pagine specifiche dal tuo PDF usando una sintassi semplice."
 bullet1 = "Pagine singole: 1,3,5"
 bullet2 = "Intervalli: 3-6 o 10-15"
-bullet3 = "Tutte le pagine: all"
+bullet3 = "Tutte le pagine: tutte"
 
 [pageSelection.tooltip.advanced]
 title = "Funzionalità avanzate"
@@ -1739,15 +1739,15 @@ text = "Usa numeri, intervalli, parole chiave e progressioni (n parte da 0). Son
 
 [pageSelection.tooltip.syntax.bullets]
 numbers = "Numeri/intervalli: 5, 10-20"
-keywords = "Parole chiave: odd, even"
+keywords = "Parole chiave: dispari, pari"
 progressions = "Progressioni: 3n, 4n+1"
 
 [pageSelection.tooltip.operators]
 title = "Operatori"
-text = "AND ha precedenza più alta della virgola. NOT si applica all’interno dell’intervallo del documento."
-and = "AND: & o \"and\" — richiede entrambe le condizioni (es., 1-50 & even)"
+text = "E ha precedenza più alta della virgola. NON si applica all’interno dell’intervallo del documento."
+and = "E: & o \"e\" — richiede entrambe le condizioni (es., 1-50 & pari)"
 comma = "Virgola: , o | — combina selezioni (es., 1-10, 20)"
-not = "NOT: ! o \"not\" — esclude pagine (es., 3n & not 30)"
+not = "NON: ! o \"NON\" — esclude pagine (es., 3n & non 30)"
 
 [pageSelection.tooltip.examples]
 title = "Esempi"
@@ -1795,15 +1795,15 @@ text = "Usa numeri, intervalli, parole chiave e progressioni (n parte da 0). Son
 
 [bulkSelection.syntax.bullets]
 numbers = "Numeri/intervalli: 5, 10-20"
-keywords = "Parole chiave: odd, even"
+keywords = "Parole chiave: dispari, pari"
 progressions = "Progressioni: 3n, 4n+1"
 
 [bulkSelection.operators]
 title = "Operatori"
-text = "AND ha precedenza più alta della virgola. NOT si applica all’interno dell’intervallo del documento."
-and = "AND: & o \"and\" — richiede entrambe le condizioni (es., 1-50 & even)"
+text = "E ha precedenza più alta della virgola. NON si applica all’interno dell’intervallo del documento."
+and = "E: & o \"e\" — richiede entrambe le condizioni (es., 1-50 & pari)"
 comma = "Virgola: , o | — combina selezioni (es., 1-10, 20)"
-not = "NOT: ! o \"not\" — esclude pagine (es., 3n & not 30)"
+not = "NON: ! o \"non\" — esclude pagine (es., 3n & non 30)"
 
 [bulkSelection.examples]
 title = "Esempi"
@@ -2163,9 +2163,9 @@ info = "Python non è installato. È necessario per l'esecuzione."
 
 [ScannerImageSplit.selectText]
 1 = "Soglia angolo:"
-2 = "Imposta il minimo angolo richiesto perché l'immagine venga ruotata (default: 10)."
+2 = "Imposta il minimo angolo richiesto perché l'immagine venga ruotata (predefinito: 10)."
 3 = "Tolleranza:"
-4 = "Imposta lo spettro di colori attorno al colore di sfondo stimato (default: 30)."
+4 = "Imposta lo spettro di colori attorno al colore di sfondo stimato (predefinito: 30)."
 5 = "Area minima:"
 6 = "Imposta l'area minima di una foto (default: 10000)."
 7 = "Area di contorno minima:"
@@ -2343,26 +2343,26 @@ placeholder = "Seleziona un file PDF nella vista principale per iniziare"
 settings = "Impostazioni"
 
 [flatten.options]
-stepTitle = "Opzioni di flattening"
-title = "Opzioni di flattening"
-note = "Il flattening rimuove gli elementi interattivi dal PDF, rendendoli non modificabili."
+stepTitle = "Opzioni di appiattimento"
+title = "Opzioni di appiattimento"
+note = "L'appiattimento rimuove gli elementi interattivi dal PDF, rendendoli non modificabili."
 
 [flatten.options.flattenOnlyForms]
 label = "Appiattisci solo i moduli"
 desc = "Appiattisci solo i campi modulo, lasciando intatti gli altri elementi interattivi"
 
 [flatten.results]
-title = "Risultati Flatten"
+title = "Risultati di appiattimento"
 
 [flatten.error]
-failed = "Si è verificato un errore durante il flattening del PDF."
+failed = "Si è verificato un errore durante l'appiattimento del PDF."
 
 [flatten.tooltip.header]
-title = "Informazioni sul flattening dei PDF"
+title = "Informazioni sull'appiattimento dei PDF"
 
 [flatten.tooltip.description]
-title = "Cosa fa il flattening?"
-text = "Il flattening rende il tuo PDF non modificabile trasformando moduli compilabili e pulsanti in testo e immagini normali. Il PDF avrà lo stesso aspetto, ma nessuno potrà più modificare o compilare i moduli. Perfetto per condividere moduli completati, creare documenti finali per gli archivi o garantire un aspetto uniforme ovunque."
+title = "Cosa fa l'appiattimento?"
+text = "L'appiattimento rende il tuo PDF non modificabile trasformando moduli compilabili e pulsanti in testo e immagini normali. Il PDF avrà lo stesso aspetto, ma nessuno potrà più modificare o compilare i moduli. Perfetto per condividere moduli completati, creare documenti finali per gli archivi o garantire un aspetto uniforme ovunque."
 bullet1 = "Le caselle di testo diventano testo normale (non modificabile)"
 bullet2 = "Checkbox e pulsanti diventano immagini"
 bullet3 = "Ottimo per versioni finali che non vuoi vengano modificate"
@@ -2469,7 +2469,7 @@ title = "Compara"
 header = "Compara PDF"
 clearSelected = "Cancella selezionati"
 addFilesHint = "Aggiungi PDF nel passaggio File per abilitarne la selezione."
-noFiles = "Nessun PDF disponibile yet"
+noFiles = "Nessun PDF disponibile"
 pages = "Pagine"
 cta = "Confronta"
 loading = "Confronto in corso..."
@@ -4168,7 +4168,7 @@ label = "Directory pipeline"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Directory cartelle monitorate"
-description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per default: /pipeline/watchedFolders)"
+description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per predefinito: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directory cartelle completate"
@@ -4179,11 +4179,11 @@ label = "Percorsi strumenti esterni"
 
 [admin.settings.general.customPaths.operations.weasyprint]
 label = "Eseguibile WeasyPrint"
-description = "Percorso dell'eseguibile WeasyPrint per conversione da HTML a PDF (lascia vuoto per default: /opt/venv/bin/weasyprint)"
+description = "Percorso dell'eseguibile WeasyPrint per conversione da HTML a PDF (lascia vuoto per predefinito: /opt/venv/bin/weasyprint)"
 
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Eseguibile Unoconvert"
-description = "Percorso di LibreOffice unoconvert per conversioni di documenti (lascia vuoto per default: /opt/venv/bin/unoconvert)"
+description = "Percorso di LibreOffice unoconvert per conversioni di documenti (lascia vuoto per predefinito: /opt/venv/bin/unoconvert)"
 
 [admin.settings.security]
 title = "Sicurezza"
@@ -4305,12 +4305,12 @@ label = "Blocca localhost"
 description = "Blocca localhost e indirizzi loopback (127.x.x.x, ::1)"
 
 [admin.settings.security.htmlUrlSecurity.blockLinkLocal]
-label = "Blocca indirizzi link-local"
-description = "Blocca indirizzi link-local (169.254.x.x, fe80::/10)"
+label = "Blocca indirizzi link-locali"
+description = "Blocca indirizzi link-locali (169.254.x.x, fe80::/10)"
 
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
-label = "Blocca endpoint dei metadata cloud"
-description = "Blocca gli endpoint dei metadata dei provider cloud (169.254.169.254)"
+label = "Blocca endpoint dei metadati cloud"
+description = "Blocca gli endpoint dei metadati dei provider cloud (169.254.169.254)"
 
 [admin.settings.connections]
 title = "Connessioni"
@@ -5211,7 +5211,7 @@ noSearchResults = "Nessuno strumento trovato"
 noTools = "Nessuno strumento disponibile"
 
 [onboarding]
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+allTools = "Questo è il pannello <strong>Tutti gli Strumenti</strong>, dove puoi sfogliare e selezionare tutti gli strumenti PDF disponibili."
 selectCropTool = "Selezioniamo lo strumento <strong>Ritaglia</strong> per mostrare come usarne uno."
 toolInterface = "Questa è l'interfaccia dello strumento <strong>Ritaglia</strong>. Come vedi, non c'è molto perché non abbiamo ancora aggiunto file PDF su cui lavorare."
 filesButton = "Il pulsante <strong>File</strong> sulla barra di accesso rapido consente di caricare PDF su cui usare gli strumenti."
