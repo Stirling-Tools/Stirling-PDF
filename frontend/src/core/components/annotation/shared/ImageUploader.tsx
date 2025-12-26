@@ -1,7 +1,9 @@
-import React from 'react';
-import { FileInput, Text, Stack } from '@mantine/core';
+import React, { useState } from 'react';
+import { FileInput, Text, Stack, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { removeWhiteBackground } from '@app/utils/imageTransparency';
+import { alert } from '@app/components/toast';
 
 interface ImageUploaderProps {
   onImageChange: (file: File | null) => void;
@@ -9,6 +11,8 @@ interface ImageUploaderProps {
   label?: string;
   placeholder?: string;
   hint?: string;
+  allowBackgroundRemoval?: boolean;
+  onProcessedImageData?: (dataUrl: string | null) => void;
 }
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -16,9 +20,50 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   disabled = false,
   label,
   placeholder,
-  hint
+  hint,
+  allowBackgroundRemoval = false,
+  onProcessedImageData
 }) => {
   const { t } = useTranslation();
+  const [removeBackground, setRemoveBackground] = useState(false);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [originalImageData, setOriginalImageData] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const processImage = async (imageSource: File | string, shouldRemoveBackground: boolean): Promise<void> => {
+    if (shouldRemoveBackground && allowBackgroundRemoval) {
+      setIsProcessing(true);
+      try {
+        const transparentImageDataUrl = await removeWhiteBackground(imageSource, {
+          autoDetectCorner: true,
+          tolerance: 15
+        });
+        onProcessedImageData?.(transparentImageDataUrl);
+      } catch (error) {
+        console.error('Error removing background:', error);
+        alert({
+          title: t('sign.image.backgroundRemovalFailedTitle', 'Background removal failed'),
+          body: t('sign.image.backgroundRemovalFailedMessage', 'Could not remove the background from the image. Using original image instead.'),
+          alertType: 'error'
+        });
+        onProcessedImageData?.(null);
+      } finally {
+        setIsProcessing(false);
+      }
+    } else {
+      // When background removal is disabled, return the original image data
+      if (typeof imageSource === 'string') {
+        onProcessedImageData?.(imageSource);
+      } else {
+        // Convert File to data URL if needed
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          onProcessedImageData?.(e.target?.result as string);
+        };
+        reader.readAsDataURL(imageSource);
+      }
+    }
+  };
 
   const handleImageChange = async (file: File | null) => {
     if (file && !disabled) {
@@ -29,13 +74,35 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           return;
         }
 
+        setCurrentFile(file);
         onImageChange(file);
+
+        const originalDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+
+        setOriginalImageData(originalDataUrl);
+        await processImage(file, removeBackground);
       } catch (error) {
         console.error('Error processing image file:', error);
       }
     } else if (!file) {
       // Clear image data when no file is selected
+      setCurrentFile(null);
+      setOriginalImageData(null);
       onImageChange(null);
+      onProcessedImageData?.(null);
+    }
+  };
+
+  const handleBackgroundRemovalChange = async (checked: boolean) => {
+    if (isProcessing) return; // Prevent race conditions
+    setRemoveBackground(checked);
+    if (originalImageData) {
+      await processImage(originalImageData, checked);
     }
   };
 
@@ -47,12 +114,25 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           placeholder={placeholder || t('sign.image.placeholder', 'Select image file')}
           accept="image/*,.svg"
           onChange={handleImageChange}
-          disabled={disabled}
+          disabled={disabled || isProcessing}
         />
       </PrivateContent>
+      {allowBackgroundRemoval && (
+        <Checkbox
+          label={t('sign.image.removeBackground', 'Remove white background (make transparent)')}
+          checked={removeBackground}
+          onChange={(event) => handleBackgroundRemovalChange(event.currentTarget.checked)}
+          disabled={disabled || !currentFile || isProcessing}
+        />
+      )}
       {hint && (
         <Text size="sm" c="dimmed">
           {hint}
+        </Text>
+      )}
+      {isProcessing && (
+        <Text size="sm" c="dimmed">
+          {t('sign.image.processing', 'Processing image...')}
         </Text>
       )}
     </Stack>
