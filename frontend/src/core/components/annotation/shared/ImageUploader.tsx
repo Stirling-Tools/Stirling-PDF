@@ -43,8 +43,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         console.error('Error removing background:', error);
         alert({
           title: t('sign.image.backgroundRemovalFailedTitle', 'Background removal failed'),
-          message: t('sign.image.backgroundRemovalFailedMessage', 'Could not remove the background from the image. Using original image instead.'),
-          type: 'error'
+          body: t('sign.image.backgroundRemovalFailedMessage', 'Could not remove the background from the image. Using original image instead.'),
+          alertType: 'error'
         });
         onProcessedImageData?.(null);
       } finally {
