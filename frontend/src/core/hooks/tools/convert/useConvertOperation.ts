@@ -42,7 +42,7 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
