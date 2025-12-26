@@ -3,6 +3,7 @@ import { FileInput, Text, Stack, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { removeWhiteBackground } from '@app/utils/imageTransparency';
+import { alert } from '@app/components/toast';
 
 interface ImageUploaderProps {
   onImageChange: (file: File | null) => void;
@@ -40,6 +41,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         onProcessedImageData?.(transparentImageDataUrl);
       } catch (error) {
         console.error('Error removing background:', error);
+        alert({
+          title: t('sign.image.backgroundRemovalFailedTitle', 'Background removal failed'),
+          message: t('sign.image.backgroundRemovalFailedMessage', 'Could not remove the background from the image. Using original image instead.'),
+          type: 'error'
+        });
         onProcessedImageData?.(null);
       } finally {
         setIsProcessing(false);
