@@ -253,6 +253,22 @@ public class JobExecutorService {
                 log.error("Synchronous job timed out after {} ms", timeoutToUse);
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
+            } catch (RuntimeException e) {
+                // Check if this is a wrapped typed exception that should be handled by
+                // GlobalExceptionHandler
+                Throwable cause = e.getCause();
+                if (cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
+                        || cause
+                                instanceof
+                                stirling.software.common.util.ExceptionUtils
+                                        .BaseValidationException) {
+                    // Rethrow so GlobalExceptionHandler can handle with proper HTTP status codes
+                    throw e;
+                }
+                // Handle other RuntimeExceptions as generic errors
+                log.error("Error executing synchronous job: {}", e.getMessage(), e);
+                return ResponseEntity.internalServerError()
+                        .body(Map.of("error", "Job failed: " + e.getMessage()));
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
                 // Construct a JSON error response

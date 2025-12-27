@@ -25,6 +25,12 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const { selectedTool } = useNavigationState();
   const isSignMode = selectedTool === 'sign';
 
+  // Check if we're in any annotation tool that should disable the toggle
+  const isInAnnotationTool = selectedTool === 'annotate' || selectedTool === 'sign' || selectedTool === 'addImage' || selectedTool === 'addText';
+
+  // Check if we're on annotate tool to highlight the button
+  const isAnnotateActive = selectedTool === 'annotate';
+
   // Don't show any annotation controls in sign mode
   if (isSignMode) {
     return null;
@@ -35,13 +41,14 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       {/* Annotation Visibility Toggle */}
       <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position={tooltipPosition} offset={tooltipOffset} arrow portalTarget={document.body}>
         <ActionIcon
-          variant="subtle"
+          variant={isAnnotateActive ? "filled" : "subtle"}
+          color="blue"
           radius="md"
           className="right-rail-icon"
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={disabled || currentView !== 'viewer'}
+          disabled={disabled || currentView !== 'viewer' || isInAnnotationTool}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}

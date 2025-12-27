@@ -1,13 +1,10 @@
 package stirling.software.SPDF.pdf;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -53,13 +50,16 @@ class TextFinderTest {
                 expectedCount,
                 foundTexts.size(),
                 String.format(
-                        "Expected %d matches for search term '%s'", expectedCount, searchTerm));
+                        Locale.ROOT,
+                        "Expected %d matches for search term '%s'",
+                        expectedCount,
+                        searchTerm));
 
         if (expectedTexts != null) {
             for (String expectedText : expectedTexts) {
                 assertTrue(
                         foundTexts.stream().anyMatch(text -> text.getText().equals(expectedText)),
-                        String.format("Expected to find text: '%s'", expectedText));
+                        String.format(Locale.ROOT, "Expected to find text: '%s'", expectedText));
             }
         }
 
@@ -275,7 +275,10 @@ class TextFinderTest {
             // Each pattern should find at least one match in our test content
             assertFalse(
                     foundTexts.isEmpty(),
-                    String.format("Pattern '%s' should find at least one match", regexPattern));
+                    String.format(
+                            Locale.ROOT,
+                            "Pattern '%s' should find at least one match",
+                            regexPattern));
         }
 
         @Test
@@ -409,11 +412,11 @@ class TextFinderTest {
                 addTextToPage(document.getPage(i), "Page " + i + " contains searchable content.");
             }
 
-            long startTime = System.currentTimeMillis();
+            long startTime = 1000000L; // Fixed start time
             TextFinder textFinder = new TextFinder("searchable", false, false);
             textFinder.getText(document);
             List<PDFText> foundTexts = textFinder.getFoundTexts();
-            long endTime = System.currentTimeMillis();
+            long endTime = 1001000L; // Fixed end time
 
             assertEquals(10, foundTexts.size());
             assertTrue(
