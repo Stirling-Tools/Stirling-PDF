@@ -1275,6 +1275,9 @@ cbzOptions = "Optionen: CBZ zu PDF"
 optimizeForEbook = "PDF für E-Book-Reader optimieren (verwendet Ghostscript)"
 cbzOutputOptions = "Optionen: PDF zu CBZ"
 cbzDpi = "DPI für Bildrendering"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -2353,6 +2356,10 @@ saved = "Gespeichert"
 label = "Unterschriftsbild hochladen"
 placeholder = "Bilddatei auswählen"
 hint = "Laden Sie ein PNG- oder JPG-Bild Ihrer Unterschrift hoch"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "So fügen Sie eine Unterschrift hinzu"
