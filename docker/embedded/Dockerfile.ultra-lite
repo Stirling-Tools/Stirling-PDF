@@ -36,7 +36,7 @@ RUN DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 2: Runtime image
-FROM alpine:3.22.1
+FROM alpine:3.23.2
 
 ARG VERSION_TAG
 
